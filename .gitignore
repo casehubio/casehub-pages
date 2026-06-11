@@ -187,7 +187,7 @@ core/packages/melviz/**/.checkstyle
 **/.mvn
 
 # Workspace symlink
-proj
+wksp
 
 # Ignore all build artifacts
 *.class
