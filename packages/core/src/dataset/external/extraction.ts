@@ -30,6 +30,30 @@ function looksLikeIsoDate(value: string): boolean {
 // Stage 1: Parse — raw data to structured JS value
 // ---------------------------------------------------------------------------
 
+const PROMETHEUS_LINE_RE = /^[a-zA-Z_:][a-zA-Z0-9_:]*(?:\{[^}]*\})?\s+[\d.eE+\-NnaI]+/m;
+
+function looksLikePrometheus(raw: string): boolean {
+  const lines = raw.split("\n");
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith("#")) continue;
+    return PROMETHEUS_LINE_RE.test(trimmed);
+  }
+  return false;
+}
+
+function urlExtension(url: string | undefined): string | undefined {
+  if (url === undefined) return undefined;
+  try {
+    const pathname = new URL(url).pathname;
+    const dot = pathname.lastIndexOf(".");
+    if (dot === -1) return undefined;
+    return pathname.slice(dot).toLowerCase();
+  } catch {
+    return undefined;
+  }
+}
+
 function parseRaw(result: FetchResult, def: ExternalDataSetDef): unknown {
   const { data, contentType } = result;
 
@@ -49,9 +73,28 @@ function parseRaw(result: FetchResult, def: ExternalDataSetDef): unknown {
     return csvToObjects(csv.headers, csv.rows);
   }
 
-  // URL ending in "metrics" (no dot after "metrics") — Prometheus text format
+  // Explicit JSON content type — parse as JSON directly
+  if (contentType?.startsWith("application/json")) {
+    return JSON.parse(raw) as unknown;
+  }
+
+  // Prometheus: URL ending in /metrics OR text/plain with metric-shaped lines
   if (def.url !== undefined && /\/metrics$/.test(def.url)) {
     return parseMetrics(raw);
+  }
+  if (contentType?.startsWith("text/plain") && looksLikePrometheus(raw)) {
+    return parseMetrics(raw);
+  }
+
+  // URL file extension hint (tiebreaker when content type is missing/generic)
+  const ext = urlExtension(def.url);
+  if (ext === ".csv") {
+    const csv = parseCsv(raw);
+    return csvToObjects(csv.headers, csv.rows);
+  }
+  if (ext === ".tsv") {
+    const csv = parseCsv(raw, { delimiter: "\t" });
+    return csvToObjects(csv.headers, csv.rows);
   }
 
   // Try JSON first
@@ -193,18 +236,42 @@ function valueToString(value: unknown): string | null {
   return String(value);
 }
 
+function classifyValue(val: unknown): ColumnTypeEnum {
+  if (val === null || val === undefined) return ColumnType.LABEL;
+  if (typeof val === "number") return ColumnType.NUMBER;
+  if (typeof val === "string") {
+    if (looksLikeIsoDate(val)) return ColumnType.DATE;
+    const n = Number(val);
+    if (!Number.isNaN(n) && val.trim() !== "") return ColumnType.NUMBER;
+  }
+  return ColumnType.LABEL;
+}
+
 function inferColumnType(values: unknown[]): ColumnTypeEnum {
-  // Sample non-null values to determine type
+  let numbers = 0;
+  let dates = 0;
+  let labels = 0;
+  let total = 0;
+
   for (const val of values) {
     if (val === null || val === undefined) continue;
-    if (typeof val === "number") return ColumnType.NUMBER;
-    if (typeof val === "string") {
-      if (looksLikeIsoDate(val)) return ColumnType.DATE;
-      // Check if numeric string
-      const n = Number(val);
-      if (!Number.isNaN(n) && val.trim() !== "") return ColumnType.NUMBER;
-    }
+    total++;
+    const t = classifyValue(val);
+    if (t === ColumnType.NUMBER) numbers++;
+    else if (t === ColumnType.DATE) dates++;
+    else labels++;
   }
+
+  if (total === 0) return ColumnType.LABEL;
+
+  // Unanimous or strong majority (all non-null values agree) → that type
+  if (numbers === total) return ColumnType.NUMBER;
+  if (dates === total) return ColumnType.DATE;
+
+  // Any disagreement → LABEL (safe fallback for mixed data)
+  if (labels > 0) return ColumnType.LABEL;
+  if (numbers > 0 && dates > 0) return ColumnType.LABEL;
+
   return ColumnType.LABEL;
 }
 

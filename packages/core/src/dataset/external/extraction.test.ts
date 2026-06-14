@@ -297,4 +297,132 @@ describe("extractDataSet", () => {
       extractDataSet(fetchResult(data), def({ type: "nonexistent-type" }), registry),
     ).rejects.toThrow("UNKNOWN_PRESET");
   });
+
+  // --- URL file extension detection (#9 finding 1) ---
+
+  it("parses as CSV when URL ends with .csv", async () => {
+    const csv = "name,age\nAlice,30\nBob,25";
+    const result = await extractDataSet(
+      fetchResult(csv),
+      def({ url: "http://example.com/data.csv" }),
+      registry,
+    );
+
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Alice");
+  });
+
+  it("parses as CSV when URL has .csv with query string", async () => {
+    const csv = "x,y\n1,2";
+    const result = await extractDataSet(
+      fetchResult(csv),
+      def({ url: "http://example.com/data.csv?token=abc" }),
+      registry,
+    );
+
+    expect(result.dataset.rows).toHaveLength(1);
+    expect(result.dataset.columns[0]!.id).toBe("x");
+  });
+
+  it("parses as CSV when URL ends with .tsv (tab-delimited)", async () => {
+    const tsv = "name\tage\nAlice\t30";
+    const result = await extractDataSet(
+      fetchResult(tsv),
+      def({ url: "http://example.com/data.tsv" }),
+      registry,
+    );
+
+    expect(result.dataset.rows).toHaveLength(1);
+    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Alice");
+  });
+
+  it("explicit content type takes precedence over URL extension", async () => {
+    // JSON data served from a .csv URL with application/json content type
+    const json = JSON.stringify([{ a: 1 }]);
+    const result = await extractDataSet(
+      fetchResult(json, "application/json"),
+      def({ url: "http://example.com/data.csv" }),
+      registry,
+    );
+
+    expect(result.dataset.rows).toHaveLength(1);
+    expect(result.dataset.columns[0]!.id).toBe("a");
+  });
+
+  // --- Prometheus dual detection (#9 finding 2) ---
+
+  it("detects Prometheus format from text/plain content with metric lines", async () => {
+    const metricsText = [
+      "# HELP up Whether target is up",
+      "up{instance=\"localhost:9090\"} 1",
+      "up{instance=\"localhost:9100\"} 0",
+    ].join("\n");
+    const result = await extractDataSet(
+      fetchResult(metricsText, "text/plain"),
+      def({ content: metricsText }),
+      registry,
+    );
+
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.dataset.columns).toHaveLength(3);
+  });
+
+  it("does not misdetect plain text as Prometheus when it has no metric lines", async () => {
+    const plainText = "Hello world\nThis is just text\nNot metrics";
+    // Should fall through to CSV fallback, not Prometheus
+    const result = await extractDataSet(
+      fetchResult(plainText, "text/plain"),
+      def({ content: plainText }),
+      registry,
+    );
+
+    // CSV fallback will parse each line as a single-column row
+    expect(result.dataset.rows.length).toBeGreaterThan(0);
+    // Should NOT have 3 columns (which metrics parser would produce)
+    expect(result.dataset.columns.length).not.toBe(3);
+  });
+
+  // --- Column type inference majority voting (#9 finding 3) ---
+
+  it("infers LABEL when column has mixed types (numbers then non-numeric)", async () => {
+    const data = [
+      { id: "42" },
+      { id: "43" },
+      { id: "N/A" },
+      { id: "unknown" },
+      { id: "44" },
+    ];
+    const result = await extractDataSet(fetchResult(data), def(), registry);
+
+    // Mixed: 3 numbers, 2 labels → no clear majority, fallback to LABEL
+    const col = result.dataset.columns.find((c) => c.id === "id");
+    expect(col!.type).toBe(ColumnType.LABEL);
+  });
+
+  it("infers NUMBER when strong majority are numeric", async () => {
+    const data = [
+      { val: "10" },
+      { val: "20" },
+      { val: "30" },
+      { val: "40" },
+      { val: null },
+    ];
+    const result = await extractDataSet(fetchResult(data), def(), registry);
+
+    const col = result.dataset.columns.find((c) => c.id === "val");
+    expect(col!.type).toBe(ColumnType.NUMBER);
+  });
+
+  it("infers DATE when strong majority are ISO dates", async () => {
+    const data = [
+      { ts: "2024-01-01T00:00:00Z" },
+      { ts: "2024-02-01T00:00:00Z" },
+      { ts: "2024-03-01T00:00:00Z" },
+      { ts: null },
+    ];
+    const result = await extractDataSet(fetchResult(data), def(), registry);
+
+    const col = result.dataset.columns.find((c) => c.id === "ts");
+    expect(col!.type).toBe(ColumnType.DATE);
+  });
 });

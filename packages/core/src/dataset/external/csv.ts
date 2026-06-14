@@ -105,46 +105,41 @@ function parseField(
     return { value: "", nextIndex: start };
   }
 
-  // Quoted field
+  // Quoted field — escaped quotes require segment assembly
   if (raw[start] === quote) {
     let i = start + 1;
-    let value = "";
+    const segments: string[] = [];
+    let segStart = i;
 
     while (i < len) {
       if (raw[i] === quote) {
-        // Escaped quote (doubled)
         if (i + 1 < len && raw[i + 1] === quote) {
-          value += quote;
+          segments.push(raw.slice(segStart, i));
+          segments.push(quote);
           i += 2;
+          segStart = i;
         } else {
-          // End of quoted field
+          segments.push(raw.slice(segStart, i));
           i++;
-          return { value, nextIndex: i };
+          return { value: segments.join(""), nextIndex: i };
         }
       } else {
-        value += raw[i]!;
         i++;
       }
     }
 
-    // Unterminated quote — return what we have
-    return { value, nextIndex: i };
+    segments.push(raw.slice(segStart, i));
+    return { value: segments.join(""), nextIndex: i };
   }
 
-  // Unquoted field — read until delimiter or line ending
+  // Unquoted field — single slice from start to first delimiter/line ending
   let i = start;
-  let value = "";
 
   while (i < len) {
-    if (raw.startsWith(delimiter, i)) {
-      break;
-    }
-    if (raw[i] === "\n" || raw[i] === "\r") {
-      break;
-    }
-    value += raw[i]!;
+    if (raw.startsWith(delimiter, i)) break;
+    if (raw[i] === "\n" || raw[i] === "\r") break;
     i++;
   }
 
-  return { value, nextIndex: i };
+  return { value: raw.slice(start, i), nextIndex: i };
 }
