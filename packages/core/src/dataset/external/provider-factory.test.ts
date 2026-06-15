@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createDataProviderFactory } from "./provider-factory.js";
 import { InlineProvider } from "./providers/inline.js";
 import { BrowserFetchProvider } from "./providers/browser-fetch.js";
@@ -90,5 +90,34 @@ describe("createDataProviderFactory", () => {
     );
 
     expect(provider).toBeInstanceOf(BrowserFetchProvider);
+  });
+
+  it("passes custom fetch to BrowserFetchProvider when provided", async () => {
+    const customFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify([1, 2, 3]), {
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const factoryWithFetch = createDataProviderFactory(customFetch);
+    const provider = factoryWithFetch.create(
+      def({ url: "https://example.com/data.json" }),
+      config(),
+    );
+
+    expect(provider).toBeInstanceOf(BrowserFetchProvider);
+
+    // Verify the custom fetch is actually used
+    const result = await provider!.fetch({
+      url: "https://example.com/data.json",
+      method: "GET",
+      query: {},
+      headers: {},
+    });
+
+    expect(customFetch).toHaveBeenCalledWith(
+      "https://example.com/data.json",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(result.data).toEqual([1, 2, 3]);
   });
 });

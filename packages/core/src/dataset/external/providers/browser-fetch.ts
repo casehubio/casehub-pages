@@ -1,6 +1,12 @@
 import type { DataProvider, DataRequest, FetchResult } from "../types.js";
 
 export class BrowserFetchProvider implements DataProvider {
+  private readonly _fetch: typeof globalThis.fetch;
+
+  constructor(fetchFn?: typeof globalThis.fetch) {
+    this._fetch = fetchFn ?? globalThis.fetch;
+  }
+
   async fetch(request: DataRequest): Promise<FetchResult> {
     const url = new URL(request.url);
     for (const [k, v] of Object.entries(request.query)) {
@@ -18,7 +24,7 @@ export class BrowserFetchProvider implements DataProvider {
       headers.set("Content-Type", "application/x-www-form-urlencoded");
     }
 
-    const response = await fetch(url.toString(), init);
+    const response = await this._fetch(url.toString(), init);
 
     if (!response.ok) {
       const text = await response.text();
