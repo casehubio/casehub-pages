@@ -99,7 +99,8 @@ describe("DataSetManager — lookup pipeline", () => {
     const ds = salesDataSet();
     mgr.register(SALES_ID, ds);
     const result = mgr.lookup(createLookup(SALES_ID, []));
-    expect(result).toBe(ds);
+    expect(result.dataset).toBe(ds);
+    expect(result.totalRows).toBe(5);
   });
 
   it("resolved filter ops applied correctly", () => {
@@ -114,7 +115,8 @@ describe("DataSetManager — lookup pipeline", () => {
       }],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [filter]));
-    expect(result.rows).toHaveLength(3);
+    expect(result.dataset.rows).toHaveLength(3);
+    expect(result.totalRows).toBe(3);
   });
 
   it("unresolved filter ops resolved against column schema then applied", () => {
@@ -130,7 +132,8 @@ describe("DataSetManager — lookup pipeline", () => {
       }],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [filter]));
-    expect(result.rows).toHaveLength(3);
+    expect(result.dataset.rows).toHaveLength(3);
+    expect(result.totalRows).toBe(3);
   });
 
   it("group ops applied correctly", () => {
@@ -152,7 +155,8 @@ describe("DataSetManager — lookup pipeline", () => {
       ],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [group]));
-    expect(result.rows).toHaveLength(3);
+    expect(result.dataset.rows).toHaveLength(3);
+    expect(result.totalRows).toBe(3);
   });
 
   it("sort ops applied correctly", () => {
@@ -163,8 +167,9 @@ describe("DataSetManager — lookup pipeline", () => {
       columns: [{ columnId: "revenue" as ColumnId, order: "DESCENDING" }],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [sort]));
-    expect(result.rows[0]!.number("revenue" as ColumnId)).toBe(300);
-    expect(result.rows[4]!.number("revenue" as ColumnId)).toBe(50);
+    expect(result.dataset.rows[0]!.number("revenue" as ColumnId)).toBe(300);
+    expect(result.dataset.rows[4]!.number("revenue" as ColumnId)).toBe(50);
+    expect(result.totalRows).toBe(5);
   });
 
   it("filter + group + sort full pipeline", () => {
@@ -198,11 +203,12 @@ describe("DataSetManager — lookup pipeline", () => {
       columns: [{ columnId: "total" as ColumnId, order: "DESCENDING" }],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [filter, group, sort]));
-    expect(result.rows).toHaveLength(2);
-    expect(result.rows[0]!.text("dept" as ColumnId)).toBe("Engineering");
-    expect(result.rows[0]!.number("total" as ColumnId)).toBe(500);
-    expect(result.rows[1]!.text("dept" as ColumnId)).toBe("Sales");
-    expect(result.rows[1]!.number("total" as ColumnId)).toBe(250);
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.dataset.rows[0]!.text("dept" as ColumnId)).toBe("Engineering");
+    expect(result.dataset.rows[0]!.number("total" as ColumnId)).toBe(500);
+    expect(result.dataset.rows[1]!.text("dept" as ColumnId)).toBe("Sales");
+    expect(result.dataset.rows[1]!.number("total" as ColumnId)).toBe(250);
+    expect(result.totalRows).toBe(2);
   });
 
   it("TIME_FRAME filter with explicit referenceDate — deterministic", () => {
@@ -222,7 +228,8 @@ describe("DataSetManager — lookup pipeline", () => {
       createLookup(SALES_ID, [filter]),
       { referenceDate: refDate },
     );
-    expect(result.rows).toHaveLength(4);
+    expect(result.dataset.rows).toHaveLength(4);
+    expect(result.totalRows).toBe(4);
   });
 });
 
@@ -235,7 +242,8 @@ describe("DataSetManager — pagination", () => {
 
   it("no options returns all rows", () => {
     const result = setupManager().lookup(createLookup(SALES_ID, []));
-    expect(result.rows).toHaveLength(5);
+    expect(result.dataset.rows).toHaveLength(5);
+    expect(result.totalRows).toBe(5);
   });
 
   it("explicit defaults return all rows", () => {
@@ -243,7 +251,8 @@ describe("DataSetManager — pagination", () => {
       createLookup(SALES_ID, []),
       { rowOffset: 0, rowCount: -1 },
     );
-    expect(result.rows).toHaveLength(5);
+    expect(result.dataset.rows).toHaveLength(5);
+    expect(result.totalRows).toBe(5);
   });
 
   it("rowOffset + rowCount slices correctly", () => {
@@ -251,9 +260,10 @@ describe("DataSetManager — pagination", () => {
       createLookup(SALES_ID, []),
       { rowOffset: 1, rowCount: 2 },
     );
-    expect(result.rows).toHaveLength(2);
-    expect(result.rows[0]!.number("revenue" as ColumnId)).toBe(200);
-    expect(result.rows[1]!.number("revenue" as ColumnId)).toBe(150);
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.dataset.rows[0]!.number("revenue" as ColumnId)).toBe(200);
+    expect(result.dataset.rows[1]!.number("revenue" as ColumnId)).toBe(150);
+    expect(result.totalRows).toBe(5); // totalRows is before pagination
   });
 
   it("rowCount: 0 returns zero rows", () => {
@@ -261,7 +271,8 @@ describe("DataSetManager — pagination", () => {
       createLookup(SALES_ID, []),
       { rowOffset: 0, rowCount: 0 },
     );
-    expect(result.rows).toHaveLength(0);
+    expect(result.dataset.rows).toHaveLength(0);
+    expect(result.totalRows).toBe(5); // totalRows is before pagination
   });
 
   it("rowOffset beyond dataset length returns zero rows", () => {
@@ -269,7 +280,8 @@ describe("DataSetManager — pagination", () => {
       createLookup(SALES_ID, []),
       { rowOffset: 100, rowCount: 10 },
     );
-    expect(result.rows).toHaveLength(0);
+    expect(result.dataset.rows).toHaveLength(0);
+    expect(result.totalRows).toBe(5); // totalRows is before pagination
   });
 
   it("rowCount: -1 with offset returns all rows from offset", () => {
@@ -277,7 +289,8 @@ describe("DataSetManager — pagination", () => {
       createLookup(SALES_ID, []),
       { rowOffset: 3, rowCount: -1 },
     );
-    expect(result.rows).toHaveLength(2);
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.totalRows).toBe(5); // totalRows is before pagination
   });
 
   it("pagination applies after ops", () => {
@@ -290,9 +303,10 @@ describe("DataSetManager — pagination", () => {
       createLookup(SALES_ID, [sort]),
       { rowOffset: 0, rowCount: 2 },
     );
-    expect(result.rows).toHaveLength(2);
-    expect(result.rows[0]!.number("revenue" as ColumnId)).toBe(50);
-    expect(result.rows[1]!.number("revenue" as ColumnId)).toBe(100);
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.dataset.rows[0]!.number("revenue" as ColumnId)).toBe(50);
+    expect(result.dataset.rows[1]!.number("revenue" as ColumnId)).toBe(100);
+    expect(result.totalRows).toBe(5); // totalRows is after ops but before pagination
   });
 });
 

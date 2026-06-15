@@ -11,13 +11,18 @@ export interface LookupOptions {
   readonly referenceDate?: Date;
 }
 
+export interface LookupResult {
+  readonly dataset: TypedDataSet;
+  readonly totalRows: number;
+}
+
 export interface DataSetManager {
   register(id: DataSetId, dataset: TypedDataSet): void;
   get(id: DataSetId): TypedDataSet | undefined;
   remove(id: DataSetId): boolean;
   has(id: DataSetId): boolean;
   accumulate(id: DataSetId, dataset: TypedDataSet, maxRows?: number): void;
-  lookup(query: DataSetLookup, options?: LookupOptions): TypedDataSet;
+  lookup(query: DataSetLookup, options?: LookupOptions): LookupResult;
 }
 
 function resolveOps(
@@ -109,7 +114,7 @@ class DataSetManagerImpl implements DataSetManager {
     this.datasets.set(id, { columns: dataset.columns, rows });
   }
 
-  lookup(query: DataSetLookup, options?: LookupOptions): TypedDataSet {
+  lookup(query: DataSetLookup, options?: LookupOptions): LookupResult {
     const offset = options?.rowOffset ?? 0;
     if (offset < 0) {
       throw new DataSetError("INVALID_OPERATION", `rowOffset cannot be negative: ${offset}`);
@@ -123,7 +128,9 @@ class DataSetManagerImpl implements DataSetManager {
     const resolvedOps = resolveOps(query.operations, dataset.columns);
     const opsOptions = options?.referenceDate !== undefined ? { referenceDate: options.referenceDate } : undefined;
     const result = applyOps(dataset, resolvedOps, opsOptions);
-    return paginate(result, offset, options?.rowCount ?? -1);
+    const totalRows = result.rows.length;
+    const paginated = paginate(result, offset, options?.rowCount ?? -1);
+    return { dataset: paginated, totalRows };
   }
 }
 
