@@ -272,6 +272,7 @@ function wireAccordion(
   slotNames.forEach((name) => {
     const panel = panels.get(name);
     if (panel) {
+      panel.style.display = "";
       const header = doc.createElement("button");
       header.dataset.accordionHeader = "";
       header.textContent = name;
