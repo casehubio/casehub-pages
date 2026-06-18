@@ -1,5 +1,6 @@
 import type { Component } from "@casehub/component/dist/model/types.js";
 import type { PagePathMap } from "./page-paths.js";
+import { activateSlot } from "@casehub/component/dist/renderer/activate-slot.js";
 
 export type PageIndex = Map<string, Component>;
 export type ActiveSlots = Map<string, string>;
@@ -81,4 +82,78 @@ function walkActive(
       walkActive(child, activeSlots, segments);
     }
   }
+}
+
+export function walkNavigate(
+  root: Component,
+  segments: string[],
+  target: HTMLElement,
+  lazyPageResolutions: Map<Component, Component>,
+): string {
+  const reached: string[] = [];
+  let currentNodes: readonly Component[] = root.slots
+    ? Object.values(root.slots).flat()
+    : [];
+
+  for (const segment of segments) {
+    const container = findInteractiveWithSlot(currentNodes, segment, lazyPageResolutions);
+    if (!container) break;
+
+    const domEl = target.querySelector<HTMLElement>(
+      `[data-component-id="${container.id}"]`,
+    );
+    if (!domEl || !activateSlot(domEl, segment)) break;
+
+    reached.push(segment);
+
+    const slotChildren = container.slots![segment]!;
+    currentNodes = descendIntoChildren(slotChildren, lazyPageResolutions);
+  }
+
+  return reached.join("/");
+}
+
+function findInteractiveWithSlot(
+  nodes: readonly Component[],
+  slotName: string,
+  lazyResolutions: Map<Component, Component>,
+): Component | undefined {
+  for (const node of nodes) {
+    if (INTERACTIVE_TYPES.has(node.type) && node.id && node.slots?.[slotName]) {
+      return node;
+    }
+
+    const resolved = node.type === "lazy-page" ? lazyResolutions.get(node) : undefined;
+    const children = resolved
+      ? [
+          ...(resolved.slots ? Object.values(resolved.slots).flat() : []),
+          ...(resolved.items ? resolved.items.map((i) => i.component) : []),
+        ]
+      : [
+          ...(node.slots ? Object.values(node.slots).flat() : []),
+          ...(node.items ? node.items.map((i) => i.component) : []),
+        ];
+
+    if (children.length > 0) {
+      const found = findInteractiveWithSlot(children, slotName, lazyResolutions);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
+function descendIntoChildren(
+  slotChildren: readonly Component[],
+  lazyResolutions: Map<Component, Component>,
+): readonly Component[] {
+  const result: Component[] = [];
+  for (const child of slotChildren) {
+    const resolved = child.type === "lazy-page" ? lazyResolutions.get(child) : undefined;
+    if (resolved) {
+      result.push(...(resolved.slots ? Object.values(resolved.slots).flat() : []));
+    } else {
+      result.push(child);
+    }
+  }
+  return result;
 }

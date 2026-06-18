@@ -1,7 +1,6 @@
 import type { Component, PermissionContext } from "@casehub/component/dist/model/types.js";
 import { ALLOW_ALL } from "@casehub/component/dist/model/types.js";
 import { renderComponent } from "@casehub/component/dist/renderer/render.js";
-import { activateSlot } from "@casehub/component/dist/renderer/activate-slot.js";
 import type { DataSetId, ColumnId } from "@casehub/data/dist/dataset/types.js";
 import type { DataProviderConfig, ExternalDataSetDef } from "@casehub/data/dist/dataset/external/types.js";
 import type { DataSetLookup } from "@casehub/data/dist/dataset/lookup.js";
@@ -14,7 +13,7 @@ import { load as yamlLoad } from "js-yaml";
 import { cellToRaw } from "@casehub/viz/dist/base/cell-extract.js";
 import { buildPagePathMap } from "./page-paths.js";
 import { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
-import { buildPageIndex, computeCurrentPage } from "./navigation.js";
+import { buildPageIndex, computeCurrentPage, walkNavigate } from "./navigation.js";
 import type { ActiveSlots } from "./navigation.js";
 import { createActivationCallback } from "./activation.js";
 import type { ComponentRegistry } from "./registry.js";
@@ -51,6 +50,7 @@ export async function loadSite(
   const activeSlots: ActiveSlots = new Map();
   const filterState = createFilterState();
   const abortController = new AbortController();
+  const lazyPageResolutions: Map<Component, Component> = new Map();
   const manager = createDataSetManager();
 
   const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState);
@@ -231,24 +231,7 @@ export async function loadSite(
     navigate(path: string): void {
       _navigating = true;
       const segments = path.split("/").filter(Boolean);
-      let reached = "";
-
-      for (const segment of segments) {
-        const containers = target.querySelectorAll<HTMLElement>(
-          "[data-component-type='tabs'], [data-component-type='pills'], [data-component-type='sidebar'], [data-component-type='accordion'], [data-component-type='carousel'], [data-component-type='stack']",
-        );
-        let found = false;
-        for (const container of containers) {
-          if (activateSlot(container, segment)) {
-            reached = reached ? `${reached}/${segment}` : segment;
-            found = true;
-            break;
-          }
-        }
-        if (!found) break;
-      }
-
-      currentPage = reached;
+      currentPage = walkNavigate(root, segments, target, lazyPageResolutions);
       _navigating = false;
 
       if (typeof history !== "undefined") {
