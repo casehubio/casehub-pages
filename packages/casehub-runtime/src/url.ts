@@ -1,7 +1,23 @@
 import type { DeepLink } from "@casehub/ui/dist/model/page-types.js";
 
+function encodePagePath(page: string): string {
+  return page
+    .split("/")
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/");
+}
+
+function decodePagePath(encoded: string): string {
+  return encoded
+    .split("/")
+    .filter(Boolean)
+    .map(decodeURIComponent)
+    .join("/");
+}
+
 export function serializeToUrl(link: DeepLink): string {
-  let url = `#/page/${link.page}`;
+  let url = `#/page/${encodePagePath(link.page)}`;
 
   if (link.filters) {
     const entries = Object.entries(link.filters).filter(([, v]) => v.length > 0);
@@ -23,7 +39,8 @@ export function parseFromUrl(hash: string): DeepLink {
 
   const withoutPrefix = hash.substring("#/page/".length);
   const qIndex = withoutPrefix.indexOf("?");
-  const page = qIndex === -1 ? withoutPrefix : withoutPrefix.substring(0, qIndex);
+  const rawPage = qIndex === -1 ? withoutPrefix : withoutPrefix.substring(0, qIndex);
+  const page = decodePagePath(rawPage);
 
   let filters: Record<string, readonly string[]> | undefined;
 

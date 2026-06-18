@@ -74,11 +74,56 @@ describe("parseFromUrl", () => {
   });
 });
 
+describe("serializeToUrl — encoding", () => {
+  it("encodes spaces in page name", () => {
+    const link: DeepLink = { page: "Q1 Report" };
+    expect(serializeToUrl(link)).toBe("#/page/Q1%20Report");
+  });
+
+  it("encodes special characters in nested page path", () => {
+    const link: DeepLink = { page: "R&D/Q1 Report" };
+    expect(serializeToUrl(link)).toBe("#/page/R%26D/Q1%20Report");
+  });
+
+  it("encodes hash in page name", () => {
+    const link: DeepLink = { page: "Section#2" };
+    expect(serializeToUrl(link)).toBe("#/page/Section%232");
+  });
+
+  it("encodes question mark in page name", () => {
+    const link: DeepLink = { page: "FAQ?" };
+    expect(serializeToUrl(link)).toBe("#/page/FAQ%3F");
+  });
+});
+
+describe("parseFromUrl — decoding", () => {
+  it("decodes encoded page segments", () => {
+    const link = parseFromUrl("#/page/Q1%20Report");
+    expect(link.page).toBe("Q1 Report");
+  });
+
+  it("decodes nested encoded page path", () => {
+    const link = parseFromUrl("#/page/R%26D/Q1%20Report");
+    expect(link.page).toBe("R&D/Q1 Report");
+  });
+});
+
 describe("round-trip", () => {
   it("serialize then parse produces same DeepLink", () => {
     const original: DeepLink = {
       page: "Sales/Revenue",
       filters: { region: ["North", "South"], year: ["2024"] },
+    };
+    const url = serializeToUrl(original);
+    const parsed = parseFromUrl(url);
+    expect(parsed.page).toBe(original.page);
+    expect(parsed.filters).toEqual(original.filters);
+  });
+
+  it("round-trips page names with special characters", () => {
+    const original: DeepLink = {
+      page: "R&D/Q1 Report",
+      filters: { "col name": ["val?1", "val#2"] },
     };
     const url = serializeToUrl(original);
     const parsed = parseFromUrl(url);
