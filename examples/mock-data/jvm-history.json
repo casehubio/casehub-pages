@@ -1,0 +1,3602 @@
+[
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 65577071.94,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 151750752.87,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7750293.18,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 79464214.76,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 48310597.0,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15104,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.32,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.06,
+    "timestamp": 1718546000000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 48745518.99,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 185374870.17,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5265359.7,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 78976753.01,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47098382.13,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 54,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14725,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.33,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.11,
+    "timestamp": 1718546002000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 74772012.83,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 203116515.7,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 6596593.16,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 83452287.96,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 41890198.78,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 41,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 53,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14604,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.19,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.07,
+    "timestamp": 1718546004000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 73899774.65,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 192260822.2,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 13071282.73,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 89594635.73,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 45507193.28,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 44,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15065,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.27,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.18,
+    "timestamp": 1718546006000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 75418069.92,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 175314451.83,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 6922885.9,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 76391102.98,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47257686.46,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14738,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.5,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.13,
+    "timestamp": 1718546008000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 58136412.09,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 208387729.86,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 6626540.97,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 82105414.0,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47382452.44,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15123,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.4,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.16,
+    "timestamp": 1718546010000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 49792437.01,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 182358214.83,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7699478.27,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 93507823.59,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47634267.42,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 41,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 53,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14557,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.24,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.06,
+    "timestamp": 1718546012000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 52618121.92,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 168741861.32,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7109828.44,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 93858194.29,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 50269146.77,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 43,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15171,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.35,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.23,
+    "timestamp": 1718546014000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 65714074.81,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 160001011.33,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 6396303.2,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 89899779.64,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 45545682.06,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 47,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 54,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15097,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.31,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.09,
+    "timestamp": 1718546016000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 79901504.26,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 185666840.56,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5909094.12,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 75942327.51,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 39535087.82,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 50,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15196,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.32,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.06,
+    "timestamp": 1718546018000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 55264771.46,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 219728496.62,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 10291143.45,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 94421567.55,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 50050915.83,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 38,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15198,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.5,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.2,
+    "timestamp": 1718546020000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 70743949.31,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 173812283.11,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7935001.29,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 78163155.09,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 38045434.43,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 50,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15019,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.52,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.22,
+    "timestamp": 1718546022000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 51937791.66,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 194726464.64,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 11089702.11,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 78056785.37,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 48675151.2,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15113,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.28,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.05,
+    "timestamp": 1718546024000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 77163944.65,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 211510531.45,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 13316655.29,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 81150282.51,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 38810952.33,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 47,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14587,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.44,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.21,
+    "timestamp": 1718546026000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 79119379.75,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 187289431.87,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 6257605.12,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 88195016.45,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 51255881.52,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 40,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 52,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15040,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.5,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.13,
+    "timestamp": 1718546028000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 48471928.22,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 187750726.21,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 12299310.69,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 79023021.27,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 42364028.08,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 53,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14948,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.51,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.14,
+    "timestamp": 1718546030000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 49916224.55,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 154481812.74,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5210342.6,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 86078430.45,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 46238161.6,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 38,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15146,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.17,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.06,
+    "timestamp": 1718546032000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 41256518.32,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 173129994.24,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 10141561.2,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 80569545.28,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44795802.99,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 50,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15084,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.38,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.1,
+    "timestamp": 1718546034000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 58918917.72,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 178494197.3,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5943257.96,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 88179654.99,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 42960165.93,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 44,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 55,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14555,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.42,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.25,
+    "timestamp": 1718546036000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 43936714.85,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 178183489.75,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 8393026.05,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 92233450.73,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 41481188.67,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 41,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 55,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14643,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.32,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.11,
+    "timestamp": 1718546038000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 49992257.92,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 214628591.95,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 9431307.45,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 92226982.1,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 45704554.37,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 38,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14595,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.52,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.22,
+    "timestamp": 1718546040000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 46652444.42,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 183994878.78,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7137472.99,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 83020805.85,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 38820895.6,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 44,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14899,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.26,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.21,
+    "timestamp": 1718546042000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 58200334.69,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 179610524.02,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 14573176.41,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 94908453.79,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 45780756.53,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 45,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 50,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14694,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.27,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.24,
+    "timestamp": 1718546044000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 63167211.63,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 187953664.1,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 12479755.6,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 76143305.46,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 46178486.32,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 50,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14558,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.53,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.07,
+    "timestamp": 1718546046000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 47432998.44,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 191652457.45,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 11752125.54,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 79704077.9,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 39678412.6,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 47,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15092,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.39,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.17,
+    "timestamp": 1718546048000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 56768996.61,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 190857060.25,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 10227827.16,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 93694125.15,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 40859628.79,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 43,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14771,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.31,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.18,
+    "timestamp": 1718546050000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 51999883.19,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 172132403.74,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 12518644.92,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 76450862.29,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44415997.32,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 47,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14575,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.37,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.15,
+    "timestamp": 1718546052000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 45298262.81,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 174430618.45,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5687913.14,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 79885688.33,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 41989823.48,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 45,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 52,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15126,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.54,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.21,
+    "timestamp": 1718546054000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 61157627.7,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 196750424.26,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 10546022.82,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 93635120.79,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 39450211.03,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 40,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 52,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14618,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.51,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.2,
+    "timestamp": 1718546056000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 46217916.39,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 169722939.0,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7106296.55,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 81857605.76,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47624959.8,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 55,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14757,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.51,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.22,
+    "timestamp": 1718546058000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 43691938.71,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 179650304.08,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7766802.24,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 75070913.78,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 48795669.12,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 52,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14665,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.45,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.16,
+    "timestamp": 1718546060000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 57107476.76,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 150676878.97,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5752438.6,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 92662127.87,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 50655000.0,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14878,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.38,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.08,
+    "timestamp": 1718546062000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 45097820.77,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 171578084.5,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 13989814.89,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 90922446.1,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 50049836.15,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 43,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15198,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.25,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.07,
+    "timestamp": 1718546064000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 71204649.67,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 211889429.1,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 9063773.9,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 87413230.2,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 40163746.74,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 41,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 50,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14681,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.5,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.05,
+    "timestamp": 1718546066000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 69462578.87,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 173252982.76,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 14308158.86,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 91044702.78,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 50096896.4,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 41,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 52,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14663,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.46,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.07,
+    "timestamp": 1718546068000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 74886671.32,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 210101527.59,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7224337.18,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 91331732.11,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44444245.29,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14728,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.16,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.09,
+    "timestamp": 1718546070000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 53130478.05,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 210504705.94,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 14668891.04,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 80582499.85,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 46980744.34,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 44,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 53,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14528,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.2,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.24,
+    "timestamp": 1718546072000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 47142712.65,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 217377402.1,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7654663.63,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 77168050.94,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44083892.62,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 43,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 54,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15120,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.54,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.07,
+    "timestamp": 1718546074000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 75980189.32,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 163305514.22,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5443865.34,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 83721150.31,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 45278884.88,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14872,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.32,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.24,
+    "timestamp": 1718546076000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 76830834.25,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 193620878.7,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 11633874.76,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 77492506.31,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 50600655.69,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 52,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15182,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.31,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.13,
+    "timestamp": 1718546078000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 51826208.1,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 158910145.93,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 9204463.34,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 93807273.41,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47482451.23,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 40,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 52,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14915,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.37,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.05,
+    "timestamp": 1718546080000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 51476548.67,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 180092170.5,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 10799847.81,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 88094112.47,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44509834.66,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 45,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15023,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.34,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.23,
+    "timestamp": 1718546082000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 71840990.41,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 161878397.73,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5847955.37,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 85309040.2,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 46861171.98,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 43,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14740,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.42,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.09,
+    "timestamp": 1718546084000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 47965197.31,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 151709777.14,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7448425.44,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 84502726.88,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 49896327.72,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 39,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 55,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14924,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.5,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.17,
+    "timestamp": 1718546086000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 68733836.62,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 176878492.72,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 8996528.63,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 77951426.9,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47626713.78,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 39,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 54,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14724,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.22,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.24,
+    "timestamp": 1718546088000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 60718310.02,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 153515286.96,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7491982.8,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 91966726.95,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44390465.56,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 45,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 53,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14953,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.4,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.19,
+    "timestamp": 1718546090000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 60191126.59,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 208139841.88,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 10478719.51,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 92944162.06,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 48411176.19,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 45,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 55,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14765,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.45,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.22,
+    "timestamp": 1718546092000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 51092454.13,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 204437238.47,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 9845970.17,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 79784917.28,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44158216.31,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14778,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.28,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.23,
+    "timestamp": 1718546094000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 43223106.31,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 160558146.06,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 8830352.92,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 78056105.33,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 40995340.28,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 44,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 54,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14838,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.37,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.13,
+    "timestamp": 1718546096000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 48273375.58,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 179410046.24,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 14048384.78,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 86681588.28,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47737321.81,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 47,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 54,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14988,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.15,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.12,
+    "timestamp": 1718546098000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 70139005.0,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 209741356.54,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 14534303.38,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 83380425.65,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 48465219.37,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 46,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14999,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.24,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.14,
+    "timestamp": 1718546100000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 41160992.8,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 173529068.06,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 11791418.85,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 83086333.38,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 40310626.24,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 45,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 50,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15137,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.36,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.23,
+    "timestamp": 1718546102000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 63675711.03,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 196409982.98,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 5839474.62,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 83572255.39,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 50135918.98,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 40,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14766,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.3,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.09,
+    "timestamp": 1718546104000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 53073832.2,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 203286079.55,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 8791262.16,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 90040196.47,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 49646939.99,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14981,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.16,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.16,
+    "timestamp": 1718546106000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 79996313.14,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 174497224.06,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 11501440.93,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 90624660.99,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 47124565.17,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 38,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 51,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14704,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.49,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.17,
+    "timestamp": 1718546108000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 49541797.68,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 183149274.27,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 6143894.46,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 93955140.44,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 44510475.77,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 53,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14671,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.39,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.24,
+    "timestamp": 1718546110000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 68734289.14,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 204445432.03,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 6637658.1,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 81220778.39,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 46101586.26,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 54,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14906,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.53,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.09,
+    "timestamp": 1718546112000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 63683914.45,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 208140014.36,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 7428493.81,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 88943860.05,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 42222157.6,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 48,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 15079,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.46,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.12,
+    "timestamp": 1718546114000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 57135120.53,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 175939961.34,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 10059607.9,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 81824623.5,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 49894058.78,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 45,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 49,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14943,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.53,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.18,
+    "timestamp": 1718546116000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Eden Space",
+    "value": 73148292.44,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Old Gen",
+    "value": 199511605.06,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "heap, G1 Survivor Space",
+    "value": 9354871.45,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, Metaspace",
+    "value": 89675906.08,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "jvm_memory_used_bytes",
+    "labels": "nonheap, CodeCache",
+    "value": 51516632.24,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "jvm_threads_live_threads",
+    "labels": "",
+    "value": 42,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "jvm_threads_peak_threads",
+    "labels": "",
+    "value": 55,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "jvm_classes_loaded_classes",
+    "labels": "",
+    "value": 14976,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "system_cpu_usage",
+    "labels": "",
+    "value": 0.32,
+    "timestamp": 1718546118000
+  },
+  {
+    "metric": "process_cpu_usage",
+    "labels": "",
+    "value": 0.2,
+    "timestamp": 1718546118000
+  }
+]

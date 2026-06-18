@@ -1,14 +1,15 @@
 properties:
   metricsUrl: data/quarkus/metrics
+  historyUrl: data/quarkus/history.json
 global:
   displayer:
     chart:
       resizable: true
-    refresh:
-      interval: 2
     lookup:
       uuid: metrics
 datasets:
+  - uuid: history
+    url: ${historyUrl}
   - uuid: metrics
     url: ${metricsUrl}
     accumulate: true
@@ -16,7 +17,7 @@ datasets:
     refreshTime: 2second
     expression: >-
       $map($, function($v){
-          [$v[0], $v[1], $v[2] = 'NaN' ? -1 : $v[2], $now() ~> $toMillis()]           
+          [$v[0], $v[1], $v[2] = 'NaN' ? -1 : $v[2], $now() ~> $toMillis()]
       })
     columns:
       - id: metric
@@ -26,7 +27,7 @@ datasets:
       - id: value
         type: number
       - id: register
-        type: label
+        type: number
 
 pages:
   - properties:
@@ -53,7 +54,10 @@ pages:
                   type: timeseries
                   general:
                     title: Heap Memory Usage
+                  chart:
+                    height: 300
                   lookup:
+                    uuid: history
                     filter:
                       - column: metric
                         function: EQUALS_TO
@@ -62,39 +66,34 @@ pages:
                       - column: labels
                         function: LIKE_TO
                         args:
-                          - '%area="heap"%'
+                          - '%heap%'
                     group:
-                      - columnGroup:
-                          source: register
-                        functions:
-                          - source: metric
-                          - source: register
+                      - functions:
+                          - source: labels
+                          - source: timestamp
                           - source: value
-                            function: SUM
           - span: 6
             components:
               - displayer:
                   type: timeseries
                   general:
                     title: Live Threads
+                  chart:
+                    height: 300
                   lookup:
-                    uuid: metrics
+                    uuid: history
                     filter:
                       - column: metric
                         function: EQUALS_TO
                         args:
-                          - jvm_threads_states_threads
+                          - jvm_threads_live_threads
                     group:
-                      - columnGroup:
-                          source: register
-                        functions:
+                      - functions:
                           - source: metric
-                            column: Heap Memory Usage
-                          - source: register
+                          - source: timestamp
                           - source: value
-                            function: SUM
       - properties:
-          margin-top: 50px
+          margin-top: 20px
         columns:
           - span: 6
             components:
@@ -102,37 +101,37 @@ pages:
                   type: timeseries
                   general:
                     title: Loaded Classes
+                  chart:
+                    height: 300
                   lookup:
+                    uuid: history
                     filter:
                       - column: metric
                         function: EQUALS_TO
                         args:
                           - jvm_classes_loaded_classes
                     group:
-                      - columnGroup:
-                          source: register
-                        functions:
+                      - functions:
                           - source: metric
-                          - source: register
+                          - source: timestamp
                           - source: value
-                            function: SUM
           - span: 6
             components:
               - displayer:
                   type: timeseries
                   general:
-                    text: CPU USAGE
+                    title: CPU Usage
+                  chart:
+                    height: 300
                   lookup:
+                    uuid: history
                     filter:
                       - column: metric
                         function: EQUALS_TO
                         args:
                           - system_cpu_usage
                     group:
-                      - columnGroup:
-                          source: register
-                        functions:
+                      - functions:
                           - source: metric
-                          - source: register
+                          - source: timestamp
                           - source: value
-                            function: SUM

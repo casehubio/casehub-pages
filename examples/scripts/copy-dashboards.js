@@ -54,6 +54,7 @@ if (fs.existsSync(mockDataDir)) {
 // Copy mock data to expected endpoint paths for dashboards that reference local APIs
 const mockEndpoints = {
   'mock-data/quarkus-metrics.txt': 'data/quarkus/metrics',
+  'mock-data/jvm-history.json': 'data/quarkus/history.json',
   'mock-data/jupyterhub-metrics.txt': 'dashboards/jupyterhub/metrics/metrics',
   'mock-data/ansible-metrics.txt': 'data/metrics',
   'mock-data/triton-metrics.txt': 'data/triton/metrics',
