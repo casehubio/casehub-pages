@@ -219,7 +219,7 @@ Webpack bundle. Host applications include `@casehub/runtime` as an npm dependenc
 | #18 | Event handler integration tests | 🔲 open |
 | #23 | Domain-specific example dashboards | 🔲 open |
 | #24 | Epic: Move to casehubio org | 🔲 open |
-| #29 | Gallery URL configuration form | 🔲 open |
+| #29 | Gallery URL configuration form | ✅ closed |
 | #34 | Type-safe TypeScript audit | 🔲 open |
 | #35 | Prometheus API response extraction | ✅ closed |
 
