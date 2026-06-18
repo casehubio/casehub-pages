@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { parseMetrics } from "./metrics-parser.js";
 
 describe("parseMetrics", () => {
-  it("parses simple metric line — preserves raw label string", () => {
+  it("parses simple metric line — extracts label values", () => {
     const result = parseMetrics('up{instance="localhost:9090"} 1');
-    expect(result).toEqual([["up", 'instance="localhost:9090"', "1"]]);
+    expect(result).toEqual([["up", "localhost:9090", "1"]]);
   });
 
   it("parses metric without labels", () => {
@@ -39,13 +39,13 @@ describe("parseMetrics", () => {
     expect(result).toHaveLength(2);
   });
 
-  it("preserves raw label format with multiple labels", () => {
+  it("extracts values from multiple labels", () => {
     const result = parseMetrics('http_requests{method="GET",code="200"} 42');
-    expect(result[0]![1]).toBe('method="GET",code="200"');
+    expect(result[0]![1]).toBe("GET, 200");
   });
 
-  it("preserves Micrometer-style labels for LIKE_TO filtering", () => {
+  it("extracts Micrometer-style labels with spaces", () => {
     const result = parseMetrics('jvm_memory_used_bytes{area="heap",id="G1 Eden Space",} 52428800');
-    expect(result[0]![1]).toBe('area="heap",id="G1 Eden Space",');
+    expect(result[0]![1]).toBe("heap, G1 Eden Space");
   });
 });

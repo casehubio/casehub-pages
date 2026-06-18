@@ -34,7 +34,8 @@ export function parseMetrics(input: string): string[][] {
     }
 
     const value = rest === "NaN" ? "-1" : rest;
-    results.push([name, labels, value]);
+    const cleanLabels = labels.replace(/[a-zA-Z_]+="([^"]*)"/g, "$1").replace(/,+$/, "").replace(/,/g, ", ");
+    results.push([name, cleanLabels, value]);
   }
 
   return results;
