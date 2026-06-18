@@ -1,6 +1,12 @@
 # HELP system_cpu_usage Recent CPU usage for the whole system
 # TYPE system_cpu_usage gauge
 system_cpu_usage 0.342
+# HELP system_cpu_count Available processors
+# TYPE system_cpu_count gauge
+system_cpu_count 8
+# HELP system_load_average_1m System load average 1 minute
+# TYPE system_load_average_1m gauge
+system_load_average_1m 2.18
 # HELP process_cpu_usage Recent CPU usage for the JVM process
 # TYPE process_cpu_usage gauge
 process_cpu_usage 0.128
@@ -13,9 +19,12 @@ process_files_max_files 1048576
 # HELP process_uptime_seconds JVM process uptime
 # TYPE process_uptime_seconds gauge
 process_uptime_seconds 86472.5
+# HELP process_start_time_seconds Start time of the JVM process
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1718460000
 # HELP jvm_threads_peak_threads Peak live thread count
 # TYPE jvm_threads_peak_threads gauge
-jvm_threads_peak_threads 48
+jvm_threads_peak_threads 52
 # HELP jvm_threads_live_threads Current live thread count
 # TYPE jvm_threads_live_threads gauge
 jvm_threads_live_threads 42
@@ -24,20 +33,20 @@ jvm_threads_live_threads 42
 jvm_threads_daemon_threads 28
 # HELP jvm_threads_states_threads Thread states
 # TYPE jvm_threads_states_threads gauge
-jvm_threads_states_threads{state="runnable",} 12
-jvm_threads_states_threads{state="blocked",} 0
-jvm_threads_states_threads{state="waiting",} 18
-jvm_threads_states_threads{state="timed-waiting",} 8
+jvm_threads_states_threads{state="runnable",} 14
+jvm_threads_states_threads{state="blocked",} 1
+jvm_threads_states_threads{state="waiting",} 16
+jvm_threads_states_threads{state="timed-waiting",} 9
 jvm_threads_states_threads{state="new",} 0
-jvm_threads_states_threads{state="terminated",} 0
+jvm_threads_states_threads{state="terminated",} 2
 # HELP jvm_memory_used_bytes JVM memory used
 # TYPE jvm_memory_used_bytes gauge
-jvm_memory_used_bytes{area="heap",id="G1 Eden Space",} 52428800
-jvm_memory_used_bytes{area="heap",id="G1 Old Gen",} 167772160
-jvm_memory_used_bytes{area="heap",id="G1 Survivor Space",} 8388608
-jvm_memory_used_bytes{area="nonheap",id="Metaspace",} 78643200
-jvm_memory_used_bytes{area="nonheap",id="CodeCache",} 41943040
-jvm_memory_used_bytes{area="nonheap",id="Compressed Class Space",} 10485760
+jvm_memory_used_bytes{area="heap",id="G1 Eden Space",} 67108864
+jvm_memory_used_bytes{area="heap",id="G1 Old Gen",} 201326592
+jvm_memory_used_bytes{area="heap",id="G1 Survivor Space",} 12582912
+jvm_memory_used_bytes{area="nonheap",id="Metaspace",} 89128960
+jvm_memory_used_bytes{area="nonheap",id="CodeCache",} 48234496
+jvm_memory_used_bytes{area="nonheap",id="Compressed Class Space",} 11534336
 # HELP jvm_memory_max_bytes JVM memory max
 # TYPE jvm_memory_max_bytes gauge
 jvm_memory_max_bytes{area="heap",id="G1 Eden Space",} 268435456
@@ -46,29 +55,99 @@ jvm_memory_max_bytes{area="heap",id="G1 Survivor Space",} 33554432
 jvm_memory_max_bytes{area="nonheap",id="Metaspace",} -1
 jvm_memory_max_bytes{area="nonheap",id="CodeCache",} 251658240
 jvm_memory_max_bytes{area="nonheap",id="Compressed Class Space",} 109051904
-# HELP jvm_gc_pause_seconds GC pause duration
-# TYPE jvm_gc_pause_seconds summary
-jvm_gc_pause_seconds_count{action="end of minor GC",cause="G1 Evacuation Pause",} 127
-jvm_gc_pause_seconds_sum{action="end of minor GC",cause="G1 Evacuation Pause",} 3.842
-jvm_gc_pause_seconds_count{action="end of major GC",cause="G1 Humongous Allocation",} 3
-jvm_gc_pause_seconds_sum{action="end of major GC",cause="G1 Humongous Allocation",} 0.956
 # HELP jvm_memory_committed_bytes JVM memory committed
 # TYPE jvm_memory_committed_bytes gauge
 jvm_memory_committed_bytes{area="heap",id="G1 Eden Space",} 134217728
 jvm_memory_committed_bytes{area="heap",id="G1 Old Gen",} 268435456
 jvm_memory_committed_bytes{area="heap",id="G1 Survivor Space",} 16777216
-jvm_memory_committed_bytes{area="nonheap",id="Metaspace",} 83886080
+jvm_memory_committed_bytes{area="nonheap",id="Metaspace",} 92274688
 jvm_memory_committed_bytes{area="nonheap",id="CodeCache",} 50331648
 jvm_memory_committed_bytes{area="nonheap",id="Compressed Class Space",} 14680064
+# HELP jvm_buffer_count_buffers Buffer pool count
+# TYPE jvm_buffer_count_buffers gauge
+jvm_buffer_count_buffers{id="direct",} 24
+jvm_buffer_count_buffers{id="mapped",} 0
+jvm_buffer_count_buffers{id="mapped - 'non-volatile memory'",} 0
+# HELP jvm_buffer_memory_used_bytes Buffer pool memory used
+# TYPE jvm_buffer_memory_used_bytes gauge
+jvm_buffer_memory_used_bytes{id="direct",} 573440
+jvm_buffer_memory_used_bytes{id="mapped",} 0
+# HELP jvm_buffer_total_capacity_bytes Buffer pool total capacity
+# TYPE jvm_buffer_total_capacity_bytes gauge
+jvm_buffer_total_capacity_bytes{id="direct",} 573440
+jvm_buffer_total_capacity_bytes{id="mapped",} 0
+# HELP jvm_classes_loaded_classes Currently loaded classes
+# TYPE jvm_classes_loaded_classes gauge
+jvm_classes_loaded_classes 14832
+# HELP jvm_classes_unloaded_classes_total Unloaded classes since start
+# TYPE jvm_classes_unloaded_classes_total counter
+jvm_classes_unloaded_classes_total 42
+# HELP jvm_gc_pause_seconds GC pause duration
+# TYPE jvm_gc_pause_seconds summary
+jvm_gc_pause_seconds_count{action="end of minor GC",cause="G1 Evacuation Pause",} 234
+jvm_gc_pause_seconds_sum{action="end of minor GC",cause="G1 Evacuation Pause",} 5.127
+jvm_gc_pause_seconds_count{action="end of minor GC",cause="Metadata GC Threshold",} 8
+jvm_gc_pause_seconds_sum{action="end of minor GC",cause="Metadata GC Threshold",} 0.342
+jvm_gc_pause_seconds_count{action="end of major GC",cause="G1 Humongous Allocation",} 3
+jvm_gc_pause_seconds_sum{action="end of major GC",cause="G1 Humongous Allocation",} 0.956
+# HELP jvm_gc_memory_allocated_bytes_total Allocated bytes in young gen
+# TYPE jvm_gc_memory_allocated_bytes_total counter
+jvm_gc_memory_allocated_bytes_total 8589934592
+# HELP jvm_gc_memory_promoted_bytes_total Promoted bytes to old gen
+# TYPE jvm_gc_memory_promoted_bytes_total counter
+jvm_gc_memory_promoted_bytes_total 536870912
 # HELP http_server_requests_seconds HTTP server request duration
 # TYPE http_server_requests_seconds summary
-http_server_requests_seconds_count{method="GET",uri="/api/users",status="200",} 4521
-http_server_requests_seconds_sum{method="GET",uri="/api/users",status="200",} 12.847
-http_server_requests_seconds_count{method="POST",uri="/api/users",status="201",} 382
-http_server_requests_seconds_sum{method="POST",uri="/api/users",status="201",} 2.194
-http_server_requests_seconds_count{method="GET",uri="/api/health",status="200",} 28934
-http_server_requests_seconds_sum{method="GET",uri="/api/health",status="200",} 8.672
-http_server_requests_seconds_count{method="GET",uri="/api/orders",status="200",} 1876
-http_server_requests_seconds_sum{method="GET",uri="/api/orders",status="200",} 9.432
-http_server_requests_seconds_count{method="GET",uri="/api/users",status="500",} 12
-http_server_requests_seconds_sum{method="GET",uri="/api/users",status="500",} 0.384
+http_server_requests_seconds_count{method="GET",uri="/api/users",status="200",} 12847
+http_server_requests_seconds_sum{method="GET",uri="/api/users",status="200",} 38.541
+http_server_requests_seconds_count{method="GET",uri="/api/users/{id}",status="200",} 8934
+http_server_requests_seconds_sum{method="GET",uri="/api/users/{id}",status="200",} 17.868
+http_server_requests_seconds_count{method="POST",uri="/api/users",status="201",} 1542
+http_server_requests_seconds_sum{method="POST",uri="/api/users",status="201",} 6.168
+http_server_requests_seconds_count{method="PUT",uri="/api/users/{id}",status="200",} 723
+http_server_requests_seconds_sum{method="PUT",uri="/api/users/{id}",status="200",} 3.615
+http_server_requests_seconds_count{method="DELETE",uri="/api/users/{id}",status="204",} 89
+http_server_requests_seconds_sum{method="DELETE",uri="/api/users/{id}",status="204",} 0.267
+http_server_requests_seconds_count{method="GET",uri="/api/orders",status="200",} 6234
+http_server_requests_seconds_sum{method="GET",uri="/api/orders",status="200",} 31.17
+http_server_requests_seconds_count{method="POST",uri="/api/orders",status="201",} 3891
+http_server_requests_seconds_sum{method="POST",uri="/api/orders",status="201",} 23.346
+http_server_requests_seconds_count{method="GET",uri="/api/products",status="200",} 15672
+http_server_requests_seconds_sum{method="GET",uri="/api/products",status="200",} 31.344
+http_server_requests_seconds_count{method="GET",uri="/api/health",status="200",} 43201
+http_server_requests_seconds_sum{method="GET",uri="/api/health",status="200",} 12.96
+http_server_requests_seconds_count{method="GET",uri="/api/health/ready",status="200",} 43201
+http_server_requests_seconds_sum{method="GET",uri="/api/health/ready",status="200",} 8.64
+http_server_requests_seconds_count{method="GET",uri="/api/health/live",status="200",} 43201
+http_server_requests_seconds_sum{method="GET",uri="/api/health/live",status="200",} 4.32
+http_server_requests_seconds_count{method="GET",uri="/api/users",status="500",} 47
+http_server_requests_seconds_sum{method="GET",uri="/api/users",status="500",} 1.504
+http_server_requests_seconds_count{method="POST",uri="/api/orders",status="400",} 234
+http_server_requests_seconds_sum{method="POST",uri="/api/orders",status="400",} 0.468
+http_server_requests_seconds_count{method="GET",uri="/api/products/{id}",status="404",} 156
+http_server_requests_seconds_sum{method="GET",uri="/api/products/{id}",status="404",} 0.312
+# HELP http_server_active_requests Active HTTP requests
+# TYPE http_server_active_requests gauge
+http_server_active_requests{method="GET",} 3
+http_server_active_requests{method="POST",} 1
+# HELP db_pool_active_connections Active database connections
+# TYPE db_pool_active_connections gauge
+db_pool_active_connections{name="default",} 5
+# HELP db_pool_idle_connections Idle database connections
+# TYPE db_pool_idle_connections gauge
+db_pool_idle_connections{name="default",} 15
+# HELP db_pool_max_connections Max database connections
+# TYPE db_pool_max_connections gauge
+db_pool_max_connections{name="default",} 20
+# HELP db_pool_pending_connections Pending connection requests
+# TYPE db_pool_pending_connections gauge
+db_pool_pending_connections{name="default",} 0
+# HELP worker_pool_active Active worker pool threads
+# TYPE worker_pool_active gauge
+worker_pool_active{pool_name="vert.x-worker-thread",pool_type="worker",} 4
+# HELP worker_pool_queue_size Worker pool queue size
+# TYPE worker_pool_queue_size gauge
+worker_pool_queue_size{pool_name="vert.x-worker-thread",pool_type="worker",} 0
+# HELP worker_pool_completed_total Completed tasks
+# TYPE worker_pool_completed_total counter
+worker_pool_completed_total{pool_name="vert.x-worker-thread",pool_type="worker",} 287456
