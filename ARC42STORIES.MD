@@ -216,9 +216,9 @@ Webpack bundle. Host applications include `@casehub/pages-runtime` as an npm dep
 | #17 | Minor runtime improvements | ✅ closed |
 | #18 | Event handler integration tests | 🔲 open |
 | #23 | Domain-specific example dashboards | 🔲 open |
-| #24 | Epic: Move to casehubio org | 🔲 open |
+| #24 | Epic: Move to casehubio org | ✅ closed |
 | #29 | Gallery URL configuration form | ✅ closed |
-| #34 | Type-safe TypeScript audit | 🔲 open |
+| #34 | Type-safe TypeScript audit | ✅ closed |
 | #35 | Prometheus API response extraction | ✅ closed |
 
 ---
