@@ -1,4 +1,4 @@
-# Melviz Component: LLM Prompter
+# CaseHub Pages Component: LLM Prompter
 
 This component will get your data and send to a LLM.
 
