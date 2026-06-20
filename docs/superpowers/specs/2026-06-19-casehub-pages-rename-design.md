@@ -140,6 +140,22 @@ The project's architectural record must reflect the rename. Every section (§1�
 - §2 build references: remove GWT mention from `build:prod`
 - §3 context diagram: update package names in the loadSite flow
 
+## GitHub Actions Workflows
+
+The repo has 7 workflow files. When the full history is pushed to `casehubio/casehub-pages`, these activate immediately — broken workflows must be fixed before the push.
+
+| Workflow | Action | Reason |
+|----------|--------|--------|
+| `ci-java.yml` | **Delete** | Triggers on `core/**`, builds Java with Maven, uploads GWT artifact. GWT removed, `core/` moved to `_legacy/`. No purpose. |
+| `build-publish-webapp.yml` | **Rewrite** | Remove JDK setup and Java build steps (lines 35–58). Rename artifacts: `melviz-webapp.zip` → `pages-webapp.zip`, `melviz-webapp.zip.sha256` → `pages-webapp.zip.sha256`, artifact name `melviz-webapp` → `pages-webapp`. |
+| `ci-javascript.yml` | **Keep** | No workspace name references — runs `yarn build` and `yarn test` (root scripts already updated). Path filters (`packages/**`, `components/**`, `webapp/**`) remain correct. |
+| `codeql.yml` | **Keep** | No melviz references. |
+| `dependency-review.yml` | **Keep** | No melviz references. |
+| `pr-validation.yml` | **Keep** | No melviz references. |
+| `stale.yml` | **Keep** | No melviz references. |
+
+**CI layering:** Per-PR validation stays repo-level (faster feedback). Cross-repo integration runs through casehub-parent (`full-stack-build.yml`, `incremental-full-stack-build.yml`). Both layers serve different purposes.
+
 ## Cleanup
 
 ### `.gitignore`
