@@ -1,7 +1,19 @@
 {
   "extends": "@casehub/pages-tsconfig/tsconfig.json",
   "compilerOptions": {
-    "noEmit": true
+    "rootDir": "src",
+    "outDir": ".typecheck",
+    "emitDeclarationOnly": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../packages/pages-runtime"
+    },
+    {
+      "path": "../packages/pages-viz"
+    }
+  ]
 }

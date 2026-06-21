@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/pages-data" },
+    { "path": "packages/pages-iframe-api" },
+    { "path": "packages/pages-echarts-base" },
+    { "path": "packages/pages-iframe-dev" },
+    { "path": "packages/pages-component" },
+    { "path": "packages/pages-ui" },
+    { "path": "packages/pages-viz" },
+    { "path": "packages/pages-runtime" },
+    { "path": "components/pages-component-echarts" },
+    { "path": "components/pages-component-llm-prompter" },
+    { "path": "components/pages-component-svg-heatmap" },
+    { "path": "examples" }
+  ]
+}

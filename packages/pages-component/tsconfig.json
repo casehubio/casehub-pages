@@ -1,4 +1,16 @@
 {
   "extends": "@casehub/pages-tsconfig/tsconfig.json",
-  "include": ["src"]
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": ".typecheck",
+    "emitDeclarationOnly": true
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../pages-data"
+    }
+  ]
 }

@@ -2,9 +2,16 @@
   "extends": "@casehub/pages-tsconfig/tsconfig.json",
   "compilerOptions": {
     "target": "es6",
-    "declaration": false,
-    "declarationMap": false,
-    "noEmit": true
+    "rootDir": "src",
+    "outDir": ".typecheck",
+    "emitDeclarationOnly": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/pages-iframe-api"
+    }
+  ]
 }
