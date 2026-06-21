@@ -240,7 +240,7 @@ Decisions not captured inline in §4:
 | Requirement | Metric |
 |---|---|
 | DashBuilder compatibility | 28/31 sample dashboards render correctly (validation matrix: `examples/VALIDATION.md`) |
-| Test coverage | 602 tests (@casehub/data), 148 tests (@casehub/component), 100 tests (@casehub/runtime) |
+| Test coverage | 615 tests (@casehub/data), 158 tests (@casehub/component), 183 tests (@casehub/runtime) |
 | No Java at runtime | `loadSite()` works without GWT compilation or Java process |
 
 ---
