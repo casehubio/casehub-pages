@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import type { Component, GridItem, GridPlacement, AccessControl } from "./types.js";
 import { ALLOW_ALL } from "./types.js";
+import type { TypedComponent } from "./index.js";
+import type { BarChartProps } from "./displayer-types.js";
+import type { GridProps } from "./component-props.js";
+import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 
 describe("Component", () => {
   it("represents a leaf component", () => {
@@ -54,5 +58,29 @@ describe("ALLOW_ALL", () => {
   it("grants all roles and permissions", () => {
     expect(ALLOW_ALL.hasRole("anything")).toBe(true);
     expect(ALLOW_ALL.hasPermission("anything")).toBe(true);
+  });
+});
+
+describe("Component<T, P>", () => {
+  it("accepts typed props without cast", () => {
+    const c: Component<"bar-chart", BarChartProps> = {
+      type: "bar-chart",
+      props: { lookup: { dataSetId: dataSetId("ds"), operations: [] } },
+    };
+    expect(c.type).toBe("bar-chart");
+    expect(c.props?.lookup?.dataSetId).toBe("ds");
+  });
+
+  it("default generic accepts any type string", () => {
+    const c: Component = { type: "anything" };
+    expect(c.type).toBe("anything");
+  });
+
+  it("TypedComponent narrows both type and props", () => {
+    const c: TypedComponent<"grid"> = {
+      type: "grid",
+      props: { columns: 12 },
+    };
+    expect(c.props?.columns).toBe(12);
   });
 });

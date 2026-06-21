@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Column } from "./Column";
+import type { Column } from "./Column";
 
 export interface DataSet {
   columns: Column[];

@@ -1,7 +1,10 @@
-export interface Component {
-  readonly type: string;
+export interface Component<
+  T extends string = string,
+  P = Record<string, unknown>,
+> {
+  readonly type: T;
   readonly id?: string;
-  readonly props?: Readonly<Record<string, unknown>>;
+  readonly props?: Readonly<P>;
   readonly style?: Readonly<Record<string, string>>;
   readonly access?: AccessControl;
   readonly slots?: Readonly<Record<string, readonly Component[]>>;

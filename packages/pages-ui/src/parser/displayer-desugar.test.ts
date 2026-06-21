@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { desugarDisplayer } from "./displayer-desugar.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
+import { getProps } from "@casehub/pages-component";
 
 describe("desugarDisplayer", () => {
   it("maps BARCHART to bar-chart with typed props", () => {
@@ -27,7 +27,7 @@ describe("desugarDisplayer", () => {
       chart: { margin: { left: 80 }, resizable: true },
       lookup: { uuid: "sales" },
     });
-    expect((result.props as any).margin).toEqual({ left: 80 });
+    expect(getProps(result, "bar-chart").margin).toEqual({ left: 80 });
     expect(result.props?.["resizable"]).toBe(true);
   });
 
@@ -37,8 +37,8 @@ describe("desugarDisplayer", () => {
       html: { html: "<div>${value}</div>", javascript: "console.log(1)" },
       lookup: { uuid: "sales" },
     });
-    expect((result.props as any).html.template).toBe("<div>${value}</div>");
-    expect((result.props as any).html.javascript).toBe("console.log(1)");
+    expect(getProps(result, "metric").html?.template).toBe("<div>${value}</div>");
+    expect(getProps(result, "metric").html?.javascript).toBe("console.log(1)");
   });
 
   it("maps extraConfiguration to extra", () => {
@@ -47,7 +47,7 @@ describe("desugarDisplayer", () => {
       extraConfiguration: '{"color": ["#ff0000"]}',
       lookup: { uuid: "sales" },
     });
-    expect((result.props as any).extra).toEqual({ color: ["#ff0000"] });
+    expect(getProps(result, "bar-chart").extra).toEqual({ color: ["#ff0000"] });
   });
 
   it("defaults to table type when no type specified", () => {
@@ -66,7 +66,7 @@ describe("desugarDisplayer", () => {
     });
     expect(result.type).toBe("iframe-plugin");
     expect(result.props?.["componentId"]).toBe("echarts");
-    expect((result.props as any).settings).toBeDefined();
+    expect(getProps(result, "iframe-plugin").settings).toBeDefined();
   });
 
   it("maps subtype", () => {
@@ -94,7 +94,7 @@ describe("desugarDisplayer", () => {
       filter: { enabled: true, notification: true, listening: false },
       lookup: { uuid: "sales" },
     });
-    expect((result.props as any).filter.notification).toBe(true);
+    expect(getProps(result, "bar-chart").filter?.notification).toBe(true);
   });
 
   it("handles external width/height", () => {
@@ -186,10 +186,11 @@ describe("desugarDisplayer", () => {
       },
       lookup: { uuid: "data" },
     });
+    const props = getProps(result, "bar-chart");
     expect(result.props?.["resizable"]).toBe(true);
     expect(result.props?.["zoom"]).toBe(true);
-    expect((result.props as any).legend).toEqual({ show: true });
-    expect((result.props as any).margin).toEqual({ left: 80, right: 20 });
+    expect(props.legend).toEqual({ show: true });
+    expect(props.margin).toEqual({ left: 80, right: 20 });
     expect(result.props?.["height"]).toBe(400);
     expect(result.props?.["width"]).toBe(600);
   });
@@ -216,7 +217,7 @@ describe("desugarDisplayer", () => {
       type: "TABLE",
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).filter).toEqual({ enabled: true });
+    expect(getProps(result, "table").filter).toEqual({ enabled: true });
   });
 
   it("table explicit pageSize overrides default", () => {
@@ -234,7 +235,7 @@ describe("desugarDisplayer", () => {
       filter: { enabled: false },
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).filter).toEqual({ enabled: false });
+    expect(getProps(result, "table").filter).toEqual({ enabled: false });
   });
 
   it("non-table types do not get table defaults", () => {
@@ -265,7 +266,7 @@ describe("desugarDisplayer", () => {
       type: "BARCHART",
       dataSetLookup: { uuid: "sales", rowCount: 100 },
     });
-    const lookup = (result.props as any).lookup as DataSetLookup;
+    const lookup = getProps(result, "bar-chart").lookup;
     expect(lookup.dataSetId).toBe("sales");
     expect(lookup.operations).toEqual([]);
     expect(result.props?.["rowCount"]).toBe(100);
@@ -285,7 +286,7 @@ describe("desugarDisplayer", () => {
       extraConfiguration: "not valid json {",
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).extra).toBe("not valid json {");
+    expect(getProps(result, "bar-chart").extra).toBe("not valid json {");
   });
 
   it("collects component settings for external components", () => {
@@ -297,7 +298,7 @@ describe("desugarDisplayer", () => {
     });
     expect(result.type).toBe("iframe-plugin");
     expect(result.props?.["componentId"]).toBe("echarts");
-    expect((result.props as any).settings).toEqual({
+    expect(getProps(result, "iframe-plugin").settings).toEqual({
       echarts: { option: { title: { text: "My Chart" } } },
       "echarts.theme": "dark",
     });
@@ -340,7 +341,7 @@ describe("desugarDisplayer", () => {
       axis: { x: { labels_angle: 30, title: "Month" } },
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).xAxis).toEqual({
+    expect(getProps(result, "bar-chart").xAxis).toEqual({
       labelAngle: 30,
       title: "Month",
     });
@@ -352,7 +353,7 @@ describe("desugarDisplayer", () => {
       axis: { y: { title: "Revenue", labels_show: false } },
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).yAxis).toEqual({
+    expect(getProps(result, "bar-chart").yAxis).toEqual({
       title: "Revenue",
       showLabels: false,
     });
@@ -365,7 +366,7 @@ describe("desugarDisplayer", () => {
       lookup: { uuid: "data" },
     });
     expect(result.props?.["resizable"]).toBe(true);
-    expect((result.props as any).xAxis).toEqual({ labelAngle: 10 });
+    expect(getProps(result, "line-chart").xAxis).toEqual({ labelAngle: 10 });
   });
 
   it("prefers top-level axis over chart.axis", () => {
@@ -375,7 +376,7 @@ describe("desugarDisplayer", () => {
       chart: { axis: { x: { labels_angle: 10 } } },
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).xAxis).toEqual({ labelAngle: 30 });
+    expect(getProps(result, "bar-chart").xAxis).toEqual({ labelAngle: 30 });
   });
 
   it("extracts both x and y axis simultaneously", () => {
@@ -387,8 +388,9 @@ describe("desugarDisplayer", () => {
       },
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).xAxis).toEqual({ labelAngle: 30, title: "X" });
-    expect((result.props as any).yAxis).toEqual({ title: "Y", showLabels: false });
+    const props = getProps(result, "bar-chart");
+    expect(props.xAxis).toEqual({ labelAngle: 30, title: "X" });
+    expect(props.yAxis).toEqual({ title: "Y", showLabels: false });
   });
 
   it("extracts chart.grid visibility settings", () => {
@@ -397,7 +399,7 @@ describe("desugarDisplayer", () => {
       chart: { grid: { x: false, y: false } },
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).grid).toEqual({ x: false, y: false });
+    expect(getProps(result, "bar-chart").grid).toEqual({ x: false, y: false });
   });
 
   it("extracts chart.grid with only x", () => {
@@ -406,7 +408,7 @@ describe("desugarDisplayer", () => {
       chart: { grid: { x: false } },
       lookup: { uuid: "data" },
     });
-    expect((result.props as any).grid).toEqual({ x: false });
+    expect(getProps(result, "line-chart").grid).toEqual({ x: false });
   });
 
   it("parses lookup from YAML format to DataSetLookup", () => {
@@ -420,10 +422,10 @@ describe("desugarDisplayer", () => {
         }],
       },
     });
-    const lookup = (result.props as any).lookup as DataSetLookup;
+    const lookup = getProps(result, "bar-chart").lookup;
     expect(lookup.dataSetId).toBe("sales");
     expect(lookup.operations).toHaveLength(1);
-    expect(lookup.operations[0].type).toBe("group");
+    expect(lookup.operations![0]!.type).toBe("group");
   });
 
   it("parses lookup with filter and sort", () => {
@@ -435,11 +437,11 @@ describe("desugarDisplayer", () => {
         sort: [{ column: "name", order: "ASCENDING" }],
       },
     });
-    const lookup = (result.props as any).lookup as DataSetLookup;
+    const lookup = getProps(result, "table").lookup;
     expect(lookup.dataSetId).toBe("data");
     expect(lookup.operations).toHaveLength(2);
-    expect(lookup.operations[0].type).toBe("filter");
-    expect(lookup.operations[1].type).toBe("sort");
+    expect(lookup.operations![0]!.type).toBe("filter");
+    expect(lookup.operations![1]!.type).toBe("sort");
   });
 
   it("parses simple lookup with uuid only", () => {
@@ -447,7 +449,7 @@ describe("desugarDisplayer", () => {
       type: "BARCHART",
       lookup: { uuid: "hello" },
     });
-    const lookup = (result.props as any).lookup as DataSetLookup;
+    const lookup = getProps(result, "bar-chart").lookup;
     expect(lookup.dataSetId).toBe("hello");
     expect(lookup.operations).toEqual([]);
   });
@@ -458,6 +460,6 @@ describe("desugarDisplayer", () => {
       dataSet: '["Hello World", 42]',
     });
     expect(result.type).toBe("bar-chart");
-    expect((result.props as any).inlineDataSet).toBe('["Hello World", 42]');
+    expect(result.props?.["inlineDataSet"]).toBe('["Hello World", 42]');
   });
 });

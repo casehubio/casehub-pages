@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { DataSet, FilterRequest } from "../dataset";
-import { FunctionCallRequest } from "../function";
+import type { DataSet, FilterRequest } from "../dataset";
+import type { FunctionCallRequest } from "../function";
 
 /*
  * Controls component lifecycle and allows component communicate with CaseHub Pages

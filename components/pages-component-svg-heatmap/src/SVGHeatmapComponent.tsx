@@ -17,8 +17,10 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 
-import { SvgHeatmap, SvgNodeValue } from "./SvgHeatmap";
-import { ColumnType, DataSet, ComponentController } from "@casehub/pages-iframe-api";
+import type { SvgNodeValue } from "./SvgHeatmap";
+import { SvgHeatmap } from "./SvgHeatmap";
+import type { DataSet, ComponentController } from "@casehub/pages-iframe-api";
+import { ColumnType } from "@casehub/pages-iframe-api";
 
 const SVG_PARAM = "svg";
 const BLUR_PARAM = "blur";
@@ -35,12 +37,16 @@ const validateDataSet = (ds: DataSet): string | undefined => {
   if (ds.columns.length < 2) {
     return NOT_ENOUGH_COLUMNS_MSG;
   }
+  const col0 = ds.columns[0];
+  const col1 = ds.columns[1];
   if (
-    (ds.columns[0].type !== ColumnType.TEXT && ds.columns[0].type !== ColumnType.LABEL) ||
-    ds.columns[1].type !== ColumnType.NUMBER
+    !col0 || !col1 ||
+    (col0.type !== ColumnType.TEXT && col0.type !== ColumnType.LABEL) ||
+    col1.type !== ColumnType.NUMBER
   ) {
     return INVALID_COLUMNS_TYPE_MSG;
   }
+  return undefined;
 };
 
 const isUrl = (param: string) => {
@@ -51,7 +57,7 @@ const isSvg = (param: string) => {
   return param && param.trim().startsWith("<svg");
 };
 
-const validateParams = (params: Map<string, string>) => {
+const validateParams = (params: Map<string, string>): string | undefined => {
   const svg = params.get(SVG_PARAM);
   if (!svg) {
     return MISSING_PARAM_MSG;
@@ -60,11 +66,12 @@ const validateParams = (params: Map<string, string>) => {
   if (!(isUrl(svg) || isSvg(svg))) {
     return INVALID_SVG_PARAM;
   }
+  return undefined;
 };
 const extractNodeInfo = (dataset: string[][]): SvgNodeValue[] =>
   dataset.map((row) => ({
-    nodeId: row[0],
-    value: +row[1],
+    nodeId: row[0]!,
+    value: +(row[1]!),
   }));
 
 interface AppState {
@@ -84,7 +91,8 @@ interface Props {
 export function SVGHeatmapComponent(props: Props) {
   const [appState, setAppState] = useState<AppState>({ svgNodesValues: [], svgContent: "" });
 
-  const onDataset = (ds: DataSet, params: Map<string, any>) => {
+  const onDataset = (ds: DataSet, params?: Map<string, any>) => {
+    if (!params) return;
     const validationMessage = validateDataSet(ds) || validateParams(params);
     if (validationMessage) {
       props.controller.requireConfigurationFix(validationMessage);
@@ -96,13 +104,15 @@ export function SVGHeatmapComponent(props: Props) {
     }
     props.controller.configurationOk();
 
-    const htParams = {
+    const blurParam = params.get(BLUR_PARAM);
+    const opacityParam = params.get(OPACITY_PARAM);
+    const htParams: Record<string, any> = {
       svg: params.get(SVG_PARAM),
-      blur: +params.get(BLUR_PARAM) || undefined,
-      opacity: +params.get(OPACITY_PARAM) || undefined,
       sizeFactor: +params.get(SIZE_PARAM) || 1.0,
       containsId: params.get(CONTAINS_ID_PARAM) === "true",
     };
+    if (blurParam) htParams.blur = +blurParam;
+    if (opacityParam) htParams.opacity = +opacityParam;
 
     if (isSvg(htParams.svg)) {
       setAppState((previousState) => ({

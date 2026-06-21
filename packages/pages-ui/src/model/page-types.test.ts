@@ -13,8 +13,11 @@ import type {
 } from "./page-types.js";
 import type { Component } from "./types.js";
 import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import { dataSetId, columnId } from "@casehub/pages-data/dist/dataset/types.js";
+import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 import { HttpMethod } from "@casehub/pages-data/dist/dataset/external/types.js";
+import { filterBy } from "../dsl/lookup-helpers.js";
 
 describe("PageProps", () => {
   it("has name, datasets, settings, properties", () => {
@@ -126,7 +129,7 @@ describe("LookupDefaults", () => {
   it("has dataSetId and operations", () => {
     const defaults: LookupDefaults = {
       dataSetId: "default-ds" as DataSetId,
-      operations: [{ type: "filter", column: "status" as any, function: "EQUALS_TO", terms: ["active"] }],
+      operations: [filterBy("status", "EQUALS_TO", "active")],
     };
 
     expect(defaults.dataSetId).toBe("default-ds");
@@ -162,8 +165,8 @@ describe("DataSetDefaults", () => {
   it("has columns array", () => {
     const defaults: DataSetDefaults = {
       columns: [
-        { id: "col1" as any, name: "Column 1", type: 1 /* NUMBER */ },
-        { id: "col2" as any, name: "Column 2", type: 2 /* LABEL */ },
+        { id: columnId("col1"), name: "Column 1", type: ColumnType.NUMBER },
+        { id: columnId("col2"), name: "Column 2", type: ColumnType.LABEL },
       ],
     };
 
@@ -240,7 +243,7 @@ describe("ViewState", () => {
       layoutOverrides: [
         {
           componentId: "chart1",
-          placement: { row: 0, column: 0, width: 2, height: 1 },
+          placement: { x: 0, y: 0, w: 2, h: 1 },
         },
       ],
     };
@@ -291,12 +294,12 @@ describe("LayoutOverride", () => {
   it("has componentId and placement", () => {
     const override: LayoutOverride = {
       componentId: "metric1",
-      placement: { row: 1, column: 2, width: 1, height: 1 },
+      placement: { x: 2, y: 1, w: 1, h: 1 },
     };
 
     expect(override.componentId).toBe("metric1");
-    expect(override.placement.row).toBe(1);
-    expect(override.placement.column).toBe(2);
+    expect(override.placement.y).toBe(1);
+    expect(override.placement.x).toBe(2);
   });
 });
 
@@ -359,7 +362,7 @@ describe("DeepLink", () => {
 
 describe("Site", () => {
   it("has root component", () => {
-    const root: Component = { type: "page", props: {}, children: [] };
+    const root: Component = { type: "page", props: {} };
     const state: ViewState = {};
 
     const site: Site = {
@@ -373,14 +376,14 @@ describe("Site", () => {
   });
 
   it("has page method returning Component or null", () => {
-    const root: Component = { type: "page", props: {}, children: [] };
+    const root: Component = { type: "page", props: {} };
     const state: ViewState = {};
 
     const site: Site = {
       root,
       page: (path: string) => {
         if (path === "dashboard") {
-          return { type: "page", props: { name: "Dashboard" }, children: [] };
+          return { type: "page", props: { name: "Dashboard" } };
         }
         return null;
       },
@@ -397,7 +400,7 @@ describe("Site", () => {
   });
 
   it("has dataset method returning ExternalDataSetDef or null", () => {
-    const root: Component = { type: "page", props: {}, children: [] };
+    const root: Component = { type: "page", props: {} };
     const state: ViewState = {};
 
     const site: Site = {
@@ -425,7 +428,7 @@ describe("Site", () => {
   });
 
   it("has state property", () => {
-    const root: Component = { type: "page", props: {}, children: [] };
+    const root: Component = { type: "page", props: {} };
     const state: ViewState = {
       currentPage: "overview",
       expandedNodes: ["node1"],

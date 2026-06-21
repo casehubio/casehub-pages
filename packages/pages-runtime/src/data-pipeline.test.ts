@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { DataSetId, Column, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
+import { ColumnType, dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 import { toTypedDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
 import { createDataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
 import { createDataPipeline } from "./data-pipeline.js";
@@ -183,7 +184,7 @@ describe("data pipeline deduplication", () => {
       pagePath: "",
     });
 
-    const def = { uuid: "sales" as DataSetId, content: "[]" } as any;
+    const def: ExternalDataSetDef = { uuid: dataSetId("sales"), content: "[]" };
     const scope: DataSetScope = new Map([
       ["", new Map([[def.uuid, def]])],
     ]);

@@ -1,18 +1,22 @@
 {
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "lib": ["es6", "dom", "es2018.promise", "es2019", "esnext"],
-    "target": "es5",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "removeComments": true,
-    "strictNullChecks": true,
-    "experimentalDecorators": true,
-    "downlevelIteration": true,
-    "skipLibCheck": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
     "jsx": "react-jsx"
   }
 }

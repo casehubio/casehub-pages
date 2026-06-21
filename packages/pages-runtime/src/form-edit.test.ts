@@ -6,6 +6,13 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
+import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+
+interface DataElement extends HTMLElement {
+  dataSet?: TypedDataSet;
+  editable?: boolean;
+  shadowRoot: ShadowRoot;
+}
 
 const YAML = `
 datasets:
@@ -69,34 +76,34 @@ describe("form editing + local save (real DOM)", () => {
   });
 
   async function setup(): Promise<{
-    tableEl: HTMLElement & { dataSet?: any; shadowRoot: ShadowRoot };
-    formInputs: Array<HTMLElement & { dataSet?: any; editable?: boolean; shadowRoot: ShadowRoot }>;
+    tableEl: DataElement;
+    formInputs: DataElement[];
   }> {
     site = await loadSite(target, YAML);
 
-    const tableEl = target.querySelector("casehub-table") as any;
+    const tableEl = target.querySelector("casehub-table") as DataElement | null;
     expect(tableEl).not.toBeNull();
 
     const start = Date.now();
-    while (!tableEl.dataSet && Date.now() - start < 2000) {
+    while (!tableEl!.dataSet && Date.now() - start < 2000) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    expect(tableEl.dataSet).toBeTruthy();
+    expect(tableEl!.dataSet).toBeTruthy();
 
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    ) as any[];
+    ) as DataElement[];
     expect(formInputs.length).toBe(2);
 
     const start2 = Date.now();
-    while (!formInputs.every((i: any) => i.dataSet) && Date.now() - start2 < 2000) {
+    while (!formInputs.every((i) => i.dataSet) && Date.now() - start2 < 2000) {
       await new Promise((r) => setTimeout(r, 10));
     }
 
-    return { tableEl, formInputs };
+    return { tableEl: tableEl!, formInputs };
   }
 
-  function getTableRows(tableEl: any): HTMLTableRowElement[] {
+  function getTableRows(tableEl: DataElement): HTMLTableRowElement[] {
     return Array.from(tableEl.shadowRoot.querySelectorAll("tbody tr"));
   }
 

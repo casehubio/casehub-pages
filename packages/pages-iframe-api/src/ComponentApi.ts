@@ -14,11 +14,11 @@
  * limitations under the License.
  * */
 
-import { DataSet } from "./dataset";
+import type { DataSet } from "./dataset";
 import { BrowserComponentBus } from "./controller/BrowserComponentBus";
 import { PagesComponentController } from "./controller/PagesComponentController";
 import { PagesComponentDispatcher } from "./controller/PagesComponentDispatcher";
-import { ComponentBus, ComponentController } from "./controller";
+import type { ComponentBus, ComponentController } from "./controller";
 
 export class ComponentApi {
   private bus: ComponentBus;

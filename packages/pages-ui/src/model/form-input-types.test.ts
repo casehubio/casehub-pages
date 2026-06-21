@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { isFixedOptions } from "./form-input-types.js";
-import type { FixedOptions, DataSetOptions } from "./form-input-types.js";
+import { isFixedOptions } from "@casehub/pages-component";
+import type { FixedOptions, DataSetOptions } from "@casehub/pages-component";
+import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 
 describe("form input type utilities", () => {
   it("isFixedOptions identifies FixedOptions correctly", () => {
@@ -10,7 +11,7 @@ describe("form input type utilities", () => {
 
   it("isFixedOptions rejects DataSetOptions", () => {
     const datasetOpts: DataSetOptions = {
-      dataset: "employees" as any,
+      dataset: dataSetId("employees"),
       labelColumn: "name",
       valueColumn: "id",
     };

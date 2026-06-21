@@ -16,7 +16,8 @@
 
 import * as React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { EChartOption, EChartsType, init } from "echarts";
+import type { EChartOption, EChartsType } from "echarts";
+import { init } from "echarts";
 
 const OPTION_PARAM = "option";
 const DATASET_PARAM = "dataSet";
@@ -44,7 +45,9 @@ export function ECharts(props: Props) {
     if (container.current && !chart) {
       const _chart = init(container.current, props.theme) as EChartsTypeWithTheme;
       _chart.setOption(INIT_OPTIONS);
-      _chart.theme = props.theme;
+      if (props.theme) {
+        _chart.theme = props.theme;
+      }
       setChart(_chart);
     }
   }, [chart, props]);
@@ -110,6 +113,7 @@ const setPropertyOnObject = (prop: string, value: any, obj: any) => {
   let parent = obj;
   for (let i = 0; i < props.length; i++) {
     const name = props[i];
+    if (!name) continue;
     if (i === props.length - 1) {
       parent[name] = value;
     } else {

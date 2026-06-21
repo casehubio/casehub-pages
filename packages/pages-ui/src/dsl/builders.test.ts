@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "../model/types.js";
 import type { PageSettings } from "../model/page-types.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import { getProps } from "../model/type-guards.js";
 import {
   page,
   grid,
@@ -110,8 +111,8 @@ describe("builders", () => {
       expect(result.type).toBe("grid");
       expect(result.props).toEqual({ columns: 2 });
       expect(result.items).toHaveLength(2);
-      expect(result.items?.[0].placement).toEqual({ x: 0, y: 0, w: 1, h: 1 });
-      expect(result.items?.[1].placement).toEqual({ x: 1, y: 0, w: 1, h: 1 });
+      expect(result.items?.[0]!.placement).toEqual({ x: 0, y: 0, w: 1, h: 1 });
+      expect(result.items?.[1]!.placement).toEqual({ x: 1, y: 0, w: 1, h: 1 });
     });
 
     it("generates deterministic IDs for grid and items", () => {
@@ -127,8 +128,8 @@ describe("builders", () => {
       const gridId = result.id!;
 
       // Items get IDs based on grid ID and placement
-      expect(result.items?.[0].component.id).toBe(`${gridId}_0_0`);
-      expect(result.items?.[1].component.id).toBe(`${gridId}_6_3`);
+      expect(result.items?.[0]!.component.id).toBe(`${gridId}_0_0`);
+      expect(result.items?.[1]!.component.id).toBe(`${gridId}_6_3`);
     });
 
     it("does not override existing component IDs", () => {
@@ -137,7 +138,7 @@ describe("builders", () => {
 
       const result = grid(1, item);
 
-      expect(result.items?.[0].component.id).toBe("custom-id");
+      expect(result.items?.[0]!.component.id).toBe("custom-id");
     });
 
     it("generates sequential grid IDs across calls", () => {
@@ -430,10 +431,10 @@ describe("builders", () => {
 
       // They should have different IDs (different calls produce distinct grids),
       // but each grid's item IDs should be deterministic based on placement
-      expect(grid1.items![0]!.component.id).toMatch(/_0_0$/);
-      expect(grid1.items![1]!.component.id).toMatch(/_6_0$/);
-      expect(grid2.items![0]!.component.id).toMatch(/_0_0$/);
-      expect(grid2.items![1]!.component.id).toMatch(/_6_0$/);
+      expect(grid1.items?.[0]?.component.id).toMatch(/_0_0$/);
+      expect(grid1.items?.[1]?.component.id).toMatch(/_6_0$/);
+      expect(grid2.items?.[0]?.component.id).toMatch(/_0_0$/);
+      expect(grid2.items?.[1]?.component.id).toMatch(/_6_0$/);
     });
   });
 
@@ -516,7 +517,7 @@ describe("builders", () => {
 
       expect(dashboard.type).toBe("page");
       expect(dashboard.slots?.content).toHaveLength(1);
-      expect(dashboard.slots?.content?.[0].type).toBe("tabs");
+      expect(dashboard.slots?.content?.[0]!.type).toBe("tabs");
     });
 
     it("applies decorators in chain", () => {
@@ -571,7 +572,7 @@ describe("builders", () => {
 
   describe("page() with dataScope and save", () => {
     it("accepts dataScope and save in PageOptions", () => {
-      const ds = "employees" as DataSetId;
+      const ds = dataSetId("employees");
       const p = page("Form",
         textInput({ field: "name" }),
         {
@@ -580,19 +581,37 @@ describe("builders", () => {
         },
       );
       expect(p.type).toBe("page");
-      expect((p.props as any).dataScope.dataset).toBe(ds);
-      expect((p.props as any).save.trigger).toBe("auto");
+      const props = getProps(p, "page");
+      expect(props.dataScope!.dataset).toBe(ds);
+      expect(props.save!.trigger).toBe("auto");
       expect(p.slots!.content).toHaveLength(1);
     });
 
     it("detects PageOptions with only dataScope (no datasets/settings/properties)", () => {
-      const ds = "emps" as DataSetId;
+      const ds = dataSetId("emps");
       const p = page("Form",
         textInput({ field: "name" }),
         { dataScope: { dataset: ds, idColumn: "id" }, save: { adapter: "local" } },
       );
-      expect((p.props as any).dataScope).toBeDefined();
+      const props = getProps(p, "page");
+      expect(props.dataScope).toBeDefined();
       expect(p.slots!.content).toHaveLength(1);
+    });
+  });
+
+  describe("typed builder outputs", () => {
+    it("grid() returns typed component with accessible props", () => {
+      const g = grid(12);
+      // This should compile without 'as any' — g.props is GridProps
+      expect(g.props?.columns).toBe(12);
+      expect(g.type).toBe("grid");
+    });
+
+    it("columns() returns typed component with accessible props", () => {
+      const c = columns([60, 40], [html("a")], [html("b")]);
+      // This should compile without 'as any' — c.props is ColumnsProps
+      expect(c.props?.distribution).toEqual([60, 40]);
+      expect(c.type).toBe("columns");
     });
   });
 });

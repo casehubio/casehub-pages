@@ -1,35 +1,15 @@
 import type { Component } from "./types.js";
-import type {
-  ComponentTypeRegistry as BaseRegistry,
-} from "@casehub/pages-component";
-import { getProps as baseGetProps } from "@casehub/pages-component";
-import type { PageProps } from "./page-types.js";
-import type {
-  BarChartProps,
-  LineChartProps,
-  AreaChartProps,
-  PieChartProps,
-  ScatterChartProps,
-  BubbleChartProps,
-  TimeseriesProps,
-  TableProps,
-  MetricProps,
-  MeterProps,
-  SelectorProps,
-  MapProps,
-  IframePluginProps,
-} from "./displayer-types.js";
-import type {
-  TextInputProps,
-  NumberInputProps,
-  DropdownProps,
-  CheckboxProps,
-  DatePickerProps,
-  TextareaProps,
-} from "./form-input-types.js";
+import type { TypedComponent } from "@casehub/pages-component";
 
-// Re-export all base guards
+// Re-export everything from pages-component
+export type {
+  ComponentTypeRegistry,
+  ComponentType,
+  TypedComponent,
+} from "@casehub/pages-component";
 export {
+  getProps,
+  isComponentType,
   isGrid,
   isColumns,
   isRows,
@@ -47,164 +27,33 @@ export {
   isMarkdown,
   isTitle,
   isLazyPage,
+  isBarChart,
+  isLineChart,
+  isAreaChart,
+  isPieChart,
+  isScatterChart,
+  isBubbleChart,
+  isTimeseries,
+  isTable,
+  isMetric,
+  isMeter,
+  isSelector,
+  isMap,
+  isIframePlugin,
+  isTextInput,
+  isNumberInput,
+  isDropdown,
+  isCheckbox,
+  isDatePicker,
+  isTextarea,
 } from "@casehub/pages-component";
 
-export interface ComponentTypeRegistry extends BaseRegistry {
-  page: PageProps;
-  "bar-chart": BarChartProps;
-  "line-chart": LineChartProps;
-  "area-chart": AreaChartProps;
-  "pie-chart": PieChartProps;
-  "scatter-chart": ScatterChartProps;
-  "bubble-chart": BubbleChartProps;
-  timeseries: TimeseriesProps;
-  table: TableProps;
-  metric: MetricProps;
-  meter: MeterProps;
-  selector: SelectorProps;
-  map: MapProps;
-  "iframe-plugin": IframePluginProps;
-  "text-input": TextInputProps;
-  "number-input": NumberInputProps;
-  dropdown: DropdownProps;
-  checkbox: CheckboxProps;
-  "date-picker": DatePickerProps;
-  textarea: TextareaProps;
-}
-
-// IMPORTANT: Type assertion to widen the generic constraint.
-// baseGetProps only knows about the base ComponentTypeRegistry.
-// This cast widens it to include chart/data types.
-export const getProps = baseGetProps as <T extends keyof ComponentTypeRegistry>(
-  component: Component,
-  type: T,
-) => ComponentTypeRegistry[T];
-
-// Page components
-export function isPage(
-  c: Component,
-): c is Component & { props: PageProps } {
+// isPage is a pages-ui utility (moved from pages-component)
+export function isPage(c: Component): c is TypedComponent<"page"> {
   return c.type === "page";
 }
 
-// Chart components
-export function isBarChart(
-  c: Component,
-): c is Component & { props: BarChartProps } {
-  return c.type === "bar-chart";
-}
-
-export function isLineChart(
-  c: Component,
-): c is Component & { props: LineChartProps } {
-  return c.type === "line-chart";
-}
-
-export function isAreaChart(
-  c: Component,
-): c is Component & { props: AreaChartProps } {
-  return c.type === "area-chart";
-}
-
-export function isPieChart(
-  c: Component,
-): c is Component & { props: PieChartProps } {
-  return c.type === "pie-chart";
-}
-
-export function isScatterChart(
-  c: Component,
-): c is Component & { props: ScatterChartProps } {
-  return c.type === "scatter-chart";
-}
-
-export function isBubbleChart(
-  c: Component,
-): c is Component & { props: BubbleChartProps } {
-  return c.type === "bubble-chart";
-}
-
-export function isTimeseries(
-  c: Component,
-): c is Component & { props: TimeseriesProps } {
-  return c.type === "timeseries";
-}
-
-// Data components
-export function isTable(
-  c: Component,
-): c is Component & { props: TableProps } {
-  return c.type === "table";
-}
-
-export function isMetric(
-  c: Component,
-): c is Component & { props: MetricProps } {
-  return c.type === "metric";
-}
-
-export function isMeter(
-  c: Component,
-): c is Component & { props: MeterProps } {
-  return c.type === "meter";
-}
-
-export function isSelector(
-  c: Component,
-): c is Component & { props: SelectorProps } {
-  return c.type === "selector";
-}
-
-export function isMap(
-  c: Component,
-): c is Component & { props: MapProps } {
-  return c.type === "map";
-}
-
-// Plugin component
-export function isIframePlugin(
-  c: Component,
-): c is Component & { props: IframePluginProps } {
-  return c.type === "iframe-plugin";
-}
-
-// Form input components
-export function isTextInput(
-  c: Component,
-): c is Component & { props: TextInputProps } {
-  return c.type === "text-input";
-}
-
-export function isNumberInput(
-  c: Component,
-): c is Component & { props: NumberInputProps } {
-  return c.type === "number-input";
-}
-
-export function isDropdown(
-  c: Component,
-): c is Component & { props: DropdownProps } {
-  return c.type === "dropdown";
-}
-
-export function isCheckbox(
-  c: Component,
-): c is Component & { props: CheckboxProps } {
-  return c.type === "checkbox";
-}
-
-export function isDatePicker(
-  c: Component,
-): c is Component & { props: DatePickerProps } {
-  return c.type === "date-picker";
-}
-
-export function isTextarea(
-  c: Component,
-): c is Component & { props: TextareaProps } {
-  return c.type === "textarea";
-}
-
+// isFormInput is a pages-ui utility combining multiple guards
 const FORM_INPUT_TYPES = new Set(["text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea"]);
 
 export function isFormInput(c: Component): boolean {

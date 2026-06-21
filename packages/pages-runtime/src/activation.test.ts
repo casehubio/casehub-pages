@@ -8,6 +8,8 @@ import type { PageIndex } from "./navigation.js";
 import type { DataSetScope } from "./dataset-scope.js";
 import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
+import type { DataScopeRegistry } from "./data-scope-registry.js";
+import type { SaveConfigRegistry } from "./save-config-registry.js";
 
 const DATA_TYPES = [
   "bar-chart",
@@ -120,6 +122,8 @@ function lazySetup() {
   const pagePathMap: PagePathMap = new Map();
   const pageIndex: PageIndex = new Map();
   const dataSetScope: DataSetScope = new Map();
+  const dataScopeRegistry: DataScopeRegistry = new Map();
+  const saveConfigRegistry: SaveConfigRegistry = new Map();
   const lazyPageResolutions = new Map<Component, Component>();
   const abortController = new AbortController();
 
@@ -132,6 +136,8 @@ function lazySetup() {
     permissions: ALLOW_ALL,
     pageIndex,
     dataSetScope,
+    dataScopeRegistry,
+    saveConfigRegistry,
     lazyPageResolutions,
   });
 

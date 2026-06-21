@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "@casehub/pages-component/dist/model/types.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 import { buildDataSetScope, resolveDataSetDef, extendDataSetScope } from "./dataset-scope.js";
 import { buildPagePathMap, extendPagePathMap, type PagePathMap } from "./page-paths.js";
 
-function makeDef(uuid: string) {
-  return { uuid: uuid as DataSetId, content: "[]" } as any;
+function makeDef(uuid: string): ExternalDataSetDef {
+  return { uuid: dataSetId(uuid), content: "[]" };
 }
 
 describe("buildDataSetScope", () => {
@@ -18,7 +18,7 @@ describe("buildDataSetScope", () => {
     };
     const paths = buildPagePathMap(root);
     const scope = buildDataSetScope(root, paths);
-    expect(scope.get("")?.get("sales" as DataSetId)).toBe(ds);
+    expect(scope.get("")?.get(dataSetId("sales"))).toBe(ds);
   });
 
   it("child page inherits parent datasets", () => {
@@ -31,7 +31,7 @@ describe("buildDataSetScope", () => {
     };
     const paths = buildPagePathMap(root);
     const scope = buildDataSetScope(root, paths);
-    expect(scope.get("Sales")?.get("global" as DataSetId)).toBe(ds);
+    expect(scope.get("Sales")?.get(dataSetId("global"))).toBe(ds);
   });
 
   it("child page overrides parent dataset with same id", () => {
@@ -48,7 +48,7 @@ describe("buildDataSetScope", () => {
     };
     const paths = buildPagePathMap(root);
     const scope = buildDataSetScope(root, paths);
-    expect(scope.get("Sales")?.get("data" as DataSetId)).toBe(childDs);
+    expect(scope.get("Sales")?.get(dataSetId("data"))).toBe(childDs);
   });
 });
 
@@ -61,7 +61,7 @@ describe("resolveDataSetDef", () => {
     };
     const paths = buildPagePathMap(root);
     const scope = buildDataSetScope(root, paths);
-    expect(resolveDataSetDef("local" as DataSetId, "", scope)).toBe(ds);
+    expect(resolveDataSetDef(dataSetId("local"), "", scope)).toBe(ds);
   });
 
   it("walks up ancestors to find dataset", () => {
@@ -79,21 +79,21 @@ describe("resolveDataSetDef", () => {
     };
     const paths = buildPagePathMap(root);
     const scope = buildDataSetScope(root, paths);
-    expect(resolveDataSetDef("root-ds" as DataSetId, "Sales/Detail", scope)).toBe(ds);
+    expect(resolveDataSetDef(dataSetId("root-ds"), "Sales/Detail", scope)).toBe(ds);
   });
 
   it("returns undefined for unknown dataset", () => {
     const root: Component = { type: "page", props: { name: "App" } };
     const paths = buildPagePathMap(root);
     const scope = buildDataSetScope(root, paths);
-    expect(resolveDataSetDef("nonexistent" as DataSetId, "", scope)).toBeUndefined();
+    expect(resolveDataSetDef(dataSetId("nonexistent"), "", scope)).toBeUndefined();
   });
 });
 
 describe("extendDataSetScope", () => {
   it("extends scope with fetched subtree, inheriting parent datasets", () => {
     const parentDs: ExternalDataSetDef = {
-      uuid: "parent-ds" as DataSetId,
+      uuid: dataSetId("parent-ds"),
       url: "http://example.com/data",
       columns: [],
     };
@@ -109,7 +109,7 @@ describe("extendDataSetScope", () => {
     const scope = buildDataSetScope(root, paths);
 
     const childDs: ExternalDataSetDef = {
-      uuid: "child-ds" as DataSetId,
+      uuid: dataSetId("child-ds"),
       url: "http://example.com/child",
       columns: [],
     };
@@ -131,7 +131,7 @@ describe("extendDataSetScope", () => {
     // Child page inherits parent dataset AND has its own
     const detailScope = scope.get("Sales/Detail");
     expect(detailScope).toBeTruthy();
-    expect(detailScope!.get("parent-ds" as DataSetId)).toBe(parentDs);
-    expect(detailScope!.get("child-ds" as DataSetId)).toBe(childDs);
+    expect(detailScope!.get(dataSetId("parent-ds"))).toBe(parentDs);
+    expect(detailScope!.get(dataSetId("child-ds"))).toBe(childDs);
   });
 });

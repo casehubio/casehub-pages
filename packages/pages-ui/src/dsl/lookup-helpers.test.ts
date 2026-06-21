@@ -17,6 +17,8 @@ import {
   distinct,
   join,
 } from "./lookup-helpers.js";
+import type { UnresolvedLeaf } from "@casehub/pages-data/dist/dataset/filter.js";
+import type { GroupOp } from "@casehub/pages-data/dist/dataset/group.js";
 
 describe("lookup()", () => {
   it("creates DataSetLookup with branded DataSetId", () => {
@@ -80,19 +82,19 @@ describe("filterBy()", () => {
   it("serializes Date args as ISO 8601", () => {
     const date = new Date("2024-06-15T00:00:00Z");
     const f = filterBy("created", "GREATER_THAN", date);
-    const expr = f.expressions[0] as any;
+    const expr = f.expressions[0] as UnresolvedLeaf;
     expect(expr.args[0]).toBe("2024-06-15T00:00:00.000Z");
   });
 
   it("serializes number args", () => {
     const f = filterBy("age", "GREATER_THAN", 25);
-    const expr = f.expressions[0] as any;
+    const expr = f.expressions[0] as UnresolvedLeaf;
     expect(expr.args[0]).toBe("25");
   });
 
   it("handles multiple args for BETWEEN", () => {
     const f = filterBy("age", "BETWEEN", 18, 65);
-    const expr = f.expressions[0] as any;
+    const expr = f.expressions[0] as UnresolvedLeaf;
     expect(expr.args).toEqual(["18", "65"]);
   });
 });
@@ -101,14 +103,20 @@ describe("boolean combinators", () => {
   it("and() combines filters", () => {
     const f = and(filterBy("region", "EQUALS_TO", "North"), filterBy("year", "EQUALS_TO", "2024"));
     expect(f.expressions.length).toBe(1);
-    expect(f.expressions[0]!.type).toBe("and");
-    expect((f.expressions[0] as any).children.length).toBe(2);
+    const expr = f.expressions[0]!;
+    expect(expr.type).toBe("and");
+    if (expr.type === "and") {
+      expect(expr.children.length).toBe(2);
+    }
   });
 
   it("or() combines filters", () => {
     const f = or(filterBy("region", "EQUALS_TO", "North"), filterBy("region", "EQUALS_TO", "South"));
-    expect(f.expressions[0]!.type).toBe("or");
-    expect((f.expressions[0] as any).children.length).toBe(2);
+    const expr = f.expressions[0]!;
+    expect(expr.type).toBe("or");
+    if (expr.type === "or") {
+      expect(expr.children.length).toBe(2);
+    }
   });
 
   it("not() wraps a filter", () => {
@@ -121,11 +129,13 @@ describe("boolean combinators", () => {
       or(filterBy("region", "EQUALS_TO", "North"), filterBy("region", "EQUALS_TO", "South")),
       not(filterBy("archived", "EQUALS_TO", "true")),
     );
-    expect(f.expressions[0]!.type).toBe("and");
-    const children = (f.expressions[0] as any).children;
-    expect(children.length).toBe(2);
-    expect(children[0]!.type).toBe("or");
-    expect(children[1]!.type).toBe("not");
+    const expr = f.expressions[0]!;
+    expect(expr.type).toBe("and");
+    if (expr.type === "and") {
+      expect(expr.children.length).toBe(2);
+      expect(expr.children[0]!.type).toBe("or");
+      expect(expr.children[1]!.type).toBe("not");
+    }
   });
 });
 
@@ -153,42 +163,58 @@ describe("result column helpers", () => {
   it("sum() creates aggregate column", () => {
     const c = sum("revenue");
     expect(c.kind).toBe("aggregate");
-    expect((c as any).fn).toEqual({ fn: "SUM" });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "SUM" });
+    }
   });
 
   it("avg() creates aggregate column", () => {
     const c = avg("revenue");
-    expect((c as any).fn).toEqual({ fn: "AVERAGE" });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "AVERAGE" });
+    }
   });
 
   it("count() creates aggregate column", () => {
     const c = count("id");
-    expect((c as any).fn).toEqual({ fn: "COUNT" });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "COUNT" });
+    }
   });
 
   it("min() creates aggregate column", () => {
     const c = min("price");
-    expect((c as any).fn).toEqual({ fn: "MIN" });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "MIN" });
+    }
   });
 
   it("max() creates aggregate column", () => {
     const c = max("price");
-    expect((c as any).fn).toEqual({ fn: "MAX" });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "MAX" });
+    }
   });
 
   it("distinct() creates aggregate column", () => {
     const c = distinct("category");
-    expect((c as any).fn).toEqual({ fn: "DISTINCT" });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "DISTINCT" });
+    }
   });
 
   it("join() with default separator", () => {
     const c = join("names");
-    expect((c as any).fn).toEqual({ fn: "JOIN", separator: ", " });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "JOIN", separator: ", " });
+    }
   });
 
   it("join() with custom separator", () => {
     const c = join("names", " | ");
-    expect((c as any).fn).toEqual({ fn: "JOIN", separator: " | " });
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "JOIN", separator: " | " });
+    }
   });
 });
 
@@ -223,7 +249,9 @@ describe("integration examples", () => {
   it("builds whole-dataset aggregation with null groupBy source", () => {
     const l = lookup("sales", groupBy(null, sum("revenue"), avg("revenue"), count("id")));
 
-    const groupOp = l.operations[0] as any;
+    const op = l.operations[0]!;
+    expect(op.type).toBe("group");
+    const groupOp = op as GroupOp;
     expect(groupOp.groupingKey).toBeNull();
     expect(groupOp.columns.length).toBe(3);
   });
@@ -235,7 +263,9 @@ describe("integration examples", () => {
       sortBy("created", "ASCENDING"),
     );
 
-    const groupOp = l.operations[0] as any;
-    expect(groupOp.groupingKey.strategy).toEqual({ mode: "fixedCalendar", unit: "MONTH" });
+    const op = l.operations[0]!;
+    expect(op.type).toBe("group");
+    const groupOp = op as GroupOp;
+    expect(groupOp.groupingKey!.strategy).toEqual({ mode: "fixedCalendar", unit: "MONTH" });
   });
 });

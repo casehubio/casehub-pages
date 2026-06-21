@@ -5,7 +5,7 @@ import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 import type {
   DataComponentCommon,
   ChartSettings,
-} from "@casehub/pages-ui/dist/model/displayer-types.js";
+} from "@casehub/pages-component";
 
 // ── Mock ECharts ──────────────────────────────────────────────────────
 
@@ -314,7 +314,7 @@ describe("CasehubChartElement", () => {
 
   describe("container sizing from props", () => {
     it("numeric height sets container minHeight and height in px", () => {
-      el.props = { lookup: mockLookup("s"), height: 200 } as TestChartProps;
+      el.props = { lookup: mockLookup("s"), height: "200px" } as TestChartProps;
       const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
       expect(container.style.minHeight).toBe("200px");
       expect(container.style.height).toBe("200px");
@@ -327,7 +327,7 @@ describe("CasehubChartElement", () => {
     });
 
     it("numeric width sets container width in px", () => {
-      el.props = { lookup: mockLookup("s"), width: 400 } as TestChartProps;
+      el.props = { lookup: mockLookup("s"), width: "400px" } as TestChartProps;
       const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
       expect(container.style.width).toBe("400px");
     });

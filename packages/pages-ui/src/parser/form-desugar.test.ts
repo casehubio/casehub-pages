@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
+import { getProps } from "@casehub/pages-component";
+import type { DataScopeRef } from "@casehub/pages-component";
 
 describe("form input desugaring", () => {
   it("desugars text-input shorthand", () => {
@@ -107,8 +109,9 @@ describe("dataScope and save parsing", () => {
       }],
     });
     const page = root.slots!.content![0]!;
-    expect((page.props as any).dataScope).toEqual({ dataset: "emps", idColumn: "id" });
-    expect((page.props as any).save).toEqual({ trigger: "auto", delay: 2000, adapter: "local" });
+    const pageProps = getProps(page, "page");
+    expect(pageProps.dataScope).toEqual({ dataset: "emps", idColumn: "id" });
+    expect(pageProps.save).toEqual({ trigger: "auto", delay: 2000, adapter: "local" });
   });
 
   it("parses save with adapterConfig from adapter-named key", () => {
@@ -121,7 +124,8 @@ describe("dataScope and save parsing", () => {
       }],
     });
     const page = root.slots!.content![0]!;
-    expect((page.props as any).save.adapterConfig).toEqual({ method: "PATCH" });
+    const pageProps = getProps(page, "page");
+    expect(pageProps.save!.adapterConfig).toEqual({ method: "PATCH" });
   });
 
   it("parses dataScope with $ref filter", () => {
@@ -137,7 +141,9 @@ describe("dataScope and save parsing", () => {
       }],
     });
     const page = root.slots!.content![0]!;
-    const ds = (page.props as any).dataScope;
-    expect(ds.filter.employee_id.$ref).toBe("employees.id");
+    const pageProps = getProps(page, "page");
+    const ds = pageProps.dataScope!;
+    const ref = ds.filter!.employee_id as DataScopeRef;
+    expect(ref.$ref).toBe("employees.id");
   });
 });

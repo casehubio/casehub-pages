@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseLookup } from "./lookup-parser.js";
+import { expectGroupOp, expectSortOp } from "./test-helpers.js";
 import type { DataSetId, ColumnId } from "./types.js";
 import { ZodError } from "zod";
 
@@ -712,7 +713,7 @@ describe("parseLookup", () => {
       }],
     });
     expect(lookup.operations).toHaveLength(1);
-    expect(lookup.operations[0].type).toBe("group");
+    expect(lookup.operations[0]!.type).toBe("group");
   });
 
   it("accepts sortOps as alias for sort", () => {
@@ -721,8 +722,9 @@ describe("parseLookup", () => {
       sortOps: [{ column: "name", sortOrder: "DESCENDING" }],
     });
     expect(lookup.operations).toHaveLength(1);
-    expect(lookup.operations[0].type).toBe("sort");
-    expect((lookup.operations[0] as any).columns[0].order).toBe("DESCENDING");
+    expect(lookup.operations[0]!.type).toBe("sort");
+    const sortOp0 = expectSortOp(lookup.operations[0]!);
+    expect(sortOp0.columns[0]!.order).toBe("DESCENDING");
   });
 
   it("accepts functions as alias for columns in group entries", () => {
@@ -733,10 +735,10 @@ describe("parseLookup", () => {
         functions: [{ source: "dept" }, { source: "sal", function: "AVERAGE" }],
       }],
     });
-    const groupOp = lookup.operations[0] as any;
+    const groupOp = expectGroupOp(lookup.operations[0]!);
     expect(groupOp.columns).toHaveLength(2);
-    expect(groupOp.columns[0].kind).toBe("key");
-    expect(groupOp.columns[1].kind).toBe("aggregate");
+    expect(groupOp.columns[0]!.kind).toBe("key");
+    expect(groupOp.columns[1]!.kind).toBe("aggregate");
   });
 
   it("accepts lowercase function names (count → COUNT)", () => {
@@ -747,8 +749,10 @@ describe("parseLookup", () => {
         functions: [{ source: "dept" }, { source: "val", function: "count" }],
       }],
     });
-    const groupOp = lookup.operations[0] as any;
-    expect(groupOp.columns[1].fn.fn).toBe("COUNT");
+    const groupOp = expectGroupOp(lookup.operations[0]!);
+    const col1 = groupOp.columns[1]!;
+    if (col1.kind !== "aggregate") throw new Error("Expected aggregate");
+    expect(col1.fn.fn).toBe("COUNT");
   });
 
   it("accepts groupStrategy as alias for strategy", () => {
@@ -759,8 +763,10 @@ describe("parseLookup", () => {
         functions: [{ source: "date" }],
       }],
     });
-    const groupOp = lookup.operations[0] as any;
-    expect(groupOp.groupingKey.strategy.mode).toBe("dynamic");
+    const groupOp = expectGroupOp(lookup.operations[0]!);
+    const key = groupOp.groupingKey;
+    if (!key) throw new Error("Expected grouping key");
+    expect(key.strategy.mode).toBe("dynamic");
   });
 
   it("accepts sortOrder as alias for order in sort columns", () => {
@@ -768,8 +774,8 @@ describe("parseLookup", () => {
       uuid: "ds",
       sort: [{ column: "name", sortOrder: "DESCENDING" }],
     });
-    const sortOp = lookup.operations[0] as any;
-    expect(sortOp.columns[0].order).toBe("DESCENDING");
+    const sortOp = expectSortOp(lookup.operations[0]!);
+    expect(sortOp.columns[0]!.order).toBe("DESCENDING");
   });
 
   it("accepts column as alias for id in group result columns", () => {
@@ -779,7 +785,7 @@ describe("parseLookup", () => {
         functions: [{ source: "salary", function: "SUM", column: "Total" }],
       }],
     });
-    const groupOp = lookup.operations[0] as any;
-    expect(groupOp.columns[0].columnId).toBe("Total");
+    const groupOp = expectGroupOp(lookup.operations[0]!);
+    expect(groupOp.columns[0]!.columnId).toBe("Total");
   });
 });

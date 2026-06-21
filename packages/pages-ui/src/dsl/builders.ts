@@ -4,6 +4,7 @@ import type {
   GridPlacement,
   AccessControl,
 } from "../model/types.js";
+import type { TypedComponent } from "@casehub/pages-component";
 import type {
   HtmlProps,
   MarkdownProps,
@@ -29,15 +30,13 @@ import type {
   SelectorProps,
   MapProps,
   IframePluginProps,
-} from "../model/displayer-types.js";
-import type {
   TextInputProps,
   NumberInputProps,
   DropdownProps,
   CheckboxProps,
   DatePickerProps,
   TextareaProps,
-} from "../model/form-input-types.js";
+} from "@casehub/pages-component";
 
 // Grid ID counter — scoped per page tree via resetGridCounter()
 let gridCounter = 0;
@@ -71,7 +70,7 @@ function freeze<T>(obj: T): T {
 export function page(
   name: string,
   ...args: (Component | PageOptions)[]
-): Component {
+): TypedComponent<"page"> {
   // Validate name
   if (name.includes("/")) {
     throw new Error(`Page name cannot contain '/': ${name}`);
@@ -113,13 +112,13 @@ export function page(
   };
 
   return freeze({
-    type: "page",
-    props: props as unknown as Record<string, unknown>,
+    type: "page" as const,
+    props,
     slots: { content: children },
   });
 }
 
-export function grid(columns: number, ...items: GridItem[]): Component {
+export function grid(columns: number, ...items: GridItem[]): TypedComponent<"grid"> {
   const gridId = `grid_${gridCounter++}`;
 
   // Assign IDs to items if they don't have one
@@ -138,9 +137,9 @@ export function grid(columns: number, ...items: GridItem[]): Component {
   const props: GridProps = { columns };
 
   return freeze({
-    type: "grid",
+    type: "grid" as const,
     id: gridId,
-    props: props as unknown as Record<string, unknown>,
+    props,
     items: itemsWithIds,
   });
 }
@@ -161,7 +160,7 @@ export function at(
 export function columns(
   distribution: number[],
   ...slotContents: Component[][]
-): Component {
+): TypedComponent<"columns"> {
   if (distribution.length !== slotContents.length) {
     throw new Error(
       `Distribution length (${distribution.length}) must match slotContents length (${slotContents.length})`
@@ -176,8 +175,8 @@ export function columns(
   const props: ColumnsProps = { distribution };
 
   return freeze({
-    type: "columns",
-    props: props as unknown as Record<string, unknown>,
+    type: "columns" as const,
+    props,
     slots: freeze(slots),
   });
 }
@@ -244,43 +243,43 @@ export function appGrid(...entries: [string, ...Component[]][]): Component {
   return navComponent("app-grid", entries);
 }
 
-export function panel(title: string, ...children: Component[]): Component {
+export function panel(title: string, ...children: Component[]): TypedComponent<"panel"> {
   const props: PanelProps = { title };
 
   return freeze({
-    type: "panel",
-    props: props as unknown as Record<string, unknown>,
+    type: "panel" as const,
+    props,
     slots: { default: children },
   });
 }
 
-export function html(content: string): Component {
+export function html(content: string): TypedComponent<"html"> {
   const props: HtmlProps = { content };
 
   return freeze({
-    type: "html",
-    props: props as unknown as Record<string, unknown>,
+    type: "html" as const,
+    props,
   });
 }
 
-export function markdown(content: string): Component {
+export function markdown(content: string): TypedComponent<"markdown"> {
   const props: MarkdownProps = { content };
 
   return freeze({
-    type: "markdown",
-    props: props as unknown as Record<string, unknown>,
+    type: "markdown" as const,
+    props,
   });
 }
 
-export function title(text: string, size?: string): Component {
+export function title(text: string, size?: string): TypedComponent<"title"> {
   const props: TitleProps = {
     text,
     ...(size !== undefined && { size }),
   };
 
   return freeze({
-    type: "title",
-    props: props as unknown as Record<string, unknown>,
+    type: "title" as const,
+    props,
   });
 }
 
@@ -312,94 +311,94 @@ export function withStyle(
 }
 
 // Data component builders
-export function barChart(props: BarChartProps): Component {
+export function barChart(props: BarChartProps): TypedComponent<"bar-chart"> {
   return freeze({
-    type: "bar-chart",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "bar-chart" as const,
+    props: { ...props },
   });
 }
 
-export function lineChart(props: LineChartProps): Component {
+export function lineChart(props: LineChartProps): TypedComponent<"line-chart"> {
   return freeze({
-    type: "line-chart",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "line-chart" as const,
+    props: { ...props },
   });
 }
 
-export function areaChart(props: AreaChartProps): Component {
+export function areaChart(props: AreaChartProps): TypedComponent<"area-chart"> {
   return freeze({
-    type: "area-chart",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "area-chart" as const,
+    props: { ...props },
   });
 }
 
-export function pieChart(props: PieChartProps): Component {
+export function pieChart(props: PieChartProps): TypedComponent<"pie-chart"> {
   return freeze({
-    type: "pie-chart",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "pie-chart" as const,
+    props: { ...props },
   });
 }
 
-export function scatterChart(props: ScatterChartProps): Component {
+export function scatterChart(props: ScatterChartProps): TypedComponent<"scatter-chart"> {
   return freeze({
-    type: "scatter-chart",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "scatter-chart" as const,
+    props: { ...props },
   });
 }
 
-export function bubbleChart(props: BubbleChartProps): Component {
+export function bubbleChart(props: BubbleChartProps): TypedComponent<"bubble-chart"> {
   return freeze({
-    type: "bubble-chart",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "bubble-chart" as const,
+    props: { ...props },
   });
 }
 
-export function timeseries(props: TimeseriesProps): Component {
+export function timeseries(props: TimeseriesProps): TypedComponent<"timeseries"> {
   return freeze({
-    type: "timeseries",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "timeseries" as const,
+    props: { ...props },
   });
 }
 
-export function table(props: TableProps): Component {
+export function table(props: TableProps): TypedComponent<"table"> {
   return freeze({
-    type: "table",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "table" as const,
+    props: { ...props },
   });
 }
 
-export function metric(props: MetricProps): Component {
+export function metric(props: MetricProps): TypedComponent<"metric"> {
   return freeze({
-    type: "metric",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "metric" as const,
+    props: { ...props },
   });
 }
 
-export function meter(props: MeterProps): Component {
+export function meter(props: MeterProps): TypedComponent<"meter"> {
   return freeze({
-    type: "meter",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "meter" as const,
+    props: { ...props },
   });
 }
 
-export function selector(props: SelectorProps): Component {
+export function selector(props: SelectorProps): TypedComponent<"selector"> {
   return freeze({
-    type: "selector",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "selector" as const,
+    props: { ...props },
   });
 }
 
-export function mapChart(props: MapProps): Component {
+export function mapChart(props: MapProps): TypedComponent<"map"> {
   return freeze({
-    type: "map",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "map" as const,
+    props: { ...props },
   });
 }
 
-export function iframePlugin(props: IframePluginProps): Component {
+export function iframePlugin(props: IframePluginProps): TypedComponent<"iframe-plugin"> {
   return freeze({
-    type: "iframe-plugin",
-    props: { ...props } as unknown as Record<string, unknown>,
+    type: "iframe-plugin" as const,
+    props: { ...props },
   });
 }
 

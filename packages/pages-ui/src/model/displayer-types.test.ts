@@ -7,13 +7,14 @@ import type {
   BubbleChartProps,
   MapProps,
   MetricProps,
-} from "./displayer-types.js";
+} from "@casehub/pages-component";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
+import { dataSetId, columnId } from "@casehub/pages-data/dist/dataset/types.js";
 
 describe("DataComponentCommon", () => {
   it("requires lookup", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -26,7 +27,7 @@ describe("DataComponentCommon", () => {
 
   it("has optional title, visible, width, height, csvExport", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -48,7 +49,7 @@ describe("DataComponentCommon", () => {
 
   it("has optional rowCount and rowOffset", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -64,15 +65,15 @@ describe("DataComponentCommon", () => {
 
   it("has optional columns array", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
     const component: DataComponentCommon = {
       lookup,
       columns: [
-        { id: "col1" as any, expression: "$.value" },
-        { id: "col2" as any, pattern: "###.##" },
+        { id: columnId("col1"), expression: "$.value" },
+        { id: columnId("col2"), pattern: "###.##" },
       ],
     };
 
@@ -83,7 +84,7 @@ describe("DataComponentCommon", () => {
 
   it("has optional filter and refresh settings", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -175,7 +176,7 @@ describe("ChartSettings", () => {
 describe("BarChartProps", () => {
   it("has subtype union", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -204,7 +205,7 @@ describe("BarChartProps", () => {
 
   it("extends DataComponentCommon and ChartSettings", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -234,7 +235,7 @@ describe("IframePluginProps", () => {
 
   it("has optional lookup", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -295,7 +296,7 @@ describe("IframePluginProps", () => {
 describe("BubbleChartProps", () => {
   it("has radius configuration", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -311,7 +312,7 @@ describe("BubbleChartProps", () => {
 
   it("extends DataComponentCommon and ChartSettings", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -331,7 +332,7 @@ describe("BubbleChartProps", () => {
 describe("MapProps", () => {
   it("has colorScheme", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -345,7 +346,7 @@ describe("MapProps", () => {
 
   it("has subtype union", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -366,7 +367,7 @@ describe("MapProps", () => {
 describe("MetricProps", () => {
   it("has subtype for built-in templates", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 
@@ -395,7 +396,7 @@ describe("MetricProps", () => {
 
   it("has optional html template and javascript", () => {
     const lookup: DataSetLookup = {
-      dataSetId: "ds1" as any,
+      dataSetId: dataSetId("ds1"),
       operations: [],
     };
 

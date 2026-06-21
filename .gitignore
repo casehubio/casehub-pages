@@ -184,3 +184,4 @@ wksp
 *.war
 *.ear
 *.zip
+.idea/

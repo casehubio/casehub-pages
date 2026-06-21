@@ -1,9 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CasehubIframePlugin } from "./CasehubIframePlugin.js";
-import type { IframePluginProps } from "@casehub/pages-ui/dist/model/displayer-types.js";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
+import type { IframePluginProps } from "@casehub/pages-component";
+import type { TypedDataSet, TypedRow, CellValue } from "@casehub/pages-data/dist/dataset/types.js";
+import { ColumnType, columnId } from "@casehub/pages-data/dist/dataset/types.js";
 
+
+function mockRow(cells: CellValue[]): TypedRow {
+  return {
+    cells,
+    cell: (id) => cells[0]!,
+    number: (id) => 0,
+    text: (id) => "",
+    date: (id) => new Date(),
+  };
+}
 describe("CasehubIframePlugin", () => {
   let element: CasehubIframePlugin;
 
@@ -24,7 +34,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "x", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("x"), name: "x", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -44,7 +54,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "x", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("x"), name: "x", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -63,7 +73,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "x", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("x"), name: "x", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -82,7 +92,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "x", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("x"), name: "x", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -121,17 +131,14 @@ describe("CasehubIframePlugin", () => {
 
     const dataset: TypedDataSet = {
       columns: [
-        { id: "x", type: ColumnType.TEXT },
-        { id: "y", type: ColumnType.NUMBER },
+        { id: columnId("x"), name: "x", type: ColumnType.TEXT },
+        { id: columnId("y"), name: "y", type: ColumnType.NUMBER },
       ],
       rows: [
-        {
-          cells: [
-            { type: ColumnType.TEXT, value: "A" },
-            { type: ColumnType.NUMBER, value: 10 },
-          ],
-          cell: () => ({ type: ColumnType.TEXT, value: "A" }),
-        },
+        mockRow([
+          { type: ColumnType.TEXT, value: "A" },
+          { type: ColumnType.NUMBER, value: 10 },
+        ]),
       ],
     };
 
@@ -176,7 +183,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "col1", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("col1"), name: "col1", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -221,7 +228,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "col1", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("col1"), name: "col1", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -252,7 +259,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "col1", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("col1"), name: "col1", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -286,7 +293,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "x", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("x"), name: "x", type: ColumnType.TEXT }],
       rows: [],
     };
 
@@ -317,7 +324,7 @@ describe("CasehubIframePlugin", () => {
     };
 
     const dataset: TypedDataSet = {
-      columns: [{ id: "x", type: ColumnType.TEXT }],
+      columns: [{ id: columnId("x"), name: "x", type: ColumnType.TEXT }],
       rows: [],
     };
 

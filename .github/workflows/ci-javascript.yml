@@ -36,6 +36,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Type check all packages
+        run: yarn typecheck
+
       - name: Build all workspace packages
         run: yarn build
 

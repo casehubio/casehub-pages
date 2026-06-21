@@ -1,5 +1,5 @@
 import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-import type { MetricProps } from "@casehub/pages-ui/dist/model/displayer-types.js";
+import type { MetricProps } from "@casehub/pages-component";
 import { CasehubElement } from "../base/CasehubElement.js";
 import { cellToRaw, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 

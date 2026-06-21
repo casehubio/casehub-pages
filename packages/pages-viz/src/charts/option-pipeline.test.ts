@@ -1,16 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import type { TypedDataSet, Column, ColumnSettings } from "@casehub/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
+import { ColumnType, columnId } from "@casehub/pages-data/dist/dataset/types.js";
 import { createTypedRow } from "@casehub/pages-data/dist/dataset/conversion.js";
-import type { ChartSettings } from "@casehub/pages-ui/dist/model/displayer-types.js";
+import type { ChartSettings } from "@casehub/pages-component";
 
 function mockColumn(id: string, name: string, type: ColumnType): Column {
-  return { id: id as any, name, type };
+  return { id: columnId(id), name, type };
 }
 
 function mockColumnSettings(id: string, name?: string): ColumnSettings {
-  return { id: id as any, name };
+  const base: ColumnSettings = { id: columnId(id) };
+  return name !== undefined ? { ...base, name } : base;
 }
 
 describe("datasetToSource", () => {

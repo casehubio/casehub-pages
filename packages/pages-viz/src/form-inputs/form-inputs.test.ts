@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 import { toTypedDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
 import type { CasehubFieldChangeDetail } from "./CasehubFormInput.js";
@@ -27,7 +28,11 @@ function makeDataSet(
       name: id,
       type: type as ColumnType,
     })),
-    data: rows,
+    data: rows.map(row => row.map(cell => {
+      if (cell === null) return null;
+      if (cell instanceof Date) return cell.toISOString();
+      return String(cell);
+    })),
   };
   return toTypedDataSet(ds);
 }
@@ -542,7 +547,7 @@ describe("CasehubDropdown", () => {
 
     el.props = {
       field: "category",
-      options: { dataset: "categories", labelColumn: "label", valueColumn: "value" },
+      options: { dataset: dataSetId("categories"), labelColumn: "label", valueColumn: "value" },
       lookup: mockLookup("test"),
     };
     el.editable = true;
@@ -559,7 +564,7 @@ describe("CasehubDropdown", () => {
     const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
     el.props = {
       field: "category",
-      options: { dataset: "categories", labelColumn: "label", valueColumn: "value" },
+      options: { dataset: dataSetId("categories"), labelColumn: "label", valueColumn: "value" },
       lookup: mockLookup("test"),
     };
     el.editable = true;

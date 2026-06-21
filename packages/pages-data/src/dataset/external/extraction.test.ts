@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { extractDataSet } from "./extraction.js";
 import { createPresetRegistry } from "./presets/registry.js";
 import type { ExternalDataSetDef, FetchResult, PresetRegistry } from "./types.js";
-import type { ColumnId, DataSetId } from "../types.js";
+import type { ColumnId, DataSetId, CellValue } from "../types.js";
 import { ColumnType } from "../types.js";
 import { DataSetError } from "../errors.js";
 
@@ -12,6 +12,11 @@ function def(overrides: Partial<ExternalDataSetDef> = {}): ExternalDataSetDef {
 
 function fetchResult(data: unknown, contentType?: string): FetchResult {
   return contentType !== undefined ? { data, contentType } : { data };
+}
+
+function val(cell: CellValue): string | number | Date {
+  if (cell.type === "NULL") throw new Error("Unexpected NULL cell");
+  return cell.value;
 }
 
 describe("extractDataSet", () => {
@@ -479,9 +484,10 @@ describe("extractDataSet", () => {
 
     expect(result.dataset.columns.map(c => c.id)).toEqual(["timestamp", "value", "__name__", "handler", "code"]);
     expect(result.dataset.rows).toHaveLength(3);
-    expect(result.dataset.rows[0]!.cell("handler" as ColumnId).value).toBe("/api/v1/query");
-    expect(result.dataset.rows[0]!.cell("code" as ColumnId).value).toBe("200");
-    expect(result.dataset.rows[0]!.cell("__name__" as ColumnId).value).toBe("http_requests_total");
+    const row0 = result.dataset.rows[0]!;
+    expect(val(row0.cell("handler" as ColumnId))).toBe("/api/v1/query");
+    expect(val(row0.cell("code" as ColumnId))).toBe("200");
+    expect(val(row0.cell("__name__" as ColumnId))).toBe("http_requests_total");
   });
 
   it("extracts Prometheus API matrix response via type preset", async () => {
@@ -508,8 +514,9 @@ describe("extractDataSet", () => {
 
     expect(result.dataset.columns.map(c => c.id)).toEqual(["timestamp", "value", "__name__", "instance"]);
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.cell("__name__" as ColumnId).value).toBe("go_gc_heap_live_bytes");
-    expect(result.dataset.rows[0]!.cell("instance" as ColumnId).value).toBe("localhost:9090");
+    const row0 = result.dataset.rows[0]!;
+    expect(val(row0.cell("__name__" as ColumnId))).toBe("go_gc_heap_live_bytes");
+    expect(val(row0.cell("instance" as ColumnId))).toBe("localhost:9090");
   });
 
   it("auto-detects Prometheus API format when type is not specified", async () => {
@@ -553,7 +560,7 @@ describe("extractDataSet", () => {
 
     const codeCol = result.dataset.columns.find(c => c.id === "code");
     expect(codeCol).toBeDefined();
-    const row200 = result.dataset.rows.filter(r => r.cell("code" as ColumnId).value === "200");
+    const row200 = result.dataset.rows.filter(r => val(r.cell("code" as ColumnId)) === "200");
     expect(row200).toHaveLength(2);
   });
 });

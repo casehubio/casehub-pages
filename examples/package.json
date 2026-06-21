@@ -10,6 +10,7 @@
     "build:bundle": "webpack --env prod",
     "build:bundle:dev": "webpack --env dev",
     "build": "yarn clean && yarn generate-samples && yarn build:bundle && yarn copy-dashboards",
+    "typecheck": "tsc --noEmit",
     "serve": "npx http-server dist -c-1 -p 8080 -o",
     "dev": "node scripts/dev-server.js",
     "test": "npx playwright test",

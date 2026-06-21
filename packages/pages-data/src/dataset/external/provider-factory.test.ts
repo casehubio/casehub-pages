@@ -5,6 +5,7 @@ import { BrowserFetchProvider } from "./providers/browser-fetch.js";
 import { CorsProxyProvider } from "./providers/cors-proxy.js";
 import { ServerRelayProvider } from "./providers/server-relay.js";
 import type { DataProviderConfig, ExternalDataSetDef } from "./types.js";
+import { HttpMethod } from "./types.js";
 import type { DataSetId } from "../types.js";
 
 function def(overrides: Partial<ExternalDataSetDef> = {}): ExternalDataSetDef {
@@ -109,7 +110,7 @@ describe("createDataProviderFactory", () => {
     // Verify the custom fetch is actually used
     const result = await provider!.fetch({
       url: "https://example.com/data.json",
-      method: "GET",
+      method: HttpMethod.GET,
       query: {},
       headers: {},
     });

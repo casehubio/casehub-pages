@@ -30,7 +30,7 @@ describe("BrowserFetchProvider", () => {
     const provider = new BrowserFetchProvider(mockFetch);
     await provider.fetch(makeRequest("https://api.example.com/search", { q: "test", limit: "10" }));
 
-    const calledUrl = mockFetch.mock.calls[0][0] as string;
+    const calledUrl = mockFetch.mock.calls[0]![0] as string;
     expect(calledUrl).toContain("q=test");
     expect(calledUrl).toContain("limit=10");
   });

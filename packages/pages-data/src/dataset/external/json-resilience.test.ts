@@ -3,7 +3,8 @@ import { extractDataSet } from "./extraction.js";
 import { createPresetRegistry } from "./index.js";
 import type { ExternalDataSetDef } from "./types.js";
 
-const emptyDef: ExternalDataSetDef = { uuid: "test" as any };
+import { dataSetId } from "../types.js";
+const emptyDef: ExternalDataSetDef = { uuid: dataSetId("test") };
 const presets = createPresetRegistry();
 
 describe("JSON parsing resilience for inline content", () => {
@@ -14,7 +15,7 @@ describe("JSON parsing resilience for inline content", () => {
       presets,
     );
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.columns[0].id).toBe("Column 0");
+    expect(result.dataset.columns[0]!.id).toBe("Column 0");
   });
 
   it("strips trailing comma after last array element", async () => {
@@ -99,7 +100,7 @@ describe("JSON parsing resilience for inline content", () => {
     );
     expect(result.dataset.rows).toHaveLength(1);
     expect(result.dataset.columns).toHaveLength(2);
-    expect(result.dataset.columns[0].id).toBe("Column 0");
+    expect(result.dataset.columns[0]!.id).toBe("Column 0");
   });
 
   it("treats flat array with single-quoted values as single-row dataset", async () => {

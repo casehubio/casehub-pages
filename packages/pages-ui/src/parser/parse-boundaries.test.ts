@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
+import { getProps } from "@casehub/pages-component";
+import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 
 describe("parsePage input boundary behavior", () => {
   it("throws on string input (not a parsed object)", () => {
@@ -54,7 +56,7 @@ describe("global defaults propagation", () => {
     });
     const page = root.slots!["content"]![0]!;
     const component = page.items![0]!.component;
-    const lookup = (component.props as any)?.lookup;
+    const lookup = component.props?.["lookup"] as DataSetLookup | undefined;
     expect(lookup?.dataSetId).toBe("shared-ds");
   });
 
@@ -78,7 +80,8 @@ describe("global defaults propagation", () => {
     });
     const page = root.slots!["content"]![0]!;
     const component = page.items![0]!.component;
-    expect((component.props as any).lookup.dataSetId).toBe("override-ds");
+    const lookup = component.props?.["lookup"] as DataSetLookup;
+    expect(lookup.dataSetId).toBe("override-ds");
     expect(component.props?.["resizable"]).toBe(true);
   });
 
@@ -190,9 +193,10 @@ describe("inline content edge cases", () => {
       },
       pages: [{ components: [{ html: "test" }] }],
     });
-    const datasets = (root.props as any).datasets as unknown[];
+    const pageProps = getProps(root, "page");
+    const datasets = pageProps.datasets!;
     expect(datasets).toHaveLength(1);
-    expect((datasets[0] as any).uuid).toBe("inline");
+    expect(datasets[0]!.uuid).toBe("inline");
   });
 
   it("global.dataset is appended after explicit datasets", () => {
@@ -206,10 +210,11 @@ describe("inline content edge cases", () => {
       ],
       pages: [{ components: [{ html: "test" }] }],
     });
-    const datasets = (root.props as any).datasets as unknown[];
+    const pageProps = getProps(root, "page");
+    const datasets = pageProps.datasets!;
     expect(datasets).toHaveLength(3);
-    expect((datasets[0] as any).uuid).toBe("explicit-1");
-    expect((datasets[1] as any).uuid).toBe("explicit-2");
-    expect((datasets[2] as any).uuid).toBe("global-ds");
+    expect(datasets[0]!.uuid).toBe("explicit-1");
+    expect(datasets[1]!.uuid).toBe("explicit-2");
+    expect(datasets[2]!.uuid).toBe("global-ds");
   });
 });

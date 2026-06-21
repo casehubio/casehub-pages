@@ -47,3 +47,5 @@ export interface DataSet {
   readonly columns: readonly Column[];
   readonly data: readonly (readonly (string | null)[])[];
 }
+
+export { dataSetId, columnId } from "./constructors.js";

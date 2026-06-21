@@ -1,69 +1,20 @@
 import type { Component, GridPlacement } from "./types.js";
 import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { DataSetOp } from "@casehub/pages-data/dist/dataset/ops.js";
-import type {
-  ExternalDataSetDef,
-  ExternalColumnDef,
-  HttpMethod,
-} from "@casehub/pages-data/dist/dataset/external/types.js";
-import type { ChartSettings } from "./displayer-types.js";
+import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 
-export interface DataScopeRef {
-  readonly $ref: string;
-}
+// Re-export types that moved to pages-component
+export type {
+  PageProps,
+  PageSettings,
+  DataComponentDefaults,
+  LookupDefaults,
+  DataSetDefaults,
+  DataScope,
+  DataScopeRef,
+  SaveConfig,
+} from "@casehub/pages-component";
 
-export interface DataScope {
-  readonly dataset: DataSetId;
-  readonly idColumn: string;
-  readonly filter?: Readonly<Record<string, string | DataScopeRef>>;
-}
-
-export interface SaveConfig {
-  readonly trigger?: "auto" | "field" | "button" | "manual";
-  readonly delay?: number;
-  readonly adapter: string;
-  readonly adapterConfig?: Readonly<Record<string, unknown>>;
-}
-
-export interface PageProps {
-  readonly name?: string;
-  readonly datasets?: readonly ExternalDataSetDef[];
-  readonly settings?: PageSettings;
-  readonly properties?: Readonly<Record<string, string>>;
-  readonly dataScope?: DataScope;
-  readonly save?: SaveConfig;
-}
-
-export interface PageSettings {
-  readonly mode?: "light" | "dark";
-  readonly allowUrlProperties?: boolean;
-  readonly dataComponentDefaults?: DataComponentDefaults;
-  readonly datasetDefaults?: DataSetDefaults;
-}
-
-export interface DataComponentDefaults {
-  readonly lookup?: LookupDefaults;
-  readonly chart?: Partial<ChartSettings>;
-}
-
-export interface LookupDefaults {
-  readonly dataSetId?: DataSetId;
-  readonly operations?: readonly DataSetOp[];
-  readonly rowCount?: number;
-  readonly rowOffset?: number;
-}
-
-export interface DataSetDefaults {
-  readonly url?: string;
-  readonly content?: string;
-  readonly method?: HttpMethod;
-  readonly headers?: Readonly<Record<string, string>>;
-  readonly columns?: readonly ExternalColumnDef[];
-  readonly cacheEnabled?: boolean;
-  readonly refreshTime?: string;
-}
-
+// Runtime types stay in pages-ui
 export interface ViewState {
   readonly currentPage?: string;
   readonly expandedNodes?: readonly string[];

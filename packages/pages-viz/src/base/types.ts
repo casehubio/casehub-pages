@@ -3,7 +3,7 @@ import type { ColumnSettings } from "@casehub/pages-data/dist/dataset/types.js";
 import type {
   FilterSettings,
   RefreshSettings,
-} from "@casehub/pages-ui/dist/model/component-props.js";
+} from "@casehub/pages-component";
 
 export interface VizComponentProps {
   readonly lookup?: DataSetLookup;

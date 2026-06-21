@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { ECharts } from "echarts/core";
 import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { MapProps } from "@casehub/pages-ui/dist/model/displayer-types.js";
+import type { MapProps } from "@casehub/pages-component";
 import { toTypedDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
 
 // ── Mock ECharts ──────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ function makeDataSet(columns: [string, string][], rows: (string | number | null)
       name: id,
       type: type as ColumnType,
     })),
-    data: rows,
+    data: rows.map(row => row.map(cell => cell === null ? null : String(cell))),
   };
   return toTypedDataSet(ds);
 }
@@ -96,7 +96,7 @@ describe("CasehubMap", () => {
         map: "world",
       });
 
-      const data = series[0].data as Array<{ name: string; value: number }>;
+      const data = series[0]!.data as Array<{ name: string; value: number }>;
       expect(data).toEqual([
         { name: "USA", value: 100 },
         { name: "China", value: 200 },
@@ -205,7 +205,7 @@ describe("CasehubMap", () => {
         coordinateSystem: "geo",
       });
 
-      const data = series[0].data as Array<{ name: string; value: number[] }>;
+      const data = series[0]!.data as Array<{ name: string; value: number[] }>;
       expect(data).toEqual([
         { name: "New York", value: [-74.006, 40.7128, undefined] },
         { name: "London", value: [-0.1276, 51.5074, undefined] },
@@ -228,14 +228,14 @@ describe("CasehubMap", () => {
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const series = option.series as Record<string, unknown>[];
-      const data = series[0].data as Array<{ name: string; value: number[] }>;
+      const data = series[0]!.data as Array<{ name: string; value: number[] }>;
       expect(data).toEqual([
         { name: "Tokyo", value: [139.6917, 35.6895, 13960000] },
       ]);
 
       // Should have symbolSize callback when 4th column exists
-      expect(series[0].symbolSize).toBeDefined();
-      expect(typeof series[0].symbolSize).toBe("function");
+      expect(series[0]!.symbolSize).toBeDefined();
+      expect(typeof series[0]!.symbolSize).toBe("function");
     });
   });
 

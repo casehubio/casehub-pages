@@ -45,10 +45,8 @@ describe("PresetRegistry", () => {
 
   it("is read-only — no register method exposed", () => {
     const registry = createPresetRegistry();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((registry as any).register).toBeUndefined();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((registry as any).set).toBeUndefined();
+    expect("register" in registry).toBe(false);
+    expect("set" in registry).toBe(false);
   });
 
   it("preserves all built-ins when custom presets are provided", () => {

@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
+import { getProps } from "@casehub/pages-component";
+import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 
 describe("parsePage", () => {
   describe("basic structure", () => {
@@ -532,10 +534,11 @@ describe("parsePage", () => {
         },
         pages: [{ components: [{ html: "test" }] }],
       });
-      const datasets = (root.props as any).datasets as unknown[];
+      const pageProps = getProps(root, "page");
+      const datasets = pageProps.datasets!;
       expect(datasets).toBeDefined();
       expect(datasets).toHaveLength(1);
-      expect((datasets[0] as any).uuid).toBe("global-ds");
+      expect(datasets[0]!.uuid).toBe("global-ds");
     });
 
     it("merges global.dataset alongside existing datasets", () => {
@@ -546,7 +549,8 @@ describe("parsePage", () => {
         datasets: [{ uuid: "explicit-ds", content: "[2]" }],
         pages: [{ components: [{ html: "test" }] }],
       });
-      const datasets = (root.props as any).datasets as unknown[];
+      const pageProps = getProps(root, "page");
+      const datasets = pageProps.datasets!;
       expect(datasets).toHaveLength(2);
     });
 
@@ -561,7 +565,8 @@ describe("parsePage", () => {
       const page = root.slots!["content"]![0]!;
       const chart = page.items![0]!.component;
       expect(chart.props?.["resizable"]).toBe(true);
-      expect((chart.props as any).lookup.dataSetId).toBe("ds");
+      const chartProps = getProps(chart, "bar-chart");
+      expect(chartProps.lookup.dataSetId).toBe("ds");
     });
   });
 
@@ -605,7 +610,7 @@ describe("parsePage", () => {
           { name: "Other", components: [{ html: "other" }] },
         ],
       });
-      const pageNames = root.slots!["content"]!.map(p => (p.props as any).name);
+      const pageNames = root.slots!["content"]!.map(p => getProps(p, "page").name);
       expect(pageNames).toContain("index");
       expect(pageNames).toContain("Other");
       expect(pageNames).not.toContain("Cards");
@@ -618,7 +623,7 @@ describe("parsePage", () => {
           { name: "Charts", components: [{ html: "charts" }] },
         ],
       });
-      const pageNames = root.slots!["content"]!.map(p => (p.props as any).name);
+      const pageNames = root.slots!["content"]!.map(p => getProps(p, "page").name);
       expect(pageNames).toContain("index");
       expect(pageNames).not.toContain("Charts");
     });
@@ -643,7 +648,7 @@ describe("parsePage", () => {
           ],
         },
       });
-      const pageNames = root.slots!["content"]!.map(p => (p.props as any).name);
+      const pageNames = root.slots!["content"]!.map(p => getProps(p, "page").name);
       expect(pageNames).toEqual(["index"]);
     });
 

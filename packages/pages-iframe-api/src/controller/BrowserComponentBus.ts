@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ComponentMessage, MessageProperty } from "../message";
-import { ComponentBus } from "./ComponentBus";
+import type { ComponentMessage } from "../message";
+import { MessageProperty } from "../message";
+import type { ComponentBus } from "./ComponentBus";
 
 export class BrowserComponentBus implements ComponentBus {
-  private listener: (message: ComponentMessage) => void;
+  private listener!: (message: ComponentMessage) => void;
 
   private readonly messageListener = (e: MessageEvent) => {
     this.listener(e.data as ComponentMessage);

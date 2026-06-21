@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { DataSet, FilterRequest } from "../dataset";
-import { FunctionCallRequest, FunctionResponse, FunctionResultType } from "../function";
+import type { DataSet, FilterRequest } from "../dataset";
+import type { FunctionCallRequest, FunctionResponse } from "../function";
+import { FunctionResultType } from "../function";
 import { MessageType } from "../message";
 import { MessageProperty } from "../message/MessageProperty";
-import { ComponentBus } from "./ComponentBus";
-import { ComponentController } from "./ComponentController";
+import type { ComponentBus } from "./ComponentBus";
+import type { ComponentController } from "./ComponentController";
 
 interface FunctionCallbacks {
   onSucess: (result: any) => void;

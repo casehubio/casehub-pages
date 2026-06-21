@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-import { DataSet } from "../dataset";
-import { FunctionResponse } from "../function";
-import { ComponentMessage, MessageType } from "../message";
+import type { DataSet } from "../dataset";
+import type { FunctionResponse } from "../function";
+import type { ComponentMessage } from "../message";
+import { MessageType } from "../message";
 import { MessageProperty } from "../message/MessageProperty";
-import { ComponentBus } from "./ComponentBus";
+import type { ComponentBus } from "./ComponentBus";
 
 import { PagesComponentController } from "./PagesComponentController";
-import { InternalComponentDispatcher } from "./InternalComponentListener";
+import type { InternalComponentDispatcher } from "./InternalComponentListener";
 
 export class PagesComponentDispatcher implements InternalComponentDispatcher {
-  private componentId: string;
+  private componentId!: string;
 
   constructor(private readonly bus: ComponentBus, public readonly componentController: PagesComponentController) {
     // no op

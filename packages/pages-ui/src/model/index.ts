@@ -32,24 +32,24 @@ export type {
   RefreshSettings,
 } from "./component-props.js";
 
-// Page types
+// Page types (runtime types defined here, component-level types re-exported from pages-component)
 export type {
   PageProps,
   PageSettings,
   DataComponentDefaults,
   LookupDefaults,
   DataSetDefaults,
+  DataScope,
+  DataScopeRef,
+  SaveConfig,
   ViewState,
   DrillDownStep,
   LayoutOverride,
   DeepLink,
   Site,
-  DataScope,
-  DataScopeRef,
-  SaveConfig,
 } from "./page-types.js";
 
-// Displayer types
+// Displayer types (re-exported from pages-component)
 export type {
   DataComponentCommon,
   ChartSettings,
@@ -66,9 +66,9 @@ export type {
   SelectorProps,
   MapProps,
   IframePluginProps,
-} from "./displayer-types.js";
+} from "@casehub/pages-component";
 
-// Form input types
+// Form input types (re-exported from pages-component)
 export type {
   FormInputCommon,
   TextInputProps,
@@ -79,8 +79,8 @@ export type {
   CheckboxProps,
   DatePickerProps,
   TextareaProps,
-} from "./form-input-types.js";
-export { isFixedOptions } from "./form-input-types.js";
+} from "@casehub/pages-component";
+export { isFixedOptions } from "@casehub/pages-component";
 
 // Type guards
 export type { ComponentTypeRegistry } from "./type-guards.js";

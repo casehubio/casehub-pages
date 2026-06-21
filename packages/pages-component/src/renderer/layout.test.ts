@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { applyLayoutCSS, isLayoutType } from "./layout.js";
+import type { Component } from "../model/types.js";
 
 describe("isLayoutType", () => {
   it("recognises layout types", () => {
@@ -28,41 +29,47 @@ describe("isLayoutType", () => {
 describe("applyLayoutCSS", () => {
   it("applies grid CSS", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "grid", { columns: 12 });
+    const component: Component = { type: "grid", props: { columns: 12 } };
+    applyLayoutCSS(el, component);
     expect(el.style.display).toBe("grid");
     expect(el.style.gridTemplateColumns).toBe("repeat(12, 1fr)");
   });
 
   it("applies columns CSS with distribution", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "columns", { distribution: [2, 1] });
+    const component: Component = { type: "columns", props: { distribution: [2, 1] } };
+    applyLayoutCSS(el, component);
     expect(el.style.display).toBe("grid");
     expect(el.style.gridTemplateColumns).toBe("2fr 1fr");
   });
 
   it("applies rows CSS", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "rows", {});
+    const component: Component = { type: "rows" };
+    applyLayoutCSS(el, component);
     expect(el.style.display).toBe("flex");
     expect(el.style.flexDirection).toBe("column");
   });
 
   it("stack does not set display:grid", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "stack", {});
+    const component: Component = { type: "stack" };
+    applyLayoutCSS(el, component);
     expect(el.style.display).not.toBe("grid");
   });
 
   it("applies sidebar CSS", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "sidebar", {});
+    const component: Component = { type: "sidebar" };
+    applyLayoutCSS(el, component);
     expect(el.style.display).toBe("grid");
     expect(el.style.gridTemplateColumns).toBe("auto 1fr");
   });
 
   it("applies app-grid CSS with template areas", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "app-grid", {});
+    const component: Component = { type: "app-grid" };
+    applyLayoutCSS(el, component);
     expect(el.style.display).toBe("grid");
     expect(el.style.gridTemplateColumns).toBe("auto 1fr");
     expect(el.style.gridTemplateRows).toBe("auto 1fr auto");
@@ -70,7 +77,8 @@ describe("applyLayoutCSS", () => {
 
   it("accordion applies flex column", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "accordion", {});
+    const component: Component = { type: "accordion" };
+    applyLayoutCSS(el, component);
     expect(el.style.display).toBe("flex");
     expect(el.style.flexDirection).toBe("column");
   });
@@ -78,20 +86,23 @@ describe("applyLayoutCSS", () => {
   it("tabs/pills/carousel do not set layout CSS (handled by interactivity)", () => {
     for (const type of ["tabs", "pills", "carousel"]) {
       const el = document.createElement("div");
-      applyLayoutCSS(el, type, {});
+      const component: Component = { type };
+      applyLayoutCSS(el, component);
       expect(el.style.display).toBe("");
     }
   });
 
   it("panel does not set layout CSS", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "panel", {});
+    const component: Component = { type: "panel" };
+    applyLayoutCSS(el, component);
     expect(el.style.display).toBe("");
   });
 
   it("grid defaults to 12 columns if not specified", () => {
     const el = document.createElement("div");
-    applyLayoutCSS(el, "grid", undefined);
+    const component: Component = { type: "grid" };
+    applyLayoutCSS(el, component);
     expect(el.style.gridTemplateColumns).toBe("repeat(12, 1fr)");
   });
 });

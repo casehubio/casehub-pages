@@ -21,10 +21,11 @@
   "scripts": {
     "build:prod": "yarn build:packages && yarn build:components && yarn build:webapp && yarn build:examples",
     "build": "yarn build:packages && yarn build:components && yarn build:webapp",
-    "build:packages": "yarn workspace @casehub/pages-iframe-api run build && yarn workspace @casehub/pages-echarts-base run build && yarn workspace @casehub/pages-iframe-dev run build && yarn workspace @casehub/pages-component run build && yarn workspace @casehub/pages-data run build && yarn workspace @casehub/pages-ui run build && yarn workspace @casehub/pages-viz run build && yarn workspace @casehub/pages-runtime run build",
+    "build:packages": "yarn workspace @casehub/pages-iframe-api run build && yarn workspace @casehub/pages-echarts-base run build && yarn workspace @casehub/pages-iframe-dev run build && yarn workspace @casehub/pages-data run build && yarn workspace @casehub/pages-component run build && yarn workspace @casehub/pages-ui run build && yarn workspace @casehub/pages-viz run build && yarn workspace @casehub/pages-runtime run build",
     "build:components": "yarn workspaces foreach -Apt --include '@casehub/pages-component-*' run build",
     "build:webapp": "yarn workspace @casehub/pages-webapp run build",
     "build:examples": "yarn workspace @casehub/pages-examples run build",
+    "typecheck": "yarn workspaces foreach -Apt run typecheck",
     "clean": "yarn workspaces foreach -Apt run clean || true",
     "test": "yarn workspaces foreach -Apt run test"
   }

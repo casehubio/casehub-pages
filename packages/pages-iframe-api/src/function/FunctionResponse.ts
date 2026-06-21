@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FunctionCallRequest } from "./FunctionCallRequest";
+import type { FunctionCallRequest } from "./FunctionCallRequest";
 import { FunctionResultType } from "./FunctionResultType";
 
 export interface FunctionResponse {

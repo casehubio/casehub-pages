@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { MetricProps } from "@casehub/pages-ui/dist/model/displayer-types.js";
+import type { MetricProps } from "@casehub/pages-component";
 import { toTypedDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
 
 import { CasehubMetric } from "./CasehubMetric.js";
@@ -22,7 +22,7 @@ function makeDataSet(
       name: id,
       type: type as ColumnType,
     })),
-    data: rows,
+    data: rows.map(row => row.map(cell => cell === null ? null : String(cell))),
   };
   return toTypedDataSet(ds);
 }

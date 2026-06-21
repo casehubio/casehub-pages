@@ -103,8 +103,8 @@ describe("applySort", () => {
       columns: [{ columnId: "missing" as ColumnId, order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
-    expect(result.rows[0]!.cells[0]!.value).toBe(10);
-    expect(result.rows[1]!.cells[0]!.value).toBe(5);
+    expect(extractValue(result.rows[0]!.cells[0]!)).toBe(10);
+    expect(extractValue(result.rows[1]!.cells[0]!)).toBe(5);
   });
 
   it("stable sort preserves original order for equal elements", () => {

@@ -2,6 +2,14 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
+import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import { columnId } from "@casehub/pages-data/dist/dataset/types.js";
+
+interface DataElement extends HTMLElement {
+  dataSet?: TypedDataSet;
+  editable?: boolean;
+  error?: string;
+}
 
 const CONTACT_MANAGER_YAML = `
 datasets:
@@ -88,16 +96,16 @@ describe("form integration — YAML end-to-end", () => {
     if (!condition()) throw new Error(`Timeout: ${msg}`);
   }
 
-  function getFormInputs(): Array<HTMLElement & { dataSet?: any; editable?: boolean; error?: string }> {
+  function getFormInputs(): DataElement[] {
     return Array.from(
       target.querySelectorAll(
         "casehub-text-input, casehub-number-input, casehub-dropdown, casehub-checkbox, casehub-date-picker, casehub-textarea"
       ),
-    ) as any[];
+    ) as DataElement[];
   }
 
-  function getTable(): (HTMLElement & { dataSet?: any }) | null {
-    return target.querySelector("casehub-table") as any;
+  function getTable(): DataElement | null {
+    return target.querySelector("casehub-table") as DataElement | null;
   }
 
   it("loadSite renders table and form inputs from YAML", async () => {
@@ -107,7 +115,7 @@ describe("form integration — YAML end-to-end", () => {
     expect(table).not.toBeNull();
 
     await waitFor(() => !!table!.dataSet, "table data");
-    expect(table!.dataSet.rows.length).toBe(3);
+    expect(table!.dataSet!.rows.length).toBe(3);
 
     const inputs = getFormInputs();
     expect(inputs.length).toBeGreaterThan(0);
@@ -122,7 +130,7 @@ describe("form integration — YAML end-to-end", () => {
     await waitFor(() => inputs.every((i) => i.dataSet), "all form inputs have data");
 
     for (const input of inputs) {
-      expect(input.dataSet.rows.length).toBe(3);
+      expect(input.dataSet!.rows.length).toBe(3);
     }
   });
 
@@ -140,14 +148,14 @@ describe("form integration — YAML end-to-end", () => {
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: "id", rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), rowIndex: 0, reset: false, group: undefined },
       }),
     );
 
     await new Promise((r) => setTimeout(r, 100));
 
     for (const input of inputs) {
-      expect(input.dataSet.rows.length).toBe(1);
+      expect(input.dataSet!.rows.length).toBe(1);
     }
   });
 
@@ -165,7 +173,7 @@ describe("form integration — YAML end-to-end", () => {
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: "id", rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), rowIndex: 0, reset: false, group: undefined },
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -173,19 +181,21 @@ describe("form integration — YAML end-to-end", () => {
     const nameInputs = inputs.filter((i) => i.tagName.toLowerCase() === "casehub-text-input");
     expect(nameInputs.length).toBeGreaterThan(0);
     const nameInput = nameInputs[0]!;
-    expect(nameInput.dataSet.rows[0].cell("name").value).toBe("Alice");
+    const aliceNameCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
+    expect(aliceNameCell.type !== "NULL" && aliceNameCell.value).toBe("Alice");
 
     // Click row 1 (Bob)
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: "id", rowIndex: 1, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), rowIndex: 1, reset: false, group: undefined },
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
-    expect(nameInput.dataSet.rows[0].cell("name").value).toBe("Bob");
+    const bobNameCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
+    expect(bobNameCell.type !== "NULL" && bobNameCell.value).toBe("Bob");
   });
 
   it("form inputs are editable when page has save config", async () => {
@@ -247,14 +257,15 @@ pages:
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: "name", rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("name"), rowIndex: 0, reset: false, group: undefined },
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
     const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "casehub-text-input")!;
-    expect(nameInput.dataSet.rows.length).toBe(1);
-    expect(nameInput.dataSet.rows[0].cell("name").value).toBe("Alice");
+    expect(nameInput.dataSet!.rows.length).toBe(1);
+    const aliceCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
+    expect(aliceCell.type !== "NULL" && aliceCell.value).toBe("Alice");
 
     // Click Bob's email cell (different column! columnId: "email", rowIndex: 1)
     // Without the fix, this would compound: name="Alice" AND email="bob@..."
@@ -263,13 +274,14 @@ pages:
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: "email", rowIndex: 1, reset: false, group: undefined },
+        detail: { columnId: columnId("email"), rowIndex: 1, reset: false, group: undefined },
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
-    expect(nameInput.dataSet.rows.length).toBe(1);
-    expect(nameInput.dataSet.rows[0].cell("name").value).toBe("Bob");
+    expect(nameInput.dataSet!.rows.length).toBe(1);
+    const bobCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
+    expect(bobCell.type !== "NULL" && bobCell.value).toBe("Bob");
   });
 
   it("selecting a row after text-filtering the table works correctly", async () => {
@@ -286,29 +298,31 @@ pages:
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: "id", rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), rowIndex: 0, reset: false, group: undefined },
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
     const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "casehub-text-input")!;
-    expect(nameInput.dataSet.rows[0].cell("name").value).toBe("Alice");
+    const aliceNameCell2 = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
+    expect(aliceNameCell2.type !== "NULL" && aliceNameCell2.value).toBe("Alice");
 
     // Now simulate what happens after table text-filter shows only Bob:
     // The table emits with the ROW OBJECT directly (not rowIndex) because
     // the display index doesn't match the dataset index after filtering.
-    const bobRow = table!.dataSet.rows[1]; // Bob is row 1 in the full dataset
+    const bobRow = table!.dataSet!.rows[1]; // Bob is row 1 in the full dataset
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: "name", row: bobRow, reset: false, group: undefined },
+        detail: { columnId: columnId("name"), row: bobRow, reset: false, group: undefined },
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
-    expect(nameInput.dataSet.rows.length).toBe(1);
-    expect(nameInput.dataSet.rows[0].cell("name").value).toBe("Bob");
+    expect(nameInput.dataSet!.rows.length).toBe(1);
+    const bobNameCell2 = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
+    expect(bobNameCell2.type !== "NULL" && bobNameCell2.value).toBe("Bob");
   });
 
   it("casehub-field-change events are handled without crash", async () => {

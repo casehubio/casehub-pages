@@ -16,13 +16,15 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { ComponentDevPane } from "./ComponentDevPane";
-import {
+import type {
   DataSet,
-  MessageProperty,
   ComponentMessage,
-  MessageType,
   FunctionResponse,
   FunctionCallRequest,
+} from "@casehub/pages-iframe-api";
+import {
+  MessageProperty,
+  MessageType,
   FunctionResultType,
 } from "@casehub/pages-iframe-api";
 

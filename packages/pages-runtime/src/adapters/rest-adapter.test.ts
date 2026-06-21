@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { createRestAdapter } from "./rest-adapter.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 
 describe("rest-adapter", () => {
   it("should send PATCH request with changed fields", async () => {
@@ -13,11 +13,11 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as any,
+      mockFetch as typeof globalThis.fetch,
     );
 
     const result = await adapter.save(
-      "users" as DataSetId,
+      dataSetId("users"),
       { id: 1, name: "Updated", email: "updated@example.com" },
       ["name", "email"],
       "id",
@@ -51,11 +51,11 @@ describe("rest-adapter", () => {
         headers: { "X-Custom-Header": "value" },
       },
       "https://api.example.com/users",
-      mockFetch as any,
+      mockFetch as typeof globalThis.fetch,
     );
 
     await adapter.save(
-      "users" as DataSetId,
+      dataSetId("users"),
       { id: 1, name: "Updated" },
       ["name"],
       "id",
@@ -84,11 +84,11 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as any,
+      mockFetch as typeof globalThis.fetch,
     );
 
     const result = await adapter.save(
-      "users" as DataSetId,
+      dataSetId("users"),
       { id: 999, name: "Unknown" },
       ["name"],
       "id",
@@ -107,11 +107,11 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as any,
+      mockFetch as typeof globalThis.fetch,
     );
 
     const result = await adapter.save(
-      "users" as DataSetId,
+      dataSetId("users"),
       { id: 1, name: "Updated" },
       ["name"],
       "id",
@@ -131,11 +131,11 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as any,
+      mockFetch as typeof globalThis.fetch,
     );
 
     const result = await adapter.save(
-      "users" as DataSetId,
+      dataSetId("users"),
       { id: 1, name: "Updated" },
       ["name"],
       "id",

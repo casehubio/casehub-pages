@@ -1,5 +1,5 @@
 import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-import type { IframePluginProps } from "@casehub/pages-ui/dist/model/displayer-types.js";
+import type { IframePluginProps } from "@casehub/pages-component";
 import { toWireDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
 import { CasehubElement } from "../base/CasehubElement.js";
 

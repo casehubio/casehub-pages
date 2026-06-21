@@ -6,6 +6,12 @@ import { describe, it, expect, afterEach } from "vitest";
 import "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
+import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import { columnId, ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
+
+interface DataElement extends HTMLElement {
+  dataSet?: TypedDataSet;
+}
 import {
   page,
   textInput,
@@ -119,15 +125,15 @@ function buildContactManagerTS() {
     ]),
     {
       columns: [
-        { id: "id", type: "NUMBER" },
-        { id: "name", type: "TEXT" },
-        { id: "email", type: "TEXT" },
-        { id: "phone", type: "TEXT" },
-        { id: "category", type: "LABEL" },
-        { id: "active", type: "LABEL" },
-        { id: "startDate", type: "DATE" },
-        { id: "notes", type: "TEXT" },
-        { id: "priority", type: "NUMBER" },
+        { id: columnId("id"), type: ColumnType.NUMBER },
+        { id: columnId("name"), type: ColumnType.TEXT },
+        { id: columnId("email"), type: ColumnType.TEXT },
+        { id: columnId("phone"), type: ColumnType.TEXT },
+        { id: columnId("category"), type: ColumnType.LABEL },
+        { id: columnId("active"), type: ColumnType.LABEL },
+        { id: columnId("startDate"), type: ColumnType.DATE },
+        { id: columnId("notes"), type: ColumnType.TEXT },
+        { id: columnId("priority"), type: ColumnType.NUMBER },
       ],
     },
   );
@@ -150,7 +156,7 @@ function buildContactManagerTS() {
       datePicker({ field: "startDate", label: "Start Date" }),
       textarea({ field: "notes", label: "Notes", rows: 3 }),
       {
-        dataScope: { dataset: ds, idColumn: "id" },
+        dataScope: { dataset: ds, idColumn: columnId("id") },
         save: { trigger: "auto" as const, delay: 2000, adapter: "local" },
       },
     ),
@@ -236,8 +242,8 @@ describe("YAML ↔ TS equivalence", () => {
     sites.push(tsSite);
     await new Promise((r) => setTimeout(r, 200));
 
-    const yamlTable = yamlTarget.querySelector("casehub-table") as any;
-    const tsTable = tsTarget.querySelector("casehub-table") as any;
+    const yamlTable = yamlTarget.querySelector("casehub-table") as DataElement | null;
+    const tsTable = tsTarget.querySelector("casehub-table") as DataElement | null;
 
     expect(yamlTable?.dataSet?.rows?.length).toBe(3);
     expect(tsTable?.dataSet?.rows?.length).toBe(3);

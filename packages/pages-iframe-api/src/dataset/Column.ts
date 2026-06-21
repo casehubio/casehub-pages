@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { ColumnType } from "./ColumnType";
-import { ColumnSettings } from "./ColumnSettings";
+import type { ColumnSettings } from "./ColumnSettings";
 
 export interface Column {
   name: string;

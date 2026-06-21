@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ComponentMessage } from "../message";
+import type { ComponentMessage } from "../message";
 import { PagesComponentController } from "./PagesComponentController";
 
 /*

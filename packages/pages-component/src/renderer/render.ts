@@ -53,7 +53,7 @@ function renderNode(
 
   // 3. Apply layout CSS
   if (isLayoutType(component.type)) {
-    applyLayoutCSS(el, component.type, component.props);
+    applyLayoutCSS(el, component);
   }
 
   // 4. Apply Component.style — runs AFTER layout CSS so author overrides win

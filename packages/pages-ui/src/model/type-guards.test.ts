@@ -36,8 +36,8 @@ describe("type guards - chart components", () => {
     };
     expect(isBarChart(c)).toBe(true);
     if (isBarChart(c)) {
-      expect(c.props.title).toBe("Revenue");
-      expect(c.props.lookup.dataSetId).toBe("sales");
+      expect(c.props!.title).toBe("Revenue");
+      expect(c.props!.lookup.dataSetId).toBe("sales");
     }
   });
 
@@ -53,7 +53,7 @@ describe("type guards - chart components", () => {
     };
     expect(isLineChart(c)).toBe(true);
     if (isLineChart(c)) {
-      expect(c.props.lookup.dataSetId).toBe("metrics");
+      expect(c.props!.lookup.dataSetId).toBe("metrics");
     }
   });
 
@@ -88,8 +88,8 @@ describe("type guards - chart components", () => {
     };
     expect(isBubbleChart(c)).toBe(true);
     if (isBubbleChart(c)) {
-      expect(c.props.minRadius).toBe(5);
-      expect(c.props.maxRadius).toBe(20);
+      expect(c.props!.minRadius).toBe(5);
+      expect(c.props!.maxRadius).toBe(20);
     }
   });
 
@@ -110,7 +110,7 @@ describe("type guards - data components", () => {
     };
     expect(isTable(c)).toBe(true);
     if (isTable(c)) {
-      expect(c.props.pageSize).toBe(10);
+      expect(c.props!.pageSize).toBe(10);
     }
   });
 
@@ -121,7 +121,7 @@ describe("type guards - data components", () => {
     };
     expect(isMetric(c)).toBe(true);
     if (isMetric(c)) {
-      expect(c.props.subtype).toBe("card");
+      expect(c.props!.subtype).toBe("card");
     }
   });
 
@@ -132,7 +132,7 @@ describe("type guards - data components", () => {
     };
     expect(isMeter(c)).toBe(true);
     if (isMeter(c)) {
-      expect(c.props.end).toBe(100);
+      expect(c.props!.end).toBe(100);
     }
   });
 
@@ -143,7 +143,7 @@ describe("type guards - data components", () => {
     };
     expect(isSelector(c)).toBe(true);
     if (isSelector(c)) {
-      expect(c.props.subtype).toBe("dropdown");
+      expect(c.props!.subtype).toBe("dropdown");
     }
   });
 
@@ -154,7 +154,7 @@ describe("type guards - data components", () => {
     };
     expect(isMap(c)).toBe(true);
     if (isMap(c)) {
-      expect(c.props.subtype).toBe("markers");
+      expect(c.props!.subtype).toBe("markers");
     }
   });
 });
@@ -167,7 +167,7 @@ describe("type guards - page components", () => {
     };
     expect(isPage(c)).toBe(true);
     if (isPage(c)) {
-      expect(c.props.name).toBe("Dashboard");
+      expect(c.props!.name).toBe("Dashboard");
     }
   });
 });
@@ -180,7 +180,7 @@ describe("type guards - plugin components", () => {
     };
     expect(isIframePlugin(c)).toBe(true);
     if (isIframePlugin(c)) {
-      expect(c.props.componentId).toBe("custom-viz");
+      expect(c.props!.componentId).toBe("custom-viz");
     }
   });
 });

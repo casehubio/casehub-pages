@@ -19,14 +19,16 @@ import {
   isTitle,
   isLazyPage,
   getProps,
+  isComponentType,
 } from "./type-guards.js";
+import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 
 describe("type guards - layout components", () => {
   it("isGrid narrows grid components", () => {
     const c: Component = { type: "grid", props: { columns: 12 }, items: [] };
     expect(isGrid(c)).toBe(true);
     if (isGrid(c)) {
-      expect(c.props.columns).toBe(12);
+      expect(c.props?.columns).toBe(12);
     }
   });
 
@@ -42,7 +44,7 @@ describe("type guards - layout components", () => {
     };
     expect(isColumns(c)).toBe(true);
     if (isColumns(c)) {
-      expect(c.props.distribution).toEqual([1, 2, 1]);
+      expect(c.props?.distribution).toEqual([1, 2, 1]);
     }
   });
 
@@ -160,7 +162,7 @@ describe("type guards - wrapper components", () => {
     };
     expect(isPanel(c)).toBe(true);
     if (isPanel(c)) {
-      expect(c.props.title).toBe("Section");
+      expect(c.props?.title).toBe("Section");
     }
   });
 
@@ -175,7 +177,7 @@ describe("type guards - content components", () => {
     const c: Component = { type: "html", props: { content: "<p>hi</p>" } };
     expect(isHtml(c)).toBe(true);
     if (isHtml(c)) {
-      expect(c.props.content).toBe("<p>hi</p>");
+      expect(c.props?.content).toBe("<p>hi</p>");
     }
   });
 
@@ -191,7 +193,7 @@ describe("type guards - content components", () => {
     };
     expect(isMarkdown(c)).toBe(true);
     if (isMarkdown(c)) {
-      expect(c.props.content).toBe("# Heading");
+      expect(c.props?.content).toBe("# Heading");
     }
   });
 
@@ -207,8 +209,8 @@ describe("type guards - content components", () => {
     };
     expect(isTitle(c)).toBe(true);
     if (isTitle(c)) {
-      expect(c.props.text).toBe("Dashboard");
-      expect(c.props.size).toBe("large");
+      expect(c.props?.text).toBe("Dashboard");
+      expect(c.props?.size).toBe("large");
     }
   });
 
@@ -226,8 +228,8 @@ describe("type guards - page components", () => {
     };
     expect(isLazyPage(c)).toBe(true);
     if (isLazyPage(c)) {
-      expect(c.props.name).toBe("Reports");
-      expect(c.props.href).toBe("/reports.yaml");
+      expect(c.props?.name).toBe("Reports");
+      expect(c.props?.href).toBe("/reports.yaml");
     }
   });
 
@@ -253,5 +255,36 @@ describe("getProps", () => {
   it("throws for mismatched type", () => {
     const c: Component = { type: "panel", props: {} };
     expect(() => getProps(c, "grid")).toThrow("Expected grid, got panel");
+  });
+});
+
+describe("type guards narrow to TypedComponent", () => {
+  it("isGrid narrows type and props", () => {
+    const c: Component = {
+      type: "grid",
+      props: { columns: 12 },
+    };
+    if (isGrid(c)) {
+      // TypeScript knows c.type === "grid" and c.props is GridProps
+      expect(c.type).toBe("grid");
+      expect(c.props?.columns).toBe(12);
+    }
+  });
+
+  it("isComponentType narrows generically", () => {
+    const c: Component = { type: "grid", props: { columns: 12 } };
+    if (isComponentType(c, "grid")) {
+      expect(c.type).toBe("grid");
+      expect(c.props?.columns).toBe(12);
+    }
+  });
+
+  it("getProps returns typed props for all registry types", () => {
+    const c: Component = {
+      type: "bar-chart",
+      props: { lookup: { dataSetId: dataSetId("ds"), operations: [] } },
+    };
+    const props = getProps(c, "bar-chart");
+    expect(props.lookup.dataSetId).toBe("ds");
   });
 });

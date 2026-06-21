@@ -1,5 +1,5 @@
 import { CasehubFormInput } from "./CasehubFormInput.js";
-import type { TextInputProps } from "@casehub/pages-ui";
+import type { TextInputProps } from "@casehub/pages-component";
 import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 

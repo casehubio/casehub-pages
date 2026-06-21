@@ -106,7 +106,7 @@ describe("data component builders", () => {
       refresh: { interval: 30 },
     });
     expect(c.props!["lookup"]).toBeDefined();
-    expect((c.props as any).refresh.interval).toBe(30);
+    expect(c.props!.refresh!.interval).toBe(30);
   });
 
   it("all builders return frozen components", () => {

@@ -1,13 +1,9 @@
 {
   "extends": "@casehub/pages-tsconfig/tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "node",
+    "target": "es6",
     "declaration": false,
-    "declarationMap": false,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "es6"
+    "declarationMap": false
   },
   "include": ["src"]
 }
