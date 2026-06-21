@@ -1,22 +1,22 @@
 import { describe, it, expect } from "vitest";
 import { resolveFilterTypes } from "./filter-resolve.js";
 import type { FilterExpression, ResolvedFilterExpression } from "./filter.js";
-import type { Column, ColumnId } from "./types.js";
-import { ColumnType } from "./types.js";
+import type { Column, ColumnId} from "./types.js";
+import { ColumnType, columnId} from "./types.js";
 import { DataSetError } from "./errors.js";
 
 const columns: Column[] = [
-  { id: "age" as ColumnId, name: "Age", type: ColumnType.NUMBER },
-  { id: "name" as ColumnId, name: "Name", type: ColumnType.TEXT },
-  { id: "city" as ColumnId, name: "City", type: ColumnType.LABEL },
-  { id: "birthdate" as ColumnId, name: "Birth Date", type: ColumnType.DATE },
+  { id: columnId("age"), name: "Age", type: ColumnType.NUMBER },
+  { id: columnId("name"), name: "Name", type: ColumnType.TEXT },
+  { id: columnId("city"), name: "City", type: ColumnType.LABEL },
+  { id: columnId("birthdate"), name: "Birth Date", type: ColumnType.DATE },
 ];
 
 describe("resolveFilterTypes", () => {
   it("resolves unresolved numeric filter to typed variant", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "GREATER_THAN",
       args: ["30"],
     };
@@ -33,7 +33,7 @@ describe("resolveFilterTypes", () => {
   it("resolves unresolved text filter to typed variant", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "name" as ColumnId,
+      columnId: columnId("name"),
       fn: "EQUALS_TO",
       args: ["John"],
     };
@@ -50,7 +50,7 @@ describe("resolveFilterTypes", () => {
   it("resolves unresolved label filter to typed variant", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "city" as ColumnId,
+      columnId: columnId("city"),
       fn: "IN",
       args: ["NYC", "LA"],
     };
@@ -67,7 +67,7 @@ describe("resolveFilterTypes", () => {
   it("resolves unresolved date filter to typed variant", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "birthdate" as ColumnId,
+      columnId: columnId("birthdate"),
       fn: "LOWER_THAN",
       args: ["2000-01-01T00:00:00Z"],
     };
@@ -84,7 +84,7 @@ describe("resolveFilterTypes", () => {
   it("resolves BETWEEN for numeric column", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "BETWEEN",
       args: ["20", "40"],
     };
@@ -101,7 +101,7 @@ describe("resolveFilterTypes", () => {
   it("resolves BETWEEN for date column", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "birthdate" as ColumnId,
+      columnId: columnId("birthdate"),
       fn: "BETWEEN",
       args: ["2000-01-01T00:00:00Z", "2010-01-01T00:00:00Z"],
     };
@@ -122,7 +122,7 @@ describe("resolveFilterTypes", () => {
   it("resolves IN for numeric column", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "IN",
       args: ["25", "30", "35"],
     };
@@ -139,7 +139,7 @@ describe("resolveFilterTypes", () => {
   it("resolves NOT_IN for string column", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "name" as ColumnId,
+      columnId: columnId("name"),
       fn: "NOT_IN",
       args: ["John", "Jane"],
     };
@@ -156,7 +156,7 @@ describe("resolveFilterTypes", () => {
   it("resolves IS_NULL for any column type", () => {
     const numExpr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "IS_NULL",
       args: [],
     };
@@ -173,7 +173,7 @@ describe("resolveFilterTypes", () => {
   it("resolves NOT_NULL for any column type", () => {
     const dateExpr: FilterExpression = {
       type: "unresolved",
-      columnId: "birthdate" as ColumnId,
+      columnId: columnId("birthdate"),
       fn: "NOT_NULL",
       args: [],
     };
@@ -190,7 +190,7 @@ describe("resolveFilterTypes", () => {
   it("resolves TIME_FRAME for date column", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "birthdate" as ColumnId,
+      columnId: columnId("birthdate"),
       fn: "TIME_FRAME",
       args: ["begin[year] till now"],
     };
@@ -213,7 +213,7 @@ describe("resolveFilterTypes", () => {
   it("resolves LIKE_TO for text column with default caseSensitive", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "name" as ColumnId,
+      columnId: columnId("name"),
       fn: "LIKE_TO",
       args: ["%john%"],
     };
@@ -230,7 +230,7 @@ describe("resolveFilterTypes", () => {
   it("resolves LIKE_TO for text column with caseSensitive=false", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "name" as ColumnId,
+      columnId: columnId("name"),
       fn: "LIKE_TO",
       args: ["%john%", "false"],
     };
@@ -247,7 +247,7 @@ describe("resolveFilterTypes", () => {
   it("resolves LIKE_TO for text column with caseSensitive=true", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "name" as ColumnId,
+      columnId: columnId("name"),
       fn: "LIKE_TO",
       args: ["%john%", "true"],
     };
@@ -267,13 +267,13 @@ describe("resolveFilterTypes", () => {
       children: [
         {
           type: "unresolved",
-          columnId: "age" as ColumnId,
+          columnId: columnId("age"),
           fn: "GREATER_THAN",
           args: ["18"],
         },
         {
           type: "unresolved",
-          columnId: "name" as ColumnId,
+          columnId: columnId("name"),
           fn: "EQUALS_TO",
           args: ["John"],
         },
@@ -305,13 +305,13 @@ describe("resolveFilterTypes", () => {
       children: [
         {
           type: "unresolved",
-          columnId: "city" as ColumnId,
+          columnId: columnId("city"),
           fn: "EQUALS_TO",
           args: ["NYC"],
         },
         {
           type: "unresolved",
-          columnId: "city" as ColumnId,
+          columnId: columnId("city"),
           fn: "EQUALS_TO",
           args: ["LA"],
         },
@@ -342,7 +342,7 @@ describe("resolveFilterTypes", () => {
       type: "not",
       child: {
         type: "unresolved",
-        columnId: "age" as ColumnId,
+        columnId: columnId("age"),
         fn: "LOWER_THAN",
         args: ["18"],
       },
@@ -369,13 +369,13 @@ describe("resolveFilterTypes", () => {
           children: [
             {
               type: "unresolved",
-              columnId: "city" as ColumnId,
+              columnId: columnId("city"),
               fn: "EQUALS_TO",
               args: ["NYC"],
             },
             {
               type: "unresolved",
-              columnId: "city" as ColumnId,
+              columnId: columnId("city"),
               fn: "EQUALS_TO",
               args: ["LA"],
             },
@@ -385,7 +385,7 @@ describe("resolveFilterTypes", () => {
           type: "not",
           child: {
             type: "unresolved",
-            columnId: "age" as ColumnId,
+            columnId: columnId("age"),
             fn: "LOWER_THAN",
             args: ["18"],
           },
@@ -428,7 +428,7 @@ describe("resolveFilterTypes", () => {
   it("passes through already-resolved expressions", () => {
     const expr: ResolvedFilterExpression = {
       type: "numeric",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       filter: { fn: "GREATER_THAN", value: 30 },
     };
 
@@ -443,12 +443,12 @@ describe("resolveFilterTypes", () => {
       children: [
         {
           type: "numeric",
-          columnId: "age" as ColumnId,
+          columnId: columnId("age"),
           filter: { fn: "GREATER_THAN", value: 18 },
         },
         {
           type: "string",
-          columnId: "name" as ColumnId,
+          columnId: columnId("name"),
           filter: { fn: "EQUALS_TO", value: "John" },
         },
       ],
@@ -462,7 +462,7 @@ describe("resolveFilterTypes", () => {
   it("throws UNKNOWN_COLUMN for missing column", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "unknown" as ColumnId,
+      columnId: columnId("unknown"),
       fn: "EQUALS_TO",
       args: ["value"],
     };
@@ -475,7 +475,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for LIKE_TO on NUMBER", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "LIKE_TO",
       args: ["%pattern%"],
     };
@@ -488,7 +488,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for LIKE_TO on DATE", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "birthdate" as ColumnId,
+      columnId: columnId("birthdate"),
       fn: "LIKE_TO",
       args: ["%pattern%"],
     };
@@ -501,7 +501,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for TIME_FRAME on NUMBER", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "TIME_FRAME",
       args: ["begin[year] till now"],
     };
@@ -514,7 +514,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for TIME_FRAME on TEXT", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "name" as ColumnId,
+      columnId: columnId("name"),
       fn: "TIME_FRAME",
       args: ["begin[year] till now"],
     };
@@ -527,7 +527,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for invalid number parsing", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "EQUALS_TO",
       args: ["not-a-number"],
     };
@@ -540,7 +540,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for invalid date parsing", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "birthdate" as ColumnId,
+      columnId: columnId("birthdate"),
       fn: "EQUALS_TO",
       args: ["not-a-date"],
     };
@@ -553,7 +553,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for invalid number in BETWEEN", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "BETWEEN",
       args: ["20", "invalid"],
     };
@@ -565,7 +565,7 @@ describe("resolveFilterTypes", () => {
   it("throws RESOLUTION_FAILED for invalid number in IN", () => {
     const expr: FilterExpression = {
       type: "unresolved",
-      columnId: "age" as ColumnId,
+      columnId: columnId("age"),
       fn: "IN",
       args: ["20", "invalid", "30"],
     };

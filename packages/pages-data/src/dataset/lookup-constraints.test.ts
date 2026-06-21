@@ -5,23 +5,23 @@ import {
   type DataSetLookupConstraints,
 } from "./lookup-constraints.js";
 import { createLookup } from "./lookup.js";
-import { ColumnType } from "./types.js";
+import { ColumnType, dataSetId, columnId} from "./types.js";
 import type { Column, ColumnId, DataSetId } from "./types.js";
 import type { GroupOp } from "./group.js";
 import type { ResolvedFilterOp } from "./filter.js";
 
 function dsId(id: string): DataSetId {
-  return id as DataSetId;
+  return dataSetId(id);
 }
 
 function col(id: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name: id, type };
+  return { id: columnId(id), name: id, type };
 }
 
 function groupingKey(id: string) {
   return {
-    sourceId: id as ColumnId,
-    columnId: id as ColumnId,
+    sourceId: columnId(id),
+    columnId: columnId(id),
     strategy: { mode: "distinct" as const },
     maxIntervals: 15,
     emptyIntervals: false,
@@ -33,8 +33,8 @@ function groupOp(keyId: string | null, ...columnIds: string[]): GroupOp {
   return {
     type: "group",
     groupingKey: keyId ? {
-      sourceId: keyId as ColumnId,
-      columnId: keyId as ColumnId,
+      sourceId: columnId(keyId),
+      columnId: columnId(keyId),
       strategy: { mode: "distinct" },
       maxIntervals: 15,
       emptyIntervals: false,
@@ -42,8 +42,8 @@ function groupOp(keyId: string | null, ...columnIds: string[]): GroupOp {
     } : null,
     columns: columnIds.map((id) => ({
       kind: "aggregate",
-      sourceId: id as ColumnId,
-      columnId: id as ColumnId,
+      sourceId: columnId(id),
+      columnId: columnId(id),
       fn: { fn: "COUNT" },
     })),
   };
@@ -66,7 +66,7 @@ describe("validateLookup", () => {
     it("detects filter when not allowed", () => {
       const filter: ResolvedFilterOp = {
         type: "filter",
-        expressions: [{ type: "numeric", columnId: "x" as ColumnId, filter: { fn: "IS_NULL" } }],
+        expressions: [{ type: "numeric", columnId: columnId("x"), filter: { fn: "IS_NULL" } }],
       };
       const lookup = createLookup(dsId("test"), [filter]);
       const constraints: DataSetLookupConstraints = { ...DEFAULT_CONSTRAINTS, filterAllowed: false };
@@ -79,7 +79,7 @@ describe("validateLookup", () => {
     it("allows filter when filterAllowed is true", () => {
       const filter: ResolvedFilterOp = {
         type: "filter",
-        expressions: [{ type: "numeric", columnId: "x" as ColumnId, filter: { fn: "IS_NULL" } }],
+        expressions: [{ type: "numeric", columnId: columnId("x"), filter: { fn: "IS_NULL" } }],
       };
       const lookup = createLookup(dsId("test"), [filter, groupOp("x")]);
       const violations = validateLookup(lookup, DEFAULT_CONSTRAINTS);
@@ -123,8 +123,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: groupingKey("x"),
         columns: [
-          { kind: "select", sourceId: "y" as ColumnId, columnId: "y" as ColumnId },
-          { kind: "aggregate", sourceId: "z" as ColumnId, columnId: "z" as ColumnId, fn: { fn: "COUNT" } },
+          { kind: "select", sourceId: columnId("y"), columnId: columnId("y") },
+          { kind: "aggregate", sourceId: columnId("z"), columnId: columnId("z"), fn: { fn: "COUNT" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -140,8 +140,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: groupingKey("x"),
         columns: [
-          { kind: "select", sourceId: "y" as ColumnId, columnId: "y" as ColumnId },
-          { kind: "aggregate", sourceId: "z" as ColumnId, columnId: "z" as ColumnId, fn: { fn: "COUNT" } },
+          { kind: "select", sourceId: columnId("y"), columnId: columnId("y") },
+          { kind: "aggregate", sourceId: columnId("z"), columnId: columnId("z"), fn: { fn: "COUNT" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -156,9 +156,9 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: groupingKey("x"),
         columns: [
-          { kind: "select", sourceId: "y" as ColumnId, columnId: "y" as ColumnId },
-          { kind: "select", sourceId: "z" as ColumnId, columnId: "z" as ColumnId },
-          { kind: "aggregate", sourceId: "w" as ColumnId, columnId: "w" as ColumnId, fn: { fn: "COUNT" } },
+          { kind: "select", sourceId: columnId("y"), columnId: columnId("y") },
+          { kind: "select", sourceId: columnId("z"), columnId: columnId("z") },
+          { kind: "aggregate", sourceId: columnId("w"), columnId: columnId("w"), fn: { fn: "COUNT" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -213,7 +213,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: groupingKey("x"),
-        columns: [{ kind: "aggregate", sourceId: "y" as ColumnId, columnId: "y" as ColumnId, fn: { fn: "COUNT" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("y"), columnId: columnId("y"), fn: { fn: "COUNT" } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -231,7 +231,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: groupingKey("x"),
-        columns: [{ kind: "aggregate", sourceId: "y" as ColumnId, columnId: "y" as ColumnId, fn: { fn: "COUNT" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("y"), columnId: columnId("y"), fn: { fn: "COUNT" } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -247,7 +247,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "COUNT" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "COUNT" } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -264,7 +264,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "COUNT" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "COUNT" } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -281,10 +281,10 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: null,
         columns: [
-          { kind: "aggregate", sourceId: "a" as ColumnId, columnId: "a" as ColumnId, fn: { fn: "DISTINCT" } },
-          { kind: "aggregate", sourceId: "b" as ColumnId, columnId: "b" as ColumnId, fn: { fn: "SUM" } },
-          { kind: "aggregate", sourceId: "c" as ColumnId, columnId: "c" as ColumnId, fn: { fn: "AVERAGE" } },
-          { kind: "aggregate", sourceId: "d" as ColumnId, columnId: "d" as ColumnId, fn: { fn: "MEDIAN" } },
+          { kind: "aggregate", sourceId: columnId("a"), columnId: columnId("a"), fn: { fn: "DISTINCT" } },
+          { kind: "aggregate", sourceId: columnId("b"), columnId: columnId("b"), fn: { fn: "SUM" } },
+          { kind: "aggregate", sourceId: columnId("c"), columnId: columnId("c"), fn: { fn: "AVERAGE" } },
+          { kind: "aggregate", sourceId: columnId("d"), columnId: columnId("d"), fn: { fn: "MEDIAN" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -301,7 +301,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "JOIN", separator: "," } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "JOIN", separator: "," } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -317,7 +317,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "JOIN", separator: "," } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "JOIN", separator: "," } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -335,8 +335,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: null,
         columns: [
-          { kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "MIN" } },
-          { kind: "aggregate", sourceId: "y" as ColumnId, columnId: "y" as ColumnId, fn: { fn: "MAX" } },
+          { kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "MIN" } },
+          { kind: "aggregate", sourceId: columnId("y"), columnId: columnId("y"), fn: { fn: "MAX" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -354,7 +354,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "MIN" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "MIN" } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const cols = [col("x", ColumnType.DATE)];
@@ -372,7 +372,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "MIN" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "MIN" } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -388,7 +388,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: groupingKey("x"),
-        columns: [{ kind: "select", sourceId: "y" as ColumnId, columnId: "y" as ColumnId }],
+        columns: [{ kind: "select", sourceId: columnId("y"), columnId: columnId("y") }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const cols = [col("x", ColumnType.LABEL), col("y", ColumnType.TEXT)];
@@ -405,7 +405,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: groupingKey("x"),
-        columns: [{ kind: "select", sourceId: "y" as ColumnId, columnId: "y" as ColumnId }],
+        columns: [{ kind: "select", sourceId: columnId("y"), columnId: columnId("y") }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const cols = [col("x", ColumnType.LABEL), col("y", ColumnType.DATE)];
@@ -423,7 +423,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: groupingKey("x"),
-        columns: [{ kind: "select", sourceId: "y" as ColumnId, columnId: "y" as ColumnId }],
+        columns: [{ kind: "select", sourceId: columnId("y"), columnId: columnId("y") }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -439,7 +439,7 @@ describe("validateLookup", () => {
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "COUNT" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "COUNT" } }],
       };
       const lookup = createLookup(dsId("test"), [group]);
       const constraints: DataSetLookupConstraints = {
@@ -458,8 +458,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: null,
         columns: [
-          { kind: "aggregate", sourceId: "x" as ColumnId, columnId: "dup" as ColumnId, fn: { fn: "COUNT" } },
-          { kind: "aggregate", sourceId: "y" as ColumnId, columnId: "dup" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "aggregate", sourceId: columnId("x"), columnId: columnId("dup"), fn: { fn: "COUNT" } },
+          { kind: "aggregate", sourceId: columnId("y"), columnId: columnId("dup"), fn: { fn: "SUM" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -476,8 +476,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: null,
         columns: [
-          { kind: "aggregate", sourceId: "x" as ColumnId, columnId: "dup" as ColumnId, fn: { fn: "COUNT" } },
-          { kind: "aggregate", sourceId: "y" as ColumnId, columnId: "dup" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "aggregate", sourceId: columnId("x"), columnId: columnId("dup"), fn: { fn: "COUNT" } },
+          { kind: "aggregate", sourceId: columnId("y"), columnId: columnId("dup"), fn: { fn: "SUM" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -492,10 +492,10 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: null,
         columns: [
-          { kind: "aggregate", sourceId: "a" as ColumnId, columnId: "dup1" as ColumnId, fn: { fn: "COUNT" } },
-          { kind: "aggregate", sourceId: "b" as ColumnId, columnId: "dup1" as ColumnId, fn: { fn: "SUM" } },
-          { kind: "aggregate", sourceId: "c" as ColumnId, columnId: "dup2" as ColumnId, fn: { fn: "COUNT" } },
-          { kind: "aggregate", sourceId: "d" as ColumnId, columnId: "dup2" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "aggregate", sourceId: columnId("a"), columnId: columnId("dup1"), fn: { fn: "COUNT" } },
+          { kind: "aggregate", sourceId: columnId("b"), columnId: columnId("dup1"), fn: { fn: "SUM" } },
+          { kind: "aggregate", sourceId: columnId("c"), columnId: columnId("dup2"), fn: { fn: "COUNT" } },
+          { kind: "aggregate", sourceId: columnId("d"), columnId: columnId("dup2"), fn: { fn: "SUM" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -542,8 +542,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: groupingKey("x"),
         columns: [
-          { kind: "aggregate", sourceId: "y" as ColumnId, columnId: "y" as ColumnId, fn: { fn: "COUNT" } },
-          { kind: "aggregate", sourceId: "z" as ColumnId, columnId: "z" as ColumnId, fn: { fn: "JOIN", separator: "," } },
+          { kind: "aggregate", sourceId: columnId("y"), columnId: columnId("y"), fn: { fn: "COUNT" } },
+          { kind: "aggregate", sourceId: columnId("z"), columnId: columnId("z"), fn: { fn: "JOIN", separator: "," } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -565,8 +565,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: groupingKey("x"),
         columns: [
-          { kind: "aggregate", sourceId: "y" as ColumnId, columnId: "y" as ColumnId, fn: { fn: "COUNT" } },
-          { kind: "aggregate", sourceId: "z" as ColumnId, columnId: "z" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "aggregate", sourceId: columnId("y"), columnId: columnId("y"), fn: { fn: "COUNT" } },
+          { kind: "aggregate", sourceId: columnId("z"), columnId: columnId("z"), fn: { fn: "SUM" } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -586,8 +586,8 @@ describe("validateLookup", () => {
         type: "group",
         groupingKey: groupingKey("x"),
         columns: [
-          { kind: "aggregate", sourceId: "y" as ColumnId, columnId: "y" as ColumnId, fn: { fn: "COUNT" } },
-          { kind: "aggregate", sourceId: "z" as ColumnId, columnId: "z" as ColumnId, fn: { fn: "JOIN", separator: "," } },
+          { kind: "aggregate", sourceId: columnId("y"), columnId: columnId("y"), fn: { fn: "COUNT" } },
+          { kind: "aggregate", sourceId: columnId("z"), columnId: columnId("z"), fn: { fn: "JOIN", separator: "," } },
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
@@ -607,12 +607,12 @@ describe("validateLookup", () => {
     it("returns all violations for a single lookup", () => {
       const filter: ResolvedFilterOp = {
         type: "filter",
-        expressions: [{ type: "numeric", columnId: "x" as ColumnId, filter: { fn: "IS_NULL" } }],
+        expressions: [{ type: "numeric", columnId: columnId("x"), filter: { fn: "IS_NULL" } }],
       };
       const group: GroupOp = {
         type: "group",
         groupingKey: null,
-        columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "COUNT" } }],
+        columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "COUNT" } }],
       };
       const lookup = createLookup(dsId("test"), [filter, group]);
       const constraints: DataSetLookupConstraints = {

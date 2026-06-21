@@ -4,12 +4,13 @@ import { InlineProvider } from "./providers/inline.js";
 import { BrowserFetchProvider } from "./providers/browser-fetch.js";
 import { CorsProxyProvider } from "./providers/cors-proxy.js";
 import { ServerRelayProvider } from "./providers/server-relay.js";
-import type { DataProviderConfig, ExternalDataSetDef } from "./types.js";
+import type { DataProviderConfig, ExternalDataSetDef} from "./types.js";
 import { HttpMethod } from "./types.js";
 import type { DataSetId } from "../types.js";
 
+import { dataSetId } from "../types.js";
 function def(overrides: Partial<ExternalDataSetDef> = {}): ExternalDataSetDef {
-  return { uuid: "test-ds" as DataSetId, ...overrides };
+  return { uuid: dataSetId("test-ds"), ...overrides };
 }
 
 function config(overrides: Partial<DataProviderConfig> = {}): DataProviderConfig {
@@ -27,7 +28,7 @@ describe("createDataProviderFactory", () => {
 
   it("returns undefined when def has join (no provider needed)", () => {
     const provider = factory.create(
-      def({ join: ["ds-a" as DataSetId, "ds-b" as DataSetId] }),
+      def({ join: [dataSetId("ds-a"), dataSetId("ds-b")] }),
       config(),
     );
 

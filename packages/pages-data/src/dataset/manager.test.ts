@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { createDataSetManager } from "./manager.js";
 import { toTypedDataSet } from "./conversion.js";
 import { createLookup } from "./lookup.js";
-import type { Column, ColumnId, DataSetId } from "./types.js";
-import { ColumnType } from "./types.js";
+import type { Column, ColumnId, DataSetId} from "./types.js";
+import { ColumnType, dataSetId, columnId} from "./types.js";
 import type { ResolvedFilterOp, FilterOp } from "./filter.js";
 import type { GroupOp } from "./group.js";
 import type { SortOp } from "./sort.js";
@@ -11,7 +11,7 @@ import { parseTimeFrame } from "./timeframe.js";
 import { DataSetError } from "./errors.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 function testDataSet(rows: (string | null)[][]) {
@@ -24,9 +24,9 @@ function testDataSet(rows: (string | null)[][]) {
   });
 }
 
-const ID_A = "dataset-a" as DataSetId;
-const ID_B = "dataset-b" as DataSetId;
-const ID_UNKNOWN = "does-not-exist" as DataSetId;
+const ID_A = dataSetId("dataset-a");
+const ID_B = dataSetId("dataset-b");
+const ID_UNKNOWN = dataSetId("does-not-exist");
 
 describe("DataSetManager — registry", () => {
   it("register + get returns the same dataset", () => {
@@ -91,7 +91,7 @@ function salesDataSet() {
   });
 }
 
-const SALES_ID = "sales" as DataSetId;
+const SALES_ID = dataSetId("sales");
 
 describe("DataSetManager — lookup pipeline", () => {
   it("no operations returns full dataset unchanged", () => {
@@ -110,7 +110,7 @@ describe("DataSetManager — lookup pipeline", () => {
       type: "filter",
       expressions: [{
         type: "numeric",
-        columnId: "revenue" as ColumnId,
+        columnId: columnId("revenue"),
         filter: { fn: "GREATER_THAN", value: 100 },
       }],
     };
@@ -126,7 +126,7 @@ describe("DataSetManager — lookup pipeline", () => {
       type: "filter",
       expressions: [{
         type: "unresolved",
-        columnId: "revenue" as ColumnId,
+        columnId: columnId("revenue"),
         fn: "GREATER_THAN",
         args: ["100"],
       }],
@@ -142,16 +142,16 @@ describe("DataSetManager — lookup pipeline", () => {
     const group: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 15,
         emptyIntervals: false,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [group]));
@@ -164,11 +164,11 @@ describe("DataSetManager — lookup pipeline", () => {
     mgr.register(SALES_ID, salesDataSet());
     const sort: SortOp = {
       type: "sort",
-      columns: [{ columnId: "revenue" as ColumnId, order: "DESCENDING" }],
+      columns: [{ columnId: columnId("revenue"), order: "DESCENDING" }],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [sort]));
-    expect(result.dataset.rows[0]!.number("revenue" as ColumnId)).toBe(300);
-    expect(result.dataset.rows[4]!.number("revenue" as ColumnId)).toBe(50);
+    expect(result.dataset.rows[0]!.number(columnId("revenue"))).toBe(300);
+    expect(result.dataset.rows[4]!.number(columnId("revenue"))).toBe(50);
     expect(result.totalRows).toBe(5);
   });
 
@@ -179,35 +179,35 @@ describe("DataSetManager — lookup pipeline", () => {
       type: "filter",
       expressions: [{
         type: "numeric",
-        columnId: "revenue" as ColumnId,
+        columnId: columnId("revenue"),
         filter: { fn: "GREATER_OR_EQUALS_TO", value: 100 },
       }],
     };
     const group: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 15,
         emptyIntervals: false,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
     const sort: SortOp = {
       type: "sort",
-      columns: [{ columnId: "total" as ColumnId, order: "DESCENDING" }],
+      columns: [{ columnId: columnId("total"), order: "DESCENDING" }],
     };
     const result = mgr.lookup(createLookup(SALES_ID, [filter, group, sort]));
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.text("dept" as ColumnId)).toBe("Engineering");
-    expect(result.dataset.rows[0]!.number("total" as ColumnId)).toBe(500);
-    expect(result.dataset.rows[1]!.text("dept" as ColumnId)).toBe("Sales");
-    expect(result.dataset.rows[1]!.number("total" as ColumnId)).toBe(250);
+    expect(result.dataset.rows[0]!.text(columnId("dept"))).toBe("Engineering");
+    expect(result.dataset.rows[0]!.number(columnId("total"))).toBe(500);
+    expect(result.dataset.rows[1]!.text(columnId("dept"))).toBe("Sales");
+    expect(result.dataset.rows[1]!.number(columnId("total"))).toBe(250);
     expect(result.totalRows).toBe(2);
   });
 
@@ -219,7 +219,7 @@ describe("DataSetManager — lookup pipeline", () => {
       type: "filter",
       expressions: [{
         type: "date",
-        columnId: "date" as ColumnId,
+        columnId: columnId("date"),
         filter: { fn: "TIME_FRAME", timeFrame },
       }],
     };
@@ -261,8 +261,8 @@ describe("DataSetManager — pagination", () => {
       { rowOffset: 1, rowCount: 2 },
     );
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.number("revenue" as ColumnId)).toBe(200);
-    expect(result.dataset.rows[1]!.number("revenue" as ColumnId)).toBe(150);
+    expect(result.dataset.rows[0]!.number(columnId("revenue"))).toBe(200);
+    expect(result.dataset.rows[1]!.number(columnId("revenue"))).toBe(150);
     expect(result.totalRows).toBe(5); // totalRows is before pagination
   });
 
@@ -297,15 +297,15 @@ describe("DataSetManager — pagination", () => {
     const mgr = setupManager();
     const sort: SortOp = {
       type: "sort",
-      columns: [{ columnId: "revenue" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("revenue"), order: "ASCENDING" }],
     };
     const result = mgr.lookup(
       createLookup(SALES_ID, [sort]),
       { rowOffset: 0, rowCount: 2 },
     );
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.number("revenue" as ColumnId)).toBe(50);
-    expect(result.dataset.rows[1]!.number("revenue" as ColumnId)).toBe(100);
+    expect(result.dataset.rows[0]!.number(columnId("revenue"))).toBe(50);
+    expect(result.dataset.rows[1]!.number(columnId("revenue"))).toBe(100);
     expect(result.totalRows).toBe(5); // totalRows is after ops but before pagination
   });
 });
@@ -324,7 +324,7 @@ describe("DataSetManager — error paths", () => {
       type: "filter",
       expressions: [{
         type: "unresolved",
-        columnId: "nonexistent" as ColumnId,
+        columnId: columnId("nonexistent"),
         fn: "EQUALS_TO",
         args: ["x"],
       }],
@@ -339,7 +339,7 @@ describe("DataSetManager — error paths", () => {
       type: "filter",
       expressions: [{
         type: "unresolved",
-        columnId: "revenue" as ColumnId,
+        columnId: columnId("revenue"),
         fn: "LIKE_TO",
         args: ["%test%"],
       }],
@@ -359,7 +359,7 @@ describe("DataSetManager — error paths", () => {
   it("raw-object DataSetLookup with invalid op order throws INVALID_OPERATION", () => {
     const mgr = createDataSetManager();
     mgr.register(SALES_ID, salesDataSet());
-    const sort: SortOp = { type: "sort", columns: [{ columnId: "revenue" as ColumnId, order: "ASCENDING" }] };
+    const sort: SortOp = { type: "sort", columns: [{ columnId: columnId("revenue"), order: "ASCENDING" }] };
     const group: GroupOp = { type: "group", groupingKey: null, columns: [] };
     const rawLookup = { dataSetId: SALES_ID, operations: [sort, group] } as const;
     expect(() => mgr.lookup(rawLookup)).toThrow("INVALID_OPERATION");
@@ -374,7 +374,7 @@ describe("DataSetManager — accumulate", () => {
     const stored = mgr.get(ID_A);
     expect(stored).toBeDefined();
     expect(stored!.rows).toHaveLength(1);
-    expect(stored!.rows[0]!.text("name" as ColumnId)).toBe("Alice");
+    expect(stored!.rows[0]!.text(columnId("name"))).toBe("Alice");
   });
 
   it("accumulate puts new rows first, then appends old rows", () => {
@@ -385,8 +385,8 @@ describe("DataSetManager — accumulate", () => {
     mgr.accumulate(ID_A, fresh);
     const stored = mgr.get(ID_A)!;
     expect(stored.rows).toHaveLength(2);
-    expect(stored.rows[0]!.text("name" as ColumnId)).toBe("Bob");
-    expect(stored.rows[1]!.text("name" as ColumnId)).toBe("Alice");
+    expect(stored.rows[0]!.text(columnId("name"))).toBe("Bob");
+    expect(stored.rows[1]!.text(columnId("name"))).toBe("Alice");
   });
 
   it("accumulate trims oldest rows when maxRows exceeded", () => {
@@ -397,8 +397,8 @@ describe("DataSetManager — accumulate", () => {
     mgr.accumulate(ID_A, fresh, 2);
     const stored = mgr.get(ID_A)!;
     expect(stored.rows).toHaveLength(2);
-    expect(stored.rows[0]!.text("name" as ColumnId)).toBe("Charlie");
-    expect(stored.rows[1]!.text("name" as ColumnId)).toBe("Alice");
+    expect(stored.rows[0]!.text(columnId("name"))).toBe("Charlie");
+    expect(stored.rows[1]!.text(columnId("name"))).toBe("Alice");
   });
 
   it("accumulate with zero new rows preserves existing dataset", () => {
@@ -409,7 +409,7 @@ describe("DataSetManager — accumulate", () => {
     mgr.accumulate(ID_A, empty);
     const stored = mgr.get(ID_A)!;
     expect(stored.rows).toHaveLength(1);
-    expect(stored.rows[0]!.text("name" as ColumnId)).toBe("Alice");
+    expect(stored.rows[0]!.text(columnId("name"))).toBe("Alice");
   });
 
   it("accumulate with no maxRows appends all rows", () => {
@@ -420,10 +420,10 @@ describe("DataSetManager — accumulate", () => {
     mgr.accumulate(ID_A, fresh);
     const stored = mgr.get(ID_A)!;
     expect(stored.rows).toHaveLength(4);
-    expect(stored.rows[0]!.text("name" as ColumnId)).toBe("Charlie");
-    expect(stored.rows[1]!.text("name" as ColumnId)).toBe("Diana");
-    expect(stored.rows[2]!.text("name" as ColumnId)).toBe("Alice");
-    expect(stored.rows[3]!.text("name" as ColumnId)).toBe("Bob");
+    expect(stored.rows[0]!.text(columnId("name"))).toBe("Charlie");
+    expect(stored.rows[1]!.text(columnId("name"))).toBe("Diana");
+    expect(stored.rows[2]!.text(columnId("name"))).toBe("Alice");
+    expect(stored.rows[3]!.text(columnId("name"))).toBe("Bob");
   });
 
   it("accumulate throws SCHEMA_MISMATCH when column schemas differ", () => {
@@ -442,6 +442,6 @@ describe("DataSetManager — accumulate", () => {
     expect(() => mgr.accumulate(ID_A, differentSchema)).toThrow(DataSetError);
     // Existing dataset preserved
     expect(mgr.get(ID_A)!.rows).toHaveLength(1);
-    expect(mgr.get(ID_A)!.rows[0]!.text("name" as ColumnId)).toBe("Alice");
+    expect(mgr.get(ID_A)!.rows[0]!.text(columnId("name"))).toBe("Alice");
   });
 });

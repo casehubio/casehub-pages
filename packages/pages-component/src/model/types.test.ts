@@ -83,4 +83,10 @@ describe("Component<T, P>", () => {
     };
     expect(c.props?.columns).toBe(12);
   });
+
+  it("rejects primitive P type parameter", () => {
+    // @ts-expect-error — P must be an object type, not a primitive
+    const _bad: Component<"foo", number> = { type: "foo" };
+    expect(_bad.type).toBe("foo");
+  });
 });

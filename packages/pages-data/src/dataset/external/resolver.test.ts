@@ -5,8 +5,8 @@ import { createDataSetManager } from "../manager.js";
 import { createPresetRegistry } from "./presets/registry.js";
 import { createDataProviderFactory } from "./provider-factory.js";
 import { toTypedDataSet } from "../conversion.js";
-import type { ColumnId, DataSetId, Column } from "../types.js";
-import { ColumnType } from "../types.js";
+import type { Column } from "../types.js";
+import { ColumnType, dataSetId, columnId } from "../types.js";
 import { DataSetError } from "../errors.js";
 import type {
   ExternalDataSetDef,
@@ -38,7 +38,7 @@ function mockProviderFactory(data: unknown, contentType?: string) {
 }
 
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 const COLS = [
@@ -52,7 +52,7 @@ describe("resolveExternalDataSet", () => {
   it("resolves content-based definition and registers in manager", async () => {
     const ctx = makeCtx();
     const def: ExternalDataSetDef = {
-      uuid: "ds-inline" as DataSetId,
+      uuid: dataSetId("ds-inline"),
       content: JSON.stringify([
         { name: "Alice", value: 100 },
         { name: "Bob", value: 200 },
@@ -63,16 +63,16 @@ describe("resolveExternalDataSet", () => {
 
     expect(result.source).toBe("content");
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Alice");
-    expect(result.dataset.rows[1]!.number("value" as ColumnId)).toBe(200);
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(result.dataset.rows[1]!.number(columnId("value"))).toBe(200);
     // Should be registered in manager
-    expect(ctx.manager.has("ds-inline" as DataSetId)).toBe(true);
+    expect(ctx.manager.has(dataSetId("ds-inline"))).toBe(true);
   });
 
   it("resolves content-based with expression filter", async () => {
     const ctx = makeCtx();
     const def: ExternalDataSetDef = {
-      uuid: "ds-expr" as DataSetId,
+      uuid: dataSetId("ds-expr"),
       content: JSON.stringify([
         { name: "Alice", value: 100 },
         { name: "Bob", value: 200 },
@@ -85,8 +85,8 @@ describe("resolveExternalDataSet", () => {
 
     expect(result.source).toBe("content");
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Bob");
-    expect(result.dataset.rows[1]!.text("name" as ColumnId)).toBe("Charlie");
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Bob");
+    expect(result.dataset.rows[1]!.text(columnId("name"))).toBe("Charlie");
   });
 
   // ---- URL-based resolution ----
@@ -100,7 +100,7 @@ describe("resolveExternalDataSet", () => {
       providerFactory: mockProviderFactory(JSON.stringify(jsonData)),
     });
     const def: ExternalDataSetDef = {
-      uuid: "ds-url" as DataSetId,
+      uuid: dataSetId("ds-url"),
       url: "https://api.example.com/cities",
     };
 
@@ -108,8 +108,8 @@ describe("resolveExternalDataSet", () => {
 
     expect(result.source).toBe("url");
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.text("city" as ColumnId)).toBe("London");
-    expect(ctx.manager.has("ds-url" as DataSetId)).toBe(true);
+    expect(result.dataset.rows[0]!.text(columnId("city"))).toBe("London");
+    expect(ctx.manager.has(dataSetId("ds-url"))).toBe(true);
   });
 
   // ---- Join-based resolution ----
@@ -118,22 +118,22 @@ describe("resolveExternalDataSet", () => {
     const ctx = makeCtx();
     const dsA = toTypedDataSet({ columns: COLS, data: [["Alice", "100"]] });
     const dsB = toTypedDataSet({ columns: COLS, data: [["Bob", "200"]] });
-    ctx.manager.register("ds-a" as DataSetId, dsA);
-    ctx.manager.register("ds-b" as DataSetId, dsB);
+    ctx.manager.register(dataSetId("ds-a"), dsA);
+    ctx.manager.register(dataSetId("ds-b"), dsB);
 
     const def: ExternalDataSetDef = {
-      uuid: "ds-joined" as DataSetId,
-      join: ["ds-a" as DataSetId, "ds-b" as DataSetId],
+      uuid: dataSetId("ds-joined"),
+      join: [dataSetId("ds-a"), dataSetId("ds-b")],
     };
 
     const result = await resolveExternalDataSet(def, ctx);
 
     expect(result.source).toBe("join");
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Alice");
-    expect(result.dataset.rows[1]!.text("name" as ColumnId)).toBe("Bob");
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(result.dataset.rows[1]!.text(columnId("name"))).toBe("Bob");
     // Joined dataset registered under its own uuid
-    expect(ctx.manager.has("ds-joined" as DataSetId)).toBe(true);
+    expect(ctx.manager.has(dataSetId("ds-joined"))).toBe(true);
   });
 
   // ---- Accumulate ----
@@ -142,7 +142,7 @@ describe("resolveExternalDataSet", () => {
     const ctx = makeCtx();
 
     const def1: ExternalDataSetDef = {
-      uuid: "ds-acc" as DataSetId,
+      uuid: dataSetId("ds-acc"),
       content: JSON.stringify([{ name: "Alice", value: 100 }]),
       accumulate: true,
     };
@@ -150,7 +150,7 @@ describe("resolveExternalDataSet", () => {
     await resolveExternalDataSet(def1, ctx);
 
     const def2: ExternalDataSetDef = {
-      uuid: "ds-acc" as DataSetId,
+      uuid: dataSetId("ds-acc"),
       content: JSON.stringify([{ name: "Bob", value: 200 }]),
       accumulate: true,
     };
@@ -160,7 +160,7 @@ describe("resolveExternalDataSet", () => {
     // The returned dataset is the freshly extracted one (single row)
     expect(result.dataset.rows).toHaveLength(1);
     // But the manager should have accumulated both rows
-    const stored = ctx.manager.get("ds-acc" as DataSetId);
+    const stored = ctx.manager.get(dataSetId("ds-acc"));
     expect(stored).toBeDefined();
     expect(stored!.rows).toHaveLength(2);
   });
@@ -186,7 +186,7 @@ describe("resolveExternalDataSet", () => {
   it("throws INVALID_DEFINITION when no source is provided", async () => {
     const ctx = makeCtx();
     const def: ExternalDataSetDef = {
-      uuid: "ds-empty" as DataSetId,
+      uuid: dataSetId("ds-empty"),
     };
 
     await expect(resolveExternalDataSet(def, ctx)).rejects.toThrow(DataSetError);
@@ -209,7 +209,7 @@ describe("resolveExternalDataSet", () => {
       providerFactory: { create: () => failingProvider },
     });
     const def: ExternalDataSetDef = {
-      uuid: "ds-fail" as DataSetId,
+      uuid: dataSetId("ds-fail"),
       url: "https://api.example.com/broken",
     };
 
@@ -230,7 +230,7 @@ describe("resolveExternalDataSet", () => {
       ),
     });
     const def: ExternalDataSetDef = {
-      uuid: "ds-src-url" as DataSetId,
+      uuid: dataSetId("ds-src-url"),
       url: "https://api.example.com/data",
     };
     const result = await resolveExternalDataSet(def, ctx);
@@ -240,7 +240,7 @@ describe("resolveExternalDataSet", () => {
   it("returns source='content' for content-based definitions", async () => {
     const ctx = makeCtx();
     const def: ExternalDataSetDef = {
-      uuid: "ds-src-content" as DataSetId,
+      uuid: dataSetId("ds-src-content"),
       content: JSON.stringify([{ x: 1 }]),
     };
     const result = await resolveExternalDataSet(def, ctx);
@@ -250,16 +250,16 @@ describe("resolveExternalDataSet", () => {
   it("returns source='join' for join-based definitions", async () => {
     const ctx = makeCtx();
     ctx.manager.register(
-      "j1" as DataSetId,
+      dataSetId("j1"),
       toTypedDataSet({ columns: COLS, data: [["A", "1"]] }),
     );
     ctx.manager.register(
-      "j2" as DataSetId,
+      dataSetId("j2"),
       toTypedDataSet({ columns: COLS, data: [["B", "2"]] }),
     );
     const def: ExternalDataSetDef = {
-      uuid: "ds-src-join" as DataSetId,
-      join: ["j1" as DataSetId, "j2" as DataSetId],
+      uuid: dataSetId("ds-src-join"),
+      join: [dataSetId("j1"), dataSetId("j2")],
     };
     const result = await resolveExternalDataSet(def, ctx);
     expect(result.source).toBe("join");
@@ -270,7 +270,7 @@ describe("resolveExternalDataSet", () => {
   it("sets inferredColumns=true when no explicit columns are declared", async () => {
     const ctx = makeCtx();
     const def: ExternalDataSetDef = {
-      uuid: "ds-infer" as DataSetId,
+      uuid: dataSetId("ds-infer"),
       content: JSON.stringify([{ name: "Alice", value: 100 }]),
     };
     const result = await resolveExternalDataSet(def, ctx);
@@ -280,11 +280,11 @@ describe("resolveExternalDataSet", () => {
   it("sets inferredColumns=false when explicit columns are declared", async () => {
     const ctx = makeCtx();
     const def: ExternalDataSetDef = {
-      uuid: "ds-explicit" as DataSetId,
+      uuid: dataSetId("ds-explicit"),
       content: JSON.stringify([{ name: "Alice", value: 100 }]),
       columns: [
-        { id: "name" as ColumnId, type: ColumnType.LABEL },
-        { id: "value" as ColumnId, type: ColumnType.NUMBER },
+        { id: columnId("name"), type: ColumnType.LABEL },
+        { id: columnId("value"), type: ColumnType.NUMBER },
       ],
     };
     const result = await resolveExternalDataSet(def, ctx);
@@ -296,7 +296,7 @@ describe("resolveExternalDataSet", () => {
   it("throws INVALID_DEFINITION when multiple sources are provided", async () => {
     const ctx = makeCtx();
     const def: ExternalDataSetDef = {
-      uuid: "ds-multi" as DataSetId,
+      uuid: dataSetId("ds-multi"),
       url: "https://api.example.com/data",
       content: JSON.stringify([{ a: 1 }]),
     };
@@ -323,7 +323,7 @@ describe("resolveExternalDataSet", () => {
       providerFactory: { create: () => captureProvider },
     });
     const def: ExternalDataSetDef = {
-      uuid: "ds-req" as DataSetId,
+      uuid: dataSetId("ds-req"),
       url: "https://api.example.com/data",
       method: HttpMethod.POST,
       headers: { Authorization: "Bearer token" },
@@ -353,7 +353,7 @@ describe("resolveExternalDataSet", () => {
       providerFactory: { create: () => captureProvider },
     });
     const def: ExternalDataSetDef = {
-      uuid: "ds-defaults" as DataSetId,
+      uuid: dataSetId("ds-defaults"),
       url: "https://api.example.com/data",
     };
 

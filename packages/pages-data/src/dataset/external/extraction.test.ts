@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { extractDataSet } from "./extraction.js";
 import { createPresetRegistry } from "./presets/registry.js";
-import type { ExternalDataSetDef, FetchResult, PresetRegistry } from "./types.js";
+import type { ExternalDataSetDef, FetchResult, PresetRegistry} from "./types.js";
 import type { ColumnId, DataSetId, CellValue } from "../types.js";
-import { ColumnType } from "../types.js";
+import { ColumnType, dataSetId, columnId} from "../types.js";
 import { DataSetError } from "../errors.js";
 
 function def(overrides: Partial<ExternalDataSetDef> = {}): ExternalDataSetDef {
-  return { uuid: "test-ds" as DataSetId, ...overrides };
+  return { uuid: dataSetId("test-ds"), ...overrides };
 }
 
 function fetchResult(data: unknown, contentType?: string): FetchResult {
@@ -37,8 +37,8 @@ describe("extractDataSet", () => {
       fetchResult(data),
       def({
         columns: [
-          { id: "name" as ColumnId, type: ColumnType.LABEL },
-          { id: "age" as ColumnId, type: ColumnType.NUMBER },
+          { id: columnId("name"), type: ColumnType.LABEL },
+          { id: columnId("age"), type: ColumnType.NUMBER },
         ],
       }),
       registry,
@@ -49,8 +49,8 @@ describe("extractDataSet", () => {
     expect(result.dataset.columns[0]!.id).toBe("name");
     expect(result.dataset.columns[0]!.type).toBe(ColumnType.LABEL);
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Alice");
-    expect(result.dataset.rows[0]!.number("age" as ColumnId)).toBe(30);
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(result.dataset.rows[0]!.number(columnId("age"))).toBe(30);
   });
 
   it("extracts Shape B with inferred columns (numbers, strings, dates)", async () => {
@@ -64,12 +64,12 @@ describe("extractDataSet", () => {
     expect(result.dataset.columns).toHaveLength(3);
 
     const colMap = new Map(result.dataset.columns.map((c) => [c.id, c]));
-    expect(colMap.get("region" as ColumnId)!.type).toBe(ColumnType.LABEL);
-    expect(colMap.get("revenue" as ColumnId)!.type).toBe(ColumnType.NUMBER);
-    expect(colMap.get("timestamp" as ColumnId)!.type).toBe(ColumnType.DATE);
+    expect(colMap.get(columnId("region"))!.type).toBe(ColumnType.LABEL);
+    expect(colMap.get(columnId("revenue"))!.type).toBe(ColumnType.NUMBER);
+    expect(colMap.get(columnId("timestamp"))!.type).toBe(ColumnType.DATE);
 
-    expect(result.dataset.rows[0]!.text("region" as ColumnId)).toBe("US");
-    expect(result.dataset.rows[0]!.number("revenue" as ColumnId)).toBe(100);
+    expect(result.dataset.rows[0]!.text(columnId("region"))).toBe("US");
+    expect(result.dataset.rows[0]!.number(columnId("revenue"))).toBe(100);
   });
 
   // --- Shape C: array of arrays ---
@@ -126,7 +126,7 @@ describe("extractDataSet", () => {
     );
 
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.number("x" as ColumnId)).toBe(1);
+    expect(result.dataset.rows[0]!.number(columnId("x"))).toBe(1);
   });
 
   it("throws EXTRACTION_ERROR for nonexistent dataPath", async () => {
@@ -162,7 +162,7 @@ describe("extractDataSet", () => {
     expect(result.dataset.columns.length).toBeGreaterThanOrEqual(2);
     expect(result.dataset.rows).toHaveLength(1);
     // timestamp should be multiplied by 1000
-    expect(result.dataset.rows[0]!.number("timestamp" as ColumnId)).toBe(1625000000000);
+    expect(result.dataset.rows[0]!.number(columnId("timestamp"))).toBe(1625000000000);
   });
 
   // --- expression ---
@@ -213,7 +213,7 @@ describe("extractDataSet", () => {
     // The prometheus preset returns { columns, values } (Shape A).
     // The expression filters to rows where value="1" (the "api" row).
     expect(result.dataset.rows).toHaveLength(1);
-    expect(result.dataset.rows[0]!.number("timestamp" as ColumnId)).toBe(1625000000000);
+    expect(result.dataset.rows[0]!.number(columnId("timestamp"))).toBe(1625000000000);
   });
 
   // --- CSV content type ---
@@ -269,7 +269,7 @@ describe("extractDataSet", () => {
       extractDataSet(
         fetchResult(data),
         def({
-          columns: [{ id: "name" as ColumnId, type: ColumnType.NUMBER }],
+          columns: [{ id: columnId("name"), type: ColumnType.NUMBER }],
         }),
         registry,
       ),
@@ -314,7 +314,7 @@ describe("extractDataSet", () => {
     );
 
     expect(result.dataset.rows).toHaveLength(2);
-    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Alice");
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
   });
 
   it("parses as CSV when URL has .csv with query string", async () => {
@@ -338,7 +338,7 @@ describe("extractDataSet", () => {
     );
 
     expect(result.dataset.rows).toHaveLength(1);
-    expect(result.dataset.rows[0]!.text("name" as ColumnId)).toBe("Alice");
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
   });
 
   it("explicit content type takes precedence over URL extension", async () => {
@@ -485,9 +485,9 @@ describe("extractDataSet", () => {
     expect(result.dataset.columns.map(c => c.id)).toEqual(["timestamp", "value", "__name__", "handler", "code"]);
     expect(result.dataset.rows).toHaveLength(3);
     const row0 = result.dataset.rows[0]!;
-    expect(val(row0.cell("handler" as ColumnId))).toBe("/api/v1/query");
-    expect(val(row0.cell("code" as ColumnId))).toBe("200");
-    expect(val(row0.cell("__name__" as ColumnId))).toBe("http_requests_total");
+    expect(val(row0.cell(columnId("handler")))).toBe("/api/v1/query");
+    expect(val(row0.cell(columnId("code")))).toBe("200");
+    expect(val(row0.cell(columnId("__name__")))).toBe("http_requests_total");
   });
 
   it("extracts Prometheus API matrix response via type preset", async () => {
@@ -515,8 +515,8 @@ describe("extractDataSet", () => {
     expect(result.dataset.columns.map(c => c.id)).toEqual(["timestamp", "value", "__name__", "instance"]);
     expect(result.dataset.rows).toHaveLength(2);
     const row0 = result.dataset.rows[0]!;
-    expect(val(row0.cell("__name__" as ColumnId))).toBe("go_gc_heap_live_bytes");
-    expect(val(row0.cell("instance" as ColumnId))).toBe("localhost:9090");
+    expect(val(row0.cell(columnId("__name__")))).toBe("go_gc_heap_live_bytes");
+    expect(val(row0.cell(columnId("instance")))).toBe("localhost:9090");
   });
 
   it("auto-detects Prometheus API format when type is not specified", async () => {
@@ -560,7 +560,7 @@ describe("extractDataSet", () => {
 
     const codeCol = result.dataset.columns.find(c => c.id === "code");
     expect(codeCol).toBeDefined();
-    const row200 = result.dataset.rows.filter(r => val(r.cell("code" as ColumnId)) === "200");
+    const row200 = result.dataset.rows.filter(r => val(r.cell(columnId("code"))) === "200");
     expect(row200).toHaveLength(2);
   });
 });

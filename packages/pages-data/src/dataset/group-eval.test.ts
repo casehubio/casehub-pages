@@ -8,8 +8,8 @@ import {
   applyGroup,
   applyGroupSequence,
 } from "./group-eval.js";
-import type { CellValue, Column, ColumnId } from "./types.js";
-import { ColumnType } from "./types.js";
+import type { CellValue, Column, ColumnId} from "./types.js";
+import { ColumnType, columnId} from "./types.js";
 import { toTypedDataSet } from "./conversion.js";
 import type { GroupOp, ResultColumn } from "./group.js";
 import { DataSetError } from "./errors.js";
@@ -308,7 +308,7 @@ describe("computeAggregation", () => {
 
 // Test helper
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 describe("compareValues — codepoint order", () => {
@@ -327,17 +327,17 @@ describe("compareValues — codepoint order", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
-        { kind: "aggregate", sourceId: "label" as ColumnId, columnId: "min_label" as ColumnId, fn: { fn: "MIN" } },
-        { kind: "aggregate", sourceId: "label" as ColumnId, columnId: "max_label" as ColumnId, fn: { fn: "MAX" } },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
+        { kind: "aggregate", sourceId: columnId("label"), columnId: columnId("min_label"), fn: { fn: "MIN" } },
+        { kind: "aggregate", sourceId: columnId("label"), columnId: columnId("max_label"), fn: { fn: "MAX" } },
       ],
     };
     const result = applyGroup(ds, op);
@@ -345,8 +345,8 @@ describe("compareValues — codepoint order", () => {
     // Codepoint order: 'A' (65) < 'b' (98) < 'c' (99)
     // MIN should be "Apple", MAX should be "cherry"
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]!.text("min_label" as ColumnId)).toBe("Apple");
-    expect(result.rows[0]!.text("max_label" as ColumnId)).toBe("cherry");
+    expect(result.rows[0]!.text(columnId("min_label"))).toBe("Apple");
+    expect(result.rows[0]!.text(columnId("max_label"))).toBe("cherry");
   });
 });
 
@@ -357,7 +357,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("dept", "Department", ColumnType.LABEL)],
         data: [["Sales"], ["Engineering"], ["Sales"], ["Marketing"]],
       });
-      const intervals = buildDistinctIntervals(ds, "dept" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("dept"));
 
       expect(intervals).toHaveLength(3);
       expect(intervals[0]).toEqual({
@@ -382,7 +382,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("status", "Status", ColumnType.LABEL)],
         data: [["A"], ["B"], ["A"], ["C"], ["B"], ["A"]],
       });
-      const intervals = buildDistinctIntervals(ds, "status" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("status"));
 
       expect(intervals[0]!.rowIndices).toEqual([0, 2, 5]);
       expect(intervals[1]!.rowIndices).toEqual([1, 4]);
@@ -396,7 +396,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("status", "Status Code", ColumnType.NUMBER)],
         data: [["200"], ["404"], ["200"], ["500"]],
       });
-      const intervals = buildDistinctIntervals(ds, "status" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("status"));
 
       expect(intervals).toHaveLength(3);
       expect(intervals[0]).toEqual({
@@ -421,7 +421,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("val", "Value", ColumnType.NUMBER)],
         data: [["1.5"], ["2.0"], ["1.5"]],
       });
-      const intervals = buildDistinctIntervals(ds, "val" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("val"));
 
       expect(intervals[0]!.name).toBe("1.5");
       expect(intervals[1]!.name).toBe("2");
@@ -438,7 +438,7 @@ describe("buildDistinctIntervals", () => {
           ["2024-01-15T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDistinctIntervals(ds, "date" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("date"));
 
       expect(intervals).toHaveLength(2);
       expect(intervals[0]).toEqual({
@@ -458,7 +458,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("ts", "Timestamp", ColumnType.DATE)],
         data: [["2024-03-15T14:30:00.000Z"]],
       });
-      const intervals = buildDistinctIntervals(ds, "ts" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("ts"));
 
       expect(intervals[0]!.name).toBe("2024-03-15T14:30:00.000Z");
     });
@@ -470,7 +470,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("dept", "Department", ColumnType.LABEL)],
         data: [[null], ["Sales"], [null]],
       });
-      const intervals = buildDistinctIntervals(ds, "dept" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("dept"));
 
       expect(intervals).toHaveLength(2);
       expect(intervals[0]).toEqual({
@@ -490,7 +490,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("status", "Status", ColumnType.NUMBER)],
         data: [["200"], [null], ["404"], [null], ["200"]],
       });
-      const intervals = buildDistinctIntervals(ds, "status" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("status"));
 
       expect(intervals).toHaveLength(3);
       expect(intervals[0]!.name).toBe("200");
@@ -508,7 +508,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("dept", "Department", ColumnType.LABEL)],
         data: [],
       });
-      const intervals = buildDistinctIntervals(ds, "dept" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("dept"));
 
       expect(intervals).toEqual([]);
     });
@@ -518,7 +518,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("val", "Value", ColumnType.LABEL)],
         data: [["C"], ["A"], ["B"]],
       });
-      const intervals = buildDistinctIntervals(ds, "val" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("val"));
 
       expect(intervals[0]!.index).toBe(0);
       expect(intervals[1]!.index).toBe(1);
@@ -530,7 +530,7 @@ describe("buildDistinctIntervals", () => {
         columns: [col("letter", "Letter", ColumnType.LABEL)],
         data: [["Z"], ["A"], ["M"], ["Z"]],
       });
-      const intervals = buildDistinctIntervals(ds, "letter" as ColumnId);
+      const intervals = buildDistinctIntervals(ds, columnId("letter"));
 
       expect(intervals[0]!.name).toBe("Z");
       expect(intervals[1]!.name).toBe("A");
@@ -551,7 +551,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-01-25T00:00:00.000Z"],
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "MONTH");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "MONTH");
 
       expect(intervals).toHaveLength(12);
       // Buckets named "1" through "12"
@@ -581,7 +581,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-03-01T00:00:00.000Z"], // March → bucket "12"
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "MONTH", {
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "MONTH", {
         firstMonthOfYear: 4,
       });
 
@@ -607,7 +607,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-02-01T00:00:00.000Z"], // Q1
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "QUARTER");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "QUARTER");
 
       expect(intervals).toHaveLength(4);
       expect(intervals[0]).toEqual(expect.objectContaining({ name: "1", index: 0, rowIndices: [0, 4] }));
@@ -626,7 +626,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-03-31T00:00:00.000Z"], // Fiscal Q4 (Jan-Mar)
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "QUARTER", {
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "QUARTER", {
         firstMonthOfYear: 4,
       });
 
@@ -650,7 +650,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-01-17T00:00:00.000Z"], // Wednesday → bucket "3"
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "DAY_OF_WEEK");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "DAY_OF_WEEK");
 
       expect(intervals).toHaveLength(7);
       expect(intervals[0]).toEqual(expect.objectContaining({ name: "1", rowIndices: [0] })); // Mon
@@ -669,7 +669,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-01-20T00:00:00.000Z"], // Saturday → bucket "7"
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "DAY_OF_WEEK", {
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "DAY_OF_WEEK", {
         firstDayOfWeek: 7,
       });
 
@@ -691,7 +691,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-01-16T00:00:00.000Z"], // hour 0
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "HOUR");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "HOUR");
 
       expect(intervals).toHaveLength(24);
       expect(intervals[0]).toEqual(expect.objectContaining({ name: "0", index: 0, rowIndices: [0, 3] }));
@@ -710,7 +710,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-03-10T00:00:00.000Z"],
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "MONTH");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "MONTH");
 
       expect(intervals).toHaveLength(12);
       expect(intervals[0]!.rowIndices).toEqual([0]); // Jan
@@ -727,7 +727,7 @@ describe("buildFixedCalendarIntervals", () => {
         columns: [col("d", "Date", ColumnType.DATE)],
         data: [],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "MONTH");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "MONTH");
 
       expect(intervals).toHaveLength(12);
       for (const iv of intervals) {
@@ -743,7 +743,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-01-15T10:59:30.000Z"], // minute 59
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "MINUTE");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "MINUTE");
 
       expect(intervals).toHaveLength(60);
       expect(intervals[0]!.name).toBe("0");
@@ -759,7 +759,7 @@ describe("buildFixedCalendarIntervals", () => {
           ["2024-01-15T10:05:00.000Z"], // second 0
         ],
       });
-      const intervals = buildFixedCalendarIntervals(ds, "d" as ColumnId, "SECOND");
+      const intervals = buildFixedCalendarIntervals(ds, columnId("d"), "SECOND");
 
       expect(intervals).toHaveLength(60);
       expect(intervals[30]!.rowIndices).toEqual([0]);
@@ -779,7 +779,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-05-20T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 12);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 12);
 
       // Span is ~4 months → monthly buckets should fit within 12
       expect(intervals.length).toBeGreaterThanOrEqual(4);
@@ -796,7 +796,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-06-15T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       // Span is ~4.5 years → yearly buckets
       expect(intervals.length).toBeGreaterThanOrEqual(4);
@@ -816,7 +816,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-01-03T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 100, {
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 100, {
         preferredUnit: "MONTH",
       });
 
@@ -836,7 +836,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-03-10T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 12);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 12);
 
       // All dates assigned; boundaries should be calendar-aligned
       expect(intervals.length).toBeGreaterThanOrEqual(3);
@@ -854,7 +854,7 @@ describe("buildDynamicDateIntervals", () => {
         columns: [col("d", "Date", ColumnType.DATE)],
         data: [["2024-06-15T12:30:00.000Z"]],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       expect(intervals).toHaveLength(1);
       expect(intervals[0]!.rowIndices).toEqual([0]);
@@ -865,7 +865,7 @@ describe("buildDynamicDateIntervals", () => {
         columns: [col("d", "Date", ColumnType.DATE)],
         data: [],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       expect(intervals).toHaveLength(0);
     });
@@ -879,7 +879,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-03-10T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 12);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 12);
 
       const allRows = intervals.flatMap((iv) => [...iv.rowIndices]);
       expect(allRows).toContain(0);
@@ -895,7 +895,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-06-15T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       expect(intervals).toHaveLength(1);
       expect(intervals[0]!.rowIndices).toEqual([0, 1]);
@@ -911,7 +911,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-06-01T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       for (const iv of intervals) {
         expect(iv.name).toMatch(/^\d{4}$/);
@@ -926,7 +926,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-01-15T14:45:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       for (const iv of intervals) {
         expect(iv.name).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}$/);
@@ -941,7 +941,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-01-15T10:35:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       for (const iv of intervals) {
         expect(iv.name).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
@@ -956,7 +956,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-01-15T10:30:05.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 10);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 10);
 
       for (const iv of intervals) {
         expect(iv.name).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
@@ -973,7 +973,7 @@ describe("buildDynamicDateIntervals", () => {
           ["2024-03-10T00:00:00.000Z"],
         ],
       });
-      const intervals = buildDynamicDateIntervals(ds, "d" as ColumnId, 12);
+      const intervals = buildDynamicDateIntervals(ds, columnId("d"), 12);
 
       for (const iv of intervals) {
         expect(iv.minValue).toBeInstanceOf(Date);
@@ -990,7 +990,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["0"], ["25"], ["50"], ["75"], ["100"]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 4);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 4);
 
       expect(intervals).toHaveLength(4);
       // First bin: [0, 25)
@@ -1006,7 +1006,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["10"], ["30"], ["50"], ["70"], ["90"]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 4);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 4);
 
       // All rows should be assigned
       const allRows = intervals.flatMap((iv) => [...iv.rowIndices]).sort((a, b) => a - b);
@@ -1020,7 +1020,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["0"], ["100"], ["200"], ["300"], ["400"], ["500"]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 3);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 3);
 
       expect(intervals).toHaveLength(3);
     });
@@ -1032,7 +1032,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["0"], ["100"]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 2);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 2);
 
       expect(intervals[0]!.name).toBe("0-50");
       expect(intervals[1]!.name).toBe("50-100");
@@ -1045,7 +1045,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["42"], ["42"], ["42"]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 5);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 5);
 
       expect(intervals).toHaveLength(1);
       expect(intervals[0]!.rowIndices).toEqual([0, 1, 2]);
@@ -1056,7 +1056,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["-100"], ["-50"], ["0"], ["50"], ["100"]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 4);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 4);
 
       expect(intervals).toHaveLength(4);
       expect(intervals[0]!.name).toBe("-100--50");
@@ -1070,7 +1070,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["10"], [null], ["20"], [null]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 5);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 5);
 
       const allRows = intervals.flatMap((iv) => [...iv.rowIndices]);
       expect(allRows).toContain(0);
@@ -1084,7 +1084,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 5);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 5);
 
       expect(intervals).toHaveLength(0);
     });
@@ -1096,7 +1096,7 @@ describe("buildDynamicNumberIntervals", () => {
         columns: [col("v", "Value", ColumnType.NUMBER)],
         data: [["0"], ["100"]],
       });
-      const intervals = buildDynamicNumberIntervals(ds, "v" as ColumnId, 4);
+      const intervals = buildDynamicNumberIntervals(ds, columnId("v"), 4);
 
       expect(intervals[0]!.minValue).toBe(0);
       expect(intervals[0]!.maxValue).toBe(25);
@@ -1135,13 +1135,13 @@ describe("applyGroup", () => {
       type: "group",
       groupingKey: null,
       columns: [
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
     const result = applyGroup(ds, op);
 
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]!.number("total" as ColumnId)).toBe(500);
+    expect(result.rows[0]!.number(columnId("total"))).toBe(500);
   });
 
   it("null groupingKey — kind:key is INVALID_OPERATION error", () => {
@@ -1150,7 +1150,7 @@ describe("applyGroup", () => {
       type: "group",
       groupingKey: null,
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept" as ColumnId },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept") },
       ],
     };
 
@@ -1164,16 +1164,16 @@ describe("applyGroup", () => {
       type: "group",
       groupingKey: null,
       columns: [
-        { kind: "select", sourceId: "dept" as ColumnId, columnId: "firstDept" as ColumnId },
+        { kind: "select", sourceId: columnId("dept"), columnId: columnId("firstDept") },
       ],
     };
     const result = applyGroup(ds, op);
 
     expect(result.rows).toHaveLength(4);
-    expect(result.rows[0]!.text("firstDept" as ColumnId)).toBe("Sales");
-    expect(result.rows[1]!.text("firstDept" as ColumnId)).toBe("Engineering");
-    expect(result.rows[2]!.text("firstDept" as ColumnId)).toBe("Sales");
-    expect(result.rows[3]!.text("firstDept" as ColumnId)).toBe("Marketing");
+    expect(result.rows[0]!.text(columnId("firstDept"))).toBe("Sales");
+    expect(result.rows[1]!.text(columnId("firstDept"))).toBe("Engineering");
+    expect(result.rows[2]!.text(columnId("firstDept"))).toBe("Sales");
+    expect(result.rows[3]!.text(columnId("firstDept"))).toBe("Marketing");
   });
 
   it("null groupingKey — mixed select+aggregate still aggregates to one row", () => {
@@ -1182,15 +1182,15 @@ describe("applyGroup", () => {
       type: "group",
       groupingKey: null,
       columns: [
-        { kind: "select", sourceId: "dept" as ColumnId, columnId: "firstDept" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "select", sourceId: columnId("dept"), columnId: columnId("firstDept") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
     const result = applyGroup(ds, op);
 
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]!.text("firstDept" as ColumnId)).toBe("Sales");
-    expect(result.rows[0]!.number("total" as ColumnId)).toBe(500);
+    expect(result.rows[0]!.text(columnId("firstDept"))).toBe("Sales");
+    expect(result.rows[0]!.number(columnId("total"))).toBe(500);
   });
 
   it("distinct grouping — one row per unique dept", () => {
@@ -1198,15 +1198,15 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept" as ColumnId },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept") },
       ],
     };
     const result = applyGroup(ds, op);
@@ -1220,28 +1220,28 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
     const result = applyGroup(ds, op);
 
     expect(result.rows).toHaveLength(3);
     // Sales: 100 + 150 = 250, Engineering: 200, Marketing: 50
-    const salesRow = result.rows.find((r) => r.text("dept_key" as ColumnId) === "Sales")!;
-    expect(salesRow.number("total" as ColumnId)).toBe(250);
-    const engRow = result.rows.find((r) => r.text("dept_key" as ColumnId) === "Engineering")!;
-    expect(engRow.number("total" as ColumnId)).toBe(200);
-    const mktRow = result.rows.find((r) => r.text("dept_key" as ColumnId) === "Marketing")!;
-    expect(mktRow.number("total" as ColumnId)).toBe(50);
+    const salesRow = result.rows.find((r) => r.text(columnId("dept_key")) === "Sales")!;
+    expect(salesRow.number(columnId("total"))).toBe(250);
+    const engRow = result.rows.find((r) => r.text(columnId("dept_key")) === "Engineering")!;
+    expect(engRow.number(columnId("total"))).toBe(200);
+    const mktRow = result.rows.find((r) => r.text(columnId("dept_key")) === "Marketing")!;
+    expect(mktRow.number(columnId("total"))).toBe(50);
   });
 
   it("aggregate COUNT per group", () => {
@@ -1249,24 +1249,24 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "count" as ColumnId, fn: { fn: "COUNT" } },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("count"), fn: { fn: "COUNT" } },
       ],
     };
     const result = applyGroup(ds, op);
 
-    const salesRow = result.rows.find((r) => r.text("dept_key" as ColumnId) === "Sales")!;
-    expect(salesRow.number("count" as ColumnId)).toBe(2);
-    const engRow = result.rows.find((r) => r.text("dept_key" as ColumnId) === "Engineering")!;
-    expect(engRow.number("count" as ColumnId)).toBe(1);
+    const salesRow = result.rows.find((r) => r.text(columnId("dept_key")) === "Sales")!;
+    expect(salesRow.number(columnId("count"))).toBe(2);
+    const engRow = result.rows.find((r) => r.text(columnId("dept_key")) === "Engineering")!;
+    expect(engRow.number(columnId("count"))).toBe(1);
   });
 
   it("key column shows bucket name as LABEL", () => {
@@ -1274,21 +1274,21 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
       ],
     };
     const result = applyGroup(ds, op);
 
     // Key column values are the bucket names
-    const names = result.rows.map((r) => r.cell("dept_key" as ColumnId));
+    const names = result.rows.map((r) => r.cell(columnId("dept_key")));
     expect(names[0]).toEqual(label("Sales"));
     expect(names[1]).toEqual(label("Engineering"));
     expect(names[2]).toEqual(label("Marketing"));
@@ -1299,23 +1299,23 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
-        { kind: "select", sourceId: "revenue" as ColumnId, columnId: "firstRev" as ColumnId },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
+        { kind: "select", sourceId: columnId("revenue"), columnId: columnId("firstRev") },
       ],
     };
     const result = applyGroup(ds, op);
 
     // Sales bucket has rows 0 and 2 → first by original row order = row 0 (revenue 100)
-    const salesRow = result.rows.find((r) => r.text("dept_key" as ColumnId) === "Sales")!;
-    expect(salesRow.number("firstRev" as ColumnId)).toBe(100);
+    const salesRow = result.rows.find((r) => r.text(columnId("dept_key")) === "Sales")!;
+    expect(salesRow.number(columnId("firstRev"))).toBe(100);
   });
 
   it("output columns have correct types (key=LABEL, SUM=NUMBER)", () => {
@@ -1323,16 +1323,16 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
     const result = applyGroup(ds, op);
@@ -1346,15 +1346,15 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "aggregate", sourceId: "dept" as ColumnId, columnId: "bad" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "aggregate", sourceId: columnId("dept"), columnId: columnId("bad"), fn: { fn: "SUM" } },
       ],
     };
 
@@ -1367,8 +1367,8 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "revenue" as ColumnId,
-        columnId: "rev" as ColumnId,
+        sourceId: columnId("revenue"),
+        columnId: columnId("rev"),
         strategy: { mode: "fixedCalendar", unit: "MONTH" },
         maxIntervals: 100,
         emptyIntervals: true,
@@ -1386,22 +1386,22 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "dynamic" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
       ],
     };
     const result = applyGroup(ds, op);
 
     // Should produce distinct buckets
     expect(result.rows).toHaveLength(3);
-    expect(result.rows[0]!.text("dept_key" as ColumnId)).toBe("Sales");
+    expect(result.rows[0]!.text(columnId("dept_key"))).toBe("Sales");
   });
 
   it("emptyIntervals=false excludes empty buckets", () => {
@@ -1418,16 +1418,16 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "d" as ColumnId,
-        columnId: "d" as ColumnId,
+        sourceId: columnId("d"),
+        columnId: columnId("d"),
         strategy: { mode: "fixedCalendar", unit: "MONTH" },
         maxIntervals: 100,
         emptyIntervals: false,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "d" as ColumnId, columnId: "month_key" as ColumnId },
-        { kind: "aggregate", sourceId: "v" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "key", sourceId: columnId("d"), columnId: columnId("month_key") },
+        { kind: "aggregate", sourceId: columnId("v"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
     const result = applyGroup(ds, op);
@@ -1441,24 +1441,24 @@ describe("applyGroup", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: false,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept_key" as ColumnId },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept_key") },
       ],
     };
     const result = applyGroup(ds, op);
 
     // Distinct intervals in first-seen order: Sales, Engineering, Marketing
     // With ascending=false → reversed: Marketing, Engineering, Sales
-    expect(result.rows[0]!.text("dept_key" as ColumnId)).toBe("Marketing");
-    expect(result.rows[1]!.text("dept_key" as ColumnId)).toBe("Engineering");
-    expect(result.rows[2]!.text("dept_key" as ColumnId)).toBe("Sales");
+    expect(result.rows[0]!.text(columnId("dept_key"))).toBe("Marketing");
+    expect(result.rows[1]!.text(columnId("dept_key"))).toBe("Engineering");
+    expect(result.rows[2]!.text(columnId("dept_key"))).toBe("Sales");
   });
 });
 
@@ -1490,26 +1490,26 @@ describe("applyGroupSequence", () => {
     const op: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "region" as ColumnId,
-        columnId: "region" as ColumnId,
+        sourceId: columnId("region"),
+        columnId: columnId("region"),
         strategy: { mode: "distinct" },
         maxIntervals: 100,
         emptyIntervals: true,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "region" as ColumnId, columnId: "region_key" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "key", sourceId: columnId("region"), columnId: columnId("region_key") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
 
     const result = applyGroupSequence(ds, [op]);
 
     expect(result.rows).toHaveLength(2);
-    const eastRow = result.rows.find((r) => r.text("region_key" as ColumnId) === "East")!;
-    expect(eastRow.number("total" as ColumnId)).toBe(300); // 100 + 200
-    const westRow = result.rows.find((r) => r.text("region_key" as ColumnId) === "West")!;
-    expect(westRow.number("total" as ColumnId)).toBe(200); // 150 + 50
+    const eastRow = result.rows.find((r) => r.text(columnId("region_key")) === "East")!;
+    expect(eastRow.number(columnId("total"))).toBe(300); // 100 + 200
+    const westRow = result.rows.find((r) => r.text(columnId("region_key")) === "West")!;
+    expect(westRow.number(columnId("total"))).toBe(200); // 150 + 50
   });
 
   it("second GroupOp without join or selectedIntervals → INVALID_OPERATION", () => {
@@ -1518,8 +1518,8 @@ describe("applyGroupSequence", () => {
       {
         type: "group",
         groupingKey: {
-          sourceId: "region" as ColumnId,
-          columnId: "region" as ColumnId,
+          sourceId: columnId("region"),
+          columnId: columnId("region"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
@@ -1530,15 +1530,15 @@ describe("applyGroupSequence", () => {
       {
         type: "group",
         groupingKey: {
-          sourceId: "product" as ColumnId,
-          columnId: "product" as ColumnId,
+          sourceId: columnId("product"),
+          columnId: columnId("product"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
           ascendingOrder: true,
         },
         columns: [
-          { kind: "key", sourceId: "product" as ColumnId, columnId: "product_key" as ColumnId },
+          { kind: "key", sourceId: columnId("product"), columnId: columnId("product_key") },
         ],
       },
     ];
@@ -1553,8 +1553,8 @@ describe("applyGroupSequence", () => {
       {
         type: "group",
         groupingKey: {
-          sourceId: "region" as ColumnId,
-          columnId: "region" as ColumnId,
+          sourceId: columnId("region"),
+          columnId: columnId("region"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
@@ -1566,16 +1566,16 @@ describe("applyGroupSequence", () => {
       {
         type: "group",
         groupingKey: {
-          sourceId: "product" as ColumnId,
-          columnId: "product" as ColumnId,
+          sourceId: columnId("product"),
+          columnId: columnId("product"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
           ascendingOrder: true,
         },
         columns: [
-          { kind: "key", sourceId: "product" as ColumnId, columnId: "product_key" as ColumnId },
-          { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "key", sourceId: columnId("product"), columnId: columnId("product_key") },
+          { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
         ],
         join: true,
       },
@@ -1585,10 +1585,10 @@ describe("applyGroupSequence", () => {
 
     // Only East rows: Widgets/100, Gadgets/200
     expect(result.rows).toHaveLength(2);
-    const widgetsRow = result.rows.find((r) => r.text("product_key" as ColumnId) === "Widgets")!;
-    expect(widgetsRow.number("total" as ColumnId)).toBe(100);
-    const gadgetsRow = result.rows.find((r) => r.text("product_key" as ColumnId) === "Gadgets")!;
-    expect(gadgetsRow.number("total" as ColumnId)).toBe(200);
+    const widgetsRow = result.rows.find((r) => r.text(columnId("product_key")) === "Widgets")!;
+    expect(widgetsRow.number(columnId("total"))).toBe(100);
+    const gadgetsRow = result.rows.find((r) => r.text(columnId("product_key")) === "Gadgets")!;
+    expect(gadgetsRow.number(columnId("total"))).toBe(200);
   });
 
   it("join: true — nested grouping produces parent x child rows", () => {
@@ -1600,8 +1600,8 @@ describe("applyGroupSequence", () => {
       {
         type: "group",
         groupingKey: {
-          sourceId: "region" as ColumnId,
-          columnId: "region" as ColumnId,
+          sourceId: columnId("region"),
+          columnId: columnId("region"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
@@ -1612,17 +1612,17 @@ describe("applyGroupSequence", () => {
       {
         type: "group",
         groupingKey: {
-          sourceId: "product" as ColumnId,
-          columnId: "product" as ColumnId,
+          sourceId: columnId("product"),
+          columnId: columnId("product"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
           ascendingOrder: true,
         },
         columns: [
-          { kind: "select", sourceId: "region" as ColumnId, columnId: "region_val" as ColumnId },
-          { kind: "key", sourceId: "product" as ColumnId, columnId: "product_key" as ColumnId },
-          { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "select", sourceId: columnId("region"), columnId: columnId("region_val") },
+          { kind: "key", sourceId: columnId("product"), columnId: columnId("product_key") },
+          { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
         ],
         join: true,
       },
@@ -1635,9 +1635,9 @@ describe("applyGroupSequence", () => {
 
     // Verify each combination
     const rows = result.rows.map((r) => ({
-      region: r.text("region_val" as ColumnId),
-      product: r.text("product_key" as ColumnId),
-      total: r.number("total" as ColumnId),
+      region: r.text(columnId("region_val")),
+      product: r.text(columnId("product_key")),
+      total: r.number(columnId("total")),
     }));
 
     expect(rows).toContainEqual({ region: "East", product: "Widgets", total: 100 });
@@ -1652,8 +1652,8 @@ describe("applyGroupSequence", () => {
       {
         type: "group",
         groupingKey: {
-          sourceId: "region" as ColumnId,
-          columnId: "region" as ColumnId,
+          sourceId: columnId("region"),
+          columnId: columnId("region"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
@@ -1661,23 +1661,23 @@ describe("applyGroupSequence", () => {
         },
         // First op has columns, but they should be ignored
         columns: [
-          { kind: "key", sourceId: "region" as ColumnId, columnId: "region_key" as ColumnId },
-          { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "ignored_total" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "key", sourceId: columnId("region"), columnId: columnId("region_key") },
+          { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("ignored_total"), fn: { fn: "SUM" } },
         ],
       },
       {
         type: "group",
         groupingKey: {
-          sourceId: "product" as ColumnId,
-          columnId: "product" as ColumnId,
+          sourceId: columnId("product"),
+          columnId: columnId("product"),
           strategy: { mode: "distinct" },
           maxIntervals: 100,
           emptyIntervals: true,
           ascendingOrder: true,
         },
         columns: [
-          { kind: "key", sourceId: "product" as ColumnId, columnId: "product_key" as ColumnId },
-          { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "rev_sum" as ColumnId, fn: { fn: "SUM" } },
+          { kind: "key", sourceId: columnId("product"), columnId: columnId("product_key") },
+          { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("rev_sum"), fn: { fn: "SUM" } },
         ],
         join: true,
       },
@@ -1690,7 +1690,7 @@ describe("applyGroupSequence", () => {
     expect(result.columns[0]!.id).toBe("product_key");
     expect(result.columns[1]!.id).toBe("rev_sum");
     // First op's "region_key" and "ignored_total" should not be in the output
-    expect(result.columns.find((c) => c.id === ("region_key" as ColumnId))).toBeUndefined();
-    expect(result.columns.find((c) => c.id === ("ignored_total" as ColumnId))).toBeUndefined();
+    expect(result.columns.find((c) => c.id === (columnId("region_key")))).toBeUndefined();
+    expect(result.columns.find((c) => c.id === (columnId("ignored_total")))).toBeUndefined();
   });
 });

@@ -1,5 +1,5 @@
 import type { Column, ColumnId, ColumnType as ColumnTypeEnum, DataSet } from "../types.js";
-import { ColumnType } from "../types.js";
+import { ColumnType, columnId} from "../types.js";
 import { DataSetError } from "../errors.js";
 import { toTypedDataSet } from "../conversion.js";
 import { parseCsv } from "./csv.js";
@@ -318,7 +318,7 @@ function mapTypeString(type: string): ColumnTypeEnum {
 
 function tabulateShapeA(data: ShapeAData): { columns: Column[]; rows: (string | null)[][] } {
   const columns: Column[] = data.columns.map((c) => ({
-    id: c.id as ColumnId,
+    id: columnId(c.id),
     name: c.name ?? c.id,
     type: mapTypeString(c.type),
   }));
@@ -347,7 +347,7 @@ function tabulateShapeB(data: Record<string, unknown>[]): { columns: Column[]; r
   const columns: Column[] = keys.map((key) => {
     const values = data.map((obj) => obj[key]);
     return {
-      id: key as ColumnId,
+      id: columnId(key),
       name: key,
       type: inferColumnType(values),
     };

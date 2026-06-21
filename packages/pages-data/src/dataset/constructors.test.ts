@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { dataSetId, columnId } from "./constructors.js";
 import type { DataSetId, ColumnId } from "./types.js";
-
 describe("branded type constructors", () => {
   it("dataSetId creates a DataSetId from a string", () => {
     const id: DataSetId = dataSetId("my-dataset");

@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
-import type { ColumnSettings, ColumnId } from "./types.js";
+import type { ColumnSettings, ColumnId} from "./types.js";
 
+import { columnId } from "./types.js";
 describe("ColumnSettings", () => {
   it("has renamed fields", () => {
     const settings: ColumnSettings = {
-      id: "revenue" as ColumnId,
+      id: columnId("revenue"),
       name: "Revenue",
       expression: "value * 100",
       pattern: "#,###",
@@ -19,7 +20,7 @@ describe("ColumnSettings", () => {
 
   it("name is optional", () => {
     const settings: ColumnSettings = {
-      id: "revenue" as ColumnId,
+      id: columnId("revenue"),
     };
     expect(settings.name).toBeUndefined();
   });

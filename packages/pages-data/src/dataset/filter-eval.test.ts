@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { applyFilter } from "./filter-eval.js";
 import { toTypedDataSet } from "./conversion.js";
-import type { Column, ColumnId, TypedDataSet } from "./types.js";
-import { ColumnType } from "./types.js";
+import type { Column, ColumnId, TypedDataSet} from "./types.js";
+import { ColumnType, columnId} from "./types.js";
 import type { ResolvedFilterExpression, NumericFilter, StringFilter, DateFilter } from "./filter.js";
 import { parseTimeFrame } from "./timeframe.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 function numericDataSet(): TypedDataSet {
@@ -18,22 +18,22 @@ function numericDataSet(): TypedDataSet {
 }
 
 function nf(filter: NumericFilter): ResolvedFilterExpression {
-  return { type: "numeric", columnId: "val" as ColumnId, filter };
+  return { type: "numeric", columnId: columnId("val"), filter };
 }
 
 function sf(filter: StringFilter): ResolvedFilterExpression {
-  return { type: "string", columnId: "name" as ColumnId, filter };
+  return { type: "string", columnId: columnId("name"), filter };
 }
 
 function df(filter: DateFilter): ResolvedFilterExpression {
-  return { type: "date", columnId: "date" as ColumnId, filter };
+  return { type: "date", columnId: columnId("date"), filter };
 }
 
 describe("applyFilter — numeric", () => {
   it("EQUALS_TO filters to matching rows", () => {
     const result = applyFilter(numericDataSet(), { type: "filter", expressions: [nf({ fn: "EQUALS_TO", value: 30 })] });
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]!.number("val" as ColumnId)).toBe(30);
+    expect(result.rows[0]!.number(columnId("val"))).toBe(30);
   });
 
   it("NOT_EQUALS_TO excludes matching rows", () => {
@@ -137,7 +137,7 @@ describe("applyFilter — string", () => {
   it("EQUALS_TO matches exact string", () => {
     const result = applyFilter(stringDataSet(), { type: "filter", expressions: [sf({ fn: "EQUALS_TO", value: "Bob" })] });
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]!.text("name" as ColumnId)).toBe("Bob");
+    expect(result.rows[0]!.text(columnId("name"))).toBe("Bob");
   });
 
   it("NOT_EQUALS_TO excludes matching string", () => {
@@ -198,7 +198,7 @@ describe("applyFilter — LIKE_TO", () => {
       data: [["a.b"], ["axb"]],
     });
     const result = applyFilter(ds, { type: "filter", expressions: [
-      { type: "string", columnId: "name" as ColumnId, filter: { fn: "LIKE_TO", pattern: "a.b", caseSensitive: true } },
+      { type: "string", columnId: columnId("name"), filter: { fn: "LIKE_TO", pattern: "a.b", caseSensitive: true } },
     ]});
     expect(result.rows).toHaveLength(1);
   });
@@ -209,10 +209,10 @@ describe("applyFilter — LIKE_TO", () => {
       data: [["a(b)"], ["ab"], ["a+b"]],
     });
     const result = applyFilter(ds, { type: "filter", expressions: [
-      { type: "string", columnId: "name" as ColumnId, filter: { fn: "LIKE_TO", pattern: "a(b)", caseSensitive: true } },
+      { type: "string", columnId: columnId("name"), filter: { fn: "LIKE_TO", pattern: "a(b)", caseSensitive: true } },
     ]});
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]!.text("name" as ColumnId)).toBe("a(b)");
+    expect(result.rows[0]!.text(columnId("name"))).toBe("a(b)");
   });
 
   it("bracket expression [charlist] passes through", () => {
@@ -221,7 +221,7 @@ describe("applyFilter — LIKE_TO", () => {
       data: [["cat"], ["cut"], ["cot"], ["cit"]],
     });
     const result = applyFilter(ds, { type: "filter", expressions: [
-      { type: "string", columnId: "name" as ColumnId, filter: { fn: "LIKE_TO", pattern: "c[ao]t", caseSensitive: true } },
+      { type: "string", columnId: columnId("name"), filter: { fn: "LIKE_TO", pattern: "c[ao]t", caseSensitive: true } },
     ]});
     expect(result.rows).toHaveLength(2);
   });
@@ -232,7 +232,7 @@ describe("applyFilter — LIKE_TO", () => {
       data: [["a%b"], ["a_b"], ["axb"]],
     });
     const result = applyFilter(ds, { type: "filter", expressions: [
-      { type: "string", columnId: "name" as ColumnId, filter: { fn: "LIKE_TO", pattern: "a[%_]b", caseSensitive: true } },
+      { type: "string", columnId: columnId("name"), filter: { fn: "LIKE_TO", pattern: "a[%_]b", caseSensitive: true } },
     ]});
     expect(result.rows).toHaveLength(2);
   });
@@ -243,7 +243,7 @@ describe("applyFilter — LIKE_TO", () => {
       data: [[null]],
     });
     const result = applyFilter(ds, { type: "filter", expressions: [
-      { type: "string", columnId: "name" as ColumnId, filter: { fn: "LIKE_TO", pattern: "%", caseSensitive: true } },
+      { type: "string", columnId: columnId("name"), filter: { fn: "LIKE_TO", pattern: "%", caseSensitive: true } },
     ]});
     expect(result.rows).toHaveLength(0);
   });

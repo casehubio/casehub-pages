@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseLookup } from "./lookup-parser.js";
-import { expectGroupOp, expectSortOp } from "./test-helpers.js";
+import { expectGroupOp, expectSortOp, expectAggregateColumn } from "./test-helpers.js";
 import type { DataSetId, ColumnId } from "./types.js";
 import { ZodError } from "zod";
 
@@ -750,8 +750,7 @@ describe("parseLookup", () => {
       }],
     });
     const groupOp = expectGroupOp(lookup.operations[0]!);
-    const col1 = groupOp.columns[1]!;
-    if (col1.kind !== "aggregate") throw new Error("Expected aggregate");
+    const col1 = expectAggregateColumn(groupOp.columns[1]!);
     expect(col1.fn.fn).toBe("COUNT");
   });
 

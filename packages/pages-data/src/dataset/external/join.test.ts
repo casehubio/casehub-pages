@@ -6,8 +6,10 @@ import type { Column, ColumnId, DataSetId } from "../types.js";
 import { ColumnType } from "../types.js";
 import { DataSetError } from "../errors.js";
 
+import { dataSetId, columnId } from "../types.js";
+
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 const COLS = [col("name", "Name", ColumnType.LABEL), col("value", "Value", ColumnType.NUMBER)];
@@ -16,9 +18,9 @@ function makeDs(rows: (string | null)[][]) {
   return toTypedDataSet({ columns: COLS, data: rows });
 }
 
-const ID_A = "ds-a" as DataSetId;
-const ID_B = "ds-b" as DataSetId;
-const ID_C = "ds-c" as DataSetId;
+const ID_A = dataSetId("ds-a");
+const ID_B = dataSetId("ds-b");
+const ID_C = dataSetId("ds-c");
 
 describe("joinDataSets", () => {
   it("joins two datasets with matching schemas", () => {
@@ -27,8 +29,8 @@ describe("joinDataSets", () => {
     mgr.register(ID_B, makeDs([["Bob", "200"]]));
     const result = joinDataSets([ID_A, ID_B], mgr);
     expect(result.rows).toHaveLength(2);
-    expect(result.rows[0]!.text("name" as ColumnId)).toBe("Alice");
-    expect(result.rows[1]!.text("name" as ColumnId)).toBe("Bob");
+    expect(result.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(result.rows[1]!.text(columnId("name"))).toBe("Bob");
   });
 
   it("joins three datasets", () => {

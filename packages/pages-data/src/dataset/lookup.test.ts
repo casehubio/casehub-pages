@@ -1,20 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { createLookup } from "./lookup.js";
-import type { ColumnId, DataSetId } from "./types.js";
+import type { ColumnId, DataSetId} from "./types.js";
 import type { ResolvedFilterOp } from "./filter.js";
 import type { GroupOp } from "./group.js";
 import type { SortOp } from "./sort.js";
 import { DataSetError } from "./errors.js";
 
+import { dataSetId, columnId } from "./types.js";
 function dsId(id: string): DataSetId {
-  return id as DataSetId;
+  return dataSetId(id);
 }
 
 describe("createLookup", () => {
   it("creates a lookup with valid ops", () => {
     const filter: ResolvedFilterOp = {
       type: "filter",
-      expressions: [{ type: "numeric", columnId: "x" as ColumnId, filter: { fn: "IS_NULL" } }],
+      expressions: [{ type: "numeric", columnId: columnId("x"), filter: { fn: "IS_NULL" } }],
     };
     const lookup = createLookup(dsId("test"), [filter]);
     expect(lookup.dataSetId).toBe("test");
@@ -28,11 +29,11 @@ describe("createLookup", () => {
   });
 
   it("throws on invalid op order (sort before group)", () => {
-    const sort: SortOp = { type: "sort", columns: [{ columnId: "x" as ColumnId, order: "ASCENDING" }] };
+    const sort: SortOp = { type: "sort", columns: [{ columnId: columnId("x"), order: "ASCENDING" }] };
     const group: GroupOp = {
       type: "group",
       groupingKey: null,
-      columns: [{ kind: "aggregate", sourceId: "x" as ColumnId, columnId: "x" as ColumnId, fn: { fn: "COUNT" } }],
+      columns: [{ kind: "aggregate", sourceId: columnId("x"), columnId: columnId("x"), fn: { fn: "COUNT" } }],
     };
     expect(() => createLookup(dsId("test"), [sort, group])).toThrow(DataSetError);
   });

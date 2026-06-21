@@ -4,14 +4,14 @@ import type { DataSetOp } from "./ops.js";
 import type { ResolvedFilterOp } from "./filter.js";
 import type { GroupOp } from "./group.js";
 import type { SortOp } from "./sort.js";
-import type { ColumnId, Column } from "./types.js";
-import { ColumnType } from "./types.js";
+import type { ColumnId, Column} from "./types.js";
+import { ColumnType, columnId} from "./types.js";
 import { toTypedDataSet } from "./conversion.js";
 import { parseTimeFrame } from "./timeframe.js";
 
 const filter: ResolvedFilterOp = { type: "filter", expressions: [] };
 const group: GroupOp = { type: "group", groupingKey: null, columns: [] };
-const sort: SortOp = { type: "sort", columns: [{ columnId: "x" as ColumnId, order: "ASCENDING" }] };
+const sort: SortOp = { type: "sort", columns: [{ columnId: columnId("x"), order: "ASCENDING" }] };
 
 describe("validateOpOrder", () => {
   it("accepts empty ops", () => {
@@ -50,7 +50,7 @@ describe("validateOpOrder", () => {
 });
 
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 describe("applyOps", () => {
@@ -79,7 +79,7 @@ describe("applyOps", () => {
       type: "filter",
       expressions: [{
         type: "numeric",
-        columnId: "revenue" as ColumnId,
+        columnId: columnId("revenue"),
         filter: { fn: "GREATER_THAN", value: 100 },
       }],
     };
@@ -92,7 +92,7 @@ describe("applyOps", () => {
       type: "filter",
       expressions: [{
         type: "numeric",
-        columnId: "revenue" as ColumnId,
+        columnId: columnId("revenue"),
         filter: { fn: "GREATER_OR_EQUALS_TO", value: 75 },
       }],
     };
@@ -101,33 +101,33 @@ describe("applyOps", () => {
     const group: GroupOp = {
       type: "group",
       groupingKey: {
-        sourceId: "dept" as ColumnId,
-        columnId: "dept" as ColumnId,
+        sourceId: columnId("dept"),
+        columnId: columnId("dept"),
         strategy: { mode: "distinct" },
         maxIntervals: 15,
         emptyIntervals: false,
         ascendingOrder: true,
       },
       columns: [
-        { kind: "key", sourceId: "dept" as ColumnId, columnId: "dept" as ColumnId },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
+        { kind: "key", sourceId: columnId("dept"), columnId: columnId("dept") },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
       ],
     };
 
     const sort: SortOp = {
       type: "sort",
-      columns: [{ columnId: "total" as ColumnId, order: "DESCENDING" }],
+      columns: [{ columnId: columnId("total"), order: "DESCENDING" }],
     };
 
     const result = applyOps(salesData, [filter, group, sort]);
     expect(result.rows).toHaveLength(3); // Sales, Engineering, Marketing
     // Engineering: 200+300=500, Sales: 100+150=250, Marketing: 75
-    expect(result.rows[0]!.cell("dept" as ColumnId)).toEqual({ type: ColumnType.LABEL, value: "Engineering" });
-    expect(result.rows[0]!.number("total" as ColumnId)).toBe(500);
-    expect(result.rows[1]!.cell("dept" as ColumnId)).toEqual({ type: ColumnType.LABEL, value: "Sales" });
-    expect(result.rows[1]!.number("total" as ColumnId)).toBe(250);
-    expect(result.rows[2]!.cell("dept" as ColumnId)).toEqual({ type: ColumnType.LABEL, value: "Marketing" });
-    expect(result.rows[2]!.number("total" as ColumnId)).toBe(75);
+    expect(result.rows[0]!.cell(columnId("dept"))).toEqual({ type: ColumnType.LABEL, value: "Engineering" });
+    expect(result.rows[0]!.number(columnId("total"))).toBe(500);
+    expect(result.rows[1]!.cell(columnId("dept"))).toEqual({ type: ColumnType.LABEL, value: "Sales" });
+    expect(result.rows[1]!.number(columnId("total"))).toBe(250);
+    expect(result.rows[2]!.cell(columnId("dept"))).toEqual({ type: ColumnType.LABEL, value: "Marketing" });
+    expect(result.rows[2]!.number(columnId("total"))).toBe(75);
   });
 
   it("invalid ordering → INVALID_OPERATION", () => {
@@ -141,25 +141,25 @@ describe("applyOps", () => {
       type: "group",
       groupingKey: null,
       columns: [
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "total" as ColumnId, fn: { fn: "SUM" } },
-        { kind: "aggregate", sourceId: "revenue" as ColumnId, columnId: "count" as ColumnId, fn: { fn: "COUNT" } },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "SUM" } },
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("count"), fn: { fn: "COUNT" } },
       ],
     };
     const result = applyOps(salesData, [group]);
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]!.number("total" as ColumnId)).toBe(875); // 100+200+150+50+300+75
-    expect(result.rows[0]!.number("count" as ColumnId)).toBe(6);
+    expect(result.rows[0]!.number(columnId("total"))).toBe(875); // 100+200+150+50+300+75
+    expect(result.rows[0]!.number(columnId("count"))).toBe(6);
   });
 
   it("sort only", () => {
     const sort: SortOp = {
       type: "sort",
-      columns: [{ columnId: "revenue" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("revenue"), order: "ASCENDING" }],
     };
     const result = applyOps(salesData, [sort]);
     expect(result.rows).toHaveLength(6);
-    expect(result.rows[0]!.number("revenue" as ColumnId)).toBe(50);
-    expect(result.rows[5]!.number("revenue" as ColumnId)).toBe(300);
+    expect(result.rows[0]!.number(columnId("revenue"))).toBe(50);
+    expect(result.rows[5]!.number(columnId("revenue"))).toBe(300);
   });
 
   it("forwards referenceDate to filter for TIME_FRAME evaluation", () => {
@@ -182,14 +182,14 @@ describe("applyOps", () => {
       type: "filter",
       expressions: [{
         type: "date",
-        columnId: "date" as ColumnId,
+        columnId: columnId("date"),
         filter: { fn: "TIME_FRAME", timeFrame },
       }],
     };
 
     const result = applyOps(ds, [filter], { referenceDate: refDate });
     expect(result.rows).toHaveLength(2);
-    expect(result.rows[0]!.text("label" as ColumnId)).toBe("in-range");
-    expect(result.rows[1]!.text("label" as ColumnId)).toBe("in-range");
+    expect(result.rows[0]!.text(columnId("label"))).toBe("in-range");
+    expect(result.rows[1]!.text(columnId("label"))).toBe("in-range");
   });
 });

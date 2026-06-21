@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { toTypedDataSet, toWireDataSet } from "./conversion.js";
-import type { DataSet, Column, ColumnId, TypedDataSet } from "./types.js";
-import { ColumnType } from "./types.js";
+import type { DataSet, Column, ColumnId, TypedDataSet} from "./types.js";
+import { ColumnType, columnId} from "./types.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 describe("toTypedDataSet", () => {
@@ -25,10 +25,10 @@ describe("toTypedDataSet", () => {
     expect(result.columns).toEqual(ds.columns);
     expect(result.rows).toHaveLength(2);
 
-    expect(result.rows[0]!.text("name" as ColumnId)).toBe("Acme");
-    expect(result.rows[0]!.number("revenue" as ColumnId)).toBe(100);
-    expect(result.rows[1]!.text("name" as ColumnId)).toBe("Beta");
-    expect(result.rows[1]!.number("revenue" as ColumnId)).toBe(250.5);
+    expect(result.rows[0]!.text(columnId("name"))).toBe("Acme");
+    expect(result.rows[0]!.number(columnId("revenue"))).toBe(100);
+    expect(result.rows[1]!.text(columnId("name"))).toBe("Beta");
+    expect(result.rows[1]!.number(columnId("revenue"))).toBe(250.5);
   });
 
   it("parses DATE columns as UTC Dates", () => {
@@ -38,7 +38,7 @@ describe("toTypedDataSet", () => {
     };
 
     const result = toTypedDataSet(ds);
-    const date = result.rows[0]!.date("date" as ColumnId);
+    const date = result.rows[0]!.date(columnId("date"));
 
     expect(date).toBeInstanceOf(Date);
     expect(date.toISOString()).toBe("2024-06-15T10:30:00.000Z");
@@ -52,8 +52,8 @@ describe("toTypedDataSet", () => {
 
     const result = toTypedDataSet(ds);
 
-    expect(result.rows[0]!.text("region" as ColumnId)).toBe("US");
-    expect(result.rows[0]!.cell("region" as ColumnId).type).toBe(ColumnType.LABEL);
+    expect(result.rows[0]!.text(columnId("region"))).toBe("US");
+    expect(result.rows[0]!.cell(columnId("region")).type).toBe(ColumnType.LABEL);
   });
 
   it("throws DataSetError for unparseable NUMBER", () => {
@@ -92,7 +92,7 @@ describe("toTypedDataSet", () => {
     };
 
     const result = toTypedDataSet(ds);
-    expect(() => result.rows[0]!.cell("unknown" as ColumnId)).toThrow();
+    expect(() => result.rows[0]!.cell(columnId("unknown"))).toThrow();
   });
 
   it("number() throws when called on a TEXT column", () => {
@@ -102,7 +102,7 @@ describe("toTypedDataSet", () => {
     };
 
     const result = toTypedDataSet(ds);
-    expect(() => result.rows[0]!.number("name" as ColumnId)).toThrow();
+    expect(() => result.rows[0]!.number(columnId("name"))).toThrow();
   });
 
   it("returns immutable rows", () => {
@@ -124,7 +124,7 @@ describe("toTypedDataSet", () => {
       data: [["hello"]],
     };
     const result = toTypedDataSet(ds);
-    const cell = result.rows[0]!.cell("b" as ColumnId);
+    const cell = result.rows[0]!.cell(columnId("b"));
     expect(cell.type).toBe("NULL");
   });
 
@@ -134,7 +134,7 @@ describe("toTypedDataSet", () => {
       data: [[null]],
     };
     const result = toTypedDataSet(ds);
-    expect(result.rows[0]!.cell("x" as ColumnId).type).toBe("NULL");
+    expect(result.rows[0]!.cell(columnId("x")).type).toBe("NULL");
   });
 
   it("preserves empty string as valid TEXT value, not null", () => {
@@ -143,7 +143,7 @@ describe("toTypedDataSet", () => {
       data: [[""]],
     };
     const result = toTypedDataSet(ds);
-    const cell = result.rows[0]!.cell("x" as ColumnId);
+    const cell = result.rows[0]!.cell(columnId("x"));
     expect(cell.type).toBe(ColumnType.TEXT);
     expect((cell as { value: string }).value).toBe("");
   });
@@ -154,7 +154,7 @@ describe("toTypedDataSet", () => {
       data: [[null]],
     };
     const result = toTypedDataSet(ds);
-    expect(() => result.rows[0]!.text("x" as ColumnId)).toThrow();
+    expect(() => result.rows[0]!.text(columnId("x"))).toThrow();
   });
 });
 

@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { applySort } from "./sort-eval.js";
 import { toTypedDataSet } from "./conversion.js";
-import type { Column, ColumnId } from "./types.js";
-import { ColumnType } from "./types.js";
+import type { Column, ColumnId} from "./types.js";
+import { ColumnType, columnId} from "./types.js";
 import type { SortOp } from "./sort.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
-  return { id: id as ColumnId, name, type };
+  return { id: columnId(id), name, type };
 }
 
 function extractValue(cell: any) {
@@ -21,7 +21,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "val" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("val"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows.map((r) => extractValue(r.cells[0]))).toEqual([10, 20, 30]);
@@ -34,7 +34,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "val" as ColumnId, order: "DESCENDING" }],
+      columns: [{ columnId: columnId("val"), order: "DESCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows.map((r) => extractValue(r.cells[0]))).toEqual([30, 20, 10]);
@@ -55,8 +55,8 @@ describe("applySort", () => {
     const op: SortOp = {
       type: "sort",
       columns: [
-        { columnId: "dept" as ColumnId, order: "ASCENDING" },
-        { columnId: "val" as ColumnId, order: "ASCENDING" },
+        { columnId: columnId("dept"), order: "ASCENDING" },
+        { columnId: columnId("val"), order: "ASCENDING" },
       ],
     };
     const result = applySort(ds, op);
@@ -74,7 +74,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "val" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("val"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows.map((r) => extractValue(r.cells[0]))).toEqual([10, 20, null]);
@@ -87,7 +87,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "val" as ColumnId, order: "DESCENDING" }],
+      columns: [{ columnId: columnId("val"), order: "DESCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows.map((r) => extractValue(r.cells[0]))).toEqual([20, 10, null]);
@@ -100,7 +100,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "missing" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("missing"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     expect(extractValue(result.rows[0]!.cells[0]!)).toBe(10);
@@ -121,7 +121,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "key" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("key"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows.map((r) => [extractValue(r.cells[0]), extractValue(r.cells[1])])).toEqual([
@@ -138,7 +138,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "date" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("date"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     const dates = result.rows.map((r) => extractValue(r.cells[0]));
@@ -154,7 +154,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "label" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("label"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows.map((r) => extractValue(r.cells[0]))).toEqual(["apple", "banana", "zebra"]);
@@ -167,7 +167,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "val" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("val"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows).toEqual([]);
@@ -180,7 +180,7 @@ describe("applySort", () => {
     });
     const op: SortOp = {
       type: "sort",
-      columns: [{ columnId: "val" as ColumnId, order: "ASCENDING" }],
+      columns: [{ columnId: columnId("val"), order: "ASCENDING" }],
     };
     const result = applySort(ds, op);
     expect(result.rows.map((r) => extractValue(r.cells[0]))).toEqual([42]);

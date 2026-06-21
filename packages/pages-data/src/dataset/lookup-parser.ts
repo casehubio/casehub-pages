@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ColumnId, DataSetId } from "./types.js";
+import type { DataSetId } from "./types.js";
 import type { FilterExpression, FilterOp, CoreFunctionType } from "./filter.js";
 import type { GroupOp, GroupingKey, GroupStrategy, ResultColumn, Aggregation } from "./group.js";
 import type { FixedCalendarUnit } from "./group.js";
@@ -8,6 +8,7 @@ import type { SortOp, SortColumn } from "./sort.js";
 import type { DataSetLookup } from "./lookup.js";
 import { createLookup } from "./lookup.js";
 
+import { dataSetId, columnId } from "./types.js";
 // Core function type enum schema
 const coreFunctionTypeSchema = z.enum([
   "IS_NULL", "NOT_NULL",
@@ -145,7 +146,7 @@ const lookupSchema = z.object({
 
 export function parseLookup(raw: unknown): DataSetLookup {
   const parsed = lookupSchema.parse(raw);
-  const dataSetId = parsed.uuid as DataSetId;
+  const dsId = dataSetId(parsed.uuid);
   const operations: (FilterOp | GroupOp | SortOp)[] = [];
 
   // Parse filter (implicit AND)
@@ -167,7 +168,7 @@ export function parseLookup(raw: unknown): DataSetLookup {
   // Parse sort operation
   if (parsed.sort && parsed.sort.length > 0) {
     const columns: SortColumn[] = parsed.sort.map(col => ({
-      columnId: col.column as ColumnId,
+      columnId: columnId(col.column),
       order: col.order,
     }));
     operations.push({
@@ -177,7 +178,7 @@ export function parseLookup(raw: unknown): DataSetLookup {
   }
 
   // Use createLookup to validate op ordering
-  return createLookup(dataSetId, operations);
+  return createLookup(dsId, operations);
 }
 
 function parseFilterExpressions(nodes: z.infer<typeof filterNodeSchema>[]): FilterExpression[] {
@@ -209,7 +210,7 @@ function parseFilterNode(node: z.infer<typeof filterNodeSchema>): FilterExpressi
   if ("column" in node && "function" in node) {
     return {
       type: "unresolved",
-      columnId: node.column as ColumnId,
+      columnId: columnId(node.column),
       fn: node.function as CoreFunctionType,
       args: node.args.map(String),
     };
@@ -226,8 +227,8 @@ function parseGroupEntry(entry: z.infer<typeof groupEntrySchema>): GroupOp {
     const strategy = parseGroupStrategy(cg.strategy, cg.unit, cg.preferredUnit);
 
     groupingKey = {
-      sourceId: cg.source as ColumnId,
-      columnId: (cg.id ?? cg.source) as ColumnId,
+      sourceId: columnId(cg.source),
+      columnId: columnId(cg.id ?? cg.source),
       strategy,
       maxIntervals: cg.maxIntervals,
       emptyIntervals: cg.emptyIntervals,
@@ -238,22 +239,19 @@ function parseGroupEntry(entry: z.infer<typeof groupEntrySchema>): GroupOp {
   }
 
   const columns: ResultColumn[] = entry.columns.map(col => {
-    const sourceId = col.source as ColumnId;
-    const columnId = (col.id ?? col.source) as ColumnId;
+    const srcId = columnId(col.source);
+    const colId = columnId(col.id ?? col.source);
 
-    // Key column: source matches columnGroup.source
     if (entry.columnGroup && col.source === entry.columnGroup.source) {
-      return { kind: "key", sourceId, columnId };
+      return { kind: "key", sourceId: srcId, columnId: colId };
     }
 
-    // Aggregate column: has function
     if (col.function) {
       const fn = parseAggregation(col.function, col.separator);
-      return { kind: "aggregate", sourceId, columnId, fn };
+      return { kind: "aggregate", sourceId: srcId, columnId: colId, fn };
     }
 
-    // Select column: no function
-    return { kind: "select", sourceId, columnId };
+    return { kind: "select", sourceId: srcId, columnId: colId };
   });
 
   return {

@@ -1,6 +1,6 @@
 export interface Component<
   T extends string = string,
-  P = Record<string, unknown>,
+  P extends object = Record<string, unknown>,
 > {
   readonly type: T;
   readonly id?: string;
