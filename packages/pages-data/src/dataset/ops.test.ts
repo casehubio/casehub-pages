@@ -1,10 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { validateOpOrder, applyOps } from "./ops.js";
-import type { DataSetOp } from "./ops.js";
 import type { ResolvedFilterOp } from "./filter.js";
 import type { GroupOp } from "./group.js";
 import type { SortOp } from "./sort.js";
-import type { ColumnId, Column} from "./types.js";
+import type { Column} from "./types.js";
 import { ColumnType, columnId} from "./types.js";
 import { toTypedDataSet } from "./conversion.js";
 import { parseTimeFrame } from "./timeframe.js";

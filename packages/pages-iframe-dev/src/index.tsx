@@ -90,9 +90,7 @@ function respondFunctionCall(message: ComponentMessage) {
   const functionCall = message.properties.get(MessageProperty.FUNCTION_CALL) as FunctionCallRequest;
   const functionName = functionCall.functionName;
 
-  const confResponse = functions
-    ? functions.filter((f) => f.name === functionName).filter((f) => paramsMatch(functionCall.parameters, f.params))[0]
-    : undefined;
+  const confResponse = functions.filter((f) => f.name === functionName).filter((f) => paramsMatch(functionCall.parameters, f.params))[0];
   console.debug("[COMPONENT DEV] Function response: ");
   console.debug(confResponse);
   let functionResponse: FunctionResponse;
@@ -119,7 +117,7 @@ function respondFunctionCall(message: ComponentMessage) {
     };
   }
 
-  const props = new Map<string, any>();
+  const props = new Map<string, unknown>();
   props.set(MessageProperty.FUNCTION_RESPONSE, functionResponse);
   sendMessage({
     type: MessageType.FUNCTION_RESPONSE,
@@ -128,7 +126,7 @@ function respondFunctionCall(message: ComponentMessage) {
 }
 
 function createInit(devConf: ComponentDevConfiguration) {
-  const props = new Map<string, any>();
+  const props = new Map<string, unknown>();
   devConf.init.forEach((prop) => props.set(prop.key, prop.value));
   initMessage = {
     type: MessageType.INIT,
@@ -137,7 +135,7 @@ function createInit(devConf: ComponentDevConfiguration) {
 }
 
 function createDataSet(devConf: ComponentDevConfiguration) {
-  const props = new Map<string, any>();
+  const props = new Map<string, unknown>();
   devConf.init.forEach((prop) => props.set(prop.key, prop.value));
   props.set(MessageProperty.DATASET, devConf.dataSet);
   dataSetMessage = {
@@ -146,13 +144,10 @@ function createDataSet(devConf: ComponentDevConfiguration) {
   };
 }
 
-function paramsMatch(requestParams: Map<string, any>, devParams: Prop[]): boolean {
-  const devParamsEmpty = !devParams || devParams.length === 0;
-  const requestParamsEmpty = !requestParams || requestParams.size === 0;
-  const allMatch =
-    devParams && requestParams
-      ? !devParamsEmpty && devParams.every((p) => requestParams.get(p.key) === p.value)
-      : false;
+function paramsMatch(requestParams: Map<string, unknown>, devParams: Prop[]): boolean {
+  const devParamsEmpty = devParams.length === 0;
+  const requestParamsEmpty = requestParams.size === 0;
+  const allMatch = !devParamsEmpty && devParams.every((p) => requestParams.get(p.key) === p.value);
   return (devParamsEmpty && requestParamsEmpty) || allMatch;
 }
 
@@ -168,6 +163,6 @@ export class ComponentDev {
     fetch(DEV_FILE)
       .then((r) => r.text())
       .then((text) => { handleDevConf(text); })
-      .catch((e) => { console.log("Not able to load manifest DEV file: " + e); });
+      .catch((e: unknown) => { console.log("Not able to load manifest DEV file: " + String(e)); });
   }
 }

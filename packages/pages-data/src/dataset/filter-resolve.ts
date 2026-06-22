@@ -18,15 +18,13 @@ export function resolveFilterTypes(
   columns: readonly Column[],
 ): ResolvedFilterExpression {
   if ("children" in expression) {
-    if (expression.type === "and" || expression.type === "or") {
-      return {
-        type: expression.type,
-        children: expression.children.map(child => resolveFilterTypes(child, columns)),
-      };
-    }
+    return {
+      type: expression.type,
+      children: expression.children.map(child => resolveFilterTypes(child, columns)),
+    };
   }
 
-  if ("child" in expression && expression.type === "not") {
+  if ("child" in expression) {
     return {
       type: "not",
       child: resolveFilterTypes(expression.child, columns),
@@ -73,19 +71,19 @@ function resolveNumericFilter(fn: CoreFunctionType, args: readonly string[]): Nu
     case "NOT_NULL":
       return { fn: "NOT_NULL" };
     case "EQUALS_TO":
-      return { fn: "EQUALS_TO", value: parseNumber(args[0]!) };
+      return { fn: "EQUALS_TO", value: parseNumber(requireArg(args, 0, fn)) };
     case "NOT_EQUALS_TO":
-      return { fn: "NOT_EQUALS_TO", value: parseNumber(args[0]!) };
+      return { fn: "NOT_EQUALS_TO", value: parseNumber(requireArg(args, 0, fn)) };
     case "GREATER_THAN":
-      return { fn: "GREATER_THAN", value: parseNumber(args[0]!) };
+      return { fn: "GREATER_THAN", value: parseNumber(requireArg(args, 0, fn)) };
     case "GREATER_OR_EQUALS_TO":
-      return { fn: "GREATER_OR_EQUALS_TO", value: parseNumber(args[0]!) };
+      return { fn: "GREATER_OR_EQUALS_TO", value: parseNumber(requireArg(args, 0, fn)) };
     case "LOWER_THAN":
-      return { fn: "LOWER_THAN", value: parseNumber(args[0]!) };
+      return { fn: "LOWER_THAN", value: parseNumber(requireArg(args, 0, fn)) };
     case "LOWER_OR_EQUALS_TO":
-      return { fn: "LOWER_OR_EQUALS_TO", value: parseNumber(args[0]!) };
+      return { fn: "LOWER_OR_EQUALS_TO", value: parseNumber(requireArg(args, 0, fn)) };
     case "BETWEEN":
-      return { fn: "BETWEEN", low: parseNumber(args[0]!), high: parseNumber(args[1]!) };
+      return { fn: "BETWEEN", low: parseNumber(requireArg(args, 0, fn)), high: parseNumber(requireArg(args, 1, fn)) };
     case "IN":
       return { fn: "IN", values: args.map(parseNumber) };
     case "NOT_IN":
@@ -110,21 +108,21 @@ function resolveStringFilter(fn: CoreFunctionType, args: readonly string[]): Str
     case "NOT_NULL":
       return { fn: "NOT_NULL" };
     case "EQUALS_TO":
-      return { fn: "EQUALS_TO", value: args[0]! };
+      return { fn: "EQUALS_TO", value: requireArg(args, 0, fn) };
     case "NOT_EQUALS_TO":
-      return { fn: "NOT_EQUALS_TO", value: args[0]! };
+      return { fn: "NOT_EQUALS_TO", value: requireArg(args, 0, fn) };
     case "GREATER_THAN":
-      return { fn: "GREATER_THAN", value: args[0]! };
+      return { fn: "GREATER_THAN", value: requireArg(args, 0, fn) };
     case "GREATER_OR_EQUALS_TO":
-      return { fn: "GREATER_OR_EQUALS_TO", value: args[0]! };
+      return { fn: "GREATER_OR_EQUALS_TO", value: requireArg(args, 0, fn) };
     case "LOWER_THAN":
-      return { fn: "LOWER_THAN", value: args[0]! };
+      return { fn: "LOWER_THAN", value: requireArg(args, 0, fn) };
     case "LOWER_OR_EQUALS_TO":
-      return { fn: "LOWER_OR_EQUALS_TO", value: args[0]! };
+      return { fn: "LOWER_OR_EQUALS_TO", value: requireArg(args, 0, fn) };
     case "BETWEEN":
-      return { fn: "BETWEEN", low: args[0]!, high: args[1]! };
+      return { fn: "BETWEEN", low: requireArg(args, 0, fn), high: requireArg(args, 1, fn) };
     case "LIKE_TO": {
-      const pattern = args[0]!;
+      const pattern = requireArg(args, 0, fn);
       const caseSensitive = args[1] === "false" ? false : true;
       return { fn: "LIKE_TO", pattern, caseSensitive };
     }
@@ -147,21 +145,21 @@ function resolveDateFilter(fn: CoreFunctionType, args: readonly string[]): DateF
     case "NOT_NULL":
       return { fn: "NOT_NULL" };
     case "EQUALS_TO":
-      return { fn: "EQUALS_TO", value: parseDate(args[0]!) };
+      return { fn: "EQUALS_TO", value: parseDate(requireArg(args, 0, fn)) };
     case "NOT_EQUALS_TO":
-      return { fn: "NOT_EQUALS_TO", value: parseDate(args[0]!) };
+      return { fn: "NOT_EQUALS_TO", value: parseDate(requireArg(args, 0, fn)) };
     case "GREATER_THAN":
-      return { fn: "GREATER_THAN", value: parseDate(args[0]!) };
+      return { fn: "GREATER_THAN", value: parseDate(requireArg(args, 0, fn)) };
     case "GREATER_OR_EQUALS_TO":
-      return { fn: "GREATER_OR_EQUALS_TO", value: parseDate(args[0]!) };
+      return { fn: "GREATER_OR_EQUALS_TO", value: parseDate(requireArg(args, 0, fn)) };
     case "LOWER_THAN":
-      return { fn: "LOWER_THAN", value: parseDate(args[0]!) };
+      return { fn: "LOWER_THAN", value: parseDate(requireArg(args, 0, fn)) };
     case "LOWER_OR_EQUALS_TO":
-      return { fn: "LOWER_OR_EQUALS_TO", value: parseDate(args[0]!) };
+      return { fn: "LOWER_OR_EQUALS_TO", value: parseDate(requireArg(args, 0, fn)) };
     case "BETWEEN":
-      return { fn: "BETWEEN", low: parseDate(args[0]!), high: parseDate(args[1]!) };
+      return { fn: "BETWEEN", low: parseDate(requireArg(args, 0, fn)), high: parseDate(requireArg(args, 1, fn)) };
     case "TIME_FRAME":
-      return { fn: "TIME_FRAME", timeFrame: parseTimeFrame(args[0]!) };
+      return { fn: "TIME_FRAME", timeFrame: parseTimeFrame(requireArg(args, 0, fn)) };
     case "IN":
       return { fn: "IN", values: args.map(parseDate) };
     case "NOT_IN":
@@ -172,6 +170,17 @@ function resolveDateFilter(fn: CoreFunctionType, args: readonly string[]): DateF
         `LIKE_TO cannot be used with DATE columns`,
       );
   }
+}
+
+function requireArg(args: readonly string[], index: number, fn: CoreFunctionType): string {
+  const value = args[index];
+  if (value === undefined) {
+    throw new DataSetError(
+      "RESOLUTION_FAILED",
+      `${fn} requires argument at index ${String(index)} but only ${String(args.length)} provided`,
+    );
+  }
+  return value;
 }
 
 function parseNumber(s: string): number {

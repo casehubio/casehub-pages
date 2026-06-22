@@ -62,7 +62,9 @@ export class CasehubTextarea extends CasehubFormInput<TextareaProps> {
 
     const textarea = document.createElement("textarea");
     const value = this.extractFieldValue(dataset);
-    if (value !== undefined) textarea.value = String(value);
+    if (typeof value === "string") textarea.value = value;
+    else if (typeof value === "number") textarea.value = String(value);
+    else if (value !== undefined) textarea.value = "";
     if (props.rows !== undefined) textarea.rows = props.rows;
     if (props.maxLength) textarea.maxLength = props.maxLength;
     if (props.required) textarea.required = true;

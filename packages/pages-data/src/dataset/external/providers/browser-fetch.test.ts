@@ -11,7 +11,7 @@ describe("BrowserFetchProvider", () => {
   it("handles absolute URLs correctly", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ data: [1, 2, 3] }),
+      json: () => Promise.resolve({ data: [1, 2, 3] }),
       headers: new Headers({ "content-type": "application/json" }),
     });
 
@@ -23,7 +23,7 @@ describe("BrowserFetchProvider", () => {
   it("appends query parameters to URL", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      text: async () => "",
+      text: () => Promise.resolve(""),
       headers: new Headers(),
     });
 
@@ -40,7 +40,7 @@ describe("BrowserFetchProvider", () => {
       ok: false,
       status: 404,
       statusText: "Not Found",
-      text: async () => "404: Not Found",
+      text: () => Promise.resolve("404: Not Found"),
     });
 
     const provider = new BrowserFetchProvider(mockFetch);
@@ -50,7 +50,7 @@ describe("BrowserFetchProvider", () => {
   it("returns text data when content-type is not JSON", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      text: async () => "name,value\nA,1",
+      text: () => Promise.resolve("name,value\nA,1"),
       headers: new Headers({ "content-type": "text/csv" }),
     });
 
@@ -71,7 +71,7 @@ describe("BrowserFetchProvider", () => {
   it("uses custom fetch function", async () => {
     const customFetch = vi.fn().mockResolvedValue({
       ok: true,
-      text: async () => "custom",
+      text: () => Promise.resolve("custom"),
       headers: new Headers(),
     });
 

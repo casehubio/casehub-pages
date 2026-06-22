@@ -33,7 +33,10 @@ export class PagesComponentDispatcher implements InternalComponentDispatcher {
 
   private readonly messageDispatcher = (message: ComponentMessage) => {
     if (message.type === MessageType.INIT) {
-      this.componentId = message.properties.get(MessageProperty.COMPONENT_ID);
+      const id = message.properties.get(MessageProperty.COMPONENT_ID);
+      if (typeof id === "string") {
+        this.componentId = id;
+      }
       this.componentController.init(message.properties);
     }
 

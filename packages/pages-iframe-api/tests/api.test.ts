@@ -15,15 +15,17 @@
  */
 import {
   ColumnType,
+  FunctionResultType,
+  MessageType,
+  MessageProperty,
+  ComponentApi,
+} from "../src/index";
+import type {
   DataSet,
   FilterRequest,
   FunctionCallRequest,
   FunctionResponse,
-  FunctionResultType,
   ComponentMessage,
-  MessageType,
-  MessageProperty,
-  ComponentApi,
   ComponentBus,
 } from "../src/index";
 
@@ -68,7 +70,7 @@ describe("[Controller API] Callbacks", () => {
 
   it("INIT Callback with params", async () => {
     const handleInit = jest.fn();
-    const params = new Map<string, any>();
+    const params = new Map<string, unknown>();
     params.set("hello", "world");
     controller.setOnInit(handleInit);
     await postInitMessage(params);
@@ -85,9 +87,10 @@ describe("[Controller API] Callbacks", () => {
 
 describe("[Controller API] Sending Requests", () => {
   const bus = mockBus();
+  const sendSpy = bus.send;
   const componentId = "42";
   beforeAll(() => {
-    const params = new Map<string, any>();
+    const params = new Map<string, unknown>();
     params.set(MessageProperty.COMPONENT_ID, componentId);
     controller.init(params);
     controller.setComponentBus(bus);
@@ -95,7 +98,7 @@ describe("[Controller API] Sending Requests", () => {
 
   it("Configuration Issues", async () => {
     const configIssue = "some configuration issue.";
-    const params = new Map<string, any>();
+    const params = new Map<string, unknown>();
     const expected: ComponentMessage = {
       type: MessageType.FIX_CONFIGURATION,
       properties: params,
@@ -105,7 +108,7 @@ describe("[Controller API] Sending Requests", () => {
     controller.requireConfigurationFix(configIssue);
     await delay(0);
 
-    expect(bus.send).toBeCalledWith(componentId, expected);
+    expect(sendSpy).toHaveBeenCalledWith(componentId, expected);
   });
 
   it("Configuration Fixed", async () => {
@@ -116,23 +119,23 @@ describe("[Controller API] Sending Requests", () => {
     controller.configurationOk();
     await delay(0);
 
-    expect(bus.send).toBeCalledWith(componentId, message);
+    expect(sendSpy).toHaveBeenCalledWith(componentId, message);
   });
 
-  it("Filter", async () => {
+  it("Filter", () => {
     const filterRequest: FilterRequest = {
       column: 1,
       reset: false,
       row: 1,
     };
-    const props = new Map<string, any>();
+    const props = new Map<string, unknown>();
     props.set(MessageProperty.FILTER, filterRequest);
     const message: ComponentMessage = {
       type: MessageType.FILTER,
       properties: props,
     };
     controller.filter(filterRequest);
-    expect(bus.send).toBeCalledWith(componentId, message);
+    expect(sendSpy).toHaveBeenCalledWith(componentId, message);
   });
 });
 
@@ -203,7 +206,7 @@ const delay = (ms: number) => {
 };
 
 async function postDataSetMessage() {
-  const params = new Map<string, any>();
+  const params = new Map<string, unknown>();
   params.set("dataSet", sampleDataSet);
   const datasetMsg: ComponentMessage = {
     type: MessageType.DATASET,
@@ -212,7 +215,7 @@ async function postDataSetMessage() {
   await postMessage(datasetMsg);
 }
 
-async function postInitMessage(params: Map<string, any>) {
+async function postInitMessage(params: Map<string, unknown>) {
   const init: ComponentMessage = {
     type: MessageType.INIT,
     properties: params,
@@ -247,7 +250,7 @@ function buildFunctionResponse(
     result: _result,
     request: _request,
   };
-  const params = new Map<string, any>();
+  const params = new Map<string, unknown>();
   const functionResponseMessage: ComponentMessage = {
     type: MessageType.FUNCTION_RESPONSE,
     properties: params,

@@ -56,7 +56,7 @@ export function applyChartSettings(
 
   // Legend
   if (props.legend !== undefined) {
-    const legend: Record<string, unknown> = { ...((option.legend as Record<string, unknown>) || {}) };
+    const legend: Record<string, unknown> = { ...((option.legend as Record<string, unknown> | undefined) ?? {}) };
 
     if (props.legend.show !== undefined) {
       legend.show = props.legend.show;
@@ -86,7 +86,7 @@ export function applyChartSettings(
 
   // X-Axis (only for Cartesian charts)
   if (withAxes && props.xAxis !== undefined) {
-    const xAxis: Record<string, unknown> = { ...((option.xAxis as Record<string, unknown>) || {}) };
+    const xAxis: Record<string, unknown> = { ...((option.xAxis as Record<string, unknown> | undefined) ?? {}) };
 
     if (props.xAxis.title !== undefined) {
       xAxis.name = props.xAxis.title;
@@ -97,7 +97,7 @@ export function applyChartSettings(
     }
 
     if (props.xAxis.labelAngle != null) {
-      const existing = (xAxis.axisLabel as Record<string, unknown>) || {};
+      const existing = (xAxis.axisLabel as Record<string, unknown> | undefined) ?? {};
       xAxis.axisLabel = { ...existing, rotate: props.xAxis.labelAngle };
     }
 
@@ -106,7 +106,7 @@ export function applyChartSettings(
 
   // Y-Axis (only for Cartesian charts)
   if (withAxes && props.yAxis !== undefined) {
-    const yAxis: Record<string, unknown> = { ...((option.yAxis as Record<string, unknown>) || {}) };
+    const yAxis: Record<string, unknown> = { ...((option.yAxis as Record<string, unknown> | undefined) ?? {}) };
 
     if (props.yAxis.title !== undefined) {
       yAxis.name = props.yAxis.title;
@@ -117,7 +117,7 @@ export function applyChartSettings(
     }
 
     if (props.yAxis.labelAngle != null) {
-      const existing = (yAxis.axisLabel as Record<string, unknown>) || {};
+      const existing = (yAxis.axisLabel as Record<string, unknown> | undefined) ?? {};
       yAxis.axisLabel = { ...existing, rotate: props.yAxis.labelAngle };
     }
 
@@ -126,7 +126,7 @@ export function applyChartSettings(
 
   // Margins (via grid)
   if (props.margin !== undefined) {
-    const grid: Record<string, unknown> = { ...((option.grid as Record<string, unknown>) || {}) };
+    const grid: Record<string, unknown> = { ...((option.grid as Record<string, unknown> | undefined) ?? {}) };
 
     if (props.margin.top !== undefined) {
       grid.top = props.margin.top;
@@ -150,14 +150,14 @@ export function applyChartSettings(
   // Grid line visibility (splitLine controls gridlines)
   if (withAxes && props.grid !== undefined) {
     if (props.grid.x === false) {
-      const xAxis: Record<string, unknown> = { ...((option.xAxis as Record<string, unknown>) || {}) };
-      const existing = (xAxis.splitLine as Record<string, unknown>) || {};
+      const xAxis: Record<string, unknown> = { ...((option.xAxis as Record<string, unknown> | undefined) ?? {}) };
+      const existing = (xAxis.splitLine as Record<string, unknown> | undefined) ?? {};
       xAxis.splitLine = { ...existing, show: false };
       option.xAxis = xAxis;
     }
     if (props.grid.y === false) {
-      const yAxis: Record<string, unknown> = { ...((option.yAxis as Record<string, unknown>) || {}) };
-      const existing = (yAxis.splitLine as Record<string, unknown>) || {};
+      const yAxis: Record<string, unknown> = { ...((option.yAxis as Record<string, unknown> | undefined) ?? {}) };
+      const existing = (yAxis.splitLine as Record<string, unknown> | undefined) ?? {};
       yAxis.splitLine = { ...existing, show: false };
       option.yAxis = yAxis;
     }

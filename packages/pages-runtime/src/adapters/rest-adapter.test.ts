@@ -4,10 +4,10 @@ import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 
 describe("rest-adapter", () => {
   it("should send PATCH request with changed fields", async () => {
-    const mockFetch = vi.fn(async () => ({
+    const mockFetch = vi.fn(() => Promise.resolve({
       ok: true,
       headers: new Headers({ "content-type": "application/json" }),
-      json: async () => ({ id: 1, name: "Updated", email: "updated@example.com" }),
+      json: () => Promise.resolve({ id: 1, name: "Updated", email: "updated@example.com" }),
     } as Response));
 
     const adapter = createRestAdapter(
@@ -39,10 +39,10 @@ describe("rest-adapter", () => {
   });
 
   it("should use custom method and headers from config", async () => {
-    const mockFetch = vi.fn(async () => ({
+    const mockFetch = vi.fn(() => Promise.resolve({
       ok: true,
       headers: new Headers(),
-      json: async () => ({}),
+      json: () => Promise.resolve({}),
     } as Response));
 
     const adapter = createRestAdapter(
@@ -75,7 +75,7 @@ describe("rest-adapter", () => {
   });
 
   it("should return error on HTTP failure", async () => {
-    const mockFetch = vi.fn(async () => ({
+    const mockFetch = vi.fn(() => Promise.resolve({
       ok: false,
       status: 404,
       statusText: "Not Found",
@@ -100,7 +100,7 @@ describe("rest-adapter", () => {
   });
 
   it("should return error on network failure", async () => {
-    const mockFetch = vi.fn(async () => {
+    const mockFetch = vi.fn(() => {
       throw new Error("Network error");
     });
 
@@ -123,7 +123,7 @@ describe("rest-adapter", () => {
   });
 
   it("should handle non-JSON response", async () => {
-    const mockFetch = vi.fn(async () => ({
+    const mockFetch = vi.fn(() => Promise.resolve({
       ok: true,
       headers: new Headers({ "content-type": "text/plain" }),
     } as Response));

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
-import type { Component, GridItem } from "../model/types.js";
+import type { GridItem } from "../model/types.js";
 
 /**
  * Extract flat list of {type, x, y, w, h} from a parsed page's grid items,

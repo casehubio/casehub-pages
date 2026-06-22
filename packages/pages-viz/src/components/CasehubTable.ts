@@ -115,7 +115,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
       const cursorPos = filterInput.selectionStart;
       this._currentPage = 0;
       this.rerender(props, dataset);
-      const restored = this.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input");
+      const restored = this.shadowRoot?.querySelector<HTMLInputElement>(".filter-box input");
       if (restored) {
         restored.focus();
         restored.setSelectionRange(cursorPos, cursorPos);
@@ -134,7 +134,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
 
       const range = document.createElement("span");
       range.className = "range";
-      range.textContent = `${startRow} – ${endRow} of ${totalCount}`;
+      range.textContent = `${String(startRow)} – ${String(endRow)} of ${String(totalCount)}`;
       paging.appendChild(range);
 
       const firstBtn = document.createElement("button");
@@ -167,7 +167,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
       });
 
       const ofLabel = document.createElement("span");
-      ofLabel.textContent = `of ${totalPages}`;
+      ofLabel.textContent = `of ${String(totalPages)}`;
 
       const nextBtn = document.createElement("button");
       nextBtn.innerHTML = "&#8250;";
@@ -210,20 +210,24 @@ export class CasehubTable extends CasehubElement<TableProps> {
 
     const tbody = document.createElement("tbody");
     for (let rowIdx = 0; rowIdx < displayRows.length; rowIdx++) {
-      const row = displayRows[rowIdx]!;
+      const row = displayRows[rowIdx];
+      if (!row) continue;
       const tr = document.createElement("tr");
       if (props.filter?.enabled) tr.className = "clickable";
 
       for (let colIdx = 0; colIdx < dataset.columns.length; colIdx++) {
         const td = document.createElement("td");
-        const cell = row.cells[colIdx]!;
+        const cell = row.cells[colIdx];
+        if (!cell) continue;
         let raw = cellToRaw(cell);
-        const expr = resolveColumnExpression(dataset.columns[colIdx]!.id, props.columns);
+        const col = dataset.columns[colIdx];
+        if (!col) continue;
+        const expr = resolveColumnExpression(col.id, props.columns);
         if (expr) raw = applyCellExpression(raw, expr);
         td.textContent = raw === null ? "" : String(raw);
 
         if (props.filter?.enabled) {
-          const columnId = dataset.columns[colIdx]!.id;
+          const columnId = col.id;
           const clickedRow = row;
           td.addEventListener("click", () => {
             this.dispatchEvent(
@@ -291,8 +295,11 @@ export class CasehubTable extends CasehubElement<TableProps> {
 
     const sorted = [...rows];
     sorted.sort((a, b) => {
-      const cellA = cellToRaw(a.cells[colIdx]!);
-      const cellB = cellToRaw(b.cells[colIdx]!);
+      const aCellVal = a.cells[colIdx];
+      const bCellVal = b.cells[colIdx];
+      if (!aCellVal || !bCellVal) return 0;
+      const cellA = cellToRaw(aCellVal);
+      const cellB = cellToRaw(bCellVal);
       if (cellA === null && cellB === null) return 0;
       if (cellA === null) return 1;
       if (cellB === null) return -1;

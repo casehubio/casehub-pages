@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { createDataSetManager } from "./manager.js";
 import { toTypedDataSet } from "./conversion.js";
 import { createLookup } from "./lookup.js";
-import type { Column, ColumnId, DataSetId} from "./types.js";
+import type { Column} from "./types.js";
 import { ColumnType, dataSetId, columnId} from "./types.js";
 import type { ResolvedFilterOp, FilterOp } from "./filter.js";
 import type { GroupOp } from "./group.js";
@@ -25,7 +25,6 @@ function testDataSet(rows: (string | null)[][]) {
 }
 
 const ID_A = dataSetId("dataset-a");
-const ID_B = dataSetId("dataset-b");
 const ID_UNKNOWN = dataSetId("does-not-exist");
 
 describe("DataSetManager — registry", () => {

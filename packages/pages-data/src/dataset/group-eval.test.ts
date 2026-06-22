@@ -8,10 +8,10 @@ import {
   applyGroup,
   applyGroupSequence,
 } from "./group-eval.js";
-import type { CellValue, Column, ColumnId} from "./types.js";
+import type { CellValue, Column} from "./types.js";
 import { ColumnType, columnId} from "./types.js";
 import { toTypedDataSet } from "./conversion.js";
-import type { GroupOp, ResultColumn } from "./group.js";
+import type { GroupOp } from "./group.js";
 import { DataSetError } from "./errors.js";
 
 // Test helpers

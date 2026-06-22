@@ -107,30 +107,30 @@ describe("form editing + local save (real DOM)", () => {
     return Array.from(tableEl.shadowRoot.querySelectorAll("tbody tr"));
   }
 
-  function clickRow(tableEl: any, rowIdx: number): void {
+  function clickRow(tableEl: DataElement, rowIdx: number): void {
     const rows = getTableRows(tableEl);
     expect(rows.length).toBeGreaterThan(rowIdx);
     const td = rows[rowIdx]!.querySelector("td")!;
     td.click();
   }
 
-  function getTableCellText(tableEl: any, rowIdx: number, colIdx: number): string {
+  function getTableCellText(tableEl: DataElement, rowIdx: number, colIdx: number): string {
     const rows = getTableRows(tableEl);
     const cells = rows[rowIdx]!.querySelectorAll("td");
-    return cells[colIdx]!.textContent ?? "";
+    return cells[colIdx]!.textContent;
   }
 
-  function getFormValue(input: any, field: string): string | undefined {
-    if (!input.dataSet?.rows?.length) return undefined;
+  function getFormValue(input: DataElement, field: string): string | undefined {
+    if (!input.dataSet?.rows.length) return undefined;
     try {
-      const cell = input.dataSet.rows[0].cell(field);
+      const cell = input.dataSet.rows[0]!.cell(field as import("@casehub/pages-data/dist/dataset/types.js").ColumnId);
       return cell.type === "NULL" ? undefined : String(cell.value);
     } catch {
       return undefined;
     }
   }
 
-  function emitFieldChange(input: any, field: string, value: string, committed: boolean): void {
+  function emitFieldChange(input: HTMLElement, field: string, value: string, committed: boolean): void {
     input.dispatchEvent(
       new CustomEvent("casehub-field-change", {
         bubbles: true,
@@ -243,8 +243,8 @@ describe("form editing + local save (real DOM)", () => {
     await new Promise((r) => setTimeout(r, 100));
 
     // Edit both fields
-    emitFieldChange(nameInput, "name", "Alice New", true);
-    emitFieldChange(emailInput, "email", "new@example.com", true);
+    emitFieldChange(nameInput!, "name", "Alice New", true);
+    emitFieldChange(emailInput!, "email", "new@example.com", true);
     await new Promise((r) => setTimeout(r, 500));
 
     // Both should be in table
@@ -315,13 +315,13 @@ describe("form editing + local save (real DOM)", () => {
       // Edit Alice
       clickRow(tableEl, 0);
       await new Promise((r) => setTimeout(r, 100));
-      emitFieldChange(nameInput, "name", `Alice-${i}`, true);
+      emitFieldChange(nameInput, "name", `Alice-${String(i)}`, true);
       await new Promise((r) => setTimeout(r, 400));
 
       // Edit Bob
       clickRow(tableEl, 1);
       await new Promise((r) => setTimeout(r, 100));
-      emitFieldChange(nameInput, "name", `Bob-${i}`, true);
+      emitFieldChange(nameInput, "name", `Bob-${String(i)}`, true);
       await new Promise((r) => setTimeout(r, 400));
     }
 
@@ -372,8 +372,8 @@ pages:
 `;
 
     const failingAdapter = {
-      async save() {
-        return { success: false, error: "Server error: 500" };
+      save() {
+        return Promise.resolve({ success: false, error: "Server error: 500" });
       },
     };
 
@@ -432,7 +432,7 @@ pages:
     emitFieldChange(nameInput, "name", "Dirty", false);
 
     // Simulate beforeunload
-    const event = new Event("beforeunload") as BeforeUnloadEvent;
+    const event = new Event("beforeunload");
     let prevented = false;
     event.preventDefault = () => { prevented = true; };
     window.dispatchEvent(event);
@@ -483,7 +483,7 @@ pages:
   it("14. beforeunload does not fire preventDefault when clean", async () => {
     await setup();
 
-    const event = new Event("beforeunload") as BeforeUnloadEvent;
+    const event = new Event("beforeunload");
     let prevented = false;
     event.preventDefault = () => { prevented = true; };
     window.dispatchEvent(event);

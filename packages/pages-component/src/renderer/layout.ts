@@ -1,5 +1,4 @@
 import type { Component } from "../model/types.js";
-import type { GridProps, ColumnsProps } from "../model/component-props.js";
 import { isGrid, isColumns } from "../model/type-guards.js";
 
 const LAYOUT_TYPES = new Set([
@@ -21,7 +20,7 @@ export function applyLayoutCSS(
     case "grid": {
       element.style.display = "grid";
       if (isGrid(component)) {
-        element.style.gridTemplateColumns = `repeat(${component.props?.columns ?? 12}, 1fr)`;
+        element.style.gridTemplateColumns = `repeat(${String(component.props?.columns ?? 12)}, 1fr)`;
       }
       break;
     }
@@ -29,7 +28,7 @@ export function applyLayoutCSS(
       element.style.display = "grid";
       if (isColumns(component)) {
         if (component.props?.distribution) {
-          element.style.gridTemplateColumns = component.props.distribution.map((n) => `${n}fr`).join(" ");
+          element.style.gridTemplateColumns = component.props.distribution.map((n) => `${String(n)}fr`).join(" ");
         }
       }
       break;

@@ -1,15 +1,23 @@
 import type { SaveAdapter, SaveResult } from "../save-adapter.js";
-import type { DataSetId, ColumnId, TypedDataSet, CellValue } from "@casehub/pages-data/dist/dataset/types.js";
+import type { ColumnId, TypedDataSet, CellValue } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
 import { createTypedRow } from "@casehub/pages-data/dist/dataset/conversion.js";
 import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
 
+/** Stringify a record value that is known to be a non-null primitive at runtime. */
+function stringifyValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value instanceof Date) return value.toISOString();
+  return JSON.stringify(value);
+}
+
 export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
   return {
-    async save(dataSetId, record, changedFields, idColumn, idValue): Promise<SaveResult> {
+    save(dataSetId, record, changedFields, idColumn, idValue): Promise<SaveResult> {
       const existing = manager.get(dataSetId);
       if (!existing) {
-        return { success: false, error: `Dataset "${String(dataSetId)}" not found` };
+        return Promise.resolve({ success: false, error: `Dataset "${String(dataSetId)}" not found` });
       }
 
       const rowIndex = existing.rows.findIndex(row => {
@@ -18,12 +26,18 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       });
 
       if (rowIndex === -1) {
-        return { success: false, error: `Record with ${idColumn}=${String(idValue)} not found` };
+        return Promise.resolve({ success: false, error: `Record with ${idColumn}=${String(idValue)} not found` });
       }
 
-      const oldRow = existing.rows[rowIndex]!;
+      const oldRow = existing.rows[rowIndex];
+      if (!oldRow) {
+        return Promise.resolve({ success: false, error: `Row at index ${String(rowIndex)} not found` });
+      }
       const newCells: CellValue[] = oldRow.cells.map((cell, i) => {
-        const col = existing.columns[i]!;
+        const col = existing.columns[i];
+        if (!col) {
+          return cell;
+        }
         if (changedFields.includes(col.id)) {
           const newValue = record[col.id as string];
           if (newValue === null || newValue === undefined) {
@@ -37,14 +51,14 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
               return { type: ColumnType.NUMBER, value: num } as const;
             }
             case ColumnType.DATE: {
-              const date = new Date(String(newValue));
+              const date = new Date(stringifyValue(newValue));
               if (Number.isNaN(date.getTime())) return { type: "NULL" as const };
               return { type: ColumnType.DATE, value: date } as const;
             }
             case ColumnType.TEXT:
-              return { type: ColumnType.TEXT, value: String(newValue) } as const;
+              return { type: ColumnType.TEXT, value: stringifyValue(newValue) } as const;
             case ColumnType.LABEL:
-              return { type: ColumnType.LABEL, value: String(newValue) } as const;
+              return { type: ColumnType.LABEL, value: stringifyValue(newValue) } as const;
             default:
               return cell;
           }
@@ -58,13 +72,13 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       const newDataset: TypedDataSet = { columns: existing.columns, rows: newRows };
       manager.register(dataSetId, newDataset);
 
-      return { success: true };
+      return Promise.resolve({ success: true });
     },
 
-    async delete(dataSetId, idColumn, idValue): Promise<SaveResult> {
+    delete(dataSetId, idColumn, idValue): Promise<SaveResult> {
       const existing = manager.get(dataSetId);
       if (!existing) {
-        return { success: false, error: `Dataset "${String(dataSetId)}" not found` };
+        return Promise.resolve({ success: false, error: `Dataset "${String(dataSetId)}" not found` });
       }
 
       const rowIndex = existing.rows.findIndex(row => {
@@ -73,7 +87,7 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       });
 
       if (rowIndex === -1) {
-        return { success: false, error: `Record with ${idColumn}=${String(idValue)} not found` };
+        return Promise.resolve({ success: false, error: `Record with ${idColumn}=${String(idValue)} not found` });
       }
 
       const newRows = [...existing.rows];
@@ -81,13 +95,13 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       const newDataset: TypedDataSet = { columns: existing.columns, rows: newRows };
       manager.register(dataSetId, newDataset);
 
-      return { success: true };
+      return Promise.resolve({ success: true });
     },
 
-    async create(dataSetId, record): Promise<SaveResult> {
+    create(dataSetId, record): Promise<SaveResult> {
       const existing = manager.get(dataSetId);
       if (!existing) {
-        return { success: false, error: `Dataset "${String(dataSetId)}" not found` };
+        return Promise.resolve({ success: false, error: `Dataset "${String(dataSetId)}" not found` });
       }
 
       const newCells: CellValue[] = existing.columns.map((col) => {
@@ -99,11 +113,11 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
           case ColumnType.NUMBER:
             return { type: ColumnType.NUMBER, value: Number(value) } as const;
           case ColumnType.DATE:
-            return { type: ColumnType.DATE, value: new Date(String(value)) } as const;
+            return { type: ColumnType.DATE, value: new Date(stringifyValue(value)) } as const;
           case ColumnType.TEXT:
-            return { type: ColumnType.TEXT, value: String(value) } as const;
+            return { type: ColumnType.TEXT, value: stringifyValue(value) } as const;
           case ColumnType.LABEL:
-            return { type: ColumnType.LABEL, value: String(value) } as const;
+            return { type: ColumnType.LABEL, value: stringifyValue(value) } as const;
           default:
             return { type: "NULL" as const };
         }
@@ -113,7 +127,7 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       const newDataset: TypedDataSet = { columns: existing.columns, rows: [...existing.rows, newRow] };
       manager.register(dataSetId, newDataset);
 
-      return { success: true };
+      return Promise.resolve({ success: true });
     },
   };
 }

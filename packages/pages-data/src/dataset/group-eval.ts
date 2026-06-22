@@ -62,18 +62,15 @@ function cellValueKey(val: CellValue): string {
     return "NULL";
   }
   if (val.type === ColumnType.NUMBER) {
-    return `NUM:${val.value}`;
+    return `NUM:${String(val.value)}`;
   }
   if (val.type === ColumnType.DATE) {
-    return `DATE:${val.value.getTime()}`;
+    return `DATE:${String(val.value.getTime())}`;
   }
   if (val.type === ColumnType.TEXT) {
     return `TEXT:${val.value}`;
   }
-  if (val.type === ColumnType.LABEL) {
-    return `LABEL:${val.value}`;
-  }
-  return "UNKNOWN";
+  return `LABEL:${val.value}`;
 }
 
 function sumValues(values: readonly CellValue[]): CellValue {
@@ -120,12 +117,17 @@ function medianValues(values: readonly CellValue[]): CellValue {
   if (numbers.length % 2 === 1) {
     // Odd count: return middle element
     const mid = Math.floor(numbers.length / 2);
-    return { type: ColumnType.NUMBER, value: numbers[mid]! };
+    const midVal = numbers[mid];
+    if (midVal === undefined) throw new DataSetError("INVALID_OPERATION", "Median index out of bounds");
+    return { type: ColumnType.NUMBER, value: midVal };
   } else {
     // Even count: return average of two middle elements
     const mid2 = numbers.length / 2;
     const mid1 = mid2 - 1;
-    return { type: ColumnType.NUMBER, value: (numbers[mid1]! + numbers[mid2]!) / 2 };
+    const val1 = numbers[mid1];
+    const val2 = numbers[mid2];
+    if (val1 === undefined || val2 === undefined) throw new DataSetError("INVALID_OPERATION", "Median index out of bounds");
+    return { type: ColumnType.NUMBER, value: (val1 + val2) / 2 };
   }
 }
 
@@ -206,7 +208,7 @@ function joinValues(values: readonly CellValue[], separator: string): CellValue 
       parts.push(String(val.value));
     } else if (val.type === ColumnType.DATE) {
       parts.push(val.value.toISOString());
-    } else if (val.type === ColumnType.TEXT || val.type === ColumnType.LABEL) {
+    } else {
       parts.push(val.value);
     }
   }
@@ -224,7 +226,8 @@ export function buildDistinctIntervals(
 
   // Walk rows and build buckets
   for (let rowIdx = 0; rowIdx < ds.rows.length; rowIdx++) {
-    const row = ds.rows[rowIdx]!;
+    const row = ds.rows[rowIdx];
+    if (row === undefined) continue;
     const cellValue = row.cell(sourceId);
     const bucketName = getBucketName(cellValue);
 
@@ -245,7 +248,8 @@ export function buildDistinctIntervals(
   // Convert map to IntervalList in first-seen order
   const intervals: Interval[] = [];
   for (const bucketName of bucketOrder) {
-    const bucket = buckets.get(bucketName)!;
+    const bucket = buckets.get(bucketName);
+    if (bucket === undefined) continue;
     intervals.push({
       name: bucketName,
       index: bucket.index,
@@ -266,10 +270,7 @@ function getBucketName(val: CellValue): string {
   if (val.type === ColumnType.DATE) {
     return val.value.toISOString();
   }
-  if (val.type === ColumnType.TEXT || val.type === ColumnType.LABEL) {
-    return val.value;
-  }
-  return "unknown";
+  return val.value;
 }
 
 export function buildFixedCalendarIntervals(
@@ -290,24 +291,29 @@ export function buildFixedCalendarIntervals(
 
   // Walk rows and assign to buckets
   for (let rowIdx = 0; rowIdx < ds.rows.length; rowIdx++) {
-    const row = ds.rows[rowIdx]!;
+    const row = ds.rows[rowIdx];
+    if (row === undefined) continue;
     const cellValue = row.cell(sourceId);
     if (cellValue.type !== ColumnType.DATE) {
       continue; // skip NULLs and non-date values
     }
 
     const bucketIndex = getFixedBucketIndex(cellValue.value, unit, firstMonth, firstDay);
-    bucketRows[bucketIndex]!.push(rowIdx);
+    const bucketRow = bucketRows[bucketIndex];
+    if (bucketRow === undefined) continue;
+    bucketRow.push(rowIdx);
   }
 
   // Build intervals
   const intervals: Interval[] = [];
   const nameOffset = getFixedNameOffset(unit);
   for (let i = 0; i < bucketCount; i++) {
+    const rows = bucketRows[i];
+    if (rows === undefined) continue;
     intervals.push({
       name: String(i + nameOffset),
       index: i,
-      rowIndices: Object.freeze([...bucketRows[i]!]),
+      rowIndices: Object.freeze([...rows]),
     });
   }
 
@@ -395,7 +401,8 @@ export function buildDynamicDateIntervals(
   // 1. Collect non-null DATE values with row indices
   const entries: { rowIdx: number; date: Date }[] = [];
   for (let rowIdx = 0; rowIdx < ds.rows.length; rowIdx++) {
-    const row = ds.rows[rowIdx]!;
+    const row = ds.rows[rowIdx];
+    if (row === undefined) continue;
     const cellValue = row.cell(sourceId);
     if (cellValue.type === ColumnType.DATE) {
       entries.push({ rowIdx, date: cellValue.value });
@@ -409,8 +416,13 @@ export function buildDynamicDateIntervals(
   // 2. Sort by date ascending
   entries.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  const minDate = entries[0]!.date;
-  const maxDate = entries[entries.length - 1]!.date;
+  const firstEntry = entries[0];
+  const lastEntry = entries[entries.length - 1];
+  if (firstEntry === undefined || lastEntry === undefined) {
+    return Object.freeze([]);
+  }
+  const minDate = firstEntry.date;
+  const maxDate = lastEntry.date;
 
   // 3. If min === max or only one date: single interval
   if (minDate.getTime() === maxDate.getTime()) {
@@ -463,13 +475,16 @@ export function buildDynamicDateIntervals(
   let entryIdx = 0;
 
   for (let i = 0; i < boundaries.length - 1; i++) {
-    const intervalStart = boundaries[i]!;
-    const intervalEnd = boundaries[i + 1]!;
+    const intervalStart = boundaries[i];
+    const intervalEnd = boundaries[i + 1];
+    if (intervalStart === undefined || intervalEnd === undefined) continue;
     const rowIndices: number[] = [];
 
     // Walk entries that fall within [intervalStart, intervalEnd)
-    while (entryIdx < entries.length && entries[entryIdx]!.date.getTime() < intervalEnd.getTime()) {
-      rowIndices.push(entries[entryIdx]!.rowIdx);
+    while (entryIdx < entries.length) {
+      const entry = entries[entryIdx];
+      if (entry === undefined || entry.date.getTime() >= intervalEnd.getTime()) break;
+      rowIndices.push(entry.rowIdx);
       entryIdx++;
     }
 
@@ -538,7 +553,7 @@ export function applyGroup(ds: TypedDataSet, op: GroupOp): TypedDataSet {
     }
 
     // Otherwise: build output from the selected rows grouped by bucket
-    return materialise(ds, selected, op.columns, op.groupingKey);
+    return materialise(ds, selected, op.columns);
   }
 
   // Case 3: Full group-by
@@ -555,7 +570,7 @@ export function applyGroup(ds: TypedDataSet, op: GroupOp): TypedDataSet {
   // Sort buckets
   intervals = sortBuckets(intervals, resolvedKey.ascendingOrder);
 
-  return materialise(ds, intervals, op.columns, resolvedKey);
+  return materialise(ds, intervals, op.columns);
 }
 
 function applyWholeDatasetAggregation(ds: TypedDataSet, op: GroupOp): TypedDataSet {
@@ -596,10 +611,11 @@ function applyWholeDatasetAggregation(ds: TypedDataSet, op: GroupOp): TypedDataS
       const values = collectColumnValues(ds, col.sourceId, allRowIndices(ds));
       cells.push(computeAggregation(col.fn, values));
     } else if (col.kind === "select") {
-      if (ds.rows.length === 0) {
+      const firstRow = ds.rows[0];
+      if (firstRow === undefined) {
         cells.push({ type: "NULL" as const });
       } else {
-        cells.push(ds.rows[0]!.cell(col.sourceId));
+        cells.push(firstRow.cell(col.sourceId));
       }
     }
   }
@@ -714,7 +730,11 @@ function collectRowIndices(intervals: readonly Interval[]): number[] {
 }
 
 function narrowDataSet(ds: TypedDataSet, rowIndices: readonly number[]): TypedDataSet {
-  const rows = rowIndices.map((idx) => ds.rows[idx]!);
+  const rows = rowIndices.map((idx) => {
+    const row = ds.rows[idx];
+    if (row === undefined) throw new DataSetError("INVALID_OPERATION", `Row index ${String(idx)} out of bounds`);
+    return row;
+  });
   return { columns: ds.columns, rows };
 }
 
@@ -733,7 +753,9 @@ function collectColumnValues(
 ): CellValue[] {
   const values: CellValue[] = [];
   for (const idx of rowIndices) {
-    values.push(ds.rows[idx]!.cell(sourceId));
+    const row = ds.rows[idx];
+    if (row === undefined) throw new DataSetError("INVALID_OPERATION", `Row index ${String(idx)} out of bounds`);
+    values.push(row.cell(sourceId));
   }
   return values;
 }
@@ -799,7 +821,6 @@ function materialise(
   ds: TypedDataSet,
   intervals: readonly Interval[],
   resultColumns: readonly ResultColumn[],
-  key: GroupingKey,
 ): TypedDataSet {
   // Validate aggregation column types before materialising
   for (const col of resultColumns) {
@@ -830,7 +851,9 @@ function materialise(
           } else {
             // First row by original row order
             const minRowIdx = Math.min(...interval.rowIndices);
-            cells.push(ds.rows[minRowIdx]!.cell(rc.sourceId));
+            const row = ds.rows[minRowIdx];
+            if (row === undefined) throw new DataSetError("INVALID_OPERATION", `Row index ${String(minRowIdx)} out of bounds`);
+            cells.push(row.cell(rc.sourceId));
           }
           break;
         }
@@ -870,12 +893,15 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
   }
 
   if (ops.length === 1) {
-    return applyGroup(ds, ops[0]!);
+    const singleOp = ops[0];
+    if (singleOp === undefined) return ds;
+    return applyGroup(ds, singleOp);
   }
 
   // Validate: subsequent GroupOps must have selectedIntervals or join: true
   for (let i = 1; i < ops.length; i++) {
-    const op = ops[i]!;
+    const op = ops[i];
+    if (op === undefined) continue;
     const hasSelectedIntervals = op.selectedIntervals !== undefined && op.selectedIntervals.length > 0;
     const hasJoin = op.join === true;
     if (!hasSelectedIntervals && !hasJoin) {
@@ -892,7 +918,8 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
   let partitions: Partition[] = [{ rowIndices: allRowIndices(ds) }];
 
   for (let i = 0; i < ops.length; i++) {
-    const op = ops[i]!;
+    const op = ops[i];
+    if (op === undefined) continue;
     const isFinal = i === ops.length - 1;
 
     if (op.groupingKey === null) {
@@ -917,7 +944,9 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
         const selectedOriginalIndices: number[] = [];
         for (const iv of selected) {
           for (const subIdx of iv.rowIndices) {
-            selectedOriginalIndices.push(partition.rowIndices[subIdx]!);
+            const origIdx = partition.rowIndices[subIdx];
+            if (origIdx === undefined) throw new DataSetError("INVALID_OPERATION", `Sub-index ${String(subIdx)} out of bounds`);
+            selectedOriginalIndices.push(origIdx);
           }
         }
         selectedOriginalIndices.sort((a, b) => a - b);
@@ -942,7 +971,11 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
 
         for (const iv of intervals) {
           // Map sub-dataset row indices back to original dataset row indices
-          const originalIndices = iv.rowIndices.map((subIdx) => partition.rowIndices[subIdx]!);
+          const originalIndices = iv.rowIndices.map((subIdx) => {
+            const origIdx = partition.rowIndices[subIdx];
+            if (origIdx === undefined) throw new DataSetError("INVALID_OPERATION", `Sub-index ${String(subIdx)} out of bounds`);
+            return origIdx;
+          });
           const child: Partition = { rowIndices: originalIndices };
           if (partition.parentLabel !== undefined) child.parentLabel = partition.parentLabel;
           newPartitions.push(child);
@@ -970,7 +1003,8 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
   }
 
   // Materialise using the final GroupOp's columns
-  const finalOp = ops[ops.length - 1]!;
+  const finalOp = ops[ops.length - 1];
+  if (finalOp === undefined) return ds;
   const resultColumns = finalOp.columns;
 
   // Validate aggregation column types
@@ -997,8 +1031,9 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
             const resolvedKey = resolveStrategy(ds, finalOp.groupingKey);
             const intervals = computeBuckets(subDs, resolvedKey);
             // The partition should map to a single bucket value
-            if (intervals.length > 0) {
-              cells.push({ type: ColumnType.LABEL, value: intervals[0]!.name });
+            const firstInterval = intervals[0];
+            if (firstInterval !== undefined) {
+              cells.push({ type: ColumnType.LABEL, value: firstInterval.name });
             } else {
               cells.push({ type: "NULL" as const });
             }
@@ -1016,7 +1051,9 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
             cells.push({ type: "NULL" as const });
           } else {
             const minRowIdx = Math.min(...partition.rowIndices);
-            cells.push(ds.rows[minRowIdx]!.cell(rc.sourceId));
+            const row = ds.rows[minRowIdx];
+            if (row === undefined) throw new DataSetError("INVALID_OPERATION", `Row index ${String(minRowIdx)} out of bounds`);
+            cells.push(row.cell(rc.sourceId));
           }
           break;
         }
@@ -1037,7 +1074,8 @@ export function buildDynamicNumberIntervals(
   // 1. Collect non-null NUMBER values with row indices
   const entries: { rowIdx: number; value: number }[] = [];
   for (let rowIdx = 0; rowIdx < ds.rows.length; rowIdx++) {
-    const row = ds.rows[rowIdx]!;
+    const row = ds.rows[rowIdx];
+    if (row === undefined) continue;
     const cellValue = row.cell(sourceId);
     if (cellValue.type === ColumnType.NUMBER) {
       entries.push({ rowIdx, value: cellValue.value });
@@ -1049,8 +1087,10 @@ export function buildDynamicNumberIntervals(
   }
 
   // 2. Find min and max
-  let min = entries[0]!.value;
-  let max = entries[0]!.value;
+  const firstEntry = entries[0];
+  if (firstEntry === undefined) return Object.freeze([]);
+  let min = firstEntry.value;
+  let max = firstEntry.value;
   for (const entry of entries) {
     if (entry.value < min) min = entry.value;
     if (entry.value > max) max = entry.value;
@@ -1059,7 +1099,7 @@ export function buildDynamicNumberIntervals(
   // 3. Single value → single interval
   if (min === max) {
     return Object.freeze([{
-      name: `${min}-${max}`,
+      name: `${String(min)}-${String(max)}`,
       index: 0,
       rowIndices: Object.freeze(entries.map((e) => e.rowIdx)),
       minValue: min,
@@ -1085,9 +1125,10 @@ export function buildDynamicNumberIntervals(
     // Walk sorted entries that fall within this bin
     // Last bin uses <= for upper bound (includes max)
     while (entryIdx < entries.length) {
-      const val = entries[entryIdx]!.value;
-      if (isLastBin ? val <= binMax : val < binMax) {
-        rowIndices.push(entries[entryIdx]!.rowIdx);
+      const entry = entries[entryIdx];
+      if (entry === undefined) break;
+      if (isLastBin ? entry.value <= binMax : entry.value < binMax) {
+        rowIndices.push(entry.rowIdx);
         entryIdx++;
       } else {
         break;
@@ -1095,7 +1136,7 @@ export function buildDynamicNumberIntervals(
     }
 
     intervals.push({
-      name: `${binMin}-${binMax}`,
+      name: `${String(binMin)}-${String(binMax)}`,
       index: i,
       rowIndices: Object.freeze([...rowIndices]),
       minValue: binMin,

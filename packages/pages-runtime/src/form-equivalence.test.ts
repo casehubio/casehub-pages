@@ -245,8 +245,8 @@ describe("YAML ↔ TS equivalence", () => {
     const yamlTable = yamlTarget.querySelector("casehub-table");
     const tsTable = tsTarget.querySelector("casehub-table");
 
-    expect((yamlTable as DataElement | null)?.dataSet?.rows?.length).toBe(3);
-    expect((tsTable as DataElement | null)?.dataSet?.rows?.length).toBe(3);
+    expect((yamlTable as DataElement | null)?.dataSet?.rows.length).toBe(3);
+    expect((tsTable as DataElement | null)?.dataSet?.rows.length).toBe(3);
 
     const yamlInputs = yamlTarget.querySelectorAll("casehub-text-input");
     const tsInputs = tsTarget.querySelectorAll("casehub-text-input");

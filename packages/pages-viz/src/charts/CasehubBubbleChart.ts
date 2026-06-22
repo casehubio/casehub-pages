@@ -9,6 +9,7 @@ import {
 import { CasehubChartElement } from "../base/CasehubChartElement.js";
 import type { BubbleChartProps } from "@casehub/pages-component";
 import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
 import { cellToRaw } from "../base/cell-extract.js";
@@ -29,10 +30,13 @@ export class CasehubBubbleChart extends CasehubChartElement<BubbleChartProps> {
     const maxR = props.maxRadius ?? 50;
 
     // Find value range from column 3 (index 2)
-    const values = dataset.rows.map(row => {
-      const cell = row.cell(dataset.columns[2]!.id);
-      return cellToRaw(cell);
-    }).filter((v): v is number => typeof v === "number");
+    const sizeColumn = dataset.columns[2];
+    const values = sizeColumn
+      ? dataset.rows.map(row => {
+          const cell = row.cell(sizeColumn.id);
+          return cellToRaw(cell);
+        }).filter((v): v is number => typeof v === "number")
+      : [];
 
     let dataMin: number;
     let dataMax: number;
@@ -40,7 +44,6 @@ export class CasehubBubbleChart extends CasehubChartElement<BubbleChartProps> {
 
     if (values.length === 0) {
       // No valid values — use constant symbol size (midpoint)
-      const constantSize = (minR + maxR) / 2;
       dataMin = 0;
       dataMax = 0;
       range = 1;
@@ -61,7 +64,7 @@ export class CasehubBubbleChart extends CasehubChartElement<BubbleChartProps> {
     };
 
     const col0Type = dataset.columns[0]?.type;
-    const xAxisType = col0Type === "LABEL" ? "category" : "value";
+    const xAxisType = col0Type === ColumnType.LABEL ? "category" : "value";
 
     let option: Record<string, unknown> = {
       dataset: { source },

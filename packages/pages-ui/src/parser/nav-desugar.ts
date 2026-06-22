@@ -33,7 +33,7 @@ interface NavTree {
 export function resolveNavigation(
   components: Component[],
   pages: Component[],
-  navTree: unknown | undefined,
+  navTree: unknown,
 ): Component[] {
   const typedNavTree = navTree as NavTree | undefined;
 
@@ -62,7 +62,8 @@ export function resolveNavigation(
             });
           }
           // Strip slots from the nav component — they'll render at the target
-          const { slots: _s, ...navOnly } = group;
+          const { slots: _slots, ...navOnly } = group;
+          void _slots;
           return navOnly;
         }
         return resolveNavGroup(component, pages, typedNavTree);
@@ -76,13 +77,16 @@ export function resolveNavigation(
     .map((component) => {
       if (component.type === "slot-target") {
         const divId = component.props?.["id"] as string | undefined;
-        if (divId && targetSlots.has(divId)) {
-          const { type, slots } = targetSlots.get(divId)!;
-          return {
-            type,
-            props: {},
-            slots,
-          };
+        if (divId) {
+          const target = targetSlots.get(divId);
+          if (target) {
+            const { type, slots } = target;
+            return {
+              type,
+              props: {},
+              slots,
+            };
+          }
         }
       }
       return component;
@@ -173,10 +177,12 @@ function resolveNavGroup(
   }
 
   // Return nav component with slots, without navGroupId/targetDivId in props
-  const { navGroupId, targetDivId, ...cleanProps } = navComponent.props as Record<
+  const { navGroupId: _navGroupId, targetDivId: _targetDivId, ...cleanProps } = navComponent.props as Record<
     string,
     unknown
   >;
+  void _navGroupId;
+  void _targetDivId;
 
   return {
     ...navComponent,
@@ -231,7 +237,7 @@ function findGroupRecursive(
  * Extracts all page names from a navTree group.
  * Recursively processes nested groups.
  */
-export function collectNavTreePageNames(navTree: unknown | undefined): Set<string> {
+export function collectNavTreePageNames(navTree: unknown): Set<string> {
   const names = new Set<string>();
   const typed = navTree as NavTree | undefined;
   if (!typed?.root_items) return names;
@@ -286,7 +292,8 @@ function extractHierarchicalPageNames(
       entries.push({ slotKey, pageName: child.page });
     }
     if (child.type === "GROUP" && child.children) {
-      const childPrefix = prefix ? `${prefix}/${child.id}` : child.id!;
+      const childId = child.id ?? "";
+      const childPrefix = prefix ? `${prefix}/${childId}` : childId;
       entries.push(
         ...extractHierarchicalPageNames(child as NavTreeGroup, childPrefix),
       );
@@ -296,7 +303,7 @@ function extractHierarchicalPageNames(
   return entries;
 }
 
-export function collectNavTreeGroupIds(navTree: unknown | undefined): Set<string> {
+export function collectNavTreeGroupIds(navTree: unknown): Set<string> {
   const ids = new Set<string>();
   const typed = navTree as NavTree | undefined;
   if (!typed?.root_items) return ids;

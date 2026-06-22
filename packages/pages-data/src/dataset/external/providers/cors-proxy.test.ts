@@ -15,9 +15,9 @@ function makeRequest(url: string): DataRequest {
 class MockProvider implements DataProvider {
   lastRequest: DataRequest | undefined;
 
-  async fetch(request: DataRequest): Promise<FetchResult> {
+  fetch(request: DataRequest): Promise<FetchResult> {
     this.lastRequest = request;
-    return { data: "mock response", contentType: "text/plain" };
+    return Promise.resolve({ data: "mock response", contentType: "text/plain" });
   }
 }
 

@@ -1,9 +1,8 @@
 import { describe, it, expect } from "vitest";
-import type { Component, GridItem, GridPlacement, AccessControl } from "./types.js";
+import type { Component, GridItem } from "./types.js";
 import { ALLOW_ALL } from "./types.js";
 import type { TypedComponent } from "./index.js";
 import type { BarChartProps } from "./displayer-types.js";
-import type { GridProps } from "./component-props.js";
 import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 
 describe("Component", () => {
@@ -68,7 +67,7 @@ describe("Component<T, P>", () => {
       props: { lookup: { dataSetId: dataSetId("ds"), operations: [] } },
     };
     expect(c.type).toBe("bar-chart");
-    expect(c.props?.lookup?.dataSetId).toBe("ds");
+    expect(c.props!.lookup.dataSetId).toBe("ds");
   });
 
   it("default generic accepts any type string", () => {

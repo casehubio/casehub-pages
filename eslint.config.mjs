@@ -11,6 +11,14 @@ export default tseslint.config(
     },
   },
   {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/test-helpers.ts"],
     rules: {
       "@typescript-eslint/no-non-null-assertion": "off",
@@ -19,6 +27,8 @@ export default tseslint.config(
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-call": "off",
       "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
     },
   },
   {
@@ -33,6 +43,8 @@ export default tseslint.config(
       "**/dev-webapp/**",
       "**/tests/jest.setup.ts",
       "**/vitest.config.ts",
+      "examples/**",
+      "packages/pages-iframe-api/tests/**",
       "packages/pages-webpack-base/**",
       "**/*.js",
       "**/*.cjs",

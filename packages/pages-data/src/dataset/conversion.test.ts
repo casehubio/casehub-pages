@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { toTypedDataSet, toWireDataSet } from "./conversion.js";
-import type { DataSet, Column, ColumnId, TypedDataSet} from "./types.js";
+import type { DataSet, Column} from "./types.js";
 import { ColumnType, columnId} from "./types.js";
 
 function col(id: string, name: string, type: ColumnType): Column {

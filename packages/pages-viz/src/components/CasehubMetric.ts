@@ -44,8 +44,14 @@ export class CasehubMetric extends CasehubElement<MetricProps> {
       this.renderCard(container, title, "—");
       return;
     }
-    const colId = dataset.columns[0]!.id;
-    let raw = cellToRaw(dataset.rows[0]!.cell(colId));
+    const firstColumn = dataset.columns[0];
+    const firstRow = dataset.rows[0];
+    if (!firstColumn || !firstRow) {
+      this.renderCard(container, title, "—");
+      return;
+    }
+    const colId = firstColumn.id;
+    let raw = cellToRaw(firstRow.cell(colId));
     const expr = resolveColumnExpression(colId, props.columns);
     if (expr) raw = applyCellExpression(raw, expr);
     const value = raw === null ? "" : String(raw);
@@ -80,7 +86,7 @@ export class CasehubMetric extends CasehubElement<MetricProps> {
       this.renderCard2(container, title, value);
     } else if (subtype === "plain-text") {
       this.renderPlainText(container, title, value);
-    } else if (subtype === "quota") {
+    } else {
       this.renderQuota(container, title, value, dataset);
     }
   }
@@ -156,7 +162,9 @@ export class CasehubMetric extends CasehubElement<MetricProps> {
 
     if (dataset.columns.length >= 2) {
       // Second column is max
-      const maxRaw = cellToRaw(dataset.rows[0]!.cell(dataset.columns[1]!.id));
+      const firstRow = dataset.rows[0];
+      const secondCol = dataset.columns[1];
+      const maxRaw = firstRow && secondCol ? cellToRaw(firstRow.cell(secondCol.id)) : null;
       const max = maxRaw === null ? 100 : Number(maxRaw);
       percentage = max === 0 ? 0 : (numValue / max) * 100;
     } else {
@@ -172,7 +180,7 @@ export class CasehubMetric extends CasehubElement<MetricProps> {
 
     const barFill = document.createElement("div");
     barFill.className = "bar-fill";
-    barFill.style.width = `${percentage}%`;
+    barFill.style.width = `${String(percentage)}%`;
     bar.appendChild(barFill);
 
     quota.appendChild(bar);

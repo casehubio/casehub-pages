@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { applyFilter } from "./filter-eval.js";
 import { toTypedDataSet } from "./conversion.js";
-import type { Column, ColumnId, TypedDataSet} from "./types.js";
+import type { Column, TypedDataSet} from "./types.js";
 import { ColumnType, columnId} from "./types.js";
 import type { ResolvedFilterExpression, NumericFilter, StringFilter, DateFilter } from "./filter.js";
 import { parseTimeFrame } from "./timeframe.js";

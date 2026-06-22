@@ -5,7 +5,6 @@ import { CasehubElement } from "./CasehubElement.js";
 import type { VizComponentProps } from "./types.js";
 import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
 import type { ChartSettings } from "@casehub/pages-component";
-import type { FilterSettings } from "@casehub/pages-component";
 
 // Register the Canvas renderer and TitleComponent once at module load
 use([CanvasRenderer, TitleComponent]);
@@ -33,21 +32,26 @@ export abstract class CasehubChartElement<
     super.props = value;
   }
 
-  override get props(): P | undefined {
-    return super.props;
+  override get props(): P {
+    return super.props as P;
   }
 
   private applySizing(props: P): void {
     const raw = props as Readonly<Record<string, unknown>>;
     const h = raw.height;
-    if (h !== undefined && h !== null) {
-      const css = typeof h === "number" ? `${h}px` : String(h);
+    if (typeof h === "number") {
+      const css = `${String(h)}px`;
       this.container.style.minHeight = css;
       this.container.style.height = css;
+    } else if (typeof h === "string") {
+      this.container.style.minHeight = h;
+      this.container.style.height = h;
     }
     const w = raw.width;
-    if (w !== undefined && w !== null) {
-      this.container.style.width = typeof w === "number" ? `${w}px` : String(w);
+    if (typeof w === "number") {
+      this.container.style.width = `${String(w)}px`;
+    } else if (typeof w === "string") {
+      this.container.style.width = w;
     }
   }
 
@@ -92,7 +96,7 @@ export abstract class CasehubChartElement<
 
   private registerClickHandler(chart: ECharts): void {
     chart.on("click", (params: { dataIndex: number }) => {
-      const filter = this.props?.filter;
+      const filter = this.props.filter;
       if (!filter?.enabled) return;
 
       const ds = this.dataSet;

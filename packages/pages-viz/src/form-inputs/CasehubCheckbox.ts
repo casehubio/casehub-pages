@@ -50,8 +50,12 @@ export class CasehubCheckbox extends CasehubFormInput<CheckboxProps> {
     const value = this.extractFieldValue(dataset);
     // Coerce: "true" (case-insensitive) → checked
     if (value !== undefined) {
-      const strValue = String(value).toLowerCase();
-      input.checked = strValue === "true";
+      let strValue: string;
+      if (typeof value === "string") strValue = value;
+      else if (typeof value === "boolean") strValue = String(value);
+      else if (typeof value === "number") strValue = String(value);
+      else strValue = "";
+      input.checked = strValue.toLowerCase() === "true";
     }
     if (props.required) input.required = true;
     if (props.readonly || !this._editable) input.disabled = true;

@@ -1,9 +1,9 @@
-import type { DataProvider, DataRequest, FetchResult } from "../types.js";
+import type { DataProvider, FetchResult } from "../types.js";
 
 export class InlineProvider implements DataProvider {
   constructor(private readonly content: string) {}
 
-  async fetch(_request: DataRequest): Promise<FetchResult> {
-    return { data: this.content };
+  fetch(_request: import("../types.js").DataRequest): Promise<FetchResult> {
+    return Promise.resolve({ data: this.content });
   }
 }

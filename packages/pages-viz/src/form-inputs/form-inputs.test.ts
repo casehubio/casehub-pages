@@ -124,8 +124,8 @@ describe("CasehubTextInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: any[] = [];
-    el.addEventListener("casehub-field-change", (e: any) => events.push(e));
+    const events: Event[] = [];
+    el.addEventListener("casehub-field-change", (e: Event) => events.push(e));
 
     const input = el.shadowRoot!.querySelector("input")!;
     input.value = "test";

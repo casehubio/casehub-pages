@@ -7,7 +7,6 @@ import type {
   GroupOp,
   ResultColumn,
   GroupingKey,
-  GroupStrategy,
   Aggregation,
   FixedCalendarUnit,
 } from "@casehub/pages-data/dist/dataset/group.js";
@@ -135,9 +134,13 @@ export function or(...filters: FilterOp[]): FilterOp {
 }
 
 export function not(filter: FilterOp): FilterOp {
+  const firstExpression = filter.expressions[0];
+  if (!firstExpression) {
+    throw new Error("Filter must have at least one expression");
+  }
   const expression: FilterExpression = Object.freeze({
     type: "not" as const,
-    child: filter.expressions[0]!,
+    child: firstExpression,
   });
 
   return Object.freeze({

@@ -13,7 +13,7 @@ import type {
 } from "./page-types.js";
 import type { Component } from "./types.js";
 import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import { dataSetId, columnId } from "@casehub/pages-data/dist/dataset/types.js";
+import { columnId } from "@casehub/pages-data/dist/dataset/types.js";
 import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 import { HttpMethod } from "@casehub/pages-data/dist/dataset/external/types.js";
@@ -406,7 +406,7 @@ describe("Site", () => {
     const site: Site = {
       root,
       page: () => null,
-      dataset: (id: DataSetId, fromPage?: string) => {
+      dataset: (id: DataSetId) => {
         if (id === "sales-data" as DataSetId) {
           return {
             uuid: id,

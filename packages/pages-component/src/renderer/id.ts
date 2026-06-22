@@ -4,5 +4,5 @@ export function generateId(
   indexOrY: number | undefined,
 ): string {
   if (parentId === undefined) return "root";
-  return `${parentId}::${slotOrX}::${indexOrY}`;
+  return `${parentId}::${String(slotOrX)}::${String(indexOrY)}`;
 }

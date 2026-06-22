@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import type { Component } from "@casehub/pages-component/dist/model/types.js";
 import { buildPageIndex, computeCurrentPage, walkNavigate, extendPageIndex } from "./navigation.js";
 import { buildPagePathMap, extendPagePathMap, type PagePathMap } from "./page-paths.js";
-import { activateSlot } from "@casehub/pages-component/dist/renderer/activate-slot.js";
 import { wireInteractivity } from "@casehub/pages-component/dist/renderer/interactive.js";
 
 function renderInteractive(

@@ -6,7 +6,7 @@ import {
 } from "./lookup-constraints.js";
 import { createLookup } from "./lookup.js";
 import { ColumnType, dataSetId, columnId} from "./types.js";
-import type { Column, ColumnId, DataSetId } from "./types.js";
+import type { Column, DataSetId } from "./types.js";
 import type { GroupOp } from "./group.js";
 import type { ResolvedFilterOp } from "./filter.js";
 
@@ -162,10 +162,7 @@ describe("validateLookup", () => {
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
-      const { maxGroups, ...rest } = DEFAULT_CONSTRAINTS;
-      const constraints: DataSetLookupConstraints = rest;
-
-      const violations = validateLookup(lookup, constraints);
+      const violations = validateLookup(lookup, DEFAULT_CONSTRAINTS);
       expect(violations).toHaveLength(0);
     });
   });
@@ -591,9 +588,8 @@ describe("validateLookup", () => {
         ],
       };
       const lookup = createLookup(dsId("test"), [group]);
-      const { extraColumnsType, ...rest } = DEFAULT_CONSTRAINTS;
       const constraints: DataSetLookupConstraints = {
-        ...rest,
+        ...DEFAULT_CONSTRAINTS,
         columnTypes: [[ColumnType.LABEL]],
         extraColumnsAllowed: true,
       };

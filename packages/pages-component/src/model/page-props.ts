@@ -1,5 +1,4 @@
 import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 import type { DataSetOp } from "@casehub/pages-data/dist/dataset/ops.js";
 import type {
   ExternalDataSetDef,

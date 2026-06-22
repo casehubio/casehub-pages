@@ -17,7 +17,7 @@
 import * as React from "react";
 import type { ComponentController, DataSet } from "@casehub/pages-iframe-api";
 import { MessageProperty } from "@casehub/pages-iframe-api";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import type { Props as EChartsProps } from "@casehub/pages-echarts-base";
 import { ECharts } from "@casehub/pages-echarts-base";
 
@@ -28,19 +28,19 @@ interface Props {
 export function EChartsComponent(props: Props) {
   const [echartsProps, setEchartsProps] = useState<EChartsProps>();
   useEffect(() => {
-    props.controller.setOnDataSet((_dataset: DataSet, params?: Map<string, any>) => {
-      const option: any = {
+    props.controller.setOnDataSet((_dataset: DataSet, params?: Map<string, unknown>) => {
+      const option: Record<string, unknown> = {
         dataset: {
           source: [_dataset.columns.map((c) => c.settings.columnName), ..._dataset.data],
         },
       };
-      const props: Record<string, any> = { option };
+      const echartsResult: EChartsProps = { option };
       if (params) {
-        props.params = params;
+        echartsResult.params = params;
         const theme = params.get(MessageProperty.MODE);
-        if (theme) props.theme = theme;
+        if (theme) echartsResult.theme = theme as string;
       }
-      setEchartsProps(props as EChartsProps);
+      setEchartsProps(echartsResult);
     });
   }, [props.controller]);
 

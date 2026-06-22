@@ -111,6 +111,9 @@ const TIME_UNITS: Record<string, number> = {
 export function parseRefreshTime(str: string): number {
   const match = str.match(/^(\d+)(\w+)$/);
   if (!match) return 10_000;
-  const multiplier = TIME_UNITS[match[2]!];
-  return multiplier !== undefined ? parseInt(match[1]!, 10) * multiplier : 10_000;
+  const unitKey = match[2];
+  const countStr = match[1];
+  if (unitKey === undefined || countStr === undefined) return 10_000;
+  const multiplier = TIME_UNITS[unitKey];
+  return multiplier !== undefined ? parseInt(countStr, 10) * multiplier : 10_000;
 }

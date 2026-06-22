@@ -30,7 +30,7 @@ export interface ResolverContext {
 // ---------------------------------------------------------------------------
 
 function validate(def: ExternalDataSetDef): void {
-  if (def.uuid === undefined || def.uuid === "") {
+  if (!def.uuid) {
     throw new DataSetError("INVALID_DEFINITION", "uuid is required");
   }
 
@@ -49,7 +49,7 @@ function validate(def: ExternalDataSetDef): void {
   if (sourceCount > 1) {
     throw new DataSetError(
       "INVALID_DEFINITION",
-      `Dataset "${def.uuid}" must specify exactly one of: url, content, join (found ${sourceCount})`,
+      `Dataset "${def.uuid}" must specify exactly one of: url, content, join (found ${String(sourceCount)})`,
     );
   }
 }
@@ -60,7 +60,7 @@ function validate(def: ExternalDataSetDef): void {
 
 function buildRequest(def: ExternalDataSetDef): DataRequest {
   const request: DataRequest = {
-    url: def.url!,
+    url: def.url ?? "",
     method: def.method ?? HttpMethod.GET,
     headers: def.headers ?? {},
     query: def.query ?? {},
@@ -96,7 +96,10 @@ export async function resolveExternalDataSet(
 
   // ---- Join route ----
   if (source === "join") {
-    const dataset = joinDataSets(def.join!, ctx.manager);
+    if (def.join === undefined) {
+      throw new DataSetError("INVALID_DEFINITION", `Dataset "${def.uuid}" determined as join but join is undefined`);
+    }
+    const dataset = joinDataSets(def.join, ctx.manager);
     ctx.manager.register(def.uuid, dataset);
     return { dataset, inferredColumns: false, source: "join" };
   }

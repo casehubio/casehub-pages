@@ -138,10 +138,11 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     const rawType = raw.type;
 
     // Navigation components
-    if (rawType in NAV_TYPE_MAP) {
+    const mappedNavType = NAV_TYPE_MAP[rawType];
+    if (mappedNavType) {
       const props = raw.properties as Record<string, unknown> | undefined;
       return {
-        type: NAV_TYPE_MAP[rawType]!,
+        type: mappedNavType,
         ...(props ? { props } : {}),
       };
     }
@@ -217,8 +218,11 @@ function extractStyle(
   for (const [key, value] of Object.entries(props)) {
     if (typeof value === "string") {
       style[key] = value;
-    } else if (value !== undefined && value !== null) {
-      // Convert non-string values to strings for CSS
+    } else if (typeof value === "object" && value !== null) {
+      // Convert object values to JSON strings for CSS
+      style[key] = JSON.stringify(value);
+    } else if (typeof value === "number" || typeof value === "boolean") {
+      // Convert primitive values to strings for CSS
       style[key] = String(value);
     }
   }

@@ -50,8 +50,10 @@ function getQuarterFirstMonth(firstMonth0Based: number, currentMonth0Based: numb
 
   // Find which quarter the current month falls into
   for (let i = 0; i < 4; i++) {
-    const qStart = quarters[i]!;
-    const qEnd = i === 3 ? firstMonth0Based : quarters[i + 1]!;
+    const qStart = quarters[i];
+    if (qStart === undefined) continue;
+    const qEnd = i === 3 ? firstMonth0Based : quarters[i + 1];
+    if (qEnd === undefined) continue;
 
     if (qStart < qEnd) {
       // Normal case: quarter doesn't wrap around year

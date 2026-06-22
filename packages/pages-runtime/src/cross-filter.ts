@@ -42,14 +42,16 @@ export function updateFilter(
   values: string[],
   reset: boolean,
 ): void {
-  if (!filterState.has(pagePath)) {
-    filterState.set(pagePath, new Map());
+  let pageFilters = filterState.get(pagePath);
+  if (!pageFilters) {
+    pageFilters = new Map();
+    filterState.set(pagePath, pageFilters);
   }
-  const pageFilters = filterState.get(pagePath)!;
-  if (!pageFilters.has(group)) {
-    pageFilters.set(group, new Map());
+  let groupFilters = pageFilters.get(group);
+  if (!groupFilters) {
+    groupFilters = new Map();
+    pageFilters.set(group, groupFilters);
   }
-  const groupFilters = pageFilters.get(group)!;
 
   if (reset) {
     groupFilters.delete(columnId);

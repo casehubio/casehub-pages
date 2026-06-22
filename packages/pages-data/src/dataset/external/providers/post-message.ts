@@ -1,4 +1,4 @@
-import type { DataProvider, DataRequest, FetchResult, PagesDataMessage } from "../types.js";
+import type { DataProvider, FetchResult, PagesDataMessage } from "../types.js";
 
 export class PostMessageProvider implements DataProvider {
   constructor(
@@ -6,19 +6,19 @@ export class PostMessageProvider implements DataProvider {
     private readonly timeoutMs: number = 30_000,
   ) {}
 
-  async fetch(_request: DataRequest): Promise<FetchResult> {
+  fetch(): Promise<FetchResult> {
     return new Promise<FetchResult>((resolve, reject) => {
       const timer = setTimeout(() => {
         cleanup();
         reject(
           new Error(
-            `PostMessage timeout: no data for dataset "${this.dataSetId}" within ${this.timeoutMs}ms`,
+            `PostMessage timeout: no data for dataset "${this.dataSetId}" within ${String(this.timeoutMs)}ms`,
           ),
         );
       }, this.timeoutMs);
 
       const handler = (event: MessageEvent) => {
-        const msg = event.data as PagesDataMessage;
+        const msg = event.data as Partial<PagesDataMessage> | null;
         if (msg && msg.type === "casehub-pages-dataset" && msg.dataSetId === this.dataSetId) {
           cleanup();
           resolve(

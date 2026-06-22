@@ -3,7 +3,6 @@ import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import type { TypedDataSet, Column, ColumnSettings } from "@casehub/pages-data/dist/dataset/types.js";
 import { ColumnType, columnId } from "@casehub/pages-data/dist/dataset/types.js";
 import { createTypedRow } from "@casehub/pages-data/dist/dataset/conversion.js";
-import type { ChartSettings } from "@casehub/pages-component";
 
 function mockColumn(id: string, name: string, type: ColumnType): Column {
   return { id: columnId(id), name, type };

@@ -18,5 +18,5 @@ import { MessageType } from "./MessageType";
 
 export interface ComponentMessage {
   type: MessageType;
-  properties: Map<MessageProperty | string, any>;
+  properties: Map<MessageProperty | string, unknown>;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createFilterState, updateFilter, getActiveFilterOps, collectAncestorFilterOps } from "./cross-filter.js";
+import { createFilterState, updateFilter, collectAncestorFilterOps } from "./cross-filter.js";
 
 describe("collectAncestorFilterOps", () => {
   it("collects filters from ancestor pages", () => {

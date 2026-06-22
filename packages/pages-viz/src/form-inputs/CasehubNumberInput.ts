@@ -62,7 +62,7 @@ export class CasehubNumberInput extends CasehubFormInput<NumberInputProps> {
     input.type = "number";
     const value = this.extractFieldValue(dataset);
     if (value !== undefined) {
-      const num = typeof value === "number" ? value : parseFloat(String(value));
+      const num = typeof value === "number" ? value : typeof value === "string" ? parseFloat(value) : NaN;
       if (!isNaN(num)) input.value = String(num);
     }
     if (props.min !== undefined) input.min = String(props.min);

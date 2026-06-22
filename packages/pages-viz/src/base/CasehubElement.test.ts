@@ -335,7 +335,7 @@ describe("CasehubElement", () => {
 
       // jsdom's ResizeObserver is limited, but we can verify the observer was set up
       // by checking onResize is a callable method
-      expect(typeof (el as any).onResize).toBe("function");
+      expect(typeof (el as unknown as Record<string, unknown>).onResize).toBe("function");
 
       resizeSpy.mockRestore();
     });

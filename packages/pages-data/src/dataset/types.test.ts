@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { ColumnSettings, ColumnId} from "./types.js";
+import type { ColumnSettings} from "./types.js";
 
 import { columnId } from "./types.js";
 describe("ColumnSettings", () => {

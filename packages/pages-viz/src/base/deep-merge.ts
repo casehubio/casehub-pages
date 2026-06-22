@@ -5,8 +5,8 @@ export function deepMerge<T extends Record<string, unknown>>(
   const result = { ...base } as Record<string, unknown>;
 
   for (const key of Object.keys(override)) {
-    const baseVal = result[key];
-    const overrideVal = override[key];
+    const baseVal: unknown = result[key];
+    const overrideVal: unknown = override[key];
 
     if (
       Array.isArray(baseVal) &&
@@ -16,7 +16,8 @@ export function deepMerge<T extends Record<string, unknown>>(
     ) {
       // Object override applied to each element of array base
       // (e.g., series: {barCategoryGap: "1%"} applied to series: [{type: "bar"}, ...])
-      result[key] = baseVal.map((item) => {
+      const baseArr = baseVal as unknown[];
+      result[key] = baseArr.map((item: unknown) => {
         if (item !== null && typeof item === "object" && !Array.isArray(item)) {
           return deepMerge(item as Record<string, unknown>, overrideVal as Record<string, unknown>);
         }
@@ -28,9 +29,11 @@ export function deepMerge<T extends Record<string, unknown>>(
     ) {
       // Merge arrays element-by-element: override properties are merged into
       // the corresponding base element. Extra override elements are appended.
-      const merged = baseVal.map((baseItem, i) => {
-        if (i >= overrideVal.length) return baseItem;
-        const overrideItem = overrideVal[i];
+      const baseArr = baseVal as unknown[];
+      const overrideArr = overrideVal as unknown[];
+      const merged: unknown[] = baseArr.map((baseItem: unknown, i: number): unknown => {
+        if (i >= overrideArr.length) return baseItem;
+        const overrideItem: unknown = overrideArr[i];
         if (
           baseItem !== null && typeof baseItem === "object" && !Array.isArray(baseItem) &&
           overrideItem !== null && typeof overrideItem === "object" && !Array.isArray(overrideItem)
@@ -40,8 +43,8 @@ export function deepMerge<T extends Record<string, unknown>>(
         return overrideItem;
       });
       // Append extra override elements beyond base length
-      for (let i = baseVal.length; i < overrideVal.length; i++) {
-        merged.push(overrideVal[i]);
+      for (let i = baseArr.length; i < overrideArr.length; i++) {
+        merged.push(overrideArr[i]);
       }
       result[key] = merged;
     } else if (

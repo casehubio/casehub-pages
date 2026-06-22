@@ -15,7 +15,7 @@ function parseCell(value: string, column: Column, rowIndex: number): CellValue {
       if (Number.isNaN(n)) {
         throw new DataSetError(
           "SCHEMA_MISMATCH",
-          `Cannot parse "${value}" as NUMBER in column "${column.id}" at row ${rowIndex}`,
+          `Cannot parse "${value}" as NUMBER in column "${column.id}" at row ${String(rowIndex)}`,
         );
       }
       return { type: ColumnType.NUMBER, value: n };
@@ -26,7 +26,7 @@ function parseCell(value: string, column: Column, rowIndex: number): CellValue {
       if (Number.isNaN(d.getTime())) {
         throw new DataSetError(
           "SCHEMA_MISMATCH",
-          `Cannot parse "${value}" as DATE in column "${column.id}" at row ${rowIndex}`,
+          `Cannot parse "${value}" as DATE in column "${column.id}" at row ${String(rowIndex)}`,
         );
       }
       return { type: ColumnType.DATE, value: d };
@@ -40,8 +40,12 @@ export function createTypedRow(cells: readonly CellValue[], columns: readonly Co
   const columnIndex = new Map<ColumnId, number>();
   const columnIndexLower = new Map<string, number>();
   for (let i = 0; i < columns.length; i++) {
-    columnIndex.set(columns[i]!.id, i);
-    columnIndexLower.set((columns[i]!.id as string).toLowerCase(), i);
+    const column = columns[i];
+    if (!column) {
+      throw new DataSetError("INVALID_OPERATION", `Column at index ${String(i)} is undefined`);
+    }
+    columnIndex.set(column.id, i);
+    columnIndexLower.set((column.id as string).toLowerCase(), i);
   }
 
   const row: TypedRow = {
@@ -52,7 +56,11 @@ export function createTypedRow(cells: readonly CellValue[], columns: readonly Co
       if (idx === undefined) {
         throw new DataSetError("UNKNOWN_COLUMN", `Column "${columnId}" not found`);
       }
-      return frozenCells[idx]!;
+      const cell = frozenCells[idx];
+      if (cell === undefined) {
+        throw new DataSetError("INVALID_OPERATION", `Cell at index ${String(idx)} is undefined`);
+      }
+      return cell;
     },
 
     number(columnId: ColumnId): number {
@@ -96,11 +104,17 @@ export function toTypedDataSet(ds: DataSet): TypedDataSet {
   const rows: TypedRow[] = [];
 
   for (let rowIdx = 0; rowIdx < ds.data.length; rowIdx++) {
-    const rawRow = ds.data[rowIdx]!;
+    const rawRow = ds.data[rowIdx];
+    if (!rawRow) {
+      throw new DataSetError("INVALID_OPERATION", `Row at index ${String(rowIdx)} is undefined`);
+    }
     const cells: CellValue[] = [];
 
     for (let colIdx = 0; colIdx < ds.columns.length; colIdx++) {
-      const column = ds.columns[colIdx]!;
+      const column = ds.columns[colIdx];
+      if (!column) {
+        throw new DataSetError("INVALID_OPERATION", `Column at index ${String(colIdx)} is undefined`);
+      }
       const rawValue = rawRow[colIdx];
       if (rawValue === undefined || rawValue === null) {
         cells.push({ type: "NULL" as const });

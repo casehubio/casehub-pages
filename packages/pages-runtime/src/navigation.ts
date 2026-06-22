@@ -107,6 +107,7 @@ export function walkNavigate(
     const container = findInteractiveWithSlot(currentNodes, segment, lazyPageResolutions);
     if (!container) break;
 
+    if (!container.id) break;
     const domEl = target.querySelector<HTMLElement>(
       `[data-component-id="${container.id}"]`,
     );
@@ -114,7 +115,8 @@ export function walkNavigate(
 
     reached.push(segment);
 
-    const slotChildren = container.slots![segment]!;
+    const slotChildren = container.slots?.[segment];
+    if (!slotChildren) break;
     currentNodes = descendIntoChildren(slotChildren, lazyPageResolutions);
   }
 

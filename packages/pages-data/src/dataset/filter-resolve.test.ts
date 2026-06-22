@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { resolveFilterTypes } from "./filter-resolve.js";
 import type { FilterExpression, ResolvedFilterExpression } from "./filter.js";
-import type { Column, ColumnId} from "./types.js";
+import type { Column} from "./types.js";
 import { ColumnType, columnId} from "./types.js";
 import { DataSetError } from "./errors.js";
 

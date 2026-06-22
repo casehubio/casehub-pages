@@ -42,7 +42,8 @@ export abstract class CasehubFormInput<
   protected extractFieldValue(dataset: TypedDataSet): unknown {
     const field = this.props?.field;
     if (!field || !dataset.rows.length) return undefined;
-    const row = dataset.rows[0]!;
+    const row = dataset.rows[0];
+    if (!row) return undefined;
     try {
       const cell = row.cell(field as ColumnId);
       if (cell.type === "NULL") return undefined;
@@ -58,6 +59,14 @@ export abstract class CasehubFormInput<
    * @param value - The new field value
    * @param committed - false = in-progress editing (input event), true = finalized (blur/change event)
    */
+  /**
+   * Type-safe access to props cast to the concrete form input type.
+   * Useful in subclass render methods that receive the props parameter.
+   */
+  protected asFormProps(props: P & { lookup?: DataSetLookup }): P {
+    return props;
+  }
+
   protected emitFieldChange(value: unknown, committed: boolean): void {
     if (!this._editable) return;
     const field = this.props?.field;

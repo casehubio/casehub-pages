@@ -28,8 +28,8 @@ function makeCtx(overrides?: Partial<ResolverContext>): ResolverContext {
 
 function mockProviderFactory(data: unknown, contentType?: string) {
   const provider: DataProvider = {
-    async fetch(_req: DataRequest): Promise<FetchResult> {
-      return contentType !== undefined ? { data, contentType } : { data };
+    fetch(): Promise<FetchResult> {
+      return Promise.resolve(contentType !== undefined ? { data, contentType } : { data });
     },
   };
   return {
@@ -201,8 +201,8 @@ describe("resolveExternalDataSet", () => {
 
   it("wraps fetch errors as FETCH_FAILED", async () => {
     const failingProvider: DataProvider = {
-      async fetch(_req: DataRequest): Promise<FetchResult> {
-        throw new Error("Network timeout");
+      fetch(): Promise<FetchResult> {
+        return Promise.reject(new Error("Network timeout"));
       },
     };
     const ctx = makeCtx({
@@ -314,9 +314,9 @@ describe("resolveExternalDataSet", () => {
   it("builds DataRequest with defaults and custom headers", async () => {
     let capturedRequest: DataRequest | undefined;
     const captureProvider: DataProvider = {
-      async fetch(req: DataRequest): Promise<FetchResult> {
+      fetch(req: DataRequest): Promise<FetchResult> {
         capturedRequest = req;
-        return { data: JSON.stringify([{ a: 1 }]) };
+        return Promise.resolve({ data: JSON.stringify([{ a: 1 }]) });
       },
     };
     const ctx = makeCtx({
@@ -344,9 +344,9 @@ describe("resolveExternalDataSet", () => {
   it("defaults method to GET and headers/query to empty objects", async () => {
     let capturedRequest: DataRequest | undefined;
     const captureProvider: DataProvider = {
-      async fetch(req: DataRequest): Promise<FetchResult> {
+      fetch(req: DataRequest): Promise<FetchResult> {
         capturedRequest = req;
-        return { data: JSON.stringify([{ a: 1 }]) };
+        return Promise.resolve({ data: JSON.stringify([{ a: 1 }]) });
       },
     };
     const ctx = makeCtx({

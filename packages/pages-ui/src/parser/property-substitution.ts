@@ -23,8 +23,8 @@ function walk(
 ): unknown {
   if (typeof node === "string") {
     if (isMetricTemplatePath(path)) return node;
-    return node.replace(/\$\{(\w+)\}/g, (match, key) =>
-      key in properties ? properties[key]! : match,
+    return node.replace(/\$\{(\w+)\}/g, (match, key: string) =>
+      key in properties ? (properties[key] ?? match) : match,
     );
   }
   if (Array.isArray(node)) {

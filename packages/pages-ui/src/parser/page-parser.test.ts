@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
 import { getProps } from "@casehub/pages-component";
-import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
+
 
 describe("parsePage", () => {
   describe("basic structure", () => {

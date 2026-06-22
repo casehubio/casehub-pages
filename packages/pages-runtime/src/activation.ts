@@ -66,8 +66,7 @@ export function createActivationCallback(
 ): (el: HTMLElement, component: Component) => void {
   const yamlCache = new Map<string, string>();
 
-  let callback: (el: HTMLElement, component: Component) => void;
-  callback = (el: HTMLElement, component: Component): void => {
+  const callback = (el: HTMLElement, component: Component): void => {
     const componentId = el.dataset.componentId;
     if (!componentId) return;
 
@@ -175,7 +174,7 @@ export function createActivationCallback(
             const parsed = parsePage(yamlLoad(text));
             integrateAndRender(el, component, parsed, pagePath, pagePathMap, pageIndex, dataSetScope, lazyPageResolutions, permissions, callback);
           })
-          .catch((err) => {
+          .catch((err: unknown) => {
             if (err instanceof DOMException && err.name === "AbortError") return;
             el.textContent = `Failed to load lazy page: ${err instanceof Error ? err.message : String(err)}`;
           });
@@ -207,10 +206,14 @@ function integrateAndRender(
     el.textContent = "Lazy page YAML must contain at least one page";
     return;
   }
-  const pageComponent = pages[0]!;
+  const pageComponent = pages[0];
+  if (!pageComponent) {
+    el.textContent = "Lazy page YAML must contain at least one page";
+    return;
+  }
 
   extendPagePathMap(pageComponent, basePath, pagePathMap);
-  const inheritedScope = dataSetScope.get(basePath) ?? new Map();
+  const inheritedScope = dataSetScope.get(basePath) ?? new Map<DataSetId, ExternalDataSetDef>();
   extendDataSetScope(pageComponent, inheritedScope, pagePathMap, dataSetScope);
   extendPageIndex(pageComponent, pagePathMap, pageIndex);
   lazyPageResolutions.set(lazyPageComponent, pageComponent);
@@ -239,15 +242,19 @@ function resolveInlineDataSet(
 
     const maxCols = rows.reduce((max: number, row: unknown[]) => Math.max(max, row.length), 0);
     const columns = Array.from({ length: maxCols }, (_: unknown, i: number) => ({
-      id: `Column ${i}` as ColumnId,
-      name: `Column ${i}`,
+      id: `Column ${String(i)}` as ColumnId,
+      name: `Column ${String(i)}`,
       type: typeof rows[0]?.[i] === "number" ? ColumnType.NUMBER : ColumnType.LABEL,
     }));
 
     const data = rows.map((row: unknown[]) =>
-      Array.from({ length: maxCols }, (_: unknown, i: number) =>
-        row[i] === undefined || row[i] === null ? null : String(row[i]),
-      ),
+      Array.from({ length: maxCols }, (_: unknown, i: number) => {
+        const cell = row[i];
+        if (cell === undefined || cell === null) return null;
+        if (typeof cell === "string") return cell;
+        if (typeof cell === "number" || typeof cell === "boolean") return String(cell);
+        return JSON.stringify(cell);
+      }),
     );
 
     const dataset = toTypedDataSet({ columns, data });

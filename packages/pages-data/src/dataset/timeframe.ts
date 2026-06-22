@@ -81,7 +81,8 @@ function parseTimeOffset(expr: string): TimeOffset {
 
   let numberStr = "";
   for (; i < trimmed.length; i++) {
-    const ch = trimmed[i]!;
+    const ch = trimmed[i];
+    if (ch === undefined) break;
     if (ch >= "0" && ch <= "9") numberStr += ch;
     else break;
   }
@@ -124,18 +125,30 @@ function parseTimeInstant(expr: string): TimeInstant {
     throw new Error(`Too many settings in brackets: "${expr}"`);
   }
 
-  const unitStr = parts[0]!.toUpperCase();
+  const unitPart = parts[0];
+  if (unitPart === undefined) {
+    throw new Error(`Missing unit in brackets: "${expr}"`);
+  }
+  const unitStr = unitPart.toUpperCase();
   if (!isTruncationUnit(unitStr)) {
     throw new Error(`Invalid truncation unit: "${unitStr}"`);
   }
 
   let firstMonthOfYear: Month | undefined;
   if (parts.length === 2) {
-    const monthStr = parts[1]!.toUpperCase();
+    const monthPart = parts[1];
+    if (monthPart === undefined) {
+      throw new Error(`Missing month in brackets: "${expr}"`);
+    }
+    const monthStr = monthPart.toUpperCase();
     if (!isMonth(monthStr)) {
       throw new Error(`Invalid month: "${monthStr}"`);
     }
-    firstMonthOfYear = MONTH_NAME_TO_NUMBER[monthStr]!;
+    const monthNumber = MONTH_NAME_TO_NUMBER[monthStr];
+    if (monthNumber === undefined) {
+      throw new Error(`Unknown month: "${monthStr}"`);
+    }
+    firstMonthOfYear = monthNumber;
   }
 
   let offset: TimeOffset | undefined;

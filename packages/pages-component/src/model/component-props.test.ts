@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type {
-  GridProps, ColumnsProps, PanelProps, HtmlProps, MarkdownProps,
-  TitleProps, LazyPageProps, FilterSettings, DrillDown, RefreshSettings,
+  GridProps, ColumnsProps, PanelProps, HtmlProps,
+  LazyPageProps, FilterSettings, RefreshSettings,
 } from "./component-props.js";
 
 describe("component props", () => {

@@ -1,5 +1,4 @@
 import type { SaveAdapter, SaveResult } from "../save-adapter.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 
 export interface RestAdapterConfig {
   readonly method?: "PUT" | "PATCH" | "POST";
@@ -32,12 +31,12 @@ export function createRestAdapter(
         });
 
         if (!response.ok) {
-          return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+          return { success: false, error: `HTTP ${String(response.status)}: ${response.statusText}` };
         }
 
         const contentType = response.headers.get("content-type");
         if (contentType?.includes("application/json")) {
-          const updatedRecord = await response.json();
+          const updatedRecord: Record<string, unknown> = await response.json() as Record<string, unknown>;
           return { success: true, updatedRecord };
         }
         return { success: true };
@@ -57,11 +56,11 @@ export function createRestAdapter(
           body: JSON.stringify(record),
         });
         if (!response.ok) {
-          return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+          return { success: false, error: `HTTP ${String(response.status)}: ${response.statusText}` };
         }
         const contentType = response.headers.get("content-type");
         if (contentType?.includes("application/json")) {
-          const updatedRecord = await response.json();
+          const updatedRecord: Record<string, unknown> = await response.json() as Record<string, unknown>;
           return { success: true, updatedRecord };
         }
         return { success: true };
@@ -78,7 +77,7 @@ export function createRestAdapter(
           headers: config?.headers ?? {},
         });
         if (!response.ok) {
-          return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+          return { success: false, error: `HTTP ${String(response.status)}: ${response.statusText}` };
         }
         return { success: true };
       } catch (err) {

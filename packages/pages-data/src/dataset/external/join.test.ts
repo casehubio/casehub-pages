@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { joinDataSets } from "./join.js";
 import { createDataSetManager } from "../manager.js";
 import { toTypedDataSet } from "../conversion.js";
-import type { Column, ColumnId, DataSetId } from "../types.js";
+import type { Column } from "../types.js";
 import { ColumnType } from "../types.js";
 import { DataSetError } from "../errors.js";
 

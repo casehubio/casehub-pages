@@ -44,6 +44,7 @@ export class CasehubMeter extends CasehubChartElement<MeterProps> {
 
     const valuesColIndex = nColumns - 1;
     const valuesCol = dataset.columns[valuesColIndex];
+    if (!valuesCol) return { series: [] };
     const namesCol = nColumns > 1 ? dataset.columns[0] : undefined;
 
     const names: string[] = [];
@@ -52,11 +53,11 @@ export class CasehubMeter extends CasehubChartElement<MeterProps> {
     for (const row of dataset.rows) {
       if (namesCol) {
         const raw = cellToRaw(row.cell(namesCol.id));
-        names.push(raw != null ? String(raw) : `Series ${names.length}`);
+        names.push(raw != null ? String(raw) : `Series ${String(names.length)}`);
       } else {
-        names.push(`Series ${names.length}`);
+        names.push(`Series ${String(names.length)}`);
       }
-      const raw = cellToRaw(row.cell(valuesCol!.id));
+      const raw = cellToRaw(row.cell(valuesCol.id));
       values.push(typeof raw === "number" ? raw : Number(raw) || 0);
     }
 
@@ -64,9 +65,9 @@ export class CasehubMeter extends CasehubChartElement<MeterProps> {
     let legendBasePosY = LEGEND_ITEM_MIN_POS_Y;
 
     const seriesData = values.map((v, i) => {
-      const titleXPos = legendBasePosX + "%";
-      const titleYPos = legendBasePosY + "%";
-      const detailYPos = legendBasePosY + LEGEND_TITLE_DISTANCE + "%";
+      const titleXPos = `${String(legendBasePosX)}%`;
+      const titleYPos = `${String(legendBasePosY)}%`;
+      const detailYPos = `${String(legendBasePosY + LEGEND_TITLE_DISTANCE)}%`;
 
       legendBasePosX += LEGEND_ITEM_X_GAP;
       if (legendBasePosX > LEGEND_ITEM_MAX_POS) {

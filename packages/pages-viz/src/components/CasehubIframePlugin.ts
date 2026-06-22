@@ -115,21 +115,28 @@ export class CasehubIframePlugin extends CasehubElement<IframePluginProps> {
   }
 
   private handleMessage(e: MessageEvent): void {
-    const msg = e.data;
+    const msg = e.data as Record<string, unknown> | null | undefined;
     if (!msg || msg.type !== "FILTER") return;
 
-    const msgProps = msg.properties;
+    const msgProps = msg.properties as Record<string, unknown> | undefined;
     const props = this.props;
     const dataset = this.dataSet;
 
     if (!props || !dataset) return;
     if (!msgProps || msgProps.COMPONENT_ID !== props.componentId) return;
 
-    const filter = msgProps.FILTER;
+    const filter = msgProps.FILTER as Record<string, unknown> | undefined;
     if (!filter) return;
 
-    const columnId = dataset.columns[filter.column]?.id;
+    const columnIndex = filter.column;
+    if (typeof columnIndex !== "number") return;
+    const columnId = dataset.columns[columnIndex]?.id;
     if (!columnId) return;
+
+    const row = filter.row;
+    if (typeof row !== "number") return;
+
+    const reset = filter.reset;
 
     this.dispatchEvent(
       new CustomEvent("casehub-filter", {
@@ -137,8 +144,8 @@ export class CasehubIframePlugin extends CasehubElement<IframePluginProps> {
         composed: true,
         detail: {
           columnId,
-          rowIndex: filter.row,
-          reset: filter.reset ?? false,
+          rowIndex: row,
+          reset: typeof reset === "boolean" ? reset : false,
           group: props.filter?.group,
         },
       }),

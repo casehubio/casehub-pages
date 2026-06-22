@@ -414,13 +414,15 @@ function wireCarousel(
   prevButton.addEventListener("click", () => {
     const currentIndex = slotNames.indexOf(currentSlot);
     const newIndex = (currentIndex - 1 + slotNames.length) % slotNames.length;
-    swap(slotNames[newIndex]!);
+    const slot = slotNames[newIndex];
+    if (slot !== undefined) swap(slot);
   });
 
   nextButton.addEventListener("click", () => {
     const currentIndex = slotNames.indexOf(currentSlot);
     const newIndex = (currentIndex + 1) % slotNames.length;
-    swap(slotNames[newIndex]!);
+    const slot = slotNames[newIndex];
+    if (slot !== undefined) swap(slot);
   });
 }
 
@@ -484,7 +486,7 @@ function wireTiles(
   updateCards(currentSlot);
 
   grid.addEventListener("click", (e) => {
-    const target = (e.target as HTMLElement).closest(".tile-card") as HTMLElement | null;
+    const target = (e.target as HTMLElement).closest<HTMLElement>(".tile-card");
     if (target?.dataset.tileName) {
       swap(target.dataset.tileName);
     }
@@ -505,7 +507,8 @@ function buildTreeStructure(slotNames: readonly string[]): TreeNode[] {
     let current = root;
 
     for (let i = 0; i < segments.length; i++) {
-      const segment = segments[i]!;
+      const segment = segments[i];
+      if (segment === undefined) continue;
       const isLeaf = i === segments.length - 1;
 
       if (isLeaf) {
@@ -606,7 +609,8 @@ function wireTree(
     if (segments.length <= 1) return;
     // Walk ancestor groups and expand any that are collapsed
     for (let i = 0; i < segments.length - 1; i++) {
-      const groupLabel = segments[i]!;
+      const groupLabel = segments[i];
+      if (groupLabel === undefined) continue;
       const childrenEl = groupElements.get(groupLabel);
       if (childrenEl && childrenEl.style.display === "none") {
         childrenEl.style.display = "";

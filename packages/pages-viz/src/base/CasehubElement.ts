@@ -35,18 +35,18 @@ export abstract class CasehubElement<
     return this._props;
   }
 
-  set props(value: P) {
+  set props(value: P | undefined) {
     const oldLookup = this._props?.lookup;
     const oldInterval = this._props?.refresh?.interval;
     this._props = value;
 
-    if (value.lookup !== oldLookup) {
+    if (value?.lookup !== oldLookup) {
       this._dataRequested = false;
       this._dataset = undefined;
     }
 
     this.requestDataIfNeeded();
-    if (value.refresh?.interval !== oldInterval) {
+    if (value?.refresh?.interval !== oldInterval) {
       this.startRefreshTimer();
     }
     this.update();
@@ -56,7 +56,7 @@ export abstract class CasehubElement<
     return this._dataset;
   }
 
-  set dataSet(value: TypedDataSet) {
+  set dataSet(value: TypedDataSet | undefined) {
     this._error = "";
     this._dataset = value;
     this.update();

@@ -7,6 +7,13 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
+import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+
+interface DataElement extends HTMLElement {
+  dataSet?: TypedDataSet;
+  editable?: boolean;
+  shadowRoot: ShadowRoot;
+}
 
 const YAML = `
 datasets:
@@ -72,12 +79,12 @@ describe("form ↔ table interaction (real DOM)", () => {
   });
 
   async function setup(): Promise<{
-    tableEl: HTMLElement & { dataSet?: any; shadowRoot: ShadowRoot };
-    formInputs: Array<HTMLElement & { dataSet?: any; editable?: boolean }>;
+    tableEl: DataElement;
+    formInputs: DataElement[];
   }> {
     site = await loadSite(target, YAML);
 
-    const tableEl = target.querySelector("casehub-table") as HTMLElement & { dataSet?: any; shadowRoot: ShadowRoot };
+    const tableEl = target.querySelector("casehub-table") as DataElement;
     expect(tableEl).not.toBeNull();
 
     // Wait for table data
@@ -90,7 +97,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     // Wait for form inputs
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    ) as Array<HTMLElement & { dataSet?: any; editable?: boolean }>;
+    ) as DataElement[];
     expect(formInputs.length).toBeGreaterThan(0);
 
     const start2 = Date.now();
@@ -123,10 +130,10 @@ describe("form ↔ table interaction (real DOM)", () => {
     input!.dispatchEvent(new Event("input"));
   }
 
-  function getFormValue(input: HTMLElement & { dataSet?: any }, field: string): string | undefined {
-    if (!input.dataSet?.rows?.length) return undefined;
+  function getFormValue(input: DataElement, field: string): string | undefined {
+    if (!input.dataSet?.rows.length) return undefined;
     try {
-      const cell = input.dataSet.rows[0].cell(field);
+      const cell = input.dataSet.rows[0]!.cell(field as import("@casehub/pages-data/dist/dataset/types.js").ColumnId);
       return cell.type === "NULL" ? undefined : String(cell.value);
     } catch {
       return undefined;
@@ -146,7 +153,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     await new Promise((r) => setTimeout(r, 100));
 
     const nameInput = formInputs[0]!;
-    expect(nameInput.dataSet.rows.length).toBe(1);
+    expect(nameInput.dataSet!.rows.length).toBe(1);
     expect(getFormValue(nameInput, "name")).toBe("Alice");
   });
 
@@ -205,7 +212,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     expect(cellTexts[1]).toBe("Bob"); // name column
 
     // Step E: Spy on filter events BEFORE clicking
-    const filterEvents: any[] = [];
+    const filterEvents: { columnId: unknown; rowIndex: unknown; row: unknown; rowName: string }[] = [];
     tableEl.addEventListener("casehub-filter", ((e: Event) => {
       const d = (e as CustomEvent).detail;
       filterEvents.push({
@@ -225,7 +232,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     expect(filterEvents[0]!.rowIndex).toBeDefined();
 
     // Step H: Form should show Bob
-    expect(nameInput.dataSet.rows.length).toBe(1);
+    expect(nameInput.dataSet!.rows.length).toBe(1);
     expect(getFormValue(nameInput, "name")).toBe("Bob");
   });
 
@@ -291,7 +298,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     clickCell(rows[0]!, 0);
     await new Promise((r) => setTimeout(r, 100));
     expect(getFormValue(nameInput, "name")).toBe("Alice");
-    expect(nameInput.dataSet.rows.length).toBe(1);
+    expect(nameInput.dataSet!.rows.length).toBe(1);
   });
 
   it("8. both form inputs update together on row selection", async () => {

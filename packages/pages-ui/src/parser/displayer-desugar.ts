@@ -237,7 +237,7 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
   const rawLookup = raw.lookup || raw.dataSetLookup;
   if (rawLookup) {
     // Extract rowCount before parsing (display-level setting, not part of DataSetLookup)
-    if (typeof rawLookup === "object" && rawLookup !== null) {
+    if (typeof rawLookup === "object") {
       const lookupObj = rawLookup as Record<string, unknown>;
       if (lookupObj.rowCount !== undefined) {
         props.rowCount = lookupObj.rowCount;
@@ -259,8 +259,11 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     }
     if (props.filter === undefined) {
       props.filter = { enabled: true };
-    } else if ((props.filter as Record<string, unknown>).enabled === undefined) {
-      props.filter = { ...(props.filter as Record<string, unknown>), enabled: true };
+    } else {
+      const filterObj = props.filter as Record<string, unknown>;
+      if (filterObj["enabled"] === undefined) {
+        props.filter = { ...filterObj, enabled: true };
+      }
     }
   }
 

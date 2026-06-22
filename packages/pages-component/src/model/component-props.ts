@@ -6,17 +6,17 @@ export interface ColumnsProps {
   readonly distribution: readonly number[];
 }
 
-export interface RowsProps {}
-export interface StackProps {}
+export type RowsProps = Record<string, never>;
+export type StackProps = Record<string, never>;
 
-export interface TabsProps {}
-export interface PillsProps {}
-export interface SidebarProps {}
-export interface TreeProps {}
-export interface MenuProps {}
-export interface AccordionProps {}
-export interface CarouselProps {}
-export interface AppGridProps {}
+export type TabsProps = Record<string, never>;
+export type PillsProps = Record<string, never>;
+export type SidebarProps = Record<string, never>;
+export type TreeProps = Record<string, never>;
+export type MenuProps = Record<string, never>;
+export type AccordionProps = Record<string, never>;
+export type CarouselProps = Record<string, never>;
+export type AppGridProps = Record<string, never>;
 
 export interface PanelProps {
   readonly title: string;

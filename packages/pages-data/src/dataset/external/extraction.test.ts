@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { extractDataSet } from "./extraction.js";
 import { createPresetRegistry } from "./presets/registry.js";
 import type { ExternalDataSetDef, FetchResult, PresetRegistry} from "./types.js";
-import type { ColumnId, DataSetId, CellValue } from "../types.js";
+import type { CellValue } from "../types.js";
 import { ColumnType, dataSetId, columnId} from "../types.js";
 import { DataSetError } from "../errors.js";
 

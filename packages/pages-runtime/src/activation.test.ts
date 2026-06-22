@@ -1,13 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import type { Component, PermissionContext } from "@casehub/pages-component/dist/model/types.js";
+import type { Component } from "@casehub/pages-component/dist/model/types.js";
 import { ALLOW_ALL } from "@casehub/pages-component/dist/model/types.js";
 import { createActivationCallback } from "./activation.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { PagePathMap } from "./page-paths.js";
 import type { PageIndex } from "./navigation.js";
 import type { DataSetScope } from "./dataset-scope.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 import type { DataScopeRegistry } from "./data-scope-registry.js";
 import type { SaveConfigRegistry } from "./save-config-registry.js";
 
@@ -249,7 +247,7 @@ describe("lazy-page activation", () => {
     document.body.removeChild(el);
   });
 
-  it("passes abort signal to fetch", async () => {
+  it("passes abort signal to fetch", () => {
     const { callback, fetchFn, abortController, pagePathMap } = lazySetup();
 
     const lazyComponent: Component = {

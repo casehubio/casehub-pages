@@ -58,7 +58,8 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
 
     if (dataset.columns.length === 0) return;
 
-    const firstColumn = dataset.columns[0]!;
+    const firstColumn = dataset.columns[0];
+    if (!firstColumn) return;
     const distinctValues = this.extractDistinctValues(dataset, firstColumn.id);
 
     const subtype = props.subtype ?? "dropdown";
@@ -67,7 +68,7 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
       this.renderDropdown(container, props, firstColumn.id, distinctValues);
     } else if (subtype === "slider") {
       this.renderSlider(container, props, firstColumn.id, distinctValues);
-    } else if (subtype === "labels") {
+    } else {
       this.renderLabels(container, props, firstColumn.id, distinctValues);
     }
   }
@@ -83,8 +84,10 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
     if (colIdx < 0) return result;
 
     for (let rowIdx = 0; rowIdx < dataset.rows.length; rowIdx++) {
-      const row = dataset.rows[rowIdx]!;
-      const raw = cellToRaw(row.cells[colIdx]!);
+      const row = dataset.rows[rowIdx];
+      const cell = row?.cells[colIdx];
+      if (!row || !cell) continue;
+      const raw = cellToRaw(cell);
 
       const key = raw instanceof Date ? raw.getTime() : raw;
 
@@ -220,7 +223,9 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
     labelsDiv.className = "labels";
 
     for (let i = 0; i < values.length; i++) {
-      const { value, rowIndex } = values[i]!;
+      const entry = values[i];
+      if (!entry) continue;
+      const { value, rowIndex } = entry;
       const chip = document.createElement("button");
       chip.className = "label-chip";
       chip.textContent = value === null ? "" : String(value);

@@ -1,6 +1,7 @@
 import type { DataSetOp } from "@casehub/pages-data/dist/dataset/ops.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 import type { DataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
+import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataScope, DataScopeRef } from "@casehub/pages-ui";
 import type { FilterState } from "./cross-filter.js";
@@ -63,8 +64,8 @@ export function resolveRefBindings(
 
       const cell = firstRow.cell(refColumnId as ColumnId);
       const value = cell.type === "NULL" ? "" : String(
-        cell.type === "NUMBER" ? cell.value :
-        cell.type === "DATE" ? cell.value.toISOString() :
+        cell.type === ColumnType.NUMBER ? cell.value :
+        cell.type === ColumnType.DATE ? cell.value.toISOString() :
         cell.value
       );
 

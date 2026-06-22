@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createLookup } from "./lookup.js";
-import type { ColumnId, DataSetId} from "./types.js";
+import type { DataSetId} from "./types.js";
 import type { ResolvedFilterOp } from "./filter.js";
 import type { GroupOp } from "./group.js";
 import type { SortOp } from "./sort.js";

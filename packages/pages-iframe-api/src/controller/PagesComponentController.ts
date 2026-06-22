@@ -23,7 +23,7 @@ import type { ComponentBus } from "./ComponentBus";
 import type { ComponentController } from "./ComponentController";
 
 interface FunctionCallbacks {
-  onSucess: (result: any) => void;
+  onSucess: (result: unknown) => void;
 
   onError: (message: string) => void;
 }
@@ -35,26 +35,29 @@ export class PagesComponentController implements ComponentController {
     // no op
   }
 
-  public onInit: (params: Map<string, any>) => void = (p) => {
+  public onInit: (params: Map<string, unknown>) => void = (p) => {
     console.debug("Received INIT.");
     console.debug(p);
   };
 
-  public onDataSet: (dataSet: DataSet, params?: Map<string, any>) => void = (ds) => {
+  public onDataSet: (dataSet: DataSet, params?: Map<string, unknown>) => void = (ds) => {
     console.debug("Received DataSet.");
     console.debug(ds);
   };
 
-  public init(params: Map<string, any>) {
-    this.componentId = params.get(MessageProperty.COMPONENT_ID);
+  public init(params: Map<string, unknown>) {
+    const id = params.get(MessageProperty.COMPONENT_ID);
+    if (typeof id === "string") {
+      this.componentId = id;
+    }
     this.onInit(params);
   }
 
-  public setOnDataSet(onDataSet: (dataSet: DataSet, params?: Map<string, any>) => void) {
+  public setOnDataSet(onDataSet: (dataSet: DataSet, params?: Map<string, unknown>) => void) {
     this.onDataSet = onDataSet;
   }
 
-  public setOnInit(onInit: (params: Map<string, any>) => void) {
+  public setOnInit(onInit: (params: Map<string, unknown>) => void) {
     this.onInit = onInit;
   }
 
@@ -63,32 +66,32 @@ export class PagesComponentController implements ComponentController {
   }
 
   public requireConfigurationFix(message: string): void {
-    const props = new Map<MessageProperty, any>();
+    const props = new Map<MessageProperty, unknown>();
     props.set(MessageProperty.CONFIGURATION_ISSUE, message);
-    this.bus.send(this.componentId!, {
+    this.bus.send(this.getComponentId(), {
       type: MessageType.FIX_CONFIGURATION,
       properties: props,
     });
   }
   public configurationOk(): void {
-    this.bus.send(this.componentId!, {
+    this.bus.send(this.getComponentId(), {
       type: MessageType.CONFIGURATION_OK,
       properties: new Map(),
     });
   }
 
   public filter(filterRequest: FilterRequest): void {
-    const props = new Map<MessageProperty, any>();
+    const props = new Map<MessageProperty, unknown>();
     props.set(MessageProperty.FILTER, filterRequest);
-    this.bus.send(this.componentId!, {
+    this.bus.send(this.getComponentId(), {
       type: MessageType.FILTER,
       properties: props,
     });
   }
-  public callFunction(functionCallRequest: FunctionCallRequest): Promise<any> {
-    const props = new Map<MessageProperty, any>();
+  public callFunction(functionCallRequest: FunctionCallRequest): Promise<unknown> {
+    const props = new Map<MessageProperty, unknown>();
     props.set(MessageProperty.FUNCTION_CALL, functionCallRequest);
-    this.bus.send(this.componentId!, {
+    this.bus.send(this.getComponentId(), {
       type: MessageType.FUNCTION_CALL,
       properties: props,
     });
@@ -121,6 +124,13 @@ export class PagesComponentController implements ComponentController {
 
   public setComponentBus(bus: ComponentBus) {
     this.bus = bus;
+  }
+
+  private getComponentId(): string {
+    if (this.componentId == null) {
+      throw new Error("Component ID is not set. Was init() called?");
+    }
+    return this.componentId;
   }
 
   private buildFunctionKey(functionRequest: FunctionCallRequest): string {

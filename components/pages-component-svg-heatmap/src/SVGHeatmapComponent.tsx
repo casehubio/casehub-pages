@@ -69,10 +69,12 @@ const validateParams = (params: Map<string, string>): string | undefined => {
   return undefined;
 };
 const extractNodeInfo = (dataset: string[][]): SvgNodeValue[] =>
-  dataset.map((row) => ({
-    nodeId: row[0]!,
-    value: +(row[1]!),
-  }));
+  dataset
+    .filter((row) => row[0] != null && row[1] != null)
+    .map((row) => ({
+      nodeId: row[0] as string,
+      value: +(row[1] as string),
+    }));
 
 interface AppState {
   svgContent: string;
@@ -91,9 +93,10 @@ interface Props {
 export function SVGHeatmapComponent(props: Props) {
   const [appState, setAppState] = useState<AppState>({ svgNodesValues: [], svgContent: "" });
 
-  const onDataset = (ds: DataSet, params?: Map<string, any>) => {
+  const onDataset = (ds: DataSet, params?: Map<string, unknown>) => {
     if (!params) return;
-    const validationMessage = validateDataSet(ds) || validateParams(params);
+    const stringParams = params as Map<string, string>;
+    const validationMessage = validateDataSet(ds) || validateParams(stringParams);
     if (validationMessage) {
       props.controller.requireConfigurationFix(validationMessage);
       setAppState((previousState) => ({
@@ -104,25 +107,28 @@ export function SVGHeatmapComponent(props: Props) {
     }
     props.controller.configurationOk();
 
-    const blurParam = params.get(BLUR_PARAM);
-    const opacityParam = params.get(OPACITY_PARAM);
-    const htParams: Record<string, any> = {
-      svg: params.get(SVG_PARAM),
-      sizeFactor: +params.get(SIZE_PARAM) || 1.0,
-      containsId: params.get(CONTAINS_ID_PARAM) === "true",
+    const svg = stringParams.get(SVG_PARAM) ?? "";
+    const sizeRaw = stringParams.get(SIZE_PARAM);
+    const blurParam = stringParams.get(BLUR_PARAM);
+    const opacityParam = stringParams.get(OPACITY_PARAM);
+    const htParams: Omit<AppState, "errorMessage"> = {
+      svgContent: "",
+      svgNodesValues: [],
+      sizeFactor: sizeRaw ? +sizeRaw || 1.0 : 1.0,
+      containsId: stringParams.get(CONTAINS_ID_PARAM) === "true",
     };
     if (blurParam) htParams.blur = +blurParam;
     if (opacityParam) htParams.opacity = +opacityParam;
 
-    if (isSvg(htParams.svg)) {
+    if (isSvg(svg)) {
       setAppState((previousState) => ({
         ...previousState,
-        svgContent: htParams.svg,
-        svgNodesValues: extractNodeInfo(ds.data),
         ...htParams,
+        svgContent: svg,
+        svgNodesValues: extractNodeInfo(ds.data),
       }));
-    } else if (isUrl(htParams.svg)) {
-      fetch(htParams.svg)
+    } else if (isUrl(svg)) {
+      fetch(svg)
         .then((r) => r.text())
         .then((urlSvgContent) =>
           { setAppState((previousState) => ({
@@ -132,12 +138,12 @@ export function SVGHeatmapComponent(props: Props) {
             svgContent: urlSvgContent,
           })); }
         )
-        .catch((e) =>
+        .catch((e: unknown) =>
           { setAppState((previousState) => ({
             ...previousState,
             svgNodesValues: [],
             svgContent: "",
-            errorMessage: e,
+            errorMessage: e instanceof Error ? e.message : String(e),
           })); }
         );
     }
@@ -145,5 +151,5 @@ export function SVGHeatmapComponent(props: Props) {
 
   useEffect(() => { props.controller.setOnDataSet(onDataset); }, [appState.svgNodesValues]);
 
-  return <>{appState?.errorMessage ? <em>{appState.errorMessage}</em> : <SvgHeatmap {...appState} />};</>;
+  return <>{appState.errorMessage ? <em>{appState.errorMessage}</em> : <SvgHeatmap {...appState} />};</>;
 }

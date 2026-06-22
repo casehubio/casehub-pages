@@ -61,7 +61,9 @@ export class CasehubTextInput extends CasehubFormInput<TextInputProps> {
     const input = document.createElement("input");
     input.type = "text";
     const value = this.extractFieldValue(dataset);
-    if (value !== undefined) input.value = String(value);
+    if (typeof value === "string") input.value = value;
+    else if (typeof value === "number") input.value = String(value);
+    else if (value !== undefined) input.value = "";
     if (props.placeholder) input.placeholder = props.placeholder;
     if (props.maxLength) input.maxLength = props.maxLength;
     if (props.required) input.required = true;

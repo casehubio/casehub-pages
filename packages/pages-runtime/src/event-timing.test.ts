@@ -1,5 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
-import { renderComponent } from "@casehub/pages-component/dist/renderer/render.js";
+import { describe, it, expect } from "vitest";
 import type { Component } from "@casehub/pages-component/dist/model/types.js";
 import { createActivationCallback } from "./activation.js";
 import type { ComponentRegistry } from "./registry.js";
@@ -124,8 +123,6 @@ describe("registry timing — entry must exist before appendChild", () => {
   it("registry lookup during connectedCallback returns entry set before appendChild", () => {
     const registry: ComponentRegistry = new Map();
     const pagePathMap: PagePathMap = new Map();
-    let registryHadEntry = false;
-
     const target = document.createElement("div");
     document.body.appendChild(target);
 
@@ -134,7 +131,7 @@ describe("registry timing — entry must exist before appendChild", () => {
       const el = (e.target as HTMLElement).closest<HTMLElement>("[data-component-id]");
       const id = el?.dataset.componentId;
       if (id) {
-        registryHadEntry = registry.has(id);
+        registry.has(id);
       }
     }));
 

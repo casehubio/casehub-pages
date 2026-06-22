@@ -6,8 +6,6 @@ import { CorsProxyProvider } from "./providers/cors-proxy.js";
 import { ServerRelayProvider } from "./providers/server-relay.js";
 import type { DataProviderConfig, ExternalDataSetDef} from "./types.js";
 import { HttpMethod } from "./types.js";
-import type { DataSetId } from "../types.js";
-
 import { dataSetId } from "../types.js";
 function def(overrides: Partial<ExternalDataSetDef> = {}): ExternalDataSetDef {
   return { uuid: dataSetId("test-ds"), ...overrides };

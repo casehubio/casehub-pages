@@ -1,9 +1,8 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "@casehub/pages-component/dist/model/types.js";
-import type { DataSetId, TypedDataSet, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
+import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
 import "@casehub/pages-viz"; // side-effect: registers all custom elements
 import { loadSite } from "./site.js";
-import type { LiveSite } from "./site.js";
 
 function simpleSite(): Component {
   return {
@@ -122,11 +121,11 @@ pages:
 
   it("forwards custom fetch and baseUrl to data pipeline", async () => {
     const fetchCalls: string[] = [];
-    const customFetch: typeof globalThis.fetch = async (input) => {
-      fetchCalls.push(String(input));
-      return new Response(JSON.stringify([["A", 1]]), {
+    const customFetch: typeof globalThis.fetch = (input) => {
+      fetchCalls.push(input instanceof Request ? input.url : String(input));
+      return Promise.resolve(new Response(JSON.stringify([["A", 1]]), {
         headers: { "Content-Type": "application/json" },
-      });
+      }));
     };
 
     const root: Component = {
@@ -327,15 +326,17 @@ describe("loadSite — cross-filter: selector updates listening component", () =
   ): Promise<HTMLElement> {
     const el = target.querySelector(selector) as HTMLElement | null;
     if (!el) throw new Error(`Element not found: ${selector}`);
+    const componentType = el.dataset.componentType;
+    if (!componentType) throw new Error(`No componentType on ${selector}`);
     const vizEl = el.querySelector(
-      `casehub-${el.dataset.componentType}`,
+      `casehub-${componentType}`,
     ) as (HTMLElement & { dataSet?: unknown }) | null;
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    if (!vizEl.dataSet) throw new Error(`Data not loaded for ${selector} within ${maxWait}ms`);
+    if (!vizEl.dataSet) throw new Error(`Data not loaded for ${selector} within ${String(maxWait)}ms`);
     return el;
   }
 

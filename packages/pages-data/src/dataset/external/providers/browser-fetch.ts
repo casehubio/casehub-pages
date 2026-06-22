@@ -34,7 +34,7 @@ export class BrowserFetchProvider implements DataProvider {
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`HTTP ${response.status} ${response.statusText}: ${text}`);
+      throw new Error(`HTTP ${String(response.status)} ${response.statusText}: ${text}`);
     }
 
     const contentType = response.headers.get("content-type");

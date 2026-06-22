@@ -8,10 +8,10 @@ import { ColumnType, columnId } from "@casehub/pages-data/dist/dataset/types.js"
 function mockRow(cells: CellValue[]): TypedRow {
   return {
     cells,
-    cell: (id) => cells[0]!,
-    number: (id) => 0,
-    text: (id) => "",
-    date: (id) => new Date(),
+    cell: () => cells[0]!,
+    number: () => 0,
+    text: () => "",
+    date: () => new Date(),
   };
 }
 describe("CasehubIframePlugin", () => {

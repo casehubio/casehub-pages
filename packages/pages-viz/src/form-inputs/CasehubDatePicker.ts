@@ -67,7 +67,7 @@ export class CasehubDatePicker extends CasehubFormInput<DatePickerProps> {
       if (value instanceof Date) {
         isoDate = value.toISOString().split("T")[0];
       } else {
-        const str = String(value);
+        const str = typeof value === "string" ? value : typeof value === "number" ? String(value) : "";
         // Attempt to parse as date
         const parsed = new Date(str);
         if (!isNaN(parsed.getTime())) {

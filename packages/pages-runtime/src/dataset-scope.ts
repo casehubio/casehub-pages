@@ -67,7 +67,7 @@ export function resolveDataSetDef(
   scope: DataSetScope,
 ): ExternalDataSetDef | undefined {
   let path = pagePath;
-  while (true) {
+  for (;;) {
     const pageScope = scope.get(path);
     if (pageScope) {
       const def = pageScope.get(dataSetId);

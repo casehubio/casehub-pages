@@ -10,6 +10,7 @@ import {
 import { CasehubChartElement } from "../base/CasehubChartElement.js";
 import type { TimeseriesProps } from "@casehub/pages-component";
 import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
 
@@ -27,7 +28,7 @@ export class CasehubTimeseries extends CasehubChartElement<TimeseriesProps> {
     // Stage 2: Build base option
     // Determine time axis column: if column 0 is LABEL, use column 1 as time axis
     const col0Type = dataset.columns[0]?.type;
-    const timeCol = col0Type === "LABEL" && dataset.columns.length > 2 ? 1 : 0;
+    const timeCol = col0Type === ColumnType.LABEL && dataset.columns.length > 2 ? 1 : 0;
     const series: Record<string, unknown>[] = [];
     for (let i = timeCol + 1; i < dataset.columns.length; i++) {
       series.push({

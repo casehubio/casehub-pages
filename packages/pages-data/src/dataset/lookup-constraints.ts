@@ -1,7 +1,7 @@
 import { ColumnType } from "./types.js";
 import type { Column } from "./types.js";
 import type { DataSetLookup } from "./lookup.js";
-import type { GroupOp, ResultColumn, Aggregation } from "./group.js";
+import type { ResultColumn, Aggregation } from "./group.js";
 
 export interface DataSetLookupConstraints {
   readonly filterAllowed: boolean;
@@ -83,12 +83,15 @@ export function validateLookup(
     groupOps.some((op) => {
       const keyCount = op.groupingKey ? 1 : 0;
       const selectCount = op.columns.filter((c) => c.kind === "select").length;
-      return keyCount + selectCount > constraints.maxGroups!;
+      if (constraints.maxGroups === undefined) {
+        throw new Error("maxGroups unexpectedly undefined");
+      }
+      return keyCount + selectCount > constraints.maxGroups;
     })
   ) {
     violations.push({
       code: "TOO_MANY_GROUPS",
-      message: `Maximum ${constraints.maxGroups} grouping ${constraints.maxGroups === 1 ? "column" : "columns"} allowed`,
+      message: `Maximum ${String(constraints.maxGroups)} grouping ${constraints.maxGroups === 1 ? "column" : "columns"} allowed`,
     });
   }
 
@@ -98,7 +101,10 @@ export function validateLookup(
   }
 
   // Get result columns from last group op
-  const lastGroup = groupOps[groupOps.length - 1]!;
+  const lastGroup = groupOps[groupOps.length - 1];
+  if (lastGroup === undefined) {
+    throw new Error("lastGroup unexpectedly undefined");
+  }
   // Build full result columns: key (if present) + columns array
   const resultColumns: ResultColumn[] = [];
   if (lastGroup.groupingKey !== null) {
@@ -114,14 +120,14 @@ export function validateLookup(
   if (constraints.minColumns !== undefined && resultColumns.length < constraints.minColumns) {
     violations.push({
       code: "TOO_FEW_COLUMNS",
-      message: `At least ${constraints.minColumns} ${constraints.minColumns === 1 ? "column" : "columns"} required`,
+      message: `At least ${String(constraints.minColumns)} ${constraints.minColumns === 1 ? "column" : "columns"} required`,
     });
   }
 
   if (constraints.maxColumns !== undefined && resultColumns.length > constraints.maxColumns) {
     violations.push({
       code: "TOO_MANY_COLUMNS",
-      message: `At most ${constraints.maxColumns} ${constraints.maxColumns === 1 ? "column" : "columns"} allowed`,
+      message: `At most ${String(constraints.maxColumns)} ${constraints.maxColumns === 1 ? "column" : "columns"} allowed`,
     });
   }
 
@@ -132,15 +138,18 @@ export function validateLookup(
 
     // Check base columns (non-extra)
     for (let i = 0; i < Math.min(baseCount, resultColumns.length); i++) {
-      const col = resultColumns[i]!;
-      const expected = expectedTypes[i]!;
+      const col = resultColumns[i];
+      const expected = expectedTypes[i];
+      if (col === undefined || expected === undefined) {
+        throw new Error(`Unexpected undefined at index ${String(i)}`);
+      }
       const actual = inferColumnType(col, columns);
 
       // If actual is undefined (source-dependent type, no columns), skip
       if (actual !== undefined && !expected.includes(actual)) {
         violations.push({
           code: "COLUMN_TYPE_MISMATCH",
-          message: `Column ${i} must be ${formatTypes(expected)}, got ${actual}`,
+          message: `Column ${String(i)} must be ${formatTypes(expected)}, got ${actual}`,
           position: i,
         });
       }
@@ -151,18 +160,21 @@ export function validateLookup(
       if (!constraints.extraColumnsAllowed) {
         violations.push({
           code: "EXTRA_COLUMNS_NOT_ALLOWED",
-          message: `Only ${baseCount} ${baseCount === 1 ? "column" : "columns"} allowed`,
+          message: `Only ${String(baseCount)} ${baseCount === 1 ? "column" : "columns"} allowed`,
         });
       } else if (constraints.extraColumnsType !== undefined) {
         // Validate extra column types
         for (let i = baseCount; i < resultColumns.length; i++) {
-          const col = resultColumns[i]!;
+          const col = resultColumns[i];
+          if (col === undefined) {
+            throw new Error(`Unexpected undefined at index ${String(i)}`);
+          }
           const actual = inferColumnType(col, columns);
 
           if (actual !== undefined && actual !== constraints.extraColumnsType) {
             violations.push({
               code: "EXTRA_COLUMN_TYPE_MISMATCH",
-              message: `Extra column ${i} must be ${constraints.extraColumnsType}, got ${actual}`,
+              message: `Extra column ${String(i)} must be ${constraints.extraColumnsType}, got ${actual}`,
               position: i,
             });
           }
@@ -242,7 +254,11 @@ function inferAggregateType(
 
 function formatTypes(types: readonly ColumnType[]): string {
   if (types.length === 1) {
-    return types[0]!;
+    const first = types[0];
+    if (first === undefined) {
+      throw new Error("First type unexpectedly undefined");
+    }
+    return first;
   }
   return `one of [${types.join(", ")}]`;
 }

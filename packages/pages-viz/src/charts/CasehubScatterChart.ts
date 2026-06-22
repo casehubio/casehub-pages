@@ -11,7 +11,6 @@ import type { ScatterChartProps } from "@casehub/pages-component";
 import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
-import { cellToRaw } from "../base/cell-extract.js";
 
 // Register required ECharts components
 use([ScatterChart, GridComponent, TooltipComponent, LegendComponent, DatasetComponent]);

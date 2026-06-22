@@ -1,4 +1,5 @@
 import type { CellValue, TypedDataSet, TypedRow } from "./types.js";
+import { ColumnType } from "./types.js";
 import type { ResolvedFilterOp, ResolvedFilterExpression, NumericFilter, StringFilter, DateFilter } from "./filter.js";
 import type { TimeFrame } from "./timeframe.js";
 import { resolveTimeFrame } from "./timeframe.js";
@@ -74,7 +75,7 @@ function evaluateNumericFilter(cell: CellValue, filter: NumericFilter): boolean 
   if (filter.fn === "NOT_NULL") return cell.type !== "NULL";
   if (cell.type === "NULL") return false;
 
-  const value = cell.type === "NUMBER" ? cell.value : NaN;
+  const value = cell.type === ColumnType.NUMBER ? cell.value : NaN;
 
   switch (filter.fn) {
     case "EQUALS_TO": return value === filter.value;
@@ -94,7 +95,7 @@ function evaluateStringFilter(cell: CellValue, filter: StringFilter): boolean {
   if (filter.fn === "NOT_NULL") return cell.type !== "NULL";
   if (cell.type === "NULL") return false;
 
-  const value = (cell.type === "TEXT" || cell.type === "LABEL") ? cell.value : "";
+  const value = (cell.type === ColumnType.TEXT || cell.type === ColumnType.LABEL) ? cell.value : "";
 
   switch (filter.fn) {
     case "EQUALS_TO": return value === filter.value;
@@ -120,7 +121,8 @@ function compileLikePattern(pattern: string): string {
   let inBracket = false;
 
   for (let i = 0; i < pattern.length; i++) {
-    const ch = pattern[i]!;
+    const ch = pattern[i];
+    if (ch === undefined) break;
 
     if (inBracket) {
       result += ch;
@@ -151,7 +153,7 @@ function evaluateDateFilter(cell: CellValue, filter: DateFilter, resolved: Resol
   if (filter.fn === "NOT_NULL") return cell.type !== "NULL";
   if (cell.type === "NULL") return false;
 
-  const value = cell.type === "DATE" ? cell.value.getTime() : NaN;
+  const value = cell.type === ColumnType.DATE ? cell.value.getTime() : NaN;
 
   switch (filter.fn) {
     case "EQUALS_TO": return value === filter.value.getTime();

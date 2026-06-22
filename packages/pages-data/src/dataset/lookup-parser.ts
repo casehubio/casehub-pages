@@ -1,9 +1,7 @@
 import { z } from "zod";
-import type { DataSetId } from "./types.js";
-import type { FilterExpression, FilterOp, CoreFunctionType } from "./filter.js";
+import type { FilterExpression, FilterOp } from "./filter.js";
 import type { GroupOp, GroupingKey, GroupStrategy, ResultColumn, Aggregation } from "./group.js";
-import type { FixedCalendarUnit } from "./group.js";
-import type { DateIntervalType, Month, DayOfWeek } from "./date-interval.js";
+import type { Month, DayOfWeek } from "./date-interval.js";
 import type { SortOp, SortColumn } from "./sort.js";
 import type { DataSetLookup } from "./lookup.js";
 import { createLookup } from "./lookup.js";
@@ -43,10 +41,8 @@ const filterNodeSchema = z.lazy(() =>
   ])
 ) as z.ZodType<FilterNodeInput>;
 
-// Aggregation function schema
-const aggregationFnSchema = z.enum([
-  "COUNT", "DISTINCT", "SUM", "AVERAGE", "MEDIAN", "MIN", "MAX", "JOIN",
-]);
+// Aggregation function type
+type AggregationFnType = "COUNT" | "DISTINCT" | "SUM" | "AVERAGE" | "MEDIAN" | "MIN" | "MAX" | "JOIN";
 
 // Group strategy schemas
 const groupStrategySchema = z.string().default("distinct");
@@ -101,7 +97,7 @@ const columnSchemaRaw = z.object({
 const columnSchema = columnSchemaRaw.transform((col) => ({
   source: col.source,
   id: col.id ?? col.column,
-  function: col.function ? col.function.toUpperCase() as z.infer<typeof aggregationFnSchema> : undefined,
+  function: col.function ? col.function.toUpperCase() as AggregationFnType : undefined,
   separator: col.separator,
 }));
 
@@ -284,7 +280,7 @@ function parseGroupStrategy(
 }
 
 function parseAggregation(
-  fn: z.infer<typeof aggregationFnSchema>,
+  fn: AggregationFnType,
   separator?: string,
 ): Aggregation {
   switch (fn) {
@@ -313,7 +309,11 @@ function monthNameToNumber(name: string): Month {
     MAY: 5, JUNE: 6, JULY: 7, AUGUST: 8,
     SEPTEMBER: 9, OCTOBER: 10, NOVEMBER: 11, DECEMBER: 12,
   };
-  return map[name]!;
+  const result = map[name];
+  if (result === undefined) {
+    throw new Error(`Unknown month name: "${name}"`);
+  }
+  return result;
 }
 
 function dayOfWeekNameToNumber(name: string): DayOfWeek {
@@ -321,5 +321,9 @@ function dayOfWeekNameToNumber(name: string): DayOfWeek {
     MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4,
     FRIDAY: 5, SATURDAY: 6, SUNDAY: 7,
   };
-  return map[name]!;
+  const result = map[name];
+  if (result === undefined) {
+    throw new Error(`Unknown day of week: "${name}"`);
+  }
+  return result;
 }

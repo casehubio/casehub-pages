@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { ECharts } from "echarts/core";
 import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 import type { LineChartProps } from "@casehub/pages-component";

@@ -19,6 +19,14 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { EChartOption, EChartsType } from "echarts";
 import { init } from "echarts";
 
+/**
+ * A chart option record that allows dynamic property access via fillProperties.
+ * Uses an index signature to support the string-path property-setting code path.
+ */
+interface ChartOptionRecord extends EChartOption {
+  [key: string]: unknown;
+}
+
 const OPTION_PARAM = "option";
 const DATASET_PARAM = "dataSet";
 const INIT_OPTIONS: EChartOption = {
@@ -29,8 +37,8 @@ const INIT_OPTIONS: EChartOption = {
 };
 
 export interface Props {
-  option?: any;
-  params?: Map<string, any>;
+  option?: EChartOption;
+  params?: Map<string, string>;
   theme?: string;
   refresh?: boolean;
 }
@@ -65,16 +73,17 @@ export function ECharts(props: Props) {
       setChart(undefined);
     } else {
       console.log(props);
-      let option = props.option || {};
+      let option: ChartOptionRecord = (props.option ?? {}) as ChartOptionRecord;
       if (props.params) {
         props.params.delete(DATASET_PARAM);
         option = fillProperties(props.params, option);
       }
       // replicate first series configuration if a single serie configuration object is provided
-      const nColumns = option.dataset?.source[0]?.length || 0;
-      if (option.series && !option.series.length && nColumns > 1) {
-        const series = Array(nColumns - 1).fill(option.series);
-        option.series = series;
+      const dataset = option.dataset as { source?: unknown[][] } | undefined;
+      const seriesVal = option.series;
+      const nColumns = (Array.isArray(dataset?.source?.[0]) ? dataset.source[0].length : 0);
+      if (seriesVal && !Array.isArray(seriesVal) && nColumns > 1) {
+        option = { ...option, series: Array(nColumns - 1).fill(seriesVal) as EChartOption.Series[] };
       }
       chart.setOption(option);
     }
@@ -87,38 +96,38 @@ export function ECharts(props: Props) {
   );
 }
 
-export const fillProperties = (props: Map<string, any>, option?: any): any => {
-  if (!option) {
-    option = {};
-  }
+export const fillProperties = (props: Map<string, string>, option?: ChartOptionRecord): ChartOptionRecord => {
+  let result: ChartOptionRecord = option ?? {};
   const optionStr = props.get(OPTION_PARAM);
   if (optionStr) {
     try {
-      const parsedOption: object = JSON.parse(optionStr);
-      option = { ...option, ...parsedOption };
-    } catch (e) {
+      const parsedOption = JSON.parse(optionStr) as ChartOptionRecord;
+      result = { ...result, ...parsedOption };
+    } catch {
       console.log("Not able to parse option property");
     }
     props.delete(OPTION_PARAM);
   }
-  props.forEach((value, key) => setPropertyOnObject(key, value, option));
-  return option;
+  props.forEach((value, key) => setPropertyOnObject(key, value, result));
+  return result;
 };
 
-const setPropertyOnObject = (prop: string, value: any, obj: any) => {
+const setPropertyOnObject = (prop: string, value: string, obj: Record<string, unknown>): Record<string, unknown> => {
   if (!prop || !value) {
     return obj;
   }
   const props = prop.split(".");
-  let parent = obj;
+  let parent: Record<string, unknown> = obj;
   for (let i = 0; i < props.length; i++) {
     const name = props[i];
     if (!name) continue;
     if (i === props.length - 1) {
       parent[name] = value;
     } else {
-      parent[name] = parent[name] || {};
-      parent = parent[name];
+      if (!parent[name] || typeof parent[name] !== "object") {
+        parent[name] = {};
+      }
+      parent = parent[name] as Record<string, unknown>;
     }
   }
   return obj;

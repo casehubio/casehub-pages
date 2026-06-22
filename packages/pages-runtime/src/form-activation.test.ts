@@ -26,13 +26,14 @@ describe("form input activation", () => {
   ): Promise<HTMLElement & { dataSet?: unknown }> {
     const el = await waitForElement(target, selector);
     const vizTag = el.dataset.componentType;
+    if (!vizTag) throw new Error(`No componentType on ${selector}`);
     const vizEl = el.querySelector(`casehub-${vizTag}`) as (HTMLElement & { dataSet?: unknown }) | null;
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    return vizEl;
+    return vizEl as HTMLElement & { dataSet?: unknown };
   }
 
   it("activates text-input as a data component with implicit lookup", async () => {
@@ -239,7 +240,7 @@ describe("form input activation", () => {
     const site = await loadSite(target, root);
 
     // Wait for selector data
-    const selContainer = await waitForData(target, "[data-component-id='dept-sel']");
+    await waitForData(target, "[data-component-id='dept-sel']");
 
     // Wait for text-input data
     const textViz = target.querySelector("casehub-text-input") as HTMLElement & {

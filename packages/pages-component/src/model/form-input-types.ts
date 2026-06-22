@@ -34,7 +34,7 @@ export interface DropdownProps extends FormInputCommon {
   readonly options: FixedOptions | DataSetOptions;
 }
 
-export interface CheckboxProps extends FormInputCommon {}
+export type CheckboxProps = FormInputCommon;
 
 export interface DatePickerProps extends FormInputCommon {
   readonly min?: string;

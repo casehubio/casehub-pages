@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseLookup } from "./lookup-parser.js";
 import { expectGroupOp, expectSortOp, expectAggregateColumn } from "./test-helpers.js";
-import type { DataSetId, ColumnId } from "./types.js";
 import { ZodError } from "zod";
 
 describe("parseLookup", () => {

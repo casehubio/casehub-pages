@@ -1,7 +1,6 @@
-import type { TypedDataSet, CellValue, TypedRow } from "./types.js";
+import type { TypedDataSet, TypedRow } from "./types.js";
 import { ColumnType } from "./types.js";
-import type { SortOp, SortColumn } from "./sort.js";
-import { DataSetError } from "./errors.js";
+import type { SortOp } from "./sort.js";
 import { findColumn, findColumnIndex } from "./column-lookup.js";
 
 export function applySort(ds: TypedDataSet, op: SortOp): TypedDataSet {
@@ -22,8 +21,9 @@ export function applySort(ds: TypedDataSet, op: SortOp): TypedDataSet {
       const colIndex = findColumnIndex(ds.columns, sortCol.columnId);
       const col = findColumn(ds.columns, sortCol.columnId);
       if (colIndex === -1 || !col) continue;
-      const aCell = a.cells[colIndex]!;
-      const bCell = b.cells[colIndex]!;
+      const aCell = a.cells[colIndex];
+      const bCell = b.cells[colIndex];
+      if (!aCell || !bCell) continue;
 
       // NULL handling - nulls sort last regardless of direction
       if (aCell.type === "NULL" && bCell.type === "NULL") continue;

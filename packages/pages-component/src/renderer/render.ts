@@ -91,8 +91,8 @@ function renderNode(
     el.style.gap = "4px";
     for (const item of component.items) {
       renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);
-      const child = el.lastElementChild as HTMLElement;
-      if (child) {
+      const child = el.lastElementChild;
+      if (child instanceof HTMLElement) {
         applyGridPlacement(child, item.placement);
       }
     }
@@ -110,18 +110,22 @@ function renderNode(
       if (!isLazy) {
         const children = getSlotChildren(component, slotName);
         for (let i = 0; i < children.length; i++) {
-          renderNode(slotContainer, children[i]!, id, slotName, i, permissions, doc, onNode);
+          const child = children[i];
+          if (child === undefined) continue;
+          renderNode(slotContainer, child, id, slotName, i, permissions, doc, onNode);
         }
       }
     }
 
     wireInteractivity(el, component.type, slotNames, panels, doc,
-      isLazy && component.slots
+      isLazy
         ? {
             slotChildren: component.slots,
             renderSlot: (parent: HTMLElement, children: readonly Component[], slot: string) => {
               for (let i = 0; i < children.length; i++) {
-                renderNode(parent, children[i]!, id, slot, i, permissions, doc, onNode);
+                const child = children[i];
+                if (child === undefined) continue;
+                renderNode(parent, child, id, slot, i, permissions, doc, onNode);
               }
             },
           }

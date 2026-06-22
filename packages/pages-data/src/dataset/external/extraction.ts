@@ -1,4 +1,4 @@
-import type { Column, ColumnId, ColumnType as ColumnTypeEnum, DataSet } from "../types.js";
+import type { Column, ColumnType as ColumnTypeEnum, DataSet } from "../types.js";
 import { ColumnType, columnId} from "../types.js";
 import { DataSetError } from "../errors.js";
 import { toTypedDataSet } from "../conversion.js";
@@ -245,7 +245,7 @@ function isShapeA(data: unknown): data is ShapeAData {
 
 function isArrayOfObjects(data: unknown): data is Record<string, unknown>[] {
   if (!Array.isArray(data) || data.length === 0) return false;
-  const first = data[0];
+  const first: unknown = data[0];
   return first !== null && typeof first === "object" && !Array.isArray(first);
 }
 
@@ -260,7 +260,7 @@ function valueToString(value: unknown): string | null {
   if (typeof value === "number") return String(value);
   if (typeof value === "boolean") return String(value);
   if (value instanceof Date) return value.toISOString();
-  return String(value);
+  return JSON.stringify(value);
 }
 
 function classifyValue(val: unknown): ColumnTypeEnum {
@@ -340,7 +340,10 @@ function tabulateShapeA(data: ShapeAData): { columns: Column[]; rows: (string | 
 }
 
 function tabulateShapeB(data: Record<string, unknown>[]): { columns: Column[]; rows: (string | null)[][] } {
-  const first = data[0]!;
+  const first = data[0];
+  if (first === undefined) {
+    throw new DataSetError("EXTRACTION_ERROR", "Cannot tabulate empty array");
+  }
   const keys = Object.keys(first);
 
   // Sample values per column for type inference
@@ -367,8 +370,8 @@ function tabulateShapeC(data: unknown[][]): { columns: Column[]; rows: (string |
   const columns: Column[] = Array.from({ length: maxCols }, (_, i) => {
     const values = data.map((row) => row[i]);
     return {
-      id: columnId(`Column ${i}`),
-      name: `Column ${i}`,
+      id: columnId(`Column ${String(i)}`),
+      name: `Column ${String(i)}`,
       type: inferColumnType(values),
     };
   });
@@ -408,8 +411,8 @@ function tabulate(
   } else if (Array.isArray(data) && data.every(v => typeof v !== "object" || v === null)) {
     // Shape D: flat array of primitives → single row with auto-generated columns
     columns = data.map((_, i) => ({
-      id: columnId(`Column ${i}`),
-      name: `Column ${i}`,
+      id: columnId(`Column ${String(i)}`),
+      name: `Column ${String(i)}`,
       type: inferColumnType([data[i]]),
     }));
     rows = [data.map(v => valueToString(v))];
@@ -420,13 +423,11 @@ function tabulate(
 
   // Apply explicit column definitions if provided
   if (explicitColumns !== undefined && explicitColumns.length > 0) {
-    columns = explicitColumns
-      .filter((c): c is ExternalColumnDef => c != null && typeof c === "object" && c.id !== undefined)
-      .map((c) => ({
-        id: c.id,
-        name: c.name ?? c.id,
-        type: typeof c.type === "string" ? mapTypeString(c.type) : (c.type ?? inferColumnType([])),
-      }));
+    columns = explicitColumns.map((c) => ({
+      id: c.id,
+      name: c.name ?? c.id,
+      type: typeof c.type === "string" ? mapTypeString(c.type) : inferColumnType([]),
+    }));
     inferred = false;
   }
 
@@ -458,7 +459,9 @@ export async function extractDataSet(
   const extracted = await navigateAndExtract(parsed, def, presetRegistry);
 
   // Stage 3: Tabulate
-  let { dataset: wireDataSet, inferredColumns } = tabulate(extracted, def.columns);
+  const tabulated = tabulate(extracted, def.columns);
+  let wireDataSet = tabulated.dataset;
+  const inferredColumns = tabulated.inferredColumns;
 
   // Prometheus column naming: when columns were inferred from Prometheus data
   // and there are exactly 3 auto-named columns, use metric/labels/value.
@@ -472,9 +475,13 @@ export async function extractDataSet(
     wireDataSet.columns[0]?.id === "Column 0" &&
     isPrometheus
   ) {
-    const renamedCols = wireDataSet.columns.map((c, i) =>
-      i < 3 ? { ...c, id: columnId(PROMETHEUS_COL_NAMES[i]!), name: PROMETHEUS_COL_NAMES[i]! } : c,
-    );
+    const renamedCols = wireDataSet.columns.map((c, i) => {
+      const promName = PROMETHEUS_COL_NAMES[i];
+      if (promName === undefined) {
+        return c;
+      }
+      return i < 3 ? { ...c, id: columnId(promName), name: promName } : c;
+    });
     wireDataSet = { ...wireDataSet, columns: renamedCols };
   }
 

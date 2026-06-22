@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import type { DataSetId, Column, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
 import { ColumnType, dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
@@ -168,10 +168,8 @@ describe("data pipeline with filters", () => {
 });
 
 describe("data pipeline deduplication", () => {
-  it("shares one resolution promise for concurrent requests to same dataSetId", async () => {
+  it("shares one resolution promise for concurrent requests to same dataSetId", () => {
     const manager = createDataSetManager();
-    const ds = regionDataSet([["North"], ["South"]]);
-
     const registry: ComponentRegistry = new Map();
     registry.set("chart-1", {
       element: document.createElement("div"),
@@ -191,7 +189,6 @@ describe("data pipeline deduplication", () => {
 
     const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry());
 
-    const resolveCount = 0;
     const mockCtx: ResolverContext = {
       manager,
       providerFactory: { create: () => undefined },
@@ -199,8 +196,6 @@ describe("data pipeline deduplication", () => {
       presetRegistry: { get: () => undefined, has: () => false },
     };
     pipeline.setResolverCtx(mockCtx);
-
-    const originalResolve = (await import("@casehub/pages-data/dist/dataset/external/resolver.js")).resolveExternalDataSet;
 
     // The pipeline already has one pending promise. Verify it's shared.
     const target1 = makeTarget();

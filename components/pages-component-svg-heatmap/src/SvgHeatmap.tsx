@@ -29,13 +29,6 @@ interface NodeInfo {
   size: number;
 }
 
-interface HeatData {
-  x: number;
-  y: number;
-  value: number;
-  radius?: number;
-}
-
 const getNode = (id: string, useContains?: boolean) =>
   useContains ? (document.querySelector(`[id*='${id}']`) as HTMLElement) : document.getElementById(id);
 
@@ -63,14 +56,16 @@ export interface SvgHeatmapProps {
 
 export function SvgHeatmap(props: SvgHeatmapProps) {
   const parentRef = createRef<HTMLDivElement>();
-  const [svgHeatmap, setSvgHeatmap] = useState<heatmap.Heatmap<any, any, any>>();
+  const [svgHeatmap, setSvgHeatmap] = useState<heatmap.Heatmap<"value", "x", "y">>();
   const [repaint, setRepaint] = useState(false);
 
   useEffect(() => {
     if (props.svgContent) {
-      const heatmapContainer = parentRef.current!;
+      const heatmapContainer = parentRef.current;
+      if (!heatmapContainer) return;
       heatmapContainer.innerHTML = props.svgContent;
-      const svg = heatmapContainer.querySelector("svg")!;
+      const svg = heatmapContainer.querySelector("svg");
+      if (!svg) return;
       svg.style.width = "100%";
       svg.style.height = "100%";
       setSvgHeatmap(
@@ -90,12 +85,13 @@ export function SvgHeatmap(props: SvgHeatmapProps) {
   }, [props]);
 
   useEffect(() => {
-    if (svgHeatmap && props.svgNodesValues && props.svgNodesValues.length > 0) {
+    if (svgHeatmap && props.svgNodesValues.length > 0) {
       const values = props.svgNodesValues
         .filter((n) => getNode(n.nodeId, props.containsId))
         .map((nodeValue) => {
           const node = getNode(nodeValue.nodeId, props.containsId);
-          const nodeInfo = getNodeInfo(node!);
+          if (!node) throw new Error(`Node ${nodeValue.nodeId} not found after filter`);
+          const nodeInfo = getNodeInfo(node);
           return {
             x: Math.ceil(nodeInfo.x),
             y: Math.ceil(nodeInfo.y),

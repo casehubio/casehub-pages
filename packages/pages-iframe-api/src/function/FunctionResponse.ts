@@ -24,5 +24,5 @@ export interface FunctionResponse {
 
   message: string;
 
-  result: any;
+  result: unknown;
 }

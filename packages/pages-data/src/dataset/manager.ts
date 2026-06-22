@@ -87,16 +87,22 @@ class DataSetManagerImpl implements DataSetManager {
     if (existing.columns.length !== dataset.columns.length) {
       throw new DataSetError(
         "SCHEMA_MISMATCH",
-        `Column schema mismatch in accumulate: new dataset has ${dataset.columns.length} columns, expected ${existing.columns.length}`,
+        `Column schema mismatch in accumulate: new dataset has ${String(dataset.columns.length)} columns, expected ${String(existing.columns.length)}`,
       );
     }
     for (let i = 0; i < existing.columns.length; i++) {
-      const existingCol = existing.columns[i]!;
-      const newCol = dataset.columns[i]!;
+      const existingCol = existing.columns[i];
+      const newCol = dataset.columns[i];
+      if (!existingCol || !newCol) {
+        throw new DataSetError(
+          "INVALID_OPERATION",
+          `Column at index ${String(i)} is undefined`,
+        );
+      }
       if (existingCol.id !== newCol.id) {
         throw new DataSetError(
           "SCHEMA_MISMATCH",
-          `Column schema mismatch in accumulate: column "${newCol.id}" at position ${i}, expected "${existingCol.id}"`,
+          `Column schema mismatch in accumulate: column "${newCol.id}" at position ${String(i)}, expected "${existingCol.id}"`,
         );
       }
       if (existingCol.type !== newCol.type) {
@@ -117,7 +123,7 @@ class DataSetManagerImpl implements DataSetManager {
   lookup(query: DataSetLookup, options?: LookupOptions): LookupResult {
     const offset = options?.rowOffset ?? 0;
     if (offset < 0) {
-      throw new DataSetError("INVALID_OPERATION", `rowOffset cannot be negative: ${offset}`);
+      throw new DataSetError("INVALID_OPERATION", `rowOffset cannot be negative: ${String(offset)}`);
     }
 
     const dataset = this.datasets.get(query.dataSetId);

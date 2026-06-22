@@ -1,7 +1,6 @@
 import type {
   Component,
   GridItem,
-  GridPlacement,
   AccessControl,
 } from "../model/types.js";
 import type { TypedComponent } from "@casehub/pages-component";
@@ -93,7 +92,7 @@ export function page(
   const childPages = children.filter((c) => c.type === "page");
   const pageNames = new Set<string>();
   for (const child of childPages) {
-    const childName = (child.props as PageProps)?.name;
+    const childName = (child.props as PageProps).name;
     if (childName) {
       if (pageNames.has(childName)) {
         throw new Error(`Duplicate child page name: ${childName}`);
@@ -119,7 +118,8 @@ export function page(
 }
 
 export function grid(columns: number, ...items: GridItem[]): TypedComponent<"grid"> {
-  const gridId = `grid_${gridCounter++}`;
+  const gridId = `grid_${String(gridCounter++)}`;
+
 
   // Assign IDs to items if they don't have one
   const itemsWithIds = items.map((item) => {
@@ -127,7 +127,7 @@ export function grid(columns: number, ...items: GridItem[]): TypedComponent<"gri
       return item;
     }
     const { x, y } = item.placement;
-    const id = `${gridId}_${x}_${y}`;
+    const id = `${gridId}_${String(x)}_${String(y)}`;
     return {
       ...item,
       component: { ...item.component, id },
@@ -163,13 +163,15 @@ export function columns(
 ): TypedComponent<"columns"> {
   if (distribution.length !== slotContents.length) {
     throw new Error(
-      `Distribution length (${distribution.length}) must match slotContents length (${slotContents.length})`
+      `Distribution length (${String(distribution.length)}) must match slotContents length (${String(slotContents.length)})`
     );
   }
 
   const slots: Record<string, readonly Component[]> = {};
   for (let i = 0; i < slotContents.length; i++) {
-    slots[`col-${i}`] = slotContents[i]!;
+    const content = slotContents[i];
+    if (!content) continue;
+    slots[`col-${String(i)}`] = content;
   }
 
   const props: ColumnsProps = { distribution };

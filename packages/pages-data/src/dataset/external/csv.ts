@@ -23,7 +23,7 @@ export function parseCsv(raw: string, options?: CsvParseOptions): CsvParseResult
   }
 
   const maxCols = allRows.reduce((max, row) => Math.max(max, row.length), 0);
-  const headers = Array.from({ length: maxCols }, (_, i) => `Column ${i}`);
+  const headers = Array.from({ length: maxCols }, (_, i) => `Column ${String(i)}`);
   return { headers, rows: allRows };
 }
 
@@ -61,7 +61,7 @@ function parseRow(
   let i = start;
   const len = raw.length;
 
-  while (true) {
+  for (;;) {
     const { value, nextIndex } = parseField(raw, i, delimiter, quote);
     fields.push(value);
     i = nextIndex;

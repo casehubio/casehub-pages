@@ -144,7 +144,7 @@ export function createDataPipeline(
       if (!resolverCtx) return;
       resolveExternalDataSet(def, resolverCtx)
         .then(() => {
-          for (const [id, entry] of registry) {
+          for (const [, entry] of registry) {
             if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
               const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
                 ?.filter as { group?: string } | undefined;

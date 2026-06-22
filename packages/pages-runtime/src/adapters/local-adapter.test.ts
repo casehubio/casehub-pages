@@ -28,8 +28,9 @@ describe("local-adapter", () => {
     const dataset: TypedDataSet = { columns, rows: [row1, row2] };
     let storedDataset = dataset;
 
+    const registerSpy = vi.fn((_id: DataSetId, ds: TypedDataSet) => { storedDataset = ds; });
     const manager: DataSetManager = {
-      register: vi.fn((id, ds) => { storedDataset = ds; }),
+      register: registerSpy,
       get: vi.fn(() => storedDataset),
       remove: vi.fn(),
       has: vi.fn(() => true),
@@ -48,7 +49,7 @@ describe("local-adapter", () => {
     );
 
     expect(result.success).toBe(true);
-    expect(manager.register).toHaveBeenCalledWith("users" as DataSetId, expect.any(Object));
+    expect(registerSpy).toHaveBeenCalledWith("users" as DataSetId, expect.any(Object));
 
     const updatedDataset = storedDataset;
     expect(updatedDataset.rows.length).toBe(2);

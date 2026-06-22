@@ -42,7 +42,10 @@ export function applyOps(
   let i = 0;
 
   while (i < ops.length) {
-    const op = ops[i]!;
+    const op = ops[i];
+    if (!op) {
+      throw new DataSetError("INVALID_OPERATION", `Operation at index ${String(i)} is undefined`);
+    }
 
     if (op.type === "filter") {
       current = applyFilter(current, op, options?.referenceDate);
@@ -50,14 +53,20 @@ export function applyOps(
     } else if (op.type === "group") {
       // Collect consecutive GroupOps for deferred materialisation
       const groupOps: GroupOp[] = [];
-      while (i < ops.length && ops[i]!.type === "group") {
-        groupOps.push(ops[i]! as GroupOp);
+      while (i < ops.length) {
+        const currentOp = ops[i];
+        if (!currentOp || currentOp.type !== "group") break;
+        groupOps.push(currentOp);
         i++;
       }
+      const firstGroupOp = groupOps[0];
+      if (!firstGroupOp) {
+        throw new DataSetError("INVALID_OPERATION", "First group operation is undefined");
+      }
       current = groupOps.length === 1
-        ? applyGroup(current, groupOps[0]!)
+        ? applyGroup(current, firstGroupOp)
         : applyGroupSequence(current, groupOps);
-    } else if (op.type === "sort") {
+    } else {
       current = applySort(current, op);
       i++;
     }

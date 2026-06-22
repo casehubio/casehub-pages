@@ -5,6 +5,7 @@ import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types
 import type { DataProviderConfig, ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
 import type { DataSetOp } from "@casehub/pages-data/dist/dataset/ops.js";
+import type { SortOrder } from "@casehub/pages-data/dist/dataset/sort.js";
 import { createDataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
 import { createDataProviderFactory, createPresetRegistry } from "@casehub/pages-data/dist/dataset/external/index.js";
 import type { Site, ViewState, DeepLink } from "@casehub/pages-ui/dist/model/page-types.js";
@@ -27,7 +28,53 @@ import { serializeToUrl, parseFromUrl } from "./url.js";
 import type { SaveAdapter } from "./save-adapter.js";
 import { createLocalAdapter } from "./adapters/local-adapter.js";
 import { createRestAdapter } from "./adapters/rest-adapter.js";
-import type { RestAdapterConfig } from "./adapters/rest-adapter.js";
+// --- Event detail interfaces for typed CustomEvent access ---
+
+interface DataRequestDetail {
+  readonly element: VizTarget;
+  readonly lookup: DataSetLookup;
+}
+
+interface SlotChangeDetail {
+  readonly activeSlot: string;
+  readonly containerId: string;
+}
+
+interface FieldChangeDetail {
+  readonly field: string;
+  readonly value: unknown;
+  readonly committed?: boolean;
+}
+
+interface FilterDetail {
+  readonly columnId: string;
+  readonly rowIndex: number;
+  readonly row?: import("@casehub/pages-data/dist/dataset/types.js").TypedRow;
+  readonly reset: boolean;
+  readonly group: string | undefined;
+}
+
+interface PageDetail {
+  readonly offset: number;
+  readonly count: number;
+}
+
+interface SortDetail {
+  readonly columnId: string;
+  readonly order: SortOrder;
+}
+
+interface RecordNavigateDetail {
+  readonly direction: "prev" | "next";
+}
+
+interface RecordCreateDetail {
+  readonly record?: Record<string, unknown>;
+}
+
+interface RecordDeleteDetail {
+  readonly idValue: unknown;
+}
 
 export interface LiveSite extends Site {
   navigate(path: string): void;
@@ -42,12 +89,17 @@ export interface SiteOptions {
   readonly adapters?: Readonly<Record<string, SaveAdapter>>;
 }
 
-export async function loadSite(
+export function loadSite(
   target: HTMLElement,
   source: string | Component,
   options?: SiteOptions,
 ): Promise<LiveSite> {
-  const root = typeof source === "string" ? parsePage(yamlLoad(source)) : source;
+  let root: Component;
+  try {
+    root = typeof source === "string" ? parsePage(yamlLoad(source)) : source;
+  } catch (err: unknown) {
+    return Promise.reject(err instanceof Error ? err : new Error(String(err)));
+  }
   const permissions = options?.permissions ?? ALLOW_ALL;
 
   const settings = root.props?.["settings"] as Record<string, unknown> | undefined;
@@ -80,7 +132,7 @@ export async function loadSite(
   const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry);
   pipeline.setResolverCtx({
     manager,
-    providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch?.bind(globalThis), options?.baseUrl),
+    providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch.bind(globalThis), options?.baseUrl),
     providerConfig: options?.providerConfig ?? {},
     presetRegistry: createPresetRegistry(),
   });
@@ -112,9 +164,9 @@ export async function loadSite(
         const dataSetDef = resolveDataSetDef(dataSetId, pagePath, dataSetScope);
         if (!dataSetDef?.url) throw new Error(`Dataset "${String(dataSetId)}" has no URL for REST adapter`);
         return createRestAdapter(
-          saveConfig.adapterConfig as RestAdapterConfig | undefined,
+          saveConfig.adapterConfig,
           dataSetDef.url,
-          options?.fetch ?? globalThis.fetch?.bind(globalThis),
+          options?.fetch ?? globalThis.fetch.bind(globalThis),
         );
       }
       default:
@@ -207,7 +259,7 @@ export async function loadSite(
     const existing = saveTimers.get(pagePath);
     if (existing) clearTimeout(existing);
     const timer = setTimeout(() => {
-      flushSave(pagePath).catch((err) => { console.error("Auto-save failed:", err); });
+      flushSave(pagePath).catch((err: unknown) => { console.error("Auto-save failed:", err); });
     }, delay);
     saveTimers.set(pagePath, timer);
   }
@@ -223,54 +275,43 @@ export async function loadSite(
   // --- Event delegation ---
 
   target.addEventListener("casehub-data-request", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
-    const vizTarget = detail.element as VizTarget;
-    const lookup = detail.lookup as DataSetLookup;
-    if (!vizTarget || !lookup) return;
+    const { element, lookup } = (e as CustomEvent<DataRequestDetail>).detail;
     const componentId = findComponentId(e);
     if (componentId) {
-      pipeline.handleDataRequest(vizTarget, lookup, componentId);
+      pipeline.handleDataRequest(element, lookup, componentId);
     }
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-slot-change", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
-    const { activeSlot, containerId } = detail;
-    if (typeof activeSlot === "string" && typeof containerId === "string") {
-      activeSlots.set(containerId, activeSlot);
-      currentPage = computeCurrentPage(root, activeSlots);
-    }
+    const { activeSlot, containerId } = (e as CustomEvent<SlotChangeDetail>).detail;
+    activeSlots.set(containerId, activeSlot);
+    currentPage = computeCurrentPage(root, activeSlots);
     if (!_navigating) {
       syncUrl("pushState");
     }
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-field-change", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
+    const { field, value, committed } = (e as CustomEvent<FieldChangeDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
     const entry = registry.get(componentId);
     if (!entry) return;
 
-    updateEditState(editState, entry.pagePath, detail.field, detail.value);
+    updateEditState(editState, entry.pagePath, field, value);
 
     const saveConfig = getSaveConfig(saveConfigRegistry, entry.pagePath);
     if (!saveConfig) return;
 
     if (saveConfig.trigger === "auto" || saveConfig.trigger === undefined) {
       resetAutoSaveTimer(entry.pagePath, saveConfig.delay ?? 2000);
-    } else if (saveConfig.trigger === "field" && detail.committed) {
-      flushSave(entry.pagePath).catch((err) => { console.error("Field save failed:", err); });
+    } else if (saveConfig.trigger === "field" && committed === true) {
+      flushSave(entry.pagePath).catch((err: unknown) => { console.error("Field save failed:", err); });
     }
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-filter", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
-    const { columnId, rowIndex, row: eventRow, reset, group } = detail;
+    const { columnId, rowIndex, row: eventRow, reset, group } = (e as CustomEvent<FilterDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
 
@@ -284,7 +325,7 @@ export async function loadSite(
     const row = eventRow ?? ds.rows[rowIndex];
     if (!row) return;
 
-    const cell = row.cell(columnId);
+    const cell = row.cell(columnId as ColumnId);
     const value = String(cellToRaw(cell));
 
     // Table clicks with a child DataScope are record selection — store the
@@ -318,14 +359,14 @@ export async function loadSite(
       // Flush pending edits BEFORE changing the selection filter —
       // flushSave reads the current filter to find the record ID.
       if (isDirty(editState, childScopePath)) {
-        flushSave(childScopePath).catch((err) => { console.error("Pre-switch save failed:", err); });
+        flushSave(childScopePath).catch((err: unknown) => { console.error("Pre-switch save failed:", err); });
       }
       // Record selection: store filter at the child DataScope's pagePath
       const childFilters = filterState.get(childScopePath);
       if (childFilters) {
         for (const [, columnMap] of childFilters) columnMap.clear();
       }
-      const idCell = row.cell(childScope.idColumn);
+      const idCell = row.cell(childScope.idColumn as ColumnId);
       const idValue = String(cellToRaw(idCell));
       updateFilter(filterState, childScopePath, group, childScope.idColumn, [idValue], reset);
     } else {
@@ -364,9 +405,7 @@ export async function loadSite(
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-page", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
-    const { offset, count } = detail;
+    const { offset, count } = (e as CustomEvent<PageDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
 
@@ -381,17 +420,15 @@ export async function loadSite(
 
     try {
       const result = manager.lookup(effectiveLookup, { rowOffset: offset, rowCount: count });
-      (entry.vizElement as unknown as VizTarget).dataSet = result.dataset;
-      (entry.vizElement as unknown as VizTarget).totalRows = result.totalRows;
+      entry.vizElement.dataSet = result.dataset;
+      entry.vizElement.totalRows = result.totalRows;
     } catch (err) {
-      (entry.vizElement as unknown as VizTarget).error = err instanceof Error ? err.message : String(err);
+      entry.vizElement.error = err instanceof Error ? err.message : String(err);
     }
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-sort", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
-    const { columnId, order } = detail;
+    const { columnId, order } = (e as CustomEvent<SortDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
 
@@ -402,27 +439,25 @@ export async function loadSite(
       ?.filter as { group?: string } | undefined;
     const filterOps = getActiveFilterOps(filterState, entry.pagePath, filterGroup?.group);
     const existingOps = entry.originalLookup.operations.filter((op: DataSetOp) => op.type !== "sort");
-    const sortOp: DataSetOp = { type: "sort" as const, columns: [{ columnId: columnId as unknown as ColumnId, order }] };
+    const sortOp: DataSetOp = { type: "sort" as const, columns: [{ columnId: columnId as ColumnId, order }] };
     const effectiveOps: DataSetOp[] = [...filterOps, ...existingOps, sortOp];
     const effectiveLookup: DataSetLookup = { ...entry.originalLookup, operations: effectiveOps };
 
     try {
       const result = manager.lookup(effectiveLookup);
-      (entry.vizElement as unknown as VizTarget).dataSet = result.dataset;
-      (entry.vizElement as unknown as VizTarget).totalRows = result.totalRows;
+      entry.vizElement.dataSet = result.dataset;
+      entry.vizElement.totalRows = result.totalRows;
     } catch (err) {
-      (entry.vizElement as unknown as VizTarget).error = err instanceof Error ? err.message : String(err);
+      entry.vizElement.error = err instanceof Error ? err.message : String(err);
     }
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-record-navigate", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail?.direction) return;
-    const direction = detail.direction as "prev" | "next";
+    const { direction } = (e as CustomEvent<RecordNavigateDetail>).detail;
 
-    for (const [scopePath, scope] of dataScopeRegistry) {
+    for (const [scopePath] of dataScopeRegistry) {
       if (!isDirty(editState, scopePath)) continue;
-      flushSave(scopePath).catch((err) => { console.error("Pre-nav save failed:", err); });
+      flushSave(scopePath).catch((err: unknown) => { console.error("Pre-nav save failed:", err); });
     }
 
     for (const [scopePath, scope] of dataScopeRegistry) {
@@ -445,7 +480,7 @@ export async function loadSite(
         }
       }
 
-      let currentIdx = currentIdValue !== undefined
+      const currentIdx = currentIdValue !== undefined
         ? allRows.findIndex(row => {
             const cell = row.cell(scope.idColumn as ColumnId);
             return cell.type !== "NULL" && String(cell.value) === currentIdValue;
@@ -458,7 +493,8 @@ export async function loadSite(
 
       if (newIdx === currentIdx) return;
 
-      const newRow = allRows[newIdx]!;
+      const newRow = allRows[newIdx];
+      if (!newRow) return;
       const newIdCell = newRow.cell(scope.idColumn as ColumnId);
       const newIdValue = String(cellToRaw(newIdCell));
 
@@ -477,8 +513,7 @@ export async function loadSite(
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-record-create", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
+    const { record: eventRecord } = (e as CustomEvent<RecordCreateDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
     const entry = registry.get(componentId);
@@ -490,7 +525,7 @@ export async function loadSite(
     const saveConfig = getSaveConfig(saveConfigRegistry, entry.pagePath);
     if (!saveConfig) return;
 
-    const record = detail.record as Record<string, unknown> ?? {};
+    const record: Record<string, unknown> = eventRecord ?? {};
 
     const adapter = resolveAdapter(saveConfig, scope.dataset, entry.pagePath);
     if (!adapter?.create) return;
@@ -518,8 +553,7 @@ export async function loadSite(
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-record-delete", ((e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (!detail) return;
+    const { idValue } = (e as CustomEvent<RecordDeleteDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
     const entry = registry.get(componentId);
@@ -531,7 +565,6 @@ export async function loadSite(
     const saveConfig = getSaveConfig(saveConfigRegistry, entry.pagePath);
     if (!saveConfig) return;
 
-    const idValue = detail.idValue;
     if (idValue === undefined) return;
 
     const adapter = resolveAdapter(saveConfig, scope.dataset, entry.pagePath);
@@ -563,7 +596,7 @@ export async function loadSite(
   // --- Render (AFTER event listeners — connectedCallback fires during render) ---
 
   const onNode = createActivationCallback(registry, pagePathMap, {
-    fetchFn: options?.fetch ?? globalThis.fetch?.bind(globalThis),
+    fetchFn: options?.fetch ?? globalThis.fetch.bind(globalThis),
     baseUrl: options?.baseUrl,
     abortSignal: abortController.signal,
     permissions,
@@ -649,7 +682,7 @@ export async function loadSite(
     }
   }
 
-  return site;
+  return Promise.resolve(site);
 }
 
 function showErrorBanner(container: HTMLElement, message: string): void {

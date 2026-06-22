@@ -47,8 +47,9 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
 
   set optionsDataSet(value: TypedDataSet) {
     this._optionsDataSet = value;
-    if (this.isConnected && this.dataSet) {
-      this.render(this.container, this.props! as DropdownProps & { lookup?: DataSetLookup }, this.dataSet);
+    const currentProps = this.props;
+    if (this.isConnected && this.dataSet && currentProps) {
+      this.render(this.container, currentProps, this.dataSet);
     }
   }
 
@@ -85,7 +86,8 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
       const option = document.createElement("option");
       option.value = opt.value;
       option.textContent = opt.label;
-      if (value !== undefined && String(value) === opt.value) {
+      const valueStr = typeof value === "string" ? value : typeof value === "number" ? String(value) : undefined;
+      if (valueStr !== undefined && valueStr === opt.value) {
         option.selected = true;
       }
       select.appendChild(option);
@@ -139,9 +141,9 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
 
   private requestOptionsData(options: DataSetOptions): void {
     this._optionsRequested = true;
-    const self = this;
+    const setOptionsDs = (ds: TypedDataSet): void => { this.optionsDataSet = ds; };
     const proxy = {
-      set dataSet(ds: TypedDataSet) { self.optionsDataSet = ds; },
+      set dataSet(ds: TypedDataSet) { setOptionsDs(ds); },
       set totalRows(_n: number) { /* ignored */ },
       set theme(_t: string) { /* ignored */ },
       set error(msg: string) { console.error("Options dataset error:", msg); },
@@ -166,7 +168,7 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
         composed: true,
         detail: {
           element: proxy,
-          lookup: { dataSetId: options.dataset, operations: ops } as DataSetLookup,
+          lookup: { dataSetId: options.dataset, operations: ops },
         },
       }),
     );
@@ -178,9 +180,12 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
 
     const filterField = options.filterField;
     this._cascadeListener = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail?.field === filterField) {
-        this._cascadeFilterValue = detail.value !== undefined ? String(detail.value) : undefined;
+      const detail = (e as CustomEvent<Record<string, unknown>>).detail;
+      if (detail.field === filterField) {
+        const detailValue: unknown = detail.value;
+        if (typeof detailValue === "string") this._cascadeFilterValue = detailValue;
+        else if (typeof detailValue === "number") this._cascadeFilterValue = String(detailValue);
+        else this._cascadeFilterValue = undefined;
         this._optionsRequested = false;
         this._optionsDataSet = undefined;
         this.requestOptionsData(options);
