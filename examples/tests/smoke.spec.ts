@@ -112,14 +112,21 @@ test.describe("Smoke — all dashboards load without errors", () => {
       test(`[known-fail] ${dashboard.name} — loads but may show errors (#35)`, async ({
         page,
       }) => {
+        const consoleErrors: string[] = [];
+        page.on("pageerror", (err) => consoleErrors.push(err.message));
+
         await openDashboard(page, dashboard.name);
         const container = page.locator("#dashboard-container");
         await expect(container).toBeVisible();
+        expect(consoleErrors, `Console errors in "${dashboard.name}"`).toHaveLength(0);
       });
       continue;
     }
 
     test(`${dashboard.name} — loads and renders without errors`, async ({ page }) => {
+      const consoleErrors: string[] = [];
+      page.on("pageerror", (err) => consoleErrors.push(err.message));
+
       await openDashboard(page, dashboard.name);
 
       const errorDiv = page.locator(
@@ -136,6 +143,8 @@ test.describe("Smoke — all dashboards load without errors", () => {
         const errors = statuses.filter((s) => s.status === "ERROR");
         expect(errors).toHaveLength(0);
       }
+
+      expect(consoleErrors, `Console errors in "${dashboard.name}"`).toHaveLength(0);
     });
   }
 });
