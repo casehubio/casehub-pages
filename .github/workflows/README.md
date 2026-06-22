@@ -16,7 +16,7 @@ Builds and tests the Java/Maven core modules:
 
 ---
 
-### 2. JavaScript CI ([ci-javascript.yml](ci-javascript.yml))
+### 2. JavaScript CI ([ci.yml](ci.yml))
 **Triggers:** Push/PR to main branch (when `packages/`, `components/`, `webapp/`, or dependency files change)
 
 Builds and tests all JavaScript/TypeScript workspace packages:
@@ -133,7 +133,7 @@ To test workflows locally, use [act](https://github.com/nektos/act):
 act push -j build-and-test -W .github/workflows/ci-java.yml
 
 # Test JavaScript CI
-act push -j build-and-test -W .github/workflows/ci-javascript.yml
+act push -j build-and-test -W .github/workflows/ci.yml
 
 # Test full webapp build
 act push -j build-full-webapp -W .github/workflows/build-publish-webapp.yml
@@ -149,7 +149,7 @@ Component tests are automatically included when using the standard `test` script
 ### Updating Node.js/Java Versions
 Update version numbers in:
 - [ci-java.yml](ci-java.yml) - `java-version`
-- [ci-javascript.yml](ci-javascript.yml) - `node-version`
+- [ci.yml](ci.yml) - `node-version`
 - [build-publish-webapp.yml](build-publish-webapp.yml) - Both `java-version` and `node-version`
 - [pr-validation.yml](pr-validation.yml) - Both versions
 - [codeql.yml](codeql.yml) - Both versions
