@@ -4,15 +4,10 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehub/pages-viz";
+import type { CasehubTable } from "@casehub/pages-viz";
+import type { CasehubTextInput } from "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-
-interface DataElement extends HTMLElement {
-  dataSet?: TypedDataSet;
-  editable?: boolean;
-  shadowRoot: ShadowRoot;
-}
 
 const YAML = `
 datasets:
@@ -76,12 +71,12 @@ describe("form editing + local save (real DOM)", () => {
   });
 
   async function setup(): Promise<{
-    tableEl: DataElement;
-    formInputs: DataElement[];
+    tableEl: CasehubTable;
+    formInputs: CasehubTextInput[];
   }> {
     site = await loadSite(target, YAML);
 
-    const tableEl = target.querySelector("casehub-table") as DataElement | null;
+    const tableEl = target.querySelector("casehub-table");
     expect(tableEl).not.toBeNull();
 
     const start = Date.now();
@@ -92,7 +87,7 @@ describe("form editing + local save (real DOM)", () => {
 
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    ) as DataElement[];
+    );
     expect(formInputs.length).toBe(2);
 
     const start2 = Date.now();
@@ -103,24 +98,24 @@ describe("form editing + local save (real DOM)", () => {
     return { tableEl: tableEl!, formInputs };
   }
 
-  function getTableRows(tableEl: DataElement): HTMLTableRowElement[] {
+  function getTableRows(tableEl: CasehubTable): HTMLTableRowElement[] {
     return Array.from(tableEl.shadowRoot.querySelectorAll("tbody tr"));
   }
 
-  function clickRow(tableEl: DataElement, rowIdx: number): void {
+  function clickRow(tableEl: CasehubTable, rowIdx: number): void {
     const rows = getTableRows(tableEl);
     expect(rows.length).toBeGreaterThan(rowIdx);
     const td = rows[rowIdx]!.querySelector("td")!;
     td.click();
   }
 
-  function getTableCellText(tableEl: DataElement, rowIdx: number, colIdx: number): string {
+  function getTableCellText(tableEl: CasehubTable, rowIdx: number, colIdx: number): string {
     const rows = getTableRows(tableEl);
     const cells = rows[rowIdx]!.querySelectorAll("td");
     return cells[colIdx]!.textContent;
   }
 
-  function getFormValue(input: DataElement, field: string): string | undefined {
+  function getFormValue(input: CasehubTextInput, field: string): string | undefined {
     if (!input.dataSet?.rows.length) return undefined;
     try {
       const cell = input.dataSet.rows[0]!.cell(field as import("@casehub/pages-data/dist/dataset/types.js").ColumnId);
@@ -383,7 +378,7 @@ pages:
 
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    ) as DataElement[];
+    );
     expect(formInputs.length).toBe(1);
 
     const start = Date.now();
@@ -398,7 +393,7 @@ pages:
 
     // Select the row and edit
     const rows = Array.from(
-      (target.querySelector("casehub-table") as DataElement).shadowRoot.querySelectorAll("tbody tr"),
+      target.querySelector("casehub-table")!.shadowRoot.querySelectorAll("tbody tr"),
     );
     rows[0]!.querySelector("td")!.click();
     await new Promise((r) => setTimeout(r, 100));

@@ -10,6 +10,8 @@ export interface CasehubDataRequestDetail {
 export abstract class CasehubElement<
   P extends VizComponentProps,
 > extends HTMLElement {
+  declare readonly shadowRoot: ShadowRoot;
+
   private _props: P | undefined;
   private _dataset: TypedDataSet | undefined;
   private _totalRows = -1;

@@ -96,7 +96,7 @@ describe("CasehubChartElement", () => {
 
       expect(echartsInit).toHaveBeenCalledTimes(1);
       expect(echartsInit).toHaveBeenCalledWith(
-        el.shadowRoot!.querySelector("div"),
+        el.shadowRoot.querySelector("div"),
         "",
         undefined,
       );
@@ -135,7 +135,7 @@ describe("CasehubChartElement", () => {
       expect(mockChart.dispose).toHaveBeenCalledTimes(1);
       expect(echartsInit).toHaveBeenCalledTimes(2);
       expect(echartsInit).toHaveBeenLastCalledWith(
-        el.shadowRoot!.querySelector("div"),
+        el.shadowRoot.querySelector("div"),
         "dark",
         undefined,
       );
@@ -314,26 +314,26 @@ describe("CasehubChartElement", () => {
   describe("container sizing from props", () => {
     it("numeric height sets container minHeight and height in px", () => {
       el.props = { lookup: mockLookup("s"), height: "200px" };
-      const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
+      const container = el.shadowRoot.querySelector("div") as HTMLDivElement;
       expect(container.style.minHeight).toBe("200px");
       expect(container.style.height).toBe("200px");
     });
 
     it("string height with units is passed through", () => {
       el.props = { lookup: mockLookup("s"), height: "50vh" };
-      const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
+      const container = el.shadowRoot.querySelector("div") as HTMLDivElement;
       expect(container.style.height).toBe("50vh");
     });
 
     it("numeric width sets container width in px", () => {
       el.props = { lookup: mockLookup("s"), width: "400px" };
-      const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
+      const container = el.shadowRoot.querySelector("div") as HTMLDivElement;
       expect(container.style.width).toBe("400px");
     });
 
     it("chart container has 300px minHeight and 100% width by default", () => {
       el.props = { lookup: mockLookup("s") };
-      const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
+      const container = el.shadowRoot.querySelector("div") as HTMLDivElement;
       expect(container.style.minHeight).toBe("300px");
       expect(container.style.width).toBe("100%");
     });

@@ -1,6 +1,8 @@
 // @casehub/viz — Web Component visualization wrappers
 // Components are registered via customElements.define() at import time.
 
+import "./custom-elements.js";
+
 // Base
 export { CasehubElement } from "./base/CasehubElement.js";
 export type { CasehubDataRequestDetail } from "./base/CasehubElement.js";

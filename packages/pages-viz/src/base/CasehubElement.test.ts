@@ -52,7 +52,7 @@ describe("CasehubElement", () => {
   describe("shadow DOM", () => {
     it("creates shadow root with a container div", () => {
       expect(el.shadowRoot).not.toBeNull();
-      const container = el.shadowRoot!.querySelector("div");
+      const container = el.shadowRoot.querySelector("div");
       expect(container).not.toBeNull();
     });
   });
@@ -214,7 +214,7 @@ describe("CasehubElement", () => {
       el.error = "broken";
       expect(el.renderCalls).toHaveLength(0);
 
-      const container = el.shadowRoot!.querySelector("div")!;
+      const container = el.shadowRoot.querySelector("div")!;
       expect(container.textContent).toContain("broken");
     });
   });
@@ -235,7 +235,7 @@ describe("CasehubElement", () => {
       el.props = { label: "test" };
       document.body.appendChild(el);
 
-      const container = el.shadowRoot!.querySelector("div")!;
+      const container = el.shadowRoot.querySelector("div")!;
       expect(container.textContent).toContain("Loading");
     });
   });

@@ -5,15 +5,10 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehub/pages-viz";
+import type { CasehubTable } from "@casehub/pages-viz";
+import type { CasehubTextInput } from "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-
-interface DataElement extends HTMLElement {
-  dataSet?: TypedDataSet;
-  editable?: boolean;
-  shadowRoot: ShadowRoot;
-}
 
 const YAML = `
 datasets:
@@ -79,25 +74,25 @@ describe("form ↔ table interaction (real DOM)", () => {
   });
 
   async function setup(): Promise<{
-    tableEl: DataElement;
-    formInputs: DataElement[];
+    tableEl: CasehubTable;
+    formInputs: CasehubTextInput[];
   }> {
     site = await loadSite(target, YAML);
 
-    const tableEl = target.querySelector("casehub-table") as DataElement;
+    const tableEl = target.querySelector("casehub-table");
     expect(tableEl).not.toBeNull();
 
     // Wait for table data
     const start = Date.now();
-    while (!tableEl.dataSet && Date.now() - start < 2000) {
+    while (!tableEl!.dataSet && Date.now() - start < 2000) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    expect(tableEl.dataSet).toBeTruthy();
+    expect(tableEl!.dataSet).toBeTruthy();
 
     // Wait for form inputs
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    ) as DataElement[];
+    );
     expect(formInputs.length).toBeGreaterThan(0);
 
     const start2 = Date.now();
@@ -105,14 +100,14 @@ describe("form ↔ table interaction (real DOM)", () => {
       await new Promise((r) => setTimeout(r, 10));
     }
 
-    return { tableEl, formInputs };
+    return { tableEl: tableEl!, formInputs };
   }
 
-  function getTableRows(tableEl: HTMLElement & { shadowRoot: ShadowRoot }): HTMLTableRowElement[] {
+  function getTableRows(tableEl: CasehubTable): HTMLTableRowElement[] {
     return Array.from(tableEl.shadowRoot.querySelectorAll("tbody tr"));
   }
 
-  function getFilterInput(tableEl: HTMLElement & { shadowRoot: ShadowRoot }): HTMLInputElement | null {
+  function getFilterInput(tableEl: CasehubTable): HTMLInputElement | null {
     return tableEl.shadowRoot.querySelector(".filter-box input");
   }
 
@@ -123,14 +118,14 @@ describe("form ↔ table interaction (real DOM)", () => {
     cell!.click();
   }
 
-  function typeInFilter(tableEl: HTMLElement & { shadowRoot: ShadowRoot }, text: string): void {
+  function typeInFilter(tableEl: CasehubTable, text: string): void {
     const input = getFilterInput(tableEl);
     expect(input).not.toBeNull();
     input!.value = text;
     input!.dispatchEvent(new Event("input"));
   }
 
-  function getFormValue(input: DataElement, field: string): string | undefined {
+  function getFormValue(input: CasehubTextInput, field: string): string | undefined {
     if (!input.dataSet?.rows.length) return undefined;
     try {
       const cell = input.dataSet.rows[0]!.cell(field as import("@casehub/pages-data/dist/dataset/types.js").ColumnId);

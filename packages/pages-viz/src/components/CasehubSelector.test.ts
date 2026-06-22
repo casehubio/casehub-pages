@@ -56,7 +56,7 @@ describe("CasehubSelector", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const select = el.shadowRoot!.querySelector("select");
+      const select = el.shadowRoot.querySelector("select");
       expect(select).not.toBeNull();
 
       const options = Array.from(select!.querySelectorAll("option"));
@@ -84,7 +84,7 @@ describe("CasehubSelector", () => {
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
 
-      const select = el.shadowRoot!.querySelector("select")!;
+      const select = el.shadowRoot.querySelector("select")!;
       select.selectedIndex = 2; // Select "B" (index 0 = All, 1 = A, 2 = B)
       select.dispatchEvent(new Event("change"));
 
@@ -111,7 +111,7 @@ describe("CasehubSelector", () => {
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
 
-      const select = el.shadowRoot!.querySelector("select")!;
+      const select = el.shadowRoot.querySelector("select")!;
       select.selectedIndex = 0; // All
       select.dispatchEvent(new Event("change"));
 
@@ -133,7 +133,7 @@ describe("CasehubSelector", () => {
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
 
-      const select = el.shadowRoot!.querySelector("select")!;
+      const select = el.shadowRoot.querySelector("select")!;
       select.selectedIndex = 1;
       select.dispatchEvent(new Event("change"));
 
@@ -158,7 +158,7 @@ describe("CasehubSelector", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const slider = el.shadowRoot!.querySelector("input[type='range']") as HTMLInputElement;
+      const slider = el.shadowRoot.querySelector("input[type='range']") as HTMLInputElement;
       expect(slider).not.toBeNull();
       expect(slider.min).toBe("10");
       expect(slider.max).toBe("50");
@@ -182,7 +182,7 @@ describe("CasehubSelector", () => {
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
 
-      const slider = el.shadowRoot!.querySelector("input[type='range']") as HTMLInputElement;
+      const slider = el.shadowRoot.querySelector("input[type='range']") as HTMLInputElement;
       slider.value = "20";
       slider.dispatchEvent(new Event("change"));
 
@@ -210,7 +210,7 @@ describe("CasehubSelector", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const chips = el.shadowRoot!.querySelectorAll(".label-chip");
+      const chips = el.shadowRoot.querySelectorAll(".label-chip");
       expect(chips).toHaveLength(3); // Red, Blue, Green
       expect(chips[0]!.textContent).toBe("Red");
       expect(chips[1]!.textContent).toBe("Blue");
@@ -234,7 +234,7 @@ describe("CasehubSelector", () => {
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
 
-      const chips = el.shadowRoot!.querySelectorAll(".label-chip");
+      const chips = el.shadowRoot.querySelectorAll(".label-chip");
       const redChip = chips[0] as HTMLButtonElement;
       redChip.click();
 
@@ -264,7 +264,7 @@ describe("CasehubSelector", () => {
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
 
-      const chip = el.shadowRoot!.querySelector(".label-chip") as HTMLButtonElement;
+      const chip = el.shadowRoot.querySelector(".label-chip") as HTMLButtonElement;
 
       // First click — select
       chip.click();
@@ -292,7 +292,7 @@ describe("CasehubSelector", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const style = el.shadowRoot!.querySelector("style");
+      const style = el.shadowRoot.querySelector("style");
       expect(style).not.toBeNull();
       expect(style!.textContent).toContain(":host");
       expect(style!.textContent).toContain("select");

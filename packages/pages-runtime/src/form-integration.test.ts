@@ -1,15 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehub/pages-viz";
+import type { CasehubTable, CasehubFormInput } from "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
 import { columnId } from "@casehub/pages-data/dist/dataset/types.js";
-
-interface DataElement extends HTMLElement {
-  dataSet?: TypedDataSet;
-  editable?: boolean;
-  error?: string;
-}
+import type { FormInputCommon } from "@casehub/pages-component";
 
 const CONTACT_MANAGER_YAML = `
 datasets:
@@ -96,15 +91,15 @@ describe("form integration — YAML end-to-end", () => {
     if (!condition()) throw new Error(`Timeout: ${msg}`);
   }
 
-  function getFormInputs(): DataElement[] {
+  function getFormInputs(): CasehubFormInput<FormInputCommon>[] {
     return Array.from(
-      target.querySelectorAll(
+      target.querySelectorAll<CasehubFormInput<FormInputCommon>>(
         "casehub-text-input, casehub-number-input, casehub-dropdown, casehub-checkbox, casehub-date-picker, casehub-textarea"
       ),
     );
   }
 
-  function getTable(): DataElement | null {
+  function getTable(): CasehubTable | null {
     return target.querySelector("casehub-table");
   }
 

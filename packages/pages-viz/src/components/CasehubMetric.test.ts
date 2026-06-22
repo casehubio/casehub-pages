@@ -59,13 +59,13 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const card = el.shadowRoot!.querySelector(".card");
+      const card = el.shadowRoot.querySelector(".card");
       expect(card).not.toBeNull();
 
-      const title = el.shadowRoot!.querySelector(".card .title");
+      const title = el.shadowRoot.querySelector(".card .title");
       expect(title?.textContent).toBe("My Metric");
 
-      const value = el.shadowRoot!.querySelector(".card .value");
+      const value = el.shadowRoot.querySelector(".card .value");
       expect(value?.textContent).toBe("42");
     });
 
@@ -82,10 +82,10 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const title = el.shadowRoot!.querySelector(".card .title");
+      const title = el.shadowRoot.querySelector(".card .title");
       expect(title?.textContent).toBe("");
 
-      const value = el.shadowRoot!.querySelector(".card .value");
+      const value = el.shadowRoot.querySelector(".card .value");
       expect(value?.textContent).toBe("100");
     });
 
@@ -100,7 +100,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const style = el.shadowRoot!.querySelector("style");
+      const style = el.shadowRoot.querySelector("style");
       expect(style).not.toBeNull();
       expect(style!.textContent).toContain(":host");
     });
@@ -124,13 +124,13 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const card2 = el.shadowRoot!.querySelector(".card2");
+      const card2 = el.shadowRoot.querySelector(".card2");
       expect(card2).not.toBeNull();
 
-      const value = el.shadowRoot!.querySelector(".card2 .value");
+      const value = el.shadowRoot.querySelector(".card2 .value");
       expect(value?.textContent).toBe("999");
 
-      const title = el.shadowRoot!.querySelector(".card2 .title");
+      const title = el.shadowRoot.querySelector(".card2 .title");
       expect(title?.textContent).toBe("Compact Metric");
     });
   });
@@ -153,13 +153,13 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const plainText = el.shadowRoot!.querySelector(".plain-text");
+      const plainText = el.shadowRoot.querySelector(".plain-text");
       expect(plainText).not.toBeNull();
 
-      const title = el.shadowRoot!.querySelector(".plain-text .title");
+      const title = el.shadowRoot.querySelector(".plain-text .title");
       expect(title?.textContent).toBe("Status");
 
-      const value = el.shadowRoot!.querySelector(".plain-text .value");
+      const value = el.shadowRoot.querySelector(".plain-text .value");
       expect(value?.textContent).toBe("Active");
     });
   });
@@ -182,16 +182,16 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const quota = el.shadowRoot!.querySelector(".quota");
+      const quota = el.shadowRoot.querySelector(".quota");
       expect(quota).not.toBeNull();
 
-      const value = el.shadowRoot!.querySelector(".quota .value");
+      const value = el.shadowRoot.querySelector(".quota .value");
       expect(value?.textContent).toBe("75");
 
-      const bar = el.shadowRoot!.querySelector(".quota .bar");
+      const bar = el.shadowRoot.querySelector(".quota .bar");
       expect(bar).not.toBeNull();
 
-      const barFill = el.shadowRoot!.querySelector(".quota .bar-fill") as HTMLElement;
+      const barFill = el.shadowRoot.querySelector(".quota .bar-fill") as HTMLElement;
       expect(barFill).not.toBeNull();
       // With no max, assume 100
       expect(barFill.style.width).toBe("75%");
@@ -212,10 +212,10 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const value = el.shadowRoot!.querySelector(".quota .value");
+      const value = el.shadowRoot.querySelector(".quota .value");
       expect(value?.textContent).toBe("60");
 
-      const barFill = el.shadowRoot!.querySelector(".quota .bar-fill") as HTMLElement;
+      const barFill = el.shadowRoot.querySelector(".quota .bar-fill") as HTMLElement;
       expect(barFill).not.toBeNull();
       // 60 / 200 = 30%
       expect(barFill.style.width).toBe("30%");
@@ -241,7 +241,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const custom = el.shadowRoot!.querySelector(".custom");
+      const custom = el.shadowRoot.querySelector(".custom");
       expect(custom).not.toBeNull();
       expect(custom?.textContent).toBe("Value: 123");
     });
@@ -262,7 +262,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const p = el.shadowRoot!.querySelector("p");
+      const p = el.shadowRoot.querySelector("p");
       expect(p?.textContent).toBe("5 items (5 total)");
     });
 
@@ -280,7 +280,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const html = el.shadowRoot!.querySelector("div div")?.innerHTML;
+      const html = el.shadowRoot.querySelector("div div")?.innerHTML;
       expect(html).toContain("42");
       expect(html).toContain("Total Goals");
       expect(html).not.toContain("${title}");
@@ -303,7 +303,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const value = el.shadowRoot!.querySelector(".card .value");
+      const value = el.shadowRoot.querySelector(".card .value");
       expect(value?.textContent).toBe("99");
     });
 
@@ -320,7 +320,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const value = el.shadowRoot!.querySelector(".card .value");
+      const value = el.shadowRoot.querySelector(".card .value");
       expect(value?.textContent).toBe("");
     });
 
@@ -337,7 +337,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const value = el.shadowRoot!.querySelector(".card .value");
+      const value = el.shadowRoot.querySelector(".card .value");
       expect(value?.textContent).toBe("Success");
     });
   });
@@ -359,7 +359,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const title = el.shadowRoot!.querySelector(".card .title");
+      const title = el.shadowRoot.querySelector(".card .title");
       expect(title?.textContent).toBe("Custom Title");
     });
 
@@ -376,7 +376,7 @@ describe("CasehubMetric", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const title = el.shadowRoot!.querySelector(".card .title");
+      const title = el.shadowRoot.querySelector(".card .title");
       expect(title?.textContent).toBe("");
     });
   });

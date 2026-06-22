@@ -115,7 +115,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
       const cursorPos = filterInput.selectionStart;
       this._currentPage = 0;
       this.rerender(props, dataset);
-      const restored = this.shadowRoot?.querySelector<HTMLInputElement>(".filter-box input");
+      const restored = this.shadowRoot.querySelector<HTMLInputElement>(".filter-box input");
       if (restored) {
         restored.focus();
         restored.setSelectionRange(cursorPos, cursorPos);

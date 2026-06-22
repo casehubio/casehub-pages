@@ -18,6 +18,8 @@ import type { CasehubNumberInput } from "./form-inputs/CasehubNumberInput.js";
 import type { CasehubTextInput } from "./form-inputs/CasehubTextInput.js";
 import type { CasehubTextarea } from "./form-inputs/CasehubTextarea.js";
 
+export {};
+
 declare global {
   interface HTMLElementTagNameMap {
     "casehub-table": CasehubTable;

@@ -12,8 +12,8 @@ describe("form input activation", () => {
   ): Promise<HTMLElement> {
     const start = Date.now();
     while (Date.now() - start < maxWait) {
-      const el = target.querySelector(selector);
-      if (el) return el as HTMLElement;
+      const el = target.querySelector<HTMLElement>(selector);
+      if (el) return el;
       await new Promise((r) => setTimeout(r, 10));
     }
     throw new Error(`Element not found: ${selector}`);
@@ -27,13 +27,13 @@ describe("form input activation", () => {
     const el = await waitForElement(target, selector);
     const vizTag = el.dataset.componentType;
     if (!vizTag) throw new Error(`No componentType on ${selector}`);
-    const vizEl = el.querySelector(`casehub-${vizTag}`) as (HTMLElement & { dataSet?: unknown }) | null;
+    const vizEl = el.querySelector<HTMLElement & { dataSet?: unknown }>(`casehub-${vizTag}`);
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    return vizEl as HTMLElement & { dataSet?: unknown };
+    return vizEl;
   }
 
   it("activates text-input as a data component with implicit lookup", async () => {
@@ -79,10 +79,7 @@ describe("form input activation", () => {
     expect(inputContainer).not.toBeNull();
 
     // The casehub-text-input custom element should be inside
-    const vizEl = inputContainer!.querySelector("casehub-text-input") as HTMLElement & {
-      editable?: boolean;
-      dataSet?: unknown;
-    };
+    const vizEl = inputContainer!.querySelector("casehub-text-input")!;
     expect(vizEl).not.toBeNull();
     expect(vizEl.editable).toBe(true);
 
@@ -114,11 +111,9 @@ describe("form input activation", () => {
     document.body.appendChild(target);
     const site = await loadSite(target, root);
 
-    const vizEl = target.querySelector("casehub-text-input") as HTMLElement & {
-      error?: string;
-    };
+    const vizEl = target.querySelector("casehub-text-input");
     expect(vizEl).not.toBeNull();
-    expect(vizEl.error).toBe("Form input requires page dataScope");
+    expect(vizEl!.error).toBe("Form input requires page dataScope");
 
     site.dispose();
     document.body.removeChild(target);
@@ -159,11 +154,9 @@ describe("form input activation", () => {
     document.body.appendChild(target);
     const site = await loadSite(target, root);
 
-    const vizEl = target.querySelector("casehub-text-input") as HTMLElement & {
-      editable?: boolean;
-    };
+    const vizEl = target.querySelector("casehub-text-input");
     expect(vizEl).not.toBeNull();
-    expect(vizEl.editable).toBe(false);
+    expect(vizEl!.editable).toBe(false);
 
     site.dispose();
     document.body.removeChild(target);
@@ -243,9 +236,7 @@ describe("form input activation", () => {
     await waitForData(target, "[data-component-id='dept-sel']");
 
     // Wait for text-input data
-    const textViz = target.querySelector("casehub-text-input") as HTMLElement & {
-      dataSet?: { rows: readonly { cell(id: string): { value: unknown; type: string } }[] };
-    };
+    const textViz = target.querySelector("casehub-text-input")!;
     expect(textViz).not.toBeNull();
     const startTime = Date.now();
     while (!textViz.dataSet && Date.now() - startTime < 500) {
@@ -256,8 +247,8 @@ describe("form input activation", () => {
     expect(textViz.dataSet!.rows.length).toBe(3);
 
     // Select "Sales" (row index 0 in the grouped output)
-    const selectorViz = target.querySelector("casehub-selector") as HTMLElement;
-    const selectEl = selectorViz.shadowRoot!.querySelector("select")!;
+    const selectorViz = target.querySelector("casehub-selector")!;
+    const selectEl = selectorViz.shadowRoot.querySelector("select")!;
     selectEl.value = "0";
     selectEl.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 50));

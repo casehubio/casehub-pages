@@ -43,11 +43,11 @@ function makeDataSetWithNames(
 }
 
 function queryRows(el: CasehubTable): HTMLTableRowElement[] {
-  return Array.from(el.shadowRoot!.querySelectorAll("tbody tr"));
+  return Array.from(el.shadowRoot.querySelectorAll("tbody tr"));
 }
 
 function queryHeaders(el: CasehubTable): HTMLTableCellElement[] {
-  return Array.from(el.shadowRoot!.querySelectorAll("thead th"));
+  return Array.from(el.shadowRoot.querySelectorAll("thead th"));
 }
 
 function queryCells(row: HTMLTableRowElement): (string | null)[] {
@@ -169,7 +169,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const style = el.shadowRoot!.querySelector("style");
+      const style = el.shadowRoot.querySelector("style");
       expect(style).not.toBeNull();
       expect(style!.textContent).toContain("border-collapse");
     });
@@ -222,7 +222,7 @@ describe("CasehubTable", () => {
       el.dataSet = ds;
 
       // Click next (4th button: first, prev, next, last)
-      const pagingBtns = el.shadowRoot!.querySelectorAll(".paging button");
+      const pagingBtns = el.shadowRoot.querySelectorAll(".paging button");
       const nextBtn = pagingBtns[2] as HTMLButtonElement;
       expect(nextBtn).not.toBeNull();
       nextBtn.click();
@@ -244,7 +244,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const paging = el.shadowRoot!.querySelector(".paging");
+      const paging = el.shadowRoot.querySelector(".paging");
       expect(paging).not.toBeNull();
       const range = paging!.querySelector(".range")!;
       expect(range.textContent).toContain("1");
@@ -262,7 +262,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const btns = el.shadowRoot!.querySelectorAll(".paging button");
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
       expect((btns[0] as HTMLButtonElement).disabled).toBe(true); // first
       expect((btns[1] as HTMLButtonElement).disabled).toBe(true); // prev
     });
@@ -279,10 +279,10 @@ describe("CasehubTable", () => {
       el.dataSet = ds;
 
       // Navigate to last page via last button
-      const btns = el.shadowRoot!.querySelectorAll(".paging button");
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
       (btns[3] as HTMLButtonElement).click(); // last
 
-      const btnsAfter = el.shadowRoot!.querySelectorAll(".paging button");
+      const btnsAfter = el.shadowRoot.querySelectorAll(".paging button");
       expect((btnsAfter[2] as HTMLButtonElement).disabled).toBe(true); // next
       expect((btnsAfter[3] as HTMLButtonElement).disabled).toBe(true); // last
     });
@@ -298,7 +298,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const paging = el.shadowRoot!.querySelector(".paging");
+      const paging = el.shadowRoot.querySelector(".paging");
       expect(paging).toBeNull();
     });
 
@@ -314,11 +314,11 @@ describe("CasehubTable", () => {
       el.dataSet = ds;
 
       // Go to page 2 via next
-      const btns = el.shadowRoot!.querySelectorAll(".paging button");
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
       (btns[2] as HTMLButtonElement).click(); // next
 
       // Go back via prev
-      const btns2 = el.shadowRoot!.querySelectorAll(".paging button");
+      const btns2 = el.shadowRoot.querySelectorAll(".paging button");
       (btns2[1] as HTMLButtonElement).click(); // prev
 
       const rows = queryRows(el);
@@ -345,7 +345,7 @@ describe("CasehubTable", () => {
       el.addEventListener("casehub-page", (e) => events.push(e as CustomEvent));
 
       // Click next page (3rd button: first, prev, next, last)
-      const btns = el.shadowRoot!.querySelectorAll(".paging button");
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
       (btns[2] as HTMLButtonElement).click();
 
       expect(events).toHaveLength(1);
@@ -381,7 +381,7 @@ describe("CasehubTable", () => {
       el.totalRows = 10;
       el.dataSet = ds;
 
-      const paging = el.shadowRoot!.querySelector(".paging");
+      const paging = el.shadowRoot.querySelector(".paging");
       expect(paging!.textContent).toContain("5"); // 10 / 2 = 5 pages
     });
   });
@@ -581,7 +581,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const input = el.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input");
+      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input");
       expect(input).not.toBeNull();
       expect(input!.placeholder).toBe("Filter");
     });
@@ -595,7 +595,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const input = el.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input")!;
+      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "London";
       input.dispatchEvent(new Event("input"));
 
@@ -614,7 +614,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const input = el.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input")!;
+      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "ali";
       input.dispatchEvent(new Event("input"));
 
@@ -633,11 +633,11 @@ describe("CasehubTable", () => {
       el.dataSet = ds;
 
       // Go to page 2
-      const btns = el.shadowRoot!.querySelectorAll(".paging button");
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
       (btns[2] as HTMLButtonElement).click();
 
       // Now filter
-      const input = el.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input")!;
+      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "A";
       input.dispatchEvent(new Event("input"));
 
@@ -654,12 +654,12 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const input = el.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input")!;
+      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "e";
       input.dispatchEvent(new Event("input"));
 
       // "Alice", "Charlie", "Dave", "Eve" match "e" → 4 results
-      const range = el.shadowRoot!.querySelector(".paging .range")!;
+      const range = el.shadowRoot.querySelector(".paging .range")!;
       expect(range.textContent).toContain("4");
     });
 
@@ -672,7 +672,7 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const input = el.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input")!;
+      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "Alice";
       input.dispatchEvent(new Event("input"));
       expect(queryRows(el)).toHaveLength(1);
@@ -691,12 +691,12 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
-      const input = el.shadowRoot!.querySelector<HTMLInputElement>(".filter-box input")!;
+      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.focus();
       input.value = "A";
       input.dispatchEvent(new Event("input"));
 
-      const active = el.shadowRoot!.activeElement;
+      const active = el.shadowRoot.activeElement;
       expect(active?.tagName).toBe("INPUT");
     });
   });
@@ -716,7 +716,7 @@ describe("CasehubTable", () => {
       el.dataSet = ds1;
 
       // Navigate to page 2 via next button
-      const btns = el.shadowRoot!.querySelectorAll(".paging button");
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
       (btns[2] as HTMLButtonElement).click();
 
       // New data arrives — page should reset to 0

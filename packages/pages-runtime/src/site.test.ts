@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "@casehub/pages-component/dist/model/types.js";
 import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import "@casehub/pages-viz"; // side-effect: registers all custom elements
+import "@casehub/pages-viz";
+import type { CasehubTable } from "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 
 function simpleSite(): Component {
@@ -324,13 +325,13 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     selector: string,
     maxWait = 500,
   ): Promise<HTMLElement> {
-    const el = target.querySelector(selector) as HTMLElement | null;
+    const el = target.querySelector<HTMLElement>(selector);
     if (!el) throw new Error(`Element not found: ${selector}`);
     const componentType = el.dataset.componentType;
     if (!componentType) throw new Error(`No componentType on ${selector}`);
-    const vizEl = el.querySelector(
+    const vizEl = el.querySelector<HTMLElement & { dataSet?: unknown }>(
       `casehub-${componentType}`,
-    ) as (HTMLElement & { dataSet?: unknown }) | null;
+    );
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {
@@ -424,11 +425,10 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     await waitForData(target, "[data-component-id='chart-1']");
 
     // Find the selector's dropdown in shadow DOM
-    const selectorViz = selectorContainer.querySelector("casehub-selector") as HTMLElement;
-    const shadow = selectorViz.shadowRoot;
-    expect(shadow).toBeTruthy();
+    const selectorViz = selectorContainer.querySelector("casehub-selector");
+    expect(selectorViz).toBeTruthy();
 
-    const selectEl = shadow!.querySelector("select");
+    const selectEl = selectorViz!.shadowRoot.querySelector("select");
     expect(selectEl).toBeTruthy();
 
     // The dropdown should have "All" + distinct values
@@ -443,13 +443,13 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     await new Promise((r) => setTimeout(r, 50));
 
     // The bar chart should now show filtered data
-    const chartViz = target.querySelector(
+    const chartViz = target.querySelector<CasehubTable>(
       "[data-component-id='chart-1'] casehub-table",
-    ) as HTMLElement & { dataSet?: { rows: readonly unknown[] } };
+    );
 
-    expect(chartViz.dataSet).toBeTruthy();
+    expect(chartViz!.dataSet).toBeTruthy();
     // After filtering to "Computers", bar chart should show only Scanner + Printer (2 rows)
-    expect(chartViz.dataSet!.rows.length).toBe(2);
+    expect(chartViz!.dataSet!.rows.length).toBe(2);
 
     site.dispose();
     document.body.removeChild(target);
@@ -545,14 +545,14 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     await waitForData(target, "[data-component-id='filter-tbl']");
 
     // Table should have 3 rows (X, Y, Z) before filtering
-    const tblViz = target.querySelector(
+    const tblViz = target.querySelector<CasehubTable>(
       "[data-component-id='filter-tbl'] casehub-table",
-    ) as HTMLElement & { dataSet?: { rows: readonly unknown[] } };
+    )!;
     expect(tblViz.dataSet!.rows.length).toBe(3);
 
     // Select "A" in the selector dropdown
-    const selViz = selContainer.querySelector("casehub-selector") as HTMLElement;
-    const select = selViz.shadowRoot!.querySelector("select")!;
+    const selViz = selContainer.querySelector("casehub-selector")!;
+    const select = selViz.shadowRoot.querySelector("select")!;
     select.value = "0";
     select.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 50));

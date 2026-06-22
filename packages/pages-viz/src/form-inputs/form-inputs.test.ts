@@ -59,7 +59,7 @@ describe("CasehubTextInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input).not.toBeNull();
     expect(input.value).toBe("Alice");
   });
@@ -71,7 +71,7 @@ describe("CasehubTextInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const label = el.shadowRoot!.querySelector("label")!;
+    const label = el.shadowRoot.querySelector("label")!;
     expect(label.textContent).toBe("Full Name");
   });
 
@@ -87,7 +87,7 @@ describe("CasehubTextInput", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "Bob";
     input.dispatchEvent(new Event("input"));
 
@@ -109,7 +109,7 @@ describe("CasehubTextInput", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "Charlie";
     input.dispatchEvent(new Event("blur"));
 
@@ -127,7 +127,7 @@ describe("CasehubTextInput", () => {
     const events: Event[] = [];
     el.addEventListener("casehub-field-change", (e: Event) => events.push(e));
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "test";
     input.dispatchEvent(new Event("input"));
 
@@ -141,7 +141,7 @@ describe("CasehubTextInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.readOnly).toBe(true);
   });
 
@@ -152,7 +152,7 @@ describe("CasehubTextInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.maxLength).toBe(10);
   });
 });
@@ -179,7 +179,7 @@ describe("CasehubNumberInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.type).toBe("number");
     expect(input.value).toBe("42");
   });
@@ -196,7 +196,7 @@ describe("CasehubNumberInput", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "25";
     input.dispatchEvent(new Event("input"));
 
@@ -217,7 +217,7 @@ describe("CasehubNumberInput", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "abc";
     input.dispatchEvent(new Event("input"));
 
@@ -238,7 +238,7 @@ describe("CasehubNumberInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.min).toBe("0");
     expect(input.max).toBe("100");
     expect(input.step).toBe("5");
@@ -267,7 +267,7 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.checked).toBe(true);
   });
 
@@ -278,7 +278,7 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.checked).toBe(true);
   });
 
@@ -289,7 +289,7 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.checked).toBe(false);
   });
 
@@ -305,7 +305,7 @@ describe("CasehubCheckbox", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.checked = true;
     input.dispatchEvent(new Event("change"));
 
@@ -321,7 +321,7 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const label = el.shadowRoot!.querySelector("label")!;
+    const label = el.shadowRoot.querySelector("label")!;
     expect(label.textContent).toBe("Is Active");
   });
 });
@@ -348,7 +348,7 @@ describe("CasehubTextarea", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const textarea = el.shadowRoot!.querySelector("textarea")!;
+    const textarea = el.shadowRoot.querySelector("textarea")!;
     expect(textarea).not.toBeNull();
     expect(textarea.value).toBe("Hello\nWorld");
   });
@@ -360,7 +360,7 @@ describe("CasehubTextarea", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const textarea = el.shadowRoot!.querySelector("textarea")!;
+    const textarea = el.shadowRoot.querySelector("textarea")!;
     expect(textarea.rows).toBe(5);
   });
 
@@ -376,7 +376,7 @@ describe("CasehubTextarea", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const textarea = el.shadowRoot!.querySelector("textarea")!;
+    const textarea = el.shadowRoot.querySelector("textarea")!;
     textarea.value = "Updated text";
     textarea.dispatchEvent(new Event("input"));
 
@@ -413,7 +413,7 @@ describe("CasehubDatePicker", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.type).toBe("date");
     expect(input.value).toBe("2024-01-15");
   });
@@ -425,7 +425,7 @@ describe("CasehubDatePicker", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.value).toBe("2024-01-15");
   });
 
@@ -441,7 +441,7 @@ describe("CasehubDatePicker", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "2025-12-31";
     input.dispatchEvent(new Event("change"));
 
@@ -462,7 +462,7 @@ describe("CasehubDatePicker", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     expect(input.min).toBe("2000-01-01");
     expect(input.max).toBe("2030-12-31");
   });
@@ -494,7 +494,7 @@ describe("CasehubDropdown", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const select = el.shadowRoot!.querySelector("select")!;
+    const select = el.shadowRoot.querySelector("select")!;
     const options = Array.from(select.querySelectorAll("option"));
     expect(options).toHaveLength(3);
     expect(options[0]!.textContent).toBe("active");
@@ -513,7 +513,7 @@ describe("CasehubDropdown", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const select = el.shadowRoot!.querySelector("select")!;
+    const select = el.shadowRoot.querySelector("select")!;
     expect(select.value).toBe("inactive");
   });
 
@@ -533,7 +533,7 @@ describe("CasehubDropdown", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const select = el.shadowRoot!.querySelector("select")!;
+    const select = el.shadowRoot.querySelector("select")!;
     select.value = "inactive";
     select.dispatchEvent(new Event("change"));
 
@@ -553,7 +553,7 @@ describe("CasehubDropdown", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const select = el.shadowRoot!.querySelector("select")!;
+    const select = el.shadowRoot.querySelector("select")!;
     expect(Array.from(select.querySelectorAll("option"))).toHaveLength(0);
   });
 
@@ -574,7 +574,7 @@ describe("CasehubDropdown", () => {
     );
     el.optionsDataSet = optionsDs;
 
-    const select = el.shadowRoot!.querySelector("select")!;
+    const select = el.shadowRoot.querySelector("select")!;
     const opts = Array.from(select.querySelectorAll("option"));
     expect(opts).toHaveLength(3);
     expect(opts[0]!.value).toBe("electronics");
@@ -602,7 +602,7 @@ describe("CasehubDropdown", () => {
     );
     el.optionsDataSet = optionsDs;
 
-    const select = el.shadowRoot!.querySelector("select")!;
+    const select = el.shadowRoot.querySelector("select")!;
     expect(select.value).toBe("clothing");
   });
 

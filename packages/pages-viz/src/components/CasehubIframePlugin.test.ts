@@ -41,7 +41,7 @@ describe("CasehubIframePlugin", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    const iframe = element.shadowRoot!.querySelector("iframe");
+    const iframe = element.shadowRoot.querySelector("iframe");
     expect(iframe).toBeTruthy();
     expect(iframe!.src).toContain("/pages/component/echarts/index.html");
   });
@@ -61,7 +61,7 @@ describe("CasehubIframePlugin", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    const iframe = element.shadowRoot!.querySelector("iframe");
+    const iframe = element.shadowRoot.querySelector("iframe");
     expect(iframe).toBeTruthy();
     expect(iframe!.style.width).toBe("800px");
     expect(iframe!.style.height).toBe("600px");
@@ -80,7 +80,7 @@ describe("CasehubIframePlugin", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    const iframe = element.shadowRoot!.querySelector("iframe");
+    const iframe = element.shadowRoot.querySelector("iframe");
     expect(iframe).toBeTruthy();
     expect(iframe!.style.width).toBe("100%");
     expect(iframe!.style.height).toBe("100%");
@@ -101,7 +101,7 @@ describe("CasehubIframePlugin", () => {
     element.dataSet = dataset;
 
     // Mock iframe contentWindow
-    const iframe = element.shadowRoot!.querySelector("iframe");
+    const iframe = element.shadowRoot.querySelector("iframe");
     if (iframe) {
       Object.defineProperty(iframe, "contentWindow", {
         value: { postMessage: postMessageSpy },
@@ -146,7 +146,7 @@ describe("CasehubIframePlugin", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    const iframe = element.shadowRoot!.querySelector("iframe");
+    const iframe = element.shadowRoot.querySelector("iframe");
     if (iframe) {
       Object.defineProperty(iframe, "contentWindow", {
         value: { postMessage: postMessageSpy },
@@ -300,7 +300,7 @@ describe("CasehubIframePlugin", () => {
     element.props = props1;
     element.dataSet = dataset;
 
-    const iframe1 = element.shadowRoot!.querySelector("iframe");
+    const iframe1 = element.shadowRoot.querySelector("iframe");
     expect(iframe1).toBeTruthy();
     expect(iframe1!.src).toContain("/pages/component/echarts/index.html");
 
@@ -312,7 +312,7 @@ describe("CasehubIframePlugin", () => {
     element.props = props2;
     element.dataSet = dataset;
 
-    const iframe2 = element.shadowRoot!.querySelector("iframe");
+    const iframe2 = element.shadowRoot.querySelector("iframe");
     expect(iframe2).toBeTruthy();
     expect(iframe2!.src).toContain("/pages/component/llm-prompter/index.html");
     expect(iframe2).not.toBe(iframe1); // Different iframe instance
@@ -333,7 +333,7 @@ describe("CasehubIframePlugin", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    const iframe = element.shadowRoot!.querySelector("iframe");
+    const iframe = element.shadowRoot.querySelector("iframe");
     expect(iframe).toBeTruthy();
 
     // Mock contentWindow but don't fire load yet

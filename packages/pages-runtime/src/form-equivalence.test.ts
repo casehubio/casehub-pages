@@ -6,12 +6,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import "@casehub/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
 import { columnId, ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
-
-interface DataElement extends HTMLElement {
-  dataSet?: TypedDataSet;
-}
 import {
   page,
   textInput,
@@ -245,8 +240,8 @@ describe("YAML ↔ TS equivalence", () => {
     const yamlTable = yamlTarget.querySelector("casehub-table");
     const tsTable = tsTarget.querySelector("casehub-table");
 
-    expect((yamlTable as DataElement | null)?.dataSet?.rows.length).toBe(3);
-    expect((tsTable as DataElement | null)?.dataSet?.rows.length).toBe(3);
+    expect(yamlTable?.dataSet?.rows.length).toBe(3);
+    expect(tsTable?.dataSet?.rows.length).toBe(3);
 
     const yamlInputs = yamlTarget.querySelectorAll("casehub-text-input");
     const tsInputs = tsTarget.querySelectorAll("casehub-text-input");
@@ -266,7 +261,7 @@ describe("YAML ↔ TS equivalence", () => {
     const inputs = tsTarget.querySelectorAll("casehub-text-input");
     expect(inputs.length).toBeGreaterThan(0);
     for (const input of inputs) {
-      expect((input as HTMLElement & { editable?: boolean }).editable).toBe(true);
+      expect(input.editable).toBe(true);
     }
 
     document.body.removeChild(tsTarget);
