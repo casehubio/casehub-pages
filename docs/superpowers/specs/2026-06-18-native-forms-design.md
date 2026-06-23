@@ -118,7 +118,7 @@ page("Employee Form",
 
 Note: `page()` uses a variadic signature `(name: string, ...args: (Component | PageOptions)[])`. Components are listed as separate arguments. `PageOptions` is the last argument, detected by `isPageOptions()`. No array wrapper.
 
-### DataScope Type (model — `@casehub/ui`)
+### DataScope Type (model — `@casehubio/ui`)
 
 ```typescript
 export interface DataScopeRef {
@@ -134,7 +134,7 @@ export interface DataScope {
 
 Filter values can be `$ref` objects (runtime binding to a parent record's column) or plain strings (static filter, e.g. `{ status: "active" }`). When all filter entries are static strings, no parent record lookup is needed — the filters are applied directly as `EQUALS_TO` operations.
 
-### SaveConfig Type (model — `@casehub/ui`)
+### SaveConfig Type (model — `@casehubio/ui`)
 
 ```typescript
 export interface SaveConfig {
@@ -145,7 +145,7 @@ export interface SaveConfig {
 }
 ```
 
-`SaveConfig` is model-level — all fields are primitive types or simple unions. The runtime resolves `adapter` (a name) to a `SaveAdapter` implementation. `SaveAdapter` lives in `@casehub/runtime`, not in the model.
+`SaveConfig` is model-level — all fields are primitive types or simple unions. The runtime resolves `adapter` (a name) to a `SaveAdapter` implementation. `SaveAdapter` lives in `@casehubio/runtime`, not in the model.
 
 ### PageProps Extension
 
@@ -492,7 +492,7 @@ target.addEventListener("casehub-field-change", ((e: Event) => {
 }) as EventListener);
 ```
 
-### SaveConfig (model — `@casehub/ui`)
+### SaveConfig (model — `@casehubio/ui`)
 
 ```typescript
 export interface SaveConfig {
@@ -533,7 +533,7 @@ Timer state lives in the runtime, keyed by pagePath:
 type SaveTimers = Map<string, ReturnType<typeof setTimeout>>;
 ```
 
-### SaveAdapter (runtime — `@casehub/runtime`)
+### SaveAdapter (runtime — `@casehubio/runtime`)
 
 ```typescript
 export interface SaveAdapter {
@@ -765,7 +765,7 @@ No custom validation rules engine. The type schema (dataset columns) plus compon
 
 ## DSL Builder Functions
 
-New builders in `@casehub/ui/dsl/builders.ts`, following the existing pattern (frozen objects, type-safe props):
+New builders in `@casehubio/ui/dsl/builders.ts`, following the existing pattern (frozen objects, type-safe props):
 
 ```typescript
 export function textInput(props: TextInputProps): Component;
@@ -818,19 +818,19 @@ Form inputs follow existing package boundaries — no separate `casehub-forms` p
 
 | Concern | Package | Files |
 |---------|---------|-------|
-| Props interfaces (`TextInputProps`, etc.) | `@casehub/ui` | `model/form-input-types.ts` (new) |
-| `FormInputCommon` base interface | `@casehub/ui` | `model/form-input-types.ts` |
-| `DataScope`, `SaveConfig` types | `@casehub/ui` | `model/page-types.ts` (extended) |
-| ComponentTypeRegistry additions | `@casehub/ui` | `model/type-guards.ts` (extended) |
-| YAML desugar rules | `@casehub/ui` | `parser/component-desugar.ts` (extended) |
-| DSL builder functions | `@casehub/ui` | `dsl/builders.ts` (extended) |
-| Web Components (`CasehubTextInput`, etc.) | `@casehub/viz` | `form-inputs/` (new directory) |
-| `SaveAdapter` interface | `@casehub/runtime` | `save-adapter.ts` (new) |
-| `EditState`, save trigger logic | `@casehub/runtime` | `edit-state.ts` (new) |
-| `DataScopeRegistry` | `@casehub/runtime` | `data-scope-registry.ts` (new) |
-| Adapter implementations (rest, local) | `@casehub/runtime` | `adapters/` (new directory) |
-| Hierarchical filter collection | `@casehub/runtime` | `cross-filter.ts` (extended) |
-| `casehub-field-change` handler | `@casehub/runtime` | `site.ts` (extended) |
+| Props interfaces (`TextInputProps`, etc.) | `@casehubio/ui` | `model/form-input-types.ts` (new) |
+| `FormInputCommon` base interface | `@casehubio/ui` | `model/form-input-types.ts` |
+| `DataScope`, `SaveConfig` types | `@casehubio/ui` | `model/page-types.ts` (extended) |
+| ComponentTypeRegistry additions | `@casehubio/ui` | `model/type-guards.ts` (extended) |
+| YAML desugar rules | `@casehubio/ui` | `parser/component-desugar.ts` (extended) |
+| DSL builder functions | `@casehubio/ui` | `dsl/builders.ts` (extended) |
+| Web Components (`CasehubTextInput`, etc.) | `@casehubio/viz` | `form-inputs/` (new directory) |
+| `SaveAdapter` interface | `@casehubio/runtime` | `save-adapter.ts` (new) |
+| `EditState`, save trigger logic | `@casehubio/runtime` | `edit-state.ts` (new) |
+| `DataScopeRegistry` | `@casehubio/runtime` | `data-scope-registry.ts` (new) |
+| Adapter implementations (rest, local) | `@casehubio/runtime` | `adapters/` (new directory) |
+| Hierarchical filter collection | `@casehubio/runtime` | `cross-filter.ts` (extended) |
+| `casehub-field-change` handler | `@casehubio/runtime` | `site.ts` (extended) |
 
 ## Gallery Example: Contact Manager
 

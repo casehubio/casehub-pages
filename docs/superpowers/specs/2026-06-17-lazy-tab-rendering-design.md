@@ -203,7 +203,7 @@ On initial load with a URL like `#/page/Sales/Revenue`, each lazy container in t
 
 ## Testing strategy
 
-### @casehub/component unit tests
+### @casehubio/component unit tests
 
 **render.test.ts:**
 - Lazy types: only first slot's children rendered. Other slot containers exist but are empty.
@@ -229,7 +229,7 @@ On initial load with a URL like `#/page/Sales/Revenue`, each lazy container in t
 - `slotSwapRegistry` stores and retrieves swap functions keyed by element.
 - WeakMap behavior: no retention after element is GC-eligible (structural, not runtime-testable — document only).
 
-### @casehub/runtime unit tests
+### @casehubio/runtime unit tests
 
 **site.test.ts:**
 - Registry eviction: after tab switch, disconnected entries removed.
@@ -241,16 +241,16 @@ On initial load with a URL like `#/page/Sales/Revenue`, each lazy container in t
 
 | File | Package | Change |
 |------|---------|--------|
-| `renderer/slot-swap.ts` | `@casehub/component` | **New** — `SwapFn`, `slotSwapRegistry` WeakMap, `dispatchSlotChange` |
-| `renderer/render.ts` | `@casehub/component` | `LAZY_TYPES` set, lazy/eager split in slot rendering |
-| `renderer/interactive.ts` | `@casehub/component` | Accept `LazyConfig`, build swap function per wire-type, register in swap registry, click handlers delegate to swap function, delete local `dispatchSlotChange` |
-| `renderer/activate-slot.ts` | `@casehub/component` | Check swap registry before display-toggle, import `dispatchSlotChange` from `slot-swap.ts`, delete local dispatch |
-| `site.ts` | `@casehub/runtime` | Evict disconnected registry entries in `casehub-slot-change` handler |
-| `renderer/render.test.ts` | `@casehub/component` | Lazy/eager rendering assertions |
-| `renderer/interactive.test.ts` | `@casehub/component` | Swap function delegation, sidebar lazy, carousel index, stack, re-render |
-| `renderer/activate-slot.test.ts` | `@casehub/component` | Swap registry integration, accordion fallback |
-| `renderer/slot-swap.test.ts` | `@casehub/component` | `dispatchSlotChange` and registry tests |
-| `site.test.ts` | `@casehub/runtime` | Registry eviction, filter, navigate, data-request tests |
+| `renderer/slot-swap.ts` | `@casehubio/component` | **New** — `SwapFn`, `slotSwapRegistry` WeakMap, `dispatchSlotChange` |
+| `renderer/render.ts` | `@casehubio/component` | `LAZY_TYPES` set, lazy/eager split in slot rendering |
+| `renderer/interactive.ts` | `@casehubio/component` | Accept `LazyConfig`, build swap function per wire-type, register in swap registry, click handlers delegate to swap function, delete local `dispatchSlotChange` |
+| `renderer/activate-slot.ts` | `@casehubio/component` | Check swap registry before display-toggle, import `dispatchSlotChange` from `slot-swap.ts`, delete local dispatch |
+| `site.ts` | `@casehubio/runtime` | Evict disconnected registry entries in `casehub-slot-change` handler |
+| `renderer/render.test.ts` | `@casehubio/component` | Lazy/eager rendering assertions |
+| `renderer/interactive.test.ts` | `@casehubio/component` | Swap function delegation, sidebar lazy, carousel index, stack, re-render |
+| `renderer/activate-slot.test.ts` | `@casehubio/component` | Swap registry integration, accordion fallback |
+| `renderer/slot-swap.test.ts` | `@casehubio/component` | `dispatchSlotChange` and registry tests |
+| `site.test.ts` | `@casehubio/runtime` | Registry eviction, filter, navigate, data-request tests |
 
 **No changes to:** `activation.ts`, `data-pipeline.ts`, `cross-filter.ts`, `navigation.ts`, `registry.ts`, `layout.ts`, `slots.ts`
 

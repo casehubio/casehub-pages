@@ -1,5 +1,5 @@
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { VizComponentProps } from "./types.js";
 
 export interface CasehubDataRequestDetail {

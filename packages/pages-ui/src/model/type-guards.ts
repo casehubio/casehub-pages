@@ -1,12 +1,12 @@
 import type { Component } from "./types.js";
-import type { TypedComponent } from "@casehub/pages-component";
+import type { TypedComponent } from "@casehubio/pages-component";
 
 // Re-export everything from pages-component
 export type {
   ComponentTypeRegistry,
   ComponentType,
   TypedComponent,
-} from "@casehub/pages-component";
+} from "@casehubio/pages-component";
 export {
   getProps,
   isComponentType,
@@ -46,7 +46,7 @@ export {
   isCheckbox,
   isDatePicker,
   isTextarea,
-} from "@casehub/pages-component";
+} from "@casehubio/pages-component";
 
 // isPage is a pages-ui utility (moved from pages-component)
 export function isPage(c: Component): c is TypedComponent<"page"> {

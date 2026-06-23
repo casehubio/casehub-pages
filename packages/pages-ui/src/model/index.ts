@@ -66,7 +66,7 @@ export type {
   SelectorProps,
   MapProps,
   IframePluginProps,
-} from "@casehub/pages-component";
+} from "@casehubio/pages-component";
 
 // Form input types (re-exported from pages-component)
 export type {
@@ -79,8 +79,8 @@ export type {
   CheckboxProps,
   DatePickerProps,
   TextareaProps,
-} from "@casehub/pages-component";
-export { isFixedOptions } from "@casehub/pages-component";
+} from "@casehubio/pages-component";
+export { isFixedOptions } from "@casehubio/pages-component";
 
 // Type guards
 export type { ComponentTypeRegistry } from "./type-guards.js";

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import type { Component } from "@casehub/pages-component/dist/model/types.js";
-import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import "@casehub/pages-viz";
-import type { CasehubTable } from "@casehub/pages-viz";
+import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import "@casehubio/pages-viz";
+import type { CasehubTable } from "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 
 function simpleSite(): Component {

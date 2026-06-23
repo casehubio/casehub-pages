@@ -1,4 +1,4 @@
-import { page, barChart } from "@casehub/ui";
+import { page, barChart } from "@casehubio/ui";
 
 export default page(
   barChart({

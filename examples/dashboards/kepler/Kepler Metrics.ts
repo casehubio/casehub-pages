@@ -1,6 +1,6 @@
-import { page, title, metric, barChart, timeseries, markdown, selector, tabs, div, columns, withStyle, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, title, metric, barChart, timeseries, markdown, selector, tabs, div, columns, withStyle, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Kepler Metrics.yaml"
 // Kepler energy consumption metrics with multi-page navigation

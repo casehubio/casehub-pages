@@ -1,12 +1,15 @@
 {
-  "name": "@casehub/pages-iframe-api",
-  "version": "0.0.0",
+  "name": "@casehubio/pages-iframe-api",
+  "version": "0.2.0",
   "description": "CaseHub Pages iframe component API",
   "license": "Apache-2.0",
   "keywords": [],
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "bugs": {
     "url": "https://github.com/casehubio/casehub-pages/issues"
@@ -31,7 +34,7 @@
     "@babel/core": "^7.28.6",
     "@babel/preset-env": "^7.28.6",
     "@babel/preset-react": "^7.28.5",
-    "@casehub/pages-tsconfig": "workspace:*",
+    "@casehubio/pages-tsconfig": "workspace:*",
     "@testing-library/jest-dom": "^6.4.2",
     "@types/jest": "^29.5.12",
     "@types/jest-when": "^3.5.5",

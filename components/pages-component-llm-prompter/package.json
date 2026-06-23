@@ -1,7 +1,6 @@
 {
-  "name": "@casehub/pages-component-llm-prompter",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@casehubio/pages-component-llm-prompter",
+  "version": "0.2.0",
   "description": "CaseHub Pages LLM prompter component",
   "license": "Apache-2.0",
   "homepage": "https://github.com/casehubio/casehub-pages",
@@ -9,11 +8,17 @@
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "bugs": {
     "url": "https://github.com/casehubio/casehub-pages/issues"
   },
   "types": "./dist/index.d.ts",
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "yarn test && rimraf dist && webpack",
     "build:prod": "yarn run build",
@@ -22,7 +27,7 @@
     "test": "jest --silent --verbose --passWithNoTests"
   },
   "dependencies": {
-    "@casehub/pages-iframe-api": "workspace:*",
+    "@casehubio/pages-iframe-api": "workspace:*",
     "heatmap.js": "^2.0.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -32,9 +37,9 @@
     "@babel/core": "^7.28.6",
     "@babel/preset-env": "^7.28.6",
     "@babel/preset-react": "^7.28.5",
-    "@casehub/pages-iframe-dev": "workspace:*",
-    "@casehub/pages-tsconfig": "workspace:*",
-    "@casehub/pages-webpack-base": "workspace:*",
+    "@casehubio/pages-iframe-dev": "workspace:*",
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "@casehubio/pages-webpack-base": "workspace:*",
     "@testing-library/jest-dom": "^6.4.2",
     "@types/heatmap.js": "^2.0.36",
     "@types/jest": "^29.5.12",

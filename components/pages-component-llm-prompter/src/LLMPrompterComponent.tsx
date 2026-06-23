@@ -14,7 +14,7 @@
  */
 
 import * as React from "react";
-import type { ComponentController, DataSet } from "@casehub/pages-iframe-api";
+import type { ComponentController, DataSet } from "@casehubio/pages-iframe-api";
 import { useState, useEffect } from "react";
 import OllamaRequest from "./OllamaRequest";
 import "./LLMPrompterComponent.css";

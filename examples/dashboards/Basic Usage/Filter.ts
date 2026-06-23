@@ -1,5 +1,5 @@
-import { page, selector, barChart, inlineDataset } from "@casehub/ui";
-import { createLookup, groupOp } from "@casehub/data";
+import { page, selector, barChart, inlineDataset } from "@casehubio/ui";
+import { createLookup, groupOp } from "@casehubio/data";
 
 const testData = JSON.stringify([
   ["Asia", "China", 1412],

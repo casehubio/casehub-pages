@@ -1,5 +1,5 @@
-import { page, barChart, pieChart, meter, html, inlineDataset, withStyle, columns, rows } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
+import { page, barChart, pieChart, meter, html, inlineDataset, withStyle, columns, rows } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
 
 inlineDataset("a", JSON.stringify([
   ["A", 1],

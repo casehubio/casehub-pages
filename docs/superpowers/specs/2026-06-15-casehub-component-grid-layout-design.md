@@ -1,14 +1,14 @@
-# @casehub/component — Shared Component Primitives and Layout Renderer
+# @casehubio/component — Shared Component Primitives and Layout Renderer
 
-Covers issue #12. Extracts zero-dependency component primitives from `@casehub/ui` into a new `@casehub/component` package, and adds a CSS Grid layout renderer that turns a `Component` tree into DOM.
+Covers issue #12. Extracts zero-dependency component primitives from `@casehubio/ui` into a new `@casehubio/component` package, and adds a CSS Grid layout renderer that turns a `Component` tree into DOM.
 
 **Architectural decisions made during brainstorming:**
-- **`FilterSettings`, `DrillDown`, `RefreshSettings` go into `@casehub/component`** — they are zero-dep behavioural primitives (refresh polling, cross-component filtering, drill-down navigation) useful to all consumers, not just data visualization.
-- **Split `ComponentTypeRegistry`** — `@casehub/component` defines the base registry with layout/content entries. `@casehub/ui` extends it with data-dep chart/displayer entries. Each package's type guards are self-consistent.
+- **`FilterSettings`, `DrillDown`, `RefreshSettings` go into `@casehubio/component`** — they are zero-dep behavioural primitives (refresh polling, cross-component filtering, drill-down navigation) useful to all consumers, not just data visualization.
+- **Split `ComponentTypeRegistry`** — `@casehubio/component` defines the base registry with layout/content entries. `@casehubio/ui` extends it with data-dep chart/displayer entries. Each package's type guards are self-consistent.
 - **`html`, `markdown`, `title` treated as unknown types** — the layout renderer creates empty containers for them, same as charts. No DOMPurify or markdown parser dependency. Content activation is the site runtime's job.
 - **`tree` and `menu` treated as unknown types** — their visual rendering (nested expand/collapse, dropdowns, hover states, keyboard navigation) is too complex for the renderer. They stay in `ComponentTypeRegistry` as valid component types but the renderer creates empty activation containers for them. The site runtime instantiates `<casehub-tree>` or `<casehub-menu>` Web Components.
 - **Props serialised as `data-component-props` JSON on all DOM elements** — universal, including layout types. Self-describing activation. The DnD editor will need to read layout props from the DOM to populate settings panels.
-- **`@casehub/ui` re-exports everything from `@casehub/component`** — zero migration for existing consumers. Import paths that point at `@casehub/ui` continue to work unchanged.
+- **`@casehubio/ui` re-exports everything from `@casehubio/component`** — zero migration for existing consumers. Import paths that point at `@casehubio/ui` continue to work unchanged.
 - **Interactive layout types (tabs, pills, accordion, carousel) handled by the renderer** — visibility toggling (`display: none`/`display: block`) is layout behaviour, not data or activation behaviour. Event delegation on layout containers; listeners die when target is cleared on re-render.
 - **All navigation components use named slots** — accordion, carousel, tabs, and pills all share the same named-slot contract (dashboard model spec §4 invariant). Slot keys serve as labels (tab names, accordion section headers). Swapping navigation types changes visual treatment without changing slot structure.
 - **stack is a plain container, not a grid** — `display: none`/`display: block` toggling only. No `grid-template-areas` — hidden elements don't participate in grid layout, making the grid declaration pointless.
@@ -19,7 +19,7 @@ Covers issue #12. Extracts zero-dependency component primitives from `@casehub/u
 ## 1. Package Architecture
 
 ```
-@casehub/component                    (zero-dep)
+@casehubio/component                    (zero-dep)
 ├── model/
 │   ├── types.ts                      Component, GridItem, GridPlacement, AccessControl, PermissionContext, ALLOW_ALL
 │   ├── component-props.ts            GridProps, ColumnsProps, RowsProps, StackProps, TabsProps, PillsProps,
@@ -35,10 +35,10 @@ Covers issue #12. Extracts zero-dependency component primitives from `@casehub/u
 │   └── index.ts
 └── index.ts
 
-@casehub/ui                           (depends on @casehub/component + @casehub/data + zod)
+@casehubio/ui                           (depends on @casehubio/component + @casehubio/data + zod)
 ├── model/
-│   ├── types.ts                      re-exports from @casehub/component
-│   ├── component-props.ts            re-exports from @casehub/component
+│   ├── types.ts                      re-exports from @casehubio/component
+│   ├── component-props.ts            re-exports from @casehubio/component
 │   ├── displayer-types.ts            unchanged (DataComponentCommon, ChartSettings, *Props)
 │   ├── page-types.ts                 unchanged (PageProps, Site, ViewState, etc.); dead imports cleaned up
 │   ├── type-guards.ts                extends ComponentTypeRegistry, adds chart/data guards
@@ -51,9 +51,9 @@ Covers issue #12. Extracts zero-dependency component primitives from `@casehub/u
 ### Dependencies
 
 ```
-@casehub/component                → (nothing — zero runtime dependencies)
-@casehub/ui                       → @casehub/component, @casehub/data, zod
-@casehub/viz                      → @casehub/ui (→ @casehub/component), @casehub/data, echarts
+@casehubio/component                → (nothing — zero runtime dependencies)
+@casehubio/ui                       → @casehubio/component, @casehubio/data, zod
+@casehubio/viz                      → @casehubio/ui (→ @casehubio/component), @casehubio/data, echarts
 ```
 
 ### Yarn workspace
@@ -64,7 +64,7 @@ Covers issue #12. Extracts zero-dependency component primitives from `@casehub/u
 
 ## 2. Type Extraction
 
-### What moves to `@casehub/component`
+### What moves to `@casehubio/component`
 
 **From `types.ts` (entire file):**
 - `Component` — the recursive composable node
@@ -81,13 +81,13 @@ Covers issue #12. Extracts zero-dependency component primitives from `@casehub/u
 - Content props: `HtmlProps`, `MarkdownProps`, `TitleProps`, `LazyPageProps`
 - Behavioural props: `FilterSettings`, `DrillDown`, `RefreshSettings`
 
-### What stays in `@casehub/ui`
+### What stays in `@casehubio/ui`
 
-**`displayer-types.ts`** — `DataComponentCommon`, `ChartSettings`, `BarChartProps`, `LineChartProps`, `AreaChartProps`, `PieChartProps`, `ScatterChartProps`, `BubbleChartProps`, `TimeseriesProps`, `TableProps`, `MetricProps`, `MeterProps`, `SelectorProps`, `MapProps`, `IframePluginProps`. All import from `@casehub/data`.
+**`displayer-types.ts`** — `DataComponentCommon`, `ChartSettings`, `BarChartProps`, `LineChartProps`, `AreaChartProps`, `PieChartProps`, `ScatterChartProps`, `BubbleChartProps`, `TimeseriesProps`, `TableProps`, `MetricProps`, `MeterProps`, `SelectorProps`, `MapProps`, `IframePluginProps`. All import from `@casehubio/data`.
 
-**`page-types.ts`** — `PageProps`, `PageSettings`, `DataComponentDefaults`, `LookupDefaults`, `DataSetDefaults`, `ViewState`, `DrillDownStep`, `LayoutOverride`, `DeepLink`, `Site`. All import from `@casehub/data`. Dead imports of `FilterSettings`, `RefreshSettings`, `ColumnId`, and `ColumnType` are cleaned up during extraction.
+**`page-types.ts`** — `PageProps`, `PageSettings`, `DataComponentDefaults`, `LookupDefaults`, `DataSetDefaults`, `ViewState`, `DrillDownStep`, `LayoutOverride`, `DeepLink`, `Site`. All import from `@casehubio/data`. Dead imports of `FilterSettings`, `RefreshSettings`, `ColumnId`, and `ColumnType` are cleaned up during extraction.
 
-**DSL builders** — import from both `@casehub/component` (via `@casehub/ui` re-exports) and `@casehub/data`.
+**DSL builders** — import from both `@casehubio/component` (via `@casehubio/ui` re-exports) and `@casehubio/data`.
 
 **YAML parser** — same dependency pattern as DSL.
 
@@ -95,7 +95,7 @@ Covers issue #12. Extracts zero-dependency component primitives from `@casehub/u
 
 ## 3. Type Guard Split
 
-### `@casehub/component` type guards
+### `@casehubio/component` type guards
 
 ```typescript
 export interface ComponentTypeRegistry {
@@ -129,11 +129,11 @@ export function isColumns(c: Component): c is Component & { props: ColumnsProps 
 // ... etc for all layout/content types
 ```
 
-### `@casehub/ui` extended type guards
+### `@casehubio/ui` extended type guards
 
 ```typescript
-import type { ComponentTypeRegistry as BaseRegistry } from "@casehub/component";
-import { getProps as baseGetProps } from "@casehub/component";
+import type { ComponentTypeRegistry as BaseRegistry } from "@casehubio/component";
+import { getProps as baseGetProps } from "@casehubio/component";
 
 export interface ComponentTypeRegistry extends BaseRegistry {
   page: PageProps;
@@ -153,7 +153,7 @@ export interface ComponentTypeRegistry extends BaseRegistry {
 }
 
 // Re-export with widened generic constraint via type assertion.
-// Single implementation in @casehub/component; the cast widens
+// Single implementation in @casehubio/component; the cast widens
 // the key constraint to include chart/data types.
 export const getProps = baseGetProps as <T extends keyof ComponentTypeRegistry>(
   component: Component,
@@ -166,7 +166,7 @@ export function isBarChart(c: Component): c is Component & { props: BarChartProp
 // ... etc for all data-dep types
 ```
 
-The type assertion approach preserves the single `getProps` implementation in `@casehub/component` while widening the generic constraint at the `@casehub/ui` level. TypeScript cannot retroactively extend a re-exported function's generic constraint; the cast is the correct mechanism.
+The type assertion approach preserves the single `getProps` implementation in `@casehubio/component` while widening the generic constraint at the `@casehubio/ui` level. TypeScript cannot retroactively extend a re-exported function's generic constraint; the cast is the correct mechanism.
 
 ---
 
@@ -324,17 +324,17 @@ The renderer walks the `Component` tree depth-first:
 
 ## 5. Re-export Strategy
 
-`@casehub/ui` re-exports everything from `@casehub/component` so existing import paths continue to work.
+`@casehubio/ui` re-exports everything from `@casehubio/component` so existing import paths continue to work.
 
-**`@casehub/ui/src/model/types.ts`** becomes:
+**`@casehubio/ui/src/model/types.ts`** becomes:
 ```typescript
 export {
   Component, GridItem, GridPlacement,
   AccessControl, PermissionContext, ALLOW_ALL,
-} from "@casehub/component";
+} from "@casehubio/component";
 ```
 
-**`@casehub/ui/src/model/component-props.ts`** becomes:
+**`@casehubio/ui/src/model/component-props.ts`** becomes:
 ```typescript
 export {
   GridProps, ColumnsProps, RowsProps, StackProps,
@@ -342,14 +342,14 @@ export {
   MenuProps, AccordionProps, CarouselProps, AppGridProps,
   PanelProps, HtmlProps, MarkdownProps, TitleProps,
   LazyPageProps, FilterSettings, DrillDown, RefreshSettings,
-} from "@casehub/component";
+} from "@casehubio/component";
 ```
 
-**`@casehub/ui/src/model/type-guards.ts`** imports `getProps` from `@casehub/component`, re-exports it with a widened type assertion (see §3), re-exports all base guards, and adds chart/data guards with the extended `ComponentTypeRegistry`.
+**`@casehubio/ui/src/model/type-guards.ts`** imports `getProps` from `@casehubio/component`, re-exports it with a widened type assertion (see §3), re-exports all base guards, and adds chart/data guards with the extended `ComponentTypeRegistry`.
 
-**`@casehub/ui/package.json`** adds `"@casehub/component": "workspace:*"` to dependencies.
+**`@casehubio/ui/package.json`** adds `"@casehubio/component": "workspace:*"` to dependencies.
 
-No existing consumer code changes. `@casehub/viz`, DSL, parser all continue to import from `@casehub/ui`.
+No existing consumer code changes. `@casehubio/viz`, DSL, parser all continue to import from `@casehubio/ui`.
 
 ---
 
@@ -362,7 +362,7 @@ No existing consumer code changes. `@casehub/viz`, DSL, parser all continue to i
 **`package.json`:**
 ```json
 {
-  "name": "@casehub/component",
+  "name": "@casehubio/component",
   "version": "0.0.1",
   "type": "module",
   "main": "dist/index.js",
@@ -420,10 +420,10 @@ Zero runtime dependencies.
 The full `build:packages` script chain becomes:
 
 ```
-@melviz/component-api → @melviz/component-echarts-base → @melviz/component-dev → @casehub/component → @casehub/data → @casehub/ui → @casehub/viz
+@melviz/component-api → @melviz/component-echarts-base → @melviz/component-dev → @casehubio/component → @casehubio/data → @casehubio/ui → @casehubio/viz
 ```
 
-`@casehub/component` and `@casehub/data` have no dependency on each other. The script is sequential; `@casehub/component` before `@casehub/data` keeps the casehub packages in dependency order (`@casehub/ui` depends on both, so both must build before it).
+`@casehubio/component` and `@casehubio/data` have no dependency on each other. The script is sequential; `@casehubio/component` before `@casehubio/data` keeps the casehub packages in dependency order (`@casehubio/ui` depends on both, so both must build before it).
 
 ### Tests
 
@@ -433,7 +433,7 @@ Vitest with jsdom environment for renderer tests. Type-only tests (model, type g
 
 ## 7. DSL Fixes Required
 
-The renderer depends on `Component.type` and slot names matching the layout table (§4.4). Two fixes are needed in `@casehub/ui`'s DSL builders:
+The renderer depends on `Component.type` and slot names matching the layout table (§4.4). Two fixes are needed in `@casehubio/ui`'s DSL builders:
 
 ### 7.1 Slot name normalisation — `content` → `default`
 
@@ -478,9 +478,9 @@ Both fixes are breaking changes to the DSL output shape. Existing tests that ass
 
 ## 9. Test Strategy
 
-### Model tests (moved from `@casehub/ui`)
+### Model tests (moved from `@casehubio/ui`)
 
-Existing tests for `types.ts` and `component-props.ts` move to `@casehub/component`. These verify type guard correctness, `getProps()` behaviour, and `ALLOW_ALL` semantics.
+Existing tests for `types.ts` and `component-props.ts` move to `@casehubio/component`. These verify type guard correctness, `getProps()` behaviour, and `ALLOW_ALL` semantics.
 
 ### Renderer tests (new)
 

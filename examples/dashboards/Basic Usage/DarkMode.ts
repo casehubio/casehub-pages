@@ -1,5 +1,5 @@
-import { page, barChart, inlineDataset } from "@casehub/ui";
-import { createLookup, groupOp } from "@casehub/data";
+import { page, barChart, inlineDataset } from "@casehubio/ui";
+import { createLookup, groupOp } from "@casehubio/data";
 
 inlineDataset("test", JSON.stringify([
   ["Hello", 20, 12],

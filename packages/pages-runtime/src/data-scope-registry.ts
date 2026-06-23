@@ -1,4 +1,4 @@
-import type { DataScope } from "@casehub/pages-ui";
+import type { DataScope } from "@casehubio/pages-ui";
 
 export type DataScopeRegistry = Map<string, DataScope>;
 

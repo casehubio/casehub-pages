@@ -1,7 +1,14 @@
 {
-  "name": "@casehub/pages-ui",
-  "version": "0.0.1",
+  "name": "@casehubio/pages-ui",
+  "version": "0.2.0",
   "description": "CaseHub Pages UI — component model, layout primitives, DSL, YAML parser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,8 +20,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehub/pages-component": "workspace:*",
-    "@casehub/pages-data": "workspace:*",
+    "@casehubio/pages-component": "workspace:*",
+    "@casehubio/pages-data": "workspace:*",
     "zod": "^3.23.0"
   },
   "devDependencies": {

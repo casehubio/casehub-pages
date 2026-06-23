@@ -1,17 +1,17 @@
-import type { Component, PermissionContext } from "@casehub/pages-component/dist/model/types.js";
-import { ALLOW_ALL } from "@casehub/pages-component/dist/model/types.js";
-import { renderComponent } from "@casehub/pages-component/dist/renderer/render.js";
-import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataProviderConfig, ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { DataSetOp } from "@casehub/pages-data/dist/dataset/ops.js";
-import type { SortOrder } from "@casehub/pages-data/dist/dataset/sort.js";
-import { createDataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
-import { createDataProviderFactory, createPresetRegistry } from "@casehub/pages-data/dist/dataset/external/index.js";
-import type { Site, ViewState, DeepLink } from "@casehub/pages-ui/dist/model/page-types.js";
-import { parsePage } from "@casehub/pages-ui/dist/parser/page-parser.js";
+import type { Component, PermissionContext } from "@casehubio/pages-component/dist/model/types.js";
+import { ALLOW_ALL } from "@casehubio/pages-component/dist/model/types.js";
+import { renderComponent } from "@casehubio/pages-component/dist/renderer/render.js";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataProviderConfig, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
+import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
+import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
+import { createDataProviderFactory, createPresetRegistry } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type { Site, ViewState, DeepLink } from "@casehubio/pages-ui/dist/model/page-types.js";
+import { parsePage } from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import { load as yamlLoad } from "js-yaml";
-import { cellToRaw } from "@casehub/pages-viz/dist/base/cell-extract.js";
+import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { buildPagePathMap } from "./page-paths.js";
 import { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
 import { buildPageIndex, computeCurrentPage, walkNavigate } from "./navigation.js";
@@ -49,7 +49,7 @@ interface FieldChangeDetail {
 interface FilterDetail {
   readonly columnId: string;
   readonly rowIndex: number;
-  readonly row?: import("@casehub/pages-data/dist/dataset/types.js").TypedRow;
+  readonly row?: import("@casehubio/pages-data/dist/dataset/types.js").TypedRow;
   readonly reset: boolean;
   readonly group: string | undefined;
 }

@@ -1,5 +1,5 @@
-import { page, barChart, table, inlineDataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
+import { page, barChart, table, inlineDataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
 
 const histogramExpression = `
 (

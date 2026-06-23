@@ -1,5 +1,5 @@
-import { page, timeseries, inlineDataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
+import { page, timeseries, inlineDataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
 
 const productsData = JSON.stringify([
   ["test", 1718460000000, 23],

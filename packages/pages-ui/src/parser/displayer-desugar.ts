@@ -1,5 +1,5 @@
 import type { Component } from "../model/types.js";
-import { parseLookup } from "@casehub/pages-data/dist/dataset/lookup-parser.js";
+import { parseLookup } from "@casehubio/pages-data/dist/dataset/lookup-parser.js";
 
 /**
  * Maps DisplayerType enum values to component type strings.

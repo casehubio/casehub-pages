@@ -7,9 +7,9 @@ import type {
   BubbleChartProps,
   MapProps,
   MetricProps,
-} from "@casehub/pages-component";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import { dataSetId, columnId } from "@casehub/pages-data/dist/dataset/types.js";
+} from "@casehubio/pages-component";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import { dataSetId, columnId } from "@casehubio/pages-data/dist/dataset/types.js";
 
 describe("DataComponentCommon", () => {
   it("requires lookup", () => {

@@ -1,6 +1,6 @@
-import { page, table, selector, bubbleChart, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, table, selector, bubbleChart, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Open Telemetry Basic.yaml"
 // OpenTelemetry traces visualization

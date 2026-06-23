@@ -9,10 +9,10 @@ Covers issue #8. Designs the complete page model — the TypeScript types that r
 - **Fully typed displayer settings (Option C)** — each displayer type gets its own typed props. `Record<string, unknown>` escape hatch only for iframe-isolated 3rd-party plugins, plus `extra` passthrough on chart types for ECharts native options.
 - **Slot-based component tree** (inspired by [Puck](https://github.com/puckeditor/puck)) — recursive composition via named slots. "Anything inside anything."
 - **Coordinate grid layout** (inspired by [react-grid-layout](https://github.com/react-grid-layout/react-grid-layout)) — `{x, y, w, h}` placement with row/column spanning for panel layout.
-- **casehub naming** — all new packages use `@casehub/*`. The git repo stays `melviz` for now.
+- **casehub naming** — all new packages use `@casehubio/*`. The git repo stays `melviz` for now.
 
 **Design direction (noted, not in scope for #8):**
-- The core component primitives (`Component`, `GridItem`, slots, access, style) are designed to be extractable into a shared `@casehub/ui` package that other casehub web UIs can compose over. The data-component types (displayer props, dataset integration) are domain-specific and depend on `@casehub/data`.
+- The core component primitives (`Component`, `GridItem`, slots, access, style) are designed to be extractable into a shared `@casehubio/ui` package that other casehub web UIs can compose over. The data-component types (displayer props, dataset integration) are domain-specific and depend on `@casehubio/data`.
 - A DnD visual builder is planned (pure TS, no framework), operating over the same model. The builder generates the model; the model is the source of truth.
 
 ---
@@ -21,30 +21,30 @@ Covers issue #8. Designs the complete page model — the TypeScript types that r
 
 | Package | Runtime | Role |
 |---------|---------|------|
-| `@casehub/ui` | TS | Component model, layout primitives, DSL, YAML parser |
-| `@casehub/data` | TS (browser/Node) | Data engine — datasets, ops, expressions, extraction, lookup |
-| `@casehub/data-jvm` | JVM (Quarkus) | Data engine — same semantics, server-side, handles large datasets |
-| `@casehub/data-relay` | JVM (Quarkus) | HTTP proxy — CORS/auth/caching, no data processing |
-| `@casehub/viz` | TS | Chart/table/metric Web Components (`<casehub-bar-chart>`, etc.) |
+| `@casehubio/ui` | TS | Component model, layout primitives, DSL, YAML parser |
+| `@casehubio/data` | TS (browser/Node) | Data engine — datasets, ops, expressions, extraction, lookup |
+| `@casehubio/data-jvm` | JVM (Quarkus) | Data engine — same semantics, server-side, handles large datasets |
+| `@casehubio/data-relay` | JVM (Quarkus) | HTTP proxy — CORS/auth/caching, no data processing |
+| `@casehubio/viz` | TS | Chart/table/metric Web Components (`<casehub-bar-chart>`, etc.) |
 
-`@casehub/data` is the existing `packages/core/` codebase (issues #4–#7). `@casehub/data-jvm` is the existing Java data pipeline in the GWT core. `@casehub/ui` is this issue (#8). `@casehub/viz` replaces the current React `components/` directory with Web Components. `@casehub/data-relay` is future (Quarkus HTTP proxy).
+`@casehubio/data` is the existing `packages/core/` codebase (issues #4–#7). `@casehubio/data-jvm` is the existing Java data pipeline in the GWT core. `@casehubio/ui` is this issue (#8). `@casehubio/viz` replaces the current React `components/` directory with Web Components. `@casehubio/data-relay` is future (Quarkus HTTP proxy).
 
-Two data engines share the same model and operation semantics. The TS engine works standalone (browser-side processing, direct fetch). When a JVM backend is available, the client can delegate to `@casehub/data-jvm` for large datasets or server-side auth. `@casehub/data-relay` is a separate concern — it proxies HTTP requests but does no data processing.
+Two data engines share the same model and operation semantics. The TS engine works standalone (browser-side processing, direct fetch). When a JVM backend is available, the client can delegate to `@casehubio/data-jvm` for large datasets or server-side auth. `@casehubio/data-relay` is a separate concern — it proxies HTTP requests but does no data processing.
 
 ### Dependency graph
 
 ```
-@casehub/ui/model/types.ts           → (no deps, pure TS — extractable)
-@casehub/ui/model/component-props.ts → (no deps, pure TS — extractable)
-@casehub/ui/model/displayer-types.ts → @casehub/data
-@casehub/ui/model/page-types.ts      → @casehub/data
-@casehub/ui/dsl                     → @casehub/ui/model, @casehub/data
-@casehub/ui/parser                  → @casehub/ui/model, @casehub/data, zod
-@casehub/viz                        → @casehub/ui/model, @casehub/data, echarts
-@casehub/data                       → jsonata, zod
+@casehubio/ui/model/types.ts           → (no deps, pure TS — extractable)
+@casehubio/ui/model/component-props.ts → (no deps, pure TS — extractable)
+@casehubio/ui/model/displayer-types.ts → @casehubio/data
+@casehubio/ui/model/page-types.ts      → @casehubio/data
+@casehubio/ui/dsl                     → @casehubio/ui/model, @casehubio/data
+@casehubio/ui/parser                  → @casehubio/ui/model, @casehubio/data, zod
+@casehubio/viz                        → @casehubio/ui/model, @casehubio/data, echarts
+@casehubio/data                       → jsonata, zod
 ```
 
-**The split:** `types.ts` contains `Component`, `GridItem`, `GridPlacement`, `AccessControl`, `PermissionContext`, `ALLOW_ALL` — the generic component primitives with zero external dependencies. These are the types extractable into a shared casehub-ui framework. `page-types.ts` contains `PageProps`, `PageSettings`, `ViewState`, `Site`, `DataComponentDefaults`, `LookupDefaults`, `DataSetDefaults` — all of which reference `@casehub/data` types (`ColumnId`, `DataSetId`, `ExternalDataSetDef`, `DataSetOp`). `displayer-types.ts` contains `DataComponentCommon`, `ChartSettings`, `BarChartProps`, etc. — also depends on `@casehub/data`.
+**The split:** `types.ts` contains `Component`, `GridItem`, `GridPlacement`, `AccessControl`, `PermissionContext`, `ALLOW_ALL` — the generic component primitives with zero external dependencies. These are the types extractable into a shared casehub-ui framework. `page-types.ts` contains `PageProps`, `PageSettings`, `ViewState`, `Site`, `DataComponentDefaults`, `LookupDefaults`, `DataSetDefaults` — all of which reference `@casehubio/data` types (`ColumnId`, `DataSetId`, `ExternalDataSetDef`, `DataSetOp`). `displayer-types.ts` contains `DataComponentCommon`, `ChartSettings`, `BarChartProps`, etc. — also depends on `@casehubio/data`.
 
 ---
 
@@ -390,7 +390,7 @@ Grids nest — a grid item's component can be another grid, enabling recursive 2
 
 **Page is a Panel with navigation superpowers.** Both are titled, collapsible containers that hold children. A page adds: dataset/settings scoping, URL addressability, lazy loading, navigation registration, and filter boundary. In the model both are `Component` — the `type` string (`"page"` vs `"panel"`) tells the runtime what capabilities to activate. Promoting a panel to a page (add datasets, make navigable) or demoting a page to a panel (strip navigation, inline content) requires changing only the `type` and props, not the structure.
 
-The `@casehub/ui` framework defines the slot contract. Each `<casehub-tabs>`, `<casehub-sidebar>`, `<casehub-app-grid>` etc. is a Web Component with different visual rendering over the same data. New navigation styles are added by registering new component types — no model changes needed.
+The `@casehubio/ui` framework defines the slot contract. Each `<casehub-tabs>`, `<casehub-sidebar>`, `<casehub-app-grid>` etc. is a Web Component with different visual rendering over the same data. New navigation styles are added by registering new component types — no model changes needed.
 
 ---
 
@@ -459,10 +459,10 @@ interface ChartSettings {
 
 ### ColumnSettings — canonical type
 
-The data layer (`@casehub/data`) already defines `ColumnSettings` in `types.ts`. The spec's data component column settings are the same concept — per-column display configuration. Rather than create a second `ColumnSettings` with different field names, the data layer's type is canonical. **Breaking change:** rename the data layer's fields to the cleaner names:
+The data layer (`@casehubio/data`) already defines `ColumnSettings` in `types.ts`. The spec's data component column settings are the same concept — per-column display configuration. Rather than create a second `ColumnSettings` with different field names, the data layer's type is canonical. **Breaking change:** rename the data layer's fields to the cleaner names:
 
 ```typescript
-// @casehub/data types.ts — CHANGED field names
+// @casehubio/data types.ts — CHANGED field names
 interface ColumnSettings {
   readonly id: ColumnId;              // was: columnId
   readonly name?: string;             // was: columnName (and make optional)
@@ -660,7 +660,7 @@ Metric components use `${value}`, `${title}`, and `${this}` as data-bound variab
 
 ### 3. Server user-context substitution (server-enforced)
 
-`DataAccessPolicy.rowFilter` uses `${user.*}` variables (e.g. `${user.tenantId}`) resolved by `@casehub/data-jvm` against the authenticated principal's attributes. The server defines the `${user.*}` namespace — available attributes depend on the auth integration (OIDC claims, LDAP attributes, custom user properties). The TS data engine never evaluates these expressions.
+`DataAccessPolicy.rowFilter` uses `${user.*}` variables (e.g. `${user.tenantId}`) resolved by `@casehubio/data-jvm` against the authenticated principal's attributes. The server defines the `${user.*}` namespace — available attributes depend on the auth integration (OIDC claims, LDAP attributes, custom user properties). The TS data engine never evaluates these expressions.
 
 ---
 
@@ -679,7 +679,7 @@ Pages can be inline (content in the payload) or lazy (`type: "lazy-page"` — co
 | Provider | How it filters |
 |----------|---------------|
 | **Static web server** (nginx, CDN) | Each page is a separate file behind path-based ACL rules. The manifest lists all pages; the client fetches each and silently drops 403s from navigation. |
-| **`@casehub/data-jvm`** (Quarkus) | The server reads the full page tree, evaluates `access` annotations against the user's roles/permissions, and returns a personalized payload with only the authorized pages. |
+| **`@casehubio/data-jvm`** (Quarkus) | The server reads the full page tree, evaluates `access` annotations against the user's roles/permissions, and returns a personalized payload with only the authorized pages. |
 | **Hybrid** | The manifest comes from the JVM (pre-filtered). Page content is served from static files or the JVM. Both enforce access. |
 
 **Recursive filtering:** The server walks the component tree and prunes access-denied subtrees.
@@ -709,13 +709,13 @@ interface DataAccessPolicy {
 }
 ```
 
-Added to `ExternalDataSetDef`. Enforcement by `@casehub/data-jvm` only. The TS data engine ignores it.
+Added to `ExternalDataSetDef`. Enforcement by `@casehubio/data-jvm` only. The TS data engine ignores it.
 
 | What | Declared in | Enforced by | Security? |
 |------|------------|-------------|-----------|
 | Page visibility | `Component.access` | Server (JVM or web server ACL) | Yes |
 | Component visibility | `Component.access` | Client (PermissionContext) | No (UX) |
-| Row-level data | `ExternalDataSetDef.dataAccess` | `@casehub/data-jvm` | Yes |
+| Row-level data | `ExternalDataSetDef.dataAccess` | `@casehubio/data-jvm` | Yes |
 
 ---
 
@@ -999,7 +999,7 @@ The parser resolves `navGroupId` + `targetDivId` + `NavTree` into direct slot co
 
 ```
 packages/
-├── casehub-ui/                         # @casehub/ui
+├── casehub-ui/                         # @casehubio/ui
 │   └── src/
 │       ├── model/
 │       │   ├── types.ts                # Component, GridItem, GridPlacement, AccessControl,
@@ -1007,7 +1007,7 @@ packages/
 │       │   │                           #   (ZERO external deps — extractable)
 │       │   ├── page-types.ts           # PageProps, PageSettings, ViewState, Site,
 │       │   │                           #   DataComponentDefaults, LookupDefaults, DataSetDefaults
-│       │   │                           #   (depends on @casehub/data)
+│       │   │                           #   (depends on @casehubio/data)
 │       │   ├── component-props.ts      # GridProps, ColumnsProps, RowsProps, StackProps,
 │       │   │                           #   TabsProps, PanelProps, HtmlProps, MarkdownProps,
 │       │   │                           #   TitleProps, LazyPageProps, FilterSettings,
@@ -1017,7 +1017,7 @@ packages/
 │       │   │                           #   BarChartProps, LineChartProps, ScatterChartProps,
 │       │   │                           #   BubbleChartProps, TableProps, MetricProps, MeterProps,
 │       │   │                           #   SelectorProps, MapProps, IframePluginProps
-│       │   │                           #   (depends on @casehub/data)
+│       │   │                           #   (depends on @casehubio/data)
 │       │   ├── type-guards.ts          # isBarChart(), isTable(), isHtml(), isGrid(), ...,
 │       │   │                           #   ComponentTypeRegistry (complete — all types), getProps()
 │       │   └── index.ts
@@ -1041,13 +1041,13 @@ packages/
 │       │
 │       └── index.ts
 │
-├── casehub-data/                       # @casehub/data (existing packages/core/)
+├── casehub-data/                       # @casehubio/data (existing packages/core/)
 │   └── src/
 │       ├── dataset/
 │       │   └── external/
 │       └── expression/
 │
-├── casehub-viz/                        # @casehub/viz (replaces React components/)
+├── casehub-viz/                        # @casehubio/viz (replaces React components/)
 │   └── src/
 │       ├── bar-chart.ts               # <casehub-bar-chart>
 │       ├── line-chart.ts, pie-chart.ts, scatter-chart.ts, bubble-chart.ts
@@ -1134,7 +1134,7 @@ This design is a **superset** of the Java RuntimeModel, not a 1:1 port.
 - Deep link round-trip: serialize → parse → same state
 - Multi-value filter URL encoding: `region:North|South`
 
-### ColumnSettings migration (`@casehub/data`)
+### ColumnSettings migration (`@casehubio/data`)
 - Renamed fields compile and pass all existing tests
 
 ---
@@ -1142,12 +1142,12 @@ This design is a **superset** of the Java RuntimeModel, not a 1:1 port.
 ## 14. Deferred Concerns
 
 - **DnD visual builder** — pure TS implementation operating over this model
-- **Web Component implementations** (`@casehub/viz`)
-- **`@casehub/ui` extraction** — extracting `types.ts` (zero-dep core) into a shared package
+- **Web Component implementations** (`@casehubio/viz`)
+- **`@casehubio/ui` extraction** — extracting `types.ts` (zero-dep core) into a shared package
 - **Responsive layouts** — breakpoint-aware grid configurations
 - **Workspace layout primitives** — `split()` (resizable panes) for IDE-like layouts
 - **JSON Schema generation** — from Zod schemas
-- **`@casehub/data-relay`** — Quarkus server-side HTTP proxy
-- **Component registration / manifest** — how `@casehub/viz` registers component types with `@casehub/ui`
+- **`@casehubio/data-relay`** — Quarkus server-side HTTP proxy
+- **Component registration / manifest** — how `@casehubio/viz` registers component types with `@casehubio/ui`
 - **Undo/redo** — model diffing for the DnD builder's edit history
 - **Theming** — CSS custom properties for dark/light mode and brand customization

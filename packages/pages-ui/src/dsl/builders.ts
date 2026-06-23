@@ -3,7 +3,7 @@ import type {
   GridItem,
   AccessControl,
 } from "../model/types.js";
-import type { TypedComponent } from "@casehub/pages-component";
+import type { TypedComponent } from "@casehubio/pages-component";
 import type {
   HtmlProps,
   MarkdownProps,
@@ -13,8 +13,8 @@ import type {
   ColumnsProps,
 } from "../model/component-props.js";
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
-import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type {
   BarChartProps,
   LineChartProps,
@@ -35,7 +35,7 @@ import type {
   CheckboxProps,
   DatePickerProps,
   TextareaProps,
-} from "@casehub/pages-component";
+} from "@casehubio/pages-component";
 
 // Grid ID counter — scoped per page tree via resetGridCounter()
 let gridCounter = 0;

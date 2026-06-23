@@ -1,6 +1,6 @@
-import { page, html, metric, timeseries, areaChart, barChart, pieChart, table, columns, withStyle, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, metric, timeseries, areaChart, barChart, pieChart, table, columns, withStyle, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Prometheus Basic.yml"
 // Demonstrates Prometheus metrics exploration with various visualizations

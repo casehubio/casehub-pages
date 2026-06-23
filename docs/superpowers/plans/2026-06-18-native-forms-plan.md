@@ -6,7 +6,7 @@
 
 **Architecture:** Form inputs are Web Components extending `CasehubElement`, participating in the standard `casehub-data-request` / `pushData` data pipeline with implicit lookups derived from page-level `dataScope`. Save is a page-level concern managed by `EditState` in the runtime with pluggable adapters resolved by name. Hierarchical filter propagation lets child dataScope pages inherit ancestor filters (same-dataset) or use `$ref` bindings (cross-dataset joins).
 
-**Tech Stack:** TypeScript 4.6, Vitest 3.0 (jsdom), Web Components (Shadow DOM), `@casehub/ui` model + `@casehub/viz` rendering + `@casehub/runtime` orchestration.
+**Tech Stack:** TypeScript 4.6, Vitest 3.0 (jsdom), Web Components (Shadow DOM), `@casehubio/ui` model + `@casehubio/viz` rendering + `@casehubio/runtime` orchestration.
 
 **Spec:** `docs/superpowers/specs/2026-06-18-native-forms-design.md`
 
@@ -15,7 +15,7 @@
 - All new types use `readonly` properties and `Object.freeze()` for immutability
 - Branded types: `DataSetId`, `ColumnId` — never raw `string`
 - Test framework: Vitest with `describe/it/expect`, jsdom environment
-- Package test commands: `yarn workspace @casehub/ui run test`, `yarn workspace @casehub/runtime run test`, `yarn workspace @casehub/viz run test`
+- Package test commands: `yarn workspace @casehubio/ui run test`, `yarn workspace @casehubio/runtime run test`, `yarn workspace @casehubio/viz run test`
 - No `cd` before commands — use `yarn workspace <name> run <script>` or absolute paths
 - Every commit references `Refs #34`
 
@@ -31,14 +31,14 @@
 - Test: `packages/casehub-ui/src/model/type-guards.test.ts` (new)
 
 **Interfaces:**
-- Consumes: `DataSetId` from `@casehub/data`, `Component` from `@casehub/component`
+- Consumes: `DataSetId` from `@casehubio/data`, `Component` from `@casehubio/component`
 - Produces: `DataScope`, `DataScopeRef`, `SaveConfig`, `FormInputCommon`, `TextInputProps`, `NumberInputProps`, `DropdownProps`, `FixedOptions`, `DataSetOptions`, `CheckboxProps`, `DatePickerProps`, `TextareaProps`, `isTextInput()`, `isNumberInput()`, `isDropdown()`, `isCheckbox()`, `isDatePicker()`, `isTextarea()`, `isFormInput()`
 
 - [ ] **Step 1: Write form-input-types.ts**
 
 ```typescript
 // packages/casehub-ui/src/model/form-input-types.ts
-import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/data/dist/dataset/types.js";
 
 export interface FormInputCommon {
   readonly field: string;
@@ -94,7 +94,7 @@ export function isFixedOptions(opts: FixedOptions | DataSetOptions): opts is Fix
 Add to `packages/casehub-ui/src/model/page-types.ts`:
 
 ```typescript
-import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/data/dist/dataset/types.js";
 
 export interface DataScopeRef {
   readonly $ref: string;
@@ -183,7 +183,7 @@ export function isFormInput(c: Component): boolean {
 // packages/casehub-ui/src/model/type-guards.test.ts
 import { describe, it, expect } from "vitest";
 import { isTextInput, isNumberInput, isDropdown, isCheckbox, isDatePicker, isTextarea, isFormInput } from "./type-guards.js";
-import type { Component } from "@casehub/component";
+import type { Component } from "@casehubio/component";
 
 describe("form input type guards", () => {
   it("isTextInput matches text-input type", () => {
@@ -226,7 +226,7 @@ describe("form input type guards", () => {
 
 - [ ] **Step 5: Run tests**
 
-Run: `yarn workspace @casehub/ui run test`
+Run: `yarn workspace @casehubio/ui run test`
 Expected: All new type guard tests pass.
 
 - [ ] **Step 6: Export new types from package index**
@@ -265,7 +265,7 @@ Add to `packages/casehub-ui/src/dsl/builders.test.ts`:
 
 ```typescript
 import { textInput, numberInput, dropdown, checkbox, datePicker, textarea, page } from "./builders.js";
-import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/data/dist/dataset/types.js";
 
 describe("form input builders", () => {
   it("textInput creates text-input component", () => {
@@ -333,7 +333,7 @@ describe("page() with dataScope and save", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/ui run test`
+Run: `yarn workspace @casehubio/ui run test`
 Expected: FAIL — `textInput`, `numberInput`, etc. not exported; `dataScope` not recognized by `isPageOptions`.
 
 - [ ] **Step 3: Implement builders and update PageOptions**
@@ -412,7 +412,7 @@ export function textarea(props: TextareaProps): Component {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `yarn workspace @casehub/ui run test`
+Run: `yarn workspace @casehubio/ui run test`
 Expected: All tests pass, including new builder and PageOptions tests.
 
 - [ ] **Step 5: Commit**
@@ -571,7 +571,7 @@ describe("dataScope and save parsing", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/ui run test`
+Run: `yarn workspace @casehubio/ui run test`
 Expected: FAIL — form input shorthands not recognized, page src not handled, dataScope/save not parsed.
 
 - [ ] **Step 3: Implement form input desugaring in component-desugar.ts**
@@ -630,7 +630,7 @@ Include `dataScope` and `save` in the constructed `PageProps`.
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `yarn workspace @casehub/ui run test`
+Run: `yarn workspace @casehubio/ui run test`
 Expected: All tests pass.
 
 - [ ] **Step 6: Commit**
@@ -707,7 +707,7 @@ describe("collectAncestorFilterOps", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: FAIL — `collectAncestorFilterOps` not found.
 
 - [ ] **Step 3: Implement collectAncestorFilterOps**
@@ -733,14 +733,14 @@ export function collectAncestorFilterOps(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: All tests pass.
 
 - [ ] **Step 5: Write DataScopeRegistry**
 
 ```typescript
 // packages/casehub-runtime/src/data-scope-registry.ts
-import type { DataScope } from "@casehub/ui";
+import type { DataScope } from "@casehubio/ui";
 
 export type DataScopeRegistry = Map<string, DataScope>;
 
@@ -763,7 +763,7 @@ export function getDataScope(registry: DataScopeRegistry, pagePath: string): Dat
 // packages/casehub-runtime/src/data-scope-registry.test.ts
 import { describe, it, expect } from "vitest";
 import { createDataScopeRegistry, hasDataScope, getDataScope } from "./data-scope-registry.js";
-import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/data/dist/dataset/types.js";
 
 describe("DataScopeRegistry", () => {
   it("registers and retrieves DataScope", () => {
@@ -784,7 +784,7 @@ describe("DataScopeRegistry", () => {
 
 - [ ] **Step 7: Run all tests**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: All tests pass.
 
 - [ ] **Step 8: Commit**
@@ -806,7 +806,7 @@ git commit -m "feat: hierarchical filter collection and DataScopeRegistry  Refs 
 - Create: `packages/casehub-runtime/src/ref-resolution.test.ts`
 
 **Interfaces:**
-- Consumes: `DataScope`, `DataScopeRef` from Task 1; `DataScopeRegistry` from Task 4; `DataSetManager`, `DataSetLookup` from `@casehub/data`; `collectAncestorFilterOps` from Task 4; `FilterState` from existing
+- Consumes: `DataScope`, `DataScopeRef` from Task 1; `DataScopeRegistry` from Task 4; `DataSetManager`, `DataSetLookup` from `@casehubio/data`; `collectAncestorFilterOps` from Task 4; `FilterState` from existing
 - Produces: `resolveRefBindings(dataScope, dataScopeRegistry, filterState, manager, pagePath, visited?): DataSetOp[]`
 
 - [ ] **Step 1: Write failing tests**
@@ -817,9 +817,9 @@ import { describe, it, expect } from "vitest";
 import { resolveRefBindings } from "./ref-resolution.js";
 import { createFilterState, updateFilter } from "./cross-filter.js";
 import { createDataScopeRegistry } from "./data-scope-registry.js";
-import type { DataSetId, ColumnId } from "@casehub/data/dist/dataset/types.js";
-import type { DataSetManager } from "@casehub/data/dist/dataset/manager.js";
-import { ColumnType } from "@casehub/data/dist/dataset/types.js";
+import type { DataSetId, ColumnId } from "@casehubio/data/dist/dataset/types.js";
+import type { DataSetManager } from "@casehubio/data/dist/dataset/manager.js";
+import { ColumnType } from "@casehubio/data/dist/dataset/types.js";
 
 function mockManager(rows: Record<string, string>[]): DataSetManager {
   return {
@@ -924,18 +924,18 @@ describe("resolveRefBindings", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: FAIL — `resolveRefBindings` not found.
 
 - [ ] **Step 3: Implement resolveRefBindings**
 
 ```typescript
 // packages/casehub-runtime/src/ref-resolution.ts
-import type { DataSetOp } from "@casehub/data/dist/dataset/ops.js";
-import type { DataSetLookup } from "@casehub/data/dist/dataset/lookup.js";
-import type { DataSetManager } from "@casehub/data/dist/dataset/manager.js";
-import type { DataSetId, ColumnId } from "@casehub/data/dist/dataset/types.js";
-import type { DataScope, DataScopeRef } from "@casehub/ui";
+import type { DataSetOp } from "@casehubio/data/dist/dataset/ops.js";
+import type { DataSetLookup } from "@casehubio/data/dist/dataset/lookup.js";
+import type { DataSetManager } from "@casehubio/data/dist/dataset/manager.js";
+import type { DataSetId, ColumnId } from "@casehubio/data/dist/dataset/types.js";
+import type { DataScope, DataScopeRef } from "@casehubio/ui";
 import type { FilterState } from "./cross-filter.js";
 import { collectAncestorFilterOps } from "./cross-filter.js";
 import type { DataScopeRegistry } from "./data-scope-registry.js";
@@ -1038,7 +1038,7 @@ function findParentWithDataset(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: All tests pass.
 
 - [ ] **Step 5: Commit**
@@ -1063,7 +1063,7 @@ git commit -m "feat: \$ref binding resolution for cross-dataset foreign-key join
 - Create: `packages/casehub-viz/src/form-inputs/form-inputs.test.ts`
 
 **Interfaces:**
-- Consumes: `CasehubElement` base class from `@casehub/viz`; `TextInputProps`, `NumberInputProps`, etc. from Task 1; `CasehubFieldChangeDetail` event detail
+- Consumes: `CasehubElement` base class from `@casehubio/viz`; `TextInputProps`, `NumberInputProps`, etc. from Task 1; `CasehubFieldChangeDetail` event detail
 - Produces: `<casehub-text-input>`, `<casehub-number-input>`, `<casehub-dropdown>`, `<casehub-checkbox>`, `<casehub-date-picker>`, `<casehub-textarea>` custom elements
 
 - [ ] **Step 1: Write the abstract CasehubFormInput base**
@@ -1071,8 +1071,8 @@ git commit -m "feat: \$ref binding resolution for cross-dataset foreign-key join
 ```typescript
 // packages/casehub-viz/src/form-inputs/CasehubFormInput.ts
 import { CasehubElement } from "../base/CasehubElement.js";
-import type { FormInputCommon } from "@casehub/ui";
-import type { TypedDataSet, ColumnId } from "@casehub/data/dist/dataset/types.js";
+import type { FormInputCommon } from "@casehubio/ui";
+import type { TypedDataSet, ColumnId } from "@casehubio/data/dist/dataset/types.js";
 
 export interface CasehubFieldChangeDetail {
   readonly field: string;
@@ -1120,7 +1120,7 @@ export abstract class CasehubFormInput<P extends FormInputCommon> extends Casehu
 ```typescript
 // packages/casehub-viz/src/form-inputs/CasehubTextInput.ts
 import { CasehubFormInput } from "./CasehubFormInput.js";
-import type { TextInputProps } from "@casehub/ui";
+import type { TextInputProps } from "@casehubio/ui";
 
 export class CasehubTextInput extends CasehubFormInput<TextInputProps> {
   render(container: HTMLElement, props: TextInputProps & { lookup?: any }, dataset: any): void {
@@ -1289,7 +1289,7 @@ describe("CasehubCheckbox", () => {
 
 - [ ] **Step 5: Run tests**
 
-Run: `yarn workspace @casehub/viz run test`
+Run: `yarn workspace @casehubio/viz run test`
 Expected: All form input tests pass.
 
 - [ ] **Step 6: Commit**
@@ -1321,9 +1321,9 @@ git commit -m "feat: six form input Web Components extending CasehubElement  Ref
 import { describe, it, expect } from "vitest";
 import "../../../casehub-viz/src/form-inputs/CasehubTextInput.js";
 import { loadSite } from "./site.js";
-import { page, textInput } from "@casehub/ui";
-import { inlineDataset } from "@casehub/ui";
-import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
+import { page, textInput } from "@casehubio/ui";
+import { inlineDataset } from "@casehubio/ui";
+import type { DataSetId } from "@casehubio/data/dist/dataset/types.js";
 
 describe("form input activation", () => {
   it("activates text-input as a data component with implicit lookup", async () => {
@@ -1356,7 +1356,7 @@ describe("form input activation", () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: FAIL — text-input not recognized as a data component.
 
 - [ ] **Step 3: Update DATA_COMPONENT_TYPES in activation.ts**
@@ -1451,7 +1451,7 @@ In `loadSite()`, create `DataScopeRegistry` alongside existing state. Populate i
 
 - [ ] **Step 7: Run tests**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: All tests pass, including the new form activation test.
 
 - [ ] **Step 8: Commit**
@@ -1595,7 +1595,7 @@ if (scope && isDirty(editState, candidate.pagePath)) {
 
 - [ ] **Step 4: Run tests**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: All tests pass.
 
 - [ ] **Step 5: Commit**
@@ -1620,14 +1620,14 @@ git commit -m "feat: EditState, casehub-field-change handler, save triggers, rec
 - Modify: `packages/casehub-runtime/src/site.ts` (SiteOptions.adapters, flushSave, post-save sync)
 
 **Interfaces:**
-- Consumes: `DataSetId`, `ColumnId` from `@casehub/data`; `DataSetManager` from `@casehub/data`; `EditState` from Task 8; `ComponentRegistry` from existing
+- Consumes: `DataSetId`, `ColumnId` from `@casehubio/data`; `DataSetManager` from `@casehubio/data`; `EditState` from Task 8; `ComponentRegistry` from existing
 - Produces: `SaveAdapter` interface; `SaveResult` interface; `createLocalAdapter(manager): SaveAdapter`; `createRestAdapter(config, datasetUrl): SaveAdapter`; `SiteOptions.adapters`
 
 - [ ] **Step 1: Write SaveAdapter interface**
 
 ```typescript
 // packages/casehub-runtime/src/save-adapter.ts
-import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/data/dist/dataset/types.js";
 
 export interface SaveAdapter {
   save(
@@ -1657,9 +1657,9 @@ export interface SaveResult {
 ```typescript
 // packages/casehub-runtime/src/adapters/local-adapter.ts
 import type { SaveAdapter, SaveResult } from "../save-adapter.js";
-import type { DataSetId, ColumnId, TypedDataSet } from "@casehub/data/dist/dataset/types.js";
-import type { DataSetManager } from "@casehub/data/dist/dataset/manager.js";
-import { createTypedRow } from "@casehub/data/dist/dataset/conversion.js";
+import type { DataSetId, ColumnId, TypedDataSet } from "@casehubio/data/dist/dataset/types.js";
+import type { DataSetManager } from "@casehubio/data/dist/dataset/manager.js";
+import { createTypedRow } from "@casehubio/data/dist/dataset/conversion.js";
 
 export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
   return {
@@ -1703,7 +1703,7 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
 ```typescript
 // packages/casehub-runtime/src/adapters/rest-adapter.ts
 import type { SaveAdapter, SaveResult } from "../save-adapter.js";
-import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/data/dist/dataset/types.js";
 
 export interface RestAdapterConfig {
   readonly method?: "PUT" | "PATCH" | "POST";
@@ -1806,7 +1806,7 @@ async function flushSave(pagePath: string): Promise<void> {
 
 - [ ] **Step 6: Run all tests**
 
-Run: `yarn workspace @casehub/runtime run test`
+Run: `yarn workspace @casehubio/runtime run test`
 Expected: All tests pass.
 
 - [ ] **Step 7: Commit**

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { createLocalAdapter } from "./local-adapter.js";
-import type { DataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
-import type { TypedDataSet, DataSetId, ColumnId, Column } from "@casehub/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
-import { createTypedRow } from "@casehub/pages-data/dist/dataset/conversion.js";
+import type { DataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
+import type { TypedDataSet, DataSetId, ColumnId, Column } from "@casehubio/pages-data/dist/dataset/types.js";
+import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
+import { createTypedRow } from "@casehubio/pages-data/dist/dataset/conversion.js";
 
 describe("local-adapter", () => {
   it("should update a record in the dataset", async () => {

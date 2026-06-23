@@ -51,7 +51,7 @@ yarn build
 The final application will be in [webapp/dist/](webapp/dist/).
 
 The `yarn build` command:
-1. Builds shared packages (`@casehub/pages-data`, `@casehub/pages-ui`, `@casehub/pages-viz`, `@casehub/pages-component`, `@casehub/pages-runtime`)
+1. Builds shared packages (`@casehubio/pages-data`, `@casehubio/pages-ui`, `@casehubio/pages-viz`, `@casehubio/pages-component`, `@casehubio/pages-runtime`)
 2. Builds iframe-isolated components in parallel
 3. Assembles final webapp bundle with all assets
 
@@ -86,7 +86,7 @@ yarn build:webapp
 yarn build:examples
 
 # Build a specific component
-yarn workspace @casehub/pages-component-echarts run build
+yarn workspace @casehubio/pages-component-llm-prompter run build
 ```
 
 ### Development Mode
@@ -94,17 +94,17 @@ yarn workspace @casehub/pages-component-echarts run build
 Run a component in development mode with hot reload:
 
 ```bash
-yarn workspace @casehub/pages-component-echarts run start  # Starts webpack-dev-server on port 9001
+yarn workspace @casehubio/pages-component-llm-prompter run start  # Starts webpack-dev-server on port 9001
 ```
 
 Run the examples gallery:
 
 ```bash
 # Serve examples gallery (port 8080) — requires webapp to be built first
-yarn workspace @casehub/pages-examples run serve
+yarn workspace @casehubio/pages-examples run serve
 
 # Dev mode with file watching
-yarn workspace @casehub/pages-examples run dev
+yarn workspace @casehubio/pages-examples run dev
 ```
 
 ### Testing
@@ -118,10 +118,10 @@ yarn workspaces foreach -A run test
 Run tests for a specific package:
 
 ```bash
-yarn workspace @casehub/pages-data run test
+yarn workspace @casehubio/pages-data run test
 
 # Run specific test file
-yarn workspace @casehub/pages-component-echarts run test -- <test-file-pattern>
+yarn workspace @casehubio/pages-component-llm-prompter run test -- <test-file-pattern>
 ```
 
 ## Architecture Overview
@@ -138,58 +138,56 @@ casehub-pages is organized as a TypeScript monorepo with Yarn workspaces:
 ### Package Overview
 
 **Core Packages** (`packages/`):
-- `@casehub/pages-data` - DataSet model, operations engine (filter/group/sort), external data extraction (JSON, CSV, Prometheus)
-- `@casehub/pages-ui` - YAML parser, DashBuilder backward compatibility, component model
-- `@casehub/pages-viz` - Web Component wrappers for charts, tables, metrics, selectors
-- `@casehub/pages-component` - CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion)
-- `@casehub/pages-runtime` - Site orchestrator providing `loadSite()` API
+- `@casehubio/pages-data` - DataSet model, operations engine (filter/group/sort), external data extraction (JSON, CSV, Prometheus)
+- `@casehubio/pages-ui` - YAML parser, DashBuilder backward compatibility, component model
+- `@casehubio/pages-viz` - Web Component wrappers for charts, tables, metrics, selectors
+- `@casehubio/pages-component` - CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion)
+- `@casehubio/pages-runtime` - Site orchestrator providing `loadSite()` API
 
 **Iframe Component API** (`packages/`):
-- `@casehub/pages-iframe-api` - Component controller and communication interfaces
-- `@casehub/pages-iframe-dev` - Development utilities for component testing
-- `@casehub/pages-echarts-base` - Reusable ECharts wrapper library
+- `@casehubio/pages-iframe-api` - Component controller and communication interfaces
+- `@casehubio/pages-iframe-dev` - Development utilities for component testing
 
 **Build Configuration** (`packages/`):
-- `@casehub/pages-webpack-base` - Common webpack configuration
-- `@casehub/pages-tsconfig` - Shared TypeScript configuration
+- `@casehubio/pages-webpack-base` - Common webpack configuration
+- `@casehubio/pages-tsconfig` - Shared TypeScript configuration
 
 **Available Components** (`components/`):
-- `@casehub/pages-component-echarts` - Apache ECharts visualizations
-- `@casehub/pages-component-llm-prompter` - LLM prompt engineering UI
-- `@casehub/pages-component-svg-heatmap` - SVG-based heatmaps
+- `@casehubio/pages-component-llm-prompter` - LLM prompt engineering UI
+- `@casehubio/pages-component-svg-heatmap` - SVG-based heatmaps
 
 ### Data Flow
 
 ```
 YAML dashboard definition
     ↓
-@casehub/pages-ui (parse YAML)
+@casehubio/pages-ui (parse YAML)
     ↓
 ComponentNode tree + DataSetDef[]
     ↓
-@casehub/pages-data (resolve datasets)
+@casehubio/pages-data (resolve datasets)
     ↓
 DataSet (columns + rows)
     ↓
-@casehub/pages-component (layout rendering)
+@casehubio/pages-component (layout rendering)
     ↓
-@casehub/pages-viz (chart/table/metric Web Components)
+@casehubio/pages-viz (chart/table/metric Web Components)
     ↓
 casehub-filter / casehub-sort events → back to data layer
 ```
 
-1. **@casehub/pages-ui** parses YAML dashboard definitions into a component tree
-2. **@casehub/pages-data** resolves datasets from JSON/CSV/metrics sources and applies JSONata transformations
-3. **@casehub/pages-component** renders CSS grid layouts with interactive containers
-4. **@casehub/pages-viz** provides Web Components for visualizations (powered by Apache ECharts)
+1. **@casehubio/pages-ui** parses YAML dashboard definitions into a component tree
+2. **@casehubio/pages-data** resolves datasets from JSON/CSV/metrics sources and applies JSONata transformations
+3. **@casehubio/pages-component** renders CSS grid layouts with interactive containers
+4. **@casehubio/pages-viz** provides Web Components for visualizations (powered by Apache ECharts)
 5. User interactions (filtering, sorting) flow back to the data layer via custom events
 
 ### Entry Point
 
-Host applications load dashboards using the `loadSite()` API from `@casehub/pages-runtime`:
+Host applications load dashboards using the `loadSite()` API from `@casehubio/pages-runtime`:
 
 ```typescript
-import { loadSite } from '@casehub/pages-runtime';
+import { loadSite } from '@casehubio/pages-runtime';
 
 const yamlDashboard = `
 pages:
@@ -206,7 +204,7 @@ Alternatively, dashboards can be configured in `setup.js` for static deployments
 
 ### Iframe-Isolated Component Architecture
 
-Each component in `components/` runs in an isolated `<iframe>` and communicates with the runtime through `window.postMessage`. The `@casehub/pages-iframe-api` package provides the TypeScript bridge.
+Each component in `components/` runs in an isolated `<iframe>` and communicates with the runtime through `window.postMessage`. The `@casehubio/pages-iframe-api` package provides the TypeScript bridge.
 
 **Component Lifecycle Pattern**:
 ```typescript
@@ -231,7 +229,7 @@ controller.ready();
 controller.filter(filterRequest);
 ```
 
-**Key Interface (`@casehub/pages-iframe-api`)**:
+**Key Interface (`@casehubio/pages-iframe-api`)**:
 - `ComponentController` - Manages component lifecycle and communication
 - `ComponentBus` - Message bus for inter-component communication
 - `DataSet` - Data structure passed from runtime to components
@@ -240,10 +238,10 @@ controller.filter(filterRequest);
 
 ### Adding a New Component
 
-1. Create new directory in `components/@casehub/pages-component-<name>/`
-2. Add `package.json` with dependency on `@casehub/pages-iframe-api`
+1. Create new directory in `components/@casehubio/pages-component-<name>/`
+2. Add `package.json` with dependency on `@casehubio/pages-iframe-api`
 3. Create `src/index.tsx` with ComponentController integration
-4. Add webpack configuration (can extend `@casehub/pages-webpack-base`)
+4. Add webpack configuration (can extend `@casehubio/pages-webpack-base`)
 5. Register component in `webapp/package.json` devDependencies
 6. Update `webapp/webpack.config.js` to copy component bundle
 7. Build with `yarn build` - output goes to `dist/index.js`

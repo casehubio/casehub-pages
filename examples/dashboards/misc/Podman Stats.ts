@@ -1,6 +1,6 @@
-import { page, html, markdown, barChart, table, columns, selector, tabs, div, withStyle, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, markdown, barChart, table, columns, selector, tabs, div, withStyle, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Podman Stats.dash.yaml"
 // Podman container and image statistics dashboard with tabs and navigation

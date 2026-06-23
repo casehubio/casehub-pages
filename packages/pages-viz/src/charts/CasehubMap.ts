@@ -8,8 +8,8 @@ import {
   DatasetComponent,
 } from "echarts/components";
 import { CasehubChartElement } from "../base/CasehubChartElement.js";
-import type { MapProps } from "@casehub/pages-component";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import type { MapProps } from "@casehubio/pages-component";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
 

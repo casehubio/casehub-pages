@@ -1,6 +1,6 @@
 import type { Component, GridPlacement } from "./types.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
+import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 
 // Re-export types that moved to pages-component
 export type {
@@ -12,7 +12,7 @@ export type {
   DataScope,
   DataScopeRef,
   SaveConfig,
-} from "@casehub/pages-component";
+} from "@casehubio/pages-component";
 
 // Runtime types stay in pages-ui
 export interface ViewState {

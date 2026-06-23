@@ -1,7 +1,7 @@
 import { CasehubElement } from "../base/CasehubElement.js";
-import type { FormInputCommon } from "@casehub/pages-component";
-import type { TypedDataSet, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
+import type { FormInputCommon } from "@casehubio/pages-component";
+import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 
 export interface CasehubFieldChangeDetail {
   readonly field: string;

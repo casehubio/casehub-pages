@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
-import { getProps } from "@casehub/pages-component";
-import type { DataScopeRef } from "@casehub/pages-component";
+import { getProps } from "@casehubio/pages-component";
+import type { DataScopeRef } from "@casehubio/pages-component";
 
 describe("form input desugaring", () => {
   it("desugars text-input shorthand", () => {

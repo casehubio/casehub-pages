@@ -20,33 +20,33 @@ Rename melviz to casehub-pages and integrate as a foundational module in the Cas
 
 Every `melviz` and `dashbuilder` reference in active code is purged.
 
-The package names encode an architectural distinction: **shared libraries** (in `packages/`) use flat names like `pages-data`, `pages-ui`; **standalone iframe-isolated microfrontend components** (in `components/`) use the `pages-component-` prefix. This makes the architectural role visible in the package registry and allows `build:components` to use `--include '@casehub/pages-component-*'` with zero excludes.
+The package names encode an architectural distinction: **shared libraries** (in `packages/`) use flat names like `pages-data`, `pages-ui`; **standalone iframe-isolated microfrontend components** (in `components/`) use the `pages-component-` prefix. This makes the architectural role visible in the package registry and allows `build:components` to use `--include '@casehubio/pages-component-*'` with zero excludes.
 
 The iframe bridge packages (`@melviz/component-api`, `@melviz/component-dev`) are renamed to `pages-iframe-api` and `pages-iframe-dev` — not `pages-api`/`pages-dev`, which would misleadingly suggest the public API of the entire pages system. These are specifically the postMessage bridge and dev tooling for building iframe components.
 
 | Current Package | Current Folder | New Package | New Folder |
 |----------------|----------------|-------------|------------|
-| `@casehub/component` | `packages/casehub-component` | `@casehub/pages-component` | `packages/pages-component` |
-| `@casehub/data` | `packages/core` | `@casehub/pages-data` | `packages/pages-data` |
-| `@casehub/ui` | `packages/casehub-ui` | `@casehub/pages-ui` | `packages/pages-ui` |
-| `@casehub/viz` | `packages/casehub-viz` | `@casehub/pages-viz` | `packages/pages-viz` |
-| `@casehub/runtime` | `packages/casehub-runtime` | `@casehub/pages-runtime` | `packages/pages-runtime` |
-| `@melviz/component-api` | `packages/melviz-component-api` | `@casehub/pages-iframe-api` | `packages/pages-iframe-api` |
-| `@melviz/component-dev` | `packages/melviz-component-dev` | `@casehub/pages-iframe-dev` | `packages/pages-iframe-dev` |
-| `webpack-base` | `packages/webpack-base` | `@casehub/pages-webpack-base` | `packages/pages-webpack-base` |
-| `@melviz/tsconfig` | `packages/tsconfig` | `@casehub/pages-tsconfig` | `packages/pages-tsconfig` |
-| `@melviz/component-echarts-base` | `components/melviz-component-echarts-base` | `@casehub/pages-echarts-base` | `packages/pages-echarts-base` |
-| `@melviz/component-echarts` | `components/melviz-component-echarts` | `@casehub/pages-component-echarts` | `components/pages-component-echarts` |
-| `@melviz/component-llm-prompter` | `components/melviz-component-llm-prompter` | `@casehub/pages-component-llm-prompter` | `components/pages-component-llm-prompter` |
-| `@melviz/component-svg-heatmap` | `components/melviz-component-svg-heatmap` | `@casehub/pages-component-svg-heatmap` | `components/pages-component-svg-heatmap` |
-| `@melviz/webapp` | `webapp/` | `@casehub/pages-webapp` | `webapp/` |
-| `@melviz/examples` | `examples/` | `@casehub/pages-examples` | `examples/` |
+| `@casehubio/component` | `packages/casehub-component` | `@casehubio/pages-component` | `packages/pages-component` |
+| `@casehubio/data` | `packages/core` | `@casehubio/pages-data` | `packages/pages-data` |
+| `@casehubio/ui` | `packages/casehub-ui` | `@casehubio/pages-ui` | `packages/pages-ui` |
+| `@casehubio/viz` | `packages/casehub-viz` | `@casehubio/pages-viz` | `packages/pages-viz` |
+| `@casehubio/runtime` | `packages/casehub-runtime` | `@casehubio/pages-runtime` | `packages/pages-runtime` |
+| `@melviz/component-api` | `packages/melviz-component-api` | `@casehubio/pages-iframe-api` | `packages/pages-iframe-api` |
+| `@melviz/component-dev` | `packages/melviz-component-dev` | `@casehubio/pages-iframe-dev` | `packages/pages-iframe-dev` |
+| `webpack-base` | `packages/webpack-base` | `@casehubio/pages-webpack-base` | `packages/pages-webpack-base` |
+| `@melviz/tsconfig` | `packages/tsconfig` | `@casehubio/pages-tsconfig` | `packages/pages-tsconfig` |
+| `@melviz/component-echarts-base` | `components/melviz-component-echarts-base` | `@casehubio/pages-echarts-base` | `packages/pages-echarts-base` |
+| `@melviz/component-echarts` | `components/melviz-component-echarts` | `@casehubio/pages-component-echarts` | `components/pages-component-echarts` |
+| `@melviz/component-llm-prompter` | `components/melviz-component-llm-prompter` | `@casehubio/pages-component-llm-prompter` | `components/pages-component-llm-prompter` |
+| `@melviz/component-svg-heatmap` | `components/melviz-component-svg-heatmap` | `@casehubio/pages-component-svg-heatmap` | `components/pages-component-svg-heatmap` |
+| `@melviz/webapp` | `webapp/` | `@casehubio/pages-webapp` | `webapp/` |
+| `@melviz/examples` | `examples/` | `@casehubio/pages-examples` | `examples/` |
 | `@melviz/core-gwt` | `core/` | *(removed from workspace — see GWT Core Removal)* | `_legacy/` |
 | Root: `melviz` | — | `casehub-pages` | — |
 
 **Note on `@melviz/component-echarts-base`:** Despite living in `components/`, this package is built by `build:packages` and excluded from `build:components` — it's a shared library, not a standalone component. The rename moves it to `packages/pages-echarts-base/` to match its actual role.
 
-**Internal class renames** (within `@casehub/pages-iframe-api`):
+**Internal class renames** (within `@casehubio/pages-iframe-api`):
 - `MelvizComponentController` → `PagesComponentController`
 - `MelvizComponentDispatcher` → `PagesComponentDispatcher`
 
@@ -56,7 +56,7 @@ The `pages-` prefix on all package folders (e.g. `pages-data/`, `pages-ui/`) div
 
 ## GWT Core Removal from Build
 
-The Java/GWT core (`core/`) is no longer a build participant. The TypeScript runtime (`@casehub/pages-runtime` via `loadSite()`) has fully replaced the GWT entry point.
+The Java/GWT core (`core/`) is no longer a build participant. The TypeScript runtime (`@casehubio/pages-runtime` via `loadSite()`) has fully replaced the GWT entry point.
 
 **Changes:**
 - Remove `"core/"` from root `package.json` workspaces array
@@ -96,13 +96,13 @@ Remove `"core/"` (GWT removed). Remove redundant explicit entry `"packages/caseh
 
 | Script | Change |
 |--------|--------|
-| `build:packages` | Replace all workspace names to new `@casehub/pages-*` names. Add `@casehub/pages-runtime` after pages-component, pages-data, pages-ui, pages-viz (fixing the existing gap where runtime was omitted from explicit build order). |
+| `build:packages` | Replace all workspace names to new `@casehubio/pages-*` names. Add `@casehubio/pages-runtime` after pages-component, pages-data, pages-ui, pages-viz (fixing the existing gap where runtime was omitted from explicit build order). |
 | `build:core` | Remove entirely (GWT removed from build) |
 | `build:core:prod` | Remove entirely |
 | `build:prod` | Remove `yarn build:core:prod &&` from chain |
-| `build:components` | Change to `--include '@casehub/pages-component-*'` — zero excludes needed because only the three standalone iframe components match (shared libraries use different name patterns) |
-| `build:webapp` | `@melviz/webapp` → `@casehub/pages-webapp` |
-| `build:examples` | `@melviz/examples` → `@casehub/pages-examples` |
+| `build:components` | Change to `--include '@casehubio/pages-component-*'` — zero excludes needed because only the three standalone iframe components match (shared libraries use different name patterns) |
+| `build:webapp` | `@melviz/webapp` → `@casehubio/pages-webapp` |
+| `build:examples` | `@melviz/examples` → `@casehubio/pages-examples` |
 | `clean` | Remove `&& cd core && mvn clean || true` |
 
 ## Examples Gallery Updates
@@ -113,11 +113,11 @@ Five aliases need both key (package name) and value (directory path) updates:
 
 | Current Key | Current Value | New Key | New Value |
 |-------------|--------------|---------|-----------|
-| `@casehub/runtime` | `../packages/casehub-runtime` | `@casehub/pages-runtime` | `../packages/pages-runtime` |
-| `@casehub/viz` | `../packages/casehub-viz` | `@casehub/pages-viz` | `../packages/pages-viz` |
-| `@casehub/ui` | `../packages/casehub-ui` | `@casehub/pages-ui` | `../packages/pages-ui` |
-| `@casehub/component` | `../packages/casehub-component` | `@casehub/pages-component` | `../packages/pages-component` |
-| `@casehub/data` | `../packages/core` | `@casehub/pages-data` | `../packages/pages-data` |
+| `@casehubio/runtime` | `../packages/casehub-runtime` | `@casehubio/pages-runtime` | `../packages/pages-runtime` |
+| `@casehubio/viz` | `../packages/casehub-viz` | `@casehubio/pages-viz` | `../packages/pages-viz` |
+| `@casehubio/ui` | `../packages/casehub-ui` | `@casehubio/pages-ui` | `../packages/pages-ui` |
+| `@casehubio/component` | `../packages/casehub-component` | `@casehubio/pages-component` | `../packages/pages-component` |
+| `@casehubio/data` | `../packages/core` | `@casehubio/pages-data` | `../packages/pages-data` |
 
 ### `copy-melviz.js` → `copy-pages.js`
 
@@ -135,7 +135,7 @@ Update `examples/package.json` scripts that reference this filename.
 ## ARC42STORIES.MD Update
 
 The project's architectural record must reflect the rename. Every section (§1–§13) is updated:
-- All pre-rename package names (`@casehub/data`, `@casehub/ui`, `@casehub/viz`, `@casehub/component`, `@casehub/runtime`, `@melviz/examples`) → new `@casehub/pages-*` names
+- All pre-rename package names (`@casehubio/data`, `@casehubio/ui`, `@casehubio/viz`, `@casehubio/component`, `@casehubio/runtime`, `@melviz/examples`) → new `@casehubio/pages-*` names
 - `melviz` in title, descriptions, terminology → `casehub-pages`
 - §2 build references: remove GWT mention from `build:prod`
 - §3 context diagram: update package names in the loadSite flow
@@ -263,10 +263,10 @@ The root README (279 lines) describes the old GWT-based hybrid architecture and 
 
 **Full rewrite** reflecting:
 - TypeScript-only architecture (no Java/Maven prerequisites)
-- `loadSite()` API entry point via `@casehub/pages-runtime`
-- Data flow: YAML → `@casehub/pages-ui` (parse) → `@casehub/pages-data` (resolve) → `@casehub/pages-component` (layout) → `@casehub/pages-viz` (render)
-- Standalone iframe components via `@casehub/pages-iframe-api` postMessage bridge
-- New `@casehub/pages-component-*` naming for standalone components
+- `loadSite()` API entry point via `@casehubio/pages-runtime`
+- Data flow: YAML → `@casehubio/pages-ui` (parse) → `@casehubio/pages-data` (resolve) → `@casehubio/pages-component` (layout) → `@casehubio/pages-viz` (render)
+- Standalone iframe components via `@casehubio/pages-iframe-api` postMessage bridge
+- New `@casehubio/pages-component-*` naming for standalone components
 - Lineage paragraph preserved:
 
 > **History:** casehub-pages descends from [dashbuilder](https://github.com/kiegroup/kie-tools), a full GWT dashboard authoring platform. The melviz fork modernised the frontend, progressively replacing GWT with TypeScript Web Components. casehub-pages completes that journey — 100% TypeScript, near feature parity with dashbuilder, and designed as a foundational building block for the CaseHub platform.
@@ -281,9 +281,9 @@ The root README (279 lines) describes the old GWT-based hybrid architecture and 
 
 Items covered by "purge every melviz reference" — enumerated here for implementation completeness:
 
-- **tsconfig extends:** 5 packages/components have `"extends": "@melviz/tsconfig/tsconfig.json"` → `"@casehub/pages-tsconfig/tsconfig.json"`
+- **tsconfig extends:** 5 packages/components have `"extends": "@melviz/tsconfig/tsconfig.json"` → `"@casehubio/pages-tsconfig/tsconfig.json"`
 - **repository/bugs/homepage URLs:** at least 8 `package.json` files reference `melviz-org/melviz` → `casehubio/casehub-pages`
-- **workspace:\* dependencies:** all `@melviz/*` cross-references in `package.json` files → `@casehub/pages-*`
+- **workspace:\* dependencies:** all `@melviz/*` cross-references in `package.json` files → `@casehubio/pages-*`
 - **JSDoc comments:** `ComponentController.ts` and `InternalComponentListener.ts` reference "melviz" in documentation strings
 - **keywords:** `examples/package.json` line 37 has keyword `"melviz"` → `"casehub-pages"`
 

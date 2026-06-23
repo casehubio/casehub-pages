@@ -1,6 +1,6 @@
-import { page, html, metric, barChart, columns, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, metric, barChart, columns, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "ModelMeshMetrics.dash.yaml"
 // ModelMesh serving metrics with custom card styling

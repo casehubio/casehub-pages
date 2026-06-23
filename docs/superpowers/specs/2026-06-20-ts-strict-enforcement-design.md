@@ -132,7 +132,7 @@ type. pages-ui re-exports `getProps` from pages-component without any cast.
 
 pages-ui permanently re-exports all component types from its public API — it is a convenience
 barrel that presents the full component model plus parsing. Consumers can import from either
-`@casehub/pages-component` (just types) or `@casehub/pages-ui` (types + parser + DSL). The
+`@casehubio/pages-component` (just types) or `@casehubio/pages-ui` (types + parser + DSL). The
 types are defined in and owned by pages-component.
 
 ## Component<T, P> Type System
@@ -298,7 +298,7 @@ These components override `target` to match their browser requirements:
 
 ```json
 {
-  "extends": "@casehub/pages-tsconfig/tsconfig.json",
+  "extends": "@casehubio/pages-tsconfig/tsconfig.json",
   "compilerOptions": {
     "target": "es6"
   }
@@ -331,7 +331,7 @@ Fix: separate type-checking truth from build output.
 **`tsconfig.json`** — the type-checking authority, includes everything:
 ```json
 {
-  "extends": "@casehub/pages-tsconfig/tsconfig.json",
+  "extends": "@casehubio/pages-tsconfig/tsconfig.json",
   "include": ["src"]
 }
 ```

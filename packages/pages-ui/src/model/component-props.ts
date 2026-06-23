@@ -19,4 +19,4 @@ export type {
   FilterSettings,
   DrillDown,
   RefreshSettings,
-} from "@casehub/pages-component";
+} from "@casehubio/pages-component";

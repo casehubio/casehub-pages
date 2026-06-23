@@ -1,6 +1,6 @@
-import { page, title, barChart, table, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, title, barChart, table, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Github Repositories.dash.yaml"
 // Top GitHub repositories by stars

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the `@casehub/ui` page model types, TypeScript DSL builders, and YAML parser with backwards compatibility for all existing dashboards.
+**Goal:** Implement the `@casehubio/ui` page model types, TypeScript DSL builders, and YAML parser with backwards compatibility for all existing dashboards.
 
-**Architecture:** Model-first — TypeScript interfaces define the component model (`Component`, `GridItem`, typed props). DSL builder functions construct model objects with validation. YAML parser uses Zod schemas constrained to match model types, with desugaring transforms for backwards compatibility. The model lives in `packages/casehub-ui/`, a new Yarn workspace alongside the existing `packages/core/` (which becomes `@casehub/data`).
+**Architecture:** Model-first — TypeScript interfaces define the component model (`Component`, `GridItem`, typed props). DSL builder functions construct model objects with validation. YAML parser uses Zod schemas constrained to match model types, with desugaring transforms for backwards compatibility. The model lives in `packages/casehub-ui/`, a new Yarn workspace alongside the existing `packages/core/` (which becomes `@casehubio/data`).
 
 **Tech Stack:** TypeScript 5.6+, Zod 3.23+, Vitest 3.0+, Yarn workspaces
 
@@ -27,10 +27,10 @@ packages/casehub-ui/
 │   │   │                         #   FilterSettings, DrillDown, RefreshSettings (ZERO deps)
 │   │   ├── page-types.ts         # PageProps, PageSettings, ViewState, Site,
 │   │   │                         #   DataComponentDefaults, LookupDefaults, DataSetDefaults,
-│   │   │                         #   DeepLink (depends on @casehub/data)
+│   │   │                         #   DeepLink (depends on @casehubio/data)
 │   │   ├── displayer-types.ts    # DataComponentCommon, ChartSettings, BarChartProps,
 │   │   │                         #   LineChartProps, TableProps, MetricProps, etc.,
-│   │   │                         #   IframePluginProps (depends on @casehub/data)
+│   │   │                         #   IframePluginProps (depends on @casehubio/data)
 │   │   ├── type-guards.ts        # ComponentTypeRegistry, getProps(), isBarChart(), etc.
 │   │   └── index.ts              # re-exports
 │   │
@@ -53,7 +53,7 @@ packages/casehub-ui/
 │   └── index.ts                  # public API re-exports
 ```
 
-**Pre-requisite:** Task 1 renames `ColumnSettings` fields in `@casehub/data` (breaking change). All subsequent tasks depend on this.
+**Pre-requisite:** Task 1 renames `ColumnSettings` fields in `@casehubio/data` (breaking change). All subsequent tasks depend on this.
 
 ---
 
@@ -68,7 +68,7 @@ packages/casehub-ui/
 
 ```json
 {
-  "name": "@casehub/ui",
+  "name": "@casehubio/ui",
   "version": "0.0.1",
   "description": "CaseHub UI — component model, layout primitives, DSL, YAML parser",
   "type": "module",
@@ -81,7 +81,7 @@ packages/casehub-ui/
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehub/data": "workspace:*",
+    "@casehubio/data": "workspace:*",
     "zod": "^3.23.0"
   },
   "devDependencies": {
@@ -126,7 +126,7 @@ packages/casehub-ui/
 - [ ] **Step 3: Create stub index.ts**
 
 ```typescript
-// @casehub/ui — component model, layout primitives, DSL, YAML parser
+// @casehubio/ui — component model, layout primitives, DSL, YAML parser
 // Populated as modules are implemented.
 ```
 
@@ -134,9 +134,9 @@ packages/casehub-ui/
 
 Add `"packages/casehub-ui"` to the `workspaces` array in the root `package.json`.
 
-- [ ] **Step 5: Rename @melviz/core to @casehub/data**
+- [ ] **Step 5: Rename @melviz/core to @casehubio/data**
 
-Change `"name"` in `packages/core/package.json` from `"@melviz/core"` to `"@casehub/data"`.
+Change `"name"` in `packages/core/package.json` from `"@melviz/core"` to `"@casehubio/data"`.
 
 - [ ] **Step 6: Install dependencies**
 
@@ -145,18 +145,18 @@ Expected: Clean install with the new workspace resolved.
 
 - [ ] **Step 7: Verify build**
 
-Run: `yarn workspace @casehub/ui run build`
+Run: `yarn workspace @casehubio/ui run build`
 Expected: Compiles with no errors (empty index.ts).
 
 - [ ] **Step 8: Commit**
 
 ```
-feat: scaffold @casehub/ui package, rename @melviz/core to @casehub/data  Refs #8
+feat: scaffold @casehubio/ui package, rename @melviz/core to @casehubio/data  Refs #8
 ```
 
 ---
 
-### Task 1: ColumnSettings breaking rename in @casehub/data
+### Task 1: ColumnSettings breaking rename in @casehubio/data
 
 **Files:**
 - Modify: `packages/core/src/dataset/types.ts`
@@ -199,7 +199,7 @@ describe("ColumnSettings", () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `yarn workspace @casehub/data run test -- src/dataset/types.test.ts`
+Run: `yarn workspace @casehubio/data run test -- src/dataset/types.test.ts`
 Expected: FAIL — old field names don't match.
 
 - [ ] **Step 3: Rename fields in types.ts**
@@ -225,7 +225,7 @@ Search for `columnId`, `columnName`, `valueExpression`, `valuePattern`, `emptyTe
 
 - [ ] **Step 5: Run all tests**
 
-Run: `yarn workspace @casehub/data run test`
+Run: `yarn workspace @casehubio/data run test`
 Expected: All tests pass with renamed fields.
 
 - [ ] **Step 6: Commit**
@@ -310,7 +310,7 @@ describe("ALLOW_ALL", () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `yarn workspace @casehub/ui run test -- src/model/types.test.ts`
+Run: `yarn workspace @casehubio/ui run test -- src/model/types.test.ts`
 Expected: FAIL — module not found.
 
 - [ ] **Step 3: Implement types.ts**
@@ -356,7 +356,7 @@ export const ALLOW_ALL: PermissionContext = {
 
 - [ ] **Step 4: Run test**
 
-Run: `yarn workspace @casehub/ui run test -- src/model/types.test.ts`
+Run: `yarn workspace @casehubio/ui run test -- src/model/types.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -518,7 +518,7 @@ feat: component props — layout, navigation, content, filter, refresh  Refs #8
 ```typescript
 import { describe, it, expect } from "vitest";
 import type { PageProps, PageSettings, ViewState, DeepLink } from "./page-types.js";
-import type { DataSetId, ColumnId } from "@casehub/data/dataset/types.js";
+import type { DataSetId, ColumnId } from "@casehubio/data/dataset/types.js";
 
 describe("PageProps", () => {
   it("has name, datasets, settings, properties", () => {
@@ -640,11 +640,11 @@ describe("MetricProps", () => {
 
 - [ ] **Step 4: Implement page-types.ts**
 
-All types from spec §2 — `PageProps`, `PageSettings`, `DataComponentDefaults`, `LookupDefaults`, `DataSetDefaults`, `ViewState`, `DeepLink`, `DrillDownStep`, `LayoutOverride`, and the `Site` interface. Imports `DataSetId`, `ColumnId`, `DataSetOp`, `ExternalDataSetDef`, `ExternalColumnDef`, `HttpMethod` from `@casehub/data`.
+All types from spec §2 — `PageProps`, `PageSettings`, `DataComponentDefaults`, `LookupDefaults`, `DataSetDefaults`, `ViewState`, `DeepLink`, `DrillDownStep`, `LayoutOverride`, and the `Site` interface. Imports `DataSetId`, `ColumnId`, `DataSetOp`, `ExternalDataSetDef`, `ExternalColumnDef`, `HttpMethod` from `@casehubio/data`.
 
 - [ ] **Step 5: Implement displayer-types.ts**
 
-All types from spec §5 — `DataComponentCommon`, `ChartSettings`, `BarChartProps`, `LineChartProps`, `AreaChartProps`, `PieChartProps`, `ScatterChartProps`, `BubbleChartProps`, `TimeseriesProps`, `TableProps`, `MetricProps`, `MeterProps`, `SelectorProps`, `MapProps`, `IframePluginProps`. Imports `DataSetLookup`, `ColumnSettings` from `@casehub/data`.
+All types from spec §5 — `DataComponentCommon`, `ChartSettings`, `BarChartProps`, `LineChartProps`, `AreaChartProps`, `PieChartProps`, `ScatterChartProps`, `BubbleChartProps`, `TimeseriesProps`, `TableProps`, `MetricProps`, `MeterProps`, `SelectorProps`, `MapProps`, `IframePluginProps`. Imports `DataSetLookup`, `ColumnSettings` from `@casehubio/data`.
 
 - [ ] **Step 6: Run tests — PASS**
 
@@ -1663,7 +1663,7 @@ describe("backwards compatibility — existing dashboards", () => {
 
 - [ ] **Step 2: Run tests**
 
-Run: `yarn workspace @casehub/ui run test -- src/parser/backwards-compat.test.ts`
+Run: `yarn workspace @casehubio/ui run test -- src/parser/backwards-compat.test.ts`
 Expected: ALL PASS — every existing dashboard parses.
 
 - [ ] **Step 3: Fix any failures**
@@ -1682,15 +1682,15 @@ test: backwards compatibility suite — all 45+ existing dashboards parse  Refs 
 
 - [ ] **Step 1: Run full test suite**
 
-Run: `yarn workspace @casehub/data run test`
+Run: `yarn workspace @casehubio/data run test`
 Expected: All pass (ColumnSettings rename didn't break anything).
 
-Run: `yarn workspace @casehub/ui run test`
+Run: `yarn workspace @casehubio/ui run test`
 Expected: All pass.
 
 - [ ] **Step 2: Run full build**
 
-Run: `yarn workspace @casehub/ui run build`
+Run: `yarn workspace @casehubio/ui run build`
 Expected: Compiles with no errors, types emitted to `dist/`.
 
 - [ ] **Step 3: Verify exports**
@@ -1705,7 +1705,7 @@ Check that `packages/casehub-ui/dist/index.d.ts` exports all public types and fu
 
 | Task | What | Deps |
 |------|------|------|
-| 0 | Scaffold `@casehub/ui` package, rename `@melviz/core` → `@casehub/data` | — |
+| 0 | Scaffold `@casehubio/ui` package, rename `@melviz/core` → `@casehubio/data` | — |
 | 1 | ColumnSettings field rename (breaking) | 0 |
 | 2 | Core model types (zero-dep) | 0 |
 | 3 | Component props (zero-dep) | 2 |

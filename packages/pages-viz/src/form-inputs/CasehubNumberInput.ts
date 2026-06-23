@@ -1,7 +1,7 @@
 import { CasehubFormInput } from "./CasehubFormInput.js";
-import type { NumberInputProps } from "@casehub/pages-component";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
+import type { NumberInputProps } from "@casehubio/pages-component";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 
 const NUMBER_INPUT_CSS = `
 :host {

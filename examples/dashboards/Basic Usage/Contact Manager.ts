@@ -1,9 +1,9 @@
 import {
   page, title, table, textInput, numberInput,
   dropdown, checkbox, datePicker, textarea, inlineDataset,
-} from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId } from "@casehub/data";
+} from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId } from "@casehubio/data";
 
 const contacts = "contacts" as DataSetId;
 

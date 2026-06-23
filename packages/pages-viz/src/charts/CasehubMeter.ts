@@ -7,8 +7,8 @@ import {
   VisualMapComponent,
 } from "echarts/components";
 import { CasehubChartElement } from "../base/CasehubChartElement.js";
-import type { MeterProps } from "@casehub/pages-component";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import type { MeterProps } from "@casehubio/pages-component";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import { cellToRaw } from "../base/cell-extract.js";
 import { applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";

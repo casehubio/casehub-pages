@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CasehubIframePlugin } from "./CasehubIframePlugin.js";
-import type { IframePluginProps } from "@casehub/pages-component";
-import type { TypedDataSet, TypedRow, CellValue } from "@casehub/pages-data/dist/dataset/types.js";
-import { ColumnType, columnId } from "@casehub/pages-data/dist/dataset/types.js";
+import type { IframePluginProps } from "@casehubio/pages-component";
+import type { TypedDataSet, TypedRow, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
+import { ColumnType, columnId } from "@casehubio/pages-data/dist/dataset/types.js";
 
 
 function mockRow(cells: CellValue[]): TypedRow {

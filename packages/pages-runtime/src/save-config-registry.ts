@@ -1,4 +1,4 @@
-import type { SaveConfig } from "@casehub/pages-ui";
+import type { SaveConfig } from "@casehubio/pages-ui";
 
 export type SaveConfigRegistry = Map<string, SaveConfig>;
 

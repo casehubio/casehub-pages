@@ -1,6 +1,6 @@
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-import type { IframePluginProps } from "@casehub/pages-component";
-import { toWireDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { IframePluginProps } from "@casehubio/pages-component";
+import { toWireDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 import { CasehubElement } from "../base/CasehubElement.js";
 
 const IFRAME_CSS = `

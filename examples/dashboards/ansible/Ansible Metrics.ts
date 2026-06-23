@@ -1,6 +1,6 @@
-import { page, html, metric, columns, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, metric, columns, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Ansible Metrics.dash.yaml"
 // Ansible Tower metrics summary dashboard

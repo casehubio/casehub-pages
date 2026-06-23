@@ -3,10 +3,10 @@
  * If this passes, the full interaction test suite covers both formats.
  */
 import { describe, it, expect, afterEach } from "vitest";
-import "@casehub/pages-viz";
+import "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import { columnId, ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
+import { columnId, ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
 import {
   page,
   textInput,
@@ -18,9 +18,9 @@ import {
   table,
   title,
   inlineDataset,
-} from "@casehub/pages-ui/dist/dsl/builders.js";
-import { createLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+} from "@casehubio/pages-ui/dist/dsl/builders.js";
+import { createLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 
 const CONTACT_YAML = `
 datasets:

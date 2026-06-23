@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@casehub/pages-webpack-base",
+  "name": "@casehubio/pages-webpack-base",
   "version": "0.0.0",
   "description": "CaseHub Pages webpack base config",
   "license": "Apache-2.0",

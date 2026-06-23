@@ -1,6 +1,6 @@
-import { page, timeseries, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId } from "@casehub/data";
+import { page, timeseries, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId } from "@casehubio/data";
 
 // TypeScript companion to "TimeSeries.dash.yaml"
 // Simple timeseries example

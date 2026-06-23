@@ -1,4 +1,4 @@
-import type { CellValue, Column, ColumnSettings } from "@casehub/pages-data/dist/dataset/types.js";
+import type { CellValue, Column, ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
 
 /**
  * Compile a cell expression string into a callable function.

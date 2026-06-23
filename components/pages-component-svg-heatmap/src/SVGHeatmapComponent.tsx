@@ -19,8 +19,8 @@ import { useEffect, useState } from "react";
 
 import type { SvgNodeValue } from "./SvgHeatmap";
 import { SvgHeatmap } from "./SvgHeatmap";
-import type { DataSet, ComponentController } from "@casehub/pages-iframe-api";
-import { ColumnType } from "@casehub/pages-iframe-api";
+import type { DataSet, ComponentController } from "@casehubio/pages-iframe-api";
+import { ColumnType } from "@casehubio/pages-iframe-api";
 
 const SVG_PARAM = "svg";
 const BLUR_PARAM = "blur";

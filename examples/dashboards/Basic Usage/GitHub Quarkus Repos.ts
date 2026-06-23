@@ -1,5 +1,5 @@
-import { page, html, table, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
+import { page, html, table, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
 
 dataset(
   "quarkus_repos",

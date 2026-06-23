@@ -1,5 +1,5 @@
 {
-  "extends": "@casehub/pages-tsconfig/tsconfig.json",
+  "extends": "@casehubio/pages-tsconfig/tsconfig.json",
   "compilerOptions": {
     "target": "es6",
     "rootDir": "src",

@@ -14,7 +14,7 @@
 
 `casehub-pages` is a pure TypeScript dashboard rendering runtime — a GWT-to-TypeScript migration of the DashBuilder visualization engine. It parses YAML dashboard definitions, resolves datasets (inline, URL, JSONata), and renders interactive visualizations as Web Components.
 
-Core packages: `@casehub/pages-data` (DataSet model, operations engine, external data extraction), `@casehub/pages-ui` (YAML parser, layout model, displayer desugaring), `@casehub/pages-viz` (Web Component chart/table/metric wrappers around ECharts), `@casehub/pages-component` (CSS grid layout renderer, slot management, interactive containers), `@casehub/pages-runtime` (site orchestrator — wires parsing, data, and rendering into `loadSite()`).
+Core packages: `@casehubio/pages-data` (DataSet model, operations engine, external data extraction), `@casehubio/pages-ui` (YAML parser, layout model, displayer desugaring), `@casehubio/pages-viz` (Web Component chart/table/metric wrappers around ECharts), `@casehubio/pages-component` (CSS grid layout renderer, slot management, interactive containers), `@casehubio/pages-runtime` (site orchestrator — wires parsing, data, and rendering into `loadSite()`).
 
 ### Stakeholders
 
@@ -55,11 +55,11 @@ yarn build:prod                   # production (includes examples gallery)
 │                  Host Application                │
 │  (DraftHouse, Claudony, standalone HTML page)    │
 │                                                  │
-│   loadSite(yaml) ──► @casehub/pages-runtime      │
-│                      ├── @casehub/pages-ui       │
-│                      ├── @casehub/pages-data     │
-│                      ├── @casehub/pages-component│
-│                      └── @casehub/pages-viz      │
+│   loadSite(yaml) ──► @casehubio/pages-runtime      │
+│                      ├── @casehubio/pages-ui       │
+│                      ├── @casehubio/pages-data     │
+│                      ├── @casehubio/pages-component│
+│                      └── @casehubio/pages-viz      │
 │                                                  │
 │   ◄── casehub-filter, casehub-sort events ──►    │
 └─────────────────────────────────────────────────┘
@@ -79,17 +79,17 @@ yarn build:prod                   # production (includes examples gallery)
 ```
 YAML dashboard definition
     ↓  (js-yaml)
-parsePage() / parsePages()          — @casehub/pages-ui
+parsePage() / parsePages()          — @casehubio/pages-ui
     ↓
 ComponentNode tree + DataSetDef[]   — layout model
     ↓
-resolveDataSet() / extractDataSet() — @casehub/pages-data
+resolveDataSet() / extractDataSet() — @casehubio/pages-data
     ↓
 DataSet (columns + rows)            — wire format
     ↓
-renderNode() / renderComponent()    — @casehub/pages-component
+renderNode() / renderComponent()    — @casehubio/pages-component
     ↓
-<casehub-bar-chart> etc.            — @casehub/pages-viz Web Components
+<casehub-bar-chart> etc.            — @casehubio/pages-viz Web Components
     ↓
 casehub-filter / casehub-sort       — DOM custom events back to data layer
 ```
@@ -112,7 +112,7 @@ Key decisions:
 
 The filter flow (selector → `casehub-filter` → listening component re-query) requires:
 1. Event listener ordering — `renderComponent` must run AFTER `addEventListener` (custom elements dispatch `casehub-data-request` synchronously during `connectedCallback`)
-2. `@casehub/viz` side-effect import — custom elements must be registered for `connectedCallback` to fire
+2. `@casehubio/viz` side-effect import — custom elements must be registered for `connectedCallback` to fire
 3. `yamlLoad` call in the YAML string path
 
 ---
@@ -121,12 +121,12 @@ The filter flow (selector → `casehub-filter` → listening component re-query)
 
 | Package | Responsibility |
 |---|---|
-| `@casehub/pages-data` | DataSet model, filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), JSONata expressions |
-| `@casehub/pages-ui` | YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
-| `@casehub/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, table, metric, selector |
-| `@casehub/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), slot management |
-| `@casehub/pages-runtime` | Site orchestrator: `loadSite()`, page navigation, dataset resolution pipeline, event wiring |
-| `@casehub/pages-examples` | Dashboard gallery: dev server, Playwright tests, DashBuilder sample validation |
+| `@casehubio/pages-data` | DataSet model, filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), JSONata expressions |
+| `@casehubio/pages-ui` | YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
+| `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, table, metric, selector |
+| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), slot management |
+| `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, page navigation, dataset resolution pipeline, event wiring |
+| `@casehubio/pages-examples` | Dashboard gallery: dev server, Playwright tests, DashBuilder sample validation |
 
 ---
 
@@ -135,11 +135,11 @@ The filter flow (selector → `casehub-filter` → listening component re-query)
 ### Dashboard Loading
 
 1. Host calls `loadSite(yaml, container, options)`
-2. Runtime parses YAML via `@casehub/pages-ui` → `ComponentNode` tree + `DataSetDef[]`
+2. Runtime parses YAML via `@casehubio/pages-ui` → `ComponentNode` tree + `DataSetDef[]`
 3. Runtime registers event listeners for `casehub-data-request`, `casehub-filter`, `casehub-sort`, `casehub-page`
-4. Runtime calls `renderComponent()` → `@casehub/pages-component` renders CSS grid layout
+4. Runtime calls `renderComponent()` → `@casehubio/pages-component` renders CSS grid layout
 5. Web Components fire `casehub-data-request` during `connectedCallback`
-6. Runtime resolves each dataset via `@casehub/pages-data` and posts results back via `casehub-data-response`
+6. Runtime resolves each dataset via `@casehubio/pages-data` and posts results back via `casehub-data-response`
 7. Web Components render with ECharts / DOM
 
 ### Cross-Filtering
@@ -154,7 +154,11 @@ The filter flow (selector → `casehub-filter` → listening component re-query)
 
 ## §7 Deployment View
 
-Webpack bundle. Host applications include `@casehub/pages-runtime` as an npm dependency or load the webapp bundle directly. The examples gallery serves at `localhost:8080` via webpack-dev-server.
+Packages published to GitHub Packages (`npm.pkg.github.com`) under the `@casehubio` scope. Host applications consume packages via Quarkus Quinoa — `npm install` at build time, static serving from `META-INF/resources/` at runtime. No Node.js at runtime.
+
+Convention: `docs/quinoa-convention.md`. Reference template: `templates/quinoa-host/`.
+
+The examples gallery serves at `localhost:8080` via webpack-dev-server (monorepo-internal, not published).
 
 ---
 
@@ -183,9 +187,9 @@ GWT-to-TypeScript migration of the core data and rendering pipeline. All package
 | Expression evaluator (JSONata bridge) | ✅ shipped |
 | YAML parser + dashboard schema | ✅ shipped |
 | External data extraction (JSON, CSV, Prometheus) | ✅ shipped |
-| @casehub/pages-viz Web Components | ✅ shipped |
-| @casehub/pages-component CSS grid layout | ✅ shipped |
-| @casehub/pages-runtime — loadSite() | ✅ shipped |
+| @casehubio/pages-viz Web Components | ✅ shipped |
+| @casehubio/pages-component CSS grid layout | ✅ shipped |
+| @casehubio/pages-runtime — loadSite() | ✅ shipped |
 
 ### Chapter 2: DashBuilder Demo Gallery
 
@@ -222,7 +226,8 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | #23 | Server-side data provider: Elasticsearch | 🔲 open |
 | #24 | View state persistence (URL-based) | 🔲 open |
 | #25 | LLM-friendly API documentation for host application integration | 🔲 open |
-| #26 | Platform convention: Quarkus + TypeScript frontend via Quinoa | 🔲 open |
+| #26 | Platform convention: Quarkus + TypeScript frontend via Quinoa | ✅ shipped |
+| #28 | Remove redundant iframe ECharts component — migrate to inline Web Components | ✅ shipped |
 
 ---
 
@@ -243,7 +248,7 @@ Decisions not captured inline in §4:
 | Requirement | Metric |
 |---|---|
 | DashBuilder compatibility | 28/31 sample dashboards render correctly (validation matrix: `examples/VALIDATION.md`) |
-| Test coverage | 615 tests (@casehub/data), 158 tests (@casehub/component), 183 tests (@casehub/runtime) |
+| Test coverage | 615 tests (@casehubio/data), 158 tests (@casehubio/component), 183 tests (@casehubio/runtime) |
 | No Java at runtime | `loadSite()` works without GWT compilation or Java process |
 
 ---

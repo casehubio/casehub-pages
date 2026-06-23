@@ -161,7 +161,7 @@ Steps:
 
 #### New cross-package import
 
-`activation.ts` gains an import of `renderComponent` from `@casehub/component/dist/renderer/render.js`. The cross-package dependency already exists at the package level (`@casehub/runtime` → `@casehub/component`), and `site.ts` already imports `renderComponent`. This adds a new file-level import within an existing dependency direction — no new architectural edge.
+`activation.ts` gains an import of `renderComponent` from `@casehubio/component/dist/renderer/render.js`. The cross-package dependency already exists at the package level (`@casehubio/runtime` → `@casehubio/component`), and `site.ts` already imports `renderComponent`. This adds a new file-level import within an existing dependency direction — no new architectural edge.
 
 ### Files
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import type { Component } from "@casehub/pages-component/dist/model/types.js";
-import { ALLOW_ALL } from "@casehub/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import { ALLOW_ALL } from "@casehubio/pages-component/dist/model/types.js";
 import { createActivationCallback } from "./activation.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { PagePathMap } from "./page-paths.js";

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "../model/types.js";
 import type { PageSettings } from "../model/page-types.js";
-import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import { getProps } from "../model/type-guards.js";
 import {
   page,

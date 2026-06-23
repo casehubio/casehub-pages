@@ -1,5 +1,5 @@
-import { page, html, barChart, inlineDataset } from "@casehub/ui";
-import { createLookup, groupOp } from "@casehub/data";
+import { page, html, barChart, inlineDataset } from "@casehubio/ui";
+import { createLookup, groupOp } from "@casehubio/data";
 
 const helloData = JSON.stringify([
   ["John", 33],

@@ -1,6 +1,6 @@
-import { page, metric, barChart, table, title, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, metric, barChart, table, title, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "JVM Monitoring.yml"
 // Monitoring JVM metrics with Micrometer format

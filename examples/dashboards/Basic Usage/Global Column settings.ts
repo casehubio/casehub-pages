@@ -1,5 +1,5 @@
-import { page, table, barChart, inlineDataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
+import { page, table, barChart, inlineDataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
 
 inlineDataset("test", "['ABC', 1]");
 

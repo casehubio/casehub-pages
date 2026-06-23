@@ -1,5 +1,5 @@
-import { page, html, iframePlugin, barChart, table, rows, columns, dataset } from "@casehub/ui";
-import { createLookup, groupOp, sortOp } from "@casehub/data";
+import { page, html, iframePlugin, barChart, table, rows, columns, dataset } from "@casehubio/ui";
+import { createLookup, groupOp, sortOp } from "@casehubio/data";
 
 dataset(
   "devs",

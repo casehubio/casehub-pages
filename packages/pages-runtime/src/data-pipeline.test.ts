@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import type { DataSetId, Column, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import { ColumnType, dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
-import { toTypedDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
-import { createDataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
+import type { DataSetId, Column, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { ColumnType, dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
 import { createDataPipeline } from "./data-pipeline.js";
 import type { VizTarget } from "./data-pipeline.js";
 import type { ComponentRegistry } from "./registry.js";
@@ -12,7 +12,7 @@ import { createFilterState } from "./cross-filter.js";
 import { getActiveFilterOps } from "./cross-filter.js";
 import type { FilterState } from "./cross-filter.js";
 import { createDataScopeRegistry } from "./data-scope-registry.js";
-import type { ResolverContext } from "@casehub/pages-data/dist/dataset/external/resolver.js";
+import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
   return { id: id as ColumnId, name, type };

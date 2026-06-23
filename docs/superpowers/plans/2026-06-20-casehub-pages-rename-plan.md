@@ -143,16 +143,16 @@ For each package, update the `"name"` field:
 
 | File | Old name | New name |
 |------|----------|----------|
-| `packages/pages-component/package.json` | `@casehub/component` | `@casehub/pages-component` |
-| `packages/pages-data/package.json` | `@casehub/data` | `@casehub/pages-data` |
-| `packages/pages-ui/package.json` | `@casehub/ui` | `@casehub/pages-ui` |
-| `packages/pages-viz/package.json` | `@casehub/viz` | `@casehub/pages-viz` |
-| `packages/pages-runtime/package.json` | `@casehub/runtime` | `@casehub/pages-runtime` |
-| `packages/pages-iframe-api/package.json` | `@melviz/component-api` | `@casehub/pages-iframe-api` |
-| `packages/pages-iframe-dev/package.json` | `@melviz/component-dev` | `@casehub/pages-iframe-dev` |
-| `packages/pages-webpack-base/package.json` | `webpack-base` | `@casehub/pages-webpack-base` |
-| `packages/pages-tsconfig/package.json` | `@melviz/tsconfig` | `@casehub/pages-tsconfig` |
-| `packages/pages-echarts-base/package.json` | `@melviz/component-echarts-base` | `@casehub/pages-echarts-base` |
+| `packages/pages-component/package.json` | `@casehubio/component` | `@casehubio/pages-component` |
+| `packages/pages-data/package.json` | `@casehubio/data` | `@casehubio/pages-data` |
+| `packages/pages-ui/package.json` | `@casehubio/ui` | `@casehubio/pages-ui` |
+| `packages/pages-viz/package.json` | `@casehubio/viz` | `@casehubio/pages-viz` |
+| `packages/pages-runtime/package.json` | `@casehubio/runtime` | `@casehubio/pages-runtime` |
+| `packages/pages-iframe-api/package.json` | `@melviz/component-api` | `@casehubio/pages-iframe-api` |
+| `packages/pages-iframe-dev/package.json` | `@melviz/component-dev` | `@casehubio/pages-iframe-dev` |
+| `packages/pages-webpack-base/package.json` | `webpack-base` | `@casehubio/pages-webpack-base` |
+| `packages/pages-tsconfig/package.json` | `@melviz/tsconfig` | `@casehubio/pages-tsconfig` |
+| `packages/pages-echarts-base/package.json` | `@melviz/component-echarts-base` | `@casehubio/pages-echarts-base` |
 
 Also update `description` fields that reference "Melviz" → "CaseHub Pages".
 
@@ -160,22 +160,22 @@ Also update `description` fields that reference "Melviz" → "CaseHub Pages".
 
 Every `package.json` that declares `workspace:*` dependencies on the old names needs updating. The mappings are:
 
-- `@casehub/component` → `@casehub/pages-component`
-- `@casehub/data` → `@casehub/pages-data`
-- `@casehub/ui` → `@casehub/pages-ui`
-- `@casehub/viz` → `@casehub/pages-viz`
-- `@casehub/runtime` → `@casehub/pages-runtime`
-- `@melviz/component-api` → `@casehub/pages-iframe-api`
-- `@melviz/component-dev` → `@casehub/pages-iframe-dev`
-- `@melviz/tsconfig` → `@casehub/pages-tsconfig`
-- `webpack-base` → `@casehub/pages-webpack-base`
-- `@melviz/component-echarts-base` → `@casehub/pages-echarts-base`
+- `@casehubio/component` → `@casehubio/pages-component`
+- `@casehubio/data` → `@casehubio/pages-data`
+- `@casehubio/ui` → `@casehubio/pages-ui`
+- `@casehubio/viz` → `@casehubio/pages-viz`
+- `@casehubio/runtime` → `@casehubio/pages-runtime`
+- `@melviz/component-api` → `@casehubio/pages-iframe-api`
+- `@melviz/component-dev` → `@casehubio/pages-iframe-dev`
+- `@melviz/tsconfig` → `@casehubio/pages-tsconfig`
+- `webpack-base` → `@casehubio/pages-webpack-base`
+- `@melviz/component-echarts-base` → `@casehubio/pages-echarts-base`
 
 Files to check: every `package.json` in the repo. Key ones:
-- `packages/pages-ui/package.json`: `@casehub/component`, `@casehub/data` → `@casehub/pages-component`, `@casehub/pages-data`
-- `packages/pages-viz/package.json`: `@casehub/data`, `@casehub/ui` → `@casehub/pages-data`, `@casehub/pages-ui`
-- `packages/pages-runtime/package.json`: all four `@casehub/*` deps
-- `packages/pages-echarts-base/package.json`: `@melviz/tsconfig` → `@casehub/pages-tsconfig`
+- `packages/pages-ui/package.json`: `@casehubio/component`, `@casehubio/data` → `@casehubio/pages-component`, `@casehubio/pages-data`
+- `packages/pages-viz/package.json`: `@casehubio/data`, `@casehubio/ui` → `@casehubio/pages-data`, `@casehubio/pages-ui`
+- `packages/pages-runtime/package.json`: all four `@casehubio/*` deps
+- `packages/pages-echarts-base/package.json`: `@melviz/tsconfig` → `@casehubio/pages-tsconfig`
 - All component `package.json` files: `@melviz/component-api`, `@melviz/component-dev`, `@melviz/tsconfig`, `webpack-base`
 
 - [ ] **Step 4: Update repository/bugs/homepage URLs**
@@ -188,7 +188,7 @@ In `examples/package.json`, change keyword `"melviz"` → `"casehub-pages"`.
 
 - [ ] **Step 6: Update tsconfig extends references**
 
-In every `tsconfig.json` that has `"extends": "@melviz/tsconfig/tsconfig.json"`, change to `"@casehub/pages-tsconfig/tsconfig.json"`. Files:
+In every `tsconfig.json` that has `"extends": "@melviz/tsconfig/tsconfig.json"`, change to `"@casehubio/pages-tsconfig/tsconfig.json"`. Files:
 - `packages/pages-iframe-api/tsconfig.json`
 - `packages/pages-iframe-dev/tsconfig.json`  (check — may not exist)
 - `packages/pages-echarts-base/tsconfig.json`
@@ -200,7 +200,7 @@ In every `tsconfig.json` that has `"extends": "@melviz/tsconfig/tsconfig.json"`,
 
 ```bash
 git -C /Users/mdproctor/claude/melviz add -A
-git -C /Users/mdproctor/claude/melviz commit -m "refactor: rename shared library packages to @casehub/pages-*  Refs #24"
+git -C /Users/mdproctor/claude/melviz commit -m "refactor: rename shared library packages to @casehubio/pages-*  Refs #24"
 ```
 
 ---
@@ -226,27 +226,27 @@ git -C /Users/mdproctor/claude/melviz mv components/melviz-component-svg-heatmap
 
 | File | Old name | New name |
 |------|----------|----------|
-| `components/pages-component-echarts/package.json` | `@melviz/component-echarts` | `@casehub/pages-component-echarts` |
-| `components/pages-component-llm-prompter/package.json` | `@melviz/component-llm-prompter` | `@casehub/pages-component-llm-prompter` |
-| `components/pages-component-svg-heatmap/package.json` | `@melviz/component-svg-heatmap` | `@casehub/pages-component-svg-heatmap` |
+| `components/pages-component-echarts/package.json` | `@melviz/component-echarts` | `@casehubio/pages-component-echarts` |
+| `components/pages-component-llm-prompter/package.json` | `@melviz/component-llm-prompter` | `@casehubio/pages-component-llm-prompter` |
+| `components/pages-component-svg-heatmap/package.json` | `@melviz/component-svg-heatmap` | `@casehubio/pages-component-svg-heatmap` |
 
-Update dependency references to `@casehub/pages-iframe-api`, `@casehub/pages-iframe-dev`, `@casehub/pages-tsconfig`, `@casehub/pages-webpack-base` in each. Update repository/bugs/homepage URLs to `casehubio/casehub-pages`.
+Update dependency references to `@casehubio/pages-iframe-api`, `@casehubio/pages-iframe-dev`, `@casehubio/pages-tsconfig`, `@casehubio/pages-webpack-base` in each. Update repository/bugs/homepage URLs to `casehubio/casehub-pages`.
 
 - [ ] **Step 3: Update webapp/package.json dependencies**
 
 Update the three devDependency references:
 
 ```
-"@melviz/component-echarts": "0.0.0" → "@casehub/pages-component-echarts": "0.0.0"
-"@melviz/component-llm-prompter": "0.0.0" → "@casehub/pages-component-llm-prompter": "0.0.0"
-"@melviz/component-svg-heatmap": "0.0.0" → "@casehub/pages-component-svg-heatmap": "0.0.0"
+"@melviz/component-echarts": "0.0.0" → "@casehubio/pages-component-echarts": "0.0.0"
+"@melviz/component-llm-prompter": "0.0.0" → "@casehubio/pages-component-llm-prompter": "0.0.0"
+"@melviz/component-svg-heatmap": "0.0.0" → "@casehubio/pages-component-svg-heatmap": "0.0.0"
 ```
 
 - [ ] **Step 4: Update webapp and examples package names**
 
-In `webapp/package.json`: `"name": "@melviz/webapp"` → `"@casehub/pages-webapp"`. Update repository/bugs URLs.
+In `webapp/package.json`: `"name": "@melviz/webapp"` → `"@casehubio/pages-webapp"`. Update repository/bugs URLs.
 
-In `examples/package.json`: `"name": "@melviz/examples"` → `"@casehub/pages-examples"`. Update dependency `"@casehub/runtime": "workspace:*"` → `"@casehub/pages-runtime": "workspace:*"`.
+In `examples/package.json`: `"name": "@melviz/examples"` → `"@casehubio/pages-examples"`. Update dependency `"@casehubio/runtime": "workspace:*"` → `"@casehubio/pages-runtime": "workspace:*"`.
 
 - [ ] **Step 5: Update root package.json**
 
@@ -256,7 +256,7 @@ Change `"name": "melviz"` → `"casehub-pages"`. Update `"description"` and `"re
 
 ```bash
 git -C /Users/mdproctor/claude/melviz add -A
-git -C /Users/mdproctor/claude/melviz commit -m "refactor: rename component packages to @casehub/pages-component-*  Refs #24"
+git -C /Users/mdproctor/claude/melviz commit -m "refactor: rename component packages to @casehubio/pages-component-*  Refs #24"
 ```
 
 ---
@@ -374,21 +374,21 @@ Update root build scripts, webpack configs, examples gallery, and CI workflows.
 
 In root `package.json`, update all scripts:
 
-`build:packages`: Replace all 7+1 workspace names with new names. Add `@casehub/pages-runtime` after the four packages it depends on:
+`build:packages`: Replace all 7+1 workspace names with new names. Add `@casehubio/pages-runtime` after the four packages it depends on:
 
 ```
-"build:packages": "yarn workspace @casehub/pages-iframe-api run build && yarn workspace @casehub/pages-echarts-base run build && yarn workspace @casehub/pages-iframe-dev run build && yarn workspace @casehub/pages-component run build && yarn workspace @casehub/pages-data run build && yarn workspace @casehub/pages-ui run build && yarn workspace @casehub/pages-viz run build && yarn workspace @casehub/pages-runtime run build"
+"build:packages": "yarn workspace @casehubio/pages-iframe-api run build && yarn workspace @casehubio/pages-echarts-base run build && yarn workspace @casehubio/pages-iframe-dev run build && yarn workspace @casehubio/pages-component run build && yarn workspace @casehubio/pages-data run build && yarn workspace @casehubio/pages-ui run build && yarn workspace @casehubio/pages-viz run build && yarn workspace @casehubio/pages-runtime run build"
 ```
 
 `build:components`:
 ```
-"build:components": "yarn workspaces foreach -Apt --include '@casehub/pages-component-*' run build"
+"build:components": "yarn workspaces foreach -Apt --include '@casehubio/pages-component-*' run build"
 ```
 
 Zero excludes — the `pages-component-*` glob matches only the three standalone components.
 
-`build:webapp`: `"yarn workspace @casehub/pages-webapp run build"`
-`build:examples`: `"yarn workspace @casehub/pages-examples run build"`
+`build:webapp`: `"yarn workspace @casehubio/pages-webapp run build"`
+`build:examples`: `"yarn workspace @casehubio/pages-examples run build"`
 
 - [ ] **Step 2: Update webapp/webpack.config.js component paths**
 
@@ -413,11 +413,11 @@ Note the output path changes from `./melviz/component/` to `./pages/component/`.
 Update the 5 resolve aliases:
 ```javascript
 alias: {
-  "@casehub/pages-runtime": path.resolve(__dirname, "../packages/pages-runtime"),
-  "@casehub/pages-viz": path.resolve(__dirname, "../packages/pages-viz"),
-  "@casehub/pages-ui": path.resolve(__dirname, "../packages/pages-ui"),
-  "@casehub/pages-component": path.resolve(__dirname, "../packages/pages-component"),
-  "@casehub/pages-data": path.resolve(__dirname, "../packages/pages-data"),
+  "@casehubio/pages-runtime": path.resolve(__dirname, "../packages/pages-runtime"),
+  "@casehubio/pages-viz": path.resolve(__dirname, "../packages/pages-viz"),
+  "@casehubio/pages-ui": path.resolve(__dirname, "../packages/pages-ui"),
+  "@casehubio/pages-component": path.resolve(__dirname, "../packages/pages-component"),
+  "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
 },
 ```
 
@@ -453,9 +453,9 @@ casehubPages = { allowExternal: true, mode: "CLIENT" };
 - [ ] **Step 6: Update examples/src/casehub-entry.ts**
 
 ```typescript
-import "@casehub/pages-viz";
-import { loadSite } from "@casehub/pages-runtime";
-import type { LiveSite, SiteOptions } from "@casehub/pages-runtime";
+import "@casehubio/pages-viz";
+import { loadSite } from "@casehubio/pages-runtime";
+import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 
 export { loadSite };
 export type { LiveSite, SiteOptions };
@@ -500,10 +500,10 @@ Full rewrite reflecting the TypeScript-only architecture. Must cover:
 - Prerequisites: Node 18+, Yarn 4.10 (no Java, no Maven)
 - Build commands: `yarn install && yarn build`, `yarn build:prod`
 - Architecture: TypeScript-only monorepo — `packages/`, `components/`, `webapp/`, `examples/`
-- Data flow: YAML → `@casehub/pages-ui` (parse) → `@casehub/pages-data` (resolve) → `@casehub/pages-component` (layout) → `@casehub/pages-viz` (render)
+- Data flow: YAML → `@casehubio/pages-ui` (parse) → `@casehubio/pages-data` (resolve) → `@casehubio/pages-component` (layout) → `@casehubio/pages-viz` (render)
 - Package list with new names and descriptions
-- Standalone iframe components via `@casehub/pages-iframe-api` postMessage bridge
-- `loadSite()` entry point from `@casehub/pages-runtime`
+- Standalone iframe components via `@casehubio/pages-iframe-api` postMessage bridge
+- `loadSite()` entry point from `@casehubio/pages-runtime`
 - How to add a new component (using `pages-component-` naming)
 - Key technologies: TypeScript 5, React 17, Webpack 5, ECharts, JSONata, Vitest/Jest
 - License
@@ -512,8 +512,8 @@ Full rewrite reflecting the TypeScript-only architecture. Must cover:
 
 Every section (§1–§13):
 - Title: `melviz` → `casehub-pages`
-- All package names: `@casehub/data` → `@casehub/pages-data`, etc.
-- `@melviz/examples` → `@casehub/pages-examples`
+- All package names: `@casehubio/data` → `@casehubio/pages-data`, etc.
+- `@melviz/examples` → `@casehubio/pages-examples`
 - §2: remove GWT mention from `build:prod`
 - §3 context diagram: update package names
 - Descriptions and terminology: `melviz` → `casehub-pages`

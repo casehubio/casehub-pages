@@ -1,5 +1,5 @@
 {
-  "name": "@casehub/pages-webapp",
+  "name": "@casehubio/pages-webapp",
   "version": "0.0.0",
   "description": "CaseHub Pages Webapp",
   "repository": "https://github.com/casehubio/casehub-pages",
@@ -14,10 +14,9 @@
     "test": "echo \"No tests yet...\""
   },
   "devDependencies": {
-    "@casehub/pages-component-echarts": "0.0.0",
-    "@casehub/pages-component-llm-prompter": "0.0.0",
-    "@casehub/pages-component-svg-heatmap": "0.0.0",
-    "@casehub/pages-webpack-base": "workspace:*",
+    "@casehubio/pages-component-llm-prompter": "0.0.0",
+    "@casehubio/pages-component-svg-heatmap": "0.0.0",
+    "@casehubio/pages-webpack-base": "workspace:*",
     "copy-webpack-plugin": "^11.0.0",
     "rimraf": "^6.1.2",
     "webpack": "^5.104.1",

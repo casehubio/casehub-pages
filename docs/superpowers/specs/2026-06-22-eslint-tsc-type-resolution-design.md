@@ -33,7 +33,7 @@ Emission alone is not enough. In `--build` mode, consuming packages follow the m
 
 `pages-viz/src/index.ts` does not import `custom-elements.d.ts`. After emission, the augmentation would sit in `.typecheck/custom-elements.d.ts` unused.
 
-**Fix:** Add `import "./custom-elements.js";` to `pages-viz/src/index.ts`. This side-effect import creates a module graph path from `index.ts` → `custom-elements.ts`, ensuring the augmentation is loaded when any package does `import "@casehub/pages-viz"`.
+**Fix:** Add `import "./custom-elements.js";` to `pages-viz/src/index.ts`. This side-effect import creates a module graph path from `index.ts` → `custom-elements.ts`, ensuring the augmentation is loaded when any package does `import "@casehubio/pages-viz"`.
 
 ### Step 3: Narrow `shadowRoot` on `CasehubElement`
 

@@ -1,9 +1,9 @@
 import { CasehubFormInput } from "./CasehubFormInput.js";
-import type { DropdownProps, FixedOptions, DataSetOptions } from "@casehub/pages-component";
-import { isFixedOptions } from "@casehub/pages-component";
-import type { TypedDataSet, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { DataSetOp } from "@casehub/pages-data/dist/dataset/ops.js";
+import type { DropdownProps, FixedOptions, DataSetOptions } from "@casehubio/pages-component";
+import { isFixedOptions } from "@casehubio/pages-component";
+import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
 import { cellToRaw } from "../base/cell-extract.js";
 
 const DROPDOWN_CSS = `

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { SelectorProps } from "@casehub/pages-component";
-import { toTypedDataSet } from "@casehub/pages-data/dist/dataset/conversion.js";
+import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { SelectorProps } from "@casehubio/pages-component";
+import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 
 import { CasehubSelector } from "./CasehubSelector.js";
 

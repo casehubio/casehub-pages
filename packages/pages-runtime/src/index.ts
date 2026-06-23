@@ -1,3 +1,5 @@
+import "@casehubio/pages-viz";
+
 export { loadSite } from "./site.js";
 export type { LiveSite, SiteOptions } from "./site.js";
 export { serializeToUrl, parseFromUrl } from "./url.js";

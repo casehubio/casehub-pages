@@ -1,5 +1,5 @@
-import { page, html, table, inlineDataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
+import { page, html, table, inlineDataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
 
 const employeesData = JSON.stringify([
   ["Alice Johnson", "Engineering", "Senior Developer", 2018, 92000],

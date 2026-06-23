@@ -1,6 +1,6 @@
-import { page, html, selector, metric, timeseries, barChart, pieChart, table, columns, withStyle, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, selector, metric, timeseries, barChart, pieChart, table, columns, withStyle, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Prometheus HTTP Requests.yml"
 // Real-time HTTP endpoint monitoring with filters and breakdowns

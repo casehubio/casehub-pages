@@ -49,9 +49,9 @@ component.dataSet = typedDataSet → echarts/table/metric renders
 
 New `examples/webpack.config.js` that produces `dist/casehub-bundle.js`:
 
-- **Entry:** a new `src/casehub-entry.ts` that imports `@casehub/viz` (triggers Web Component registration) and re-exports `loadSite` from `@casehub/runtime` and `load` from `js-yaml`
+- **Entry:** a new `src/casehub-entry.ts` that imports `@casehubio/viz` (triggers Web Component registration) and re-exports `loadSite` from `@casehubio/runtime` and `load` from `js-yaml`
 - **Output:** UMD bundle exposing `window.casehub = { loadSite, yamlLoad }`
-- **Dependencies bundled:** `@casehub/runtime`, `@casehub/viz`, `@casehub/ui`, `@casehub/component`, `@casehub/data`, `echarts`, `js-yaml`, `jsonata`, `zod`
+- **Dependencies bundled:** `@casehubio/runtime`, `@casehubio/viz`, `@casehubio/ui`, `@casehubio/component`, `@casehubio/data`, `echarts`, `js-yaml`, `jsonata`, `zod`
 - **Config:** extends `@melviz/webpack-base` for consistent loader/plugin setup
 
 ### HTML Changes
@@ -222,7 +222,7 @@ if (props.grid?.y === false) {
 
 ### Dependency
 
-Add `marked@^15.0.0` to `@casehub/runtime` as a production dependency. Marked is ~40KB, well-maintained, and has no dependencies of its own.
+Add `marked@^15.0.0` to `@casehubio/runtime` as a production dependency. Marked is ~40KB, well-maintained, and has no dependencies of its own.
 
 ### content.ts Changes
 

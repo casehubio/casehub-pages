@@ -1,5 +1,5 @@
 const path = require("path");
-const commonConfig = require("@casehub/pages-webpack-base/webpack.common.config");
+const commonConfig = require("@casehubio/pages-webpack-base/webpack.common.config");
 
 module.exports = (env = {}) => {
   const common = commonConfig({ dev: !!env.dev });
@@ -49,11 +49,11 @@ module.exports = (env = {}) => {
     resolve: {
       ...common.resolve,
       alias: {
-        "@casehub/pages-runtime": path.resolve(__dirname, "../packages/pages-runtime"),
-        "@casehub/pages-viz": path.resolve(__dirname, "../packages/pages-viz"),
-        "@casehub/pages-ui": path.resolve(__dirname, "../packages/pages-ui"),
-        "@casehub/pages-component": path.resolve(__dirname, "../packages/pages-component"),
-        "@casehub/pages-data": path.resolve(__dirname, "../packages/pages-data"),
+        "@casehubio/pages-runtime": path.resolve(__dirname, "../packages/pages-runtime"),
+        "@casehubio/pages-viz": path.resolve(__dirname, "../packages/pages-viz"),
+        "@casehubio/pages-ui": path.resolve(__dirname, "../packages/pages-ui"),
+        "@casehubio/pages-component": path.resolve(__dirname, "../packages/pages-component"),
+        "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
       },
     },
   };

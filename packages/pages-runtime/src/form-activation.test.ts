@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { Component } from "@casehub/pages-component/dist/model/types.js";
-import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import "@casehub/pages-viz"; // side-effect: registers chart/table custom elements
+import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import "@casehubio/pages-viz"; // side-effect: registers chart/table custom elements
 import { loadSite } from "./site.js";
 
 describe("form input activation", () => {

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@casehub/pages-tsconfig",
+  "name": "@casehubio/pages-tsconfig",
   "version": "0.0.0",
   "keywords": [],
   "scripts": {

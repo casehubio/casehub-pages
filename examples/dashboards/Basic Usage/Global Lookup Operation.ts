@@ -1,5 +1,5 @@
-import { page, table, lineChart, barChart, rows, columns, inlineDataset } from "@casehub/ui";
-import { createLookup, filterOp, sortOp } from "@casehub/data";
+import { page, table, lineChart, barChart, rows, columns, inlineDataset } from "@casehubio/ui";
+import { createLookup, filterOp, sortOp } from "@casehubio/data";
 
 const globalData = JSON.stringify([
   ["A", 3],

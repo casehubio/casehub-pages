@@ -1,0 +1,67 @@
+name: Publish Packages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/*/package.json'
+      - 'components/*/package.json'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@casehubio'
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build all packages
+        run: yarn build
+
+      - name: Publish packages
+        run: |
+          set -e
+          for dir in packages/*/  components/*/; do
+            if [ ! -f "$dir/package.json" ]; then continue; fi
+
+            PRIVATE=$(node -p "try{require('./$dir/package.json').private||false}catch{false}")
+            if [ "$PRIVATE" = "true" ]; then
+              echo "⏭ Skip (private): $dir"
+              continue
+            fi
+
+            NAME=$(node -p "require('./$dir/package.json').name")
+            VERSION=$(node -p "require('./$dir/package.json').version")
+
+            # Check if version already exists
+            if npm view "$NAME@$VERSION" version 2>/dev/null; then
+              echo "⏭ Skip (exists): $NAME@$VERSION"
+            else
+              echo "📦 Publishing: $NAME@$VERSION"
+              npm publish "$dir"
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

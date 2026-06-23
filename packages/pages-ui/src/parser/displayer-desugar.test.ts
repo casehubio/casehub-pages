@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { desugarDisplayer } from "./displayer-desugar.js";
-import { getProps } from "@casehub/pages-component";
+import { getProps } from "@casehubio/pages-component";
 
 describe("desugarDisplayer", () => {
   it("maps BARCHART to bar-chart with typed props", () => {

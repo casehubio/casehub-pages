@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { resolveRefBindings } from "./ref-resolution.js";
 import { createFilterState, updateFilter } from "./cross-filter.js";
 import { createDataScopeRegistry } from "./data-scope-registry.js";
-import type { DataSetId, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetManager } from "@casehub/pages-data/dist/dataset/manager.js";
-import { ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
+import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
 
 function mockManager(rows: Record<string, string>[]): DataSetManager {
   return {

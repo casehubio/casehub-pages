@@ -3,9 +3,9 @@
  * Tests edit across rows, back-and-forth navigation, data consistency.
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import "@casehub/pages-viz";
-import type { CasehubTable } from "@casehub/pages-viz";
-import type { CasehubTextInput } from "@casehub/pages-viz";
+import "@casehubio/pages-viz";
+import type { CasehubTable } from "@casehubio/pages-viz";
+import type { CasehubTextInput } from "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
 
@@ -118,7 +118,7 @@ describe("form editing + local save (real DOM)", () => {
   function getFormValue(input: CasehubTextInput, field: string): string | undefined {
     if (!input.dataSet?.rows.length) return undefined;
     try {
-      const cell = input.dataSet.rows[0]!.cell(field as import("@casehub/pages-data/dist/dataset/types.js").ColumnId);
+      const cell = input.dataSet.rows[0]!.cell(field as import("@casehubio/pages-data/dist/dataset/types.js").ColumnId);
       return cell.type === "NULL" ? undefined : String(cell.value);
     } catch {
       return undefined;

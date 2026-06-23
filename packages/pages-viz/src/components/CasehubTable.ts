@@ -1,5 +1,5 @@
-import type { TypedDataSet, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { TableProps } from "@casehub/pages-component";
+import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TableProps } from "@casehubio/pages-component";
 import { CasehubElement } from "../base/CasehubElement.js";
 import { cellToRaw, resolveColumnName, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 
@@ -272,7 +272,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
     return this.totalRows > 0 && this.totalRows > dataset.rows.length;
   }
 
-  private getFilteredRows(dataset: TypedDataSet): readonly import("@casehub/pages-data/dist/dataset/types.js").TypedRow[] {
+  private getFilteredRows(dataset: TypedDataSet): readonly import("@casehubio/pages-data/dist/dataset/types.js").TypedRow[] {
     if (!this._filterText) return dataset.rows;
     const term = this._filterText.toLowerCase();
     return dataset.rows.filter((row) =>
@@ -284,10 +284,10 @@ export class CasehubTable extends CasehubElement<TableProps> {
   }
 
   private getSortedRows(
-    rows: readonly import("@casehub/pages-data/dist/dataset/types.js").TypedRow[],
+    rows: readonly import("@casehubio/pages-data/dist/dataset/types.js").TypedRow[],
     dataset: TypedDataSet,
     serverSide: boolean,
-  ): readonly import("@casehub/pages-data/dist/dataset/types.js").TypedRow[] {
+  ): readonly import("@casehubio/pages-data/dist/dataset/types.js").TypedRow[] {
     if (serverSide || this._sortColumn === undefined) return rows;
 
     const colIdx = dataset.columns.findIndex((c) => c.id === this._sortColumn);

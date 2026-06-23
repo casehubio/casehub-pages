@@ -1,39 +1,39 @@
-# @casehub/runtime — Site Runtime Design
+# @casehubio/runtime — Site Runtime Design
 
-Covers issue #13. Designs `@casehub/runtime` — the integration package that wires `@casehub/component` (layout renderer), `@casehub/ui` (page model), `@casehub/data` (dataset engine), and `@casehub/viz` (Web Component visualizations) into a working site runtime.
+Covers issue #13. Designs `@casehubio/runtime` — the integration package that wires `@casehubio/component` (layout renderer), `@casehubio/ui` (page model), `@casehubio/data` (dataset engine), and `@casehubio/viz` (Web Component visualizations) into a working site runtime.
 
 **Architectural decisions made during brainstorming:**
-- **New `@casehub/runtime` package (Option 2)** — the runtime is a distinct concern from the model (`@casehub/ui`). Putting it in `@casehub/ui` would blur a definition package into an execution engine, force DOM/fetch dependencies on model-only consumers, and create a circular dependency with `@casehub/viz`. A separate package sits cleanly at the top of the DAG.
-- **Render callback activation (Approach B)** — add an `onNode` callback to `RenderOptions` in `@casehub/component`. The runtime provides this callback to activate viz and content components inline during the render pass. No post-render DOM walk needed. The callback receives both the DOM element and the component model — no JSON-parsing `data-component-props` back out.
+- **New `@casehubio/runtime` package (Option 2)** — the runtime is a distinct concern from the model (`@casehubio/ui`). Putting it in `@casehubio/ui` would blur a definition package into an execution engine, force DOM/fetch dependencies on model-only consumers, and create a circular dependency with `@casehubio/viz`. A separate package sits cleanly at the top of the DAG.
+- **Render callback activation (Approach B)** — add an `onNode` callback to `RenderOptions` in `@casehubio/component`. The runtime provides this callback to activate viz and content components inline during the render pass. No post-render DOM walk needed. The callback receives both the DOM element and the component model — no JSON-parsing `data-component-props` back out.
 - **On-demand dataset resolution** — datasets are not fetched eagerly on `loadSite()`. Viz components fire `casehub-data-request` on `connectedCallback`; the runtime resolves each `ExternalDataSetDef` on first request and deduplicates concurrent requests for the same `dataSetId`. This gives fast initial paint (DOM structure appears immediately, data fills in progressively).
-- **Navigation via slot-change events** — the interactive renderer in `@casehub/component` already handles tab/sidebar/accordion visibility toggling. Rather than duplicate this, the runtime observes `casehub-slot-change` events to track which page is active. Programmatic navigation uses a new `activateSlot()` export from `@casehub/component`.
+- **Navigation via slot-change events** — the interactive renderer in `@casehubio/component` already handles tab/sidebar/accordion visibility toggling. Rather than duplicate this, the runtime observes `casehub-slot-change` events to track which page is active. Programmatic navigation uses a new `activateSlot()` export from `@casehubio/component`.
 
 ---
 
 ## 1. Package Architecture
 
 ```
-@casehub/runtime → @casehub/viz       (Web Component types for type-safe activation)
-                 → @casehub/ui        (model, parser, DSL)
-                 → @casehub/component (renderComponent, onNode callback, activateSlot)
-                 → @casehub/data      (DataSetManager, resolver, ops, provider factory)
+@casehubio/runtime → @casehubio/viz       (Web Component types for type-safe activation)
+                 → @casehubio/ui        (model, parser, DSL)
+                 → @casehubio/component (renderComponent, onNode callback, activateSlot)
+                 → @casehubio/data      (DataSetManager, resolver, ops, provider factory)
 ```
 
-No package depends on `@casehub/runtime` — it sits at the top of the DAG. No cycles.
+No package depends on `@casehubio/runtime` — it sits at the top of the DAG. No cycles.
 
 ### Dependency graph (complete)
 
 ```
-@casehub/runtime → @casehub/viz → @casehub/ui → @casehub/component
-                                              → @casehub/data
+@casehubio/runtime → @casehubio/viz → @casehubio/ui → @casehubio/component
+                                              → @casehubio/data
                                               → zod
-                 → @casehub/component (direct, for renderComponent + activateSlot)
-                 → @casehub/data (direct, for DataSetManager + resolver + createDataProviderFactory)
+                 → @casehubio/component (direct, for renderComponent + activateSlot)
+                 → @casehubio/data (direct, for DataSetManager + resolver + createDataProviderFactory)
 ```
 
 ### Package naming
 
-`@casehub/data` is the logical name. The actual workspace package is `@melviz/core` (in `packages/core/package.json`). Import paths in the codebase use `@casehub/data` via tsconfig path mapping. The runtime follows this existing convention.
+`@casehubio/data` is the logical name. The actual workspace package is `@melviz/core` (in `packages/core/package.json`). Import paths in the codebase use `@casehubio/data` via tsconfig path mapping. The runtime follows this existing convention.
 
 ### Yarn workspace
 
@@ -64,7 +64,7 @@ function loadSite(
 
 `loadSite` is async — the promise resolves when the DOM is rendered and event listeners are wired. Data arrives asynchronously via the event protocol (components show "Loading..." until their dataset is pushed).
 
-**`LiveSite` extends `Site`** (declared in `@casehub/ui/model/page-types.ts`) with runtime operations. The `Site` interface stays unchanged — consumers who only need query access (`page()`, `dataset()`, `state`) type as `Site`.
+**`LiveSite` extends `Site`** (declared in `@casehubio/ui/model/page-types.ts`) with runtime operations. The `Site` interface stays unchanged — consumers who only need query access (`page()`, `dataset()`, `state`) type as `Site`.
 
 - **`navigate(path)`** — programmatically navigate to a page. Parses path segments, activates slots along the path via `activateSlot()`, updates `state.currentPage`, syncs URL. Uses an internal `_navigating` flag to suppress per-slot `pushState` calls during multi-segment navigation, then does a single `pushState` at the end.
 - **`dispose()`** — calls `abortController.abort()` to remove all event listeners in one operation, clears all source-level refresh timers (stored in `refreshTimers: Map<DataSetId, ReturnType<typeof setInterval>>`), clears `target.innerHTML` (triggers `disconnectedCallback` on all viz components — they clean up their own timers/observers), clears internal registries.
@@ -72,11 +72,11 @@ function loadSite(
 **`SiteOptions`:**
 - `permissions` — `PermissionContext` for access control (defaults to `ALLOW_ALL`).
 - `fetch` — injectable fetch function for testing and auth proxying. Passed through `createDataProviderFactory(options?.fetch)` (defaults to `globalThis.fetch`).
-- `providerConfig` — `DataProviderConfig` from `@casehub/data`. Enables CORS proxy and server relay configuration. Defaults to `{}` (direct browser fetch, no proxy).
+- `providerConfig` — `DataProviderConfig` from `@casehubio/data`. Enables CORS proxy and server relay configuration. Defaults to `{}` (direct browser fetch, no proxy).
 
 ---
 
-## 3. Changes to `@casehub/component`
+## 3. Changes to `@casehubio/component`
 
 Four additions to support the runtime. All are natural extensions of the renderer's existing role.
 
@@ -238,13 +238,13 @@ When `casehub-data-request` arrives:
 6. Set `element.theme` from the page's `settings.mode` (or inherited from ancestor).
 7. On error: set `element.error` with the error message.
 
-### 5.3 ResolverContext — uses existing @casehub/data infrastructure
+### 5.3 ResolverContext — uses existing @casehubio/data infrastructure
 
-The runtime constructs a `ResolverContext` using the existing provider factory from `@casehub/data`:
+The runtime constructs a `ResolverContext` using the existing provider factory from `@casehubio/data`:
 
 ```typescript
-import { createDataSetManager } from "@casehub/data";
-import { createDataProviderFactory, createPresetRegistry } from "@casehub/data";
+import { createDataSetManager } from "@casehubio/data";
+import { createDataProviderFactory, createPresetRegistry } from "@casehubio/data";
 
 const manager = createDataSetManager();
 const resolverCtx: ResolverContext = {
@@ -283,7 +283,7 @@ type FilterState = Map<string, Map<string | undefined, Map<ColumnId, string[]>>>
 When `casehub-filter` arrives with `{ columnId, rowIndex, reset, group }`:
 
 1. **Identify source:** find the component entry in `ComponentRegistry` via the event target. Get its `pagePath` and current dataset.
-2. **Resolve cell value:** `dataset.rows[rowIndex]` → find cell for `columnId` → convert via `String(cellToRaw(cell))` from `@casehub/viz`. `cellToRaw()` handles the `CellValue` discriminated union (`NUMBER`, `DATE`, `TEXT`, `NULL`) → primitive. `String()` produces the filter argument string compatible with the filter resolution pipeline's string→typed parsing in `@casehub/data`.
+2. **Resolve cell value:** `dataset.rows[rowIndex]` → find cell for `columnId` → convert via `String(cellToRaw(cell))` from `@casehubio/viz`. `cellToRaw()` handles the `CellValue` discriminated union (`NUMBER`, `DATE`, `TEXT`, `NULL`) → primitive. `String()` produces the filter argument string compatible with the filter resolution pipeline's string→typed parsing in `@casehubio/data`.
 3. **Update filter state:**
    - If `reset: true` → clear the filter for `columnId` in this group on this page.
    - If `reset: false` → set `filterState[pagePath][group][columnId] = [cellValue]`.
@@ -460,7 +460,7 @@ packages/casehub-runtime/
 
 ---
 
-## 10. Changes to `@casehub/data` (prerequisite)
+## 10. Changes to `@casehubio/data` (prerequisite)
 
 ### 10.1 Injectable `fetch` on BrowserFetchProvider
 

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { TypedDataSet, Column, ColumnId, ColumnType } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
+import type { TypedDataSet, Column, ColumnId, ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type {
   DataComponentCommon,
   ChartSettings,
-} from "@casehub/pages-component";
+} from "@casehubio/pages-component";
 
 // ── Mock ECharts ──────────────────────────────────────────────────────
 

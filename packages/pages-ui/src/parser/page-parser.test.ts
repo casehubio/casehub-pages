@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
-import { getProps } from "@casehub/pages-component";
+import { getProps } from "@casehubio/pages-component";
 
 
 describe("parsePage", () => {

@@ -1,6 +1,6 @@
-import type { Component } from "@casehub/pages-component/dist/model/types.js";
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
+import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { PagePathMap } from "./page-paths.js";
 
 export type DataSetScope = Map<string, Map<DataSetId, ExternalDataSetDef>>;

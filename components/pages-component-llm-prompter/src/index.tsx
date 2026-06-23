@@ -16,7 +16,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { ComponentApi } from "@casehub/pages-iframe-api";
+import { ComponentApi } from "@casehubio/pages-iframe-api";
 import { LLMPrompterComponent } from "./LLMPrompterComponent";
 
 const api = new ComponentApi();

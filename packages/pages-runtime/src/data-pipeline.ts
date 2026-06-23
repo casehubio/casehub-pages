@@ -1,10 +1,10 @@
-import type { DataSetId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetManager, LookupOptions } from "@casehub/pages-data/dist/dataset/manager.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
-import type { ResolverContext } from "@casehub/pages-data/dist/dataset/external/resolver.js";
-import type { ResolveResult, ExternalDataSetDef } from "@casehub/pages-data/dist/dataset/external/types.js";
-import { parseRefreshTime } from "@casehub/pages-data/dist/dataset/external/types.js";
-import { resolveExternalDataSet } from "@casehub/pages-data/dist/dataset/external/resolver.js";
+import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetManager, LookupOptions } from "@casehubio/pages-data/dist/dataset/manager.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
+import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import { resolveExternalDataSet } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { DataSetScope } from "./dataset-scope.js";
 import { resolveDataSetDef } from "./dataset-scope.js";

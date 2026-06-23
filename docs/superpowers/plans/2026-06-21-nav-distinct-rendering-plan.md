@@ -15,7 +15,7 @@
 - Tree ignores `targetDivId` — self-contained layout only.
 - No `ViewState.expandedNodes` integration — deferred.
 - Build with `yarn build:packages && yarn build:components` after changes to `pages-ui` or `pages-component`.
-- Run tests with `yarn workspace @casehub/pages-component run test` and `yarn workspace @casehub/pages-ui run test`.
+- Run tests with `yarn workspace @casehubio/pages-component run test` and `yarn workspace @casehubio/pages-ui run test`.
 - Typecheck with `yarn typecheck`.
 
 ---
@@ -28,7 +28,7 @@
 - Create: `packages/pages-ui/src/parser/nav-desugar.test.ts`
 
 **Interfaces:**
-- Consumes: `Component` type from `@casehub/pages-component`, existing `NavTreeGroup`/`NavTreeChild` interfaces (nav-desugar.ts:3-18)
+- Consumes: `Component` type from `@casehubio/pages-component`, existing `NavTreeGroup`/`NavTreeChild` interfaces (nav-desugar.ts:3-18)
 - Produces: Modified `resolveNavGroup` that produces hierarchical slot keys for tree; new `extractHierarchicalPageNames(group: NavTreeGroup, prefix?: string): Array<{slotKey: string, pageName: string}>` function
 
 - [ ] **Step 1: Write tests for SIDEBAR in NAV_TYPE_MAP**
@@ -63,7 +63,7 @@ const NAV_TYPE_MAP: Record<string, string> = {
 
 - [ ] **Step 3: Run test to verify SIDEBAR mapping passes**
 
-Run: `yarn workspace @casehub/pages-ui run test`
+Run: `yarn workspace @casehubio/pages-ui run test`
 
 - [ ] **Step 4: Write tests for hierarchical slot name synthesis**
 
@@ -72,7 +72,7 @@ Create `packages/pages-ui/src/parser/nav-desugar.test.ts`:
 ```typescript
 import { describe, it, expect } from "vitest";
 import { resolveNavigation } from "./nav-desugar.js";
-import type { Component } from "@casehub/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component/dist/model/types.js";
 
 function makePage(name: string): Component {
   return { type: "page", props: { name } };
@@ -238,7 +238,7 @@ describe("resolveNavigation — tree hierarchical slot names", () => {
 
 - [ ] **Step 5: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/pages-ui run test`
+Run: `yarn workspace @casehubio/pages-ui run test`
 Expected: 7 failures (hierarchical features not implemented yet)
 
 - [ ] **Step 6: Implement extractHierarchicalPageNames and modify resolveNavGroup**
@@ -341,7 +341,7 @@ if (component.props?.["navGroupId"]) {
 
 - [ ] **Step 7: Run tests to verify they pass**
 
-Run: `yarn workspace @casehub/pages-ui run test`
+Run: `yarn workspace @casehubio/pages-ui run test`
 Expected: All pass
 
 - [ ] **Step 8: Typecheck**
@@ -398,7 +398,7 @@ describe("layout — tree and tiles", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 
 - [ ] **Step 3: Implement**
 
@@ -424,7 +424,7 @@ Add case in `applyLayoutCSS` switch, alongside sidebar:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 
 - [ ] **Step 5: Commit**
 
@@ -479,7 +479,7 @@ describe("wireInteractivity — menu CSS", () => {
 
 - [ ] **Step 2: Run tests — menu class test should fail (currently gets casehub-menu but via wireTabs which will be updated)**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 Note: the menu class test might already pass since wireTabs already assigns casehub-menu. Verify.
 
 - [ ] **Step 3: Rename injectTabStyles to injectNavStyles and add CSS rules**
@@ -650,7 +650,7 @@ Simplify the wireTabs className ternary (remove tree and tiles cases):
 
 - [ ] **Step 4: Run tests**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 
 - [ ] **Step 5: Commit**
 
@@ -835,7 +835,7 @@ describe("wireInteractivity — tree", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 
 - [ ] **Step 3: Implement wireTree**
 
@@ -1017,7 +1017,7 @@ function wireTree(
 
 - [ ] **Step 4: Run tests**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 
 - [ ] **Step 5: Typecheck**
 
@@ -1115,7 +1115,7 @@ describe("wireInteractivity — tiles", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 
 - [ ] **Step 3: Implement wireTiles (replace the stub)**
 
@@ -1175,11 +1175,11 @@ function wireTiles(
 
 - [ ] **Step 4: Run tests**
 
-Run: `yarn workspace @casehub/pages-component run test`
+Run: `yarn workspace @casehubio/pages-component run test`
 
 - [ ] **Step 5: Typecheck and full test suite**
 
-Run: `yarn typecheck && yarn workspace @casehub/pages-component run test && yarn workspace @casehub/pages-ui run test && yarn workspace @casehub/pages-runtime run test`
+Run: `yarn typecheck && yarn workspace @casehubio/pages-component run test && yarn workspace @casehubio/pages-ui run test && yarn workspace @casehubio/pages-runtime run test`
 
 - [ ] **Step 6: Commit**
 
@@ -1333,9 +1333,9 @@ navTree:
 - [ ] **Step 4: Build everything and run all tests**
 
 Run: `yarn build && yarn typecheck`
-Run: `yarn workspace @casehub/pages-component run test`
-Run: `yarn workspace @casehub/pages-ui run test`
-Run: `yarn workspace @casehub/pages-runtime run test`
+Run: `yarn workspace @casehubio/pages-component run test`
+Run: `yarn workspace @casehubio/pages-ui run test`
+Run: `yarn workspace @casehubio/pages-runtime run test`
 
 All must pass.
 

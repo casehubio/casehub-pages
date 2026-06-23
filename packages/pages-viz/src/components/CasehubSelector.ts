@@ -1,5 +1,5 @@
-import type { TypedDataSet, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { SelectorProps } from "@casehub/pages-component";
+import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { SelectorProps } from "@casehubio/pages-component";
 import { CasehubElement } from "../base/CasehubElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
 

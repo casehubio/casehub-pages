@@ -1,5 +1,5 @@
-import { page, selector, barChart, dataset } from "@casehub/ui";
-import { createLookup, groupOp } from "@casehub/data";
+import { page, selector, barChart, dataset } from "@casehubio/ui";
+import { createLookup, groupOp } from "@casehubio/data";
 
 const sheetId = "1XuyPTyrjMFXQ1ey6Bg9AEcrpwZ60CnLQVEs4-DEDrcc";
 

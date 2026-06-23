@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Component } from "@casehub/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component/dist/model/types.js";
 import { buildPagePathMap, extendPagePathMap, type PagePathMap } from "./page-paths.js";
 
 describe("buildPagePathMap", () => {

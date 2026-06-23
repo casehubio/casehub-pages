@@ -1,6 +1,6 @@
-import { page, metric, barChart, table, columns, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, metric, barChart, table, columns, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Backstage Metrics.dash.yaml"
 // Node.js Backstage metrics with screens/panels navigation

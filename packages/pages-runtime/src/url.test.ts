@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { DeepLink } from "@casehub/pages-ui/dist/model/page-types.js";
+import type { DeepLink } from "@casehubio/pages-ui/dist/model/page-types.js";
 import { serializeToUrl, parseFromUrl } from "./url.js";
 
 describe("serializeToUrl", () => {

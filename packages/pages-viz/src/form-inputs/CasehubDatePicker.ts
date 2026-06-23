@@ -1,7 +1,7 @@
 import { CasehubFormInput } from "./CasehubFormInput.js";
-import type { DatePickerProps } from "@casehub/pages-component";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
+import type { DatePickerProps } from "@casehubio/pages-component";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 
 const DATE_PICKER_CSS = `
 :host {

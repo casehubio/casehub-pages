@@ -21,12 +21,12 @@ import type {
   ComponentMessage,
   FunctionResponse,
   FunctionCallRequest,
-} from "@casehub/pages-iframe-api";
+} from "@casehubio/pages-iframe-api";
 import {
   MessageProperty,
   MessageType,
   FunctionResultType,
-} from "@casehub/pages-iframe-api";
+} from "@casehubio/pages-iframe-api";
 
 const DEV_FILE = "/manifest.dev.json";
 const COMP_ID = 42;

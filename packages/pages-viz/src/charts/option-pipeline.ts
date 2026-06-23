@@ -1,5 +1,5 @@
-import type { TypedDataSet, ColumnSettings } from "@casehub/pages-data/dist/dataset/types.js";
-import type { ChartSettings } from "@casehub/pages-component";
+import type { TypedDataSet, ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ChartSettings } from "@casehubio/pages-component";
 import { cellToRaw, resolveColumnName, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 
 /**

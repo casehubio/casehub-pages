@@ -1,6 +1,6 @@
-import type { Component } from "@casehub/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component/dist/model/types.js";
 import type { PagePathMap } from "./page-paths.js";
-import { activateSlot } from "@casehub/pages-component/dist/renderer/activate-slot.js";
+import { activateSlot } from "@casehubio/pages-component/dist/renderer/activate-slot.js";
 
 export type PageIndex = Map<string, Component>;
 export type ActiveSlots = Map<string, string>;

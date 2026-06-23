@@ -1579,52 +1579,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@casehub/pages-component-echarts@npm:0.0.0, @casehub/pages-component-echarts@workspace:components/pages-component-echarts":
+"@casehubio/pages-component-llm-prompter@npm:0.0.0, @casehubio/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-component-echarts@workspace:components/pages-component-echarts"
+  resolution: "@casehubio/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter"
   dependencies:
     "@babel/core": "npm:^7.28.6"
     "@babel/preset-env": "npm:^7.28.6"
     "@babel/preset-react": "npm:^7.28.5"
-    "@casehub/pages-echarts-base": "workspace:*"
-    "@casehub/pages-iframe-api": "workspace:*"
-    "@casehub/pages-iframe-dev": "workspace:*"
-    "@casehub/pages-tsconfig": "workspace:*"
-    "@casehub/pages-webpack-base": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    "@types/react": "npm:^17.0.6"
-    "@types/react-dom": "npm:^17.0.5"
-    copy-webpack-plugin: "npm:^11.0.0"
-    html-webpack-plugin: "npm:^5.6.6"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^5.6.0"
-    webpack: "npm:^5.104.1"
-    webpack-cli: "npm:^6.0.1"
-    webpack-dev-server: "npm:^5.2.3"
-    webpack-merge: "npm:^5.8.0"
-  languageName: unknown
-  linkType: soft
-
-"@casehub/pages-component-llm-prompter@npm:0.0.0, @casehub/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter":
-  version: 0.0.0-use.local
-  resolution: "@casehub/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@casehub/pages-iframe-api": "workspace:*"
-    "@casehub/pages-iframe-dev": "workspace:*"
-    "@casehub/pages-tsconfig": "workspace:*"
-    "@casehub/pages-webpack-base": "workspace:*"
+    "@casehubio/pages-iframe-api": "workspace:*"
+    "@casehubio/pages-iframe-dev": "workspace:*"
+    "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-webpack-base": "workspace:*"
     "@testing-library/jest-dom": "npm:^6.4.2"
     "@types/heatmap.js": "npm:^2.0.36"
     "@types/jest": "npm:^29.5.12"
@@ -1653,17 +1618,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-component-svg-heatmap@npm:0.0.0, @casehub/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap":
+"@casehubio/pages-component-svg-heatmap@npm:0.0.0, @casehubio/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap"
+  resolution: "@casehubio/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap"
   dependencies:
     "@babel/core": "npm:^7.28.6"
     "@babel/preset-env": "npm:^7.28.6"
     "@babel/preset-react": "npm:^7.28.5"
-    "@casehub/pages-iframe-api": "workspace:*"
-    "@casehub/pages-iframe-dev": "workspace:*"
-    "@casehub/pages-tsconfig": "workspace:*"
-    "@casehub/pages-webpack-base": "workspace:*"
+    "@casehubio/pages-iframe-api": "workspace:*"
+    "@casehubio/pages-iframe-dev": "workspace:*"
+    "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-webpack-base": "workspace:*"
     "@testing-library/jest-dom": "npm:^6.4.2"
     "@types/heatmap.js": "npm:^2.0.36"
     "@types/jest": "npm:^29.5.12"
@@ -1689,20 +1654,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-component@workspace:*, @casehub/pages-component@workspace:packages/pages-component":
+"@casehubio/pages-component@workspace:*, @casehubio/pages-component@workspace:packages/pages-component":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-component@workspace:packages/pages-component"
+  resolution: "@casehubio/pages-component@workspace:packages/pages-component"
   dependencies:
-    "@casehub/pages-data": "workspace:*"
+    "@casehubio/pages-data": "workspace:*"
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
     vitest: "npm:^3.0.0"
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-data@workspace:*, @casehub/pages-data@workspace:packages/pages-data":
+"@casehubio/pages-data@workspace:*, @casehubio/pages-data@workspace:packages/pages-data":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-data@workspace:packages/pages-data"
+  resolution: "@casehubio/pages-data@workspace:packages/pages-data"
   dependencies:
     "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
     "@typescript-eslint/parser": "npm:^8.0.0"
@@ -1715,40 +1680,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-echarts-base@workspace:*, @casehub/pages-echarts-base@workspace:packages/pages-echarts-base":
+"@casehubio/pages-examples@workspace:examples":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-echarts-base@workspace:packages/pages-echarts-base"
+  resolution: "@casehubio/pages-examples@workspace:examples"
   dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@casehub/pages-tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/echarts": "npm:^4.9.15"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    "@types/react": "npm:^17.0.6"
-    copyfiles: "npm:^2.4.1"
-    echarts: "npm:^5.6.0"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^5.6.0"
-  languageName: unknown
-  linkType: soft
-
-"@casehub/pages-examples@workspace:examples":
-  version: 0.0.0-use.local
-  resolution: "@casehub/pages-examples@workspace:examples"
-  dependencies:
-    "@casehub/pages-runtime": "workspace:*"
-    "@casehub/pages-viz": "workspace:*"
-    "@casehub/pages-webpack-base": "workspace:*"
+    "@casehubio/pages-runtime": "workspace:*"
+    "@casehubio/pages-viz": "workspace:*"
+    "@casehubio/pages-webpack-base": "workspace:*"
     "@playwright/test": "npm:^1.50.0"
     browser-sync: "npm:^2.29.3"
     chokidar: "npm:^3.5.3"
@@ -1763,14 +1701,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-iframe-api@workspace:*, @casehub/pages-iframe-api@workspace:packages/pages-iframe-api":
+"@casehubio/pages-iframe-api@workspace:*, @casehubio/pages-iframe-api@workspace:packages/pages-iframe-api":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-iframe-api@workspace:packages/pages-iframe-api"
+  resolution: "@casehubio/pages-iframe-api@workspace:packages/pages-iframe-api"
   dependencies:
     "@babel/core": "npm:^7.28.6"
     "@babel/preset-env": "npm:^7.28.6"
     "@babel/preset-react": "npm:^7.28.5"
-    "@casehub/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-tsconfig": "workspace:*"
     "@testing-library/jest-dom": "npm:^6.4.2"
     "@types/jest": "npm:^29.5.12"
     "@types/jest-when": "npm:^3.5.5"
@@ -1787,15 +1725,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-iframe-dev@workspace:*, @casehub/pages-iframe-dev@workspace:packages/pages-iframe-dev":
+"@casehubio/pages-iframe-dev@workspace:*, @casehubio/pages-iframe-dev@workspace:packages/pages-iframe-dev":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-iframe-dev@workspace:packages/pages-iframe-dev"
+  resolution: "@casehubio/pages-iframe-dev@workspace:packages/pages-iframe-dev"
   dependencies:
     "@babel/core": "npm:^7.28.6"
     "@babel/preset-env": "npm:^7.28.6"
     "@babel/preset-react": "npm:^7.28.5"
-    "@casehub/pages-iframe-api": "workspace:*"
-    "@casehub/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-iframe-api": "workspace:*"
+    "@casehubio/pages-tsconfig": "workspace:*"
     "@testing-library/jest-dom": "npm:^6.4.2"
     "@types/jest": "npm:^29.5.12"
     "@types/jest-when": "npm:^3.5.5"
@@ -1814,14 +1752,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-runtime@workspace:*, @casehub/pages-runtime@workspace:packages/pages-runtime":
+"@casehubio/pages-runtime@workspace:*, @casehubio/pages-runtime@workspace:packages/pages-runtime":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-runtime@workspace:packages/pages-runtime"
+  resolution: "@casehubio/pages-runtime@workspace:packages/pages-runtime"
   dependencies:
-    "@casehub/pages-component": "workspace:*"
-    "@casehub/pages-data": "workspace:*"
-    "@casehub/pages-ui": "workspace:*"
-    "@casehub/pages-viz": "workspace:*"
+    "@casehubio/pages-component": "workspace:*"
+    "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-ui": "workspace:*"
+    "@casehubio/pages-viz": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
     js-yaml: "npm:^4.1.0"
     marked: "npm:^15.0.0"
@@ -1831,18 +1769,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-tsconfig@workspace:*, @casehub/pages-tsconfig@workspace:packages/pages-tsconfig":
+"@casehubio/pages-tsconfig@workspace:*, @casehubio/pages-tsconfig@workspace:packages/pages-tsconfig":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-tsconfig@workspace:packages/pages-tsconfig"
+  resolution: "@casehubio/pages-tsconfig@workspace:packages/pages-tsconfig"
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-ui@workspace:*, @casehub/pages-ui@workspace:packages/pages-ui":
+"@casehubio/pages-ui@workspace:*, @casehubio/pages-ui@workspace:packages/pages-ui":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-ui@workspace:packages/pages-ui"
+  resolution: "@casehubio/pages-ui@workspace:packages/pages-ui"
   dependencies:
-    "@casehub/pages-component": "workspace:*"
-    "@casehub/pages-data": "workspace:*"
+    "@casehubio/pages-component": "workspace:*"
+    "@casehubio/pages-data": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
     glob: "npm:^11.0.0"
     js-yaml: "npm:^4.1.0"
@@ -1853,12 +1791,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-viz@workspace:*, @casehub/pages-viz@workspace:packages/pages-viz":
+"@casehubio/pages-viz@workspace:*, @casehubio/pages-viz@workspace:packages/pages-viz":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-viz@workspace:packages/pages-viz"
+  resolution: "@casehubio/pages-viz@workspace:packages/pages-viz"
   dependencies:
-    "@casehub/pages-component": "workspace:*"
-    "@casehub/pages-data": "workspace:*"
+    "@casehubio/pages-component": "workspace:*"
+    "@casehubio/pages-data": "workspace:*"
     echarts: "npm:^5.6.0"
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
@@ -1866,14 +1804,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-webapp@workspace:webapp":
+"@casehubio/pages-webapp@workspace:webapp":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-webapp@workspace:webapp"
+  resolution: "@casehubio/pages-webapp@workspace:webapp"
   dependencies:
-    "@casehub/pages-component-echarts": "npm:0.0.0"
-    "@casehub/pages-component-llm-prompter": "npm:0.0.0"
-    "@casehub/pages-component-svg-heatmap": "npm:0.0.0"
-    "@casehub/pages-webpack-base": "workspace:*"
+    "@casehubio/pages-component-llm-prompter": "npm:0.0.0"
+    "@casehubio/pages-component-svg-heatmap": "npm:0.0.0"
+    "@casehubio/pages-webpack-base": "workspace:*"
     copy-webpack-plugin: "npm:^11.0.0"
     rimraf: "npm:^6.1.2"
     webpack: "npm:^5.104.1"
@@ -1881,9 +1818,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/pages-webpack-base@workspace:*, @casehub/pages-webpack-base@workspace:packages/pages-webpack-base":
+"@casehubio/pages-webpack-base@workspace:*, @casehubio/pages-webpack-base@workspace:packages/pages-webpack-base":
   version: 0.0.0-use.local
-  resolution: "@casehub/pages-webpack-base@workspace:packages/pages-webpack-base"
+  resolution: "@casehubio/pages-webpack-base@workspace:packages/pages-webpack-base"
   dependencies:
     "@babel/traverse": "npm:^7.16.0"
     css-loader: "npm:^7.1.2"
@@ -3597,15 +3534,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/echarts@npm:^4.9.15":
-  version: 4.9.22
-  resolution: "@types/echarts@npm:4.9.22"
-  dependencies:
-    "@types/zrender": "npm:*"
-  checksum: 10c0/00e5e6f75b4a1ee46df0286fc1fe5b42773970280576317723d7174678598d0aeb2bac36870276ac1e65bf053241443334ef37ae97a84c1b782abdb980991f39
-  languageName: node
-  linkType: hard
-
 "@types/eslint-scope@npm:^3.7.7":
   version: 3.7.7
   resolution: "@types/eslint-scope@npm:3.7.7"
@@ -4073,13 +4001,6 @@ __metadata:
   dependencies:
     "@types/yargs-parser": "npm:*"
   checksum: 10c0/d16937d7ac30dff697801c3d6f235be2166df42e4a88bf730fa6dc09201de3727c0a9500c59a672122313341de5f24e45ee0ff579c08ce91928e519090b7906b
-  languageName: node
-  linkType: hard
-
-"@types/zrender@npm:*":
-  version: 4.0.6
-  resolution: "@types/zrender@npm:4.0.6"
-  checksum: 10c0/baaf25731115fe18cb281bf38e6d414964307532381d8479edf7a4b25baecec737fed620802380fa126139e506d56d62d70fe8142c5c386e340fa91aa988dddd
   languageName: node
   linkType: hard
 

@@ -1,6 +1,6 @@
-import { page, html, barChart, table, inlineDataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, barChart, table, inlineDataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Most Spoken Languages.dash.yaml"
 // Simple inline dataset example

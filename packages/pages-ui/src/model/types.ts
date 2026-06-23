@@ -4,5 +4,5 @@ export type {
   GridPlacement,
   GridItem,
   PermissionContext,
-} from "@casehub/pages-component";
-export { ALLOW_ALL } from "@casehub/pages-component";
+} from "@casehubio/pages-component";
+export { ALLOW_ALL } from "@casehubio/pages-component";

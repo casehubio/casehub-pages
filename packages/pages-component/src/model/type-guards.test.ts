@@ -21,7 +21,7 @@ import {
   getProps,
   isComponentType,
 } from "./type-guards.js";
-import { dataSetId } from "@casehub/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 
 describe("type guards - layout components", () => {
   it("isGrid narrows grid components", () => {

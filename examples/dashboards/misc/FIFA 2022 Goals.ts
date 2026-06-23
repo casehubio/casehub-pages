@@ -1,6 +1,6 @@
-import { page, html, metric, lineChart, barChart, bubbleChart, table, columns, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, metric, lineChart, barChart, bubbleChart, table, columns, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "FIFA 2022 Goals.dash.yaml"
 // FIFA World Cup Qatar 2022 Goals Score Statistics

@@ -3,8 +3,8 @@ import { CanvasRenderer } from "echarts/renderers";
 import { TitleComponent } from "echarts/components";
 import { CasehubElement } from "./CasehubElement.js";
 import type { VizComponentProps } from "./types.js";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
-import type { ChartSettings } from "@casehub/pages-component";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ChartSettings } from "@casehubio/pages-component";
 
 // Register the Canvas renderer and TitleComponent once at module load
 use([CanvasRenderer, TitleComponent]);

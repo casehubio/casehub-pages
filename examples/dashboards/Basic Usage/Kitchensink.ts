@@ -3,8 +3,8 @@ import {
   bubbleChart, timeseries, table, metric, meter, selector, mapChart,
   iframePlugin, tabs, rows, columns, withStyle, textInput, numberInput,
   dropdown, inlineDataset, dataset
-} from "@casehub/ui";
-import { createLookup, groupOp } from "@casehub/data";
+} from "@casehubio/ui";
+import { createLookup, groupOp } from "@casehubio/data";
 
 // Datasets
 const productsData = JSON.stringify([

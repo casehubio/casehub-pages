@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import "@casehub/pages-viz";
-import type { CasehubTable, CasehubFormInput } from "@casehub/pages-viz";
+import "@casehubio/pages-viz";
+import type { CasehubTable, CasehubFormInput } from "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import { columnId } from "@casehub/pages-data/dist/dataset/types.js";
-import type { FormInputCommon } from "@casehub/pages-component";
+import { columnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { FormInputCommon } from "@casehubio/pages-component";
 
 const CONTACT_MANAGER_YAML = `
 datasets:

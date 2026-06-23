@@ -1,4 +1,4 @@
-import type { DeepLink } from "@casehub/pages-ui/dist/model/page-types.js";
+import type { DeepLink } from "@casehubio/pages-ui/dist/model/page-types.js";
 
 function encodePagePath(page: string): string {
   return page

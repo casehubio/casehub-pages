@@ -17,7 +17,7 @@
 const path = require("path");
 const { merge } = require("webpack-merge");
 const CopyPlugin = require("copy-webpack-plugin");
-const common = require("@casehub/pages-webpack-base/webpack.common.config");
+const common = require("@casehubio/pages-webpack-base/webpack.common.config");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = async (env) => {

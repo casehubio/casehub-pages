@@ -1,6 +1,6 @@
-import { page, timeseries, columns, table, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, timeseries, columns, table, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Real Time JVM Monitoring.dash.yaml"
 // Real-time accumulating JVM metrics with timeseries charts

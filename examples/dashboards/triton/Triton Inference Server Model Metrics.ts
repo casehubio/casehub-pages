@@ -1,6 +1,6 @@
-import { page, html, metric, barChart, selector, columns, withStyle, dataset } from "@casehub/ui";
-import { createLookup } from "@casehub/data";
-import type { DataSetId, ColumnId } from "@casehub/data";
+import { page, html, metric, barChart, selector, columns, withStyle, dataset } from "@casehubio/ui";
+import { createLookup } from "@casehubio/data";
+import type { DataSetId, ColumnId } from "@casehubio/data";
 
 // TypeScript companion to "Triton Inference Server Model Metrics.dash.yaml"
 // Triton inference server monitoring dashboard
