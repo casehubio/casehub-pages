@@ -15,37 +15,37 @@ function injectNavStyles(doc: Document): void {
   padding: 4px 0 12px;
 }
 [data-tab-bar] button[data-slot] {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--casehub-font, system-ui, sans-serif);
   font-size: 13px;
   font-weight: 500;
   padding: 6px 16px;
-  border: 1px solid #d0d5dd;
+  border: 1px solid var(--casehub-border, #e0e0e0);
   border-radius: 20px;
-  background: #fff;
-  color: #475467;
+  background: var(--casehub-bg, #fff);
+  color: var(--casehub-text-muted, #888);
   cursor: pointer;
   transition: all 0.15s ease;
   line-height: 1.4;
 }
 [data-tab-bar] button[data-slot]:hover {
-  background: #f2f4f7;
-  border-color: #98a2b3;
-  color: #344054;
+  background: var(--casehub-bg-hover, #e8f0fe);
+  border-color: var(--casehub-border, #e0e0e0);
+  color: var(--casehub-text, #333);
 }
 [data-tab-bar] button[data-slot][data-active] {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: var(--casehub-accent, #5470c6);
+  border-color: var(--casehub-accent, #5470c6);
   color: #fff;
 }
 [data-tab-bar] button[data-slot][data-active]:hover {
-  background: #4338ca;
-  border-color: #4338ca;
+  background: var(--casehub-accent-hover, #4361b0);
+  border-color: var(--casehub-accent-hover, #4361b0);
 }
 .casehub-sidebar {
   flex-direction: column;
   gap: 2px;
   padding: 0 12px 0 0;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--casehub-border, #e0e0e0);
   min-width: 140px;
 }
 .casehub-sidebar button[data-slot] {
@@ -56,7 +56,7 @@ function injectNavStyles(doc: Document): void {
 }
 .casehub-tabs {
   gap: 0;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--casehub-border, #e0e0e0);
   padding-bottom: 0;
 }
 .casehub-tabs button[data-slot] {
@@ -67,21 +67,21 @@ function injectNavStyles(doc: Document): void {
   border-bottom: 2px solid transparent;
 }
 .casehub-tabs button[data-slot]:hover {
-  background: #f9fafb;
+  background: var(--casehub-bg-alt, #f0f0f0);
   border-color: transparent;
-  border-bottom-color: #d0d5dd;
+  border-bottom-color: var(--casehub-border, #e0e0e0);
 }
 .casehub-tabs button[data-slot][data-active] {
   background: transparent;
-  color: #4f46e5;
-  border-bottom-color: #4f46e5;
+  color: var(--casehub-accent, #5470c6);
+  border-bottom-color: var(--casehub-accent, #5470c6);
 }
 .casehub-tabs button[data-slot][data-active]:hover {
-  background: #f5f3ff;
+  background: var(--casehub-accent-subtle, #e8eaf6);
 }
 .casehub-menu {
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--casehub-bg-alt, #f0f0f0);
+  border-bottom: 1px solid var(--casehub-border, #e0e0e0);
   gap: 0;
   padding: 0;
 }
@@ -93,21 +93,21 @@ function injectNavStyles(doc: Document): void {
   font-size: 13px;
 }
 .casehub-menu button[data-slot]:hover {
-  background: #f2f4f7;
+  background: var(--casehub-bg-hover, #e8f0fe);
   border-color: transparent;
 }
 .casehub-menu button[data-slot][data-active] {
   background: transparent;
   font-weight: 600;
-  color: #1f2937;
-  border-bottom: 2px solid #4f46e5;
+  color: var(--casehub-text, #333);
+  border-bottom: 2px solid var(--casehub-accent, #5470c6);
 }
 .casehub-tree-nav {
   flex-direction: column;
   padding: 0 12px 0 0;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--casehub-border, #e0e0e0);
   min-width: 160px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--casehub-font, system-ui, sans-serif);
   font-size: 13px;
 }
 .casehub-tree-nav ul { list-style: none; margin: 0; padding: 0; }
@@ -115,16 +115,16 @@ function injectNavStyles(doc: Document): void {
 .casehub-tree-nav .tree-group-label {
   display: flex; align-items: center; gap: 4px;
   padding: 4px 8px; cursor: pointer; user-select: none;
-  color: #475467; font-weight: 500;
+  color: var(--casehub-text-muted, #888); font-weight: 500;
 }
-.casehub-tree-nav .tree-group-label:hover { background: #f2f4f7; border-radius: 4px; }
+.casehub-tree-nav .tree-group-label:hover { background: var(--casehub-bg-hover, #e8f0fe); border-radius: var(--casehub-radius, 4px); }
 .casehub-tree-nav .tree-leaf {
   display: block; padding: 4px 8px 4px 24px;
-  cursor: pointer; color: #475467; text-decoration: none;
-  border-radius: 4px;
+  cursor: pointer; color: var(--casehub-text-muted, #888); text-decoration: none;
+  border-radius: var(--casehub-radius, 4px);
 }
-.casehub-tree-nav .tree-leaf:hover { background: #f2f4f7; }
-.casehub-tree-nav .tree-leaf[data-active] { background: #ede9fe; color: #4f46e5; font-weight: 500; }
+.casehub-tree-nav .tree-leaf:hover { background: var(--casehub-bg-hover, #e8f0fe); }
+.casehub-tree-nav .tree-leaf[data-active] { background: var(--casehub-accent-subtle, #e8eaf6); color: var(--casehub-accent, #5470c6); font-weight: 500; }
 .casehub-tree-nav .tree-children { padding-left: 16px; }
 .casehub-tiles-grid {
   display: grid;
@@ -133,19 +133,19 @@ function injectNavStyles(doc: Document): void {
   padding: 0 0 16px;
 }
 .casehub-tiles-grid .tile-card {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--casehub-border, #e0e0e0);
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
   text-align: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
+  font-family: var(--casehub-font, system-ui, sans-serif);
+  font-size: var(--casehub-font-size, 14px);
   font-weight: 500;
-  color: #475467;
+  color: var(--casehub-text-muted, #888);
   transition: all 0.15s ease;
 }
-.casehub-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #98a2b3; }
-.casehub-tiles-grid .tile-card[data-active] { border-color: #4f46e5; color: #4f46e5; box-shadow: 0 0 0 1px #4f46e5; }
+.casehub-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--casehub-border, #e0e0e0); }
+.casehub-tiles-grid .tile-card[data-active] { border-color: var(--casehub-accent, #5470c6); color: var(--casehub-accent, #5470c6); box-shadow: 0 0 0 1px var(--casehub-accent, #5470c6); }
 `;
   doc.head.appendChild(style);
 }

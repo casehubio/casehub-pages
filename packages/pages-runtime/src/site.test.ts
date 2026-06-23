@@ -236,8 +236,8 @@ pages:
     darkSite.dispose();
 
     const lightSite = await loadSite(target, lightYaml);
-    expect(target.dataset.casehubTheme).toBeUndefined();
-    expect(target.style.getPropertyValue("--casehub-bg")).toBe("");
+    expect(target.dataset.casehubTheme).toBe("light");
+    expect(target.style.getPropertyValue("--casehub-bg")).toBe("#fff");
     lightSite.dispose();
     document.body.removeChild(target);
   });

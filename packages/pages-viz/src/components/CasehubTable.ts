@@ -2,6 +2,7 @@ import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/
 import type { TableProps } from "@casehubio/pages-component";
 import { CasehubElement } from "../base/CasehubElement.js";
 import { cellToRaw, resolveColumnName, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
+import { tableToCsv, downloadCsv, copyToClipboard } from "./table-export.js";
 
 const TABLE_CSS = `
 :host {
@@ -55,6 +56,13 @@ td {
 }
 tr:nth-child(even) { background: var(--casehub-bg-alt, #fafafa); }
 tr.clickable:hover { background: var(--casehub-bg-hover, #e8f0fe); cursor: pointer; }
+.export-btn {
+  cursor: pointer; padding: 4px 8px; border: 1px solid var(--casehub-border, #ddd);
+  background: var(--casehub-bg, #fff); border-radius: 3px; font-size: 13px;
+  color: var(--casehub-text, #333); line-height: 1; display: flex; align-items: center; gap: 4px;
+}
+.export-btn:hover { background: var(--casehub-bg-alt, #f0f0f0); }
+.export-btn svg { width: 14px; height: 14px; fill: currentColor; }
 `;
 
 const SEARCH_ICON = `<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>`;
@@ -123,6 +131,39 @@ export class CasehubTable extends CasehubElement<TableProps> {
     });
     filterBox.appendChild(filterInput);
     toolbar.appendChild(filterBox);
+
+    // Export buttons
+    if (props.csvExport) {
+      const exportGroup = document.createElement("div");
+      exportGroup.style.cssText = "display:flex;gap:4px;";
+
+      const dlBtn = document.createElement("button");
+      dlBtn.className = "export-btn";
+      dlBtn.title = "Download CSV";
+      dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>`;
+      dlBtn.addEventListener("click", () => {
+        const csv = tableToCsv(dataset, props.columns);
+        downloadCsv(csv);
+      });
+      exportGroup.appendChild(dlBtn);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "export-btn";
+      copyBtn.title = "Copy to clipboard";
+      copyBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`;
+      copyBtn.addEventListener("click", () => {
+        const csv = tableToCsv(dataset, props.columns);
+        void copyToClipboard(csv).then(ok => {
+          copyBtn.textContent = ok ? "✓" : "✗";
+          setTimeout(() => {
+            copyBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`;
+          }, 1500);
+        });
+      });
+      exportGroup.appendChild(copyBtn);
+
+      toolbar.appendChild(exportGroup);
+    }
 
     // Pagination
     if (pageSize && totalCount > 0) {

@@ -12,6 +12,8 @@ import type { Site, ViewState, DeepLink } from "@casehubio/pages-ui/dist/model/p
 import { parsePage } from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import { load as yamlLoad } from "js-yaml";
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
+import { applyTheme, LIGHT_THEME, DARK_THEME } from "@casehubio/pages-viz/dist/base/theme.js";
+import type { CasehubTheme } from "@casehubio/pages-viz/dist/base/theme.js";
 import { buildPagePathMap } from "./page-paths.js";
 import { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
 import { buildPageIndex, computeCurrentPage, walkNavigate } from "./navigation.js";
@@ -78,6 +80,7 @@ interface RecordDeleteDetail {
 
 export interface LiveSite extends Site {
   navigate(path: string): void;
+  setTheme(theme: "light" | "dark" | CasehubTheme): void;
   dispose(): void;
 }
 
@@ -104,15 +107,7 @@ export function loadSite(
 
   const settings = root.props?.["settings"] as Record<string, unknown> | undefined;
   const isDark = settings?.["mode"] === "dark";
-  if (isDark) {
-    target.dataset.casehubTheme = "dark";
-    target.style.setProperty("--casehub-bg", "#1a1a2e");
-    target.style.setProperty("--casehub-text", "#e0e0e0");
-  } else {
-    delete target.dataset.casehubTheme;
-    target.style.removeProperty("--casehub-bg");
-    target.style.removeProperty("--casehub-text");
-  }
+  applyTheme(target, isDark ? DARK_THEME : LIGHT_THEME);
 
   const pagePathMap = buildPagePathMap(root);
   const dataSetScope = buildDataSetScope(root, pagePathMap);
@@ -636,6 +631,17 @@ export function loadSite(
     },
 
     state,
+
+    setTheme(theme: "light" | "dark" | CasehubTheme): void {
+      applyTheme(target, theme);
+      const echartsThemeName = theme === "dark" ? "dark" : "";
+      for (const [, entry] of registry) {
+        const vizEl = entry.vizElement;
+        if (vizEl && "buildOption" in vizEl) {
+          (vizEl as { theme: string }).theme = echartsThemeName;
+        }
+      }
+    },
 
     navigate(path: string): void {
       _navigating = true;

@@ -231,12 +231,63 @@ describe("CasehubElement", () => {
   });
 
   describe("loading state", () => {
-    it("shows loading when props set but no dataset", () => {
+    it("shows loading skeleton when props set but no dataset", () => {
       el.props = { label: "test" };
       document.body.appendChild(el);
 
       const container = el.shadowRoot.querySelector("div")!;
-      expect(container.textContent).toContain("Loading");
+      const skeleton = container.querySelector("[data-casehub-loading]");
+      expect(skeleton).not.toBeNull();
+    });
+
+    it("includes a style element for skeleton animation", () => {
+      el.props = { label: "test" };
+      document.body.appendChild(el);
+
+      const container = el.shadowRoot.querySelector("div")!;
+      const style = container.querySelector("style");
+      expect(style).not.toBeNull();
+      expect(style!.textContent).toContain("casehub-pulse");
+    });
+  });
+
+  describe("error state rendering", () => {
+    it("shows structured error with message", () => {
+      el.props = { label: "test" };
+      document.body.appendChild(el);
+      el.error = "Connection failed";
+
+      const container = el.shadowRoot.querySelector("div")!;
+      const errorEl = container.querySelector("[data-casehub-error]");
+      expect(errorEl).not.toBeNull();
+      expect(errorEl!.textContent).toContain("Connection failed");
+    });
+
+    it("includes a retry button that re-requests data", () => {
+      const lookup = mockLookup("sales");
+      el.props = { lookup, label: "test" };
+      document.body.appendChild(el);
+      expect(events).toHaveLength(1);
+
+      el.error = "Timeout";
+
+      const container = el.shadowRoot.querySelector("div")!;
+      const retryBtn = container.querySelector<HTMLButtonElement>("[data-casehub-retry]");
+      expect(retryBtn).not.toBeNull();
+
+      retryBtn!.click();
+      expect(events).toHaveLength(2);
+    });
+
+    it("does not show retry button when no lookup exists", () => {
+      el.props = { label: "test" };
+      document.body.appendChild(el);
+      el.dataSet = mockDataSet();
+      el.error = "Error";
+
+      const container = el.shadowRoot.querySelector("div")!;
+      const retryBtn = container.querySelector("[data-casehub-retry]");
+      expect(retryBtn).toBeNull();
     });
   });
 

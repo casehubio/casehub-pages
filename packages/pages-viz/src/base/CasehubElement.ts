@@ -193,11 +193,66 @@ export abstract class CasehubElement<
   // ── Default renderers ───────────────────────────────────────────────
 
   protected renderLoading(container: HTMLDivElement): void {
-    container.textContent = "Loading…";
+    container.textContent = "";
+    const style = document.createElement("style");
+    style.textContent = `
+@keyframes casehub-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+[data-casehub-loading] { padding: 12px; }
+.casehub-skeleton { height: 14px; border-radius: var(--casehub-radius, 4px); background: var(--casehub-bg-alt, #f0f0f0); margin-bottom: 10px; animation: casehub-pulse 1.5s ease-in-out infinite; }
+.casehub-skeleton:nth-child(2) { width: 80%; }
+.casehub-skeleton:nth-child(3) { width: 60%; }
+`;
+    container.appendChild(style);
+
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("data-casehub-loading", "");
+    for (let i = 0; i < 3; i++) {
+      const bar = document.createElement("div");
+      bar.className = "casehub-skeleton";
+      wrapper.appendChild(bar);
+    }
+    container.appendChild(wrapper);
   }
 
   protected renderError(container: HTMLDivElement, message: string): void {
-    container.textContent = message;
+    container.textContent = "";
+    const style = document.createElement("style");
+    style.textContent = `
+[data-casehub-error] { padding: 12px; border: 1px solid var(--casehub-border, #e0e0e0); border-radius: var(--casehub-radius, 4px); background: var(--casehub-bg, #fff); }
+.casehub-error-icon { display: inline; margin-right: 6px; }
+.casehub-error-msg { color: var(--casehub-text, #333); font-size: var(--casehub-font-size, 14px); }
+[data-casehub-retry] { margin-top: 8px; padding: 4px 12px; border: 1px solid var(--casehub-accent, #5470c6); background: transparent; color: var(--casehub-accent, #5470c6); border-radius: var(--casehub-radius, 4px); cursor: pointer; font-size: 13px; }
+[data-casehub-retry]:hover { background: var(--casehub-accent-subtle, #e8eaf6); }
+`;
+    container.appendChild(style);
+
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("data-casehub-error", "");
+
+    const icon = document.createElement("span");
+    icon.className = "casehub-error-icon";
+    icon.textContent = "⚠";
+    wrapper.appendChild(icon);
+
+    const msg = document.createElement("span");
+    msg.className = "casehub-error-msg";
+    msg.textContent = message;
+    wrapper.appendChild(msg);
+
+    if (this._props?.lookup) {
+      const retryBtn = document.createElement("button");
+      retryBtn.setAttribute("data-casehub-retry", "");
+      retryBtn.textContent = "Retry";
+      retryBtn.addEventListener("click", () => {
+        this._error = "";
+        this._dataRequested = false;
+        this.requestDataIfNeeded();
+        this.update();
+      });
+      wrapper.appendChild(retryBtn);
+    }
+
+    container.appendChild(wrapper);
   }
 
   // ── Resize hook ─────────────────────────────────────────────────────

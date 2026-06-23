@@ -12,6 +12,10 @@ export type { VizComponentProps } from "./base/types.js";
 export { cellToRaw, resolveColumnName } from "./base/cell-extract.js";
 export { deepMerge } from "./base/deep-merge.js";
 
+// Theme
+export type { CasehubTheme } from "./base/theme.js";
+export { LIGHT_THEME, DARK_THEME, applyTheme, clearTheme } from "./base/theme.js";
+
 // Charts
 export { CasehubBarChart } from "./charts/CasehubBarChart.js";
 export { CasehubLineChart } from "./charts/CasehubLineChart.js";
@@ -28,6 +32,7 @@ export { CasehubTable } from "./components/CasehubTable.js";
 export { CasehubMetric } from "./components/CasehubMetric.js";
 export { CasehubSelector } from "./components/CasehubSelector.js";
 export { CasehubIframePlugin } from "./components/CasehubIframePlugin.js";
+export { tableToCsv, downloadCsv, copyToClipboard } from "./components/table-export.js";
 
 // Form inputs
 export { CasehubFormInput } from "./form-inputs/CasehubFormInput.js";
