@@ -144,11 +144,12 @@ The filter flow (selector → `casehub-filter` → listening component re-query)
 
 ### Cross-Filtering
 
-1. User interacts with selector component
-2. Selector fires `casehub-filter` custom event with `FilterRequest`
-3. Runtime intercepts, applies filter to the target dataset's operations
-4. Runtime re-resolves the dataset and dispatches `casehub-data-response` to listening components
-5. Listening components re-render with filtered data
+1. User clicks a data point (chart bar/slice, table cell, selector option, iframe message)
+2. Emitter resolves `row` and `value` at dispatch time, emits `casehub-filter` custom event with `CasehubFilterApply` (discriminated union: `columnId`, `value`, `row`, `reset: false`, `group`) or `CasehubFilterReset` (`columnId`, `reset: true`, `group`)
+3. Runtime uses `detail.value` directly — no fallback logic or row extraction
+4. If child DataScope exists and row contains `idColumn` → record selection path; otherwise → cross-filter path
+5. Runtime re-queries listening components via the data pipeline with updated `FilterState`
+6. Components re-render; emitters track selection via `_selectedValue` for toggle (click-again-to-deselect) and visual feedback (ECharts `highlight`/`downplay` for charts, `.selected` CSS for tables)
 
 ---
 
@@ -220,7 +221,7 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | #17 | Theming system and dark mode support | 🔲 open |
 | #18 | Table data export (CSV, clipboard) | 🔲 open |
 | #19 | Loading and error states for components | 🔲 open |
-| #20 | Chart click → cross-filter event protocol | 🔲 open |
+| #20 | Chart click → cross-filter event protocol | ✅ shipped |
 | #21 | Optional Quarkus backend MVP | 🔲 open |
 | #22 | Server-side data provider: Prometheus | 🔲 open |
 | #23 | Server-side data provider: Elasticsearch | 🔲 open |

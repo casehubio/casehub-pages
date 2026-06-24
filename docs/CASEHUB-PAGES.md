@@ -325,11 +325,44 @@ barChart({
 | `selfApply` | `false` | Apply own filter to self |
 | `group` | `undefined` | Filter group name (isolates filter channels) |
 
+### casehub-filter Event Detail
+
+The `casehub-filter` event detail is a discriminated union:
+
+```typescript
+type CasehubFilterDetail = CasehubFilterApply | CasehubFilterReset;
+
+interface CasehubFilterApply {
+  readonly columnId: string;
+  readonly value: string;      // Resolved by emitter at dispatch time
+  readonly row: TypedRow;       // Full row reference
+  readonly reset: false;
+  readonly group: string | undefined;
+}
+
+interface CasehubFilterReset {
+  readonly columnId: string;
+  readonly reset: true;
+  readonly group: string | undefined;
+}
+```
+
+**Key behaviors:**
+
+- **Emitters resolve `value` and `row` at dispatch time.** The runtime never extracts values from the row or falls back to positional indices.
+- **Toggle semantics:** All emitters (except slider and iframe components) support click-to-select, click-again-to-deselect. Charts and tables track `_selectedValue`; selectors track `_selectedValue` for labels.
+- **Visual feedback:**
+  - Charts use ECharts `highlight`/`downplay` actions (same appearance as hover).
+  - Tables use `.selected` CSS class (`background: var(--casehub-bg-selected, #e8f0fe)`).
+  - Selectors use label chip highlighting (existing behavior).
+- **NULL values:** Emitters skip the event when the resolved cell value is NULL.
+- **Record selection:** Any component (not just tables) can trigger DataScope record selection if the emitted row contains the child DataScope's `idColumn`. The runtime infers the path from the data shape via try/catch on `row.cell(idColumn)` for apply events and `ds.columns.some()` for reset events.
+
 ### Event Types
 
 | Event | Emitted By | Data |
 |-------|-----------|------|
-| `casehub-filter` | Selector, Table, Charts | `{ columnId, rowIndex, reset, group }` |
+| `casehub-filter` | Selector, Table, Charts, IframePlugin | `CasehubFilterDetail` (see above) |
 | `casehub-sort` | Table (server-side) | `{ columnId, order }` |
 | `casehub-page` | Table (server-side) | `{ offset, count }` |
 | `casehub-data-request` | All viz components | `{ element, lookup }` |
