@@ -1,6 +1,6 @@
 # casehub-pages — LLM Integration Guide
 
-This document is designed for LLMs building applications that use casehub-pages for dashboard and data visualization. It covers everything needed to build, configure, and extend dashboards programmatically.
+This document is designed for LLMs building applications that use casehub-pages. casehub-pages is a structured data rendering runtime — it separates data (datasets, lookups, operations) from presentation (pages, layouts, components) and wires them together through declarative bindings. The same runtime powers dashboards, data-bound forms, CRUD interfaces, and any page that renders structured data through charts, tables, metrics, or custom components.
 
 ## Quick Start
 
@@ -11,7 +11,7 @@ This document is designed for LLMs building applications that use casehub-pages 
 yarn add @casehubio/pages-runtime @casehubio/pages-ui @casehubio/pages-data
 ```
 
-### Minimal Dashboard (TypeScript DSL — preferred)
+### Minimal Page (TypeScript DSL — preferred)
 
 ```typescript
 import { page, barChart, inlineDataset } from "@casehubio/ui";
@@ -31,7 +31,7 @@ inlineDataset("sales", JSON.stringify([
 });
 
 // 2. Build the component tree
-const dashboard = page("Sales",
+const salesPage = page("Sales",
   barChart({
     title: "Revenue by Region",
     lookup: lookup("sales", groupBy("Region", col("Region"), sum("Revenue"))),
@@ -39,10 +39,10 @@ const dashboard = page("Sales",
 );
 
 // 3. Render
-const site = await loadSite(document.getElementById("app")!, dashboard);
+const site = await loadSite(document.getElementById("app")!, salesPage);
 ```
 
-### Minimal Dashboard (YAML)
+### Minimal Page (YAML)
 
 ```yaml
 datasets:
@@ -81,9 +81,19 @@ const site = await loadSite(document.getElementById("app")!, yamlString);
 - Composability — extract common patterns into functions
 - Conditional logic — show/hide components based on runtime state
 
-**Use YAML only** when dashboards are defined by end users at runtime (e.g., stored in a database and loaded dynamically). YAML is parsed via `js-yaml` and desugared into the same component tree.
+**Use YAML only** when pages are defined at runtime (e.g., stored in a database and loaded dynamically). YAML is parsed via `js-yaml` and desugared into the same component tree.
 
 ## Core Concepts
+
+### Data–Presentation Separation
+
+casehub-pages enforces a strict separation between data and presentation:
+
+- **Data layer** (`pages-data`) — datasets, column schemas, lookup operations (filter, group, sort, aggregate). Data is defined once and bound to components by reference.
+- **Presentation layer** (`pages-component`, `pages-viz`) — layout containers, navigation, charts, tables, forms. Components declare what data they need via a `lookup` binding, never how to fetch or transform it.
+- **Runtime** (`pages-runtime`) — wires data to presentation at render time. Manages the data pipeline, event delegation, filter state, and lifecycle.
+
+This separation means the same dataset can drive a chart, a table, and a form simultaneously. Changing the data source (inline → REST → Prometheus) requires no changes to the components. Adding a new visualization requires no changes to the data layer.
 
 ### Architecture
 
@@ -523,7 +533,7 @@ For precise component placement:
 import { grid, at } from "@casehubio/ui";
 
 grid(12,
-  at(0, 0, 12, 1, title("Dashboard")),   // Full width header
+  at(0, 0, 12, 1, title("Overview")),     // Full width header
   at(0, 1, 6, 2, barChart({...})),        // Left half, 2 rows tall
   at(6, 1, 6, 1, metric({...})),          // Right half, top
   at(6, 2, 6, 1, table({...})),           // Right half, bottom
@@ -533,9 +543,9 @@ grid(12,
 
 ## Best Practices
 
-### Dashboard Composition
+### Page Composition
 
-Extract reusable dashboard sections as functions:
+Extract reusable page sections as functions:
 
 ```typescript
 function kpiRow(datasetId: string) {
@@ -588,7 +598,7 @@ import { loadSite } from "@casehubio/pages-runtime";
 
 dataset("api-data", "/api/metrics");
 
-export default page("Dashboard",
+export default page("Metrics",
   barChart({
     title: "API Metrics",
     lookup: lookup("api-data", groupBy("endpoint", col("endpoint"), sum("count"))),
