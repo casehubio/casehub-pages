@@ -52,11 +52,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Lint (ESLint strict-type-checked)
-        run: yarn lint
-
       - name: Type check (tsc --build)
         run: yarn typecheck
+
+      - name: Lint (ESLint strict-type-checked)
+        run: yarn lint
 
       - name: Build all workspace packages
         run: yarn build

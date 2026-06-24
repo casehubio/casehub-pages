@@ -36,6 +36,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/.typecheck/**",
       "_legacy/**",
+      "templates/**",
       "webapp/**",
       "examples/scripts/**",
       "examples/src/samples/**",
