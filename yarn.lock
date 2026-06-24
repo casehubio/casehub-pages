@@ -1579,7 +1579,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@casehubio/pages-component-llm-prompter@npm:0.0.0, @casehubio/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter":
+"@casehubio/pages-component-llm-prompter@workspace:*, @casehubio/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter"
   dependencies:
@@ -1618,7 +1618,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-component-svg-heatmap@npm:0.0.0, @casehubio/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap":
+"@casehubio/pages-component-svg-heatmap@workspace:*, @casehubio/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap"
   dependencies:
@@ -1808,8 +1808,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-webapp@workspace:webapp"
   dependencies:
-    "@casehubio/pages-component-llm-prompter": "npm:0.0.0"
-    "@casehubio/pages-component-svg-heatmap": "npm:0.0.0"
+    "@casehubio/pages-component-llm-prompter": "workspace:*"
+    "@casehubio/pages-component-svg-heatmap": "workspace:*"
     "@casehubio/pages-webpack-base": "workspace:*"
     copy-webpack-plugin: "npm:^11.0.0"
     rimraf: "npm:^6.1.2"
