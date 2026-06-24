@@ -3,24 +3,21 @@ import { CanvasRenderer } from "echarts/renderers";
 import { TitleComponent } from "echarts/components";
 import { CasehubElement } from "./CasehubElement.js";
 import type { VizComponentProps } from "./types.js";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, Column } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ChartSettings } from "@casehubio/pages-component";
+import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset, ChartClickParams } from "./filter-types.js";
+import { cellToRaw } from "./cell-extract.js";
 
 // Register the Canvas renderer and TitleComponent once at module load
 use([CanvasRenderer, TitleComponent]);
-
-export interface CasehubFilterDetail {
-  readonly columnId: string;
-  readonly rowIndex: number;
-  readonly reset: boolean;
-  readonly group: string | undefined;
-}
 
 export abstract class CasehubChartElement<
   P extends VizComponentProps & ChartSettings,
 > extends CasehubElement<P> {
   private _chart: ECharts | undefined;
   private _currentTheme = "";
+  private _selectedValue: string | undefined;
+  private _selectedDataIndex: number | undefined;
 
   constructor() {
     super();
@@ -34,6 +31,33 @@ export abstract class CasehubChartElement<
 
   override get props(): P {
     return super.props as P;
+  }
+
+  override get dataSet(): TypedDataSet | undefined {
+    return super.dataSet;
+  }
+
+  override set dataSet(value: TypedDataSet | undefined) {
+    super.dataSet = value;
+    if (this._selectedValue !== undefined && value) {
+      const filterCol = this.resolveFilterColumn();
+      if (filterCol) {
+        const idx = value.rows.findIndex(r => {
+          const cell = r.cell(filterCol.id);
+          return cell.type !== "NULL" && String(cellToRaw(cell)) === this._selectedValue;
+        });
+        if (idx >= 0) {
+          this._selectedDataIndex = idx;
+        } else {
+          this._selectedValue = undefined;
+          this._selectedDataIndex = undefined;
+        }
+      }
+    }
+  }
+
+  protected resolveFilterColumn(): Column | undefined {
+    return this.dataSet?.columns[0];
   }
 
   private applySizing(props: P): void {
@@ -72,6 +96,10 @@ export abstract class CasehubChartElement<
     const chart = this.ensureChart(container);
     const option = this.buildOption(props, dataset);
     chart.setOption(option, true);
+
+    if (this._selectedValue !== undefined && this._selectedDataIndex !== undefined) {
+      this.syncHighlight(chart, undefined, this._selectedDataIndex);
+    }
   }
 
   // ── ECharts instance management ─────────────────────────────────────
@@ -95,27 +123,65 @@ export abstract class CasehubChartElement<
   // ── Click handler ───────────────────────────────────────────────────
 
   private registerClickHandler(chart: ECharts): void {
-    chart.on("click", (params: { dataIndex: number }) => {
+    chart.on("click", (params) => {
+      const clickParams = params as unknown as ChartClickParams;
       const filter = this.props.filter;
       if (!filter?.enabled) return;
 
       const ds = this.dataSet;
-      const firstColumn = ds?.columns[0];
-      if (!firstColumn) return;
+      if (!ds) return;
 
-      this.dispatchEvent(
-        new CustomEvent<CasehubFilterDetail>("casehub-filter", {
-          bubbles: true,
-          composed: true,
-          detail: {
-            columnId: firstColumn.id,
-            rowIndex: params.dataIndex,
-            reset: false,
-            group: filter.group,
-          },
-        }),
-      );
+      const filterCol = this.resolveFilterColumn();
+      if (!filterCol) return;
+
+      const row = ds.rows[clickParams.dataIndex];
+      if (!row) return;
+
+      const cell = row.cell(filterCol.id);
+      if (cell.type === "NULL") return;
+
+      const value = String(cellToRaw(cell));
+
+      if (value === this._selectedValue) {
+        // Toggle off
+        const prevIndex = this._selectedDataIndex;
+        this._selectedValue = undefined;
+        this._selectedDataIndex = undefined;
+        this.syncHighlight(chart, prevIndex, undefined);
+        this.dispatchEvent(
+          new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+            bubbles: true,
+            composed: true,
+            detail: { columnId: filterCol.id, reset: true, group: filter.group } satisfies CasehubFilterReset,
+          }),
+        );
+      } else {
+        // Apply (new or switch)
+        const prevIndex = this._selectedDataIndex;
+        this._selectedValue = value;
+        this._selectedDataIndex = clickParams.dataIndex;
+        this.syncHighlight(chart, prevIndex, clickParams.dataIndex);
+        this.dispatchEvent(
+          new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+            bubbles: true,
+            composed: true,
+            detail: { columnId: filterCol.id, value, row, reset: false, group: filter.group } satisfies CasehubFilterApply,
+          }),
+        );
+      }
     });
+  }
+
+  private syncHighlight(chart: ECharts, prevIndex: number | undefined, newIndex: number | undefined): void {
+    const seriesCount = (chart.getOption().series as unknown[]).length;
+    const seriesIndex = Array.from({ length: seriesCount }, (_, i) => i);
+
+    if (prevIndex !== undefined) {
+      chart.dispatchAction({ type: "downplay", seriesIndex, dataIndex: prevIndex });
+    }
+    if (newIndex !== undefined) {
+      chart.dispatchAction({ type: "highlight", seriesIndex, dataIndex: newIndex });
+    }
   }
 
   // ── Resize ──────────────────────────────────────────────────────────
@@ -132,5 +198,7 @@ export abstract class CasehubChartElement<
       this._chart.dispose();
       this._chart = undefined;
     }
+    this._selectedValue = undefined;
+    this._selectedDataIndex = undefined;
   }
 }

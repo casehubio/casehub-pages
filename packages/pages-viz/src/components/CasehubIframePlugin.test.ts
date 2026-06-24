@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CasehubIframePlugin } from "./CasehubIframePlugin.js";
 import type { IframePluginProps } from "@casehubio/pages-component";
-import type { TypedDataSet, TypedRow, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, TypedRow, CellValue, DataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import { ColumnType, columnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { CasehubFilterApply } from "../base/filter-types.js";
+import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 
 
 function mockRow(cells: CellValue[]): TypedRow {
@@ -176,16 +178,17 @@ describe("CasehubIframePlugin", () => {
     );
   });
 
-  it("handles FILTER messages from iframe", () => {
+  it("handles FILTER messages — emits CasehubFilterApply with row and value", () => {
     const props: IframePluginProps = {
       componentId: "echarts",
       filter: { group: "test-group" },
     };
 
-    const dataset: TypedDataSet = {
+    const rawDs: DataSet = {
       columns: [{ id: columnId("col1"), name: "col1", type: ColumnType.TEXT }],
-      rows: [],
+      data: [["Alpha"], ["Beta"], ["Gamma"], ["Delta"], ["Echo"], ["Foxtrot"]],
     };
+    const dataset = toTypedDataSet(rawDs);
 
     element.props = props;
     element.dataSet = dataset;
@@ -210,16 +213,13 @@ describe("CasehubIframePlugin", () => {
       }),
     );
 
-    expect(filterHandler).toHaveBeenCalledWith(
-      expect.objectContaining({
-        detail: {
-          columnId: "col1",
-          rowIndex: 5,
-          reset: false,
-          group: "test-group",
-        },
-      }),
-    );
+    expect(filterHandler).toHaveBeenCalledTimes(1);
+    const detail = filterHandler.mock.calls[0]?.[0]?.detail as CasehubFilterApply;
+    expect(detail.columnId).toBe("col1");
+    expect(detail.value).toBe("Foxtrot");
+    expect(detail.row).toBe(dataset.rows[5]);
+    expect(detail.reset).toBe(false);
+    expect(detail.group).toBe("test-group");
   });
 
   it("ignores FILTER messages for other components", () => {
@@ -251,6 +251,50 @@ describe("CasehubIframePlugin", () => {
     );
 
     expect(filterHandler).not.toHaveBeenCalled();
+  });
+
+  it("handles FILTER reset messages without valid row", () => {
+    const props: IframePluginProps = {
+      componentId: "echarts",
+      filter: { group: "test-group" },
+    };
+
+    const rawDs: DataSet = {
+      columns: [{ id: columnId("col1"), name: "col1", type: ColumnType.TEXT }],
+      data: [["Alpha"], ["Beta"]],
+    };
+    const dataset = toTypedDataSet(rawDs);
+
+    element.props = props;
+    element.dataSet = dataset;
+
+    const filterHandler = vi.fn();
+    element.addEventListener("casehub-filter", filterHandler);
+
+    // Simulate reset message with row: -1 (invalid)
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: {
+          type: "FILTER",
+          properties: {
+            COMPONENT_ID: "echarts",
+            FILTER: {
+              column: 0,
+              row: -1,
+              reset: true,
+            },
+          },
+        },
+      }),
+    );
+
+    expect(filterHandler).toHaveBeenCalledTimes(1);
+    const detail = filterHandler.mock.calls[0]?.[0]?.detail;
+    expect(detail.columnId).toBe("col1");
+    expect(detail.reset).toBe(true);
+    expect(detail.group).toBe("test-group");
+    expect(detail.row).toBeUndefined();
+    expect(detail.value).toBeUndefined();
   });
 
   it("cleans up message listener on disconnect", () => {

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehubio/pages-viz";
 import type { CasehubTable, CasehubFormInput } from "@casehubio/pages-viz";
+import type { CasehubFilterApply } from "@casehubio/pages-viz/dist/base/filter-types.js";
+import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
 import { columnId } from "@casehubio/pages-data/dist/dataset/types.js";
@@ -139,11 +141,13 @@ describe("form integration — YAML end-to-end", () => {
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
     // Simulate table row click — emit casehub-filter for id column, row 0
+    const clickedRow = table!.dataSet!.rows[0]!;
+    const idValue = String(cellToRaw(clickedRow.cell(columnId("id"))));
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), value: idValue, row: clickedRow, reset: false, group: undefined } satisfies CasehubFilterApply,
       }),
     );
 
@@ -164,11 +168,13 @@ describe("form integration — YAML end-to-end", () => {
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
     // Click row 0 (Alice)
+    const clickedRow0 = table!.dataSet!.rows[0]!;
+    const idValue0 = String(cellToRaw(clickedRow0.cell(columnId("id"))));
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), value: idValue0, row: clickedRow0, reset: false, group: undefined } satisfies CasehubFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -180,11 +186,13 @@ describe("form integration — YAML end-to-end", () => {
     expect(aliceNameCell.type !== "NULL" && aliceNameCell.value).toBe("Alice");
 
     // Click row 1 (Bob)
+    const clickedRow1 = table!.dataSet!.rows[1]!;
+    const idValue1 = String(cellToRaw(clickedRow1.cell(columnId("id"))));
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), rowIndex: 1, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), value: idValue1, row: clickedRow1, reset: false, group: undefined } satisfies CasehubFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -248,11 +256,13 @@ pages:
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
     // Click Alice's name cell (columnId: "name", rowIndex: 0)
+    const clickedRow0 = table!.dataSet!.rows[0]!;
+    const nameValue0 = String(cellToRaw(clickedRow0.cell(columnId("name"))));
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("name"), rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("name"), value: nameValue0, row: clickedRow0, reset: false, group: undefined } satisfies CasehubFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -265,11 +275,13 @@ pages:
     // Click Bob's email cell (different column! columnId: "email", rowIndex: 1)
     // Without the fix, this would compound: name="Alice" AND email="bob@..."
     // With the fix, it translates to idColumn filter: id=2 (Bob)
+    const clickedRow1 = table!.dataSet!.rows[1]!;
+    const emailValue1 = String(cellToRaw(clickedRow1.cell(columnId("email"))));
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("email"), rowIndex: 1, reset: false, group: undefined },
+        detail: { columnId: columnId("email"), value: emailValue1, row: clickedRow1, reset: false, group: undefined } satisfies CasehubFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -289,11 +301,13 @@ pages:
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
     // Select Alice first (row 0)
+    const clickedRow0 = table!.dataSet!.rows[0]!;
+    const idValue0 = String(cellToRaw(clickedRow0.cell(columnId("id"))));
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), rowIndex: 0, reset: false, group: undefined },
+        detail: { columnId: columnId("id"), value: idValue0, row: clickedRow0, reset: false, group: undefined } satisfies CasehubFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -305,12 +319,13 @@ pages:
     // Now simulate what happens after table text-filter shows only Bob:
     // The table emits with the ROW OBJECT directly (not rowIndex) because
     // the display index doesn't match the dataset index after filtering.
-    const bobRow = table!.dataSet!.rows[1]; // Bob is row 1 in the full dataset
+    const bobRow = table!.dataSet!.rows[1]!; // Bob is row 1 in the full dataset
+    const bobNameValue = String(cellToRaw(bobRow.cell(columnId("name"))));
     table!.dispatchEvent(
       new CustomEvent("casehub-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("name"), row: bobRow, reset: false, group: undefined },
+        detail: { columnId: columnId("name"), value: bobNameValue, row: bobRow, reset: false, group: undefined } satisfies CasehubFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));

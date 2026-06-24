@@ -207,12 +207,12 @@ describe("form ↔ table interaction (real DOM)", () => {
     expect(cellTexts[1]).toBe("Bob"); // name column
 
     // Step E: Spy on filter events BEFORE clicking
-    const filterEvents: { columnId: unknown; rowIndex: unknown; row: unknown; rowName: string }[] = [];
+    const filterEvents: { columnId: unknown; value: unknown; row: unknown; rowName: string }[] = [];
     tableEl.addEventListener("casehub-filter", ((e: Event) => {
       const d = (e as CustomEvent).detail;
       filterEvents.push({
         columnId: d.columnId,
-        rowIndex: d.rowIndex,
+        value: d.value,
         row: d.row,
         rowName: d.row ? String(d.row.cell("name").value) : "NO ROW",
       });
@@ -222,9 +222,10 @@ describe("form ↔ table interaction (real DOM)", () => {
     cells[0]!.click();
     await new Promise((r) => setTimeout(r, 200));
 
-    // Step G: Check what event was emitted
+    // Step G: Check what event was emitted (new event shape has row and value, not rowIndex)
     expect(filterEvents.length).toBe(1);
-    expect(filterEvents[0]!.rowIndex).toBeDefined();
+    expect(filterEvents[0]!.row).toBeDefined();
+    expect(filterEvents[0]!.value).toBeDefined();
 
     // Step H: Form should show Bob
     expect(nameInput.dataSet!.rows.length).toBe(1);
@@ -280,7 +281,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     expect(getFormValue(nameInput, "name")).toBe("Carol");
   });
 
-  it("7. click same row twice → form still shows that record (no toggle/deselect)", async () => {
+  it("7. click same row twice → form clears (toggle/deselect)", async () => {
     const { tableEl, formInputs } = await setup();
     const nameInput = formInputs[0]!;
 
@@ -289,11 +290,10 @@ describe("form ↔ table interaction (real DOM)", () => {
     await new Promise((r) => setTimeout(r, 100));
     expect(getFormValue(nameInput, "name")).toBe("Alice");
 
-    // Click Alice again
+    // Click Alice again — toggles off, clears record selection filter
     clickCell(rows[0]!, 0);
     await new Promise((r) => setTimeout(r, 100));
-    expect(getFormValue(nameInput, "name")).toBe("Alice");
-    expect(nameInput.dataSet!.rows.length).toBe(1);
+    expect(nameInput.dataSet!.rows.length).toBe(3); // Filter cleared, all rows visible
   });
 
   it("8. both form inputs update together on row selection", async () => {

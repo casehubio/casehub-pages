@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { TypedDataSet, Column, ColumnId, ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, Column, ColumnId, ColumnType, DataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type {
   DataComponentCommon,
   ChartSettings,
 } from "@casehubio/pages-component";
+import type { CasehubFilterApply, CasehubFilterReset } from "./filter-types.js";
+import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 
 // ── Mock ECharts ──────────────────────────────────────────────────────
 
@@ -14,6 +16,8 @@ const mockChart = {
   resize: vi.fn(),
   on: vi.fn(),
   off: vi.fn(),
+  getOption: vi.fn(),
+  dispatchAction: vi.fn(),
 };
 
 vi.mock("echarts/core", () => ({
@@ -71,6 +75,14 @@ function mockDataSet(columnId = "col1" as ColumnId): TypedDataSet {
   };
 }
 
+function mockTypedDataSet(columnId = "col1" as ColumnId): TypedDataSet {
+  const ds: DataSet = {
+    columns: [{ id: columnId, name: "Column 1", type: "LABEL" as ColumnType }],
+    data: [["Alpha"], ["Beta"], ["Gamma"]],
+  };
+  return toTypedDataSet(ds);
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────
 
 describe("CasehubChartElement", () => {
@@ -78,6 +90,8 @@ describe("CasehubChartElement", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set default mock return for getOption
+    mockChart.getOption.mockReturnValue({ series: [{ type: "bar" }] });
     el = document.createElement("test-chart-element") as TestChart;
   });
 
@@ -176,7 +190,7 @@ describe("CasehubChartElement", () => {
   });
 
   describe("click-to-filter", () => {
-    it("click with filter enabled emits casehub-filter event", () => {
+    it("click emits CasehubFilterApply with value and row", () => {
       const columnId = "region" as ColumnId;
       const props: TestChartProps = {
         lookup: mockLookup("sales"),
@@ -184,32 +198,178 @@ describe("CasehubChartElement", () => {
       };
       el.props = props;
       document.body.appendChild(el);
-      el.dataSet = mockDataSet(columnId);
 
-      // Capture the 'click' handler registered via chart.on
-      expect(mockChart.on).toHaveBeenCalledWith("click", expect.any(Function));
+      const ds = mockTypedDataSet(columnId);
+      el.dataSet = ds;
+
       const clickHandler = mockChart.on.mock.calls.find(
         (c: unknown[]) => c[0] === "click",
-      )![1] as (params: { dataIndex: number }) => void;
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
-      // Listen for the filter event
       const filterEvents: CustomEvent[] = [];
-      el.addEventListener("casehub-filter", (e) =>
-        filterEvents.push(e as CustomEvent),
-      );
+      el.addEventListener("casehub-filter", (e) => filterEvents.push(e as CustomEvent));
 
-      // Simulate ECharts click
-      clickHandler({ dataIndex: 2 });
+      clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
 
       expect(filterEvents).toHaveLength(1);
-      expect(filterEvents[0]!.detail).toEqual({
-        columnId,
-        rowIndex: 2,
-        reset: false,
-        group: "g1",
+      const detail = filterEvents[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe(columnId);
+      expect(detail.value).toBe("Beta");
+      expect(detail.row).toBe(ds.rows[1]);
+      expect(detail.reset).toBe(false);
+      expect(detail.group).toBe("g1");
+    });
+
+    it("click same value twice toggles — second emits CasehubFilterReset", () => {
+      const columnId = "region" as ColumnId;
+      el.props = { lookup: mockLookup("sales"), filter: { enabled: true } };
+      document.body.appendChild(el);
+      el.dataSet = mockTypedDataSet(columnId);
+
+      const clickHandler = mockChart.on.mock.calls.find(
+        (c: unknown[]) => c[0] === "click",
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
+
+      expect(events).toHaveLength(2);
+      expect((events[0]!.detail as CasehubFilterApply).reset).toBe(false);
+      expect((events[1]!.detail as CasehubFilterReset).reset).toBe(true);
+      expect((events[1]!.detail as CasehubFilterReset).columnId).toBe(columnId);
+    });
+
+    it("click different value switches selection", () => {
+      const columnId = "region" as ColumnId;
+      el.props = { lookup: mockLookup("sales"), filter: { enabled: true } };
+      document.body.appendChild(el);
+      el.dataSet = mockTypedDataSet(columnId);
+
+      const clickHandler = mockChart.on.mock.calls.find(
+        (c: unknown[]) => c[0] === "click",
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
+      clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
+
+      expect(events).toHaveLength(2);
+      expect((events[0]!.detail as CasehubFilterApply).value).toBe("Alpha");
+      expect((events[1]!.detail as CasehubFilterApply).value).toBe("Beta");
+    });
+
+    it("skips event when cell value is NULL", () => {
+      const columnId = "region" as ColumnId;
+      el.props = { lookup: mockLookup("sales"), filter: { enabled: true } };
+      document.body.appendChild(el);
+
+      const dsWithNull: DataSet = {
+        columns: [{ id: columnId, name: "Region", type: "LABEL" as ColumnType }],
+        data: [[null]],
+      };
+      el.dataSet = toTypedDataSet(dsWithNull);
+
+      const clickHandler = mockChart.on.mock.calls.find(
+        (c: unknown[]) => c[0] === "click",
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "", data: null });
+
+      expect(events).toHaveLength(0);
+    });
+
+    it("data re-push preserves selection when value exists in new data", () => {
+      const columnId = "region" as ColumnId;
+      el.props = { lookup: mockLookup("sales"), filter: { enabled: true } };
+      document.body.appendChild(el);
+      el.dataSet = mockTypedDataSet(columnId);
+
+      const clickHandler = mockChart.on.mock.calls.find(
+        (c: unknown[]) => c[0] === "click",
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
+
+      // Select "Beta"
+      clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
+
+      // Re-push with same data — selection should be preserved
+      el.dataSet = mockTypedDataSet(columnId);
+
+      // Click "Beta" again — should toggle OFF (selection was preserved)
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+      clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
+
+      expect(events).toHaveLength(1);
+      expect((events[0]!.detail as CasehubFilterReset).reset).toBe(true);
+    });
+
+    it("data re-push clears selection when value is absent from new data", () => {
+      const columnId = "region" as ColumnId;
+      el.props = { lookup: mockLookup("sales"), filter: { enabled: true } };
+      document.body.appendChild(el);
+      el.dataSet = mockTypedDataSet(columnId); // Alpha, Beta, Gamma
+
+      const clickHandler = mockChart.on.mock.calls.find(
+        (c: unknown[]) => c[0] === "click",
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
+
+      // Select "Beta"
+      clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
+
+      // Re-push with data that does NOT contain "Beta"
+      const dsNoBeta: DataSet = {
+        columns: [{ id: columnId, name: "Region", type: "LABEL" as ColumnType }],
+        data: [["Alpha"], ["Gamma"]],
+      };
+      el.dataSet = toTypedDataSet(dsNoBeta);
+
+      // Click "Alpha" — should be a fresh select, not a toggle
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
+
+      expect(events).toHaveLength(1);
+      expect((events[0]!.detail as CasehubFilterApply).reset).toBe(false);
+      expect((events[0]!.detail as CasehubFilterApply).value).toBe("Alpha");
+    });
+
+    it("highlight dispatched on apply, downplay on reset", () => {
+      const columnId = "region" as ColumnId;
+      el.props = { lookup: mockLookup("sales"), filter: { enabled: true } };
+      document.body.appendChild(el);
+      el.dataSet = mockTypedDataSet(columnId);
+
+      // Mock chart.getOption to return series array
+      mockChart.getOption.mockReturnValue({ series: [{ type: "bar" }] });
+
+      const clickHandler = mockChart.on.mock.calls.find(
+        (c: unknown[]) => c[0] === "click",
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
+
+      // Apply
+      clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
+      expect(mockChart.dispatchAction).toHaveBeenCalledWith({
+        type: "highlight",
+        seriesIndex: [0],
+        dataIndex: 1,
       });
-      expect(filterEvents[0]!.bubbles).toBe(true);
-      expect(filterEvents[0]!.composed).toBe(true);
+
+      // Toggle off
+      mockChart.dispatchAction.mockClear();
+      clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
+      expect(mockChart.dispatchAction).toHaveBeenCalledWith({
+        type: "downplay",
+        seriesIndex: [0],
+        dataIndex: 1,
+      });
     });
 
     it("click with filter disabled emits no event", () => {
@@ -219,18 +379,18 @@ describe("CasehubChartElement", () => {
       };
       el.props = props;
       document.body.appendChild(el);
-      el.dataSet = mockDataSet();
+      el.dataSet = mockTypedDataSet();
 
       const clickHandler = mockChart.on.mock.calls.find(
         (c: unknown[]) => c[0] === "click",
-      )![1] as (params: { dataIndex: number }) => void;
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
       const filterEvents: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) =>
         filterEvents.push(e as CustomEvent),
       );
 
-      clickHandler({ dataIndex: 0 });
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
 
       expect(filterEvents).toHaveLength(0);
     });
@@ -238,18 +398,18 @@ describe("CasehubChartElement", () => {
     it("click with no filter setting emits no event", () => {
       el.props = { lookup: mockLookup("sales") };
       document.body.appendChild(el);
-      el.dataSet = mockDataSet();
+      el.dataSet = mockTypedDataSet();
 
       const clickHandler = mockChart.on.mock.calls.find(
         (c: unknown[]) => c[0] === "click",
-      )![1] as (params: { dataIndex: number }) => void;
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
       const filterEvents: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) =>
         filterEvents.push(e as CustomEvent),
       );
 
-      clickHandler({ dataIndex: 0 });
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
 
       expect(filterEvents).toHaveLength(0);
     });
@@ -265,24 +425,26 @@ describe("CasehubChartElement", () => {
       document.body.appendChild(el);
 
       // First dataset
-      el.dataSet = mockDataSet(col1);
+      el.dataSet = mockTypedDataSet(col1);
 
       const clickHandler = mockChart.on.mock.calls.find(
         (c: unknown[]) => c[0] === "click",
-      )![1] as (params: { dataIndex: number }) => void;
+      )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
       // Replace dataset
-      el.dataSet = mockDataSet(col2);
+      el.dataSet = mockTypedDataSet(col2);
 
       const filterEvents: CustomEvent[] = [];
       el.addEventListener("casehub-filter", (e) =>
         filterEvents.push(e as CustomEvent),
       );
 
-      clickHandler({ dataIndex: 0 });
+      clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
 
       // Should use col2, not col1
-      expect(filterEvents[0]!.detail.columnId).toBe(col2);
+      const detail = filterEvents[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe(col2);
+      expect(detail.value).toBe("Alpha");
     });
   });
 

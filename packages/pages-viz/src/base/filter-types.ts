@@ -1,0 +1,25 @@
+import type { TypedRow } from "@casehubio/pages-data/dist/dataset/types.js";
+
+export type CasehubFilterDetail = CasehubFilterApply | CasehubFilterReset;
+
+export interface CasehubFilterApply {
+  readonly columnId: string;
+  readonly value: string;
+  readonly row: TypedRow;
+  readonly reset: false;
+  readonly group: string | undefined;
+}
+
+export interface CasehubFilterReset {
+  readonly columnId: string;
+  readonly reset: true;
+  readonly group: string | undefined;
+}
+
+export interface ChartClickParams {
+  readonly dataIndex: number;
+  readonly seriesIndex: number;
+  readonly seriesName: string;
+  readonly name: string;
+  readonly data: unknown;
+}

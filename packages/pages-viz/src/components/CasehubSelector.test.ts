@@ -3,6 +3,7 @@ import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pag
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { SelectorProps } from "@casehubio/pages-component";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type { CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";
 
 import { CasehubSelector } from "./CasehubSelector.js";
 
@@ -67,7 +68,7 @@ describe("CasehubSelector", () => {
       expect(options[3]!.textContent).toBe("C");
     });
 
-    it("selection change emits casehub-filter with columnId and rowIndex", () => {
+    it("selection change emits CasehubFilterApply with value and row", () => {
       const ds = makeDataSet(
         [["category", "LABEL"]],
         [["A"], ["B"], ["C"]],
@@ -89,15 +90,15 @@ describe("CasehubSelector", () => {
       select.dispatchEvent(new Event("change"));
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail).toEqual({
-        columnId: "category",
-        rowIndex: 1, // Data row index for "B"
-        reset: false,
-        group: "myGroup",
-      });
+      const detail = events[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe("category");
+      expect(detail.value).toBe("B");
+      expect(detail.row).toBe(ds.rows[1]);
+      expect(detail.reset).toBe(false);
+      expect(detail.group).toBe("myGroup");
     });
 
-    it("selecting All emits reset: true", () => {
+    it("selecting All emits CasehubFilterReset", () => {
       const ds = makeDataSet(
         [["category", "LABEL"]],
         [["A"], ["B"]],
@@ -116,7 +117,11 @@ describe("CasehubSelector", () => {
       select.dispatchEvent(new Event("change"));
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail.reset).toBe(true);
+      const detail = events[0]!.detail as CasehubFilterReset;
+      expect(detail.reset).toBe(true);
+      expect(detail.columnId).toBe("category");
+      expect(detail).not.toHaveProperty("value");
+      expect(detail).not.toHaveProperty("row");
     });
 
     it("filter group is undefined when not set in props", () => {
@@ -164,7 +169,7 @@ describe("CasehubSelector", () => {
       expect(slider.max).toBe("50");
     });
 
-    it("slider change emits casehub-filter with closest rowIndex", () => {
+    it("slider change emits CasehubFilterApply with value and row", () => {
       const ds = makeDataSet(
         [["score", "NUMBER"]],
         [[10], [20], [30]],
@@ -187,9 +192,11 @@ describe("CasehubSelector", () => {
       slider.dispatchEvent(new Event("change"));
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail.columnId).toBe("score");
-      expect(events[0]!.detail.rowIndex).toBe(1); // Index of row with value 20
-      expect(events[0]!.detail.reset).toBe(false);
+      const detail = events[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe("score");
+      expect(detail.value).toBe("20");
+      expect(detail.row).toBe(ds.rows[1]);
+      expect(detail.reset).toBe(false);
     });
   });
 
@@ -217,7 +224,7 @@ describe("CasehubSelector", () => {
       expect(chips[2]!.textContent).toBe("Green");
     });
 
-    it("click emits casehub-filter and adds .selected class", () => {
+    it("click emits CasehubFilterApply with value and row and adds .selected class", () => {
       const ds = makeDataSet(
         [["tag", "LABEL"]],
         [["Red"], ["Blue"]],
@@ -239,9 +246,11 @@ describe("CasehubSelector", () => {
       redChip.click();
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail.columnId).toBe("tag");
-      expect(events[0]!.detail.rowIndex).toBe(0);
-      expect(events[0]!.detail.reset).toBe(false);
+      const detail = events[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe("tag");
+      expect(detail.value).toBe("Red");
+      expect(detail.row).toBe(ds.rows[0]);
+      expect(detail.reset).toBe(false);
 
       // Check selection state
       expect(redChip.classList.contains("selected")).toBe(true);
@@ -275,6 +284,40 @@ describe("CasehubSelector", () => {
       expect(events).toHaveLength(2);
       expect(events[1]!.detail.reset).toBe(true);
       expect(chip.classList.contains("selected")).toBe(false);
+    });
+  });
+
+  // ── Data re-push ──────────────────────────────────────────────────
+
+  describe("data re-push with labels", () => {
+    it("label selection clears when data re-push removes selected value", () => {
+      const ds1 = makeDataSet(
+        [["tag", "LABEL"]],
+        [["Red"], ["Blue"]],
+      );
+      const props: SelectorProps = {
+        lookup: mockLookup("test"),
+        subtype: "labels",
+      };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds1;
+
+      // Select "Red"
+      const chips = el.shadowRoot.querySelectorAll(".label-chip");
+      (chips[0] as HTMLButtonElement).click();
+      expect(el.shadowRoot.querySelector(".label-chip.selected")).toBeTruthy();
+
+      // Re-push without "Red"
+      const ds2 = makeDataSet(
+        [["tag", "LABEL"]],
+        [["Blue"], ["Green"]],
+      );
+      el.dataSet = ds2;
+
+      // No chip should be selected
+      expect(el.shadowRoot.querySelector(".label-chip.selected")).toBeNull();
     });
   });
 

@@ -2,6 +2,8 @@ import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { IframePluginProps } from "@casehubio/pages-component";
 import { toWireDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 import { CasehubElement } from "../base/CasehubElement.js";
+import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";
+import { cellToRaw } from "../base/cell-extract.js";
 
 const IFRAME_CSS = `
 :host {
@@ -133,21 +135,46 @@ export class CasehubIframePlugin extends CasehubElement<IframePluginProps> {
     const columnId = dataset.columns[columnIndex]?.id;
     if (!columnId) return;
 
-    const row = filter.row;
-    if (typeof row !== "number") return;
-
     const reset = filter.reset;
 
+    // Handle reset before row resolution — reset doesn't need row data
+    if (typeof reset === "boolean" && reset) {
+      this.dispatchEvent(
+        new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+          bubbles: true,
+          composed: true,
+          detail: {
+            columnId,
+            reset: true,
+            group: props.filter?.group,
+          } satisfies CasehubFilterReset,
+        }),
+      );
+      return;
+    }
+
+    // Apply path — resolve row and value
+    const rowIndex = filter.row;
+    if (typeof rowIndex !== "number") return;
+
+    const rowObj = dataset.rows[rowIndex];
+    if (!rowObj) return;
+
+    const cell = rowObj.cell(columnId);
+    if (cell.type === "NULL") return;
+    const value = String(cellToRaw(cell));
+
     this.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent<CasehubFilterDetail>("casehub-filter", {
         bubbles: true,
         composed: true,
         detail: {
           columnId,
-          rowIndex: row,
-          reset: typeof reset === "boolean" ? reset : false,
+          value,
+          row: rowObj,
+          reset: false,
           group: props.filter?.group,
-        },
+        } satisfies CasehubFilterApply,
       }),
     );
   }

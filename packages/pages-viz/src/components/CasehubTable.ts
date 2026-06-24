@@ -3,6 +3,7 @@ import type { TableProps } from "@casehubio/pages-component";
 import { CasehubElement } from "../base/CasehubElement.js";
 import { cellToRaw, resolveColumnName, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 import { tableToCsv, downloadCsv, copyToClipboard } from "./table-export.js";
+import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";
 
 const TABLE_CSS = `
 :host {
@@ -56,6 +57,7 @@ td {
 }
 tr:nth-child(even) { background: var(--casehub-bg-alt, #fafafa); }
 tr.clickable:hover { background: var(--casehub-bg-hover, #e8f0fe); cursor: pointer; }
+tr.selected { background: var(--casehub-bg-selected, #d3e3fd); }
 .export-btn {
   cursor: pointer; padding: 4px 8px; border: 1px solid var(--casehub-border, #ddd);
   background: var(--casehub-bg, #fff); border-radius: 3px; font-size: 13px;
@@ -73,6 +75,30 @@ export class CasehubTable extends CasehubElement<TableProps> {
   private _sortOrder: "ASCENDING" | "DESCENDING" = "ASCENDING";
   private _lastDataSet: TypedDataSet | undefined;
   private _filterText = "";
+  private _selectedColumnId: ColumnId | undefined;
+  private _selectedValue: string | undefined;
+
+  override get dataSet(): TypedDataSet | undefined {
+    return super.dataSet;
+  }
+
+  override set dataSet(value: TypedDataSet | undefined) {
+    if (this._selectedColumnId !== undefined && this._selectedValue !== undefined && value) {
+      const colId = this._selectedColumnId;
+      const selVal = this._selectedValue;
+      const found = value.rows.some(row => {
+        try {
+          const cell = row.cell(colId);
+          return cell.type !== "NULL" && String(cellToRaw(cell)) === selVal;
+        } catch { return false; }
+      });
+      if (!found) {
+        this._selectedColumnId = undefined;
+        this._selectedValue = undefined;
+      }
+    }
+    super.dataSet = value;
+  }
 
   protected override render(
     container: HTMLDivElement,
@@ -255,6 +281,14 @@ export class CasehubTable extends CasehubElement<TableProps> {
       if (!row) continue;
       const tr = document.createElement("tr");
       if (props.filter?.enabled) tr.className = "clickable";
+      if (this._selectedColumnId !== undefined && this._selectedValue !== undefined) {
+        try {
+          const selCell = row.cell(this._selectedColumnId);
+          if (selCell.type !== "NULL" && String(cellToRaw(selCell)) === this._selectedValue) {
+            tr.classList.add("selected");
+          }
+        } catch { /* column not present in this row — skip */ }
+      }
 
       for (let colIdx = 0; colIdx < dataset.columns.length; colIdx++) {
         const td = document.createElement("td");
@@ -271,19 +305,41 @@ export class CasehubTable extends CasehubElement<TableProps> {
           const columnId = col.id;
           const clickedRow = row;
           td.addEventListener("click", () => {
-            this.dispatchEvent(
-              new CustomEvent("casehub-filter", {
-                bubbles: true,
-                composed: true,
-                detail: {
-                  columnId,
-                  rowIndex: rowIdx,
-                  row: clickedRow,
-                  reset: false,
-                  group: props.filter?.group,
-                },
-              }),
-            );
+            const cellVal = row.cell(columnId);
+            if (cellVal.type === "NULL") return;
+            const value = String(cellToRaw(cellVal));
+
+            if (columnId === this._selectedColumnId && value === this._selectedValue) {
+              // Toggle off
+              this._selectedColumnId = undefined;
+              this._selectedValue = undefined;
+              this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+                bubbles: true, composed: true,
+                detail: { columnId, reset: true, group: props.filter?.group } satisfies CasehubFilterReset,
+              }));
+            } else if (this._selectedColumnId !== undefined && this._selectedColumnId !== columnId) {
+              // Column switch — reset old, apply new
+              const oldColumnId = this._selectedColumnId;
+              this._selectedColumnId = columnId;
+              this._selectedValue = value;
+              this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+                bubbles: true, composed: true,
+                detail: { columnId: oldColumnId, reset: true, group: props.filter?.group } satisfies CasehubFilterReset,
+              }));
+              this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+                bubbles: true, composed: true,
+                detail: { columnId, value, row: clickedRow, reset: false, group: props.filter?.group } satisfies CasehubFilterApply,
+              }));
+            } else {
+              // Same column new value, or first selection
+              this._selectedColumnId = columnId;
+              this._selectedValue = value;
+              this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+                bubbles: true, composed: true,
+                detail: { columnId, value, row: clickedRow, reset: false, group: props.filter?.group } satisfies CasehubFilterApply,
+              }));
+            }
+            this.rerender(props, dataset);
           });
         }
 

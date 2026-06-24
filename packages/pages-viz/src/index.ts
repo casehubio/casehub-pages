@@ -7,7 +7,7 @@ import "./custom-elements.js";
 export { CasehubElement } from "./base/CasehubElement.js";
 export type { CasehubDataRequestDetail } from "./base/CasehubElement.js";
 export { CasehubChartElement } from "./base/CasehubChartElement.js";
-export type { CasehubFilterDetail } from "./base/CasehubChartElement.js";
+export type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset, ChartClickParams } from "./base/filter-types.js";
 export type { VizComponentProps } from "./base/types.js";
 export { cellToRaw, resolveColumnName } from "./base/cell-extract.js";
 export { deepMerge } from "./base/deep-merge.js";

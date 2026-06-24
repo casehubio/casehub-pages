@@ -3,6 +3,7 @@ import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pag
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { TableProps } from "@casehubio/pages-component";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type { CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";
 
 import { CasehubTable } from "./CasehubTable.js";
 
@@ -507,11 +508,12 @@ describe("CasehubTable", () => {
       firstCell.click();
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail.columnId).toBe("name");
-      expect(events[0]!.detail.rowIndex).toBe(1);
-      expect(events[0]!.detail.reset).toBe(false);
-      expect(events[0]!.detail.group).toBe("myGroup");
-      expect(events[0]!.detail.row).toBeDefined();
+      const detail = events[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe("name");
+      expect(detail.value).toBe("Bob");
+      expect(detail.reset).toBe(false);
+      expect(detail.group).toBe("myGroup");
+      expect(detail.row).toBeDefined();
     });
 
     it("filter event has correct columnId for non-first column", () => {
@@ -539,8 +541,9 @@ describe("CasehubTable", () => {
       secondCell.click();
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail.columnId).toBe("score");
-      expect(events[0]!.detail.rowIndex).toBe(0);
+      const detail = events[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe("score");
+      expect(detail.value).toBe("10");
     });
 
     it("filter group is undefined when not set in props", () => {
@@ -728,6 +731,145 @@ describe("CasehubTable", () => {
 
       const rows = queryRows(el);
       expect(queryCells(rows[0]!)[0]).toBe("X");
+    });
+  });
+
+  // ── Click-to-filter ───────────────────────────────────────────────
+
+  describe("click-to-filter", () => {
+    it("click emits CasehubFilterApply with value and row", () => {
+      const ds = makeDataSet(
+        [["region", "LABEL"], ["sales", "NUMBER"]],
+        [["North", 100], ["South", 200]],
+      );
+      const props: TableProps = { lookup: mockLookup("test"), filter: { enabled: true, group: "g1" } };
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+
+      const rows = queryRows(el);
+      const firstCell = rows[0]!.querySelector("td")!;
+      firstCell.click();
+
+      expect(events).toHaveLength(1);
+      const detail = events[0]!.detail as CasehubFilterApply;
+      expect(detail.columnId).toBe("region");
+      expect(detail.value).toBe("North");
+      expect(detail.row).toBe(ds.rows[0]);
+      expect(detail.reset).toBe(false);
+      expect(detail.group).toBe("g1");
+    });
+
+    it("click same cell twice toggles — second emits reset", () => {
+      const ds = makeDataSet([["region", "LABEL"]], [["North"], ["South"]]);
+      const props: TableProps = { lookup: mockLookup("test"), filter: { enabled: true } };
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+
+      const firstCell = queryRows(el)[0]!.querySelector("td")!;
+      firstCell.click();
+      firstCell.click();
+
+      expect(events).toHaveLength(2);
+      expect((events[0]!.detail as CasehubFilterApply).reset).toBe(false);
+      expect((events[1]!.detail as CasehubFilterReset).reset).toBe(true);
+    });
+
+    it("column switch emits reset for old column then apply for new", () => {
+      const ds = makeDataSet(
+        [["region", "LABEL"], ["quarter", "LABEL"]],
+        [["North", "Q1"], ["South", "Q2"]],
+      );
+      const props: TableProps = { lookup: mockLookup("test"), filter: { enabled: true } };
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+
+      // Click region=North
+      queryRows(el)[0]!.querySelectorAll("td")[0]!.click();
+      // Click quarter=Q2 (different column)
+      queryRows(el)[1]!.querySelectorAll("td")[1]!.click();
+
+      expect(events).toHaveLength(3); // apply + reset + apply
+      expect((events[0]!.detail as CasehubFilterApply).columnId).toBe("region");
+      expect((events[1]!.detail as CasehubFilterReset).columnId).toBe("region");
+      expect((events[1]!.detail as CasehubFilterReset).reset).toBe(true);
+      expect((events[2]!.detail as CasehubFilterApply).columnId).toBe("quarter");
+      expect((events[2]!.detail as CasehubFilterApply).value).toBe("Q2");
+    });
+
+    it("selected row gets .selected CSS class after click", () => {
+      const ds = makeDataSet([["region", "LABEL"]], [["North"], ["South"]]);
+      const props: TableProps = { lookup: mockLookup("test"), filter: { enabled: true } };
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds;
+
+      queryRows(el)[0]!.querySelector("td")!.click();
+
+      const rows = queryRows(el);
+      expect(rows[0]!.classList.contains("selected")).toBe(true);
+      expect(rows[1]!.classList.contains("selected")).toBe(false);
+    });
+
+    it("toggle off removes .selected class", () => {
+      const ds = makeDataSet([["region", "LABEL"]], [["North"]]);
+      const props: TableProps = { lookup: mockLookup("test"), filter: { enabled: true } };
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds;
+
+      queryRows(el)[0]!.querySelector("td")!.click();
+      expect(queryRows(el)[0]!.classList.contains("selected")).toBe(true);
+
+      queryRows(el)[0]!.querySelector("td")!.click();
+      expect(queryRows(el)[0]!.classList.contains("selected")).toBe(false);
+    });
+
+    it("data re-push preserves selection when value exists", () => {
+      const ds1 = makeDataSet([["region", "LABEL"]], [["North"], ["South"]]);
+      const props: TableProps = { lookup: mockLookup("test"), filter: { enabled: true } };
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds1;
+
+      queryRows(el)[0]!.querySelector("td")!.click();
+
+      // Re-push with same data
+      const ds2 = makeDataSet([["region", "LABEL"]], [["South"], ["North"]]);
+      el.dataSet = ds2;
+
+      // "North" is still present → selection preserved → row with North gets .selected
+      const rows = queryRows(el);
+      const northRow = rows.find(r => queryCells(r)[0] === "North");
+      expect(northRow!.classList.contains("selected")).toBe(true);
+    });
+
+    it("data re-push clears selection when value absent", () => {
+      const ds1 = makeDataSet([["region", "LABEL"]], [["North"], ["South"]]);
+      const props: TableProps = { lookup: mockLookup("test"), filter: { enabled: true } };
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds1;
+
+      queryRows(el)[0]!.querySelector("td")!.click();
+
+      // Re-push WITHOUT "North"
+      const ds2 = makeDataSet([["region", "LABEL"]], [["South"], ["East"]]);
+      el.dataSet = ds2;
+
+      const rows = queryRows(el);
+      expect(rows.every(r => !r.classList.contains("selected"))).toBe(true);
     });
   });
 });

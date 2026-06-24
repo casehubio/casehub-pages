@@ -2,6 +2,7 @@ import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/
 import type { SelectorProps } from "@casehubio/pages-component";
 import { CasehubElement } from "../base/CasehubElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
+import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";
 
 const SELECTOR_CSS = `
 :host {
@@ -42,7 +43,26 @@ input[type="range"] {
 `;
 
 export class CasehubSelector extends CasehubElement<SelectorProps> {
-  private _selectedLabelIndex: number | undefined;
+  private _selectedValue: string | undefined;
+
+  override set dataSet(value: TypedDataSet | undefined) {
+    if (this._selectedValue !== undefined && value && value.columns.length > 0) {
+      const firstCol = value.columns[0];
+      if (firstCol) {
+        const colId = firstCol.id;
+        const found = value.rows.some(row => {
+          const cell = row.cell(colId);
+          return cell.type !== "NULL" && String(cellToRaw(cell)) === this._selectedValue;
+        });
+        if (!found) this._selectedValue = undefined;
+      }
+    }
+    super.dataSet = value;
+  }
+
+  override get dataSet(): TypedDataSet | undefined {
+    return super.dataSet;
+  }
 
   protected override render(
     container: HTMLDivElement,
@@ -123,33 +143,45 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
     }
 
     select.addEventListener("change", () => {
-      const selectedIndex = parseInt(select.value, 10);
+      const selectedRowIndex = parseInt(select.value, 10);
 
-      if (selectedIndex === -1) {
-        // "All" selected
+      if (selectedRowIndex === -1) {
+        // "All" selected — emit reset
         this.dispatchEvent(
-          new CustomEvent("casehub-filter", {
+          new CustomEvent<CasehubFilterDetail>("casehub-filter", {
             bubbles: true,
             composed: true,
             detail: {
               columnId,
-              rowIndex: 0,
               reset: true,
               group: props.filter?.group,
-            },
+            } satisfies CasehubFilterReset,
           }),
         );
       } else {
+        // Find the row object and cell value from the dataset
+        const dataset = this.dataSet;
+        if (!dataset) return;
+
+        const rowObj = dataset.rows[selectedRowIndex];
+        if (!rowObj) return;
+
+        const cell = rowObj.cell(columnId);
+        if (cell.type === "NULL") return;
+
+        const value = String(cellToRaw(cell));
+
         this.dispatchEvent(
-          new CustomEvent("casehub-filter", {
+          new CustomEvent<CasehubFilterDetail>("casehub-filter", {
             bubbles: true,
             composed: true,
             detail: {
               columnId,
-              rowIndex: selectedIndex,
+              value,
+              row: rowObj,
               reset: false,
               group: props.filter?.group,
-            },
+            } satisfies CasehubFilterApply,
           }),
         );
       }
@@ -196,16 +228,29 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
         }
       }
 
+      // Get the row object and cell value from the dataset
+      const dataset = this.dataSet;
+      if (!dataset) return;
+
+      const rowObj = dataset.rows[closestIndex];
+      if (!rowObj) return;
+
+      const cell = rowObj.cell(columnId);
+      if (cell.type === "NULL") return;
+
+      const value = String(cellToRaw(cell));
+
       this.dispatchEvent(
-        new CustomEvent("casehub-filter", {
+        new CustomEvent<CasehubFilterDetail>("casehub-filter", {
           bubbles: true,
           composed: true,
           detail: {
             columnId,
-            rowIndex: closestIndex,
+            value,
+            row: rowObj,
             reset: false,
             group: props.filter?.group,
-          },
+          } satisfies CasehubFilterApply,
         }),
       );
     });
@@ -228,8 +273,14 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
       const { value, rowIndex } = entry;
       const chip = document.createElement("button");
       chip.className = "label-chip";
-      chip.textContent = value === null ? "" : String(value);
+      const chipText = value === null ? "" : String(value);
+      chip.textContent = chipText;
       chip.type = "button";
+
+      // Apply selected class if this chip's value matches _selectedValue
+      if (this._selectedValue !== undefined && chipText === this._selectedValue) {
+        chip.classList.add("selected");
+      }
 
       chip.addEventListener("click", () => {
         const wasSelected = chip.classList.contains("selected");
@@ -237,18 +288,17 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
         if (wasSelected) {
           // Deselect
           chip.classList.remove("selected");
-          this._selectedLabelIndex = undefined;
+          this._selectedValue = undefined;
 
           this.dispatchEvent(
-            new CustomEvent("casehub-filter", {
+            new CustomEvent<CasehubFilterDetail>("casehub-filter", {
               bubbles: true,
               composed: true,
               detail: {
                 columnId,
-                rowIndex,
                 reset: true,
                 group: props.filter?.group,
-              },
+              } satisfies CasehubFilterReset,
             }),
           );
         } else {
@@ -257,18 +307,31 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
           allChips.forEach((c) => { c.classList.remove("selected"); });
 
           chip.classList.add("selected");
-          this._selectedLabelIndex = i;
+          this._selectedValue = chipText;
+
+          // Get the row object from the dataset
+          const dataset = this.dataSet;
+          if (!dataset) return;
+
+          const rowObj = dataset.rows[rowIndex];
+          if (!rowObj) return;
+
+          const cell = rowObj.cell(columnId);
+          if (cell.type === "NULL") return;
+
+          const cellValue = String(cellToRaw(cell));
 
           this.dispatchEvent(
-            new CustomEvent("casehub-filter", {
+            new CustomEvent<CasehubFilterDetail>("casehub-filter", {
               bubbles: true,
               composed: true,
               detail: {
                 columnId,
-                rowIndex,
+                value: cellValue,
+                row: rowObj,
                 reset: false,
                 group: props.filter?.group,
-              },
+              } satisfies CasehubFilterApply,
             }),
           );
         }

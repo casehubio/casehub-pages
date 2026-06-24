@@ -1,7 +1,7 @@
 import type { Component, PermissionContext } from "@casehubio/pages-component/dist/model/types.js";
 import { ALLOW_ALL } from "@casehubio/pages-component/dist/model/types.js";
 import { renderComponent } from "@casehubio/pages-component/dist/renderer/render.js";
-import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetId, ColumnId, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataProviderConfig, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
@@ -14,6 +14,7 @@ import { load as yamlLoad } from "js-yaml";
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { applyTheme, LIGHT_THEME, DARK_THEME } from "@casehubio/pages-viz/dist/base/theme.js";
 import type { CasehubTheme } from "@casehubio/pages-viz/dist/base/theme.js";
+import type { CasehubFilterDetail } from "@casehubio/pages-viz/dist/base/filter-types.js";
 import { buildPagePathMap } from "./page-paths.js";
 import { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
 import { buildPageIndex, computeCurrentPage, walkNavigate } from "./navigation.js";
@@ -48,13 +49,6 @@ interface FieldChangeDetail {
   readonly committed?: boolean;
 }
 
-interface FilterDetail {
-  readonly columnId: string;
-  readonly rowIndex: number;
-  readonly row?: import("@casehubio/pages-data/dist/dataset/types.js").TypedRow;
-  readonly reset: boolean;
-  readonly group: string | undefined;
-}
 
 interface PageDetail {
   readonly offset: number;
@@ -306,7 +300,7 @@ export function loadSite(
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-filter", ((e: Event) => {
-    const { columnId, rowIndex, row: eventRow, reset, group } = (e as CustomEvent<FilterDetail>).detail;
+    const detail = (e as CustomEvent<CasehubFilterDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
 
@@ -316,57 +310,75 @@ export function loadSite(
     const ds = entry.vizElement.dataSet;
     if (!ds) return;
 
-    // Prefer row reference from event (table), fall back to rowIndex lookup (charts)
-    const row = eventRow ?? ds.rows[rowIndex];
-    if (!row) return;
+    const { columnId, group } = detail;
 
-    const cell = row.cell(columnId as ColumnId);
-    const value = String(cellToRaw(cell));
-
-    // Table clicks with a child DataScope are record selection — store the
-    // filter at the child's pagePath using idColumn so the table stays unfiltered.
-    // Selector/chart cross-filters are NOT record selection — they use normal filtering.
-    const isTableClick = entry.component.type === "table";
+    // --- Record selection vs cross-filter path ---
     let childScopePath: string | undefined;
     let childScope: ReturnType<typeof getDataScope> | undefined;
 
-    if (isTableClick) {
-      // Check same-page DataScope first
-      const samePage = getDataScope(dataScopeRegistry, entry.pagePath);
-      if (samePage) {
-        childScopePath = entry.pagePath;
-        childScope = samePage;
-      }
-      // Then check child pages
-      if (!childScope) {
-        const prefix = entry.pagePath === "" ? "" : entry.pagePath + "/";
-        for (const [path, scope] of dataScopeRegistry) {
-          if (path.startsWith(prefix)) {
-            childScopePath = path;
-            childScope = scope;
-            break;
-          }
+    // Check same-page DataScope first
+    const samePage = getDataScope(dataScopeRegistry, entry.pagePath);
+    if (samePage) {
+      childScopePath = entry.pagePath;
+      childScope = samePage;
+    }
+    // Then check child pages
+    if (!childScope) {
+      const prefix = entry.pagePath === "" ? "" : entry.pagePath + "/";
+      for (const [path, scope] of dataScopeRegistry) {
+        if (path.startsWith(prefix)) {
+          childScopePath = path;
+          childScope = scope;
+          break;
         }
       }
     }
 
+    // Determine if this is record selection or cross-filter
+    let isRecordSelection = false;
+    let detectedIdCell: CellValue | undefined;
     if (childScope && childScopePath) {
-      // Flush pending edits BEFORE changing the selection filter —
-      // flushSave reads the current filter to find the record ID.
-      if (isDirty(editState, childScopePath)) {
-        flushSave(childScopePath).catch((err: unknown) => { console.error("Pre-switch save failed:", err); });
+      if (!detail.reset) {
+        // Apply: check via row cell lookup
+        try {
+          detectedIdCell = detail.row.cell(childScope.idColumn as ColumnId);
+          if (detectedIdCell.type !== "NULL") {
+            isRecordSelection = true;
+          }
+        } catch {
+          // Column not found → cross-filter
+        }
+      } else {
+        // Reset: check via column schema
+        isRecordSelection = ds.columns.some(
+          c => c.id === childScope.idColumn,
+        );
       }
-      // Record selection: store filter at the child DataScope's pagePath
-      const childFilters = filterState.get(childScopePath);
-      if (childFilters) {
-        for (const [, columnMap] of childFilters) columnMap.clear();
+    }
+
+    if (isRecordSelection && childScopePath && childScope) {
+      if (!detail.reset && detectedIdCell) {
+        // Record selection apply
+        if (isDirty(editState, childScopePath)) {
+          flushSave(childScopePath).catch((err: unknown) => { console.error("Pre-switch save failed:", err); });
+        }
+        const childFilters = filterState.get(childScopePath);
+        if (childFilters) {
+          for (const [, columnMap] of childFilters) columnMap.clear();
+        }
+        const idValue = String(cellToRaw(detectedIdCell));
+        updateFilter(filterState, childScopePath, group, childScope.idColumn, [idValue], false);
+      } else {
+        // Record selection reset — clear the child scope filter
+        updateFilter(filterState, childScopePath, group, childScope.idColumn, [], true);
       }
-      const idCell = row.cell(childScope.idColumn as ColumnId);
-      const idValue = String(cellToRaw(idCell));
-      updateFilter(filterState, childScopePath, group, childScope.idColumn, [idValue], reset);
     } else {
-      // Normal cross-filter: store at emitting component's pagePath
-      updateFilter(filterState, entry.pagePath, group, columnId, [value], reset);
+      // Cross-filter path
+      if (!detail.reset) {
+        updateFilter(filterState, entry.pagePath, group, columnId, [detail.value], false);
+      } else {
+        updateFilter(filterState, entry.pagePath, group, columnId, [], true);
+      }
     }
 
     // Re-push same-page components (except self unless selfApply)
