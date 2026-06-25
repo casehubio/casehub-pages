@@ -42,6 +42,7 @@ describe("createDataPipeline", () => {
       element: document.createElement("div"),
       component: { type: "bar-chart" },
       pagePath: "",
+      hasExplicitId: false,
     });
 
     const pipeline = createDataPipeline(
@@ -67,6 +68,7 @@ describe("createDataPipeline", () => {
       element: document.createElement("div"),
       component: { type: "bar-chart" },
       pagePath: "",
+      hasExplicitId: false,
     });
 
     const pipeline = createDataPipeline(
@@ -155,6 +157,7 @@ describe("data pipeline with filters", () => {
       element: document.createElement("div"),
       component: { type: "bar-chart", props: { filter: { listening: true } } },
       pagePath: "page1",
+      hasExplicitId: false,
     });
 
     const filterState: FilterState = new Map([
@@ -180,11 +183,13 @@ describe("data pipeline deduplication", () => {
       element: document.createElement("div"),
       component: { type: "bar-chart" },
       pagePath: "",
+      hasExplicitId: false,
     });
     registry.set("chart-2", {
       element: document.createElement("div"),
       component: { type: "line-chart" },
       pagePath: "",
+      hasExplicitId: false,
     });
 
     const def: ExternalDataSetDef = { uuid: dataSetId("sales"), content: "[]" };

@@ -900,10 +900,11 @@ function waitForViz(
     `casehub-${componentType}`,
   );
   if (!vizEl) return Promise.reject(new Error(`Viz element not found in ${selector}`));
+  const v = vizEl;
   const start = Date.now();
   return new Promise((resolve, reject) => {
     function check(): void {
-      if (vizEl.dataSet) { resolve(vizEl); return; }
+      if (v.dataSet) { resolve(v); return; }
       if (Date.now() - start > maxWait) { reject(new Error(`Data not loaded for ${selector} within ${String(maxWait)}ms`)); return; }
       setTimeout(check, 10);
     }

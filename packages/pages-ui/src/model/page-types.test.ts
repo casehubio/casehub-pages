@@ -7,8 +7,6 @@ import type {
   DataComponentDefaults,
   LookupDefaults,
   DataSetDefaults,
-  DrillDownStep,
-  LayoutOverride,
   Site,
 } from "./page-types.js";
 import type { Component } from "./types.js";
@@ -186,132 +184,36 @@ describe("DataSetDefaults", () => {
 });
 
 describe("ViewState", () => {
-  it("has currentPage", () => {
+  it("has currentPage, activeFilters, sort, pagination", () => {
     const state: ViewState = {
       currentPage: "overview",
-    };
-
-    expect(state.currentPage).toBe("overview");
-  });
-
-  it("has expandedNodes array", () => {
-    const state: ViewState = {
-      expandedNodes: ["node1", "node2", "node3"],
-    };
-
-    expect(state.expandedNodes).toHaveLength(3);
-    expect(state.expandedNodes![0]).toBe("node1");
-  });
-
-  it("has activeFilters keyed by string (ColumnId branded type)", () => {
-    const state: ViewState = {
       activeFilters: {
         status: ["active", "pending"],
         region: ["NA", "EU"],
       },
-    };
-
-    expect(state.activeFilters?.status).toEqual(["active", "pending"]);
-    expect(state.activeFilters?.region).toEqual(["NA", "EU"]);
-  });
-
-  it("has drillDownPath array", () => {
-    const state: ViewState = {
-      drillDownPath: [
-        {
-          source: "chart1",
-          column: "region",
-          value: "NA",
-          targetPage: "region-details",
-        },
-        {
-          source: "chart2",
-          column: "country",
-          value: "USA",
-          targetPage: "country-details",
-        },
-      ],
-    };
-
-    expect(state.drillDownPath).toHaveLength(2);
-    expect(state.drillDownPath![0]!.value).toBe("NA");
-    expect(state.drillDownPath![1]!.targetPage).toBe("country-details");
-  });
-
-  it("has layoutOverrides array", () => {
-    const state: ViewState = {
-      layoutOverrides: [
-        {
-          componentId: "chart1",
-          placement: { x: 0, y: 0, w: 2, h: 1 },
-        },
-      ],
-    };
-
-    expect(state.layoutOverrides).toHaveLength(1);
-    expect(state.layoutOverrides![0]!.componentId).toBe("chart1");
-  });
-
-  it("has collapsedPanels array", () => {
-    const state: ViewState = {
-      collapsedPanels: ["panel1", "panel2"],
-    };
-
-    expect(state.collapsedPanels).toHaveLength(2);
-    expect(state.collapsedPanels![0]).toBe("panel1");
-  });
-
-  it("has scrollPositions map", () => {
-    const state: ViewState = {
-      scrollPositions: {
-        "page1": 120,
-        "page2": 340,
+      sort: {
+        "table-1": { columnId: "revenue", order: "ASCENDING" },
       },
+      pagination: { "table-1": 2 },
     };
 
-    expect(state.scrollPositions?.page1).toBe(120);
-    expect(state.scrollPositions?.page2).toBe(340);
-  });
-});
-
-describe("DrillDownStep", () => {
-  it("has source, column, value, targetPage", () => {
-    const step: DrillDownStep = {
-      source: "sales-chart",
-      column: "region",
-      value: "EMEA",
-      targetPage: "regional-breakdown",
-    };
-
-    expect(step.source).toBe("sales-chart");
-    expect(step.column).toBe("region");
-    expect(step.value).toBe("EMEA");
-    expect(step.targetPage).toBe("regional-breakdown");
-  });
-});
-
-describe("LayoutOverride", () => {
-  it("has componentId and placement", () => {
-    const override: LayoutOverride = {
-      componentId: "metric1",
-      placement: { x: 2, y: 1, w: 1, h: 1 },
-    };
-
-    expect(override.componentId).toBe("metric1");
-    expect(override.placement.y).toBe(1);
-    expect(override.placement.x).toBe(2);
+    expect(state.currentPage).toBe("overview");
+    expect(state.activeFilters.status).toEqual(["active", "pending"]);
+    expect(state.activeFilters.region).toEqual(["NA", "EU"]);
+    expect(state.sort["table-1"]!.columnId).toBe("revenue");
+    expect(state.pagination["table-1"]).toBe(2);
   });
 });
 
 describe("DeepLink", () => {
-  it("has page and optional parameters", () => {
+  it("has page and optional filters", () => {
     const link: DeepLink = {
       page: "dashboard",
-      parameters: { view: "summary", mode: "compact" },
+      filters: { status: ["active"] },
     };
 
     expect(link.page).toBe("dashboard");
-    expect(link.parameters?.view).toBe("summary");
+    expect(link.filters?.status).toEqual(["active"]);
   });
 
   it("has optional filters", () => {
@@ -327,43 +229,34 @@ describe("DeepLink", () => {
     expect(link.filters?.priority).toEqual(["high"]);
   });
 
-  it("has optional drillDown array", () => {
+  it("has optional sort configuration", () => {
     const link: DeepLink = {
       page: "dashboard",
-      drillDown: [
-        {
-          source: "chart1",
-          column: "region",
-          value: "NA",
-          targetPage: "region-view",
-        },
-      ],
+      sort: { "table-1": { columnId: "revenue", order: "ASCENDING" } },
     };
 
-    expect(link.drillDown).toHaveLength(1);
-    expect(link.drillDown![0]!.value).toBe("NA");
+    expect(link.sort?.["table-1"]?.columnId).toBe("revenue");
+    expect(link.sort?.["table-1"]?.order).toBe("ASCENDING");
   });
 
-  it("has optional sort configuration", () => {
-    const linkAsc: DeepLink = {
+  it("has optional pagination configuration", () => {
+    const link: DeepLink = {
       page: "dashboard",
-      sort: { column: "revenue", order: "ASC" },
-    };
-    const linkDesc: DeepLink = {
-      page: "dashboard",
-      sort: { column: "revenue", order: "DESC" },
+      pagination: { "table-1": 3 },
     };
 
-    expect(linkAsc.sort?.column).toBe("revenue");
-    expect(linkAsc.sort?.order).toBe("ASC");
-    expect(linkDesc.sort?.order).toBe("DESC");
+    expect(link.pagination?.["table-1"]).toBe(3);
   });
 });
+
+function emptyViewState(overrides?: Partial<ViewState>): ViewState {
+  return { currentPage: "", activeFilters: {}, sort: {}, pagination: {}, ...overrides };
+}
 
 describe("Site", () => {
   it("has root component", () => {
     const root: Component = { type: "page", props: {} };
-    const state: ViewState = {};
+    const state = emptyViewState();
 
     const site: Site = {
       root,
@@ -377,7 +270,7 @@ describe("Site", () => {
 
   it("has page method returning Component or null", () => {
     const root: Component = { type: "page", props: {} };
-    const state: ViewState = {};
+    const state = emptyViewState();
 
     const site: Site = {
       root,
@@ -401,7 +294,7 @@ describe("Site", () => {
 
   it("has dataset method returning ExternalDataSetDef or null", () => {
     const root: Component = { type: "page", props: {} };
-    const state: ViewState = {};
+    const state = emptyViewState();
 
     const site: Site = {
       root,
@@ -429,10 +322,7 @@ describe("Site", () => {
 
   it("has state property", () => {
     const root: Component = { type: "page", props: {} };
-    const state: ViewState = {
-      currentPage: "overview",
-      expandedNodes: ["node1"],
-    };
+    const state = emptyViewState({ currentPage: "overview" });
 
     const site: Site = {
       root,
