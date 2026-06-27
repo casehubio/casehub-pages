@@ -21,12 +21,10 @@ const samplesPath = join(__dirname, "../dist/samples.json");
 const samples: SamplesData = JSON.parse(readFileSync(samplesPath, "utf-8"));
 const allDashboards = samples.categories.flatMap((c) => c.dashboards);
 
-// Kitchensink has known partial issues: iframe-plugin (external component server required),
-// map (regions property undefined). These produce ERROR statuses that are expected.
-const KNOWN_ERROR_DASHBOARDS = new Set(["Kitchensink"]);
+// Maps has a known error: registerMap() never called — geo data not available (#35).
+const KNOWN_ERROR_DASHBOARDS = new Set(["Maps"]);
 
-// Prometheus Basic has a known failure: API response format not supported (#35).
-// The dashboard errors on load because the data extraction layer can't parse the response.
+// Dashboards that fail to load due to external data or unsupported formats.
 const EXPECTED_LOAD_FAILURES = new Set(["Prometheus Basic"]);
 
 async function openDashboard(page: import("@playwright/test").Page, name: string) {

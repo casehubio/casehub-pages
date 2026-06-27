@@ -1,0 +1,80 @@
+# HELP kepler_container_joules_total Total energy consumption by container
+# TYPE kepler_container_joules_total counter
+kepler_container_joules_total{container_id="c1",container_name="api-server",container_namespace="production",pod_name="api-server-7d4f8b",} 45230.5
+kepler_container_joules_total{container_id="c2",container_name="worker",container_namespace="production",pod_name="worker-3a9c12",} 38750.2
+kepler_container_joules_total{container_id="c3",container_name="redis",container_namespace="production",pod_name="redis-master-0",} 12400.8
+kepler_container_joules_total{container_id="c4",container_name="postgres",container_namespace="data",pod_name="postgres-primary-0",} 28900.3
+kepler_container_joules_total{container_id="c5",container_name="nginx",container_namespace="ingress",pod_name="nginx-ingress-5f7b2",} 8200.1
+kepler_container_joules_total{container_id="c6",container_name="monitoring",container_namespace="observability",pod_name="prometheus-0",} 15600.7
+# HELP kepler_container_core_joules_total CPU core energy by container
+# TYPE kepler_container_core_joules_total counter
+kepler_container_core_joules_total{container_id="c1",container_name="api-server",container_namespace="production",pod_name="api-server-7d4f8b",} 22100.3
+kepler_container_core_joules_total{container_id="c2",container_name="worker",container_namespace="production",pod_name="worker-3a9c12",} 19800.1
+kepler_container_core_joules_total{container_id="c3",container_name="redis",container_namespace="production",pod_name="redis-master-0",} 5200.4
+kepler_container_core_joules_total{container_id="c4",container_name="postgres",container_namespace="data",pod_name="postgres-primary-0",} 14500.2
+kepler_container_core_joules_total{container_id="c5",container_name="nginx",container_namespace="ingress",pod_name="nginx-ingress-5f7b2",} 3900.5
+kepler_container_core_joules_total{container_id="c6",container_name="monitoring",container_namespace="observability",pod_name="prometheus-0",} 7800.3
+# HELP kepler_container_dram_joules_total DRAM energy by container
+# TYPE kepler_container_dram_joules_total counter
+kepler_container_dram_joules_total{container_id="c1",container_name="api-server",container_namespace="production",pod_name="api-server-7d4f8b",} 8900.1
+kepler_container_dram_joules_total{container_id="c2",container_name="worker",container_namespace="production",pod_name="worker-3a9c12",} 7200.3
+kepler_container_dram_joules_total{container_id="c3",container_name="redis",container_namespace="production",pod_name="redis-master-0",} 4100.2
+kepler_container_dram_joules_total{container_id="c4",container_name="postgres",container_namespace="data",pod_name="postgres-primary-0",} 9800.5
+kepler_container_dram_joules_total{container_id="c5",container_name="nginx",container_namespace="ingress",pod_name="nginx-ingress-5f7b2",} 1800.3
+kepler_container_dram_joules_total{container_id="c6",container_name="monitoring",container_namespace="observability",pod_name="prometheus-0",} 3200.1
+# HELP kepler_container_uncore_joules_total Uncore energy by container
+# TYPE kepler_container_uncore_joules_total counter
+kepler_container_uncore_joules_total{container_id="c1",container_name="api-server",container_namespace="production",pod_name="api-server-7d4f8b",} 4500.2
+kepler_container_uncore_joules_total{container_id="c2",container_name="worker",container_namespace="production",pod_name="worker-3a9c12",} 3800.1
+kepler_container_uncore_joules_total{container_id="c3",container_name="redis",container_namespace="production",pod_name="redis-master-0",} 1200.3
+kepler_container_uncore_joules_total{container_id="c4",container_name="postgres",container_namespace="data",pod_name="postgres-primary-0",} 2100.4
+kepler_container_uncore_joules_total{container_id="c5",container_name="nginx",container_namespace="ingress",pod_name="nginx-ingress-5f7b2",} 900.2
+kepler_container_uncore_joules_total{container_id="c6",container_name="monitoring",container_namespace="observability",pod_name="prometheus-0",} 1500.5
+# HELP kepler_container_package_joules_total Package energy by container
+# TYPE kepler_container_package_joules_total counter
+kepler_container_package_joules_total{container_id="c1",container_name="api-server",container_namespace="production",pod_name="api-server-7d4f8b",} 26600.5
+kepler_container_package_joules_total{container_id="c2",container_name="worker",container_namespace="production",pod_name="worker-3a9c12",} 23600.2
+kepler_container_package_joules_total{container_id="c3",container_name="redis",container_namespace="production",pod_name="redis-master-0",} 6400.7
+kepler_container_package_joules_total{container_id="c4",container_name="postgres",container_namespace="data",pod_name="postgres-primary-0",} 16600.6
+kepler_container_package_joules_total{container_id="c5",container_name="nginx",container_namespace="ingress",pod_name="nginx-ingress-5f7b2",} 4800.3
+kepler_container_package_joules_total{container_id="c6",container_name="monitoring",container_namespace="observability",pod_name="prometheus-0",} 9300.8
+# HELP kepler_container_gpu_joules_total GPU energy by container
+# TYPE kepler_container_gpu_joules_total counter
+kepler_container_gpu_joules_total{container_id="c1",container_name="api-server",container_namespace="production",pod_name="api-server-7d4f8b",} 0
+kepler_container_gpu_joules_total{container_id="c2",container_name="worker",container_namespace="production",pod_name="worker-3a9c12",} 0
+kepler_container_gpu_joules_total{container_id="c3",container_name="redis",container_namespace="production",pod_name="redis-master-0",} 0
+kepler_container_gpu_joules_total{container_id="c4",container_name="postgres",container_namespace="data",pod_name="postgres-primary-0",} 0
+kepler_container_gpu_joules_total{container_id="c5",container_name="nginx",container_namespace="ingress",pod_name="nginx-ingress-5f7b2",} 0
+kepler_container_gpu_joules_total{container_id="c6",container_name="monitoring",container_namespace="observability",pod_name="prometheus-0",} 0
+# HELP kepler_container_other_host_components_joules_total Other host component energy by container
+# TYPE kepler_container_other_host_components_joules_total counter
+kepler_container_other_host_components_joules_total{container_id="c1",container_name="api-server",container_namespace="production",pod_name="api-server-7d4f8b",} 5130.4
+kepler_container_other_host_components_joules_total{container_id="c2",container_name="worker",container_namespace="production",pod_name="worker-3a9c12",} 4350.5
+kepler_container_other_host_components_joules_total{container_id="c3",container_name="redis",container_namespace="production",pod_name="redis-master-0",} 1500.2
+kepler_container_other_host_components_joules_total{container_id="c4",container_name="postgres",container_namespace="data",pod_name="postgres-primary-0",} 2500.1
+kepler_container_other_host_components_joules_total{container_id="c5",container_name="nginx",container_namespace="ingress",pod_name="nginx-ingress-5f7b2",} 700.3
+kepler_container_other_host_components_joules_total{container_id="c6",container_name="monitoring",container_namespace="observability",pod_name="prometheus-0",} 1600.4
+# HELP kepler_node_core_joules_total CPU core energy by node
+# TYPE kepler_node_core_joules_total counter
+kepler_node_core_joules_total{instance="node-1",job="kepler",} 73300.8
+kepler_node_core_joules_total{instance="node-2",job="kepler",} 58200.5
+# HELP kepler_node_dram_joules_total DRAM energy by node
+# TYPE kepler_node_dram_joules_total counter
+kepler_node_dram_joules_total{instance="node-1",job="kepler",} 35000.5
+kepler_node_dram_joules_total{instance="node-2",job="kepler",} 28100.3
+# HELP kepler_node_uncore_joules_total Uncore energy by node
+# TYPE kepler_node_uncore_joules_total counter
+kepler_node_uncore_joules_total{instance="node-1",job="kepler",} 14000.2
+kepler_node_uncore_joules_total{instance="node-2",job="kepler",} 11200.4
+# HELP kepler_node_package_joules_total Package energy by node
+# TYPE kepler_node_package_joules_total counter
+kepler_node_package_joules_total{instance="node-1",job="kepler",} 87300.0
+kepler_node_package_joules_total{instance="node-2",job="kepler",} 69400.9
+# HELP kepler_node_gpu_joules_total GPU energy by node
+# TYPE kepler_node_gpu_joules_total counter
+kepler_node_gpu_joules_total{instance="node-1",job="kepler",} 0
+kepler_node_gpu_joules_total{instance="node-2",job="kepler",} 0
+# HELP kepler_node_other_host_components_joules_total Other host component energy by node
+# TYPE kepler_node_other_host_components_joules_total counter
+kepler_node_other_host_components_joules_total{instance="node-1",job="kepler",} 15780.9
+kepler_node_other_host_components_joules_total{instance="node-2",job="kepler",} 12500.7

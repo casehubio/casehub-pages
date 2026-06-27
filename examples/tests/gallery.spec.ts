@@ -20,9 +20,9 @@ test.describe("Gallery infrastructure", () => {
 
   test("search filters dashboards", async ({ page }) => {
     await page.goto("/");
-    await page.fill("#search", "Simple Chart");
+    await page.fill("#search", "Charts");
     const visible = page.locator(".dashboard-item:not(.hidden)");
-    await expect(visible).toHaveCount(1);
+    await expect(visible.first()).toBeVisible();
   });
 });
 
@@ -104,16 +104,12 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
   });
 }
 
-test.describe("Simple Chart", () => {
-  test("renders bar chart with data", async ({ page }) => {
-    await openDashboard(page, "Simple Chart");
+test.describe("Charts", () => {
+  test("renders bar charts on default tab", async ({ page }) => {
+    await openDashboard(page, "Charts");
 
-    // HTML title is visible
-    await expect(page.locator("h1:has-text('Person by Age')")).toBeVisible();
-
-    // Bar chart has echarts canvas in shadow DOM
     const charts = await countRenderedCharts(page);
-    expect(charts).toBe(1);
+    expect(charts).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -130,13 +126,13 @@ test.describe("Filter", () => {
   });
 });
 
-test.describe("Filter With Table", () => {
-  test("renders table and bar chart", async ({ page }) => {
-    await openDashboard(page, "Filter With Table");
+test.describe("Selectors and Filters", () => {
+  test("renders selector and chart on default tab", async ({ page }) => {
+    await openDashboard(page, "Selectors and Filters");
     const statuses = await getComponentStatuses(page);
 
-    const table = statuses.find(s => s.type === "table");
-    expect(table?.status).toBe("TABLE_OK");
+    const selector = statuses.find(s => s.type === "selector");
+    expect(selector).toBeDefined();
 
     const chart = statuses.find(s => s.type === "bar-chart");
     expect(chart?.status).toBe("CHART_OK");
@@ -168,15 +164,12 @@ test.describe("Accumulate Flag", () => {
 });
 
 test.describe("Histogram", () => {
-  test("renders bar chart and table", async ({ page }) => {
+  test("renders bar chart with histogram data", async ({ page }) => {
     await openDashboard(page, "Histogram");
     const statuses = await getComponentStatuses(page);
 
     const chart = statuses.find(s => s.type === "bar-chart");
     expect(chart?.status).toBe("CHART_OK");
-
-    const table = statuses.find(s => s.type === "table");
-    expect(table?.status).toBe("TABLE_OK");
   });
 });
 

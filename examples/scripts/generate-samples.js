@@ -4,6 +4,33 @@ const path = require('path');
 const dashboardsDir = path.join(__dirname, '../dashboards');
 const outputFile = path.join(__dirname, '../samples.json');
 
+const CATEGORY_ORDER = [
+  'Sales',
+  'Clinical',
+  'IoT',
+  'People',
+  'Prometheus',
+  'Micrometer',
+  'ansible',
+  'jupyterhub',
+  'kepler',
+  'OpenTelemetry',
+  'modelmesh',
+  'triton',
+  'Backstage',
+  'misc',
+  'Basic Usage',
+];
+
+const DISPLAY_NAMES = {
+  'ansible': 'Ansible',
+  'jupyterhub': 'JupyterHub',
+  'kepler': 'Kepler',
+  'misc': 'Misc',
+  'modelmesh': 'ModelMesh',
+  'triton': 'Triton',
+};
+
 // Recursively find all dashboard files
 function findDashboards(dir, baseDir = dir) {
   const files = fs.readdirSync(dir);
@@ -16,14 +43,14 @@ function findDashboards(dir, baseDir = dir) {
     if (stat.isDirectory()) {
       if (file === 'includes') continue;
       dashboards.push(...findDashboards(filePath, baseDir));
-    } else if (file.endsWith('.dash.yaml') || file.endsWith('.dash.yml') || file.endsWith('.yml')) {
+    } else if (file.endsWith('.dash.yaml') || file.endsWith('.dash.yml') || file.endsWith('.yml') || file.endsWith('.yaml')) {
       const relativePath = path.relative(baseDir, filePath);
-      const name = file.replace(/\.(dash\.yaml|dash\.yml|yml)$/, '');
+      const name = file.replace(/\.(dash\.yaml|dash\.yml|yml|yaml)$/, '');
       const category = path.dirname(relativePath).split(path.sep)[0];
 
       dashboards.push({
         name: name,
-        path: relativePath.replace(/\\/g, '/'), // Normalize path separators
+        path: relativePath.replace(/\\/g, '/'),
         category: category === '.' ? 'General' : category,
         file: file
       });
@@ -45,10 +72,13 @@ dashboards.forEach(dashboard => {
   categories[dashboard.category].push(dashboard);
 });
 
-// Sort categories and dashboards
-const sortedCategories = Object.keys(categories).sort();
+// Sort categories: explicit order first, then remaining alphabetically
+const knownKeys = CATEGORY_ORDER.filter(k => categories[k]);
+const unknownKeys = Object.keys(categories).filter(k => !CATEGORY_ORDER.includes(k)).sort();
+const sortedCategories = [...knownKeys, ...unknownKeys];
+
 const samples = sortedCategories.map(category => ({
-  category: category,
+  category: DISPLAY_NAMES[category] || category,
   dashboards: categories[category].sort((a, b) => a.name.localeCompare(b.name))
 }));
 
