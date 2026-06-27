@@ -262,6 +262,27 @@ describe("parseLookup", () => {
     });
   });
 
+  it("treats function on group column as aggregate, not key", () => {
+    const raw = {
+      uuid: "dataset-1",
+      group: [
+        {
+          columnGroup: { source: "department" },
+          functions: [
+            { source: "department" },
+            { source: "department", function: "COUNT", column: "count" },
+          ],
+        },
+      ],
+    };
+
+    const lookup = parseLookup(raw);
+    const cols = (lookup.operations[0] as unknown as { columns: Array<{ kind: string; columnId: string }> }).columns;
+
+    expect(cols[0]).toMatchObject({ kind: "key", columnId: "department" });
+    expect(cols[1]).toMatchObject({ kind: "aggregate", columnId: "count" });
+  });
+
   it("parses group without columnGroup (null groupingKey)", () => {
     const raw = {
       uuid: "dataset-1",

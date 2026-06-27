@@ -238,13 +238,13 @@ function parseGroupEntry(entry: z.infer<typeof groupEntrySchema>): GroupOp {
     const srcId = columnId(col.source);
     const colId = columnId(col.id ?? col.source);
 
-    if (entry.columnGroup && col.source === entry.columnGroup.source) {
-      return { kind: "key", sourceId: srcId, columnId: colId };
-    }
-
     if (col.function) {
       const fn = parseAggregation(col.function, col.separator);
       return { kind: "aggregate", sourceId: srcId, columnId: colId, fn };
+    }
+
+    if (entry.columnGroup && col.source === entry.columnGroup.source) {
+      return { kind: "key", sourceId: srcId, columnId: colId };
     }
 
     return { kind: "select", sourceId: srcId, columnId: colId };

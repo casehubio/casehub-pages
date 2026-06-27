@@ -108,6 +108,7 @@ pages:
                                           - source: department
                                           - source: department
                                             function: COUNT
+                                            column: count
                       - html: "</div></div>"
                 - span: 4
                   components:
@@ -126,6 +127,7 @@ pages:
                                           - source: level
                                           - source: level
                                             function: COUNT
+                                            column: count
                       - html: "</div></div>"
                 - span: 4
                   components:
@@ -168,7 +170,6 @@ pages:
                                     - columnGroup:
                                           source: name
                                       functions:
-                                          - source: name
                                           - source: tenure
                                           - source: salary
                       - html: "</div></div>"
@@ -188,6 +189,7 @@ pages:
                                           - source: rating
                                           - source: rating
                                             function: COUNT
+                                            column: count
                       - html: "</div></div>"
 
           # Row 3: Table (full width)

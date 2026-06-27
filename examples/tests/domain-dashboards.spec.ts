@@ -71,6 +71,53 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
   });
 }
 
+interface ChartDataInfo {
+  tag: string;
+  columns: Array<{ id: string; type: string }>;
+  rowCount: number;
+  hasNumericValues: boolean;
+  canvasWidth: number;
+  canvasHeight: number;
+}
+
+async function getChartDataInfo(
+  page: import("@playwright/test").Page,
+  selector: string,
+): Promise<ChartDataInfo[]> {
+  return page.evaluate((sel) => {
+    const target = document.getElementById("dashboard-target")!;
+    const elements = target.querySelectorAll(sel);
+    const results: ChartDataInfo[] = [];
+
+    elements.forEach((el) => {
+      const htmlEl = el as HTMLElement & {
+        dataSet?: {
+          columns?: Array<{ id: string; type: string }>;
+          rows?: Array<{ cells: Array<{ type: string; value: unknown }> }>;
+        };
+      };
+      const canvas = htmlEl.shadowRoot?.querySelector("canvas");
+      const info: ChartDataInfo = {
+        tag: el.tagName.toLowerCase(),
+        columns: htmlEl.dataSet?.columns?.map((c) => ({ id: c.id, type: c.type })) ?? [],
+        rowCount: htmlEl.dataSet?.rows?.length ?? 0,
+        hasNumericValues: false,
+        canvasWidth: canvas?.width ?? 0,
+        canvasHeight: canvas?.height ?? 0,
+      };
+
+      if (htmlEl.dataSet?.rows && htmlEl.dataSet.rows.length > 0) {
+        info.hasNumericValues = htmlEl.dataSet.rows.some((r) =>
+          r.cells.some((c) => c.type === "NUMBER"),
+        );
+      }
+
+      results.push(info);
+    });
+    return results;
+  }, selector);
+}
+
 // ---------------------------------------------------------------------------
 // Sales Dashboard
 // ---------------------------------------------------------------------------
@@ -138,6 +185,18 @@ test.describe("IoT Fleet Monitor", () => {
     expect(meters.every((m) => m.status === "CHART_OK")).toBe(true);
   });
 
+  test("meter gauges fit within their containers", async ({ page }) => {
+    await openDashboard(page, "Fleet Monitor");
+    const meterInfo = await getChartDataInfo(page, "casehub-meter");
+
+    expect(meterInfo.length).toBe(3);
+    for (const meter of meterInfo) {
+      expect(meter.canvasWidth).toBeGreaterThan(0);
+      expect(meter.canvasHeight).toBeGreaterThan(0);
+      expect(meter.hasNumericValues).toBe(true);
+    }
+  });
+
   test("dark mode is applied", async ({ page }) => {
     await openDashboard(page, "Fleet Monitor");
 
@@ -199,14 +258,40 @@ test.describe("Workforce Analytics", () => {
     expect(table?.status).toBe("TABLE_OK");
   });
 
-  test("scatter chart renders with canvas", async ({ page }) => {
+  test("pie charts have numeric value columns, not duplicate labels", async ({ page }) => {
     await openDashboard(page, "Workforce Analytics");
+    const pies = await getChartDataInfo(page, "casehub-pie-chart");
 
-    const hasScatter = await page.evaluate(() => {
-      const el = document.querySelector("casehub-scatter-chart");
-      return el?.shadowRoot?.querySelector("canvas") !== null;
-    });
-    expect(hasScatter).toBe(true);
+    expect(pies.length).toBe(2);
+    for (const pie of pies) {
+      expect(pie.rowCount).toBeGreaterThan(0);
+      expect(pie.hasNumericValues).toBe(true);
+      const types = pie.columns.map((c) => c.type);
+      expect(types).toContain("NUMBER");
+    }
+  });
+
+  test("bar charts have numeric value columns", async ({ page }) => {
+    await openDashboard(page, "Workforce Analytics");
+    const bars = await getChartDataInfo(page, "casehub-bar-chart");
+
+    expect(bars.length).toBeGreaterThanOrEqual(2);
+    for (const bar of bars) {
+      expect(bar.rowCount).toBeGreaterThan(0);
+      expect(bar.hasNumericValues).toBe(true);
+    }
+  });
+
+  test("scatter chart has numeric x and y columns", async ({ page }) => {
+    await openDashboard(page, "Workforce Analytics");
+    const scatters = await getChartDataInfo(page, "casehub-scatter-chart");
+
+    expect(scatters.length).toBe(1);
+    const scatter = scatters[0]!;
+    expect(scatter.rowCount).toBe(40);
+    expect(scatter.columns.length).toBeGreaterThanOrEqual(2);
+    expect(scatter.columns[0]!.type).toBe("NUMBER");
+    expect(scatter.columns[1]!.type).toBe("NUMBER");
   });
 
   test("no errors on any component", async ({ page }) => {

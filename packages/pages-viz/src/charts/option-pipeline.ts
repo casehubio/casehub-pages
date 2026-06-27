@@ -18,7 +18,9 @@ export function datasetToSource(
     dataset.columns.map((c) => resolveColumnName(c, propsColumns)),
     ...dataset.rows.map((row) =>
       dataset.columns.map((c, i) => {
-        const raw = cellToRaw(row.cell(c.id));
+        const cell = row.cells[i];
+        if (!cell) return null;
+        const raw = cellToRaw(cell);
         return expressions[i] ? applyCellExpression(raw, expressions[i]) : raw;
       }),
     ),
