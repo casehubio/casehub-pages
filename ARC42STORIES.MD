@@ -229,9 +229,9 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | #25 | LLM-friendly API documentation for host application integration | ✅ shipped |
 | #26 | Platform convention: Quarkus + TypeScript frontend via Quinoa | ✅ shipped |
 | #28 | Remove redundant iframe ECharts component — migrate to inline Web Components | ✅ shipped |
-| #35 | Map geo data loading — `registerMap()` for ECharts map/geo | 🔲 open |
+| #35 | Map geo data loading — `registerMap()` for ECharts map/geo | ✅ done |
 | #36 | Accumulate + expression for inline datasets | 🔲 open |
-| #44 | Minor polish for domain example dashboards | 🔲 open |
+| #44 | Minor polish for domain example dashboards | ✅ done |
 
 ---
 
@@ -262,7 +262,7 @@ Decisions not captured inline in §4:
 | Risk | Impact | Mitigation |
 |---|---|---|
 | `new Function()` requires CSP `unsafe-eval` | Blocks deployment in strict CSP environments | Column expressions could be moved to a sandboxed evaluator (#16) |
-| Kitchensink map component rendering | `regions` property undefined — map tab empty | Map page is an orphan (commented out of navTree) |
+| Map geo data requires CDN fetch | Maps depend on jsDelivr CDN at runtime for world GeoJSON | Resolved (#35) — lazy-loaded with cache and error handling; offline renders error instead of empty chart |
 
 ---
 
