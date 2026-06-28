@@ -7,7 +7,7 @@ export function dispatchSlotChange(
   slotName: string,
 ): void {
   container.dispatchEvent(
-    new CustomEvent("casehub-slot-change", {
+    new CustomEvent("pages-slot-change", {
       bubbles: true,
       composed: true,
       detail: {

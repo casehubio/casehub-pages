@@ -27,7 +27,7 @@ describe("form input activation", () => {
     const el = await waitForElement(target, selector);
     const vizTag = el.dataset.componentType;
     if (!vizTag) throw new Error(`No componentType on ${selector}`);
-    const vizEl = el.querySelector<HTMLElement & { dataSet?: unknown }>(`casehub-${vizTag}`);
+    const vizEl = el.querySelector<HTMLElement & { dataSet?: unknown }>(`pages-${vizTag}`);
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {
@@ -78,8 +78,8 @@ describe("form input activation", () => {
     const inputContainer = target.querySelector("[data-component-type='text-input']");
     expect(inputContainer).not.toBeNull();
 
-    // The casehub-text-input custom element should be inside
-    const vizEl = inputContainer!.querySelector("casehub-text-input")!;
+    // The pages-text-input custom element should be inside
+    const vizEl = inputContainer!.querySelector("pages-text-input")!;
     expect(vizEl).not.toBeNull();
     expect(vizEl.editable).toBe(true);
 
@@ -111,7 +111,7 @@ describe("form input activation", () => {
     document.body.appendChild(target);
     const site = await loadSite(target, root);
 
-    const vizEl = target.querySelector("casehub-text-input");
+    const vizEl = target.querySelector("pages-text-input");
     expect(vizEl).not.toBeNull();
     expect(vizEl!.error).toBe("Form input requires page dataScope");
 
@@ -154,7 +154,7 @@ describe("form input activation", () => {
     document.body.appendChild(target);
     const site = await loadSite(target, root);
 
-    const vizEl = target.querySelector("casehub-text-input");
+    const vizEl = target.querySelector("pages-text-input");
     expect(vizEl).not.toBeNull();
     expect(vizEl!.editable).toBe(false);
 
@@ -236,7 +236,7 @@ describe("form input activation", () => {
     await waitForData(target, "[data-component-id='dept-sel']");
 
     // Wait for text-input data
-    const textViz = target.querySelector("casehub-text-input")!;
+    const textViz = target.querySelector("pages-text-input")!;
     expect(textViz).not.toBeNull();
     const startTime = Date.now();
     while (!textViz.dataSet && Date.now() - startTime < 500) {
@@ -247,7 +247,7 @@ describe("form input activation", () => {
     expect(textViz.dataSet!.rows.length).toBe(3);
 
     // Select "Sales" (row index 0 in the grouped output)
-    const selectorViz = target.querySelector("casehub-selector")!;
+    const selectorViz = target.querySelector("pages-selector")!;
     const selectEl = selectorViz.shadowRoot.querySelector("select")!;
     selectEl.value = "0";
     selectEl.dispatchEvent(new Event("change"));

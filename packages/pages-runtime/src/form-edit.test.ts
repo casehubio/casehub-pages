@@ -4,8 +4,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehubio/pages-viz";
-import type { CasehubTable } from "@casehubio/pages-viz";
-import type { CasehubTextInput } from "@casehubio/pages-viz";
+import type { PagesTable } from "@casehubio/pages-viz";
+import type { PagesTextInput } from "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
 
@@ -71,12 +71,12 @@ describe("form editing + local save (real DOM)", () => {
   });
 
   async function setup(): Promise<{
-    tableEl: CasehubTable;
-    formInputs: CasehubTextInput[];
+    tableEl: PagesTable;
+    formInputs: PagesTextInput[];
   }> {
     site = await loadSite(target, YAML);
 
-    const tableEl = target.querySelector("casehub-table");
+    const tableEl = target.querySelector("pages-table");
     expect(tableEl).not.toBeNull();
 
     const start = Date.now();
@@ -86,7 +86,7 @@ describe("form editing + local save (real DOM)", () => {
     expect(tableEl!.dataSet).toBeTruthy();
 
     const formInputs = Array.from(
-      target.querySelectorAll("casehub-text-input"),
+      target.querySelectorAll("pages-text-input"),
     );
     expect(formInputs.length).toBe(2);
 
@@ -98,24 +98,24 @@ describe("form editing + local save (real DOM)", () => {
     return { tableEl: tableEl!, formInputs };
   }
 
-  function getTableRows(tableEl: CasehubTable): HTMLTableRowElement[] {
+  function getTableRows(tableEl: PagesTable): HTMLTableRowElement[] {
     return Array.from(tableEl.shadowRoot.querySelectorAll("tbody tr"));
   }
 
-  function clickRow(tableEl: CasehubTable, rowIdx: number): void {
+  function clickRow(tableEl: PagesTable, rowIdx: number): void {
     const rows = getTableRows(tableEl);
     expect(rows.length).toBeGreaterThan(rowIdx);
     const td = rows[rowIdx]!.querySelector("td")!;
     td.click();
   }
 
-  function getTableCellText(tableEl: CasehubTable, rowIdx: number, colIdx: number): string {
+  function getTableCellText(tableEl: PagesTable, rowIdx: number, colIdx: number): string {
     const rows = getTableRows(tableEl);
     const cells = rows[rowIdx]!.querySelectorAll("td");
     return cells[colIdx]!.textContent;
   }
 
-  function getFormValue(input: CasehubTextInput, field: string): string | undefined {
+  function getFormValue(input: PagesTextInput, field: string): string | undefined {
     if (!input.dataSet?.rows.length) return undefined;
     try {
       const cell = input.dataSet.rows[0]!.cell(field as import("@casehubio/pages-data/dist/dataset/types.js").ColumnId);
@@ -127,7 +127,7 @@ describe("form editing + local save (real DOM)", () => {
 
   function emitFieldChange(input: HTMLElement, field: string, value: string, committed: boolean): void {
     input.dispatchEvent(
-      new CustomEvent("casehub-field-change", {
+      new CustomEvent("pages-field-change", {
         bubbles: true,
         composed: true,
         detail: { field, value, committed },
@@ -327,7 +327,7 @@ describe("form editing + local save (real DOM)", () => {
     expect(getTableCellText(tableEl, 2, 1)).toBe("Carol");
   });
 
-  it("10. save failure dispatches casehub-save-error and shows error banner", async () => {
+  it("10. save failure dispatches pages-save-error and shows error banner", async () => {
     const FAIL_YAML = `
 datasets:
   - uuid: contacts
@@ -377,7 +377,7 @@ pages:
     });
 
     const formInputs = Array.from(
-      target.querySelectorAll("casehub-text-input"),
+      target.querySelectorAll("pages-text-input"),
     );
     expect(formInputs.length).toBe(1);
 
@@ -387,19 +387,19 @@ pages:
     }
 
     const errors: string[] = [];
-    target.addEventListener("casehub-save-error", (e: Event) => {
+    target.addEventListener("pages-save-error", (e: Event) => {
       errors.push((e as CustomEvent).detail.error);
     });
 
     // Select the row and edit
     const rows = Array.from(
-      target.querySelector("casehub-table")!.shadowRoot.querySelectorAll("tbody tr"),
+      target.querySelector("pages-table")!.shadowRoot.querySelectorAll("tbody tr"),
     );
     rows[0]!.querySelector("td")!.click();
     await new Promise((r) => setTimeout(r, 100));
 
     formInputs[0]!.dispatchEvent(
-      new CustomEvent("casehub-field-change", {
+      new CustomEvent("pages-field-change", {
         bubbles: true,
         composed: true,
         detail: { field: "name", value: "Updated", committed: true },
@@ -412,7 +412,7 @@ pages:
     expect(errors).toHaveLength(1);
     expect(errors[0]).toBe("Server error: 500");
 
-    const banner = target.querySelector("[data-casehub-error]");
+    const banner = target.querySelector("[data-pages-error]");
     expect(banner).not.toBeNull();
     expect(banner!.textContent).toContain("Server error: 500");
   });
@@ -435,7 +435,7 @@ pages:
     expect(prevented).toBe(true);
   });
 
-  it("12. casehub-record-navigate next moves to next row", async () => {
+  it("12. pages-record-navigate next moves to next row", async () => {
     const { tableEl, formInputs } = await setup();
     const nameInput = formInputs[0]!;
 
@@ -446,7 +446,7 @@ pages:
 
     // Navigate next
     target.dispatchEvent(
-      new CustomEvent("casehub-record-navigate", {
+      new CustomEvent("pages-record-navigate", {
         bubbles: true,
         detail: { direction: "next" },
       }),
@@ -455,7 +455,7 @@ pages:
     expect(getFormValue(nameInput, "name")).toBe("Bob");
   });
 
-  it("13. casehub-record-navigate prev moves to previous row", async () => {
+  it("13. pages-record-navigate prev moves to previous row", async () => {
     const { tableEl, formInputs } = await setup();
     const nameInput = formInputs[0]!;
 
@@ -466,7 +466,7 @@ pages:
 
     // Navigate prev
     target.dispatchEvent(
-      new CustomEvent("casehub-record-navigate", {
+      new CustomEvent("pages-record-navigate", {
         bubbles: true,
         detail: { direction: "prev" },
       }),

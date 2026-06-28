@@ -1,8 +1,8 @@
 import type { TypedRow } from "@casehubio/pages-data/dist/dataset/types.js";
 
-export type CasehubFilterDetail = CasehubFilterApply | CasehubFilterReset;
+export type PagesFilterDetail = PagesFilterApply | PagesFilterReset;
 
-export interface CasehubFilterApply {
+export interface PagesFilterApply {
   readonly columnId: string;
   readonly value: string;
   readonly row: TypedRow;
@@ -10,7 +10,7 @@ export interface CasehubFilterApply {
   readonly group: string | undefined;
 }
 
-export interface CasehubFilterReset {
+export interface PagesFilterReset {
   readonly columnId: string;
   readonly reset: true;
   readonly group: string | undefined;

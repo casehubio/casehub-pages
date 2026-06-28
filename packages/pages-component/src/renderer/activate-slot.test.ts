@@ -46,7 +46,7 @@ describe("activateSlot — slot activation", () => {
     expect(result).toBe(false);
   });
 
-  it("dispatches casehub-slot-change with correct detail", () => {
+  it("dispatches pages-slot-change with correct detail", () => {
     const target = document.createElement("div");
     const component: Component = {
       id: "test-component",
@@ -60,7 +60,7 @@ describe("activateSlot — slot activation", () => {
     const container = target.firstElementChild as HTMLElement;
 
     const handler = vi.fn();
-    container.addEventListener("casehub-slot-change", handler);
+    container.addEventListener("pages-slot-change", handler);
 
     activateSlot(container, "B");
 
@@ -131,7 +131,7 @@ describe("activateSlot — slot activation", () => {
     const container = target.firstElementChild as HTMLElement;
 
     const handler = vi.fn();
-    container.addEventListener("casehub-slot-change", handler);
+    container.addEventListener("pages-slot-change", handler);
 
     const result = activateSlot(container, "NonExistent");
 

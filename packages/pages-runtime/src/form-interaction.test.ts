@@ -5,8 +5,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehubio/pages-viz";
-import type { CasehubTable } from "@casehubio/pages-viz";
-import type { CasehubTextInput } from "@casehubio/pages-viz";
+import type { PagesTable } from "@casehubio/pages-viz";
+import type { PagesTextInput } from "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
 
@@ -75,12 +75,12 @@ describe("form ↔ table interaction (real DOM)", () => {
   });
 
   async function setup(): Promise<{
-    tableEl: CasehubTable;
-    formInputs: CasehubTextInput[];
+    tableEl: PagesTable;
+    formInputs: PagesTextInput[];
   }> {
     site = await loadSite(target, YAML);
 
-    const tableEl = target.querySelector("casehub-table");
+    const tableEl = target.querySelector("pages-table");
     expect(tableEl).not.toBeNull();
 
     // Wait for table data
@@ -92,7 +92,7 @@ describe("form ↔ table interaction (real DOM)", () => {
 
     // Wait for form inputs
     const formInputs = Array.from(
-      target.querySelectorAll("casehub-text-input"),
+      target.querySelectorAll("pages-text-input"),
     );
     expect(formInputs.length).toBeGreaterThan(0);
 
@@ -104,11 +104,11 @@ describe("form ↔ table interaction (real DOM)", () => {
     return { tableEl: tableEl!, formInputs };
   }
 
-  function getTableRows(tableEl: CasehubTable): HTMLTableRowElement[] {
+  function getTableRows(tableEl: PagesTable): HTMLTableRowElement[] {
     return Array.from(tableEl.shadowRoot.querySelectorAll("tbody tr"));
   }
 
-  function getFilterInput(tableEl: CasehubTable): HTMLInputElement | null {
+  function getFilterInput(tableEl: PagesTable): HTMLInputElement | null {
     return tableEl.shadowRoot.querySelector(".filter-box input");
   }
 
@@ -119,14 +119,14 @@ describe("form ↔ table interaction (real DOM)", () => {
     cell!.click();
   }
 
-  function typeInFilter(tableEl: CasehubTable, text: string): void {
+  function typeInFilter(tableEl: PagesTable, text: string): void {
     const input = getFilterInput(tableEl);
     expect(input).not.toBeNull();
     input!.value = text;
     input!.dispatchEvent(new Event("input"));
   }
 
-  function getFormValue(input: CasehubTextInput, field: string): string | undefined {
+  function getFormValue(input: PagesTextInput, field: string): string | undefined {
     if (!input.dataSet?.rows.length) return undefined;
     try {
       const cell = input.dataSet.rows[0]!.cell(field as import("@casehubio/pages-data/dist/dataset/types.js").ColumnId);
@@ -209,7 +209,7 @@ describe("form ↔ table interaction (real DOM)", () => {
 
     // Step E: Spy on filter events BEFORE clicking
     const filterEvents: { columnId: unknown; value: unknown; row: unknown; rowName: string }[] = [];
-    tableEl.addEventListener("casehub-filter", ((e: Event) => {
+    tableEl.addEventListener("pages-filter", ((e: Event) => {
       const d = (e as CustomEvent).detail;
       filterEvents.push({
         columnId: d.columnId,

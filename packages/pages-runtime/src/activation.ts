@@ -4,7 +4,7 @@ import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ColumnId, DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
-import type { CasehubElement } from "@casehubio/pages-viz/dist/base/CasehubElement.js";
+import type { PagesElement } from "@casehubio/pages-viz/dist/base/PagesElement.js";
 import type { VizComponentProps } from "@casehubio/pages-viz/dist/base/types.js";
 import type { PageProps } from "@casehubio/pages-ui/dist/model/page-types.js";
 import { renderComponent } from "@casehubio/pages-component/dist/renderer/render.js";
@@ -84,8 +84,8 @@ export function createActivationCallback(
     }
 
     if (DATA_COMPONENT_TYPES.has(component.type)) {
-      const tagName = `casehub-${component.type}`;
-      const vizEl = document.createElement(tagName) as CasehubElement<VizComponentProps>;
+      const tagName = `pages-${component.type}`;
+      const vizEl = document.createElement(tagName) as PagesElement<VizComponentProps>;
 
       const isFormInput = FORM_INPUT_TYPES.has(component.type);
 
@@ -224,7 +224,7 @@ function integrateAndRender(
 }
 
 function resolveInlineDataSet(
-  vizEl: CasehubElement<VizComponentProps>,
+  vizEl: PagesElement<VizComponentProps>,
   inlineData: unknown,
 ): void {
   try {

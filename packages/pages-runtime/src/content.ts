@@ -19,7 +19,7 @@ export function renderHtml(el: HTMLElement, props: Record<string, unknown>): voi
 export function renderMarkdown(el: HTMLElement, props: Record<string, unknown>): void {
   const content = typeof props.content === "string" ? props.content : "";
   const wrapper = document.createElement("div");
-  wrapper.classList.add("casehub-markdown");
+  wrapper.classList.add("pages-markdown");
   wrapper.innerHTML = marked.parse(content) as string;
   el.appendChild(wrapper);
 }

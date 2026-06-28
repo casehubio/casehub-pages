@@ -289,9 +289,9 @@ pages:
     components:
       - html: >-
           <div style="display:flex;gap:8px;padding:0 0 12px">
-            <button onclick="this.dispatchEvent(new CustomEvent('casehub-record-navigate',{bubbles:true,composed:true,detail:{direction:'prev'}}))"
+            <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'prev'}}))"
               style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">← Previous</button>
-            <button onclick="this.dispatchEvent(new CustomEvent('casehub-record-navigate',{bubbles:true,composed:true,detail:{direction:'next'}}))"
+            <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'next'}}))"
               style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">Next →</button>
           </div>
       - text-input:

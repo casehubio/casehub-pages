@@ -4,7 +4,7 @@
 
 **Goal:** Add native form input components, data-bound pages with save system, hierarchical filter propagation for master-detail, and separate-file page desugaring.
 
-**Architecture:** Form inputs are Web Components extending `CasehubElement`, participating in the standard `casehub-data-request` / `pushData` data pipeline with implicit lookups derived from page-level `dataScope`. Save is a page-level concern managed by `EditState` in the runtime with pluggable adapters resolved by name. Hierarchical filter propagation lets child dataScope pages inherit ancestor filters (same-dataset) or use `$ref` bindings (cross-dataset joins).
+**Architecture:** Form inputs are Web Components extending `PagesElement`, participating in the standard `pages-data-request` / `pushData` data pipeline with implicit lookups derived from page-level `dataScope`. Save is a page-level concern managed by `EditState` in the runtime with pluggable adapters resolved by name. Hierarchical filter propagation lets child dataScope pages inherit ancestor filters (same-dataset) or use `$ref` bindings (cross-dataset joins).
 
 **Tech Stack:** TypeScript 4.6, Vitest 3.0 (jsdom), Web Components (Shadow DOM), `@casehubio/ui` model + `@casehubio/viz` rendering + `@casehubio/runtime` orchestration.
 
@@ -1053,34 +1053,34 @@ git commit -m "feat: \$ref binding resolution for cross-dataset foreign-key join
 ### Task 6: Form Input Web Components
 
 **Files:**
-- Create: `packages/casehub-viz/src/form-inputs/CasehubFormInput.ts` (abstract base)
-- Create: `packages/casehub-viz/src/form-inputs/CasehubTextInput.ts`
-- Create: `packages/casehub-viz/src/form-inputs/CasehubNumberInput.ts`
-- Create: `packages/casehub-viz/src/form-inputs/CasehubCheckbox.ts`
-- Create: `packages/casehub-viz/src/form-inputs/CasehubTextarea.ts`
-- Create: `packages/casehub-viz/src/form-inputs/CasehubDatePicker.ts`
-- Create: `packages/casehub-viz/src/form-inputs/CasehubDropdown.ts`
+- Create: `packages/casehub-viz/src/form-inputs/PagesFormInput.ts` (abstract base)
+- Create: `packages/casehub-viz/src/form-inputs/PagesTextInput.ts`
+- Create: `packages/casehub-viz/src/form-inputs/PagesNumberInput.ts`
+- Create: `packages/casehub-viz/src/form-inputs/PagesCheckbox.ts`
+- Create: `packages/casehub-viz/src/form-inputs/PagesTextarea.ts`
+- Create: `packages/casehub-viz/src/form-inputs/PagesDatePicker.ts`
+- Create: `packages/casehub-viz/src/form-inputs/PagesDropdown.ts`
 - Create: `packages/casehub-viz/src/form-inputs/form-inputs.test.ts`
 
 **Interfaces:**
-- Consumes: `CasehubElement` base class from `@casehubio/viz`; `TextInputProps`, `NumberInputProps`, etc. from Task 1; `CasehubFieldChangeDetail` event detail
-- Produces: `<casehub-text-input>`, `<casehub-number-input>`, `<casehub-dropdown>`, `<casehub-checkbox>`, `<casehub-date-picker>`, `<casehub-textarea>` custom elements
+- Consumes: `PagesElement` base class from `@casehubio/viz`; `TextInputProps`, `NumberInputProps`, etc. from Task 1; `PagesFieldChangeDetail` event detail
+- Produces: `<pages-text-input>`, `<pages-number-input>`, `<pages-dropdown>`, `<pages-checkbox>`, `<pages-date-picker>`, `<pages-textarea>` custom elements
 
-- [ ] **Step 1: Write the abstract CasehubFormInput base**
+- [ ] **Step 1: Write the abstract PagesFormInput base**
 
 ```typescript
-// packages/casehub-viz/src/form-inputs/CasehubFormInput.ts
-import { CasehubElement } from "../base/CasehubElement.js";
+// packages/casehub-viz/src/form-inputs/PagesFormInput.ts
+import { PagesElement } from "../base/PagesElement.js";
 import type { FormInputCommon } from "@casehubio/ui";
 import type { TypedDataSet, ColumnId } from "@casehubio/data/dist/dataset/types.js";
 
-export interface CasehubFieldChangeDetail {
+export interface PagesFieldChangeDetail {
   readonly field: string;
   readonly value: unknown;
   readonly committed: boolean;
 }
 
-export abstract class CasehubFormInput<P extends FormInputCommon> extends CasehubElement<P & { lookup?: any }> {
+export abstract class PagesFormInput<P extends FormInputCommon> extends PagesElement<P & { lookup?: any }> {
   protected _editable = false;
 
   set editable(value: boolean) {
@@ -1105,7 +1105,7 @@ export abstract class CasehubFormInput<P extends FormInputCommon> extends Casehu
     const field = this.props?.field;
     if (!field) return;
     this.dispatchEvent(
-      new CustomEvent<CasehubFieldChangeDetail>("casehub-field-change", {
+      new CustomEvent<PagesFieldChangeDetail>("pages-field-change", {
         bubbles: true,
         composed: true,
         detail: { field, value, committed },
@@ -1115,18 +1115,18 @@ export abstract class CasehubFormInput<P extends FormInputCommon> extends Casehu
 }
 ```
 
-- [ ] **Step 2: Write CasehubTextInput**
+- [ ] **Step 2: Write PagesTextInput**
 
 ```typescript
-// packages/casehub-viz/src/form-inputs/CasehubTextInput.ts
-import { CasehubFormInput } from "./CasehubFormInput.js";
+// packages/casehub-viz/src/form-inputs/PagesTextInput.ts
+import { PagesFormInput } from "./PagesFormInput.js";
 import type { TextInputProps } from "@casehubio/ui";
 
-export class CasehubTextInput extends CasehubFormInput<TextInputProps> {
+export class PagesTextInput extends PagesFormInput<TextInputProps> {
   render(container: HTMLElement, props: TextInputProps & { lookup?: any }, dataset: any): void {
     container.innerHTML = "";
     const wrapper = document.createElement("div");
-    wrapper.className = "casehub-form-field";
+    wrapper.className = "pages-form-field";
 
     if (props.label) {
       const label = document.createElement("label");
@@ -1155,18 +1155,18 @@ export class CasehubTextInput extends CasehubFormInput<TextInputProps> {
   }
 }
 
-customElements.define("casehub-text-input", CasehubTextInput);
+customElements.define("pages-text-input", PagesTextInput);
 ```
 
 - [ ] **Step 3: Write remaining five Web Components**
 
-Implement `CasehubNumberInput`, `CasehubCheckbox`, `CasehubTextarea`, `CasehubDatePicker`, and `CasehubDropdown` following the same pattern as `CasehubTextInput`. Key differences:
+Implement `PagesNumberInput`, `PagesCheckbox`, `PagesTextarea`, `PagesDatePicker`, and `PagesDropdown` following the same pattern as `PagesTextInput`. Key differences:
 
-- **CasehubNumberInput:** `input.type = "number"`, coerce via `parseFloat`, set `min`/`max`/`step` attributes
-- **CasehubCheckbox:** `input.type = "checkbox"`, read coercion: `"true"` (case-insensitive) → checked, write: `"true"` / `"false"`
-- **CasehubTextarea:** Use `<textarea>` element, set `rows` attribute
-- **CasehubDatePicker:** `input.type = "date"`, ISO 8601 coercion
-- **CasehubDropdown:** `<select>` element with `<option>` entries from `props.options.values` (fixed) or stored resolved options (dataset); dual data dependency handled by `optionsData` property set at activation time
+- **PagesNumberInput:** `input.type = "number"`, coerce via `parseFloat`, set `min`/`max`/`step` attributes
+- **PagesCheckbox:** `input.type = "checkbox"`, read coercion: `"true"` (case-insensitive) → checked, write: `"true"` / `"false"`
+- **PagesTextarea:** Use `<textarea>` element, set `rows` attribute
+- **PagesDatePicker:** `input.type = "date"`, ISO 8601 coercion
+- **PagesDropdown:** `<select>` element with `<option>` entries from `props.options.values` (fixed) or stored resolved options (dataset); dual data dependency handled by `optionsData` property set at activation time
 
 Each file ends with `customElements.define("casehub-<type>", CasehubXyz)`.
 
@@ -1175,17 +1175,17 @@ Each file ends with `customElements.define("casehub-<type>", CasehubXyz)`.
 ```typescript
 // packages/casehub-viz/src/form-inputs/form-inputs.test.ts
 import { describe, it, expect, beforeEach } from "vitest";
-import "./CasehubTextInput.js";
-import "./CasehubNumberInput.js";
-import "./CasehubCheckbox.js";
-import "./CasehubTextarea.js";
-import "./CasehubDatePicker.js";
-import "./CasehubDropdown.js";
-import type { CasehubFieldChangeDetail } from "./CasehubFormInput.js";
+import "./PagesTextInput.js";
+import "./PagesNumberInput.js";
+import "./PagesCheckbox.js";
+import "./PagesTextarea.js";
+import "./PagesDatePicker.js";
+import "./PagesDropdown.js";
+import type { PagesFieldChangeDetail } from "./PagesFormInput.js";
 
-describe("CasehubTextInput", () => {
+describe("PagesTextInput", () => {
   it("renders input with field value from dataset", () => {
-    const el = document.createElement("casehub-text-input") as any;
+    const el = document.createElement("pages-text-input") as any;
     el.props = { field: "name", label: "Name" };
     el.editable = true;
     document.body.appendChild(el);
@@ -1204,8 +1204,8 @@ describe("CasehubTextInput", () => {
     document.body.removeChild(el);
   });
 
-  it("emits casehub-field-change on input when editable", () => {
-    const el = document.createElement("casehub-text-input") as any;
+  it("emits pages-field-change on input when editable", () => {
+    const el = document.createElement("pages-text-input") as any;
     el.props = { field: "name" };
     el.editable = true;
     document.body.appendChild(el);
@@ -1219,8 +1219,8 @@ describe("CasehubTextInput", () => {
       }],
     };
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: CustomEvent) => events.push(e.detail));
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: CustomEvent) => events.push(e.detail));
 
     const input = el.shadowRoot!.querySelector("input")!;
     input.value = "Bob";
@@ -1238,7 +1238,7 @@ describe("CasehubTextInput", () => {
   });
 
   it("does not emit events when not editable", () => {
-    const el = document.createElement("casehub-text-input") as any;
+    const el = document.createElement("pages-text-input") as any;
     el.props = { field: "name" };
     el.editable = false;
     document.body.appendChild(el);
@@ -1253,7 +1253,7 @@ describe("CasehubTextInput", () => {
     };
 
     const events: any[] = [];
-    el.addEventListener("casehub-field-change", (e: any) => events.push(e));
+    el.addEventListener("pages-field-change", (e: any) => events.push(e));
 
     const input = el.shadowRoot!.querySelector("input")!;
     input.value = "test";
@@ -1264,9 +1264,9 @@ describe("CasehubTextInput", () => {
   });
 });
 
-describe("CasehubCheckbox", () => {
+describe("PagesCheckbox", () => {
   it("coerces 'true' LABEL to checked", () => {
-    const el = document.createElement("casehub-checkbox") as any;
+    const el = document.createElement("pages-checkbox") as any;
     el.props = { field: "active" };
     el.editable = true;
     document.body.appendChild(el);
@@ -1296,7 +1296,7 @@ Expected: All form input tests pass.
 
 ```
 git add packages/casehub-viz/src/form-inputs/
-git commit -m "feat: six form input Web Components extending CasehubElement  Refs #34"
+git commit -m "feat: six form input Web Components extending PagesElement  Refs #34"
 ```
 
 ---
@@ -1319,7 +1319,7 @@ git commit -m "feat: six form input Web Components extending CasehubElement  Ref
 ```typescript
 // packages/casehub-runtime/src/form-activation.test.ts
 import { describe, it, expect } from "vitest";
-import "../../../casehub-viz/src/form-inputs/CasehubTextInput.js";
+import "../../../casehub-viz/src/form-inputs/PagesTextInput.js";
 import { loadSite } from "./site.js";
 import { page, textInput } from "@casehubio/ui";
 import { inlineDataset } from "@casehubio/ui";
@@ -1347,7 +1347,7 @@ describe("form input activation", () => {
     );
 
     const site = await loadSite(target, root);
-    const formInput = target.querySelector("casehub-text-input");
+    const formInput = target.querySelector("pages-text-input");
     expect(formInput).not.toBeNull();
     site.dispose();
   });
@@ -1471,10 +1471,10 @@ git commit -m "feat: form input activation with implicit lookup and hierarchical
 **Files:**
 - Create: `packages/casehub-runtime/src/edit-state.ts`
 - Create: `packages/casehub-runtime/src/edit-state.test.ts`
-- Modify: `packages/casehub-runtime/src/site.ts` (casehub-field-change handler, save triggers)
+- Modify: `packages/casehub-runtime/src/site.ts` (pages-field-change handler, save triggers)
 
 **Interfaces:**
-- Consumes: `CasehubFieldChangeDetail` from Task 6; `SaveConfig` from Task 1; `DataScopeRegistry` from Task 4; `ComponentRegistry` from existing
+- Consumes: `PagesFieldChangeDetail` from Task 6; `SaveConfig` from Task 1; `DataScopeRegistry` from Task 4; `ComponentRegistry` from existing
 - Produces: `EditState` type; `createEditState()`, `updateEditState()`, `clearEditState()`, `getEditState()`; `SaveTriggerController` managing timers and flush logic
 
 - [ ] **Step 1: Write EditState module with tests**
@@ -1553,12 +1553,12 @@ describe("EditState", () => {
 });
 ```
 
-- [ ] **Step 2: Wire casehub-field-change handler into site.ts**
+- [ ] **Step 2: Wire pages-field-change handler into site.ts**
 
 Add event listener in `loadSite()`:
 
 ```typescript
-target.addEventListener("casehub-field-change", ((e: Event) => {
+target.addEventListener("pages-field-change", ((e: Event) => {
   const detail = (e as CustomEvent).detail;
   if (!detail) return;
   const componentId = findComponentId(e);
@@ -1604,7 +1604,7 @@ Expected: All tests pass.
 git add packages/casehub-runtime/src/edit-state.ts \
        packages/casehub-runtime/src/edit-state.test.ts \
        packages/casehub-runtime/src/site.ts
-git commit -m "feat: EditState, casehub-field-change handler, save triggers, record invalidation  Refs #34"
+git commit -m "feat: EditState, pages-field-change handler, save triggers, record invalidation  Refs #34"
 ```
 
 ---

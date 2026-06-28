@@ -3,7 +3,7 @@ import type { Component } from "@casehubio/pages-component/dist/model/types.js";
 import type { DataSetId, ColumnId, DataSet, TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 import "@casehubio/pages-viz";
-import type { CasehubTable } from "@casehubio/pages-viz";
+import type { PagesTable } from "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 
 function simpleSite(): Component {
@@ -209,9 +209,9 @@ pages:
     const target = document.createElement("div");
     document.body.appendChild(target);
     const site = await loadSite(target, yaml);
-    expect(target.dataset.casehubTheme).toBe("dark");
-    expect(target.style.getPropertyValue("--casehub-bg")).toBe("#1a1a2e");
-    expect(target.style.getPropertyValue("--casehub-text")).toBe("#e0e0e0");
+    expect(target.dataset.pagesTheme).toBe("dark");
+    expect(target.style.getPropertyValue("--pages-bg")).toBe("#1a1a2e");
+    expect(target.style.getPropertyValue("--pages-text")).toBe("#e0e0e0");
     site.dispose();
     document.body.removeChild(target);
   });
@@ -233,12 +233,12 @@ pages:
     document.body.appendChild(target);
 
     const darkSite = await loadSite(target, darkYaml);
-    expect(target.dataset.casehubTheme).toBe("dark");
+    expect(target.dataset.pagesTheme).toBe("dark");
     darkSite.dispose();
 
     const lightSite = await loadSite(target, lightYaml);
-    expect(target.dataset.casehubTheme).toBe("light");
-    expect(target.style.getPropertyValue("--casehub-bg")).toBe("#fff");
+    expect(target.dataset.pagesTheme).toBe("light");
+    expect(target.style.getPropertyValue("--pages-bg")).toBe("#fff");
     lightSite.dispose();
     document.body.removeChild(target);
   });
@@ -246,7 +246,7 @@ pages:
 
 describe("loadSite — lazy rendering and registry eviction", () => {
   it("registry eviction loop executes without errors on slot changes", async () => {
-    // Test: verify the casehub-slot-change handler with the eviction loop
+    // Test: verify the pages-slot-change handler with the eviction loop
     // executes successfully during navigation
     const root: Component = {
       type: "page",
@@ -331,7 +331,7 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     const componentType = el.dataset.componentType;
     if (!componentType) throw new Error(`No componentType on ${selector}`);
     const vizEl = el.querySelector<HTMLElement & { dataSet?: unknown }>(
-      `casehub-${componentType}`,
+      `pages-${componentType}`,
     );
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
@@ -426,7 +426,7 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     await waitForData(target, "[data-component-id='chart-1']");
 
     // Find the selector's dropdown in shadow DOM
-    const selectorViz = selectorContainer.querySelector("casehub-selector");
+    const selectorViz = selectorContainer.querySelector("pages-selector");
     expect(selectorViz).toBeTruthy();
 
     const selectEl = selectorViz!.shadowRoot.querySelector("select");
@@ -444,8 +444,8 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     await new Promise((r) => setTimeout(r, 50));
 
     // The bar chart should now show filtered data
-    const chartViz = target.querySelector<CasehubTable>(
-      "[data-component-id='chart-1'] casehub-table",
+    const chartViz = target.querySelector<PagesTable>(
+      "[data-component-id='chart-1'] pages-table",
     );
 
     expect(chartViz!.dataSet).toBeTruthy();
@@ -546,13 +546,13 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     await waitForData(target, "[data-component-id='filter-tbl']");
 
     // Table should have 3 rows (X, Y, Z) before filtering
-    const tblViz = target.querySelector<CasehubTable>(
-      "[data-component-id='filter-tbl'] casehub-table",
+    const tblViz = target.querySelector<PagesTable>(
+      "[data-component-id='filter-tbl'] pages-table",
     )!;
     expect(tblViz.dataSet!.rows.length).toBe(3);
 
     // Select "A" in the selector dropdown
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const select = selViz.shadowRoot.querySelector("select")!;
     select.value = "0";
     select.dispatchEvent(new Event("change"));
@@ -597,7 +597,7 @@ navTree:
     document.body.appendChild(target);
     const site = await loadSite(target, yaml);
 
-    const sidebar = target.querySelector(".casehub-sidebar");
+    const sidebar = target.querySelector(".pages-sidebar");
     expect(sidebar).not.toBeNull();
     const buttons = sidebar!.querySelectorAll("button[data-slot]");
     expect(buttons).toHaveLength(2);
@@ -639,7 +639,7 @@ navTree:
     document.body.appendChild(target);
     const site = await loadSite(target, yaml);
 
-    const treeNav = target.querySelector(".casehub-tree-nav");
+    const treeNav = target.querySelector(".pages-tree-nav");
     expect(treeNav).not.toBeNull();
 
     const groupLabels = treeNav!.querySelectorAll(".tree-group-label");
@@ -693,7 +693,7 @@ describe("view state persistence", () => {
     const tableEl = target.querySelector("[data-component-id='t1']") as HTMLElement;
     expect(tableEl).toBeTruthy();
 
-    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+    tableEl.dispatchEvent(new CustomEvent("pages-sort", {
       bubbles: true,
       composed: true,
       detail: { columnId: "name", order: "ASCENDING" },
@@ -737,7 +737,7 @@ describe("view state persistence", () => {
     const tableEl = target.querySelector("[data-component-id='t1']") as HTMLElement;
     expect(tableEl).toBeTruthy();
 
-    tableEl.dispatchEvent(new CustomEvent("casehub-page", {
+    tableEl.dispatchEvent(new CustomEvent("pages-page", {
       bubbles: true,
       composed: true,
       detail: { offset: 4, count: 2 },
@@ -780,7 +780,7 @@ describe("view state persistence", () => {
     expect(tableEl).toBeTruthy();
 
     // Set page to 1
-    tableEl.dispatchEvent(new CustomEvent("casehub-page", {
+    tableEl.dispatchEvent(new CustomEvent("pages-page", {
       bubbles: true,
       composed: true,
       detail: { offset: 2, count: 2 },
@@ -788,7 +788,7 @@ describe("view state persistence", () => {
     expect(location.hash).toContain("page=t1:1");
 
     // Sort should reset page to 0 (page param omitted when page is 0)
-    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+    tableEl.dispatchEvent(new CustomEvent("pages-sort", {
       bubbles: true,
       composed: true,
       detail: { columnId: "a", order: "DESCENDING" },
@@ -829,7 +829,7 @@ describe("view state persistence", () => {
     const tableEl = target.querySelector("[data-component-id='t1']") as HTMLElement;
     expect(tableEl).toBeTruthy();
 
-    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+    tableEl.dispatchEvent(new CustomEvent("pages-sort", {
       bubbles: true,
       composed: true,
       detail: { columnId: "a", order: "ASCENDING" },
@@ -871,7 +871,7 @@ describe("view state persistence", () => {
     const tableEl = target.querySelector("[data-component-type='table']") as HTMLElement;
     expect(tableEl).toBeTruthy();
 
-    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+    tableEl.dispatchEvent(new CustomEvent("pages-sort", {
       bubbles: true,
       composed: true,
       detail: { columnId: "a", order: "ASCENDING" },
@@ -897,7 +897,7 @@ function waitForViz(
   const componentType = el.dataset.componentType;
   if (!componentType) return Promise.reject(new Error(`No componentType on ${selector}`));
   const vizEl = el.querySelector<HTMLElement & { dataSet?: unknown }>(
-    `casehub-${componentType}`,
+    `pages-${componentType}`,
   );
   if (!vizEl) return Promise.reject(new Error(`Viz element not found in ${selector}`));
   const v = vizEl;
@@ -912,16 +912,16 @@ function waitForViz(
   });
 }
 
-function getTableViz(target: HTMLElement, componentId: string): CasehubTable {
-  const el = target.querySelector<HTMLElement>(`[data-component-id='${componentId}'] casehub-table`);
-  if (!el) throw new Error(`casehub-table not found for ${componentId}`);
-  return el as CasehubTable;
+function getTableViz(target: HTMLElement, componentId: string): PagesTable {
+  const el = target.querySelector<HTMLElement>(`[data-component-id='${componentId}'] pages-table`);
+  if (!el) throw new Error(`pages-table not found for ${componentId}`);
+  return el as PagesTable;
 }
 
 function dispatchSort(target: HTMLElement, componentId: string, columnId: string, order: "ASCENDING" | "DESCENDING"): void {
   const el = target.querySelector<HTMLElement>(`[data-component-id='${componentId}']`);
   if (!el) throw new Error(`Component not found: ${componentId}`);
-  el.dispatchEvent(new CustomEvent("casehub-sort", {
+  el.dispatchEvent(new CustomEvent("pages-sort", {
     bubbles: true, composed: true,
     detail: { columnId, order },
   }));
@@ -930,7 +930,7 @@ function dispatchSort(target: HTMLElement, componentId: string, columnId: string
 function dispatchPage(target: HTMLElement, componentId: string, offset: number, count: number): void {
   const el = target.querySelector<HTMLElement>(`[data-component-id='${componentId}']`);
   if (!el) throw new Error(`Component not found: ${componentId}`);
-  el.dispatchEvent(new CustomEvent("casehub-page", {
+  el.dispatchEvent(new CustomEvent("pages-page", {
     bubbles: true, composed: true,
     detail: { offset, count },
   }));
@@ -1041,7 +1041,7 @@ describe("view state — 2-level nesting", () => {
 
     // Revenue table should be visible and sorted
     const vizEl = await waitForViz(target, "[data-component-id='revenue-table']");
-    const tbl = vizEl as CasehubTable;
+    const tbl = vizEl as PagesTable;
     expect(tbl.activeSort).toEqual({ columnId: "revenue", order: "DESCENDING" });
 
     // Data should be sorted descending by revenue
@@ -1174,7 +1174,7 @@ describe("view state — 2-level nesting", () => {
 
     // Apply filter via selector (select "North" = row index 0)
     const selContainer = target.querySelector("[data-component-id='sel-a']")!;
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const selectEl = selViz.shadowRoot.querySelector("select")!;
     selectEl.value = "0";
     selectEl.dispatchEvent(new Event("change"));
@@ -1258,7 +1258,7 @@ describe("view state — cross-filter + sort interaction", () => {
 
   async function applyFilter(target: HTMLElement, rowIndex: string): Promise<void> {
     const selContainer = target.querySelector("[data-component-id='sel']")!;
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const selectEl = selViz.shadowRoot.querySelector("select")!;
     selectEl.value = rowIndex;
     selectEl.dispatchEvent(new Event("change"));
@@ -1267,9 +1267,9 @@ describe("view state — cross-filter + sort interaction", () => {
 
   async function clearFilter(target: HTMLElement): Promise<void> {
     const selContainer = target.querySelector("[data-component-id='sel']")!;
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const selectEl = selViz.shadowRoot.querySelector("select")!;
-    // "All" option value is "-1" in CasehubSelector
+    // "All" option value is "-1" in PagesSelector
     selectEl.value = "-1";
     selectEl.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 50));
@@ -1523,7 +1523,7 @@ describe("view state — multiple tables same page", () => {
 
     // Apply filter via selector
     const selContainer = target.querySelector("[data-component-id='sel']")!;
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const selectEl = selViz.shadowRoot.querySelector("select")!;
     selectEl.value = "0";
     selectEl.dispatchEvent(new Event("change"));
@@ -1816,7 +1816,7 @@ describe("view state — edge cases", () => {
     expect(tableEl).toBeTruthy();
 
     // Sort on empty dataset — should not throw
-    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+    tableEl.dispatchEvent(new CustomEvent("pages-sort", {
       bubbles: true, composed: true,
       detail: { columnId: "anything", order: "ASCENDING" },
     }));
@@ -2139,7 +2139,7 @@ describe("view state — 3-level nesting", () => {
 
     // Deep table should be visible and sorted
     const vizEl = await waitForViz(target, "[data-component-id='deep-table']");
-    const tbl = vizEl as CasehubTable;
+    const tbl = vizEl as PagesTable;
     expect(tbl.activeSort).toEqual({ columnId: "val", order: "DESCENDING" });
 
     // Data should be sorted descending
@@ -2228,7 +2228,7 @@ describe("view state — record selection + sort interaction", () => {
 
     // Select "A" in selector (row index 0)
     const selContainer = target.querySelector("[data-component-id='cat-selector']")!;
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const selectEl = selViz.shadowRoot.querySelector("select")!;
     selectEl.value = "0";
     selectEl.dispatchEvent(new Event("change"));
@@ -2340,7 +2340,7 @@ describe("view state — stale sort column enhanced", () => {
 
     // Filter to "show" rows (3 rows with x column)
     const selContainer = target.querySelector("[data-component-id='vis-sel']")!;
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const selectEl = selViz.shadowRoot.querySelector("select")!;
     selectEl.value = "0"; // "show" is first in the selector (appears first in dataset)
     selectEl.dispatchEvent(new Event("change"));
@@ -2472,7 +2472,7 @@ describe("view state — filter group isolation", () => {
 
     // Apply filter via selector for group g1 (select "X")
     const selContainer = target.querySelector("[data-component-id='sel-g1']")!;
-    const selViz = selContainer.querySelector("casehub-selector")!;
+    const selViz = selContainer.querySelector("pages-selector")!;
     const selectEl = selViz.shadowRoot.querySelector("select")!;
     selectEl.value = "0";
     selectEl.dispatchEvent(new Event("change"));

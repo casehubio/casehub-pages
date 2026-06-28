@@ -189,7 +189,7 @@ All data components require a `lookup` prop that binds them to a dataset.
 
 #### Form Input Components
 
-Form inputs bind to a page's `dataScope` and emit `casehub-field-change` events.
+Form inputs bind to a page's `dataScope` and emit `pages-field-change` events.
 
 | Type | DSL Builder | Purpose |
 |------|------------|---------|
@@ -335,14 +335,14 @@ barChart({
 | `selfApply` | `false` | Apply own filter to self |
 | `group` | `undefined` | Filter group name (isolates filter channels) |
 
-### casehub-filter Event Detail
+### pages-filter Event Detail
 
-The `casehub-filter` event detail is a discriminated union:
+The `pages-filter` event detail is a discriminated union:
 
 ```typescript
-type CasehubFilterDetail = CasehubFilterApply | CasehubFilterReset;
+type PagesFilterDetail = PagesFilterApply | PagesFilterReset;
 
-interface CasehubFilterApply {
+interface PagesFilterApply {
   readonly columnId: string;
   readonly value: string;      // Resolved by emitter at dispatch time
   readonly row: TypedRow;       // Full row reference
@@ -350,7 +350,7 @@ interface CasehubFilterApply {
   readonly group: string | undefined;
 }
 
-interface CasehubFilterReset {
+interface PagesFilterReset {
   readonly columnId: string;
   readonly reset: true;
   readonly group: string | undefined;
@@ -363,7 +363,7 @@ interface CasehubFilterReset {
 - **Toggle semantics:** All emitters (except slider and iframe components) support click-to-select, click-again-to-deselect. Charts and tables track `_selectedValue`; selectors track `_selectedValue` for labels.
 - **Visual feedback:**
   - Charts use ECharts `highlight`/`downplay` actions (same appearance as hover).
-  - Tables use `.selected` CSS class (`background: var(--casehub-bg-selected, #e8f0fe)`).
+  - Tables use `.selected` CSS class (`background: var(--pages-bg-selected, #e8f0fe)`).
   - Selectors use label chip highlighting (existing behavior).
 - **NULL values:** Emitters skip the event when the resolved cell value is NULL.
 - **Record selection:** Any component (not just tables) can trigger DataScope record selection if the emitted row contains the child DataScope's `idColumn`. The runtime infers the path from the data shape via try/catch on `row.cell(idColumn)` for apply events and `ds.columns.some()` for reset events.
@@ -372,12 +372,12 @@ interface CasehubFilterReset {
 
 | Event | Emitted By | Data |
 |-------|-----------|------|
-| `casehub-filter` | Selector, Table, Charts, IframePlugin | `CasehubFilterDetail` (see above) |
-| `casehub-sort` | Table (server-side) | `{ columnId, order }` |
-| `casehub-page` | Table (server-side) | `{ offset, count }` |
-| `casehub-data-request` | All viz components | `{ element, lookup }` |
-| `casehub-field-change` | Form inputs | `{ field, value, committed }` |
-| `casehub-slot-change` | Navigation components | `{ activeSlot, containerId }` |
+| `pages-filter` | Selector, Table, Charts, IframePlugin | `PagesFilterDetail` (see above) |
+| `pages-sort` | Table (server-side) | `{ columnId, order }` |
+| `pages-page` | Table (server-side) | `{ offset, count }` |
+| `pages-data-request` | All viz components | `{ element, lookup }` |
+| `pages-field-change` | Form inputs | `{ field, value, committed }` |
+| `pages-slot-change` | Navigation components | `{ activeSlot, containerId }` |
 
 ## loadSite() API
 
@@ -417,7 +417,7 @@ interface LiveSite {
   dataset(id, fromPage?): DataSetDef | null; // Find dataset definition
   state: ViewState;                         // Current page, filters, sort, pagination
   navigate(path: string): void;             // Programmatic navigation
-  setTheme(theme: "light" | "dark" | CasehubTheme): void;  // Switch theme
+  setTheme(theme: "light" | "dark" | PagesTheme): void;  // Switch theme
   dispose(): void;                          // Cleanup all listeners and timers
 }
 ```
@@ -484,14 +484,14 @@ page("App", ...,
 
 ```typescript
 import { LIGHT_THEME, DARK_THEME, applyTheme } from "@casehubio/pages-runtime";
-import type { CasehubTheme } from "@casehubio/pages-runtime";
+import type { PagesTheme } from "@casehubio/pages-runtime";
 
 // After loadSite:
 site.setTheme("dark");
 site.setTheme("light");
 
 // Custom theme:
-const custom: CasehubTheme = {
+const custom: PagesTheme = {
   ...LIGHT_THEME,
   accent: "#e91e63",
   accentHover: "#c2185b",
@@ -505,16 +505,16 @@ All components use these CSS custom properties (set on the container element):
 
 | Property | Light Default | Dark Default | Purpose |
 |----------|--------------|-------------|---------|
-| `--casehub-font` | `system-ui, sans-serif` | same | Font family |
-| `--casehub-font-size` | `14px` | same | Base font size |
-| `--casehub-text` | `#333` | `#e0e0e0` | Text color |
-| `--casehub-text-muted` | `#888` | `#999` | Muted text |
-| `--casehub-bg` | `#fff` | `#1a1a2e` | Background |
-| `--casehub-bg-alt` | `#f0f0f0` | `#16213e` | Alternate background |
-| `--casehub-bg-hover` | `#e8f0fe` | `#1e3a5f` | Hover background |
-| `--casehub-border` | `#e0e0e0` | `#3a3a5e` | Borders |
-| `--casehub-radius` | `4px` | same | Border radius |
-| `--casehub-accent` | `#5470c6` | `#7c8cf8` | Accent color |
+| `--pages-font` | `system-ui, sans-serif` | same | Font family |
+| `--pages-font-size` | `14px` | same | Base font size |
+| `--pages-text` | `#333` | `#e0e0e0` | Text color |
+| `--pages-text-muted` | `#888` | `#999` | Muted text |
+| `--pages-bg` | `#fff` | `#1a1a2e` | Background |
+| `--pages-bg-alt` | `#f0f0f0` | `#16213e` | Alternate background |
+| `--pages-bg-hover` | `#e8f0fe` | `#1e3a5f` | Hover background |
+| `--pages-border` | `#e0e0e0` | `#3a3a5e` | Borders |
+| `--pages-radius` | `4px` | same | Border radius |
+| `--pages-accent` | `#5470c6` | `#7c8cf8` | Accent color |
 
 ## Table Export
 
@@ -695,7 +695,7 @@ import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 
 // Theme
 import { LIGHT_THEME, DARK_THEME, applyTheme, clearTheme } from "@casehubio/pages-runtime";
-import type { CasehubTheme } from "@casehubio/pages-runtime";
+import type { PagesTheme } from "@casehubio/pages-runtime";
 
 // Table export utilities
 import { tableToCsv, downloadCsv, copyToClipboard } from "@casehubio/pages-viz";

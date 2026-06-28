@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { applyTheme, clearTheme, LIGHT_THEME, DARK_THEME } from "./theme.js";
-import type { CasehubTheme } from "./theme.js";
+import type { PagesTheme } from "./theme.js";
 
 describe("theme", () => {
   let el: HTMLDivElement;
@@ -12,7 +12,7 @@ describe("theme", () => {
 
   describe("LIGHT_THEME", () => {
     it("has all required tokens", () => {
-      const keys: (keyof CasehubTheme)[] = [
+      const keys: (keyof PagesTheme)[] = [
         "font", "fontSize", "text", "textMuted",
         "bg", "bgAlt", "bgHover", "bgDisabled",
         "border", "radius", "accent", "accentHover", "accentSubtle",
@@ -26,7 +26,7 @@ describe("theme", () => {
 
   describe("DARK_THEME", () => {
     it("has all required tokens", () => {
-      const keys: (keyof CasehubTheme)[] = [
+      const keys: (keyof PagesTheme)[] = [
         "font", "fontSize", "text", "textMuted",
         "bg", "bgAlt", "bgHover", "bgDisabled",
         "border", "radius", "accent", "accentHover", "accentSubtle",
@@ -47,37 +47,37 @@ describe("theme", () => {
     it("sets all CSS custom properties on the element", () => {
       applyTheme(el, LIGHT_THEME);
 
-      expect(el.style.getPropertyValue("--casehub-font")).toBe(LIGHT_THEME.font);
-      expect(el.style.getPropertyValue("--casehub-text")).toBe(LIGHT_THEME.text);
-      expect(el.style.getPropertyValue("--casehub-bg")).toBe(LIGHT_THEME.bg);
-      expect(el.style.getPropertyValue("--casehub-border")).toBe(LIGHT_THEME.border);
-      expect(el.style.getPropertyValue("--casehub-accent")).toBe(LIGHT_THEME.accent);
-      expect(el.style.getPropertyValue("--casehub-accent-hover")).toBe(LIGHT_THEME.accentHover);
-      expect(el.style.getPropertyValue("--casehub-accent-subtle")).toBe(LIGHT_THEME.accentSubtle);
+      expect(el.style.getPropertyValue("--pages-font")).toBe(LIGHT_THEME.font);
+      expect(el.style.getPropertyValue("--pages-text")).toBe(LIGHT_THEME.text);
+      expect(el.style.getPropertyValue("--pages-bg")).toBe(LIGHT_THEME.bg);
+      expect(el.style.getPropertyValue("--pages-border")).toBe(LIGHT_THEME.border);
+      expect(el.style.getPropertyValue("--pages-accent")).toBe(LIGHT_THEME.accent);
+      expect(el.style.getPropertyValue("--pages-accent-hover")).toBe(LIGHT_THEME.accentHover);
+      expect(el.style.getPropertyValue("--pages-accent-subtle")).toBe(LIGHT_THEME.accentSubtle);
     });
 
-    it("sets data-casehub-theme attribute for preset themes", () => {
+    it("sets data-pages-theme attribute for preset themes", () => {
       applyTheme(el, DARK_THEME);
-      expect(el.dataset.casehubTheme).toBe("dark");
+      expect(el.dataset.pagesTheme).toBe("dark");
 
       applyTheme(el, LIGHT_THEME);
-      expect(el.dataset.casehubTheme).toBe("light");
+      expect(el.dataset.pagesTheme).toBe("light");
     });
 
-    it("sets data-casehub-theme to custom for non-preset themes", () => {
-      const custom: CasehubTheme = { ...LIGHT_THEME, bg: "#ff0000" };
+    it("sets data-pages-theme to custom for non-preset themes", () => {
+      const custom: PagesTheme = { ...LIGHT_THEME, bg: "#ff0000" };
       applyTheme(el, custom);
-      expect(el.dataset.casehubTheme).toBe("custom");
+      expect(el.dataset.pagesTheme).toBe("custom");
     });
 
     it("accepts string shorthand for preset themes", () => {
       applyTheme(el, "dark");
-      expect(el.style.getPropertyValue("--casehub-bg")).toBe(DARK_THEME.bg);
-      expect(el.dataset.casehubTheme).toBe("dark");
+      expect(el.style.getPropertyValue("--pages-bg")).toBe(DARK_THEME.bg);
+      expect(el.dataset.pagesTheme).toBe("dark");
 
       applyTheme(el, "light");
-      expect(el.style.getPropertyValue("--casehub-bg")).toBe(LIGHT_THEME.bg);
-      expect(el.dataset.casehubTheme).toBe("light");
+      expect(el.style.getPropertyValue("--pages-bg")).toBe(LIGHT_THEME.bg);
+      expect(el.dataset.pagesTheme).toBe("light");
     });
   });
 
@@ -86,17 +86,17 @@ describe("theme", () => {
       applyTheme(el, DARK_THEME);
       clearTheme(el);
 
-      expect(el.style.getPropertyValue("--casehub-font")).toBe("");
-      expect(el.style.getPropertyValue("--casehub-text")).toBe("");
-      expect(el.style.getPropertyValue("--casehub-bg")).toBe("");
-      expect(el.style.getPropertyValue("--casehub-border")).toBe("");
-      expect(el.style.getPropertyValue("--casehub-accent")).toBe("");
+      expect(el.style.getPropertyValue("--pages-font")).toBe("");
+      expect(el.style.getPropertyValue("--pages-text")).toBe("");
+      expect(el.style.getPropertyValue("--pages-bg")).toBe("");
+      expect(el.style.getPropertyValue("--pages-border")).toBe("");
+      expect(el.style.getPropertyValue("--pages-accent")).toBe("");
     });
 
-    it("removes data-casehub-theme attribute", () => {
+    it("removes data-pages-theme attribute", () => {
       applyTheme(el, DARK_THEME);
       clearTheme(el);
-      expect(el.dataset.casehubTheme).toBeUndefined();
+      expect(el.dataset.pagesTheme).toBeUndefined();
     });
   });
 });

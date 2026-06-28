@@ -173,7 +173,7 @@ DataSet (columns + rows)
     ↓
 @casehubio/pages-viz (chart/table/metric Web Components)
     ↓
-casehub-filter / casehub-sort events → back to data layer
+pages-filter / pages-sort events → back to data layer
 ```
 
 1. **@casehubio/pages-ui** parses YAML dashboard definitions into a component tree

@@ -38,12 +38,12 @@ describe("createActivationCallback", () => {
   }
 
   for (const type of DATA_TYPES) {
-    it(`creates casehub-${type} element for ${type}`, () => {
+    it(`creates pages-${type} element for ${type}`, () => {
       const component: Component = { type, props: { lookup: { dataSetId: "ds", operations: [] } } };
       const { el } = setup(component);
       const child = el.firstElementChild;
       expect(child).toBeTruthy();
-      expect(child!.localName).toBe(`casehub-${type}`);
+      expect(child!.localName).toBe(`pages-${type}`);
     });
   }
 
@@ -61,7 +61,7 @@ describe("createActivationCallback", () => {
   it("creates iframe-plugin element", () => {
     const component: Component = { type: "iframe-plugin", props: { componentId: "custom" } };
     const { el, registry } = setup(component);
-    expect(el.firstElementChild!.localName).toBe("casehub-iframe-plugin");
+    expect(el.firstElementChild!.localName).toBe("pages-iframe-plugin");
     expect(registry.has("test-id")).toBe(true);
   });
 
@@ -82,7 +82,7 @@ describe("createActivationCallback", () => {
   it("renders markdown as parsed HTML", () => {
     const component: Component = { type: "markdown", props: { content: "# Hello" } };
     const { el } = setup(component);
-    expect(el.querySelector(".casehub-markdown h1")?.textContent).toBe("Hello");
+    expect(el.querySelector(".pages-markdown h1")?.textContent).toBe("Hello");
   });
 
   it("does not activate layout types", () => {

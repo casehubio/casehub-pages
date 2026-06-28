@@ -52,11 +52,11 @@ describe("wireInteractivity — tabs", () => {
 });
 
 describe("wireInteractivity — pills", () => {
-  it("has casehub-pills CSS class on bar", () => {
+  it("has pages-pills CSS class on bar", () => {
     const { container, panels } = makeSlotContainers(["X", "Y"]);
     wireInteractivity(container, "pills", ["X", "Y"], panels);
     const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
-    expect(bar.classList.contains("casehub-pills")).toBe(true);
+    expect(bar.classList.contains("pages-pills")).toBe(true);
   });
 });
 
@@ -132,13 +132,13 @@ describe("wireInteractivity — stack", () => {
   });
 });
 
-describe("wireInteractivity — casehub-slot-change events", () => {
-  it("tabs emit casehub-slot-change on click", () => {
+describe("wireInteractivity — pages-slot-change events", () => {
+  it("tabs emit pages-slot-change on click", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     container.dataset.componentId = "nav-1";
     wireInteractivity(container, "tabs", ["A", "B"], panels);
     const events: Array<{ activeSlot: string; containerId: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
     const bar = container.querySelector("[data-tab-bar]")!;
@@ -148,12 +148,12 @@ describe("wireInteractivity — casehub-slot-change events", () => {
     expect(events[0]!.containerId).toBe("nav-1");
   });
 
-  it("accordion emits casehub-slot-change on expand", () => {
+  it("accordion emits pages-slot-change on expand", () => {
     const { container, panels } = makeSlotContainers(["X", "Y"]);
     container.dataset.componentId = "acc-1";
     wireInteractivity(container, "accordion", ["X", "Y"], panels);
     const events: Array<{ activeSlot: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
     const headers = container.querySelectorAll("[data-accordion-header]");
@@ -164,12 +164,12 @@ describe("wireInteractivity — casehub-slot-change events", () => {
     expect(events[0]!.activeSlot).toBe("Y");
   });
 
-  it("carousel emits casehub-slot-change on next", () => {
+  it("carousel emits pages-slot-change on next", () => {
     const { container, panels } = makeSlotContainers(["P1", "P2"]);
     container.dataset.componentId = "car-1";
     wireInteractivity(container, "carousel", ["P1", "P2"], panels);
     const events: Array<{ activeSlot: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
     const nextBtn = container.querySelector("[data-carousel-next]") as HTMLElement;
@@ -185,7 +185,7 @@ describe("wireInteractivity — sidebar", () => {
     wireInteractivity(container, "sidebar", ["Overview", "Sales"], panels);
     const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
     expect(bar).toBeTruthy();
-    expect(bar.classList.contains("casehub-sidebar")).toBe(true);
+    expect(bar.classList.contains("pages-sidebar")).toBe(true);
     const buttons = bar.querySelectorAll("button");
     expect(buttons).toHaveLength(2);
     expect(buttons[0]!.textContent).toBe("Overview");
@@ -207,12 +207,12 @@ describe("wireInteractivity — sidebar", () => {
     expect(panels.get("B")!.style.display).not.toBe("none");
   });
 
-  it("emits casehub-slot-change on click", () => {
+  it("emits pages-slot-change on click", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     container.dataset.componentId = "side-1";
     wireInteractivity(container, "sidebar", ["A", "B"], panels);
     const events: Array<{ activeSlot: string; containerId: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
     const buttons = container.querySelector("[data-tab-bar]")!.querySelectorAll("button");
@@ -274,7 +274,7 @@ describe("wireInteractivity — lazy tab swap", () => {
     const childCount = panels.get("A")!.children.length;
 
     const events: unknown[] = [];
-    container.addEventListener("casehub-slot-change", (e) => events.push(e));
+    container.addEventListener("pages-slot-change", (e) => events.push(e));
 
     // Click A (already active)
     const bar = container.querySelector("[data-tab-bar]")!;
@@ -405,20 +405,20 @@ describe("wireInteractivity — lazy stack", () => {
 });
 
 describe("wireInteractivity — tabs CSS", () => {
-  it("has casehub-tabs CSS class on bar", () => {
+  it("has pages-tabs CSS class on bar", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     wireInteractivity(container, "tabs", ["A", "B"], panels);
     const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
-    expect(bar.classList.contains("casehub-tabs")).toBe(true);
+    expect(bar.classList.contains("pages-tabs")).toBe(true);
   });
 });
 
 describe("wireInteractivity — menu CSS", () => {
-  it("has casehub-menu CSS class on bar", () => {
+  it("has pages-menu CSS class on bar", () => {
     const { container, panels } = makeSlotContainers(["File", "Edit"]);
     wireInteractivity(container, "menu", ["File", "Edit"], panels);
     const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
-    expect(bar.classList.contains("casehub-menu")).toBe(true);
+    expect(bar.classList.contains("pages-menu")).toBe(true);
   });
 
   it("first item visible by default, rest hidden", () => {
@@ -451,7 +451,7 @@ describe("wireInteractivity — tiles", () => {
     const { container, panels } = makeSlotContainers(["Dashboard", "Reports"]);
     wireInteractivity(container, "tiles", ["Dashboard", "Reports"], panels);
 
-    const grid = container.querySelector(".casehub-tiles-grid") as HTMLElement;
+    const grid = container.querySelector(".pages-tiles-grid") as HTMLElement;
     expect(grid).toBeTruthy();
 
     const cards = grid.querySelectorAll(".tile-card");
@@ -478,13 +478,13 @@ describe("wireInteractivity — tiles", () => {
     expect(panels.get("B")!.style.display).not.toBe("none");
   });
 
-  it("card click dispatches casehub-slot-change", () => {
+  it("card click dispatches pages-slot-change", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     container.dataset.componentId = "tiles-1";
     wireInteractivity(container, "tiles", ["A", "B"], panels);
 
     const events: Array<{ activeSlot: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
 
@@ -536,7 +536,7 @@ describe("wireInteractivity — tree", () => {
       "Dashboard", "Settings/Profile", "Settings/Security", "Reports",
     ], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     expect(nav).toBeTruthy();
 
     const topItems = nav.querySelectorAll(":scope > ul > li");
@@ -551,7 +551,7 @@ describe("wireInteractivity — tree", () => {
       "Settings/Profile", "Settings/Security",
     ], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     const groupLabel = nav.querySelector(".tree-group-label");
     expect(groupLabel!.textContent).toContain("Settings");
 
@@ -565,7 +565,7 @@ describe("wireInteractivity — tree", () => {
     const { container, panels } = makeSlotContainers(["A", "B", "C"]);
     wireInteractivity(container, "tree", ["A", "B", "C"], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     const leaves = nav.querySelectorAll(".tree-leaf");
     expect(leaves).toHaveLength(3);
 
@@ -591,13 +591,13 @@ describe("wireInteractivity — tree", () => {
     expect(panels.get("Settings/B")!.style.display).not.toBe("none");
   });
 
-  it("leaf click dispatches casehub-slot-change with full hierarchical key", () => {
+  it("leaf click dispatches pages-slot-change with full hierarchical key", () => {
     const { container, panels } = makeSlotContainers(["A", "Settings/B"]);
     container.dataset.componentId = "tree-1";
     wireInteractivity(container, "tree", ["A", "Settings/B"], panels);
 
     const events: Array<{ activeSlot: string; containerId: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
 
@@ -636,7 +636,7 @@ describe("wireInteractivity — tree", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     wireInteractivity(container, "tree", ["A", "B"], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav");
+    const nav = container.querySelector(".pages-tree-nav");
     expect(nav!.parentElement).toBe(container);
     expect(panels.get("A")!.parentElement).toBe(container);
   });
@@ -672,7 +672,7 @@ describe("wireInteractivity — tree", () => {
       "Settings/Advanced/Logging",
     ], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     // Settings > Advanced > Logging
     const groupLabels = nav.querySelectorAll(".tree-group-label");
     expect(groupLabels).toHaveLength(2); // Settings and Advanced

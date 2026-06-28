@@ -13,8 +13,8 @@ import { parsePage } from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import { load as yamlLoad } from "js-yaml";
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { applyTheme, LIGHT_THEME, DARK_THEME } from "@casehubio/pages-viz/dist/base/theme.js";
-import type { CasehubTheme } from "@casehubio/pages-viz/dist/base/theme.js";
-import type { CasehubFilterDetail } from "@casehubio/pages-viz/dist/base/filter-types.js";
+import type { PagesTheme } from "@casehubio/pages-viz/dist/base/theme.js";
+import type { PagesFilterDetail } from "@casehubio/pages-viz/dist/base/filter-types.js";
 import { buildPagePathMap } from "./page-paths.js";
 import { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
 import { buildPageIndex, computeCurrentPage, walkNavigate } from "./navigation.js";
@@ -81,7 +81,7 @@ interface RecordDeleteDetail {
 
 export interface LiveSite extends Site {
   navigate(path: string): void;
-  setTheme(theme: "light" | "dark" | CasehubTheme): void;
+  setTheme(theme: "light" | "dark" | PagesTheme): void;
   dispose(): void;
 }
 
@@ -334,7 +334,7 @@ export function loadSite(
     } else {
       console.error(`Save failed for page "${pagePath}":`, result.error);
       target.dispatchEvent(
-        new CustomEvent("casehub-save-error", {
+        new CustomEvent("pages-save-error", {
           bubbles: true,
           detail: { pagePath, error: result.error ?? "Save failed" },
         }),
@@ -362,7 +362,7 @@ export function loadSite(
 
   // --- Event delegation ---
 
-  target.addEventListener("casehub-data-request", ((e: Event) => {
+  target.addEventListener("pages-data-request", ((e: Event) => {
     const { element, lookup } = (e as CustomEvent<DataRequestDetail>).detail;
     const componentId = findComponentId(e);
     if (componentId) {
@@ -370,7 +370,7 @@ export function loadSite(
     }
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-slot-change", ((e: Event) => {
+  target.addEventListener("pages-slot-change", ((e: Event) => {
     const { activeSlot, containerId } = (e as CustomEvent<SlotChangeDetail>).detail;
     activeSlots.set(containerId, activeSlot);
     currentPage = computeCurrentPage(root, activeSlots);
@@ -379,7 +379,7 @@ export function loadSite(
     }
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-field-change", ((e: Event) => {
+  target.addEventListener("pages-field-change", ((e: Event) => {
     const { field, value, committed } = (e as CustomEvent<FieldChangeDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
@@ -398,8 +398,8 @@ export function loadSite(
     }
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-filter", ((e: Event) => {
-    const detail = (e as CustomEvent<CasehubFilterDetail>).detail;
+  target.addEventListener("pages-filter", ((e: Event) => {
+    const detail = (e as CustomEvent<PagesFilterDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
 
@@ -512,7 +512,7 @@ export function loadSite(
     syncUrl("replaceState");
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-page", ((e: Event) => {
+  target.addEventListener("pages-page", ((e: Event) => {
     const { offset, count } = (e as CustomEvent<PageDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
@@ -521,7 +521,7 @@ export function loadSite(
     if (!entry?.vizElement || !entry.originalLookup) return;
 
     if (count > 0 && offset % count !== 0) {
-      console.warn(`casehub-page: unaligned offset ${String(offset)} for count ${String(count)}, rounding down`);
+      console.warn(`pages-page: unaligned offset ${String(offset)} for count ${String(count)}, rounding down`);
     }
     const page = count > 0 ? Math.floor(offset / count) : 0;
     updatePage(componentViewState, componentId, page);
@@ -529,7 +529,7 @@ export function loadSite(
     syncUrl("replaceState");
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-sort", ((e: Event) => {
+  target.addEventListener("pages-sort", ((e: Event) => {
     const { columnId, order } = (e as CustomEvent<SortDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
@@ -543,7 +543,7 @@ export function loadSite(
     syncUrl("replaceState");
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-text-filter", ((e: Event) => {
+  target.addEventListener("pages-text-filter", ((e: Event) => {
     const { text } = (e as CustomEvent<TextFilterDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
@@ -557,7 +557,7 @@ export function loadSite(
     syncUrl("replaceState");
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-record-navigate", ((e: Event) => {
+  target.addEventListener("pages-record-navigate", ((e: Event) => {
     const { direction } = (e as CustomEvent<RecordNavigateDetail>).detail;
 
     for (const [scopePath] of dataScopeRegistry) {
@@ -617,7 +617,7 @@ export function loadSite(
     }
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-record-create", ((e: Event) => {
+  target.addEventListener("pages-record-create", ((e: Event) => {
     const { record: eventRecord } = (e as CustomEvent<RecordCreateDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
@@ -644,7 +644,7 @@ export function loadSite(
             }
           }
         } else {
-          target.dispatchEvent(new CustomEvent("casehub-save-error", {
+          target.dispatchEvent(new CustomEvent("pages-save-error", {
             bubbles: true,
             detail: { pagePath: entry.pagePath, error: result.error ?? "Create failed" },
           }));
@@ -657,7 +657,7 @@ export function loadSite(
       });
   }), { signal: abortController.signal });
 
-  target.addEventListener("casehub-record-delete", ((e: Event) => {
+  target.addEventListener("pages-record-delete", ((e: Event) => {
     const { idValue } = (e as CustomEvent<RecordDeleteDetail>).detail;
     const componentId = findComponentId(e);
     if (!componentId) return;
@@ -685,7 +685,7 @@ export function loadSite(
             }
           }
         } else {
-          target.dispatchEvent(new CustomEvent("casehub-save-error", {
+          target.dispatchEvent(new CustomEvent("pages-save-error", {
             bubbles: true,
             detail: { pagePath: entry.pagePath, error: result.error ?? "Delete failed" },
           }));
@@ -759,7 +759,7 @@ export function loadSite(
 
     state,
 
-    setTheme(theme: "light" | "dark" | CasehubTheme): void {
+    setTheme(theme: "light" | "dark" | PagesTheme): void {
       applyTheme(target, theme);
       const echartsThemeName = theme === "dark" ? "dark" : "";
       for (const [, entry] of registry) {
@@ -809,11 +809,11 @@ export function loadSite(
 }
 
 function showErrorBanner(container: HTMLElement, message: string): void {
-  const existing = container.querySelector("[data-casehub-error]");
+  const existing = container.querySelector("[data-pages-error]");
   if (existing) existing.remove();
 
   const banner = document.createElement("div");
-  banner.setAttribute("data-casehub-error", "");
+  banner.setAttribute("data-pages-error", "");
   banner.style.cssText = "padding:8px 16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;color:#991b1b;font-size:14px;margin:8px 0;cursor:pointer;";
   banner.textContent = message;
   banner.addEventListener("click", () => { banner.remove(); });

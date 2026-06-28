@@ -3,14 +3,14 @@ import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pag
 import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
-import type { CasehubFieldChangeDetail } from "./CasehubFormInput.js";
+import type { PagesFieldChangeDetail } from "./PagesFormInput.js";
 
-import { CasehubTextInput } from "./CasehubTextInput.js";
-import { CasehubNumberInput } from "./CasehubNumberInput.js";
-import { CasehubCheckbox } from "./CasehubCheckbox.js";
-import { CasehubTextarea } from "./CasehubTextarea.js";
-import { CasehubDatePicker } from "./CasehubDatePicker.js";
-import { CasehubDropdown } from "./CasehubDropdown.js";
+import { PagesTextInput } from "./PagesTextInput.js";
+import { PagesNumberInput } from "./PagesNumberInput.js";
+import { PagesCheckbox } from "./PagesCheckbox.js";
+import { PagesTextarea } from "./PagesTextarea.js";
+import { PagesDatePicker } from "./PagesDatePicker.js";
+import { PagesDropdown } from "./PagesDropdown.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -37,13 +37,13 @@ function makeDataSet(
   return toTypedDataSet(ds);
 }
 
-// ── CasehubTextInput ──────────────────────────────────────────────────
+// ── PagesTextInput ──────────────────────────────────────────────────
 
-describe("CasehubTextInput", () => {
-  let el: CasehubTextInput;
+describe("PagesTextInput", () => {
+  let el: PagesTextInput;
 
   beforeEach(() => {
-    el = document.createElement("casehub-text-input");
+    el = document.createElement("pages-text-input");
   });
 
   afterEach(() => {
@@ -75,15 +75,15 @@ describe("CasehubTextInput", () => {
     expect(label.textContent).toBe("Full Name");
   });
 
-  it("emits casehub-field-change on input when editable", () => {
+  it("emits pages-field-change on input when editable", () => {
     const ds = makeDataSet([["name", "TEXT"]], [[""]]);
     el.props = { field: "name", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -104,8 +104,8 @@ describe("CasehubTextInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -125,7 +125,7 @@ describe("CasehubTextInput", () => {
     el.dataSet = ds;
 
     const events: Event[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) => events.push(e));
+    el.addEventListener("pages-field-change", (e: Event) => events.push(e));
 
     const input = el.shadowRoot.querySelector("input")!;
     input.value = "test";
@@ -157,13 +157,13 @@ describe("CasehubTextInput", () => {
   });
 });
 
-// ── CasehubNumberInput ────────────────────────────────────────────────
+// ── PagesNumberInput ────────────────────────────────────────────────
 
-describe("CasehubNumberInput", () => {
-  let el: CasehubNumberInput;
+describe("PagesNumberInput", () => {
+  let el: PagesNumberInput;
 
   beforeEach(() => {
-    el = document.createElement("casehub-number-input");
+    el = document.createElement("pages-number-input");
   });
 
   afterEach(() => {
@@ -191,8 +191,8 @@ describe("CasehubNumberInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -212,8 +212,8 @@ describe("CasehubNumberInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -245,13 +245,13 @@ describe("CasehubNumberInput", () => {
   });
 });
 
-// ── CasehubCheckbox ───────────────────────────────────────────────────
+// ── PagesCheckbox ───────────────────────────────────────────────────
 
-describe("CasehubCheckbox", () => {
-  let el: CasehubCheckbox;
+describe("PagesCheckbox", () => {
+  let el: PagesCheckbox;
 
   beforeEach(() => {
-    el = document.createElement("casehub-checkbox");
+    el = document.createElement("pages-checkbox");
   });
 
   afterEach(() => {
@@ -300,8 +300,8 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -326,13 +326,13 @@ describe("CasehubCheckbox", () => {
   });
 });
 
-// ── CasehubTextarea ───────────────────────────────────────────────────
+// ── PagesTextarea ───────────────────────────────────────────────────
 
-describe("CasehubTextarea", () => {
-  let el: CasehubTextarea;
+describe("PagesTextarea", () => {
+  let el: PagesTextarea;
 
   beforeEach(() => {
-    el = document.createElement("casehub-textarea");
+    el = document.createElement("pages-textarea");
   });
 
   afterEach(() => {
@@ -371,8 +371,8 @@ describe("CasehubTextarea", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -390,13 +390,13 @@ describe("CasehubTextarea", () => {
   });
 });
 
-// ── CasehubDatePicker ─────────────────────────────────────────────────
+// ── PagesDatePicker ─────────────────────────────────────────────────
 
-describe("CasehubDatePicker", () => {
-  let el: CasehubDatePicker;
+describe("PagesDatePicker", () => {
+  let el: PagesDatePicker;
 
   beforeEach(() => {
-    el = document.createElement("casehub-date-picker");
+    el = document.createElement("pages-date-picker");
   });
 
   afterEach(() => {
@@ -436,8 +436,8 @@ describe("CasehubDatePicker", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -468,13 +468,13 @@ describe("CasehubDatePicker", () => {
   });
 });
 
-// ── CasehubDropdown ───────────────────────────────────────────────────
+// ── PagesDropdown ───────────────────────────────────────────────────
 
-describe("CasehubDropdown", () => {
-  let el: CasehubDropdown;
+describe("PagesDropdown", () => {
+  let el: PagesDropdown;
 
   beforeEach(() => {
-    el = document.createElement("casehub-dropdown");
+    el = document.createElement("pages-dropdown");
   });
 
   afterEach(() => {
@@ -528,8 +528,8 @@ describe("CasehubDropdown", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const events: CasehubFieldChangeDetail[] = [];
-    el.addEventListener("casehub-field-change", (e: Event) =>
+    const events: PagesFieldChangeDetail[] = [];
+    el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
@@ -606,7 +606,7 @@ describe("CasehubDropdown", () => {
     expect(select.value).toBe("clothing");
   });
 
-  it("DataSetOptions dispatches casehub-data-request for options dataset", () => {
+  it("DataSetOptions dispatches pages-data-request for options dataset", () => {
     const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
     el.props = {
       field: "category",
@@ -618,7 +618,7 @@ describe("CasehubDropdown", () => {
     const requests: Array<{ dataSetId: string }> = [];
     const wrapper = document.createElement("div");
     wrapper.dataset.componentId = "test-dropdown";
-    wrapper.addEventListener("casehub-data-request", (e: Event) => {
+    wrapper.addEventListener("pages-data-request", (e: Event) => {
       const detail = (e as CustomEvent).detail;
       requests.push({ dataSetId: detail.lookup.dataSetId });
     });
@@ -650,7 +650,7 @@ describe("CasehubDropdown", () => {
     const requests: Array<{ dataSetId: string; operations: unknown[] }> = [];
     const wrapper = document.createElement("div");
     wrapper.dataset.componentId = "test-cascade";
-    wrapper.addEventListener("casehub-data-request", (e: Event) => {
+    wrapper.addEventListener("pages-data-request", (e: Event) => {
       const detail = (e as CustomEvent).detail;
       requests.push({ dataSetId: detail.lookup.dataSetId, operations: detail.lookup.operations });
     });
@@ -663,7 +663,7 @@ describe("CasehubDropdown", () => {
 
     // Simulate parent field change
     el.dispatchEvent(
-      new CustomEvent("casehub-field-change", {
+      new CustomEvent("pages-field-change", {
         bubbles: true,
         composed: true,
         detail: { field: "country", value: "Germany", committed: true },

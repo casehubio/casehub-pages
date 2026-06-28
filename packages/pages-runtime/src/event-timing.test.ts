@@ -127,7 +127,7 @@ describe("registry timing — entry must exist before appendChild", () => {
     document.body.appendChild(target);
 
     // Simulate: listener checks registry when data-request fires
-    target.addEventListener("casehub-data-request", ((e: Event) => {
+    target.addEventListener("pages-data-request", ((e: Event) => {
       const el = (e.target as HTMLElement).closest<HTMLElement>("[data-component-id]");
       const id = el?.dataset.componentId;
       if (id) {
@@ -163,7 +163,7 @@ describe("closest() traversal from custom element", () => {
     container.dataset.componentId = "grid_0_0_1";
     container.dataset.componentType = "bar-chart";
 
-    const customEl = document.createElement("div"); // simulating casehub-bar-chart
+    const customEl = document.createElement("div"); // simulating pages-bar-chart
     container.appendChild(customEl);
 
     const found = customEl.closest("[data-component-id]");

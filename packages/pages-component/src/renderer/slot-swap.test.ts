@@ -21,7 +21,7 @@ describe("dispatchSlotChange", () => {
     const el = document.createElement("div");
     el.dataset.componentId = "tabs-1";
     const events: Array<{ activeSlot: string; containerId: string }> = [];
-    el.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    el.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
     dispatchSlotChange(el, "Sales");
@@ -36,7 +36,7 @@ describe("dispatchSlotChange", () => {
     child.dataset.componentId = "inner";
     parent.appendChild(child);
     let bubbled = false;
-    parent.addEventListener("casehub-slot-change", () => {
+    parent.addEventListener("pages-slot-change", () => {
       bubbled = true;
     });
     dispatchSlotChange(child, "A");

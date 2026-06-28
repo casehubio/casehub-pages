@@ -41,7 +41,7 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
     for (const c of target.querySelectorAll("[data-component-type]")) {
       const type = (c as HTMLElement).dataset.componentType!;
       if (skip.has(type)) continue;
-      const vizEl = c.querySelector(`casehub-${type}`) as HTMLElement & { dataSet?: unknown };
+      const vizEl = c.querySelector(`pages-${type}`) as HTMLElement & { dataSet?: unknown };
       if (vizEl?.dataSet) return true;
     }
     return false;
@@ -49,15 +49,15 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
 }
 
 /**
- * Helper: count casehub-* custom elements with echarts canvas inside shadow DOM.
+ * Helper: count pages-* custom elements with echarts canvas inside shadow DOM.
  */
 async function countRenderedCharts(page: import("@playwright/test").Page): Promise<number> {
   return page.evaluate(() => {
     const target = document.getElementById("dashboard-target")!;
     let count = 0;
     const charts = target.querySelectorAll(
-      "casehub-bar-chart, casehub-line-chart, casehub-area-chart, casehub-pie-chart, " +
-      "casehub-scatter-chart, casehub-bubble-chart, casehub-timeseries, casehub-meter"
+      "pages-bar-chart, pages-line-chart, pages-area-chart, pages-pie-chart, " +
+      "pages-scatter-chart, pages-bubble-chart, pages-timeseries, pages-meter"
     );
     for (const chart of charts) {
       if (chart.shadowRoot?.querySelector("canvas")) count++;
@@ -90,7 +90,7 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
       }
 
       // Data component
-      const tagName = `casehub-${type}`;
+      const tagName = `pages-${type}`;
       const vizEl = container.querySelector(tagName) as any;
       if (!vizEl) {
         results.push({ type, id, status: "NO_ELEMENT", detail: `<${tagName}> not found` });
@@ -260,7 +260,7 @@ test.describe("FIFA 2022 Goals (external API + metrics)", () => {
 
     // Verify ${title} is substituted — should NOT appear literally
     const metricText = await page.evaluate(() => {
-      const els = document.querySelectorAll('casehub-metric');
+      const els = document.querySelectorAll('pages-metric');
       return Array.from(els).map(el => el.shadowRoot?.textContent || '').join(' ');
     });
     expect(metricText).not.toContain("${title}");

@@ -10,34 +10,34 @@ describe("renderMarkdown", () => {
 
   it("renders bold text as <strong>", () => {
     renderMarkdown(el, { content: "**bold**" });
-    expect(el.querySelector(".casehub-markdown")?.innerHTML).toContain("<strong>bold</strong>");
+    expect(el.querySelector(".pages-markdown")?.innerHTML).toContain("<strong>bold</strong>");
   });
 
   it("renders heading", () => {
     renderMarkdown(el, { content: "### Heading" });
-    expect(el.querySelector(".casehub-markdown")?.innerHTML).toContain("<h3>Heading</h3>");
+    expect(el.querySelector(".pages-markdown")?.innerHTML).toContain("<h3>Heading</h3>");
   });
 
   it("renders mixed markdown and HTML", () => {
     renderMarkdown(el, { content: "**Filters**\n<br />\nSome text" });
-    const html = el.querySelector(".casehub-markdown")?.innerHTML ?? "";
+    const html = el.querySelector(".pages-markdown")?.innerHTML ?? "";
     expect(html).toContain("<strong>Filters</strong>");
     expect(html).toContain("<br");
   });
 
   it("renders empty string without error", () => {
     renderMarkdown(el, { content: "" });
-    expect(el.querySelector(".casehub-markdown")).toBeDefined();
+    expect(el.querySelector(".pages-markdown")).toBeDefined();
   });
 
   it("handles non-string content gracefully", () => {
     renderMarkdown(el, { content: 42 });
-    expect(el.querySelector(".casehub-markdown")?.textContent).toBe("");
+    expect(el.querySelector(".pages-markdown")?.textContent).toBe("");
   });
 
-  it("adds casehub-markdown class to wrapper", () => {
+  it("adds pages-markdown class to wrapper", () => {
     renderMarkdown(el, { content: "text" });
-    expect(el.querySelector(".casehub-markdown")).not.toBeNull();
+    expect(el.querySelector(".pages-markdown")).not.toBeNull();
   });
 });
 

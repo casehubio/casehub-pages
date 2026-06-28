@@ -212,7 +212,7 @@ function applyPropertyOverrides(yamlText) {
     return result;
 }
 
-// Load dashboard in target div using casehub loadSite
+// Load dashboard in target div using pages loadSite
 async function loadDashboardInTarget(dashboardPath) {
     try {
         const response = await fetch(`dashboards/${dashboardPath}`);

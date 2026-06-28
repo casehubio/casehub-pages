@@ -12,7 +12,7 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
     for (const c of target.querySelectorAll("[data-component-type]")) {
       const type = (c as HTMLElement).dataset.componentType!;
       if (skip.has(type)) continue;
-      const vizEl = c.querySelector(`casehub-${type}`) as HTMLElement & { dataSet?: unknown };
+      const vizEl = c.querySelector(`pages-${type}`) as HTMLElement & { dataSet?: unknown };
       if (vizEl?.dataSet) return true;
     }
     return false;
@@ -45,7 +45,7 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
         continue;
       }
 
-      const tagName = `casehub-${type}`;
+      const tagName = `pages-${type}`;
       const vizEl = container.querySelector(tagName) as HTMLElement & {
         error?: string;
         dataSet?: unknown;
@@ -155,7 +155,7 @@ test.describe("Sales Dashboard", () => {
   test("sidebar navigation has 4 entries and Pipeline page works", async ({ page }) => {
     await openDashboard(page, "Sales Dashboard");
 
-    const sidebarButtons = page.locator(".casehub-sidebar button[data-slot]");
+    const sidebarButtons = page.locator(".pages-sidebar button[data-slot]");
     const navCount = await sidebarButtons.count();
     expect(navCount).toBe(4);
 
@@ -163,7 +163,7 @@ test.describe("Sales Dashboard", () => {
     await page.waitForFunction(() => {
       const target = document.getElementById("dashboard-target");
       if (!target) return false;
-      const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+      const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
     }, { timeout: 10000 });
 
@@ -203,7 +203,7 @@ test.describe("IoT Fleet Monitor", () => {
 
   test("meter gauges have numeric data and non-zero canvas", async ({ page }) => {
     await openDashboard(page, "Fleet Monitor");
-    const meterInfo = await getChartDataInfo(page, "casehub-meter");
+    const meterInfo = await getChartDataInfo(page, "pages-meter");
 
     expect(meterInfo.length).toBe(3);
     for (const meter of meterInfo) {
@@ -231,12 +231,12 @@ test.describe("IoT Fleet Monitor", () => {
   test("sidebar nav switches to Sensor History with area chart", async ({ page }) => {
     await openDashboard(page, "Fleet Monitor");
 
-    const sidebarButtons = page.locator(".casehub-sidebar button[data-slot]");
+    const sidebarButtons = page.locator(".pages-sidebar button[data-slot]");
     await sidebarButtons.filter({ hasText: "Sensor History" }).click();
     await page.waitForFunction(() => {
       const target = document.getElementById("dashboard-target");
       if (!target) return false;
-      const chart = target.querySelector("casehub-area-chart") as HTMLElement & { dataSet?: unknown };
+      const chart = target.querySelector("pages-area-chart") as HTMLElement & { dataSet?: unknown };
       return !!chart?.dataSet;
     }, { timeout: 10000 });
 
@@ -281,7 +281,7 @@ test.describe("Workforce Analytics", () => {
 
   test("pie charts have numeric value columns, not duplicate labels", async ({ page }) => {
     await openDashboard(page, "Workforce Analytics");
-    const pies = await getChartDataInfo(page, "casehub-pie-chart");
+    const pies = await getChartDataInfo(page, "pages-pie-chart");
 
     expect(pies.length).toBe(2);
     for (const pie of pies) {
@@ -294,7 +294,7 @@ test.describe("Workforce Analytics", () => {
 
   test("bar charts have numeric value columns", async ({ page }) => {
     await openDashboard(page, "Workforce Analytics");
-    const bars = await getChartDataInfo(page, "casehub-bar-chart");
+    const bars = await getChartDataInfo(page, "pages-bar-chart");
 
     expect(bars.length).toBeGreaterThanOrEqual(2);
     for (const bar of bars) {
@@ -305,7 +305,7 @@ test.describe("Workforce Analytics", () => {
 
   test("scatter chart has numeric x and y columns", async ({ page }) => {
     await openDashboard(page, "Workforce Analytics");
-    const scatters = await getChartDataInfo(page, "casehub-scatter-chart");
+    const scatters = await getChartDataInfo(page, "pages-scatter-chart");
 
     expect(scatters.length).toBe(1);
     const scatter = scatters[0]!;
@@ -368,7 +368,7 @@ test.describe("Patient Tracker", () => {
     await page.waitForFunction(() => {
       const target = document.getElementById("dashboard-target");
       if (!target) return false;
-      const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+      const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
     }, { timeout: 10000 });
 

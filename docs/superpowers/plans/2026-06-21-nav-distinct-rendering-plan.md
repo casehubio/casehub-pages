@@ -444,7 +444,7 @@ Refs casehubio/casehub-pages#5"
 
 **Interfaces:**
 - Consumes: Existing `wireInteractivity` public API (unchanged)
-- Produces: `injectNavStyles` (renamed from `injectTabStyles`). `wireTabs` CSS class mapping simplified to tabs/pills/menu only. Tabs get `.casehub-tabs` underline CSS, menu gets `.casehub-menu` bar CSS.
+- Produces: `injectNavStyles` (renamed from `injectTabStyles`). `wireTabs` CSS class mapping simplified to tabs/pills/menu only. Tabs get `.pages-tabs` underline CSS, menu gets `.pages-menu` bar CSS.
 
 - [ ] **Step 1: Write failing tests for tabs and menu CSS classes**
 
@@ -452,20 +452,20 @@ Add to `packages/pages-component/src/renderer/interactive.test.ts`:
 
 ```typescript
 describe("wireInteractivity — tabs CSS", () => {
-  it("has casehub-tabs CSS class on bar", () => {
+  it("has pages-tabs CSS class on bar", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     wireInteractivity(container, "tabs", ["A", "B"], panels);
     const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
-    expect(bar.classList.contains("casehub-tabs")).toBe(true);
+    expect(bar.classList.contains("pages-tabs")).toBe(true);
   });
 });
 
 describe("wireInteractivity — menu CSS", () => {
-  it("has casehub-menu CSS class on bar", () => {
+  it("has pages-menu CSS class on bar", () => {
     const { container, panels } = makeSlotContainers(["File", "Edit"]);
     wireInteractivity(container, "menu", ["File", "Edit"], panels);
     const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
-    expect(bar.classList.contains("casehub-menu")).toBe(true);
+    expect(bar.classList.contains("pages-menu")).toBe(true);
   });
 
   it("first item visible by default, rest hidden", () => {
@@ -477,10 +477,10 @@ describe("wireInteractivity — menu CSS", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests — menu class test should fail (currently gets casehub-menu but via wireTabs which will be updated)**
+- [ ] **Step 2: Run tests — menu class test should fail (currently gets pages-menu but via wireTabs which will be updated)**
 
 Run: `yarn workspace @casehubio/pages-component run test`
-Note: the menu class test might already pass since wireTabs already assigns casehub-menu. Verify.
+Note: the menu class test might already pass since wireTabs already assigns pages-menu. Verify.
 
 - [ ] **Step 3: Rename injectTabStyles to injectNavStyles and add CSS rules**
 
@@ -528,68 +528,68 @@ function injectNavStyles(doc: Document): void {
   background: #4338ca;
   border-color: #4338ca;
 }
-.casehub-sidebar {
+.pages-sidebar {
   flex-direction: column;
   gap: 2px;
   padding: 0 12px 0 0;
   border-right: 1px solid #e5e7eb;
   min-width: 140px;
 }
-.casehub-sidebar button[data-slot] {
+.pages-sidebar button[data-slot] {
   border-radius: 8px;
   border: none;
   text-align: left;
   padding: 8px 12px;
 }
-.casehub-tabs {
+.pages-tabs {
   gap: 0;
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 0;
 }
-.casehub-tabs button[data-slot] {
+.pages-tabs button[data-slot] {
   border: none;
   border-radius: 0;
   background: transparent;
   padding: 8px 16px;
   border-bottom: 2px solid transparent;
 }
-.casehub-tabs button[data-slot]:hover {
+.pages-tabs button[data-slot]:hover {
   background: #f9fafb;
   border-color: transparent;
   border-bottom-color: #d0d5dd;
 }
-.casehub-tabs button[data-slot][data-active] {
+.pages-tabs button[data-slot][data-active] {
   background: transparent;
   color: #4f46e5;
   border-bottom-color: #4f46e5;
 }
-.casehub-tabs button[data-slot][data-active]:hover {
+.pages-tabs button[data-slot][data-active]:hover {
   background: #f5f3ff;
 }
-.casehub-menu {
+.pages-menu {
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
   gap: 0;
   padding: 0;
 }
-.casehub-menu button[data-slot] {
+.pages-menu button[data-slot] {
   border: none;
   border-radius: 0;
   background: transparent;
   padding: 8px 14px;
   font-size: 13px;
 }
-.casehub-menu button[data-slot]:hover {
+.pages-menu button[data-slot]:hover {
   background: #f2f4f7;
   border-color: transparent;
 }
-.casehub-menu button[data-slot][data-active] {
+.pages-menu button[data-slot][data-active] {
   background: transparent;
   font-weight: 600;
   color: #1f2937;
   border-bottom: 2px solid #4f46e5;
 }
-.casehub-tree-nav {
+.pages-tree-nav {
   flex-direction: column;
   padding: 0 12px 0 0;
   border-right: 1px solid #e5e7eb;
@@ -597,29 +597,29 @@ function injectNavStyles(doc: Document): void {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
 }
-.casehub-tree-nav ul { list-style: none; margin: 0; padding: 0; }
-.casehub-tree-nav li { margin: 0; }
-.casehub-tree-nav .tree-group-label {
+.pages-tree-nav ul { list-style: none; margin: 0; padding: 0; }
+.pages-tree-nav li { margin: 0; }
+.pages-tree-nav .tree-group-label {
   display: flex; align-items: center; gap: 4px;
   padding: 4px 8px; cursor: pointer; user-select: none;
   color: #475467; font-weight: 500;
 }
-.casehub-tree-nav .tree-group-label:hover { background: #f2f4f7; border-radius: 4px; }
-.casehub-tree-nav .tree-leaf {
+.pages-tree-nav .tree-group-label:hover { background: #f2f4f7; border-radius: 4px; }
+.pages-tree-nav .tree-leaf {
   display: block; padding: 4px 8px 4px 24px;
   cursor: pointer; color: #475467; text-decoration: none;
   border-radius: 4px;
 }
-.casehub-tree-nav .tree-leaf:hover { background: #f2f4f7; }
-.casehub-tree-nav .tree-leaf[data-active] { background: #ede9fe; color: #4f46e5; font-weight: 500; }
-.casehub-tree-nav .tree-children { padding-left: 16px; }
-.casehub-tiles-grid {
+.pages-tree-nav .tree-leaf:hover { background: #f2f4f7; }
+.pages-tree-nav .tree-leaf[data-active] { background: #ede9fe; color: #4f46e5; font-weight: 500; }
+.pages-tree-nav .tree-children { padding-left: 16px; }
+.pages-tiles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   padding: 0 0 16px;
 }
-.casehub-tiles-grid .tile-card {
+.pages-tiles-grid .tile-card {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 16px;
@@ -631,8 +631,8 @@ function injectNavStyles(doc: Document): void {
   color: #475467;
   transition: all 0.15s ease;
 }
-.casehub-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #98a2b3; }
-.casehub-tiles-grid .tile-card[data-active] { border-color: #4f46e5; color: #4f46e5; box-shadow: 0 0 0 1px #4f46e5; }
+.pages-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #98a2b3; }
+.pages-tiles-grid .tile-card[data-active] { border-color: #4f46e5; color: #4f46e5; box-shadow: 0 0 0 1px #4f46e5; }
 `;
   doc.head.appendChild(style);
 }
@@ -643,9 +643,9 @@ Update all callers of `injectTabStyles` to `injectNavStyles` (wireTabs, wireSide
 Simplify the wireTabs className ternary (remove tree and tiles cases):
 
 ```typescript
-  bar.className = type === "pills" ? "casehub-pills"
-    : type === "menu" ? "casehub-menu"
-    : "casehub-tabs";
+  bar.className = type === "pills" ? "pages-pills"
+    : type === "menu" ? "pages-menu"
+    : "pages-tabs";
 ```
 
 - [ ] **Step 4: Run tests**
@@ -687,7 +687,7 @@ describe("wireInteractivity — tree", () => {
       "Dashboard", "Settings/Profile", "Settings/Security", "Reports",
     ], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     expect(nav).toBeTruthy();
 
     const topItems = nav.querySelectorAll(":scope > ul > li");
@@ -702,7 +702,7 @@ describe("wireInteractivity — tree", () => {
       "Settings/Profile", "Settings/Security",
     ], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     const groupLabel = nav.querySelector(".tree-group-label");
     expect(groupLabel!.textContent).toContain("Settings");
 
@@ -716,7 +716,7 @@ describe("wireInteractivity — tree", () => {
     const { container, panels } = makeSlotContainers(["A", "B", "C"]);
     wireInteractivity(container, "tree", ["A", "B", "C"], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     const leaves = nav.querySelectorAll(".tree-leaf");
     expect(leaves).toHaveLength(3);
 
@@ -742,13 +742,13 @@ describe("wireInteractivity — tree", () => {
     expect(panels.get("Settings/B")!.style.display).not.toBe("none");
   });
 
-  it("leaf click dispatches casehub-slot-change with full hierarchical key", () => {
+  it("leaf click dispatches pages-slot-change with full hierarchical key", () => {
     const { container, panels } = makeSlotContainers(["A", "Settings/B"]);
     container.dataset.componentId = "tree-1";
     wireInteractivity(container, "tree", ["A", "Settings/B"], panels);
 
     const events: Array<{ activeSlot: string; containerId: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
 
@@ -787,7 +787,7 @@ describe("wireInteractivity — tree", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     wireInteractivity(container, "tree", ["A", "B"], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav");
+    const nav = container.querySelector(".pages-tree-nav");
     expect(nav!.parentElement).toBe(container);
     expect(panels.get("A")!.parentElement).toBe(container);
   });
@@ -823,7 +823,7 @@ describe("wireInteractivity — tree", () => {
       "Settings/Advanced/Logging",
     ], panels);
 
-    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const nav = container.querySelector(".pages-tree-nav") as HTMLElement;
     // Settings > Advanced > Logging
     const groupLabels = nav.querySelectorAll(".tree-group-label");
     expect(groupLabels).toHaveLength(2); // Settings and Advanced
@@ -916,7 +916,7 @@ function wireTree(
   injectNavStyles(doc);
 
   const nav = doc.createElement("div");
-  nav.className = "casehub-tree-nav";
+  nav.className = "pages-tree-nav";
 
   const treeStructure = buildTreeStructure(slotNames);
   const groupElements = new Map<string, HTMLElement>(); // slotKey prefix → children container
@@ -1054,7 +1054,7 @@ describe("wireInteractivity — tiles", () => {
     const { container, panels } = makeSlotContainers(["Dashboard", "Reports"]);
     wireInteractivity(container, "tiles", ["Dashboard", "Reports"], panels);
 
-    const grid = container.querySelector(".casehub-tiles-grid") as HTMLElement;
+    const grid = container.querySelector(".pages-tiles-grid") as HTMLElement;
     expect(grid).toBeTruthy();
 
     const cards = grid.querySelectorAll(".tile-card");
@@ -1081,13 +1081,13 @@ describe("wireInteractivity — tiles", () => {
     expect(panels.get("B")!.style.display).not.toBe("none");
   });
 
-  it("card click dispatches casehub-slot-change", () => {
+  it("card click dispatches pages-slot-change", () => {
     const { container, panels } = makeSlotContainers(["A", "B"]);
     container.dataset.componentId = "tiles-1";
     wireInteractivity(container, "tiles", ["A", "B"], panels);
 
     const events: Array<{ activeSlot: string }> = [];
-    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+    container.addEventListener("pages-slot-change", ((e: CustomEvent) => {
       events.push(e.detail);
     }) as EventListener);
 
@@ -1130,7 +1130,7 @@ function wireTiles(
   injectNavStyles(doc);
 
   const grid = doc.createElement("div");
-  grid.className = "casehub-tiles-grid";
+  grid.className = "pages-tiles-grid";
 
   slotNames.forEach((name) => {
     const card = doc.createElement("div");
@@ -1272,7 +1272,7 @@ navTree:
     document.body.appendChild(target);
     const site = await loadSite(target, yaml);
 
-    const sidebar = target.querySelector(".casehub-sidebar");
+    const sidebar = target.querySelector(".pages-sidebar");
     expect(sidebar).not.toBeNull();
     const buttons = sidebar!.querySelectorAll("button[data-slot]");
     expect(buttons).toHaveLength(2);
@@ -1314,7 +1314,7 @@ navTree:
     document.body.appendChild(target);
     const site = await loadSite(target, yaml);
 
-    const treeNav = target.querySelector(".casehub-tree-nav");
+    const treeNav = target.querySelector(".pages-tree-nav");
     expect(treeNav).not.toBeNull();
 
     const groupLabels = treeNav!.querySelectorAll(".tree-group-label");

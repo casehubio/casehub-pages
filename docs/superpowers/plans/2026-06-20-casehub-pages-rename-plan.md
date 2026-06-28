@@ -272,8 +272,8 @@ Rename TypeScript class names, wire protocol strings, iframe paths, and import r
 - Modify: `packages/pages-iframe-api/src/controller/index.ts` (update exports)
 - Modify: `packages/pages-data/src/dataset/external/types.ts` (wire protocol)
 - Modify: `packages/pages-data/src/dataset/external/providers/post-message.ts` (wire protocol)
-- Modify: `packages/pages-viz/src/components/CasehubIframePlugin.ts` (iframe path)
-- Modify: `packages/pages-viz/src/components/CasehubIframePlugin.test.ts` (test assertions)
+- Modify: `packages/pages-viz/src/components/PagesIframePlugin.ts` (iframe path)
+- Modify: `packages/pages-viz/src/components/PagesIframePlugin.test.ts` (test assertions)
 - Modify: `packages/pages-iframe-api/src/controller/ComponentController.ts` (JSDoc)
 - Modify: `packages/pages-iframe-api/src/controller/InternalComponentListener.ts` (JSDoc)
 
@@ -326,13 +326,13 @@ In `packages/pages-data/src/dataset/external/providers/post-message.ts`:
 
 - [ ] **Step 6: Rename iframe component path**
 
-In `packages/pages-viz/src/components/CasehubIframePlugin.ts`:
+In `packages/pages-viz/src/components/PagesIframePlugin.ts`:
 - Line 29: `` `/melviz/component/${props.componentId}/index.html` `` → `` `/pages/component/${props.componentId}/index.html` ``
 - Line 62: same change
 
 - [ ] **Step 7: Update test assertions**
 
-In `packages/pages-viz/src/components/CasehubIframePlugin.test.ts`:
+In `packages/pages-viz/src/components/PagesIframePlugin.test.ts`:
 - All 6 assertions containing `/melviz/component/` → `/pages/component/`
 
 - [ ] **Step 8: Update JSDoc comments**

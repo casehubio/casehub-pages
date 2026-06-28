@@ -163,7 +163,7 @@ function getComponentTree(container: HTMLElement): string[] {
   const tags: string[] = [];
   function walk(el: Element): void {
     const tag = el.tagName.toLowerCase();
-    if (tag.startsWith("casehub-")) {
+    if (tag.startsWith("pages-")) {
       tags.push(tag);
     }
     // Walk shadow DOM if present
@@ -212,13 +212,13 @@ describe("YAML ↔ TS equivalence", () => {
     expect(tsTags.length).toBeGreaterThan(0);
 
     // Verify specific components are present
-    expect(tsTags).toContain("casehub-table");
-    expect(tsTags).toContain("casehub-text-input");
-    expect(tsTags).toContain("casehub-number-input");
-    expect(tsTags).toContain("casehub-dropdown");
-    expect(tsTags).toContain("casehub-checkbox");
-    expect(tsTags).toContain("casehub-date-picker");
-    expect(tsTags).toContain("casehub-textarea");
+    expect(tsTags).toContain("pages-table");
+    expect(tsTags).toContain("pages-text-input");
+    expect(tsTags).toContain("pages-number-input");
+    expect(tsTags).toContain("pages-dropdown");
+    expect(tsTags).toContain("pages-checkbox");
+    expect(tsTags).toContain("pages-date-picker");
+    expect(tsTags).toContain("pages-textarea");
 
     document.body.removeChild(yamlTarget);
     document.body.removeChild(tsTarget);
@@ -237,14 +237,14 @@ describe("YAML ↔ TS equivalence", () => {
     sites.push(tsSite);
     await new Promise((r) => setTimeout(r, 200));
 
-    const yamlTable = yamlTarget.querySelector("casehub-table");
-    const tsTable = tsTarget.querySelector("casehub-table");
+    const yamlTable = yamlTarget.querySelector("pages-table");
+    const tsTable = tsTarget.querySelector("pages-table");
 
     expect(yamlTable?.dataSet?.rows.length).toBe(3);
     expect(tsTable?.dataSet?.rows.length).toBe(3);
 
-    const yamlInputs = yamlTarget.querySelectorAll("casehub-text-input");
-    const tsInputs = tsTarget.querySelectorAll("casehub-text-input");
+    const yamlInputs = yamlTarget.querySelectorAll("pages-text-input");
+    const tsInputs = tsTarget.querySelectorAll("pages-text-input");
     expect(yamlInputs.length).toBe(tsInputs.length);
 
     document.body.removeChild(yamlTarget);
@@ -258,7 +258,7 @@ describe("YAML ↔ TS equivalence", () => {
     sites.push(tsSite);
     await new Promise((r) => setTimeout(r, 200));
 
-    const inputs = tsTarget.querySelectorAll("casehub-text-input");
+    const inputs = tsTarget.querySelectorAll("pages-text-input");
     expect(inputs.length).toBeGreaterThan(0);
     for (const input of inputs) {
       expect(input.editable).toBe(true);

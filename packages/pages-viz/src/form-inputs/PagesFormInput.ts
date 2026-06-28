@@ -1,0 +1,82 @@
+import { PagesElement } from "../base/PagesElement.js";
+import type { FormInputCommon } from "@casehubio/pages-component";
+import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+
+export interface PagesFieldChangeDetail {
+  readonly field: string;
+  readonly value: unknown;
+  readonly committed: boolean;
+}
+
+/**
+ * Abstract base for form input Web Components.
+ *
+ * Extends PagesElement with:
+ * - `editable` property (set by runtime during activation)
+ * - `extractFieldValue(dataset)` helper (reads field from first row)
+ * - `emitFieldChange(value, committed)` (dispatches pages-field-change event)
+ *
+ * Form inputs do NOT have lookup in their props — the runtime injects it
+ * separately during activation. We handle this by making props extend
+ * FormInputCommon & { lookup?: DataSetLookup } so the base class's
+ * requestDataIfNeeded() can access the lookup when it exists.
+ */
+export abstract class PagesFormInput<
+  P extends FormInputCommon,
+> extends PagesElement<P & { lookup?: DataSetLookup }> {
+  protected _editable = false;
+
+  set editable(value: boolean) {
+    this._editable = value;
+  }
+
+  get editable(): boolean {
+    return this._editable;
+  }
+
+  /**
+   * Extract the field value from the dataset's first row.
+   * Returns undefined if field is missing or dataset is empty.
+   */
+  protected extractFieldValue(dataset: TypedDataSet): unknown {
+    const field = this.props?.field;
+    if (!field || !dataset.rows.length) return undefined;
+    const row = dataset.rows[0];
+    if (!row) return undefined;
+    try {
+      const cell = row.cell(field as ColumnId);
+      if (cell.type === "NULL") return undefined;
+      return cell.value;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Emit a pages-field-change event (only if editable).
+   *
+   * @param value - The new field value
+   * @param committed - false = in-progress editing (input event), true = finalized (blur/change event)
+   */
+  /**
+   * Type-safe access to props cast to the concrete form input type.
+   * Useful in subclass render methods that receive the props parameter.
+   */
+  protected asFormProps(props: P & { lookup?: DataSetLookup }): P {
+    return props;
+  }
+
+  protected emitFieldChange(value: unknown, committed: boolean): void {
+    if (!this._editable) return;
+    const field = this.props?.field;
+    if (!field) return;
+    this.dispatchEvent(
+      new CustomEvent<PagesFieldChangeDetail>("pages-field-change", {
+        bubbles: true,
+        composed: true,
+        detail: { field, value, committed },
+      }),
+    );
+  }
+}

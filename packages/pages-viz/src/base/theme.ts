@@ -1,4 +1,4 @@
-export interface CasehubTheme {
+export interface PagesTheme {
   readonly font: string;
   readonly fontSize: string;
   readonly text: string;
@@ -14,7 +14,7 @@ export interface CasehubTheme {
   readonly accentSubtle: string;
 }
 
-export const LIGHT_THEME: CasehubTheme = {
+export const LIGHT_THEME: PagesTheme = {
   font: "system-ui, sans-serif",
   fontSize: "14px",
   text: "#333",
@@ -30,7 +30,7 @@ export const LIGHT_THEME: CasehubTheme = {
   accentSubtle: "#e8eaf6",
 };
 
-export const DARK_THEME: CasehubTheme = {
+export const DARK_THEME: PagesTheme = {
   font: "system-ui, sans-serif",
   fontSize: "14px",
   text: "#e0e0e0",
@@ -46,29 +46,29 @@ export const DARK_THEME: CasehubTheme = {
   accentSubtle: "#2d2b55",
 };
 
-const TOKEN_MAP: ReadonlyArray<readonly [keyof CasehubTheme, string]> = [
-  ["font", "--casehub-font"],
-  ["fontSize", "--casehub-font-size"],
-  ["text", "--casehub-text"],
-  ["textMuted", "--casehub-text-muted"],
-  ["bg", "--casehub-bg"],
-  ["bgAlt", "--casehub-bg-alt"],
-  ["bgHover", "--casehub-bg-hover"],
-  ["bgDisabled", "--casehub-bg-disabled"],
-  ["border", "--casehub-border"],
-  ["radius", "--casehub-radius"],
-  ["accent", "--casehub-accent"],
-  ["accentHover", "--casehub-accent-hover"],
-  ["accentSubtle", "--casehub-accent-subtle"],
+const TOKEN_MAP: ReadonlyArray<readonly [keyof PagesTheme, string]> = [
+  ["font", "--pages-font"],
+  ["fontSize", "--pages-font-size"],
+  ["text", "--pages-text"],
+  ["textMuted", "--pages-text-muted"],
+  ["bg", "--pages-bg"],
+  ["bgAlt", "--pages-bg-alt"],
+  ["bgHover", "--pages-bg-hover"],
+  ["bgDisabled", "--pages-bg-disabled"],
+  ["border", "--pages-border"],
+  ["radius", "--pages-radius"],
+  ["accent", "--pages-accent"],
+  ["accentHover", "--pages-accent-hover"],
+  ["accentSubtle", "--pages-accent-subtle"],
 ];
 
-function resolveTheme(theme: CasehubTheme | "light" | "dark"): CasehubTheme {
+function resolveTheme(theme: PagesTheme | "light" | "dark"): PagesTheme {
   if (theme === "light") return LIGHT_THEME;
   if (theme === "dark") return DARK_THEME;
   return theme;
 }
 
-function resolveThemeName(theme: CasehubTheme): string {
+function resolveThemeName(theme: PagesTheme): string {
   if (theme === LIGHT_THEME) return "light";
   if (theme === DARK_THEME) return "dark";
   return "custom";
@@ -76,18 +76,18 @@ function resolveThemeName(theme: CasehubTheme): string {
 
 export function applyTheme(
   element: HTMLElement,
-  theme: CasehubTheme | "light" | "dark",
+  theme: PagesTheme | "light" | "dark",
 ): void {
   const resolved = resolveTheme(theme);
   for (const [key, prop] of TOKEN_MAP) {
     element.style.setProperty(prop, resolved[key]);
   }
-  element.dataset.casehubTheme = resolveThemeName(resolved);
+  element.dataset.pagesTheme = resolveThemeName(resolved);
 }
 
 export function clearTheme(element: HTMLElement): void {
   for (const [, prop] of TOKEN_MAP) {
     element.style.removeProperty(prop);
   }
-  delete element.dataset.casehubTheme;
+  delete element.dataset.pagesTheme;
 }

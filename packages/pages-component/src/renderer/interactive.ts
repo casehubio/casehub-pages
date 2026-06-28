@@ -15,137 +15,137 @@ function injectNavStyles(doc: Document): void {
   padding: 4px 0 12px;
 }
 [data-tab-bar] button[data-slot] {
-  font-family: var(--casehub-font, system-ui, sans-serif);
+  font-family: var(--pages-font, system-ui, sans-serif);
   font-size: 13px;
   font-weight: 500;
   padding: 6px 16px;
-  border: 1px solid var(--casehub-border, #e0e0e0);
+  border: 1px solid var(--pages-border, #e0e0e0);
   border-radius: 20px;
-  background: var(--casehub-bg, #fff);
-  color: var(--casehub-text-muted, #888);
+  background: var(--pages-bg, #fff);
+  color: var(--pages-text-muted, #888);
   cursor: pointer;
   transition: all 0.15s ease;
   line-height: 1.4;
 }
 [data-tab-bar] button[data-slot]:hover {
-  background: var(--casehub-bg-hover, #e8f0fe);
-  border-color: var(--casehub-border, #e0e0e0);
-  color: var(--casehub-text, #333);
+  background: var(--pages-bg-hover, #e8f0fe);
+  border-color: var(--pages-border, #e0e0e0);
+  color: var(--pages-text, #333);
 }
 [data-tab-bar] button[data-slot][data-active] {
-  background: var(--casehub-accent, #5470c6);
-  border-color: var(--casehub-accent, #5470c6);
+  background: var(--pages-accent, #5470c6);
+  border-color: var(--pages-accent, #5470c6);
   color: #fff;
 }
 [data-tab-bar] button[data-slot][data-active]:hover {
-  background: var(--casehub-accent-hover, #4361b0);
-  border-color: var(--casehub-accent-hover, #4361b0);
+  background: var(--pages-accent-hover, #4361b0);
+  border-color: var(--pages-accent-hover, #4361b0);
 }
-.casehub-sidebar {
+.pages-sidebar {
   flex-direction: column;
   gap: 2px;
   padding: 0 12px 0 0;
-  border-right: 1px solid var(--casehub-border, #e0e0e0);
+  border-right: 1px solid var(--pages-border, #e0e0e0);
   min-width: 140px;
 }
-.casehub-sidebar button[data-slot] {
+.pages-sidebar button[data-slot] {
   border-radius: 8px;
   border: none;
   text-align: left;
   padding: 8px 12px;
 }
-.casehub-tabs {
+.pages-tabs {
   gap: 0;
-  border-bottom: 1px solid var(--casehub-border, #e0e0e0);
+  border-bottom: 1px solid var(--pages-border, #e0e0e0);
   padding-bottom: 0;
 }
-.casehub-tabs button[data-slot] {
+.pages-tabs button[data-slot] {
   border: none;
   border-radius: 0;
   background: transparent;
   padding: 8px 16px;
   border-bottom: 2px solid transparent;
 }
-.casehub-tabs button[data-slot]:hover {
-  background: var(--casehub-bg-alt, #f0f0f0);
+.pages-tabs button[data-slot]:hover {
+  background: var(--pages-bg-alt, #f0f0f0);
   border-color: transparent;
-  border-bottom-color: var(--casehub-border, #e0e0e0);
+  border-bottom-color: var(--pages-border, #e0e0e0);
 }
-.casehub-tabs button[data-slot][data-active] {
+.pages-tabs button[data-slot][data-active] {
   background: transparent;
-  color: var(--casehub-accent, #5470c6);
-  border-bottom-color: var(--casehub-accent, #5470c6);
+  color: var(--pages-accent, #5470c6);
+  border-bottom-color: var(--pages-accent, #5470c6);
 }
-.casehub-tabs button[data-slot][data-active]:hover {
-  background: var(--casehub-accent-subtle, #e8eaf6);
+.pages-tabs button[data-slot][data-active]:hover {
+  background: var(--pages-accent-subtle, #e8eaf6);
 }
-.casehub-menu {
-  background: var(--casehub-bg-alt, #f0f0f0);
-  border-bottom: 1px solid var(--casehub-border, #e0e0e0);
+.pages-menu {
+  background: var(--pages-bg-alt, #f0f0f0);
+  border-bottom: 1px solid var(--pages-border, #e0e0e0);
   gap: 0;
   padding: 0;
 }
-.casehub-menu button[data-slot] {
+.pages-menu button[data-slot] {
   border: none;
   border-radius: 0;
   background: transparent;
   padding: 8px 14px;
   font-size: 13px;
 }
-.casehub-menu button[data-slot]:hover {
-  background: var(--casehub-bg-hover, #e8f0fe);
+.pages-menu button[data-slot]:hover {
+  background: var(--pages-bg-hover, #e8f0fe);
   border-color: transparent;
 }
-.casehub-menu button[data-slot][data-active] {
+.pages-menu button[data-slot][data-active] {
   background: transparent;
   font-weight: 600;
-  color: var(--casehub-text, #333);
-  border-bottom: 2px solid var(--casehub-accent, #5470c6);
+  color: var(--pages-text, #333);
+  border-bottom: 2px solid var(--pages-accent, #5470c6);
 }
-.casehub-tree-nav {
+.pages-tree-nav {
   flex-direction: column;
   padding: 0 12px 0 0;
-  border-right: 1px solid var(--casehub-border, #e0e0e0);
+  border-right: 1px solid var(--pages-border, #e0e0e0);
   min-width: 160px;
-  font-family: var(--casehub-font, system-ui, sans-serif);
+  font-family: var(--pages-font, system-ui, sans-serif);
   font-size: 13px;
 }
-.casehub-tree-nav ul { list-style: none; margin: 0; padding: 0; }
-.casehub-tree-nav li { margin: 0; }
-.casehub-tree-nav .tree-group-label {
+.pages-tree-nav ul { list-style: none; margin: 0; padding: 0; }
+.pages-tree-nav li { margin: 0; }
+.pages-tree-nav .tree-group-label {
   display: flex; align-items: center; gap: 4px;
   padding: 4px 8px; cursor: pointer; user-select: none;
-  color: var(--casehub-text-muted, #888); font-weight: 500;
+  color: var(--pages-text-muted, #888); font-weight: 500;
 }
-.casehub-tree-nav .tree-group-label:hover { background: var(--casehub-bg-hover, #e8f0fe); border-radius: var(--casehub-radius, 4px); }
-.casehub-tree-nav .tree-leaf {
+.pages-tree-nav .tree-group-label:hover { background: var(--pages-bg-hover, #e8f0fe); border-radius: var(--pages-radius, 4px); }
+.pages-tree-nav .tree-leaf {
   display: block; padding: 4px 8px 4px 24px;
-  cursor: pointer; color: var(--casehub-text-muted, #888); text-decoration: none;
-  border-radius: var(--casehub-radius, 4px);
+  cursor: pointer; color: var(--pages-text-muted, #888); text-decoration: none;
+  border-radius: var(--pages-radius, 4px);
 }
-.casehub-tree-nav .tree-leaf:hover { background: var(--casehub-bg-hover, #e8f0fe); }
-.casehub-tree-nav .tree-leaf[data-active] { background: var(--casehub-accent-subtle, #e8eaf6); color: var(--casehub-accent, #5470c6); font-weight: 500; }
-.casehub-tree-nav .tree-children { padding-left: 16px; }
-.casehub-tiles-grid {
+.pages-tree-nav .tree-leaf:hover { background: var(--pages-bg-hover, #e8f0fe); }
+.pages-tree-nav .tree-leaf[data-active] { background: var(--pages-accent-subtle, #e8eaf6); color: var(--pages-accent, #5470c6); font-weight: 500; }
+.pages-tree-nav .tree-children { padding-left: 16px; }
+.pages-tiles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   padding: 0 0 16px;
 }
-.casehub-tiles-grid .tile-card {
-  border: 1px solid var(--casehub-border, #e0e0e0);
+.pages-tiles-grid .tile-card {
+  border: 1px solid var(--pages-border, #e0e0e0);
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
   text-align: center;
-  font-family: var(--casehub-font, system-ui, sans-serif);
-  font-size: var(--casehub-font-size, 14px);
+  font-family: var(--pages-font, system-ui, sans-serif);
+  font-size: var(--pages-font-size, 14px);
   font-weight: 500;
-  color: var(--casehub-text-muted, #888);
+  color: var(--pages-text-muted, #888);
   transition: all 0.15s ease;
 }
-.casehub-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--casehub-border, #e0e0e0); }
-.casehub-tiles-grid .tile-card[data-active] { border-color: var(--casehub-accent, #5470c6); color: var(--casehub-accent, #5470c6); box-shadow: 0 0 0 1px var(--casehub-accent, #5470c6); }
+.pages-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--pages-border, #e0e0e0); }
+.pages-tiles-grid .tile-card[data-active] { border-color: var(--pages-accent, #5470c6); color: var(--pages-accent, #5470c6); box-shadow: 0 0 0 1px var(--pages-accent, #5470c6); }
 `;
   doc.head.appendChild(style);
 }
@@ -287,9 +287,9 @@ function wireTabs(
   injectNavStyles(doc);
   const bar = doc.createElement("div");
   bar.dataset.tabBar = "";
-  bar.className = type === "pills" ? "casehub-pills"
-    : type === "menu" ? "casehub-menu"
-    : "casehub-tabs";
+  bar.className = type === "pills" ? "pages-pills"
+    : type === "menu" ? "pages-menu"
+    : "pages-tabs";
 
   slotNames.forEach((name) => {
     const button = doc.createElement("button");
@@ -328,7 +328,7 @@ function wireSidebar(
   injectNavStyles(doc);
   const bar = doc.createElement("div");
   bar.dataset.tabBar = "";
-  bar.className = "casehub-sidebar";
+  bar.className = "pages-sidebar";
 
   slotNames.forEach((name) => {
     const button = doc.createElement("button");
@@ -451,7 +451,7 @@ function wireTiles(
   injectNavStyles(doc);
 
   const grid = doc.createElement("div");
-  grid.className = "casehub-tiles-grid";
+  grid.className = "pages-tiles-grid";
 
   slotNames.forEach((name) => {
     const card = doc.createElement("div");
@@ -537,7 +537,7 @@ function wireTree(
   injectNavStyles(doc);
 
   const nav = doc.createElement("div");
-  nav.className = "casehub-tree-nav";
+  nav.className = "pages-tree-nav";
 
   const treeStructure = buildTreeStructure(slotNames);
   const groupElements = new Map<string, HTMLElement>(); // slotKey prefix → children container

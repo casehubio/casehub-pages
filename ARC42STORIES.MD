@@ -61,7 +61,7 @@ yarn build:prod                   # production (includes examples gallery)
 │                      ├── @casehubio/pages-component│
 │                      └── @casehubio/pages-viz      │
 │                                                  │
-│   ◄── casehub-filter, casehub-sort events ──►    │
+│   ◄── pages-filter, pages-sort events ──►    │
 └─────────────────────────────────────────────────┘
          │                              │
     YAML files                    Data sources
@@ -89,9 +89,9 @@ DataSet (columns + rows)            — wire format
     ↓
 renderNode() / renderComponent()    — @casehubio/pages-component
     ↓
-<casehub-bar-chart> etc.            — @casehubio/pages-viz Web Components
+<pages-bar-chart> etc.            — @casehubio/pages-viz Web Components
     ↓
-casehub-filter / casehub-sort       — DOM custom events back to data layer
+pages-filter / pages-sort       — DOM custom events back to data layer
 ```
 
 ### Lazy Rendering for One-at-a-Time Containers
@@ -101,7 +101,7 @@ Tabs, pills, sidebar, carousel, and stack containers render only the active slot
 Key decisions:
 - **Swap function as single owner** — each wire function (wireTabs, wireSidebar, wireCarousel, wireStack) builds one swap function that owns slot state, DOM lifecycle, button chrome, and event dispatch. Click handlers and `activateSlot` both delegate to it via a `slotSwapRegistry` WeakMap.
 - **`slot-swap.ts` shared module** — consolidated `dispatchSlotChange` from interactive.ts and activate-slot.ts, eliminating duplication.
-- **Registry eviction via `isConnected`** — `casehub-slot-change` handler scans the registry and removes entries whose element is disconnected from the DOM. O(1) per entry.
+- **Registry eviction via `isConnected`** — `pages-slot-change` handler scans the registry and removes entries whose element is disconnected from the DOM. O(1) per entry.
 - **Accordion stays eager** — all accordion sections start expanded, so lazy rendering would change UX.
 
 ### NavTree Page Deduplication
@@ -110,8 +110,8 @@ Key decisions:
 
 ### Cross-Filter Event Protocol
 
-The filter flow (selector → `casehub-filter` → listening component re-query) requires:
-1. Event listener ordering — `renderComponent` must run AFTER `addEventListener` (custom elements dispatch `casehub-data-request` synchronously during `connectedCallback`)
+The filter flow (selector → `pages-filter` → listening component re-query) requires:
+1. Event listener ordering — `renderComponent` must run AFTER `addEventListener` (custom elements dispatch `pages-data-request` synchronously during `connectedCallback`)
 2. `@casehubio/viz` side-effect import — custom elements must be registered for `connectedCallback` to fire
 3. `yamlLoad` call in the YAML string path
 
@@ -136,16 +136,16 @@ The filter flow (selector → `casehub-filter` → listening component re-query)
 
 1. Host calls `loadSite(yaml, container, options)`
 2. Runtime parses YAML via `@casehubio/pages-ui` → `ComponentNode` tree + `DataSetDef[]`
-3. Runtime registers event listeners for `casehub-data-request`, `casehub-filter`, `casehub-sort`, `casehub-page`
+3. Runtime registers event listeners for `pages-data-request`, `pages-filter`, `pages-sort`, `pages-page`
 4. Runtime calls `renderComponent()` → `@casehubio/pages-component` renders CSS grid layout
-5. Web Components fire `casehub-data-request` during `connectedCallback`
+5. Web Components fire `pages-data-request` during `connectedCallback`
 6. Runtime resolves each dataset via `@casehubio/pages-data` and posts results back via `casehub-data-response`
 7. Web Components render with ECharts / DOM
 
 ### Cross-Filtering
 
 1. User clicks a data point (chart bar/slice, table cell, selector option, iframe message)
-2. Emitter resolves `row` and `value` at dispatch time, emits `casehub-filter` custom event with `CasehubFilterApply` (discriminated union: `columnId`, `value`, `row`, `reset: false`, `group`) or `CasehubFilterReset` (`columnId`, `reset: true`, `group`)
+2. Emitter resolves `row` and `value` at dispatch time, emits `pages-filter` custom event with `PagesFilterApply` (discriminated union: `columnId`, `value`, `row`, `reset: false`, `group`) or `PagesFilterReset` (`columnId`, `reset: true`, `group`)
 3. Runtime uses `detail.value` directly — no fallback logic or row extraction
 4. If child DataScope exists and row contains `idColumn` → record selection path; otherwise → cross-filter path
 5. Runtime re-queries listening components via the data pipeline with updated `FilterState`
@@ -242,7 +242,7 @@ Decisions not captured inline in §4:
 | Decision | Rationale |
 |---|---|
 | Web Components over React for viz | Components must work inside any host framework (React, vanilla, GWT iframe). Web Components are framework-agnostic. |
-| Custom events over callback API | `casehub-filter`, `casehub-sort` etc. decouple components from the runtime. Any host can intercept and handle events. |
+| Custom events over callback API | `pages-filter`, `pages-sort` etc. decouple components from the runtime. Any host can intercept and handle events. |
 | DashBuilder YAML as primary format | Backward compatibility with existing dashboards. Parser handles both DashBuilder legacy and clean casehub format. |
 
 ---

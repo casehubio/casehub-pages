@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Unify the `casehub-filter` event protocol across all emitters (charts, tables, selectors, iframe plugins) with a self-contained discriminated union, toggle semantics, visual feedback, and generalized record selection.
+**Goal:** Unify the `pages-filter` event protocol across all emitters (charts, tables, selectors, iframe plugins) with a self-contained discriminated union, toggle semantics, visual feedback, and generalized record selection.
 
-**Architecture:** Discriminated union type (`CasehubFilterApply | CasehubFilterReset`) in `filter-types.ts`. Every emitter resolves `row` and `value` at dispatch time — the runtime never falls back or guesses. Toggle via value-based tracking (`_selectedValue`). Visual feedback via ECharts `highlight`/`downplay` for charts, `.selected` CSS class for tables. Record selection generalized from table-only to data-shape-inferred.
+**Architecture:** Discriminated union type (`PagesFilterApply | PagesFilterReset`) in `filter-types.ts`. Every emitter resolves `row` and `value` at dispatch time — the runtime never falls back or guesses. Toggle via value-based tracking (`_selectedValue`). Visual feedback via ECharts `highlight`/`downplay` for charts, `.selected` CSS class for tables. Record selection generalized from table-only to data-shape-inferred.
 
 **Tech Stack:** TypeScript, Vitest, ECharts 5.6.x, Web Components
 
@@ -14,7 +14,7 @@
 - Run tests: `yarn workspace @casehubio/pages-viz run test` and `yarn workspace @casehubio/pages-runtime run test`.
 - Typecheck: `yarn typecheck`.
 - ECharts version: `^5.6.0` — use `highlight`/`downplay` actions, NOT `selectedMode`/`select`.
-- `CasehubFilterDetail` is a public API export from `@casehubio/pages-viz/dist/index.js` — the re-export in `index.ts` must be updated when the type moves.
+- `PagesFilterDetail` is a public API export from `@casehubio/pages-viz/dist/index.js` — the re-export in `index.ts` must be updated when the type moves.
 - All emitters skip events when resolved cell value is NULL. Selectors exclude null values from distinct values.
 
 ---
@@ -25,13 +25,13 @@ The foundation: define the new type, update the chart emitter to produce it, upd
 
 **Files:**
 - Create: `packages/pages-viz/src/base/filter-types.ts`
-- Modify: `packages/pages-viz/src/base/CasehubChartElement.ts`
+- Modify: `packages/pages-viz/src/base/PagesChartElement.ts`
 - Modify: `packages/pages-viz/src/index.ts` (re-export update)
-- Modify: `packages/pages-viz/src/base/CasehubChartElement.test.ts`
+- Modify: `packages/pages-viz/src/base/PagesChartElement.test.ts`
 
 **Interfaces:**
 - Consumes: `TypedRow`, `CellValue`, `ColumnId`, `Column` from `@casehubio/pages-data`; `cellToRaw` from `./cell-extract.js`; `FilterSettings` from `@casehubio/pages-component`
-- Produces: `CasehubFilterDetail`, `CasehubFilterApply`, `CasehubFilterReset`, `ChartClickParams` types exported from `filter-types.ts`. Chart emits events conforming to the discriminated union. `resolveFilterColumn()` protected method on `CasehubChartElement`.
+- Produces: `PagesFilterDetail`, `PagesFilterApply`, `PagesFilterReset`, `ChartClickParams` types exported from `filter-types.ts`. Chart emits events conforming to the discriminated union. `resolveFilterColumn()` protected method on `PagesChartElement`.
 
 - [ ] **Step 1: Create `filter-types.ts` with the discriminated union and `ChartClickParams`**
 
@@ -40,9 +40,9 @@ Create `packages/pages-viz/src/base/filter-types.ts`:
 ```typescript
 import type { TypedRow, Column } from "@casehubio/pages-data/dist/dataset/types.js";
 
-export type CasehubFilterDetail = CasehubFilterApply | CasehubFilterReset;
+export type PagesFilterDetail = PagesFilterApply | PagesFilterReset;
 
-export interface CasehubFilterApply {
+export interface PagesFilterApply {
   readonly columnId: string;
   readonly value: string;
   readonly row: TypedRow;
@@ -50,7 +50,7 @@ export interface CasehubFilterApply {
   readonly group: string | undefined;
 }
 
-export interface CasehubFilterReset {
+export interface PagesFilterReset {
   readonly columnId: string;
   readonly reset: true;
   readonly group: string | undefined;
@@ -67,24 +67,24 @@ export interface ChartClickParams {
 
 Note: `Column` import is for `resolveFilterColumn` return type — used by the chart element, not the types file itself. Remove the import here; the chart will import `Column` directly.
 
-- [ ] **Step 2: Update `index.ts` — re-export from `filter-types.ts` instead of `CasehubChartElement.ts`**
+- [ ] **Step 2: Update `index.ts` — re-export from `filter-types.ts` instead of `PagesChartElement.ts`**
 
 In `packages/pages-viz/src/index.ts`, change:
 
 ```typescript
 // OLD
-export type { CasehubFilterDetail } from "./base/CasehubChartElement.js";
+export type { PagesFilterDetail } from "./base/PagesChartElement.js";
 
 // NEW
-export type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset, ChartClickParams } from "./base/filter-types.js";
+export type { PagesFilterDetail, PagesFilterApply, PagesFilterReset, ChartClickParams } from "./base/filter-types.js";
 ```
 
 - [ ] **Step 3: Write failing tests for the new chart event shape**
 
-In `packages/pages-viz/src/base/CasehubChartElement.test.ts`, update the existing `click-to-filter` tests and add toggle + highlight tests. Replace the existing "click with filter enabled" test:
+In `packages/pages-viz/src/base/PagesChartElement.test.ts`, update the existing `click-to-filter` tests and add toggle + highlight tests. Replace the existing "click with filter enabled" test:
 
 ```typescript
-import type { CasehubFilterApply, CasehubFilterReset } from "./filter-types.js";
+import type { PagesFilterApply, PagesFilterReset } from "./filter-types.js";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 import type { DataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 
@@ -99,7 +99,7 @@ function mockTypedDataSet(columnId = "col1" as ColumnId): TypedDataSet {
 
 // In the click-to-filter describe block:
 
-it("click emits CasehubFilterApply with value and row", () => {
+it("click emits PagesFilterApply with value and row", () => {
   const columnId = "region" as ColumnId;
   const props: TestChartProps = {
     lookup: mockLookup("sales"),
@@ -116,12 +116,12 @@ it("click emits CasehubFilterApply with value and row", () => {
   )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
   const filterEvents: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => filterEvents.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => filterEvents.push(e as CustomEvent));
 
   clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
 
   expect(filterEvents).toHaveLength(1);
-  const detail = filterEvents[0]!.detail as CasehubFilterApply;
+  const detail = filterEvents[0]!.detail as PagesFilterApply;
   expect(detail.columnId).toBe(columnId);
   expect(detail.value).toBe("Beta");
   expect(detail.row).toBe(ds.rows[1]);
@@ -129,7 +129,7 @@ it("click emits CasehubFilterApply with value and row", () => {
   expect(detail.group).toBe("g1");
 });
 
-it("click same value twice toggles — second emits CasehubFilterReset", () => {
+it("click same value twice toggles — second emits PagesFilterReset", () => {
   const columnId = "region" as ColumnId;
   el.props = { lookup: mockLookup("sales"), filter: { enabled: true } };
   document.body.appendChild(el);
@@ -140,15 +140,15 @@ it("click same value twice toggles — second emits CasehubFilterReset", () => {
   )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
   const events: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
   clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
   clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
 
   expect(events).toHaveLength(2);
-  expect((events[0]!.detail as CasehubFilterApply).reset).toBe(false);
-  expect((events[1]!.detail as CasehubFilterReset).reset).toBe(true);
-  expect((events[1]!.detail as CasehubFilterReset).columnId).toBe(columnId);
+  expect((events[0]!.detail as PagesFilterApply).reset).toBe(false);
+  expect((events[1]!.detail as PagesFilterReset).reset).toBe(true);
+  expect((events[1]!.detail as PagesFilterReset).columnId).toBe(columnId);
 });
 
 it("click different value switches selection", () => {
@@ -162,14 +162,14 @@ it("click different value switches selection", () => {
   )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
   const events: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
   clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
   clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
 
   expect(events).toHaveLength(2);
-  expect((events[0]!.detail as CasehubFilterApply).value).toBe("Alpha");
-  expect((events[1]!.detail as CasehubFilterApply).value).toBe("Beta");
+  expect((events[0]!.detail as PagesFilterApply).value).toBe("Alpha");
+  expect((events[1]!.detail as PagesFilterApply).value).toBe("Beta");
 });
 
 it("skips event when cell value is NULL", () => {
@@ -188,7 +188,7 @@ it("skips event when cell value is NULL", () => {
   )![1] as (params: { dataIndex: number; seriesIndex: number; seriesName: string; name: string; data: unknown }) => void;
 
   const events: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
   clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "", data: null });
 
@@ -213,11 +213,11 @@ it("data re-push preserves selection when value exists in new data", () => {
 
   // Click "Beta" again — should toggle OFF (selection was preserved)
   const events: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
   clickHandler({ dataIndex: 1, seriesIndex: 0, seriesName: "s0", name: "Beta", data: "Beta" });
 
   expect(events).toHaveLength(1);
-  expect((events[0]!.detail as CasehubFilterReset).reset).toBe(true);
+  expect((events[0]!.detail as PagesFilterReset).reset).toBe(true);
 });
 
 it("data re-push clears selection when value is absent from new data", () => {
@@ -242,12 +242,12 @@ it("data re-push clears selection when value is absent from new data", () => {
 
   // Click "Alpha" — should be a fresh select, not a toggle
   const events: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
   clickHandler({ dataIndex: 0, seriesIndex: 0, seriesName: "s0", name: "Alpha", data: "Alpha" });
 
   expect(events).toHaveLength(1);
-  expect((events[0]!.detail as CasehubFilterApply).reset).toBe(false);
-  expect((events[0]!.detail as CasehubFilterApply).value).toBe("Alpha");
+  expect((events[0]!.detail as PagesFilterApply).reset).toBe(false);
+  expect((events[0]!.detail as PagesFilterApply).value).toBe("Alpha");
 });
 
 it("highlight dispatched on apply, downplay on reset", () => {
@@ -288,14 +288,14 @@ Also update the existing "click with filter disabled" and "click with no filter 
 - [ ] **Step 4: Run tests to verify they fail**
 
 Run: `yarn workspace @casehubio/pages-viz run test`
-Expected: Failures on new tests (old `CasehubFilterDetail` shape, no toggle, no highlight)
+Expected: Failures on new tests (old `PagesFilterDetail` shape, no toggle, no highlight)
 
-- [ ] **Step 5: Implement `CasehubChartElement` changes**
+- [ ] **Step 5: Implement `PagesChartElement` changes**
 
-In `packages/pages-viz/src/base/CasehubChartElement.ts`:
+In `packages/pages-viz/src/base/PagesChartElement.ts`:
 
-1. Remove the old `CasehubFilterDetail` interface (lines 12-17).
-2. Add imports: `import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset, ChartClickParams } from "./filter-types.js";` and `import type { Column } from "@casehubio/pages-data/dist/dataset/types.js";` and `import { cellToRaw } from "./cell-extract.js";`.
+1. Remove the old `PagesFilterDetail` interface (lines 12-17).
+2. Add imports: `import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset, ChartClickParams } from "./filter-types.js";` and `import type { Column } from "@casehubio/pages-data/dist/dataset/types.js";` and `import { cellToRaw } from "./cell-extract.js";`.
 3. Add `_selectedValue: string | undefined` field.
 4. Add `_selectedDataIndex: number | undefined` field (for downplay dispatch).
 5. Override `set dataSet` to run existence check:
@@ -348,10 +348,10 @@ In `packages/pages-viz/src/base/CasehubChartElement.ts`:
          this._selectedDataIndex = undefined;
          this.syncHighlight(chart, prevIndex, undefined);
          this.dispatchEvent(
-           new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+           new CustomEvent<PagesFilterDetail>("pages-filter", {
              bubbles: true,
              composed: true,
-             detail: { columnId: filterCol.id, reset: true, group: filter.group } satisfies CasehubFilterReset,
+             detail: { columnId: filterCol.id, reset: true, group: filter.group } satisfies PagesFilterReset,
            }),
          );
        } else {
@@ -361,10 +361,10 @@ In `packages/pages-viz/src/base/CasehubChartElement.ts`:
          this._selectedDataIndex = params.dataIndex;
          this.syncHighlight(chart, prevIndex, params.dataIndex);
          this.dispatchEvent(
-           new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+           new CustomEvent<PagesFilterDetail>("pages-filter", {
              bubbles: true,
              composed: true,
-             detail: { columnId: filterCol.id, value, row, reset: false, group: filter.group } satisfies CasehubFilterApply,
+             detail: { columnId: filterCol.id, value, row, reset: false, group: filter.group } satisfies PagesFilterApply,
            }),
          );
        }
@@ -401,15 +401,15 @@ Expected: All tests pass.
 - [ ] **Step 7: Run typecheck**
 
 Run: `yarn typecheck`
-Expected: No errors. If pages-runtime has import errors for the old `CasehubFilterDetail` location, those will be addressed in Task 4.
+Expected: No errors. If pages-runtime has import errors for the old `PagesFilterDetail` location, those will be addressed in Task 4.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add packages/pages-viz/src/base/filter-types.ts packages/pages-viz/src/base/CasehubChartElement.ts packages/pages-viz/src/base/CasehubChartElement.test.ts packages/pages-viz/src/index.ts
-git commit -m "feat: unified CasehubFilterDetail type, chart emitter alignment with toggle and highlight
+git add packages/pages-viz/src/base/filter-types.ts packages/pages-viz/src/base/PagesChartElement.ts packages/pages-viz/src/base/PagesChartElement.test.ts packages/pages-viz/src/index.ts
+git commit -m "feat: unified PagesFilterDetail type, chart emitter alignment with toggle and highlight
 
-Discriminated union (CasehubFilterApply | CasehubFilterReset) in
+Discriminated union (PagesFilterApply | PagesFilterReset) in
 filter-types.ts. Chart emitter resolves row and value at dispatch time.
 Toggle via _selectedValue tracking. Visual feedback via ECharts
 highlight/downplay. Protected resolveFilterColumn() for subclass
@@ -423,22 +423,22 @@ Refs #20"
 ### Task 2: Table Emitter — Value, Toggle, Visual Feedback, Re-push Preservation
 
 **Files:**
-- Modify: `packages/pages-viz/src/components/CasehubTable.ts`
-- Modify: `packages/pages-viz/src/components/CasehubTable.test.ts`
+- Modify: `packages/pages-viz/src/components/PagesTable.ts`
+- Modify: `packages/pages-viz/src/components/PagesTable.test.ts`
 
 **Interfaces:**
-- Consumes: `CasehubFilterDetail`, `CasehubFilterApply`, `CasehubFilterReset` from `../base/filter-types.js`; `cellToRaw` from `../base/cell-extract.js`
-- Produces: Table emits `casehub-filter` events with the discriminated union shape. Selection tracked via `_selectedColumnId` and `_selectedValue`.
+- Consumes: `PagesFilterDetail`, `PagesFilterApply`, `PagesFilterReset` from `../base/filter-types.js`; `cellToRaw` from `../base/cell-extract.js`
+- Produces: Table emits `pages-filter` events with the discriminated union shape. Selection tracked via `_selectedColumnId` and `_selectedValue`.
 
 - [ ] **Step 1: Write failing tests for table toggle, `.selected` class, and re-push preservation**
 
-Add to `packages/pages-viz/src/components/CasehubTable.test.ts`:
+Add to `packages/pages-viz/src/components/PagesTable.test.ts`:
 
 ```typescript
-import type { CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";
+import type { PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";
 
 describe("click-to-filter", () => {
-  it("click emits CasehubFilterApply with value and row", () => {
+  it("click emits PagesFilterApply with value and row", () => {
     const ds = makeDataSet(
       [["region", "LABEL"], ["sales", "NUMBER"]],
       [["North", 100], ["South", 200]],
@@ -449,14 +449,14 @@ describe("click-to-filter", () => {
     el.dataSet = ds;
 
     const events: CustomEvent[] = [];
-    el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+    el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
     const rows = queryRows(el);
     const firstCell = rows[0]!.querySelector("td")!;
     firstCell.click();
 
     expect(events).toHaveLength(1);
-    const detail = events[0]!.detail as CasehubFilterApply;
+    const detail = events[0]!.detail as PagesFilterApply;
     expect(detail.columnId).toBe("region");
     expect(detail.value).toBe("North");
     expect(detail.row).toBe(ds.rows[0]);
@@ -472,15 +472,15 @@ describe("click-to-filter", () => {
     el.dataSet = ds;
 
     const events: CustomEvent[] = [];
-    el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+    el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
     const firstCell = queryRows(el)[0]!.querySelector("td")!;
     firstCell.click();
     firstCell.click();
 
     expect(events).toHaveLength(2);
-    expect((events[0]!.detail as CasehubFilterApply).reset).toBe(false);
-    expect((events[1]!.detail as CasehubFilterReset).reset).toBe(true);
+    expect((events[0]!.detail as PagesFilterApply).reset).toBe(false);
+    expect((events[1]!.detail as PagesFilterReset).reset).toBe(true);
   });
 
   it("column switch emits reset for old column then apply for new", () => {
@@ -494,7 +494,7 @@ describe("click-to-filter", () => {
     el.dataSet = ds;
 
     const events: CustomEvent[] = [];
-    el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+    el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
     // Click region=North
     queryRows(el)[0]!.querySelectorAll("td")[0]!.click();
@@ -502,11 +502,11 @@ describe("click-to-filter", () => {
     queryRows(el)[1]!.querySelectorAll("td")[1]!.click();
 
     expect(events).toHaveLength(3); // apply + reset + apply
-    expect((events[0]!.detail as CasehubFilterApply).columnId).toBe("region");
-    expect((events[1]!.detail as CasehubFilterReset).columnId).toBe("region");
-    expect((events[1]!.detail as CasehubFilterReset).reset).toBe(true);
-    expect((events[2]!.detail as CasehubFilterApply).columnId).toBe("quarter");
-    expect((events[2]!.detail as CasehubFilterApply).value).toBe("Q2");
+    expect((events[0]!.detail as PagesFilterApply).columnId).toBe("region");
+    expect((events[1]!.detail as PagesFilterReset).columnId).toBe("region");
+    expect((events[1]!.detail as PagesFilterReset).reset).toBe(true);
+    expect((events[2]!.detail as PagesFilterApply).columnId).toBe("quarter");
+    expect((events[2]!.detail as PagesFilterApply).value).toBe("Q2");
   });
 
   it("selected row gets .selected CSS class after click", () => {
@@ -581,9 +581,9 @@ Run: `yarn workspace @casehubio/pages-viz run test -- --grep "click-to-filter"`
 
 - [ ] **Step 3: Implement table changes**
 
-In `packages/pages-viz/src/components/CasehubTable.ts`:
+In `packages/pages-viz/src/components/PagesTable.ts`:
 
-1. Add imports: `import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";`
+1. Add imports: `import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";`
 2. Add fields: `private _selectedColumnId: ColumnId | undefined;` and `private _selectedValue: string | undefined;`.
 3. Override `set dataSet` for existence check:
    ```typescript
@@ -605,7 +605,7 @@ In `packages/pages-viz/src/components/CasehubTable.ts`:
      super.dataSet = value;
    }
    ```
-4. Add `.selected` style to TABLE_CSS: `tr.selected { background: var(--casehub-bg-selected, #e8f0fe); }`
+4. Add `.selected` style to TABLE_CSS: `tr.selected { background: var(--pages-bg-selected, #e8f0fe); }`
 5. Replace the cell click handler (inside the row-rendering loop). The new handler implements toggle with column-switch semantics and calls `rerender()`:
    ```typescript
    if (props.filter?.enabled) {
@@ -620,30 +620,30 @@ In `packages/pages-viz/src/components/CasehubTable.ts`:
          // Toggle off
          this._selectedColumnId = undefined;
          this._selectedValue = undefined;
-         this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+         this.dispatchEvent(new CustomEvent<PagesFilterDetail>("pages-filter", {
            bubbles: true, composed: true,
-           detail: { columnId, reset: true, group: props.filter?.group } satisfies CasehubFilterReset,
+           detail: { columnId, reset: true, group: props.filter?.group } satisfies PagesFilterReset,
          }));
        } else if (this._selectedColumnId !== undefined && this._selectedColumnId !== columnId) {
          // Column switch — reset old, apply new
          const oldColumnId = this._selectedColumnId;
          this._selectedColumnId = columnId;
          this._selectedValue = value;
-         this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+         this.dispatchEvent(new CustomEvent<PagesFilterDetail>("pages-filter", {
            bubbles: true, composed: true,
-           detail: { columnId: oldColumnId, reset: true, group: props.filter?.group } satisfies CasehubFilterReset,
+           detail: { columnId: oldColumnId, reset: true, group: props.filter?.group } satisfies PagesFilterReset,
          }));
-         this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+         this.dispatchEvent(new CustomEvent<PagesFilterDetail>("pages-filter", {
            bubbles: true, composed: true,
-           detail: { columnId, value, row: clickedRow, reset: false, group: props.filter?.group } satisfies CasehubFilterApply,
+           detail: { columnId, value, row: clickedRow, reset: false, group: props.filter?.group } satisfies PagesFilterApply,
          }));
        } else {
          // Same column new value, or first selection
          this._selectedColumnId = columnId;
          this._selectedValue = value;
-         this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+         this.dispatchEvent(new CustomEvent<PagesFilterDetail>("pages-filter", {
            bubbles: true, composed: true,
-           detail: { columnId, value, row: clickedRow, reset: false, group: props.filter?.group } satisfies CasehubFilterApply,
+           detail: { columnId, value, row: clickedRow, reset: false, group: props.filter?.group } satisfies PagesFilterApply,
          }));
        }
        this.rerender(props, dataset);
@@ -670,10 +670,10 @@ Run: `yarn workspace @casehubio/pages-viz run test`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/pages-viz/src/components/CasehubTable.ts packages/pages-viz/src/components/CasehubTable.test.ts
+git add packages/pages-viz/src/components/PagesTable.ts packages/pages-viz/src/components/PagesTable.test.ts
 git commit -m "feat: table emitter — value, toggle, .selected CSS, re-push preservation
 
-Table emits CasehubFilterApply/Reset with value and row. Toggle with
+Table emits PagesFilterApply/Reset with value and row. Toggle with
 single-column-at-a-time semantics (column switch emits reset before
 apply). .selected row style. Selection preserved across data re-push
 when value exists.
@@ -686,24 +686,24 @@ Refs #20"
 ### Task 3: Selector + IframePlugin Emitter Alignment
 
 **Files:**
-- Modify: `packages/pages-viz/src/components/CasehubSelector.ts`
-- Modify: `packages/pages-viz/src/components/CasehubSelector.test.ts`
-- Modify: `packages/pages-viz/src/components/CasehubIframePlugin.ts`
-- Modify: `packages/pages-viz/src/components/CasehubIframePlugin.test.ts`
+- Modify: `packages/pages-viz/src/components/PagesSelector.ts`
+- Modify: `packages/pages-viz/src/components/PagesSelector.test.ts`
+- Modify: `packages/pages-viz/src/components/PagesIframePlugin.ts`
+- Modify: `packages/pages-viz/src/components/PagesIframePlugin.test.ts`
 
 **Interfaces:**
-- Consumes: `CasehubFilterDetail`, `CasehubFilterApply`, `CasehubFilterReset` from `../base/filter-types.js`
+- Consumes: `PagesFilterDetail`, `PagesFilterApply`, `PagesFilterReset` from `../base/filter-types.js`
 - Produces: Selector and IframePlugin emit events with the discriminated union shape. Selector uses `_selectedValue` instead of `_selectedLabelIndex`.
 
 - [ ] **Step 1: Write failing tests for selector new event shape and value-based tracking**
 
-Update `packages/pages-viz/src/components/CasehubSelector.test.ts`:
+Update `packages/pages-viz/src/components/PagesSelector.test.ts`:
 
 ```typescript
-import type { CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";
+import type { PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";
 
-// Update "selection change emits casehub-filter" test:
-it("selection change emits CasehubFilterApply with value and row", () => {
+// Update "selection change emits pages-filter" test:
+it("selection change emits PagesFilterApply with value and row", () => {
   const ds = makeDataSet([["category", "LABEL"]], [["A"], ["B"], ["C"]]);
   const props: SelectorProps = {
     lookup: mockLookup("test"),
@@ -714,14 +714,14 @@ it("selection change emits CasehubFilterApply with value and row", () => {
   el.dataSet = ds;
 
   const events: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
   const select = el.shadowRoot.querySelector("select")!;
   select.selectedIndex = 2; // Select "B"
   select.dispatchEvent(new Event("change"));
 
   expect(events).toHaveLength(1);
-  const detail = events[0]!.detail as CasehubFilterApply;
+  const detail = events[0]!.detail as PagesFilterApply;
   expect(detail.columnId).toBe("category");
   expect(detail.value).toBe("B");
   expect(detail.row).toBe(ds.rows[1]);
@@ -730,7 +730,7 @@ it("selection change emits CasehubFilterApply with value and row", () => {
 });
 
 // Update "selecting All emits reset" test:
-it("selecting All emits CasehubFilterReset", () => {
+it("selecting All emits PagesFilterReset", () => {
   const ds = makeDataSet([["category", "LABEL"]], [["A"], ["B"]]);
   const props: SelectorProps = { lookup: mockLookup("test") };
   el.props = props;
@@ -738,14 +738,14 @@ it("selecting All emits CasehubFilterReset", () => {
   el.dataSet = ds;
 
   const events: CustomEvent[] = [];
-  el.addEventListener("casehub-filter", (e) => events.push(e as CustomEvent));
+  el.addEventListener("pages-filter", (e) => events.push(e as CustomEvent));
 
   const select = el.shadowRoot.querySelector("select")!;
   select.selectedIndex = 0;
   select.dispatchEvent(new Event("change"));
 
   expect(events).toHaveLength(1);
-  const detail = events[0]!.detail as CasehubFilterReset;
+  const detail = events[0]!.detail as PagesFilterReset;
   expect(detail.reset).toBe(true);
   expect(detail.columnId).toBe("category");
   expect(detail).not.toHaveProperty("value");
@@ -775,14 +775,14 @@ it("label selection clears when data re-push removes selected value", () => {
 
 - [ ] **Step 2: Write failing tests for iframe new event shape**
 
-Update `packages/pages-viz/src/components/CasehubIframePlugin.test.ts` — the "handles FILTER messages from iframe" test:
+Update `packages/pages-viz/src/components/PagesIframePlugin.test.ts` — the "handles FILTER messages from iframe" test:
 
 ```typescript
-import type { CasehubFilterApply } from "../base/filter-types.js";
+import type { PagesFilterApply } from "../base/filter-types.js";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 import type { DataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 
-it("handles FILTER messages — emits CasehubFilterApply with row and value", () => {
+it("handles FILTER messages — emits PagesFilterApply with row and value", () => {
   const props: IframePluginProps = {
     componentId: "echarts",
     filter: { group: "test-group" },
@@ -798,7 +798,7 @@ it("handles FILTER messages — emits CasehubFilterApply with row and value", ()
   element.dataSet = dataset;
 
   const filterHandler = vi.fn();
-  element.addEventListener("casehub-filter", filterHandler);
+  element.addEventListener("pages-filter", filterHandler);
 
   window.dispatchEvent(new MessageEvent("message", {
     data: {
@@ -811,7 +811,7 @@ it("handles FILTER messages — emits CasehubFilterApply with row and value", ()
   }));
 
   expect(filterHandler).toHaveBeenCalledTimes(1);
-  const detail = filterHandler.mock.calls[0][0].detail as CasehubFilterApply;
+  const detail = filterHandler.mock.calls[0][0].detail as PagesFilterApply;
   expect(detail.columnId).toBe("col1");
   expect(detail.value).toBe("Foxtrot");
   expect(detail.row).toBe(dataset.rows[5]);
@@ -826,9 +826,9 @@ Run: `yarn workspace @casehubio/pages-viz run test`
 
 - [ ] **Step 4: Implement selector changes**
 
-In `packages/pages-viz/src/components/CasehubSelector.ts`:
+In `packages/pages-viz/src/components/PagesSelector.ts`:
 
-1. Add imports: `import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";`
+1. Add imports: `import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";`
 2. Replace `_selectedLabelIndex: number | undefined` with `_selectedValue: string | undefined`.
 3. Override `set dataSet` for existence check:
    ```typescript
@@ -844,32 +844,32 @@ In `packages/pages-viz/src/components/CasehubSelector.ts`:
      super.dataSet = value;
    }
    ```
-4. Update dropdown handler to include `row` and `value`, emit `CasehubFilterReset` for "All".
+4. Update dropdown handler to include `row` and `value`, emit `PagesFilterReset` for "All".
 5. Update slider handler to include `row` and `value`.
 6. Update labels handler to use `_selectedValue` instead of `_selectedLabelIndex`. Check chip text against `_selectedValue` for `.selected` class.
 
 - [ ] **Step 5: Implement iframe plugin changes**
 
-In `packages/pages-viz/src/components/CasehubIframePlugin.ts`:
+In `packages/pages-viz/src/components/PagesIframePlugin.ts`:
 
-1. Add import: `import type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset } from "../base/filter-types.js";` and `import { cellToRaw } from "../base/cell-extract.js";`
+1. Add import: `import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";` and `import { cellToRaw } from "../base/cell-extract.js";`
 2. In `handleMessage`, resolve `row` and `value` before dispatching:
    ```typescript
    const rowObj = dataset.rows[row];
    if (!rowObj) return;
 
    if (typeof reset === "boolean" && reset) {
-     this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+     this.dispatchEvent(new CustomEvent<PagesFilterDetail>("pages-filter", {
        bubbles: true, composed: true,
-       detail: { columnId, reset: true, group: props.filter?.group } satisfies CasehubFilterReset,
+       detail: { columnId, reset: true, group: props.filter?.group } satisfies PagesFilterReset,
      }));
    } else {
      const cell = rowObj.cell(columnId);
      if (cell.type === "NULL") return;
      const value = String(cellToRaw(cell));
-     this.dispatchEvent(new CustomEvent<CasehubFilterDetail>("casehub-filter", {
+     this.dispatchEvent(new CustomEvent<PagesFilterDetail>("pages-filter", {
        bubbles: true, composed: true,
-       detail: { columnId, value, row: rowObj, reset: false, group: props.filter?.group } satisfies CasehubFilterApply,
+       detail: { columnId, value, row: rowObj, reset: false, group: props.filter?.group } satisfies PagesFilterApply,
      }));
    }
    ```
@@ -885,10 +885,10 @@ Run: `yarn typecheck`
 - [ ] **Step 8: Commit**
 
 ```bash
-git add packages/pages-viz/src/components/CasehubSelector.ts packages/pages-viz/src/components/CasehubSelector.test.ts packages/pages-viz/src/components/CasehubIframePlugin.ts packages/pages-viz/src/components/CasehubIframePlugin.test.ts
+git add packages/pages-viz/src/components/PagesSelector.ts packages/pages-viz/src/components/PagesSelector.test.ts packages/pages-viz/src/components/PagesIframePlugin.ts packages/pages-viz/src/components/PagesIframePlugin.test.ts
 git commit -m "feat: selector and iframe plugin emitter alignment
 
-Selector emits CasehubFilterApply/Reset with row and value. Labels
+Selector emits PagesFilterApply/Reset with row and value. Labels
 use _selectedValue (value-based) instead of _selectedLabelIndex
 (index-based). set dataSet existence check clears stale selection.
 IframePlugin resolves row and value from dataset before dispatching.
@@ -905,7 +905,7 @@ Refs #20"
 - Modify: `packages/pages-runtime/src/site.test.ts`
 
 **Interfaces:**
-- Consumes: `CasehubFilterDetail`, `CasehubFilterApply`, `CasehubFilterReset` from `@casehubio/pages-viz/dist/base/filter-types.js`
+- Consumes: `PagesFilterDetail`, `PagesFilterApply`, `PagesFilterReset` from `@casehubio/pages-viz/dist/base/filter-types.js`
 - Produces: Simplified filter listener with generalized record selection
 
 - [ ] **Step 1: Build packages first (runtime depends on viz)**
@@ -914,7 +914,7 @@ Run: `yarn build:packages`
 
 - [ ] **Step 2: Write/update failing tests for the runtime filter listener**
 
-In `packages/pages-runtime/src/site.test.ts`, update the existing cross-filter test (the one using `notification: true`) to verify the new event shape is handled, and add a test for the selector emitting `CasehubFilterReset` (no `row`/`value`).
+In `packages/pages-runtime/src/site.test.ts`, update the existing cross-filter test (the one using `notification: true`) to verify the new event shape is handled, and add a test for the selector emitting `PagesFilterReset` (no `row`/`value`).
 
 The existing test at line 344 ("selector filter updates bar chart data") uses `select.value = "0"` and `select.dispatchEvent(new Event("change"))` which triggers the selector's internal handler — after Task 3, that handler now emits the new event shape. So this test should pass if the runtime handles the new shape.
 
@@ -925,12 +925,12 @@ Key test to add: verify the runtime uses `detail.value` directly instead of extr
 In `packages/pages-runtime/src/site.ts`:
 
 1. Remove the local `FilterDetail` interface (lines 51-57).
-2. Add import: `import type { CasehubFilterDetail, CasehubFilterApply } from "@casehubio/pages-viz/dist/base/filter-types.js";`
+2. Add import: `import type { PagesFilterDetail, PagesFilterApply } from "@casehubio/pages-viz/dist/base/filter-types.js";`
 3. Remove unused import: `cellToRaw` from `@casehubio/pages-viz` (no longer needed in the filter listener).
 4. Replace the filter listener (lines 308-400). The new listener:
    ```typescript
-   target.addEventListener("casehub-filter", ((e: Event) => {
-     const detail = (e as CustomEvent<CasehubFilterDetail>).detail;
+   target.addEventListener("pages-filter", ((e: Event) => {
+     const detail = (e as CustomEvent<PagesFilterDetail>).detail;
      const componentId = findComponentId(e);
      if (!componentId) return;
 
@@ -995,7 +995,7 @@ In `packages/pages-runtime/src/site.ts`:
          if (childFilters) {
            for (const [, columnMap] of childFilters) columnMap.clear();
          }
-         const idCell = (detail as CasehubFilterApply).row.cell(childScope.idColumn as ColumnId);
+         const idCell = (detail as PagesFilterApply).row.cell(childScope.idColumn as ColumnId);
          const idValue = String(cellToRaw(idCell));
          updateFilter(filterState, childScopePath, group, childScope.idColumn, [idValue], false);
        } else {
@@ -1005,7 +1005,7 @@ In `packages/pages-runtime/src/site.ts`:
      } else {
        // Cross-filter path
        if (!detail.reset) {
-         updateFilter(filterState, entry.pagePath, group, columnId, [(detail as CasehubFilterApply).value], false);
+         updateFilter(filterState, entry.pagePath, group, columnId, [(detail as PagesFilterApply).value], false);
        } else {
          updateFilter(filterState, entry.pagePath, group, columnId, [], true);
        }
@@ -1056,7 +1056,7 @@ Run: `yarn build && yarn typecheck`
 git add packages/pages-runtime/src/site.ts packages/pages-runtime/src/site.test.ts
 git commit -m "feat: runtime simplification — self-contained events, generalized record selection
 
-Remove FilterDetail interface, import CasehubFilterDetail from
+Remove FilterDetail interface, import PagesFilterDetail from
 pages-viz. Use detail.value directly (no row extraction). Remove
 isTableClick guard — any component triggers record selection if
 dataset schema contains idColumn. Apply: try/catch on row.cell().
@@ -1090,7 +1090,7 @@ Update to reflect the new discriminated union, the `value` and `row` fields on a
 git add docs/CASEHUB-PAGES.md
 git commit -m "docs: update CASEHUB-PAGES.md event protocol for unified cross-filter
 
-Document CasehubFilterApply/Reset discriminated union, emitter-resolved
+Document PagesFilterApply/Reset discriminated union, emitter-resolved
 value/row, toggle semantics, visual feedback (highlight/downplay for
 charts, .selected for tables), and generalized record selection.
 

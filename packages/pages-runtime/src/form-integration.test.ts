@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehubio/pages-viz";
-import type { CasehubTable, CasehubFormInput } from "@casehubio/pages-viz";
-import type { CasehubFilterApply } from "@casehubio/pages-viz/dist/base/filter-types.js";
+import type { PagesTable, PagesFormInput } from "@casehubio/pages-viz";
+import type { PagesFilterApply } from "@casehubio/pages-viz/dist/base/filter-types.js";
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
@@ -93,16 +93,16 @@ describe("form integration — YAML end-to-end", () => {
     if (!condition()) throw new Error(`Timeout: ${msg}`);
   }
 
-  function getFormInputs(): CasehubFormInput<FormInputCommon>[] {
+  function getFormInputs(): PagesFormInput<FormInputCommon>[] {
     return Array.from(
-      target.querySelectorAll<CasehubFormInput<FormInputCommon>>(
-        "casehub-text-input, casehub-number-input, casehub-dropdown, casehub-checkbox, casehub-date-picker, casehub-textarea"
+      target.querySelectorAll<PagesFormInput<FormInputCommon>>(
+        "pages-text-input, pages-number-input, pages-dropdown, pages-checkbox, pages-date-picker, pages-textarea"
       ),
     );
   }
 
-  function getTable(): CasehubTable | null {
-    return target.querySelector("casehub-table");
+  function getTable(): PagesTable | null {
+    return target.querySelector("pages-table");
   }
 
   it("loadSite renders table and form inputs from YAML", async () => {
@@ -140,14 +140,14 @@ describe("form integration — YAML end-to-end", () => {
     const inputs = getFormInputs();
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
-    // Simulate table row click — emit casehub-filter for id column, row 0
+    // Simulate table row click — emit pages-filter for id column, row 0
     const clickedRow = table!.dataSet!.rows[0]!;
     const idValue = String(cellToRaw(clickedRow.cell(columnId("id"))));
     table!.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), value: idValue, row: clickedRow, reset: false, group: undefined } satisfies CasehubFilterApply,
+        detail: { columnId: columnId("id"), value: idValue, row: clickedRow, reset: false, group: undefined } satisfies PagesFilterApply,
       }),
     );
 
@@ -171,15 +171,15 @@ describe("form integration — YAML end-to-end", () => {
     const clickedRow0 = table!.dataSet!.rows[0]!;
     const idValue0 = String(cellToRaw(clickedRow0.cell(columnId("id"))));
     table!.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), value: idValue0, row: clickedRow0, reset: false, group: undefined } satisfies CasehubFilterApply,
+        detail: { columnId: columnId("id"), value: idValue0, row: clickedRow0, reset: false, group: undefined } satisfies PagesFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
-    const nameInputs = inputs.filter((i) => i.tagName.toLowerCase() === "casehub-text-input");
+    const nameInputs = inputs.filter((i) => i.tagName.toLowerCase() === "pages-text-input");
     expect(nameInputs.length).toBeGreaterThan(0);
     const nameInput = nameInputs[0]!;
     const aliceNameCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
@@ -189,10 +189,10 @@ describe("form integration — YAML end-to-end", () => {
     const clickedRow1 = table!.dataSet!.rows[1]!;
     const idValue1 = String(cellToRaw(clickedRow1.cell(columnId("id"))));
     table!.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), value: idValue1, row: clickedRow1, reset: false, group: undefined } satisfies CasehubFilterApply,
+        detail: { columnId: columnId("id"), value: idValue1, row: clickedRow1, reset: false, group: undefined } satisfies PagesFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -259,15 +259,15 @@ pages:
     const clickedRow0 = table!.dataSet!.rows[0]!;
     const nameValue0 = String(cellToRaw(clickedRow0.cell(columnId("name"))));
     table!.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("name"), value: nameValue0, row: clickedRow0, reset: false, group: undefined } satisfies CasehubFilterApply,
+        detail: { columnId: columnId("name"), value: nameValue0, row: clickedRow0, reset: false, group: undefined } satisfies PagesFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
-    const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "casehub-text-input")!;
+    const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "pages-text-input")!;
     expect(nameInput.dataSet!.rows.length).toBe(1);
     const aliceCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
     expect(aliceCell.type !== "NULL" && aliceCell.value).toBe("Alice");
@@ -278,10 +278,10 @@ pages:
     const clickedRow1 = table!.dataSet!.rows[1]!;
     const emailValue1 = String(cellToRaw(clickedRow1.cell(columnId("email"))));
     table!.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("email"), value: emailValue1, row: clickedRow1, reset: false, group: undefined } satisfies CasehubFilterApply,
+        detail: { columnId: columnId("email"), value: emailValue1, row: clickedRow1, reset: false, group: undefined } satisfies PagesFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -304,15 +304,15 @@ pages:
     const clickedRow0 = table!.dataSet!.rows[0]!;
     const idValue0 = String(cellToRaw(clickedRow0.cell(columnId("id"))));
     table!.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("id"), value: idValue0, row: clickedRow0, reset: false, group: undefined } satisfies CasehubFilterApply,
+        detail: { columnId: columnId("id"), value: idValue0, row: clickedRow0, reset: false, group: undefined } satisfies PagesFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
 
-    const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "casehub-text-input")!;
+    const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "pages-text-input")!;
     const aliceNameCell2 = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
     expect(aliceNameCell2.type !== "NULL" && aliceNameCell2.value).toBe("Alice");
 
@@ -322,10 +322,10 @@ pages:
     const bobRow = table!.dataSet!.rows[1]!; // Bob is row 1 in the full dataset
     const bobNameValue = String(cellToRaw(bobRow.cell(columnId("name"))));
     table!.dispatchEvent(
-      new CustomEvent("casehub-filter", {
+      new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
-        detail: { columnId: columnId("name"), value: bobNameValue, row: bobRow, reset: false, group: undefined } satisfies CasehubFilterApply,
+        detail: { columnId: columnId("name"), value: bobNameValue, row: bobRow, reset: false, group: undefined } satisfies PagesFilterApply,
       }),
     );
     await new Promise((r) => setTimeout(r, 100));
@@ -335,17 +335,17 @@ pages:
     expect(bobNameCell2.type !== "NULL" && bobNameCell2.value).toBe("Bob");
   });
 
-  it("casehub-field-change events are handled without crash", async () => {
+  it("pages-field-change events are handled without crash", async () => {
     site = await loadSite(target, CONTACT_MANAGER_YAML);
 
     const inputs = getFormInputs();
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
-    const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "casehub-text-input");
+    const nameInput = inputs.find((i) => i.tagName.toLowerCase() === "pages-text-input");
     expect(nameInput).toBeDefined();
 
     nameInput!.dispatchEvent(
-      new CustomEvent("casehub-field-change", {
+      new CustomEvent("pages-field-change", {
         bubbles: true,
         composed: true,
         detail: { field: "name", value: "Updated", committed: true },

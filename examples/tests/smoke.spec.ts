@@ -38,7 +38,7 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
     for (const c of target.querySelectorAll("[data-component-type]")) {
       const type = (c as HTMLElement).dataset.componentType!;
       if (skip.has(type)) continue;
-      const vizEl = c.querySelector(`casehub-${type}`) as HTMLElement & { dataSet?: unknown };
+      const vizEl = c.querySelector(`pages-${type}`) as HTMLElement & { dataSet?: unknown };
       if (vizEl?.dataSet) return true;
     }
     return false;
@@ -73,7 +73,7 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
         continue;
       }
 
-      const tagName = `casehub-${type}`;
+      const tagName = `pages-${type}`;
       const vizEl = container.querySelector(tagName) as HTMLElement & {
         error?: string;
         dataSet?: unknown;

@@ -4,45 +4,45 @@
 import "./custom-elements.js";
 
 // Base
-export { CasehubElement } from "./base/CasehubElement.js";
-export type { CasehubDataRequestDetail } from "./base/CasehubElement.js";
-export { CasehubChartElement } from "./base/CasehubChartElement.js";
-export type { CasehubFilterDetail, CasehubFilterApply, CasehubFilterReset, ChartClickParams } from "./base/filter-types.js";
+export { PagesElement } from "./base/PagesElement.js";
+export type { PagesDataRequestDetail } from "./base/PagesElement.js";
+export { PagesChartElement } from "./base/PagesChartElement.js";
+export type { PagesFilterDetail, PagesFilterApply, PagesFilterReset, ChartClickParams } from "./base/filter-types.js";
 export type { VizComponentProps } from "./base/types.js";
 export { cellToRaw, resolveColumnName } from "./base/cell-extract.js";
 export { deepMerge } from "./base/deep-merge.js";
 
 // Theme
-export type { CasehubTheme } from "./base/theme.js";
+export type { PagesTheme } from "./base/theme.js";
 export { LIGHT_THEME, DARK_THEME, applyTheme, clearTheme } from "./base/theme.js";
 
 // Charts
-export { CasehubBarChart } from "./charts/CasehubBarChart.js";
-export { CasehubLineChart } from "./charts/CasehubLineChart.js";
-export { CasehubAreaChart } from "./charts/CasehubAreaChart.js";
-export { CasehubPieChart } from "./charts/CasehubPieChart.js";
-export { CasehubScatterChart } from "./charts/CasehubScatterChart.js";
-export { CasehubBubbleChart } from "./charts/CasehubBubbleChart.js";
-export { CasehubTimeseries } from "./charts/CasehubTimeseries.js";
-export { CasehubMeter } from "./charts/CasehubMeter.js";
-export { CasehubMap } from "./charts/CasehubMap.js";
+export { PagesBarChart } from "./charts/PagesBarChart.js";
+export { PagesLineChart } from "./charts/PagesLineChart.js";
+export { PagesAreaChart } from "./charts/PagesAreaChart.js";
+export { PagesPieChart } from "./charts/PagesPieChart.js";
+export { PagesScatterChart } from "./charts/PagesScatterChart.js";
+export { PagesBubbleChart } from "./charts/PagesBubbleChart.js";
+export { PagesTimeseries } from "./charts/PagesTimeseries.js";
+export { PagesMeter } from "./charts/PagesMeter.js";
+export { PagesMap } from "./charts/PagesMap.js";
 
 // HTML components
-export { CasehubTable } from "./components/CasehubTable.js";
-export { CasehubMetric } from "./components/CasehubMetric.js";
-export { CasehubSelector } from "./components/CasehubSelector.js";
-export { CasehubIframePlugin } from "./components/CasehubIframePlugin.js";
+export { PagesTable } from "./components/PagesTable.js";
+export { PagesMetric } from "./components/PagesMetric.js";
+export { PagesSelector } from "./components/PagesSelector.js";
+export { PagesIframePlugin } from "./components/PagesIframePlugin.js";
 export { tableToCsv, downloadCsv, copyToClipboard } from "./components/table-export.js";
 
 // Form inputs
-export { CasehubFormInput } from "./form-inputs/CasehubFormInput.js";
-export type { CasehubFieldChangeDetail } from "./form-inputs/CasehubFormInput.js";
-export { CasehubTextInput } from "./form-inputs/CasehubTextInput.js";
-export { CasehubNumberInput } from "./form-inputs/CasehubNumberInput.js";
-export { CasehubDropdown } from "./form-inputs/CasehubDropdown.js";
-export { CasehubCheckbox } from "./form-inputs/CasehubCheckbox.js";
-export { CasehubDatePicker } from "./form-inputs/CasehubDatePicker.js";
-export { CasehubTextarea } from "./form-inputs/CasehubTextarea.js";
+export { PagesFormInput } from "./form-inputs/PagesFormInput.js";
+export type { PagesFieldChangeDetail } from "./form-inputs/PagesFormInput.js";
+export { PagesTextInput } from "./form-inputs/PagesTextInput.js";
+export { PagesNumberInput } from "./form-inputs/PagesNumberInput.js";
+export { PagesDropdown } from "./form-inputs/PagesDropdown.js";
+export { PagesCheckbox } from "./form-inputs/PagesCheckbox.js";
+export { PagesDatePicker } from "./form-inputs/PagesDatePicker.js";
+export { PagesTextarea } from "./form-inputs/PagesTextarea.js";
 
 // Shared pipeline
 export { datasetToSource, applyChartSettings } from "./charts/option-pipeline.js";
