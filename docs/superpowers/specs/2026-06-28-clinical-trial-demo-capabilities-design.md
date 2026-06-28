@@ -36,7 +36,7 @@ The runtime maintains a context object capturing the current dashboard state:
 
 ```typescript
 interface RuntimeContext {
-  readonly filter: Record<string, string | string[]>;
+  readonly filter: Record<string, readonly string[]>;
   readonly datasets: Record<string, DataSetSnapshot>;
   readonly page: { name: string; path: string };
   readonly params: Record<string, string>;
@@ -49,8 +49,8 @@ interface DataSetSnapshot {
 }
 ```
 
-- `filter` — active filter values keyed by columnId (derived from the existing `FilterState`)
-- `datasets` — metadata snapshots published after each dataset resolution
+- `filter` — active filter values keyed by columnId, page-scoped. Derived from the current page's `FilterState` via `deriveActiveFilters()`. Values are always `string[]` — a single-select filter produces a one-element array, not a bare string.
+- `datasets` — metadata snapshots published after each dataset resolution. `rowCount` is the total rows in the **resolved dataset** (post-fetch, pre-cross-filter, pre-pagination). This is a stable count independent of per-component view state. Dashboard authors who need a count reflecting active filters should use a parameterised URL that applies filters server-side.
 - `page` — current page/navigation state
 - `params` — URL hash parameters and page-level properties
 
@@ -66,13 +66,48 @@ interface DataSetSnapshot {
 | `#{page.name}` | Current page name |
 | `#{params.trialId}` | URL parameter or page property |
 
+**Array-valued filters:** `#{filter.ward}` resolves from `readonly string[]`. In string interpolation contexts (URLs, content), the first element is used. An empty array resolves to empty string. For expression semantics, see §1.3.
+
+**Context-aware escaping:** The template resolver escapes interpolated values based on output context:
+
+| Context | Escaping |
+|---------|----------|
+| `html:` / `markdown:` content | HTML-entity escape (`<` → `&lt;`, `"` → `&quot;`, etc.) |
+| Dataset URL templates | `encodeURIComponent()` |
+| Expression evaluation (visibility, row styling) | None — values are compared, not rendered |
+| Action body/headers | None — values are data, not markup |
+
+Escaping happens at interpolation time in the template resolver — input values remain raw in the context.
+
 ### 1.3 Expression language for conditions
 
-Used by `visible` (#47) and row styling (#40). Minimal grammar — no function calls, no ternary, no nesting.
+Used by `visibleWhen` (#47) and row styling (#40). Minimal grammar — no function calls, no ternary. `#{}` expressions cannot be nested inside each other.
 
 **Operators:** `==`, `!=`, `>`, `<`, `>=`, `<=`, `&&`, `||`, `!`
 
+**Operator precedence** (standard, highest to lowest):
+
+| Precedence | Operators |
+|------------|-----------|
+| 1 (highest) | `!` (unary NOT) |
+| 2 | `>`, `<`, `>=`, `<=` |
+| 3 | `==`, `!=` |
+| 4 | `&&` |
+| 5 (lowest) | `\|\|` |
+
+**Parentheses** `()` are supported for explicit grouping:
+```
+(#{row.status} == 'Critical' && #{filter.showHighlights}) || #{row.daysOverdue} > 0
+```
+
 **Literals:** `'single-quoted strings'`, numeric literals, `true`, `false`, `null`
+
+**Type coercion:** When both operands of a comparison (`>`, `<`, `>=`, `<=`) can be parsed as finite numbers, the comparison is numeric. Otherwise, operands are compared as strings. Equality operators (`==`, `!=`) use strict string comparison — no numeric coercion.
+
+**Array-valued filter semantics:**
+- Truthy check: `#{filter.ward}` → true if the array is non-empty
+- Equality: `#{filter.ward} == 'ICU'` → true if the array contains `'ICU'`
+- Numeric comparison: `#{filter.grade} >= 4` → uses the first element, coerced to number
 
 **Examples:**
 - Truthy check: `#{filter.ward}` — true if value exists and is non-empty
@@ -80,25 +115,42 @@ Used by `visible` (#47) and row styling (#40). Minimal grammar — no function c
 - Equality: `#{row.status} == 'Critical'`
 - Negation: `!#{filter.ward}`
 - Logical AND: `#{filter.ward} && #{filter.status}`
+- Grouped: `(#{row.status} == 'Critical' && #{filter.showHighlights}) || #{row.daysOverdue} > 0`
 
 ### 1.4 Reactivity
 
-When context changes (filter applied, dataset resolved, page navigated):
+**Change-detection model:** Object replacement. Each context change produces a new `RuntimeContext` reference. The runtime retains the previous reference for comparison.
 
-1. Runtime updates the `RuntimeContext` object
-2. Iterates all registered context consumers (components with `#{}` in their props)
-3. Re-evaluates each template/condition
-4. If the resolved value changed, applies the effect:
-   - **Dataset URL** (#49) → re-fetch the dataset
+**Consumer lifecycle:**
+
+- **Registration:** Automatic during `connectedCallback`. The runtime scans the component's props for `#{}` patterns and registers matching components as context consumers. On registration, the runtime **immediately evaluates** all expressions against the current context and applies effects. This handles both first-ever activation and re-activation after a lazy container (tabs, pills, sidebar, carousel, stack) swaps the component back in.
+- **Deregistration:** Automatic during `disconnectedCallback`. Components torn down by lazy container slot swaps are removed from the consumer set and do not receive context updates while inactive.
+- **Re-activation:** When a user switches back to a tab containing context-dependent components, `connectedCallback` fires, the component re-registers, and all expressions are evaluated against the current (possibly changed) context. No stale state survives the DOM round-trip.
+
+**Evaluation pass:** When context changes (filter applied, dataset resolved, page navigated):
+
+1. Runtime creates a new `RuntimeContext` with the updated state
+2. For each registered consumer, re-evaluates its `#{}` templates/conditions
+3. Compares each resolved value against the consumer's previous resolved value
+4. If changed, applies the effect:
+   - **Dataset URL** (#49) → re-fetch the dataset (see §1.9)
    - **Visibility** (#47) → show/hide the component via CSS `display: none`
    - **Content** (#48) → re-render the text
    - **Row style** (#40) → re-render the table
 
-Context consumers register during component activation. Registration is automatic — the runtime scans props for `#{}` patterns.
+**Cascade termination:** A dataset re-fetch (triggered by a URL template resolving to a new URL) updates the `datasets.*` portion of the context, which triggers another evaluation pass. Cascades terminate because:
 
-### 1.5 `visible` property
+- URL consumers whose templates resolve to the **same URL as before** do not re-fetch
+- Visibility/content consumers that resolve to the **same value as before** do not re-render
+- No consumer effect feeds back into `filter` or `page` state — these are updated only by user interaction or explicit navigation
+
+Worst case for a single filter change: filter context update → URL re-evaluation → fetch → dataset snapshot update → visibility/content re-evaluation. Two evaluation passes, bounded fetches (one per parameterised dataset whose URL actually changed).
+
+### 1.5 `visibleWhen` property
 
 New property on the base `Component` type in `pages-component/model/types.ts`. Accepts a context expression string. When the expression evaluates to falsy, the component's DOM element receives `display: none`. When truthy, the display is restored.
+
+Distinct from the existing `visible?: boolean` on `DataComponentCommon` and `IframePluginProps`, which is static visibility set at parse time. `visibleWhen` is runtime-evaluated. When both are present, `visibleWhen` takes precedence.
 
 ### 1.6 YAML integration
 
@@ -111,7 +163,7 @@ datasets:
 # #47 — Conditional visibility
 - displayer:
     type: TABLE
-    visible: "#{filter.patientId}"
+    visibleWhen: "#{filter.patientId}"
     lookup:
         uuid: patient_vitals
 
@@ -127,7 +179,7 @@ datasets:
 | `RuntimeContext`, `DataSetSnapshot` types | `@casehubio/pages-component/context/` |
 | Template parser (string → resolved value) | `@casehubio/pages-component/context/` |
 | Expression evaluator (string → boolean) | `@casehubio/pages-component/context/` |
-| `visible` property on `Component` | `@casehubio/pages-component/model/types.ts` |
+| `visibleWhen` property on `Component` | `@casehubio/pages-component/model/types.ts` |
 | Context wiring (state tracking, consumer registration, cascade) | `@casehubio/pages-runtime` |
 
 Template parser and expression evaluator are pure functions with zero dependencies.
@@ -139,6 +191,14 @@ Row styling conditions (#40) receive an extended context with a `row.*` namespac
 ```yaml
 condition: "#{row.status} == 'Critical' && #{filter.showHighlights}"
 ```
+
+### 1.9 Parameterised dataset URL resolution
+
+Template resolution for dataset URLs happens in `@casehubio/pages-runtime`, not in `@casehubio/pages-data`. The runtime calls the template parser (pure function from `pages-component/context/`) with the URL template and current `RuntimeContext`, then passes the resolved concrete URL to the data pipeline. The data pipeline never sees `#{}` templates — it receives plain URLs. This preserves the correct dependency direction (`pages-runtime` → `pages-component`, `pages-runtime` → `pages-data`; `pages-data` never imports from `pages-component`).
+
+**Deferred fetch:** If any `#{}` variable in a dataset URL is unresolved (references a filter or param that has no value), the fetch is suppressed. The dataset remains in a pending state with no `DataSetSnapshot` published. Components bound to that dataset render their empty/loading state. Once all variables resolve, the fetch proceeds normally.
+
+**Request cancellation:** When a parameterised URL resolves to a new value while a fetch for the previous URL is in-flight, the runtime aborts the stale request via `AbortController` before dispatching the new fetch. The data pipeline's `pendingResolutions` map is updated to track the new request. This prevents out-of-order response races.
 
 ---
 
@@ -167,10 +227,12 @@ interface ActionCallbacks {
 }
 ```
 
+**Host fetch injection:** `ActionExecutor` is constructed with the host-provided `fetch` function and `baseUrl` from `SiteOptions` — the same values used by the data pipeline's `ResolverContext.providerFactory`. This ensures action requests carry authentication headers, CSRF tokens, and base URL resolution consistent with data fetches. `ActionExecutor` never uses `globalThis.fetch` directly.
+
 Execution flow:
 
 1. Resolve all `#{}` templates in URL, body values, and headers against the current `RuntimeContext`
-2. Send HTTP request via `fetch()`
+2. Send HTTP request via the host-provided `fetch`
 3. Classify response: success (2xx), client error (4xx), server error (5xx)
 4. On success: dispatch `casehub-action-complete` event with `refresh` dataset IDs
 5. On error: return error detail for the component to display
@@ -289,7 +351,7 @@ YAML:
 - alert:
     severity: warning
     content: "#{datasets.overdue_items.rowCount} items past deadline"
-    visible: "#{datasets.overdue_items.rowCount} > 0"
+    visibleWhen: "#{datasets.overdue_items.rowCount} > 0"
     dismissible: true
 ```
 
@@ -520,7 +582,7 @@ displayer:
 **Interaction with other table features:**
 
 - **Sorting:** Sorts within each level (siblings sorted among siblings)
-- **Pagination:** Applies to visible rows only. Expanding adds rows, may push to next page.
+- **Pagination:** Applies to **root rows only**. Page boundaries are determined by root row count. Expanding a root row reveals its children within the current page without pushing other roots to the next page. This avoids disorienting row-push effects and orphaned children on subsequent pages.
 - **Filtering:** If a child matches but its parent doesn't, the parent is shown as a non-matching context row (dimmed) to preserve hierarchy.
 
 Expand/collapse state is local to the component, not persisted in view state.
@@ -535,7 +597,7 @@ Expand/collapse state is local to the component, not persisted in view state.
 |------|------|-------|
 | 1 | Context types, template parser, expression evaluator | #47, #48, #49 |
 | 2 | Context wiring in runtime (state tracking, consumer registration, cascade) | #47, #48, #49 |
-| 3 | `visible` property on Component model | #47 |
+| 3 | `visibleWhen` property on Component model | #47 |
 | 4 | Content interpolation in markdown/html/title | #48 |
 | 5 | Parameterised dataset URLs | #49 |
 
@@ -581,7 +643,7 @@ The context model handles WebSocket dataset pushes with no changes:
 1. WebSocket provider updates a dataset via `DataSetManager.accumulate()` or `.register()`
 2. Runtime publishes a new `DataSetSnapshot` to `RuntimeContext`
 3. All context consumers re-evaluate (visibility, content, parameterised URLs)
-4. Components with `visible: "#{datasets.messages.rowCount} > 0"` react to live data
+4. Components with `visibleWhen: "#{datasets.messages.rowCount} > 0"` react to live data
 5. `casehub-action-complete` event's dataset refresh works with WebSocket datasets — the runtime triggers a re-subscribe or requests a fresh snapshot
 
 No design modifications needed. The WebSocket provider is a new data source type in the pipeline, not a context model change.
