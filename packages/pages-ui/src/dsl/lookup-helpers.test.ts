@@ -56,6 +56,11 @@ describe("groupBy()", () => {
     const g = groupBy("region", col("region"), col("name"));
     expect(g.columns[1]!.kind).toBe("select");
   });
+
+  it("rejects non-string/null source with clear error (clinical#107)", () => {
+    const badSource = [] as unknown as string;
+    expect(() => groupBy(badSource, col("phase"))).toThrow(/groupBy source must be a string/);
+  });
 });
 
 describe("groupByCalendar()", () => {

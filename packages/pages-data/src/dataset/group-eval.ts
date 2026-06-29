@@ -876,9 +876,11 @@ function sortBuckets(intervals: readonly Interval[], ascending: boolean): Interv
 
 function findColumnInDataset(ds: TypedDataSet, columnId: ColumnId): Column {
   const col = ds.columns.find((c) => c.id === columnId)
-    ?? ds.columns.find((c) => (c.id as string).toLowerCase() === (columnId as string).toLowerCase());
+    ?? (typeof columnId === "string"
+      ? ds.columns.find((c) => typeof c.id === "string" && c.id.toLowerCase() === columnId.toLowerCase())
+      : undefined);
   if (col === undefined) {
-    throw new DataSetError("UNKNOWN_COLUMN", `Column "${columnId}" not found`);
+    throw new DataSetError("UNKNOWN_COLUMN", `Column "${String(columnId)}" not found`);
   }
   return col;
 }

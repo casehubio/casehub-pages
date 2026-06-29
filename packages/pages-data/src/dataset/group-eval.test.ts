@@ -1144,6 +1144,26 @@ describe("applyGroup", () => {
     expect(result.rows[0]!.number(columnId("total"))).toBe(500);
   });
 
+  it("non-string sourceId in groupingKey throws clear error (clinical#107)", () => {
+    const ds = makeTestDs();
+    const op: GroupOp = {
+      type: "group",
+      groupingKey: {
+        sourceId: [] as unknown as ReturnType<typeof columnId>,
+        columnId: [] as unknown as ReturnType<typeof columnId>,
+        strategy: { mode: "distinct" },
+        maxIntervals: 15,
+        emptyIntervals: false,
+        ascendingOrder: true,
+      },
+      columns: [
+        { kind: "select", sourceId: columnId("dept"), columnId: columnId("dept") },
+      ],
+    };
+
+    expect(() => applyGroup(ds, op)).toThrow(DataSetError);
+  });
+
   it("null groupingKey — kind:key is INVALID_OPERATION error", () => {
     const ds = makeTestDs();
     const op: GroupOp = {

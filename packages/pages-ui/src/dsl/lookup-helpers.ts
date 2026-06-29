@@ -19,6 +19,9 @@ export function lookup(dataSetId: string, ...ops: DataSetOp[]): DataSetLookup {
 
 // Group builders
 export function groupBy(source: string | null, ...resultColumns: ResultColumn[]): GroupOp {
+  if (source !== null && typeof source !== "string") {
+    throw new Error(`groupBy source must be a string column name or null, got: ${typeof source}`);
+  }
   if (source === null) {
     return Object.freeze({
       type: "group" as const,

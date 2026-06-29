@@ -23,4 +23,14 @@ describe("branded type constructors", () => {
     const fn = (colId: ColumnId) => colId;
     expect(fn(id)).toBe("c");
   });
+
+  it("columnId rejects non-string input (clinical#107)", () => {
+    expect(() => columnId([] as unknown as string)).toThrow(/string/);
+    expect(() => columnId(42 as unknown as string)).toThrow(/string/);
+    expect(() => columnId(undefined as unknown as string)).toThrow(/string/);
+  });
+
+  it("dataSetId rejects non-string input", () => {
+    expect(() => dataSetId([] as unknown as string)).toThrow(/string/);
+  });
 });

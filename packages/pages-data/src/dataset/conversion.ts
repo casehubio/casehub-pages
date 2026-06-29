@@ -45,14 +45,17 @@ export function createTypedRow(cells: readonly CellValue[], columns: readonly Co
       throw new DataSetError("INVALID_OPERATION", `Column at index ${String(i)} is undefined`);
     }
     columnIndex.set(column.id, i);
-    columnIndexLower.set((column.id as string).toLowerCase(), i);
+    if (typeof column.id === "string") {
+      columnIndexLower.set(column.id.toLowerCase(), i);
+    }
   }
 
   const row: TypedRow = {
     cells: frozenCells,
 
     cell(columnId: ColumnId): CellValue {
-      const idx = columnIndex.get(columnId) ?? columnIndexLower.get((columnId as string).toLowerCase());
+      const idx = columnIndex.get(columnId)
+        ?? (typeof columnId === "string" ? columnIndexLower.get(columnId.toLowerCase()) : undefined);
       if (idx === undefined) {
         throw new DataSetError("UNKNOWN_COLUMN", `Column "${columnId}" not found`);
       }
