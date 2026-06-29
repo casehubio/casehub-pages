@@ -1,15 +1,15 @@
 casehub-pages
 --
 
-casehub-pages is a foundational dashboard rendering runtime for the CaseHub platform — a pure TypeScript library for parsing YAML dashboard definitions and rendering interactive visualizations as Web Components.
+casehub-pages is a foundational dashboard rendering runtime for the CaseHub platform — a pure TypeScript library with a type-safe DSL for building interactive data-bound pages as Web Components.
 
 **History:** casehub-pages descends from dashbuilder, a full GWT dashboard authoring platform. The melviz fork modernised the frontend, progressively replacing GWT with TypeScript Web Components. casehub-pages completes that journey — 100% TypeScript, near feature parity with dashbuilder, and designed as a foundational building block for the CaseHub platform.
 
-* Supports YAML-based pages, allowing users to build dashboards and reports declaratively
-* Reads data from JSON, metrics, and CSV sources
+* **TypeScript-first** — type-safe DSL builders with full IDE autocompletion; YAML supported for runtime-loaded pages
+* Reads data from JSON, metrics, CSV, and WebSocket sources
 * Data transformation using JSONata expressions
 * Iframe-isolated microfrontends for custom visualizations
-* Real-time data refresh from datasets
+* Real-time data via WebSocket push and polling refresh
 * Cross-component communication using filter components
 
 Licensed under the Apache License, Version 2.0
@@ -139,7 +139,7 @@ casehub-pages is organized as a TypeScript monorepo with Yarn workspaces:
 
 **Core Packages** (`packages/`):
 - `@casehubio/pages-data` - DataSet model, operations engine (filter/group/sort), external data extraction (JSON, CSV, Prometheus)
-- `@casehubio/pages-ui` - YAML parser, DashBuilder backward compatibility, component model
+- `@casehubio/pages-ui` - TypeScript DSL builders, YAML parser, component model
 - `@casehubio/pages-viz` - Web Component wrappers for charts, tables, metrics, selectors
 - `@casehubio/pages-component` - CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion)
 - `@casehubio/pages-runtime` - Site orchestrator providing `loadSite()` API
@@ -159,11 +159,9 @@ casehub-pages is organized as a TypeScript monorepo with Yarn workspaces:
 ### Data Flow
 
 ```
-YAML dashboard definition
+TypeScript DSL (or YAML string)
     ↓
-@casehubio/pages-ui (parse YAML)
-    ↓
-ComponentNode tree + DataSetDef[]
+Component tree + DataSetDef[]
     ↓
 @casehubio/pages-data (resolve datasets)
     ↓
@@ -176,31 +174,34 @@ DataSet (columns + rows)
 pages-filter / pages-sort events → back to data layer
 ```
 
-1. **@casehubio/pages-ui** parses YAML dashboard definitions into a component tree
-2. **@casehubio/pages-data** resolves datasets from JSON/CSV/metrics sources and applies JSONata transformations
+1. **@casehubio/pages-ui** provides type-safe DSL builders that produce a component tree (YAML is parsed into the same tree structure for runtime-loaded pages)
+2. **@casehubio/pages-data** resolves datasets from REST, JSON, CSV, metrics, and WebSocket sources, applying JSONata transformations
 3. **@casehubio/pages-component** renders CSS grid layouts with interactive containers
 4. **@casehubio/pages-viz** provides Web Components for visualizations (powered by Apache ECharts)
 5. User interactions (filtering, sorting) flow back to the data layer via custom events
 
 ### Entry Point
 
-Host applications load dashboards using the `loadSite()` API from `@casehubio/pages-runtime`:
+Host applications build pages using the TypeScript DSL and render them with `loadSite()`:
 
 ```typescript
-import { loadSite } from '@casehubio/pages-runtime';
+import { page, barChart, dataset } from "@casehubio/ui";
+import { lookup, groupBy, col, sum } from "@casehubio/data";
+import { loadSite } from "@casehubio/pages-runtime";
 
-const yamlDashboard = `
-pages:
-  - components:
-    - markdown: "# Dashboard Title"
-    - bar:
-        dataset: sales
-`;
+dataset("sales", "/api/sales");
 
-loadSite(yamlDashboard, document.getElementById('container'));
+const app = page("Dashboard",
+  barChart({
+    title: "Sales by Region",
+    lookup: lookup("sales", groupBy("Region", col("Region"), sum("Revenue"))),
+  }),
+);
+
+const site = await loadSite(document.getElementById("app")!, app);
 ```
 
-Alternatively, dashboards can be configured in `setup.js` for static deployments or sent dynamically via `window.postMessage`.
+`loadSite()` also accepts a YAML string for runtime-loaded pages (e.g., stored in a database). See `docs/CASEHUB-PAGES.md` for the complete API reference.
 
 ### Iframe-Isolated Component Architecture
 
@@ -255,18 +256,15 @@ The final artifact is a single directory (`webapp/dist/`) containing:
 
 This can be deployed to any static web server or GitHub Pages.
 
-## Working with YAML Dashboards
+## YAML Support (Runtime-Loaded Pages)
 
-casehub-pages renders dashboards defined in YAML. The application can receive content dynamically via `postMessage`:
+`loadSite()` accepts YAML strings for pages defined at runtime (e.g., stored in a database and loaded dynamically). YAML is parsed into the same component tree the TypeScript DSL produces.
 
-```javascript
-window.postMessage(`pages:
-  - components:
-    - markdown: "# Hello World!"
-`, null)
+```typescript
+const site = await loadSite(container, yamlString);
 ```
 
-Alternatively, use `setup.js` to configure static dashboards that load on startup.
+Pages can also be received dynamically via `postMessage` for embedded scenarios. For new applications, always prefer the TypeScript DSL — see `docs/CASEHUB-PAGES.md` for guidance.
 
 ## Key Technologies
 
