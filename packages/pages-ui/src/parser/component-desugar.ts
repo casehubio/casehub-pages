@@ -32,29 +32,35 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
   // Content shorthands (check first, before type key)
   if ("html" in raw) {
     const style = extractStyle(raw.properties);
+    const visibleWhen = raw.visibleWhen as string | undefined;
     return {
       type: "html",
       props: { content: raw.html },
       ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
     };
   }
 
   if ("markdown" in raw) {
     const style = extractStyle(raw.properties);
+    const visibleWhen = raw.visibleWhen as string | undefined;
     return {
       type: "markdown",
       props: { content: raw.markdown },
       ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
     };
   }
 
   // Title shorthand (only if type is NOT present)
   if ("title" in raw && !("type" in raw)) {
     const style = extractStyle(raw.properties);
+    const visibleWhen = raw.visibleWhen as string | undefined;
     return {
       type: "title",
       props: { text: raw.title },
       ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
     };
   }
 
@@ -64,12 +70,40 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     if (formType in raw) {
       const props = raw[formType] as Record<string, unknown>;
       const style = extractStyle(raw.properties);
+      const visibleWhen = raw.visibleWhen as string | undefined;
       return {
         type: formType,
         props,
         ...(style ? { style } : {}),
+        ...(visibleWhen ? { visibleWhen } : {}),
       };
     }
+  }
+
+  // Alert shorthand
+  if ("alert" in raw) {
+    const props = raw.alert as Record<string, unknown>;
+    const style = extractStyle(raw.properties);
+    const visibleWhen = raw.visibleWhen as string | undefined;
+    return {
+      type: "alert",
+      props,
+      ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
+    };
+  }
+
+  // Action button shorthand
+  if ("action-button" in raw) {
+    const props = raw["action-button"] as Record<string, unknown>;
+    const style = extractStyle(raw.properties);
+    const visibleWhen = raw.visibleWhen as string | undefined;
+    return {
+      type: "action-button",
+      props,
+      ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
+    };
   }
 
   // Navigation references (transient)

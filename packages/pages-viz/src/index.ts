@@ -7,6 +7,7 @@ import "./custom-elements.js";
 export { PagesElement } from "./base/PagesElement.js";
 export type { PagesDataRequestDetail } from "./base/PagesElement.js";
 export { PagesChartElement } from "./base/PagesChartElement.js";
+export { PagesContentElement } from "./base/PagesContentElement.js";
 export type { PagesFilterDetail, PagesFilterApply, PagesFilterReset, ChartClickParams } from "./base/filter-types.js";
 export type { VizComponentProps } from "./base/types.js";
 export { cellToRaw, resolveColumnName } from "./base/cell-extract.js";
@@ -43,6 +44,16 @@ export { PagesDropdown } from "./form-inputs/PagesDropdown.js";
 export { PagesCheckbox } from "./form-inputs/PagesCheckbox.js";
 export { PagesDatePicker } from "./form-inputs/PagesDatePicker.js";
 export { PagesTextarea } from "./form-inputs/PagesTextarea.js";
+
+// New charts
+export { PagesTimeline } from "./charts/PagesTimeline.js";
+export { PagesGraph } from "./charts/PagesGraph.js";
+
+// New components
+export { PagesActionButton } from "./components/PagesActionButton.js";
+export { PagesAlert } from "./components/PagesAlert.js";
+export { PagesBadge } from "./components/PagesBadge.js";
+export { PagesCountdown } from "./components/PagesCountdown.js";
 
 // Shared pipeline
 export { datasetToSource, applyChartSettings } from "./charts/option-pipeline.js";

@@ -57,6 +57,15 @@ datasets:
           - id: flagged
             type: LABEL
 
+    - uuid: flaggedPatients
+      lookup:
+          uuid: patients
+          filter:
+              - column: flagged
+                function: EQUALS_TO
+                args:
+                    - "true"
+
     - uuid: vitals
       content: >-
           [
@@ -135,6 +144,76 @@ datasets:
           - id: temperature
             type: NUMBER
           - id: o2Saturation
+            type: NUMBER
+
+    - uuid: admissions
+      content: >-
+          [
+              ["Emily Rodriguez", "2026-06-20", "2026-06-30", "ICU"],
+              ["Michael Chen", "2026-06-18", "2026-06-28", "General"],
+              ["Sophia Patel", "2026-06-24", "2026-06-29", "Pediatrics"],
+              ["James Wilson", "2026-06-19", null, "ICU"],
+              ["Maria Santos", "2026-06-25", "2026-06-28", "Maternity"],
+              ["Robert Johnson", "2026-06-23", "2026-07-05", "General"],
+              ["Aisha Ibrahim", "2026-06-21", "2026-07-01", "General"],
+              ["David Lee", "2026-06-24", "2026-06-29", "Pediatrics"],
+              ["Isabella Martinez", "2026-06-20", null, "ICU"],
+              ["Antonio Garcia", "2026-06-21", "2026-06-29", "ICU"]
+          ]
+      columns:
+          - id: patient
+            type: LABEL
+          - id: admitDate
+            type: DATE
+          - id: dischargeDate
+            type: DATE
+          - id: ward
+            type: LABEL
+
+    - uuid: nextReview
+      content: >-
+          [
+              ["ICU Rounds", "2026-06-30T10:00:00"]
+          ]
+      columns:
+          - id: review
+            type: TEXT
+          - id: deadline
+            type: DATE
+
+    - uuid: assignments
+      content: >-
+          [
+              ["Dr. Sarah Mitchell", "Emily Rodriguez", 4],
+              ["Dr. Sarah Mitchell", "James Wilson", 4],
+              ["Dr. Sarah Mitchell", "Isabella Martinez", 3],
+              ["Dr. Sarah Mitchell", "Antonio Garcia", 2],
+              ["Dr. James Anderson", "Michael Chen", 3],
+              ["Dr. James Anderson", "Robert Johnson", 2],
+              ["Dr. James Anderson", "Samuel Davis", 1],
+              ["Dr. James Anderson", "Christopher White", 2],
+              ["Dr. James Anderson", "William Zhang", 1],
+              ["Dr. Lisa Thompson", "Sophia Patel", 3],
+              ["Dr. Lisa Thompson", "David Lee", 2],
+              ["Dr. Lisa Thompson", "Yuki Tanaka", 1],
+              ["Dr. Lisa Thompson", "Ethan Taylor", 2],
+              ["Dr. Lisa Thompson", "Olivia Smith", 3],
+              ["Dr. Rachel Kim", "Maria Santos", 2],
+              ["Dr. Rachel Kim", "Fatima Ahmed", 3],
+              ["Dr. Rachel Kim", "Priya Sharma", 1],
+              ["Dr. Michael Chang", "Aisha Ibrahim", 3],
+              ["Dr. Michael Chang", "Thomas Brown", 1],
+              ["Dr. Michael Chang", "Grace Kim", 3],
+              ["Dr. Michael Chang", "Mohammed Ali", 2],
+              ["Dr. Michael Chang", "Hannah Cohen", 1],
+              ["Dr. Michael Chang", "Lucas Anderson", 1]
+          ]
+      columns:
+          - id: doctor
+            type: LABEL
+          - id: patient
+            type: LABEL
+          - id: visits
             type: NUMBER
 
 pages:
@@ -288,9 +367,12 @@ pages:
                                           - source: id
                                             function: COUNT
           - columns:
-                - components:
+                - span: 8
+                  components:
                       - markdown: >-
-                            ## Ward Protocol Notes
+                            ## #{filter.ward ? filter.ward + " Ward" : "All Wards"} Overview
+
+                            **Current Status:** #{datasets.patients.rowCount} patients
 
                             **ICU Protocols:**
                             - Vitals monitoring every 2 hours
@@ -311,6 +393,57 @@ pages:
                             - Rooming-in encouraged for all mothers
                             - Lactation consultant available on request
                             - Newborn screening completed before discharge
+                - span: 4
+                  components:
+                      - alert:
+                            severity: warning
+                            content: "Review flagged patients requiring immediate attention"
+                            dismissible: false
+                      - displayer:
+                            type: BADGE
+                            badge:
+                                column: status
+                                colorMap:
+                                    Critical: red
+                                    Monitoring: yellow
+                                    Stable: green
+                            lookup:
+                                uuid: patients
+                                group:
+                                    - columnGroup:
+                                          source: status
+                                      functions:
+                                          - source: status
+
+          - columns:
+                - span: 9
+                  components:
+                      - displayer:
+                            type: TIMELINE
+                            general:
+                                title: Admission Timelines
+                            timeline:
+                                startColumn: admitDate
+                                endColumn: dischargeDate
+                                labelColumn: patient
+                                categoryColumn: ward
+                            chart:
+                                zoom: true
+                                height: 300
+                            lookup:
+                                uuid: admissions
+                - span: 3
+                  components:
+                      - displayer:
+                            type: COUNTDOWN
+                            general:
+                                title: Next ICU Rounds
+                            countdown:
+                                deadlineColumn: deadline
+                                warningThreshold: "24hour"
+                                criticalThreshold: "4hour"
+                            lookup:
+                                uuid: nextReview
 
     # === Page 2: Vitals Monitor ===
     - name: Vitals Monitor
@@ -379,6 +512,11 @@ pages:
                                 - id: temperature
                                   expression: >-
                                       value > 38.5 ? "⚠️ " + value : value
+                            rowStyle:
+                                - condition: "#{row.temperature} > 38.5"
+                                  className: pages-row-danger
+                                - condition: "#{row.temperature} > 37.5 && #{row.temperature} <= 38.5"
+                                  className: pages-row-warning
                             lookup:
                                 uuid: vitals
 
@@ -401,7 +539,21 @@ pages:
                     notification: true
                 lookup:
                     uuid: patients
+            visibleWhen: "#{filter.ward}"
           - html: "</div></div>"
+          - action-button:
+                label: "Admit New Patient"
+                url: "/api/patients"
+                method: POST
+                style: primary
+                confirm: "Add a new patient to the system?"
+                body:
+                    name: "New Patient"
+                    status: "Stable"
+                onSuccess:
+                    message: "Patient admitted successfully"
+                onError:
+                    message: "Failed to admit patient"
           - html: "<div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Edit Patient</div><div class='pf-v5-c-card__body'>"
           - text-input:
                 field: name
@@ -437,6 +589,26 @@ pages:
                 label: Flagged for Review
           - html: "</div></div>"
 
+    # === Page 4: Assignments ===
+    - name: Assignments
+      rows:
+          - columns:
+                - components:
+                      - displayer:
+                            type: GRAPH
+                            general:
+                                title: Doctor-Patient Assignments
+                            graph:
+                                layout: force
+                                sourceColumn: doctor
+                                targetColumn: patient
+                                valueColumn: visits
+                                directed: true
+                            chart:
+                                height: 500
+                            lookup:
+                                uuid: assignments
+
 navTree:
     root_items:
         - type: GROUP
@@ -445,3 +617,4 @@ navTree:
               - page: Ward Overview
               - page: Vitals Monitor
               - page: Patient Detail
+              - page: Assignments

@@ -5,6 +5,10 @@ import { applyOps } from "./ops.js";
 import { resolveFilterTypes } from "./filter-resolve.js";
 import { DataSetError } from "./errors.js";
 
+export interface DataSetManagerOptions {
+  readonly onChanged?: (id: DataSetId, dataset: TypedDataSet) => void;
+}
+
 export interface LookupOptions {
   readonly rowOffset?: number;
   readonly rowCount?: number;
@@ -53,9 +57,15 @@ function paginate(
 
 class DataSetManagerImpl implements DataSetManager {
   private readonly datasets = new Map<DataSetId, TypedDataSet>();
+  private readonly options: DataSetManagerOptions | undefined;
+
+  constructor(options?: DataSetManagerOptions) {
+    this.options = options;
+  }
 
   register(id: DataSetId, dataset: TypedDataSet): void {
     this.datasets.set(id, dataset);
+    this.options?.onChanged?.(id, dataset);
   }
 
   get(id: DataSetId): TypedDataSet | undefined {
@@ -80,6 +90,7 @@ class DataSetManagerImpl implements DataSetManager {
     const existing = this.datasets.get(id);
     if (!existing) {
       this.datasets.set(id, dataset);
+      this.options?.onChanged?.(id, dataset);
       return;
     }
 
@@ -117,7 +128,9 @@ class DataSetManagerImpl implements DataSetManager {
     const rows = maxRows !== undefined && maxRows >= 0
       ? combined.slice(0, maxRows)
       : combined;
-    this.datasets.set(id, { columns: dataset.columns, rows });
+    const result = { columns: dataset.columns, rows };
+    this.datasets.set(id, result);
+    this.options?.onChanged?.(id, result);
   }
 
   lookup(query: DataSetLookup, options?: LookupOptions): LookupResult {
@@ -140,6 +153,6 @@ class DataSetManagerImpl implements DataSetManager {
   }
 }
 
-export function createDataSetManager(): DataSetManager {
-  return new DataSetManagerImpl();
+export function createDataSetManager(options?: DataSetManagerOptions): DataSetManager {
+  return new DataSetManagerImpl(options);
 }

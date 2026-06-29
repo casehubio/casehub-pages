@@ -46,6 +46,7 @@ export interface DataRequest {
   readonly query: Readonly<Record<string, string>>;
   readonly form?: Readonly<Record<string, string>>;
   readonly body?: string;
+  readonly signal?: AbortSignal;
 }
 
 export interface FetchResult {

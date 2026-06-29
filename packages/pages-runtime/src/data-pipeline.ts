@@ -17,6 +17,8 @@ import { getDataScope } from "./data-scope-registry.js";
 import { resolveRefBindings } from "./ref-resolution.js";
 import type { ComponentViewState } from "./component-view-state.js";
 import { getComponentState, updatePage } from "./component-view-state.js";
+import type { ContextManager } from "./context-wiring.js";
+import { hasTemplateVars, resolveTemplate, allTemplateVarsResolved } from "@casehubio/pages-component/dist/context/index.js";
 
 export interface VizTarget {
   dataSet: unknown;
@@ -56,9 +58,12 @@ export function createDataPipeline(
   filterState: FilterState,
   dataScopeRegistry: DataScopeRegistry,
   componentViewState: ComponentViewState,
+  contextManager?: ContextManager,
 ): DataPipeline {
   const pendingResolutions = new Map<DataSetId, Promise<ResolveResult>>();
   const refreshTimers = new Map<DataSetId, ReturnType<typeof setInterval>>();
+  const abortControllers = new Map<DataSetId, AbortController>();
+  const parameterisedConsumers = new Set<DataSetId>();
   let resolverCtx: ResolverContext | undefined;
 
   function pushData(
@@ -70,6 +75,21 @@ export function createDataPipeline(
     options?: LookupOptions,
   ): void {
     try {
+      // Pipeline bypass: when component has expandable config, deliver all rows.
+      // The component handles pagination and text filtering internally.
+      {
+        const expandableEntry = registry.get(componentId);
+        const expandable = (expandableEntry?.component.props as { expandable?: unknown } | undefined)?.expandable;
+        if (expandable) {
+          const result = manager.lookup(lookup, options);
+          target.activePage = undefined;
+          target.totalRows = result.totalRows;
+          target.dataSet = result.dataset;
+          target.activeSort = undefined;
+          return;
+        }
+      }
+
       const dataScope = getDataScope(dataScopeRegistry, pagePath);
       let filterOps;
 
@@ -201,6 +221,110 @@ export function createDataPipeline(
 
       if (!resolverCtx) {
         target.error = `No resolver context available`;
+        return;
+      }
+
+      // Parameterised URL handling: defer fetch until all template vars resolved
+      if (def.url && contextManager && hasTemplateVars(def.url) && !parameterisedConsumers.has(lookup.dataSetId)) {
+        parameterisedConsumers.add(lookup.dataSetId);
+
+        const urlTemplate = def.url;
+        let lastResolvedUrl = "";
+
+        // Create a sentinel element for the consumer (attached to document for isConnected)
+        const sentinel = document.createElement("span");
+        sentinel.dataset.paramDataset = String(lookup.dataSetId);
+        document.body.appendChild(sentinel);
+
+        const consumer: import("./context-wiring.js").ContextConsumer = {
+          element: sentinel,
+          templates: new Map([
+            [
+              "url",
+              {
+                template: urlTemplate,
+                escapeMode: "url" as const,
+                lastResolved: "",
+                apply: (resolvedUrl: string) => {
+                  // Check if all variables are actually resolved (not just changed)
+                  if (!allTemplateVarsResolved(urlTemplate, contextManager.getContext())) {
+                    return;
+                  }
+
+                  if (resolvedUrl === lastResolvedUrl) return;
+                  lastResolvedUrl = resolvedUrl;
+
+                  // Abort any in-flight request for this dataset
+                  const existingController = abortControllers.get(lookup.dataSetId);
+                  if (existingController) {
+                    existingController.abort();
+                  }
+
+                  // Create new AbortController for this request
+                  const controller = new AbortController();
+                  abortControllers.set(lookup.dataSetId, controller);
+
+                  // Build a new def with the resolved URL
+                  const resolvedDef: ExternalDataSetDef = { ...def, url: resolvedUrl };
+
+                  // Clean up any pending resolution
+                  pendingResolutions.delete(lookup.dataSetId);
+
+                  // Wrap provider to inject AbortSignal and resolved URL
+                  const wrappedCtx: ResolverContext = {
+                    ...resolverCtx!,
+                    providerFactory: {
+                      create: (d, c) => {
+                        const provider = resolverCtx!.providerFactory.create(d, c);
+                        if (!provider) return undefined;
+                        return {
+                          fetch: (req) => provider.fetch({ ...req, url: resolvedUrl, signal: controller.signal }),
+                        };
+                      },
+                    },
+                  };
+                  const pending = resolveExternalDataSet(resolvedDef, wrappedCtx);
+                  pendingResolutions.set(lookup.dataSetId, pending);
+
+                  pending
+                    .then(() => {
+                      pendingResolutions.delete(lookup.dataSetId);
+                      abortControllers.delete(lookup.dataSetId);
+                      // Re-push all components that reference this dataset
+                      for (const [compId, compEntry] of registry) {
+                        if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
+                          const fg = (compEntry.component.props as Record<string, unknown> | undefined)
+                            ?.filter as { group?: string } | undefined;
+                          pushData(compEntry.vizElement, compEntry.originalLookup, compEntry.pagePath, fg?.group, compId);
+                        }
+                      }
+                    })
+                    .catch((err: unknown) => {
+                      pendingResolutions.delete(lookup.dataSetId);
+                      abortControllers.delete(lookup.dataSetId);
+                      if (err instanceof DOMException && err.name === "AbortError") return;
+                      target.error = err instanceof Error ? err.message : String(err);
+                    });
+                },
+              },
+            ],
+          ]),
+          suspended: false,
+        };
+
+        contextManager.registerConsumer(consumer);
+
+        // Check if URL can be resolved right now
+        if (allTemplateVarsResolved(urlTemplate, contextManager.getContext())) {
+          const resolvedUrl = resolveTemplate(urlTemplate, contextManager.getContext(), "url");
+          consumer.templates.get("url")!.lastResolved = resolvedUrl;
+          consumer.templates.get("url")!.apply(resolvedUrl);
+        }
+        return;
+      }
+
+      // If it's a parameterised URL that's already registered, skip (the consumer handles it)
+      if (def.url && hasTemplateVars(def.url) && parameterisedConsumers.has(lookup.dataSetId)) {
         return;
       }
 

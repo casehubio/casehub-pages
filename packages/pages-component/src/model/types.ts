@@ -7,6 +7,7 @@ export interface Component<
   readonly props?: Readonly<P>;
   readonly style?: Readonly<Record<string, string>>;
   readonly access?: AccessControl;
+  readonly visibleWhen?: string;
   readonly slots?: Readonly<Record<string, readonly Component[]>>;
   readonly items?: readonly GridItem[];
 }

@@ -20,6 +20,10 @@ import { extendDataSetScope } from "./dataset-scope.js";
 import type { DataScopeRegistry } from "./data-scope-registry.js";
 import type { SaveConfigRegistry } from "./save-config-registry.js";
 import { renderTitle, renderHtml, renderMarkdown } from "./content.js";
+import type { ContextManager } from "./context-wiring.js";
+import { evaluateExpression, hasTemplateVars, resolveTemplate } from "@casehubio/pages-component/dist/context/index.js";
+import type { EscapeMode } from "@casehubio/pages-component/dist/context/index.js";
+import type { PagesContentElement } from "@casehubio/pages-viz/dist/base/PagesContentElement.js";
 
 const FORM_INPUT_TYPES = new Set([
   "text-input",
@@ -44,6 +48,10 @@ const DATA_COMPONENT_TYPES = new Set([
   "selector",
   "map",
   "iframe-plugin",
+  "badge",
+  "countdown",
+  "timeline",
+  "graph",
   ...FORM_INPUT_TYPES,
 ]);
 
@@ -63,6 +71,7 @@ export function createActivationCallback(
   registry: ComponentRegistry,
   pagePathMap: PagePathMap,
   options?: LazyPageOptions,
+  contextManager?: ContextManager,
 ): (el: HTMLElement, component: Component) => void {
   const yamlCache = new Map<string, string>();
 
@@ -71,6 +80,12 @@ export function createActivationCallback(
     if (!componentId) return;
 
     const pagePath = pagePathMap.get(component) ?? "";
+
+    // Handle static visible: false (unless visibleWhen overrides it)
+    const staticVisible = (component.props as Record<string, unknown> | undefined)?.visible;
+    if (!component.visibleWhen && staticVisible === false) {
+      el.hidden = true;
+    }
 
     // Register DataScope and SaveConfig for page components
     if (component.type === "page" && options) {
@@ -130,21 +145,101 @@ export function createActivationCallback(
       if (inlineData !== undefined && lookup === undefined) {
         resolveInlineDataSet(vizEl, inlineData);
       }
+
+      // Register visibleWhen consumer
+      if (component.visibleWhen && contextManager) {
+        registerVisibleWhenConsumer(el, vizEl, component.visibleWhen, contextManager);
+      }
+
       return;
     }
 
     if (component.type === "title" && component.props) {
-      renderTitle(el, component.props);
+      const textProp = typeof component.props.text === "string" ? component.props.text : "";
+      if (contextManager && hasTemplateVars(textProp)) {
+        const resolvedText = resolveTemplate(textProp, contextManager.getContext(), "none");
+        renderTitle(el, { ...component.props, text: resolvedText });
+        registerContentConsumer(el, textProp, "none", contextManager, (resolved) => {
+          el.innerHTML = "";
+          renderTitle(el, { ...component.props, text: resolved });
+        }, component.visibleWhen);
+      } else {
+        renderTitle(el, component.props);
+        if (component.visibleWhen && contextManager) {
+          registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+        }
+      }
       return;
     }
 
     if (component.type === "html" && component.props) {
-      renderHtml(el, component.props);
+      const contentProp = typeof component.props.content === "string" ? component.props.content : "";
+      if (contextManager && hasTemplateVars(contentProp)) {
+        const resolvedContent = resolveTemplate(contentProp, contextManager.getContext(), "html");
+        renderHtml(el, { ...component.props, content: resolvedContent });
+        registerContentConsumer(el, contentProp, "html", contextManager, (resolved) => {
+          el.innerHTML = "";
+          renderHtml(el, { ...component.props, content: resolved });
+        }, component.visibleWhen);
+      } else {
+        renderHtml(el, component.props);
+        if (component.visibleWhen && contextManager) {
+          registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+        }
+      }
       return;
     }
 
     if (component.type === "markdown" && component.props) {
-      renderMarkdown(el, component.props);
+      const contentProp = typeof component.props.content === "string" ? component.props.content : "";
+      if (contextManager && hasTemplateVars(contentProp)) {
+        const resolvedContent = resolveTemplate(contentProp, contextManager.getContext(), "markdown");
+        renderMarkdown(el, { ...component.props, content: resolvedContent });
+        registerContentConsumer(el, contentProp, "markdown", contextManager, (resolved) => {
+          el.innerHTML = "";
+          renderMarkdown(el, { ...component.props, content: resolved });
+        }, component.visibleWhen);
+      } else {
+        renderMarkdown(el, component.props);
+        if (component.visibleWhen && contextManager) {
+          registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+        }
+      }
+      return;
+    }
+
+    if (component.type === "action-button" && component.props) {
+      const actionButton = document.createElement("pages-action-button");
+      (actionButton as unknown as PagesContentElement<Record<string, unknown>>).props = component.props;
+      el.appendChild(actionButton);
+
+      if (component.visibleWhen && contextManager) {
+        registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+      }
+      return;
+    }
+
+    if (component.type === "alert" && component.props) {
+      const contentProp = typeof component.props.content === "string" ? component.props.content : "";
+      if (contextManager && hasTemplateVars(contentProp)) {
+        const resolvedContent = resolveTemplate(contentProp, contextManager.getContext(), "none");
+        const alert = document.createElement("pages-alert");
+        (alert as unknown as PagesContentElement<Record<string, unknown>>).props = { ...component.props, content: resolvedContent };
+        el.appendChild(alert);
+        registerContentConsumer(el, contentProp, "none", contextManager, (resolved) => {
+          el.innerHTML = "";
+          const updatedAlert = document.createElement("pages-alert");
+          (updatedAlert as unknown as PagesContentElement<Record<string, unknown>>).props = { ...component.props, content: resolved };
+          el.appendChild(updatedAlert);
+        }, component.visibleWhen);
+      } else {
+        const alert = document.createElement("pages-alert");
+        (alert as unknown as PagesContentElement<Record<string, unknown>>).props = component.props;
+        el.appendChild(alert);
+        if (component.visibleWhen && contextManager) {
+          registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+        }
+      }
       return;
     }
 
@@ -265,5 +360,81 @@ function resolveInlineDataSet(
   } catch {
     vizEl.error = "Failed to parse inline dataSet";
   }
+}
+
+function registerContentConsumer(
+  el: HTMLElement,
+  template: string,
+  escapeMode: EscapeMode,
+  contextManager: ContextManager,
+  applyFn: (resolved: string) => void,
+  visibleWhenExpr?: string,
+): void {
+  const initialResolved = resolveTemplate(template, contextManager.getContext(), escapeMode);
+
+  const consumer: import("./context-wiring.js").ContextConsumer = {
+    element: el,
+    templates: new Map([
+      [
+        "content",
+        {
+          template,
+          escapeMode,
+          lastResolved: initialResolved,
+          apply: applyFn,
+        },
+      ],
+    ]),
+    suspended: false,
+  };
+
+  if (visibleWhenExpr) {
+    const initialResult = evaluateExpression(visibleWhenExpr, contextManager.getContext());
+    consumer.suspended = !initialResult;
+    consumer.visibleWhen = {
+      expression: visibleWhenExpr,
+      lastResult: initialResult,
+      onSuspend: () => { el.hidden = true; },
+      onResume: () => { el.hidden = false; },
+    };
+    el.hidden = !initialResult;
+  }
+
+  contextManager.registerConsumer(consumer);
+}
+
+function registerVisibleWhenConsumer(
+  el: HTMLElement,
+  vizEl: PagesElement<VizComponentProps> | null,
+  expression: string,
+  contextManager: ContextManager,
+): void {
+  // Evaluate initial state
+  const initialResult = evaluateExpression(expression, contextManager.getContext());
+
+  const consumer = {
+    element: el,
+    templates: new Map(),
+    suspended: !initialResult,
+    visibleWhen: {
+      expression,
+      lastResult: initialResult,
+      onSuspend: () => {
+        el.hidden = true;
+        // Note: refresh timer lifecycle is managed internally by PagesElement
+        // based on the hidden state and isConnected status
+      },
+      onResume: () => {
+        el.hidden = false;
+        // Note: refresh timer lifecycle is managed internally by PagesElement
+        // based on the hidden state and isConnected status
+      },
+    },
+  };
+
+  contextManager.registerConsumer(consumer);
+
+  // Set initial hidden state
+  el.hidden = !initialResult;
 }
 

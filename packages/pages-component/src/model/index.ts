@@ -47,7 +47,24 @@ export type {
   SelectorProps,
   MapProps,
   IframePluginProps,
+  BadgeProps,
+  CountdownProps,
+  TimelineProps,
+  GraphProps,
+  RowStyleRule,
+  ExpandableConfig,
 } from "./displayer-types.js";
+
+// Action types
+export type {
+  AlertProps,
+  ActionButtonProps,
+  SubmitConfig,
+  ActionRequest,
+  ActionCallbacks,
+  ActionResult,
+  PagesActionRequestDetail,
+} from "./action-types.js";
 
 // Form input types
 export type {

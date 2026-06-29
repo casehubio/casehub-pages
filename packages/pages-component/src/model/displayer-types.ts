@@ -1,5 +1,5 @@
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ColumnSettings, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { FilterSettings, RefreshSettings } from "./component-props.js";
 
 export interface DataComponentCommon {
@@ -62,10 +62,24 @@ export interface BubbleChartProps extends DataComponentCommon, ChartSettings {
 
 export interface TimeseriesProps extends DataComponentCommon, ChartSettings {}
 
+export interface RowStyleRule {
+  readonly condition: string;
+  readonly className?: string;
+  readonly style?: Record<string, string>;
+}
+
+export interface ExpandableConfig {
+  readonly idColumn: ColumnId;
+  readonly parentColumn: ColumnId;
+  readonly defaultExpanded?: boolean | number;
+}
+
 export interface TableProps extends DataComponentCommon {
   readonly pageSize?: number;
   readonly sortable?: boolean;
   readonly resizable?: boolean;
+  readonly rowStyle?: readonly RowStyleRule[];
+  readonly expandable?: ExpandableConfig;
 }
 
 export interface MetricProps extends DataComponentCommon {
@@ -102,4 +116,35 @@ export interface IframePluginProps {
   readonly height?: string;
   readonly filter?: FilterSettings;
   readonly refresh?: RefreshSettings;
+}
+
+export interface BadgeProps extends DataComponentCommon {
+  readonly column?: ColumnId;
+  readonly colorMap?: Record<string, string>;
+}
+
+export interface CountdownProps extends DataComponentCommon {
+  readonly deadlineColumn?: ColumnId;
+  readonly format?: "full" | "compact" | "days-only";
+  readonly warningThreshold?: string;
+  readonly criticalThreshold?: string;
+}
+
+export interface TimelineProps extends DataComponentCommon, ChartSettings {
+  readonly startColumn?: ColumnId;
+  readonly endColumn?: ColumnId;
+  readonly labelColumn?: ColumnId;
+  readonly categoryColumn?: ColumnId;
+}
+
+export interface GraphProps extends DataComponentCommon, ChartSettings {
+  readonly layout?: "force" | "circular" | "none";
+  readonly sourceColumn?: ColumnId;
+  readonly targetColumn?: ColumnId;
+  readonly valueColumn?: ColumnId;
+  readonly directed?: boolean;
+  readonly nodeLabelColumn?: ColumnId;
+  readonly nodeColorColumn?: ColumnId;
+  readonly nodeColorMap?: Record<string, string>;
+  readonly nodeSizeColumn?: ColumnId;
 }

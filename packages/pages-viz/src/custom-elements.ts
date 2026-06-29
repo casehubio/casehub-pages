@@ -11,12 +11,18 @@ import type { PagesMeter } from "./charts/PagesMeter.js";
 import type { PagesPieChart } from "./charts/PagesPieChart.js";
 import type { PagesScatterChart } from "./charts/PagesScatterChart.js";
 import type { PagesTimeseries } from "./charts/PagesTimeseries.js";
+import type { PagesTimeline } from "./charts/PagesTimeline.js";
+import type { PagesGraph } from "./charts/PagesGraph.js";
 import type { PagesCheckbox } from "./form-inputs/PagesCheckbox.js";
 import type { PagesDatePicker } from "./form-inputs/PagesDatePicker.js";
 import type { PagesDropdown } from "./form-inputs/PagesDropdown.js";
 import type { PagesNumberInput } from "./form-inputs/PagesNumberInput.js";
 import type { PagesTextInput } from "./form-inputs/PagesTextInput.js";
 import type { PagesTextarea } from "./form-inputs/PagesTextarea.js";
+import type { PagesActionButton } from "./components/PagesActionButton.js";
+import type { PagesAlert } from "./components/PagesAlert.js";
+import type { PagesBadge } from "./components/PagesBadge.js";
+import type { PagesCountdown } from "./components/PagesCountdown.js";
 
 export {};
 
@@ -35,11 +41,17 @@ declare global {
     "pages-pie-chart": PagesPieChart;
     "pages-scatter-chart": PagesScatterChart;
     "pages-timeseries": PagesTimeseries;
+    "pages-timeline": PagesTimeline;
+    "pages-graph": PagesGraph;
     "pages-checkbox": PagesCheckbox;
     "pages-date-picker": PagesDatePicker;
     "pages-dropdown": PagesDropdown;
     "pages-number-input": PagesNumberInput;
     "pages-text-input": PagesTextInput;
     "pages-textarea": PagesTextarea;
+    "pages-action-button": PagesActionButton;
+    "pages-alert": PagesAlert;
+    "pages-badge": PagesBadge;
+    "pages-countdown": PagesCountdown;
   }
 }

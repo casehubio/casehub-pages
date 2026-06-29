@@ -34,6 +34,10 @@ import { serializeToUrl, parseFromUrl } from "./url.js";
 import type { SaveAdapter } from "./save-adapter.js";
 import { createLocalAdapter } from "./adapters/local-adapter.js";
 import { createRestAdapter } from "./adapters/rest-adapter.js";
+import { ContextManager } from "./context-wiring.js";
+import { ActionExecutor } from "./action.js";
+import type { PagesActionCompleteDetail } from "./action.js";
+import type { PagesActionRequestDetail } from "@casehubio/pages-component/dist/model/action-types.js";
 // --- Event detail interfaces for typed CustomEvent access ---
 
 interface DataRequestDetail {
@@ -119,14 +123,23 @@ export function loadSite(
   const filterState = createFilterState();
   const abortController = new AbortController();
   const lazyPageResolutions: Map<Component, Component> = new Map();
-  const manager = createDataSetManager();
+  const contextManager = new ContextManager();
+  const manager = createDataSetManager({
+    onChanged: (id, dataset) => {
+      contextManager.updateDataset(id, dataset);
+    },
+  });
   const dataScopeRegistry = createDataScopeRegistry();
   const saveConfigRegistry = createSaveConfigRegistry();
   const editState = createEditState();
   const saveTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   const componentViewState = createComponentViewState();
+  const actionExecutor = new ActionExecutor(
+    options?.fetch ?? globalThis.fetch.bind(globalThis),
+    options?.baseUrl ?? ""
+  );
 
-  const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry, componentViewState);
+  const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry, componentViewState, contextManager);
   pipeline.setResolverCtx({
     manager,
     providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch.bind(globalThis), options?.baseUrl),
@@ -240,6 +253,7 @@ export function loadSite(
     _navigating = true;
     const segments = path.split("/").filter(Boolean);
     currentPage = walkNavigate(root, segments, target, lazyPageResolutions);
+    contextManager.updatePage(currentPage, currentPage);
     _navigating = false;
   }
 
@@ -509,6 +523,10 @@ export function loadSite(
       }
     }
 
+    // Update ContextManager with derived filter state
+    const derivedFilters = deriveActiveFilters(filterState, currentPage);
+    contextManager.updateFilter(derivedFilters);
+
     syncUrl("replaceState");
   }), { signal: abortController.signal });
 
@@ -698,6 +716,39 @@ export function loadSite(
       });
   }), { signal: abortController.signal });
 
+  target.addEventListener("pages-action-request", ((e: Event) => {
+    const { config, resolve } = (e as CustomEvent<PagesActionRequestDetail>).detail;
+
+    actionExecutor.execute(config, config.callbacks, contextManager.getContext())
+      .then((result) => {
+        resolve(result);
+
+        if (result.success && config.callbacks.onSuccess?.refresh) {
+          target.dispatchEvent(new CustomEvent<PagesActionCompleteDetail>("pages-action-complete", {
+            bubbles: true,
+            detail: { refresh: config.callbacks.onSuccess.refresh },
+          }));
+        }
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        resolve({ success: false, error: msg });
+      });
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-action-complete", ((e: Event) => {
+    const { refresh } = (e as CustomEvent<PagesActionCompleteDetail>).detail;
+
+    // Re-fetch listed datasets
+    for (const dataSetId of refresh) {
+      for (const [id, entry] of registry) {
+        if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
+          pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, id);
+        }
+      }
+    }
+  }), { signal: abortController.signal });
+
   // --- Render (AFTER event listeners — connectedCallback fires during render) ---
 
   const onNode = createActivationCallback(registry, pagePathMap, {
@@ -710,7 +761,7 @@ export function loadSite(
     dataScopeRegistry,
     saveConfigRegistry,
     lazyPageResolutions,
-  });
+  }, contextManager);
   renderComponent(target, root, { permissions, onNode });
 
   // popstate — back/forward browser navigation
@@ -788,6 +839,11 @@ export function loadSite(
         clearTimeout(timer);
       }
       saveTimers.clear();
+      // Clean up parameterised URL sentinel elements
+      const sentinels = document.querySelectorAll("[data-param-dataset]");
+      for (const sentinel of sentinels) {
+        sentinel.remove();
+      }
       componentViewState.clear();
       registry.clear();
       target.innerHTML = "";

@@ -520,3 +520,83 @@ describe("pipeline — text filter from ComponentViewState", () => {
     expect(target.activePage).toBe(0);
   });
 });
+
+describe("pipeline — expandable bypass", () => {
+  it("delivers all rows when component props contain expandable", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("id", "ID", ColumnType.LABEL), col("parentId", "Parent", ColumnType.LABEL), col("name", "Name", ColumnType.LABEL)],
+      data: [["t1", "", "Trial A"], ["s1", "t1", "Site 1"], ["s2", "t1", "Site 2"], ["t2", "", "Trial B"], ["s3", "t2", "Site 3"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: {
+        type: "table",
+        props: {
+          pageSize: 2,
+          expandable: { idColumn: "id", parentColumn: "parentId" },
+          lookup: { dataSetId: "test", operations: [] },
+        },
+      },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updatePage(cvs, "t1", 0);
+    updateTextFilter(cvs, "t1", "Trial");
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    // All 5 rows delivered — pagination and text filter bypassed
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows).toHaveLength(5);
+    expect(target.totalRows).toBe(5);
+    expect(target.activePage).toBeUndefined();
+  });
+
+  it("delivers all rows without expandable (normal pagination applies)", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL)],
+      data: [["A"], ["B"], ["C"], ["D"], ["E"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: {
+        type: "table",
+        props: { pageSize: 2, lookup: { dataSetId: "test", operations: [] } },
+      },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updatePage(cvs, "t1", 0);
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    // Normal pagination: page 0, pageSize 2 → 2 rows
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows).toHaveLength(2);
+    expect(target.activePage).toBe(0);
+  });
+});

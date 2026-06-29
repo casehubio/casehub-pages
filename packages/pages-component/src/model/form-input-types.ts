@@ -1,10 +1,12 @@
 import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { SubmitConfig } from "./action-types.js";
 
 export interface FormInputCommon {
   readonly field: string;
   readonly label?: string;
   readonly required?: boolean;
   readonly readonly?: boolean;
+  readonly submit?: SubmitConfig;
 }
 
 export interface TextInputProps extends FormInputCommon {

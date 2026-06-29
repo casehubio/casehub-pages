@@ -17,6 +17,10 @@ const TYPE_MAP: Record<string, string> = {
   METERCHART: "meter",
   SELECTOR: "selector",
   MAP: "map",
+  BADGE: "badge",
+  COUNTDOWN: "countdown",
+  TIMELINE: "timeline",
+  GRAPH: "graph",
 };
 
 /**
@@ -168,6 +172,18 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     if (table.pageSize !== undefined) {
       props.pageSize = table.pageSize;
     }
+    if (table.sortable !== undefined) {
+      props.sortable = table.sortable;
+    }
+    if (table.resizable !== undefined) {
+      props.resizable = table.resizable;
+    }
+    if (table.rowStyle !== undefined) {
+      props.rowStyle = table.rowStyle;
+    }
+    if (table.expandable !== undefined) {
+      props.expandable = table.expandable;
+    }
   }
 
   // Extract meter settings
@@ -182,6 +198,83 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     }
     if (meter.critical !== undefined) {
       props.critical = typeof meter.critical === "string" ? Number(meter.critical) : meter.critical;
+    }
+  }
+
+  // Extract badge settings
+  if (raw.badge && typeof raw.badge === "object") {
+    const badge = raw.badge as Record<string, unknown>;
+    if (badge.column !== undefined) {
+      props.column = badge.column;
+    }
+    if (badge.colorMap !== undefined) {
+      props.colorMap = badge.colorMap;
+    }
+  }
+
+  // Extract countdown settings
+  if (raw.countdown && typeof raw.countdown === "object") {
+    const countdown = raw.countdown as Record<string, unknown>;
+    if (countdown.deadlineColumn !== undefined) {
+      props.deadlineColumn = countdown.deadlineColumn;
+    }
+    if (countdown.format !== undefined) {
+      props.format = countdown.format;
+    }
+    if (countdown.warningThreshold !== undefined) {
+      props.warningThreshold = countdown.warningThreshold;
+    }
+    if (countdown.criticalThreshold !== undefined) {
+      props.criticalThreshold = countdown.criticalThreshold;
+    }
+  }
+
+  // Extract timeline settings
+  if (raw.timeline && typeof raw.timeline === "object") {
+    const timeline = raw.timeline as Record<string, unknown>;
+    if (timeline.startColumn !== undefined) {
+      props.startColumn = timeline.startColumn;
+    }
+    if (timeline.endColumn !== undefined) {
+      props.endColumn = timeline.endColumn;
+    }
+    if (timeline.labelColumn !== undefined) {
+      props.labelColumn = timeline.labelColumn;
+    }
+    if (timeline.categoryColumn !== undefined) {
+      props.categoryColumn = timeline.categoryColumn;
+    }
+  }
+
+  // Extract graph settings
+  if (raw.graph && typeof raw.graph === "object") {
+    const graph = raw.graph as Record<string, unknown>;
+    if (graph.layout !== undefined) {
+      props.layout = graph.layout;
+    }
+    if (graph.sourceColumn !== undefined) {
+      props.sourceColumn = graph.sourceColumn;
+    }
+    if (graph.targetColumn !== undefined) {
+      props.targetColumn = graph.targetColumn;
+    }
+    if (graph.valueColumn !== undefined) {
+      props.valueColumn = graph.valueColumn;
+    }
+    if (graph.directed !== undefined) {
+      props.directed = graph.directed;
+    }
+    if (graph.nodeLabelColumn !== undefined) {
+      props.nodeLabelColumn = graph.nodeLabelColumn;
+    }
+    if (graph.nodeColorColumn !== undefined) {
+      props.nodeColorColumn = graph.nodeColorColumn;
+    }
+    if (graph.nodeColorMap !== undefined) {
+      props.nodeColorMap = graph.nodeColorMap;
+    }
+    if (graph.nodeSizeColumn !== undefined) {
+      props.nodeSizeColumn = graph.nodeSizeColumn;
     }
   }
 
@@ -267,8 +360,12 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     }
   }
 
+  // Extract visibleWhen
+  const visibleWhen = raw.visibleWhen as string | undefined;
+
   return {
     type,
     ...(Object.keys(props).length > 0 ? { props } : {}),
+    ...(visibleWhen ? { visibleWhen } : {}),
   };
 }

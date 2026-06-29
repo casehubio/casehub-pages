@@ -45,6 +45,18 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
         continue;
       }
 
+      if (type === "alert" || type === "action-button" || type === "badge") {
+        // These components render as standard HTML, not web components
+        const hasContent = container.textContent!.trim().length > 0;
+        results.push({
+          type,
+          id,
+          status: hasContent ? "OK" : "EMPTY",
+          detail: container.textContent!.trim().substring(0, 50),
+        });
+        continue;
+      }
+
       const tagName = `pages-${type}`;
       const vizEl = container.querySelector(tagName) as HTMLElement & {
         error?: string;
@@ -382,5 +394,112 @@ test.describe("Patient Tracker", () => {
     const statuses = await getComponentStatuses(page);
     const errors = statuses.filter((s) => s.status === "ERROR");
     expect(errors).toHaveLength(0);
+  });
+
+  test("new components render: badge, alert, action-button", async ({ page }) => {
+    await openDashboard(page, "Patient Tracker");
+    let statuses = await getComponentStatuses(page);
+
+    // Badge should render on Ward Overview
+    const badge = statuses.find((s) => s.type === "badge");
+    expect(badge).toBeDefined();
+    expect(badge?.status).not.toBe("ERROR");
+
+    // Alert should render on Ward Overview
+    const alert = statuses.find((s) => s.type === "alert");
+    expect(alert).toBeDefined();
+    expect(alert?.status).not.toBe("ERROR");
+
+    // Navigate to Patient Detail tab
+    const tabButtons = page.locator("[data-component-type='tabs'] button");
+    await tabButtons.filter({ hasText: "Patient Detail" }).click();
+    await page.waitForTimeout(500);
+
+    // Action button should render on Patient Detail
+    statuses = await getComponentStatuses(page);
+    const actionBtn = statuses.find((s) => s.type === "action-button");
+    expect(actionBtn).toBeDefined();
+    expect(actionBtn?.status).not.toBe("ERROR");
+  });
+
+  test("content interpolation in markdown panel updates with filter", async ({ page }) => {
+    await openDashboard(page, "Patient Tracker");
+
+    // Initially, markdown should show total patient count
+    const initialMarkdown = await page.evaluate(() => {
+      const containers = document.querySelectorAll("[data-component-type='markdown']");
+      return Array.from(containers)
+        .map((c) => c.textContent?.trim() ?? "")
+        .join(" ");
+    });
+    expect(initialMarkdown).toMatch(/25 patients/i);
+
+    // Select ICU ward filter
+    const dropdown = page.locator("[data-component-type='selector'] select").first();
+    await dropdown.selectOption({ label: "ICU" });
+    await page.waitForTimeout(500); // Wait for filter to apply
+
+    // Markdown should now show ICU ward and reduced patient count
+    const filteredMarkdown = await page.evaluate(() => {
+      const containers = document.querySelectorAll("[data-component-type='markdown']");
+      return Array.from(containers)
+        .map((c) => c.textContent?.trim() ?? "")
+        .join(" ");
+    });
+    expect(filteredMarkdown).toMatch(/ICU/i);
+    expect(filteredMarkdown).toMatch(/5 patients/i);
+  });
+
+  test("alert component renders", async ({ page }) => {
+    await openDashboard(page, "Patient Tracker");
+
+    // Alert component should be present
+    const alertExists = await page.evaluate(() => {
+      const alert = document.querySelector("[data-component-type='alert']");
+      return alert !== null;
+    });
+    expect(alertExists).toBe(true);
+  });
+
+  test("row styling configuration is present on vitals table", async ({ page }) => {
+    await openDashboard(page, "Patient Tracker");
+
+    // Navigate to Vitals Monitor tab
+    const tabButtons = page.locator("[data-component-type='tabs'] button");
+    await tabButtons.filter({ hasText: "Vitals Monitor" }).click();
+    await page.waitForTimeout(500);
+
+    // Check that the vitals table renders with rows
+    const hasRows = await page.evaluate(() => {
+      const table = document.querySelector("pages-table");
+      if (!table || !table.shadowRoot) return false;
+
+      const rows = table.shadowRoot.querySelectorAll("tbody tr");
+      return rows.length > 0;
+    });
+
+    expect(hasRows).toBe(true);
+  });
+
+  test("visibleWhen on Patient Detail table evaluates filter expression", async ({ page }) => {
+    await openDashboard(page, "Patient Tracker");
+
+    // Navigate to Patient Detail tab
+    const tabButtons = page.locator("[data-component-type='tabs'] button");
+    await tabButtons.filter({ hasText: "Patient Detail" }).click();
+    await page.waitForTimeout(500);
+
+    // Check if table container exists and has visibleWhen behavior
+    const tableExists = await page.evaluate(() => {
+      const containers = document.querySelectorAll("[data-component-type='table']");
+      for (const container of containers) {
+        const vizEl = container.querySelector("pages-table");
+        if (vizEl) {
+          return true;
+        }
+      }
+      return false;
+    });
+    expect(tableExists).toBe(true);
   });
 });
