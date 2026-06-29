@@ -26,22 +26,22 @@ describe("DataSetManager — onChanged callback", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const ds = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, ds);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
     expect(callback).toHaveBeenCalledOnce();
     expect(callback).toHaveBeenCalledWith(ID_A, ds);
   });
 
-  it("accumulate triggers onChanged with the accumulated dataset", () => {
+  it("append triggers onChanged with the appended dataset", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const ds1 = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, ds1);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds1 });
     callback.mockClear();
 
     const ds2 = testDataSet([["Bob", "200"]]);
-    mgr.accumulate(ID_A, ds2);
+    mgr.apply(ID_A, { type: "append", rows: ds2.rows });
     expect(callback).toHaveBeenCalledOnce();
-    // accumulate should trigger with the resulting merged dataset
+    // append should trigger with the resulting merged dataset
     const result = mgr.get(ID_A)!;
     expect(callback).toHaveBeenCalledWith(ID_A, result);
   });
@@ -50,7 +50,7 @@ describe("DataSetManager — onChanged callback", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const ds = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, ds);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
     callback.mockClear();
 
     mgr.remove(ID_A);
@@ -62,21 +62,21 @@ describe("DataSetManager — onChanged callback", () => {
     const mgr = createDataSetManager({ onChanged: callback });
 
     const ds1 = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, ds1);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds1 });
     expect(callback).toHaveBeenCalledOnce();
     expect(callback).toHaveBeenCalledWith(ID_A, ds1);
 
     callback.mockClear();
 
     const ds2 = testDataSet([["Bob", "200"]]);
-    mgr.register(ID_A, ds2);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds2 });
     expect(callback).toHaveBeenCalledOnce();
     expect(callback).toHaveBeenCalledWith(ID_A, ds2);
 
     callback.mockClear();
 
     const ds3 = testDataSet([["Charlie", "300"]]);
-    mgr.register(ID_B, ds3);
+    mgr.apply(ID_B, { type: "snapshot", dataset: ds3 });
     expect(callback).toHaveBeenCalledOnce();
     expect(callback).toHaveBeenCalledWith(ID_B, ds3);
   });
@@ -85,27 +85,27 @@ describe("DataSetManager — onChanged callback", () => {
     const mgr = createDataSetManager();
     const ds = testDataSet([["Alice", "100"]]);
     // Should not throw
-    expect(() => mgr.register(ID_A, ds)).not.toThrow();
+    expect(() => mgr.apply(ID_A, { type: "snapshot", dataset: ds })).not.toThrow();
     expect(mgr.get(ID_A)).toBe(ds);
   });
 
-  it("callback receives correct dataset after accumulate merge", () => {
+  it("callback receives correct dataset after append merge", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
 
     const initial = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, initial);
+    mgr.apply(ID_A, { type: "snapshot", dataset: initial });
     callback.mockClear();
 
     const additional = testDataSet([["Bob", "200"]]);
-    mgr.accumulate(ID_A, additional);
+    mgr.apply(ID_A, { type: "append", rows: additional.rows });
 
     expect(callback).toHaveBeenCalledOnce();
     const [id, dataset] = callback.mock.calls[0]!;
     expect(id).toBe(ID_A);
     expect(dataset.rows).toHaveLength(2);
-    expect(dataset.rows[0]!.text(columnId("name"))).toBe("Bob");
-    expect(dataset.rows[1]!.text(columnId("name"))).toBe("Alice");
+    expect(dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(dataset.rows[1]!.text(columnId("name"))).toBe("Bob");
   });
 
   it("apply() snapshot triggers onChanged", () => {
@@ -121,7 +121,7 @@ describe("DataSetManager — onChanged callback", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const seed = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, seed);
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
     callback.mockClear();
 
     const newRow = testDataSet([["Bob", "200"]]).rows[0]!;
@@ -145,7 +145,7 @@ describe("DataSetManager — onChanged callback", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const seed = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, seed);
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
     callback.mockClear();
 
     const replacement = testDataSet([["Alice", "999"]]).rows[0]!;
@@ -166,7 +166,7 @@ describe("DataSetManager — onChanged callback", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const seed = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, seed);
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
     callback.mockClear();
 
     const replacement = testDataSet([["Bob", "999"]]).rows[0]!;
@@ -184,7 +184,7 @@ describe("DataSetManager — onChanged callback", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const seed = testDataSet([["Alice", "100"], ["Bob", "200"]]);
-    mgr.register(ID_A, seed);
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
     callback.mockClear();
 
     mgr.apply(ID_A, {
@@ -204,7 +204,7 @@ describe("DataSetManager — onChanged callback", () => {
     const callback = vi.fn();
     const mgr = createDataSetManager({ onChanged: callback });
     const seed = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, seed);
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
     callback.mockClear();
 
     mgr.apply(ID_A, {

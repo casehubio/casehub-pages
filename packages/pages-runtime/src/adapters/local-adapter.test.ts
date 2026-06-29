@@ -28,13 +28,16 @@ describe("local-adapter", () => {
     const dataset: TypedDataSet = { columns, rows: [row1, row2] };
     let storedDataset = dataset;
 
-    const registerSpy = vi.fn((_id: DataSetId, ds: TypedDataSet) => { storedDataset = ds; });
+    const applySpy = vi.fn((_id: DataSetId, event: any) => {
+      if (event.type === "snapshot") {
+        storedDataset = event.dataset;
+      }
+    });
     const manager: DataSetManager = {
-      register: registerSpy,
+      apply: applySpy,
       get: vi.fn(() => storedDataset),
       remove: vi.fn(),
       has: vi.fn(() => true),
-      accumulate: vi.fn(),
       lookup: vi.fn(),
     };
 
@@ -49,7 +52,7 @@ describe("local-adapter", () => {
     );
 
     expect(result.success).toBe(true);
-    expect(registerSpy).toHaveBeenCalledWith("users" as DataSetId, expect.any(Object));
+    expect(applySpy).toHaveBeenCalledWith("users" as DataSetId, expect.objectContaining({ type: "snapshot" }));
 
     const updatedDataset = storedDataset;
     expect(updatedDataset.rows.length).toBe(2);
@@ -60,11 +63,10 @@ describe("local-adapter", () => {
 
   it("should return error if dataset not found", async () => {
     const manager: DataSetManager = {
-      register: vi.fn(),
+      apply: vi.fn(),
       get: vi.fn(() => undefined),
       remove: vi.fn(),
       has: vi.fn(() => false),
-      accumulate: vi.fn(),
       lookup: vi.fn(),
     };
 
@@ -96,11 +98,10 @@ describe("local-adapter", () => {
     const dataset: TypedDataSet = { columns, rows: [row1] };
 
     const manager: DataSetManager = {
-      register: vi.fn(),
+      apply: vi.fn(),
       get: vi.fn(() => dataset),
       remove: vi.fn(),
       has: vi.fn(() => true),
-      accumulate: vi.fn(),
       lookup: vi.fn(),
     };
 
@@ -135,11 +136,14 @@ describe("local-adapter", () => {
     let storedDataset = dataset;
 
     const manager: DataSetManager = {
-      register: vi.fn((id, ds) => { storedDataset = ds; }),
+      apply: vi.fn((_id, event: any) => {
+        if (event.type === "snapshot") {
+          storedDataset = event.dataset;
+        }
+      }),
       get: vi.fn(() => storedDataset),
       remove: vi.fn(),
       has: vi.fn(() => true),
-      accumulate: vi.fn(),
       lookup: vi.fn(),
     };
 
@@ -178,11 +182,14 @@ describe("local-adapter", () => {
     let storedDataset = dataset;
 
     const manager: DataSetManager = {
-      register: vi.fn((_id, ds) => { storedDataset = ds; }),
+      apply: vi.fn((_id, event: any) => {
+        if (event.type === "snapshot") {
+          storedDataset = event.dataset;
+        }
+      }),
       get: vi.fn(() => storedDataset),
       remove: vi.fn(),
       has: vi.fn(() => true),
-      accumulate: vi.fn(),
       lookup: vi.fn(),
     };
 
@@ -209,11 +216,14 @@ describe("local-adapter", () => {
     let storedDataset = dataset;
 
     const manager: DataSetManager = {
-      register: vi.fn((_id, ds) => { storedDataset = ds; }),
+      apply: vi.fn((_id, event: any) => {
+        if (event.type === "snapshot") {
+          storedDataset = event.dataset;
+        }
+      }),
       get: vi.fn(() => storedDataset),
       remove: vi.fn(),
       has: vi.fn(() => true),
-      accumulate: vi.fn(),
       lookup: vi.fn(),
     };
 
@@ -227,11 +237,10 @@ describe("local-adapter", () => {
 
   it("delete returns error if dataset not found", async () => {
     const manager: DataSetManager = {
-      register: vi.fn(),
+      apply: vi.fn(),
       get: vi.fn(() => undefined),
       remove: vi.fn(),
       has: vi.fn(() => false),
-      accumulate: vi.fn(),
       lookup: vi.fn(),
     };
 

@@ -100,7 +100,7 @@ export async function resolveExternalDataSet(
       throw new DataSetError("INVALID_DEFINITION", `Dataset "${def.uuid}" determined as join but join is undefined`);
     }
     const dataset = joinDataSets(def.join, ctx.manager);
-    ctx.manager.register(def.uuid, dataset);
+    ctx.manager.apply(def.uuid, { type: "snapshot", dataset });
     return { dataset, inferredColumns: false, source: "join" };
   }
 
@@ -133,20 +133,23 @@ export async function resolveExternalDataSet(
     ctx.presetRegistry,
   );
 
-  // ---- Register / Accumulate ----
-  registerOrAccumulate(def, dataset, ctx.manager);
+  // ---- Apply resolved dataset ----
+  applyResolvedDataSet(def, dataset, ctx.manager);
 
   return { dataset, inferredColumns, source };
 }
 
-function registerOrAccumulate(
+function applyResolvedDataSet(
   def: ExternalDataSetDef,
   dataset: TypedDataSet,
   manager: DataSetManager,
 ): void {
-  if (def.accumulate) {
-    manager.accumulate(def.uuid, dataset, def.cacheMaxRows);
+  if (def.accumulate && manager.has(def.uuid)) {
+    const event = def.cacheMaxRows !== undefined
+      ? { type: "append" as const, rows: dataset.rows, maxRows: def.cacheMaxRows }
+      : { type: "append" as const, rows: dataset.rows };
+    manager.apply(def.uuid, event);
   } else {
-    manager.register(def.uuid, dataset);
+    manager.apply(def.uuid, { type: "snapshot", dataset });
   }
 }

@@ -35,7 +35,7 @@ describe("createDataPipeline", () => {
   it("resolves data-request for registered dataset", () => {
     const manager = createDataSetManager();
     const ds = regionDataSet([["North"], ["South"], ["East"]]);
-    manager.register("sales" as DataSetId, ds);
+    manager.apply("sales" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("chart-1", {
@@ -150,7 +150,7 @@ describe("data pipeline with filters", () => {
   it("applies active filters when pushing data", () => {
     const manager = createDataSetManager();
     const ds = regionDataSet([["North"], ["South"], ["East"]]);
-    manager.register("sales" as DataSetId, ds);
+    manager.apply("sales" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("chart-1", {
@@ -225,7 +225,7 @@ describe("pipeline — sort from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL), col("value", "Value", ColumnType.NUMBER)],
       data: [["B", "2"], ["A", "1"], ["C", "3"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -258,7 +258,7 @@ describe("pipeline — sort from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL)],
       data: [["A"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -289,7 +289,7 @@ describe("pipeline — sort from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL), col("value", "Value", ColumnType.NUMBER)],
       data: [["B", "2"], ["A", "1"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -321,7 +321,7 @@ describe("pipeline — sort from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL)],
       data: [["B"], ["A"], ["C"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -356,7 +356,7 @@ describe("pipeline — pagination from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL)],
       data: [["A"], ["B"], ["C"], ["D"], ["E"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -390,7 +390,7 @@ describe("pipeline — pagination from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL)],
       data: [["A"], ["B"], ["C"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -425,7 +425,7 @@ describe("pipeline — text filter from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL), col("city", "City", ColumnType.LABEL)],
       data: [["Alice", "London"], ["Bob", "Paris"], ["Charlie", "London"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -459,7 +459,7 @@ describe("pipeline — text filter from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL)],
       data: [["Alice"], ["bob"], ["CHARLIE"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -489,7 +489,7 @@ describe("pipeline — text filter from ComponentViewState", () => {
       columns: [col("name", "Name", ColumnType.LABEL)],
       data: [["A"], ["AB"], ["ABC"], ["B"], ["BC"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -528,7 +528,7 @@ describe("pipeline — expandable bypass", () => {
       columns: [col("id", "ID", ColumnType.LABEL), col("parentId", "Parent", ColumnType.LABEL), col("name", "Name", ColumnType.LABEL)],
       data: [["t1", "", "Trial A"], ["s1", "t1", "Site 1"], ["s2", "t1", "Site 2"], ["t2", "", "Trial B"], ["s3", "t2", "Site 3"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {
@@ -570,7 +570,7 @@ describe("pipeline — expandable bypass", () => {
       columns: [col("name", "Name", ColumnType.LABEL)],
       data: [["A"], ["B"], ["C"], ["D"], ["E"]],
     });
-    manager.register("test" as DataSetId, ds);
+    manager.apply("test" as DataSetId, { type: "snapshot", dataset: ds });
 
     const registry: ComponentRegistry = new Map();
     registry.set("t1", {

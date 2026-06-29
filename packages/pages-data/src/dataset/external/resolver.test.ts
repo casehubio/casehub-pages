@@ -118,8 +118,8 @@ describe("resolveExternalDataSet", () => {
     const ctx = makeCtx();
     const dsA = toTypedDataSet({ columns: COLS, data: [["Alice", "100"]] });
     const dsB = toTypedDataSet({ columns: COLS, data: [["Bob", "200"]] });
-    ctx.manager.register(dataSetId("ds-a"), dsA);
-    ctx.manager.register(dataSetId("ds-b"), dsB);
+    ctx.manager.apply(dataSetId("ds-a"), { type: "snapshot", dataset: dsA });
+    ctx.manager.apply(dataSetId("ds-b"), { type: "snapshot", dataset: dsB });
 
     const def: ExternalDataSetDef = {
       uuid: dataSetId("ds-joined"),
@@ -159,10 +159,12 @@ describe("resolveExternalDataSet", () => {
 
     // The returned dataset is the freshly extracted one (single row)
     expect(result.dataset.rows).toHaveLength(1);
-    // But the manager should have accumulated both rows
+    // But the manager should have appended both rows (new at end)
     const stored = ctx.manager.get(dataSetId("ds-acc"));
     expect(stored).toBeDefined();
     expect(stored!.rows).toHaveLength(2);
+    expect(stored!.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(stored!.rows[1]!.text(columnId("name"))).toBe("Bob");
   });
 
   // ---- Validation: missing uuid ----
@@ -249,13 +251,13 @@ describe("resolveExternalDataSet", () => {
 
   it("returns source='join' for join-based definitions", async () => {
     const ctx = makeCtx();
-    ctx.manager.register(
+    ctx.manager.apply(
       dataSetId("j1"),
-      toTypedDataSet({ columns: COLS, data: [["A", "1"]] }),
+      { type: "snapshot", dataset: toTypedDataSet({ columns: COLS, data: [["A", "1"]] }) },
     );
-    ctx.manager.register(
+    ctx.manager.apply(
       dataSetId("j2"),
-      toTypedDataSet({ columns: COLS, data: [["B", "2"]] }),
+      { type: "snapshot", dataset: toTypedDataSet({ columns: COLS, data: [["B", "2"]] }) },
     );
     const def: ExternalDataSetDef = {
       uuid: dataSetId("ds-src-join"),

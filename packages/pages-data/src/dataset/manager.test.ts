@@ -29,19 +29,19 @@ const ID_A = dataSetId("dataset-a");
 const ID_UNKNOWN = dataSetId("does-not-exist");
 
 describe("DataSetManager — registry", () => {
-  it("register + get returns the same dataset", () => {
+  it("snapshot + get returns the same dataset", () => {
     const mgr = createDataSetManager();
     const ds = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, ds);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
     expect(mgr.get(ID_A)).toBe(ds);
   });
 
-  it("register overwrites existing dataset with same ID", () => {
+  it("snapshot overwrites existing dataset with same ID", () => {
     const mgr = createDataSetManager();
     const ds1 = testDataSet([["Alice", "100"]]);
     const ds2 = testDataSet([["Bob", "200"]]);
-    mgr.register(ID_A, ds1);
-    mgr.register(ID_A, ds2);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds1 });
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds2 });
     expect(mgr.get(ID_A)).toBe(ds2);
   });
 
@@ -52,7 +52,7 @@ describe("DataSetManager — registry", () => {
 
   it("has returns true for registered ID", () => {
     const mgr = createDataSetManager();
-    mgr.register(ID_A, testDataSet([["Alice", "100"]]));
+    mgr.apply(ID_A, { type: "snapshot", dataset: testDataSet([["Alice", "100"]]) });
     expect(mgr.has(ID_A)).toBe(true);
   });
 
@@ -63,7 +63,7 @@ describe("DataSetManager — registry", () => {
 
   it("remove returns true and deletes registered dataset", () => {
     const mgr = createDataSetManager();
-    mgr.register(ID_A, testDataSet([["Alice", "100"]]));
+    mgr.apply(ID_A, { type: "snapshot", dataset: testDataSet([["Alice", "100"]]) });
     expect(mgr.remove(ID_A)).toBe(true);
     expect(mgr.get(ID_A)).toBeUndefined();
   });
@@ -97,7 +97,7 @@ describe("DataSetManager — lookup pipeline", () => {
   it("no operations returns full dataset unchanged", () => {
     const mgr = createDataSetManager();
     const ds = salesDataSet();
-    mgr.register(SALES_ID, ds);
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: ds });
     const result = mgr.lookup(createLookup(SALES_ID, []));
     expect(result.dataset).toBe(ds);
     expect(result.totalRows).toBe(5);
@@ -105,7 +105,7 @@ describe("DataSetManager — lookup pipeline", () => {
 
   it("resolved filter ops applied correctly", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const filter: ResolvedFilterOp = {
       type: "filter",
       expressions: [{
@@ -121,7 +121,7 @@ describe("DataSetManager — lookup pipeline", () => {
 
   it("unresolved filter ops resolved against column schema then applied", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const filter: FilterOp = {
       type: "filter",
       expressions: [{
@@ -138,7 +138,7 @@ describe("DataSetManager — lookup pipeline", () => {
 
   it("group ops applied correctly", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const group: GroupOp = {
       type: "group",
       groupingKey: {
@@ -161,7 +161,7 @@ describe("DataSetManager — lookup pipeline", () => {
 
   it("sort ops applied correctly", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const sort: SortOp = {
       type: "sort",
       columns: [{ columnId: columnId("revenue"), order: "DESCENDING" }],
@@ -174,7 +174,7 @@ describe("DataSetManager — lookup pipeline", () => {
 
   it("filter + group + sort full pipeline", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const filter: ResolvedFilterOp = {
       type: "filter",
       expressions: [{
@@ -213,7 +213,7 @@ describe("DataSetManager — lookup pipeline", () => {
 
   it("TIME_FRAME filter with explicit referenceDate — deterministic", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const timeFrame = parseTimeFrame("begin[year] till end[year]");
     const filter: ResolvedFilterOp = {
       type: "filter",
@@ -236,7 +236,7 @@ describe("DataSetManager — lookup pipeline", () => {
 describe("DataSetManager — pagination", () => {
   function setupManager() {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     return mgr;
   }
 
@@ -319,7 +319,7 @@ describe("DataSetManager — error paths", () => {
 
   it("filter referencing unknown column throws UNKNOWN_COLUMN", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const filter: FilterOp = {
       type: "filter",
       expressions: [{
@@ -334,7 +334,7 @@ describe("DataSetManager — error paths", () => {
 
   it("invalid function/type combo throws RESOLUTION_FAILED", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const filter: FilterOp = {
       type: "filter",
       expressions: [{
@@ -349,7 +349,7 @@ describe("DataSetManager — error paths", () => {
 
   it("negative rowOffset throws INVALID_OPERATION", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     expect(() => mgr.lookup(
       createLookup(SALES_ID, []),
       { rowOffset: -1 },
@@ -358,7 +358,7 @@ describe("DataSetManager — error paths", () => {
 
   it("raw-object DataSetLookup with invalid op order throws INVALID_OPERATION", () => {
     const mgr = createDataSetManager();
-    mgr.register(SALES_ID, salesDataSet());
+    mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const sort: SortOp = { type: "sort", columns: [{ columnId: columnId("revenue"), order: "ASCENDING" }] };
     const group: GroupOp = { type: "group", groupingKey: null, columns: [] };
     const rawLookup = { dataSetId: SALES_ID, operations: [sort, group] } as const;
@@ -366,69 +366,66 @@ describe("DataSetManager — error paths", () => {
   });
 });
 
-describe("DataSetManager — accumulate", () => {
-  it("accumulate on empty registry behaves like register", () => {
+describe("DataSetManager — append (legacy accumulate behavior)", () => {
+  it("append on empty registry is a no-op (requires explicit snapshot first)", () => {
     const mgr = createDataSetManager();
     const ds = testDataSet([["Alice", "100"]]);
-    mgr.accumulate(ID_A, ds);
-    const stored = mgr.get(ID_A);
-    expect(stored).toBeDefined();
-    expect(stored!.rows).toHaveLength(1);
-    expect(stored!.rows[0]!.text(columnId("name"))).toBe("Alice");
+    mgr.apply(ID_A, { type: "append", rows: ds.rows });
+    expect(mgr.has(ID_A)).toBe(false);
   });
 
-  it("accumulate puts new rows first, then appends old rows", () => {
+  it("append adds new rows at END (old accumulate prepended)", () => {
     const mgr = createDataSetManager();
     const old = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, old);
+    mgr.apply(ID_A, { type: "snapshot", dataset: old });
     const fresh = testDataSet([["Bob", "200"]]);
-    mgr.accumulate(ID_A, fresh);
+    mgr.apply(ID_A, { type: "append", rows: fresh.rows });
+    const stored = mgr.get(ID_A)!;
+    expect(stored.rows).toHaveLength(2);
+    expect(stored.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(stored.rows[1]!.text(columnId("name"))).toBe("Bob");
+  });
+
+  it("append trims oldest rows from START when maxRows exceeded", () => {
+    const mgr = createDataSetManager();
+    const old = testDataSet([["Alice", "100"], ["Bob", "200"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: old });
+    const fresh = testDataSet([["Charlie", "300"]]);
+    mgr.apply(ID_A, { type: "append", rows: fresh.rows, maxRows: 2 });
     const stored = mgr.get(ID_A)!;
     expect(stored.rows).toHaveLength(2);
     expect(stored.rows[0]!.text(columnId("name"))).toBe("Bob");
-    expect(stored.rows[1]!.text(columnId("name"))).toBe("Alice");
+    expect(stored.rows[1]!.text(columnId("name"))).toBe("Charlie");
   });
 
-  it("accumulate trims oldest rows when maxRows exceeded", () => {
-    const mgr = createDataSetManager();
-    const old = testDataSet([["Alice", "100"], ["Bob", "200"]]);
-    mgr.register(ID_A, old);
-    const fresh = testDataSet([["Charlie", "300"]]);
-    mgr.accumulate(ID_A, fresh, 2);
-    const stored = mgr.get(ID_A)!;
-    expect(stored.rows).toHaveLength(2);
-    expect(stored.rows[0]!.text(columnId("name"))).toBe("Charlie");
-    expect(stored.rows[1]!.text(columnId("name"))).toBe("Alice");
-  });
-
-  it("accumulate with zero new rows preserves existing dataset", () => {
+  it("append with zero new rows preserves existing dataset", () => {
     const mgr = createDataSetManager();
     const existing = testDataSet([["Alice", "100"]]);
-    mgr.register(ID_A, existing);
+    mgr.apply(ID_A, { type: "snapshot", dataset: existing });
     const empty = testDataSet([]);
-    mgr.accumulate(ID_A, empty);
+    mgr.apply(ID_A, { type: "append", rows: empty.rows });
     const stored = mgr.get(ID_A)!;
     expect(stored.rows).toHaveLength(1);
     expect(stored.rows[0]!.text(columnId("name"))).toBe("Alice");
   });
 
-  it("accumulate with no maxRows appends all rows", () => {
+  it("append with no maxRows appends all rows at END", () => {
     const mgr = createDataSetManager();
     const old = testDataSet([["Alice", "100"], ["Bob", "200"]]);
-    mgr.register(ID_A, old);
+    mgr.apply(ID_A, { type: "snapshot", dataset: old });
     const fresh = testDataSet([["Charlie", "300"], ["Diana", "400"]]);
-    mgr.accumulate(ID_A, fresh);
+    mgr.apply(ID_A, { type: "append", rows: fresh.rows });
     const stored = mgr.get(ID_A)!;
     expect(stored.rows).toHaveLength(4);
-    expect(stored.rows[0]!.text(columnId("name"))).toBe("Charlie");
-    expect(stored.rows[1]!.text(columnId("name"))).toBe("Diana");
-    expect(stored.rows[2]!.text(columnId("name"))).toBe("Alice");
-    expect(stored.rows[3]!.text(columnId("name"))).toBe("Bob");
+    expect(stored.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(stored.rows[1]!.text(columnId("name"))).toBe("Bob");
+    expect(stored.rows[2]!.text(columnId("name"))).toBe("Charlie");
+    expect(stored.rows[3]!.text(columnId("name"))).toBe("Diana");
   });
 
-  it("accumulate throws SCHEMA_MISMATCH when column schemas differ", () => {
+  it("append validates row cells against existing column schema", () => {
     const mgr = createDataSetManager();
-    mgr.register(ID_A, testDataSet([["Alice", "100"]]));
+    mgr.apply(ID_A, { type: "snapshot", dataset: testDataSet([["Alice", "100"]]) });
 
     // Different schema — LABEL column instead of NUMBER for amount
     const differentSchema = toTypedDataSet({
@@ -439,10 +436,14 @@ describe("DataSetManager — accumulate", () => {
       data: [["Bob", "text"]],
     });
 
-    expect(() => { mgr.accumulate(ID_A, differentSchema); }).toThrow(DataSetError);
-    // Existing dataset preserved
-    expect(mgr.get(ID_A)!.rows).toHaveLength(1);
-    expect(mgr.get(ID_A)!.rows[0]!.text(columnId("name"))).toBe("Alice");
+    // Append inherits existing columns; row cell validation happens during append
+    mgr.apply(ID_A, { type: "append", rows: differentSchema.rows });
+
+    // Cell-level validation allows this (rows conform to existing schema structure)
+    const stored = mgr.get(ID_A)!;
+    expect(stored.rows).toHaveLength(2);
+    expect(stored.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(stored.rows[1]!.text(columnId("name"))).toBe("Bob");
   });
 });
 

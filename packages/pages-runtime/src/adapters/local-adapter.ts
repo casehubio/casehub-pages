@@ -70,7 +70,7 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       const newRows = [...existing.rows];
       newRows[rowIndex] = newRow;
       const newDataset: TypedDataSet = { columns: existing.columns, rows: newRows };
-      manager.register(dataSetId, newDataset);
+      manager.apply(dataSetId, { type: "snapshot", dataset: newDataset });
 
       return Promise.resolve({ success: true });
     },
@@ -93,7 +93,7 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       const newRows = [...existing.rows];
       newRows.splice(rowIndex, 1);
       const newDataset: TypedDataSet = { columns: existing.columns, rows: newRows };
-      manager.register(dataSetId, newDataset);
+      manager.apply(dataSetId, { type: "snapshot", dataset: newDataset });
 
       return Promise.resolve({ success: true });
     },
@@ -125,7 +125,7 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
 
       const newRow = createTypedRow(newCells, existing.columns);
       const newDataset: TypedDataSet = { columns: existing.columns, rows: [...existing.rows, newRow] };
-      manager.register(dataSetId, newDataset);
+      manager.apply(dataSetId, { type: "snapshot", dataset: newDataset });
 
       return Promise.resolve({ success: true });
     },
