@@ -230,7 +230,7 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | #26 | Platform convention: Quarkus + TypeScript frontend via Quinoa | ✅ shipped |
 | #28 | Remove redundant iframe ECharts component — migrate to inline Web Components | ✅ shipped |
 | #35 | Map geo data loading — `registerMap()` for ECharts map/geo | ✅ done |
-| #36 | Accumulate + expression for inline datasets | 🔲 open |
+| #36 | Accumulate + expression for inline datasets | ✅ shipped |
 | #44 | Minor polish for domain example dashboards | ✅ done |
 
 ---
