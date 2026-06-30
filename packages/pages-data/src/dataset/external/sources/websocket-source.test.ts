@@ -565,4 +565,144 @@ describe("WebSocketSource", () => {
       expect(MockWebSocket.instances[0]!.url).toBe("ws://localhost/ws");
     });
   });
+
+  describe("WebSocketSource — single-subscriber fallback (#61)", () => {
+    it("routes message without dataset field to sole subscriber", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const events: DataSetEvent[] = [];
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, (e) => events.push(e));
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.onmessage?.({
+        data: JSON.stringify({
+          type: "snapshot",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["hello"]],
+        }),
+      });
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.type).toBe("snapshot");
+    });
+
+    it("drops message without dataset field when multiple subscribers exist", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const events: DataSetEvent[] = [];
+      const def1: ExternalDataSetDef = {
+        uuid: dataSetId("d1"),
+        url: "ws://localhost/ws?dataset=a",
+      };
+      const def2: ExternalDataSetDef = {
+        uuid: dataSetId("d2"),
+        url: "ws://localhost/ws?dataset=b",
+      };
+
+      source.subscribe(dataSetId("d1"), def1, (e) => events.push(e));
+      source.subscribe(dataSetId("d2"), def2, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.onmessage?.({
+        data: JSON.stringify({
+          type: "snapshot",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["hello"]],
+        }),
+      });
+
+      expect(events).toHaveLength(0);
+    });
+
+    it("does not fallback when dataset field is present but unrecognized", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const events: DataSetEvent[] = [];
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, (e) => events.push(e));
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.onmessage?.({
+        data: JSON.stringify({
+          dataset: "unknown",
+          type: "snapshot",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["hello"]],
+        }),
+      });
+
+      expect(events).toHaveLength(0);
+    });
+  });
+
+  describe("WebSocketSource — duplicate subscribe guard (#62a)", () => {
+    it("does not send duplicate subscribe message for same dataSetId", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def1: ExternalDataSetDef = {
+        uuid: dataSetId("d1"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+      const def2: ExternalDataSetDef = {
+        uuid: dataSetId("d2"),
+        url: "ws://localhost/ws?dataset=other",
+      };
+
+      source.subscribe(dataSetId("d1"), def1, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      // First subscriber sends subscribe
+      const subscribeCount = ws.sent.filter(
+        (m) => JSON.parse(m).type === "subscribe",
+      ).length;
+      expect(subscribeCount).toBe(1);
+
+      // Second subscriber with different ID sends another subscribe
+      source.subscribe(dataSetId("d2"), def2, vi.fn());
+      const afterTwoSubs = ws.sent.filter(
+        (m) => JSON.parse(m).type === "subscribe",
+      ).length;
+      expect(afterTwoSubs).toBe(2);
+
+      // Third subscribe for same ID as first — should NOT send another
+      source.subscribe(dataSetId("d1"), def1, vi.fn());
+      const afterDuplicate = ws.sent.filter(
+        (m) => JSON.parse(m).type === "subscribe",
+      ).length;
+      expect(afterDuplicate).toBe(2); // Still 2, not 3
+    });
+  });
 });

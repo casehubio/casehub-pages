@@ -121,11 +121,14 @@ export function createWebSocketSource(
 
   function processMessage(msg: WireMessage): void {
     const wireName = msg.dataset;
-    const dataSetId = wireName ? wireNameToId.get(wireName) : undefined;
+    let dataSetId = wireName !== undefined ? wireNameToId.get(wireName) : undefined;
 
-    if (!dataSetId) {
-      // Unsubscribed dataset — skip silently
-      return;
+    if (dataSetId === undefined) {
+      if (wireName === undefined && subscriptions.size === 1) {
+        dataSetId = subscriptions.keys().next().value;
+      } else {
+        return;
+      }
     }
 
     const subscription = subscriptions.get(dataSetId);
@@ -237,6 +240,8 @@ export function createWebSocketSource(
 
   return {
     subscribe(dataSetId: DataSetId, def: ExternalDataSetDef, listener: DataSetEventListener): void {
+      if (subscriptions.has(dataSetId)) return;
+
       const wireName = extractWireName(def.url, dataSetId);
 
       subscriptions.set(dataSetId, { def, listener });
