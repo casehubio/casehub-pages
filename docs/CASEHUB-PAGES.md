@@ -200,6 +200,54 @@ Form inputs bind to a page's `dataScope` and emit `pages-field-change` events.
 | `date-picker` | `datePicker(props)` | Date selector |
 | `textarea` | `textarea(props)` | Multi-line text |
 
+#### Workbench Primitives
+
+Components for building resizable workbench layouts with dockable panels and hosted Web Components.
+
+| Type | DSL Builder | Purpose |
+|------|------------|---------|
+| `split` | `split(direction, children, options?)` | Resizable layout with drag handles |
+| `dock-bar` | `dockBar(orientation, items)` | Icon strip that toggles panel visibility |
+| `host-panel` | `hostPanel(typeName, props?)` | Mount registered custom Web Component |
+
+**Split Layout:**
+
+```typescript
+split("horizontal", [
+  hostPanel("diff-viewer", { pathA, pathB }),
+  hostPanel("debate-feed", { sessionId }),
+], { ratio: [60, 40], minSizes: [300, 200] })
+```
+
+**Dock Bar:**
+
+```typescript
+dockBar("vertical", [
+  { icon: "💬", label: "Debate", panelId: "debate", defaultOpen: true },
+  { icon: "📋", label: "Review", panelId: "review", defaultOpen: true },
+])
+```
+
+**Host Panel:**
+
+Requires `registerPanel(typeName, tagName)` before `loadSite()`:
+
+```typescript
+import { registerPanel, loadSite } from "@casehubio/pages-runtime";
+
+registerPanel("diff-viewer", "drafthouse-diff");
+registerPanel("debate-feed", "drafthouse-debate");
+
+const workbench = split("horizontal", [
+  hostPanel("diff-viewer", { pathA: "doc-a.md", pathB: "doc-b.md" }),
+  withId("debate", hostPanel("debate-feed", { sessionId: "abc" })),
+], { ratio: [60, 40] });
+
+await loadSite(container, workbench);
+```
+
+Panel Web Components receive props via `configure(props)` method before `connectedCallback()`.
+
 ### Component Modifiers
 
 ```typescript
@@ -248,6 +296,130 @@ page("Sales",
   barChart({ lookup: lookup("regional-sales", ...) }),
   { datasets: [dataset("regional-sales", "/api/sales/regional")] },
 );
+```
+
+### Push Sources (WebSocket / SSE)
+
+Real-time data push via WebSocket or Server-Sent Events.
+
+**URL schemes:**
+- WebSocket: `ws://` / `wss://`
+- SSE: `sse://` / `sses://`
+
+```typescript
+dataset("live-metrics", "ws://metrics-server.example.com/stream?dataset=metrics");
+dataset("live-events", "sse://events-server.example.com/feed?dataset=events");
+```
+
+**Wire Protocol:**
+
+Messages use a unified operation vocabulary routed by `op` field:
+
+| Operation | Purpose | Fields |
+|-----------|---------|--------|
+| `snapshot` | Replace entire dataset | `dataset`, `seq`, `columns`, `rows` |
+| `append` | Add rows to end | `dataset`, `seq`, `columns`, `rows` |
+| `replace` | Update a specific row | `dataset`, `seq`, `columns`, `row`, `key` |
+| `remove` | Delete a specific row | `dataset`, `seq`, `key` |
+| `event` | Inter-panel communication | `topic`, `payload` |
+
+Example messages:
+
+```json
+{"op": "snapshot", "dataset": "metrics", "seq": "1", "columns": [...], "rows": [...]}
+{"op": "append", "dataset": "metrics", "seq": "2", "columns": [...], "rows": [[...]]}
+{"op": "replace", "dataset": "metrics", "seq": "3", "columns": [...], "row": [...], "key": "id-123"}
+{"op": "remove", "dataset": "metrics", "seq": "4", "key": "id-123"}
+{"op": "event", "topic": "selection-changed", "payload": {"location": "line:42"}}
+```
+
+**Incremental Reconnect:**
+
+WebSocket sends `since` parameter on reconnection to request only changes since last `seq`:
+
+```json
+{"op": "subscribe", "dataset": "metrics", "since": "42"}
+```
+
+SSE uses the browser's built-in `Last-Event-ID` header — server receives the last `id` field automatically.
+
+**Configuration:**
+
+```typescript
+interface DataProviderConfig {
+  webSocket?: {
+    relay?: { endpoint: string };
+    auth?: { type: "query-param"; paramName?: string; token: string };
+  };
+  sse?: {
+    auth?: { type: "query-param"; paramName?: string; token: string };
+  };
+}
+```
+
+Pass via `SiteOptions`:
+
+```typescript
+await loadSite(container, tree, {
+  providerConfig: {
+    webSocket: {
+      relay: { endpoint: "wss://relay.example.com/ws" },
+      auth: { type: "query-param", token: "abc123" },
+    },
+  },
+});
+```
+
+**Relay:** WebSocket only. Proxies connections to a different origin (e.g., for Nginx-fronted servers).
+
+**Auth:** Appends token as query parameter to connection URL. WebSocket and SSE support this.
+
+**Error Propagation:**
+
+Errors are classified as:
+- **Transient** (corrupt message, reconnecting) — logged, reconnection continues
+- **Permanent** (auth expired, server-rejected close code 4000+) — propagated to components via `target.error`
+
+When a permanent error occurs, all components bound to the dataset display the error message instead of rendering.
+
+**SSE Named Events:**
+
+SSE servers can send named events directly (idiomatic SSE):
+
+```
+event: snapshot
+data: {"columns": [...], "rows": [...]}
+
+event: append
+data: {"columns": [...], "rows": [...]}
+```
+
+Or unnamed events with `op` field (WebSocket-compatible):
+
+```
+data: {"op": "snapshot", "columns": [...], "rows": [...]}
+```
+
+Both formats work. The runtime handles them uniformly.
+
+**Inter-Panel Communication:**
+
+`op: "event"` messages dispatch `pages-event` DOM events for custom panels to communicate:
+
+```typescript
+// Panel A dispatches
+this.dispatchEvent(new CustomEvent("pages-event", {
+  bubbles: true, composed: true,
+  detail: { topic: "selection-changed", payload: { location: "line:42" } },
+}));
+
+// Panel B listens
+document.addEventListener("pages-event", (e) => {
+  const { topic, payload } = e.detail;
+  if (topic === "selection-changed") {
+    this.scrollToLocation(payload.location);
+  }
+});
 ```
 
 ## Data Operations (Lookup API)
@@ -378,6 +550,55 @@ interface PagesFilterReset {
 | `pages-data-request` | All viz components | `{ element, lookup }` |
 | `pages-field-change` | Form inputs | `{ field, value, committed }` |
 | `pages-slot-change` | Navigation components | `{ activeSlot, containerId }` |
+
+## registerPanel() API
+
+Register custom Web Components for use with `hostPanel()`.
+
+```typescript
+import { registerPanel } from "@casehubio/pages-runtime";
+
+registerPanel(typeName: string, tagName: string): void
+```
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `typeName` | `string` | Type name referenced in `hostPanel(typeName, ...)` |
+| `tagName` | `string` | Custom element tag name (must be registered via `customElements.define()`) |
+
+Call once at app initialization, **before** `loadSite()`:
+
+```typescript
+registerPanel("diff-viewer", "drafthouse-diff");
+registerPanel("debate-feed", "drafthouse-debate");
+
+const workbench = hostPanel("diff-viewer", { pathA: "doc-a.md" });
+await loadSite(container, workbench);
+```
+
+**Panel Lifecycle:**
+
+When `hostPanel` is rendered:
+1. Runtime creates container `<div data-component-type="host-panel">`
+2. Looks up tag name from registry
+3. If type not found → renders error placeholder: `"Unknown panel type: <typeName>"`
+4. Creates custom element: `document.createElement(tagName)`
+5. Calls `panel.configure(props)` if method exists — **before** `appendChild`
+6. Appends to container → `connectedCallback()` fires
+
+**Panel Interface:**
+
+```typescript
+interface ConfigurablePanel extends HTMLElement {
+  configure(props: Record<string, unknown>): void;  // Optional
+}
+```
+
+Duck-typed. Panels without `configure()` still mount — they use `connectedCallback`, attributes, or internal initialization.
+
+**Reconfiguration:** Calling `configure(newProps)` again on an already-mounted panel. No unmount/remount.
+
+**Unmount:** Container removed from DOM → `disconnectedCallback()` fires → panel cleans up internally.
 
 ## loadSite() API
 
@@ -663,6 +884,7 @@ The `dataset()` URL is resolved relative to the Quarkus server — REST endpoint
 import {
   page, rows, columns, grid, at, panel,
   tabs, pills, sidebar, menu, tree, tiles, accordion, carousel, stack,
+  split, dockBar, hostPanel,
   html, markdown, title,
   withId, withStyle, withAccess,
 } from "@casehubio/ui";
@@ -690,7 +912,7 @@ import {
 } from "@casehubio/data";
 
 // Runtime
-import { loadSite } from "@casehubio/pages-runtime";
+import { loadSite, registerPanel } from "@casehubio/pages-runtime";
 import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 
 // Theme

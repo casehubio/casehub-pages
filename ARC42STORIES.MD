@@ -12,15 +12,15 @@
 
 ### Description
 
-`casehub-pages` is a web application framework for the CaseHub platform — a pure TypeScript runtime for composing applications from layouts, data pipelines, visualization, and forms. The framework separates data from presentation, wires them together through declarative bindings and a reactive event pipeline, and renders the result as Web Components.
+`casehub-pages` is a web application framework for the CaseHub platform — a pure TypeScript runtime for composing applications from layouts, data pipelines, visualization, forms, hosted Web Components, and inter-component communication. The framework separates data from presentation, wires them together through declarative bindings and a reactive event pipeline, and renders the result as Web Components.
 
-Core packages: `@casehubio/pages-data` (DataSet model, reactive event engine, operations, external data extraction, WebSocket sources, JSONata), `@casehubio/pages-ui` (TypeScript DSL builders, YAML parser, component model), `@casehubio/pages-viz` (Web Component chart/table/metric wrappers around ECharts), `@casehubio/pages-component` (CSS grid layout renderer, interactive containers), `@casehubio/pages-runtime` (site orchestrator — `loadSite()` API, data pipeline, event delegation).
+Core packages: `@casehubio/pages-data` (DataSet model, reactive event engine, operations, external data extraction, push sources — WebSocket and SSE, JSONata), `@casehubio/pages-ui` (TypeScript DSL builders, YAML parser, component model), `@casehubio/pages-viz` (Web Component chart/table/metric wrappers around ECharts), `@casehubio/pages-component` (CSS grid layout renderer, interactive containers, split layouts, dock bars), `@casehubio/pages-runtime` (site orchestrator — `loadSite()` API, panel hosting, data pipeline, event delegation).
 
 ### Stakeholders
 
 | Stakeholder | Interest |
 |---|---|
-| Application developers | Compose web applications using the TypeScript DSL |
+| Application developers | Compose web applications using the TypeScript DSL, use `hostPanel()` for custom Web Components |
 | Host applications | Embed casehub-pages via iframe or direct integration using `loadSite()` API |
 | DashBuilder users | Backward-compatible rendering of existing DashBuilder YAML |
 
@@ -63,15 +63,17 @@ yarn build:prod                   # production (includes examples gallery)
 │                      ├── @casehubio/pages-component│
 │                      └── @casehubio/pages-viz      │
 │                                                  │
-│   ◄── pages-filter, pages-sort ──►                │
+│   hostPanel() ──► custom Web Components           │
+│                                                  │
+│   ◄── pages-filter, pages-sort, pages-event ──►   │
 └─────────────────────────────────────────────────┘
          │                              │
   TypeScript DSL                  Data sources
   (or YAML string)         (REST, Prometheus, CSV,
-                            WebSocket, expression)
+                       WebSocket, SSE, expression)
 ```
 
-**Boundary:** casehub-pages owns layout, data resolution, event delegation, and rendering. Domain logic (authentication, data source credentials) belongs to the host application.
+**Boundary:** casehub-pages owns layout, data resolution, event delegation, panel hosting, and rendering. Domain logic (authentication, data source credentials) belongs to the host application.
 
 ---
 
@@ -84,20 +86,24 @@ TypeScript DSL (or YAML string)
     ↓  (DSL builders / js-yaml)
 Component tree + DataSetDef[]       — layout model
     ↓
-resolveDataSet() / WebSocketSource  — @casehubio/pages-data
+resolveDataSet() / PushSource       — @casehubio/pages-data
     ↓
 DataSet (columns + rows)            — reactive: mutations cascade to bound components
     ↓
 renderNode() / renderComponent()    — @casehubio/pages-component
     ↓
-<pages-bar-chart> etc.              — @casehubio/pages-viz Web Components
+<pages-bar-chart> / hostPanel()     — @casehubio/pages-viz Web Components + custom panels
     ↓
-pages-filter / pages-sort           — DOM custom events back to data layer
+pages-filter / pages-sort / pages-event — DOM custom events back to data layer
 ```
 
 ### Reactive Data Pipeline
 
-The `DataSetManager` uses a unified event model — `apply(id, event)` accepts a discriminated union of four event types (snapshot, append, replace, remove). All sources — HTTP resolver, expression generator, WebSocket — produce `DataSetEvent` objects. The manager applies them uniformly, and changes cascade automatically to all bound components.
+The `DataSetManager` uses a unified event model — `apply(id, event)` accepts a discriminated union of four event types (snapshot, append, replace, remove). All sources — HTTP resolver, expression generator, WebSocket, SSE — produce `DataSetEvent` objects. The manager applies them uniformly, and changes cascade automatically to all bound components.
+
+### Unified Data + Event Bus
+
+Push sources (WebSocket, SSE) use a unified operation vocabulary routed by `op` field: `snapshot`, `append`, `replace`, `remove` for dataset mutations, `event` for inter-panel communication. One connection, one wire protocol. The `PushSource` abstraction encapsulates subscription lifecycle, reconnection, and error propagation. Errors are classified as transient (corrupt message, reconnecting) or permanent (auth expired, server-rejected 4000+). The runtime sets `target.error` only on permanent errors.
 
 ### Lazy Rendering for One-at-a-Time Containers
 
@@ -126,11 +132,11 @@ The filter flow (selector → `pages-filter` → listening component re-query) r
 
 | Package | Responsibility |
 |---|---|
-| `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), WebSocket sources, JSONata expressions |
+| `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), push sources (PushSource interface, WebSocket, SSE, generic pool), JSONata expressions |
 | `@casehubio/pages-ui` | TypeScript DSL builders, YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
 | `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, table, metric, selector |
-| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), slot management |
-| `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, page navigation, data pipeline, event delegation |
+| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), split layouts, dock bars, slot management |
+| `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, panel hosting (`registerPanel`, `hostPanel`), page navigation, data pipeline, event delegation |
 | `@casehubio/pages-examples` | Examples gallery: dev server, Playwright tests, sample validation |
 
 ---
@@ -141,11 +147,23 @@ The filter flow (selector → `pages-filter` → listening component re-query) r
 
 1. Host calls `loadSite(container, tree)` with a TypeScript DSL component tree (or YAML string)
 2. Runtime parses input via `@casehubio/pages-ui` → `ComponentNode` tree + `DataSetDef[]`
-3. Runtime registers event listeners for `pages-data-request`, `pages-filter`, `pages-sort`, `pages-page`
+3. Runtime registers event listeners for `pages-data-request`, `pages-filter`, `pages-sort`, `pages-page`, `pages-event`
 4. Runtime calls `renderComponent()` → `@casehubio/pages-component` renders CSS grid layout
-5. Viz Web Components fire `pages-data-request` during `connectedCallback`
-6. Runtime resolves each dataset via `@casehubio/pages-data` (HTTP, WebSocket, expression) and posts results back
-7. Components render with ECharts / DOM
+5. `hostPanel` activation mounts custom Web Components via `configure()` then `appendChild()`
+6. Viz Web Components fire `pages-data-request` during `connectedCallback`
+7. Runtime resolves each dataset via `@casehubio/pages-data` (HTTP, WebSocket, SSE, expression) and posts results back
+8. Components render with ECharts / DOM
+
+### Push Source Lifecycle
+
+1. Component requests a dataset with `ws://` or `sse://` URL
+2. Data pipeline acquires a `PushSource` from the pool (keyed by base URL, one connection per origin)
+3. Pipeline calls `source.subscribe(dataSetId, def, listener, onError)` — WebSocket sends subscribe message, SSE is receive-only
+4. Source receives wire messages with `op` field routing to dataset mutations (`snapshot`, `append`, `replace`, `remove`) or inter-panel events (`event`)
+5. Dataset mutations apply to `DataSetManager`, cascading to all bound components
+6. Errors classified as transient (logged, reconnect continues) or permanent (propagated to components via `target.error`)
+7. `MutationObserver` detects component unmount, calls `source.unsubscribe(dataSetId)` when last subscriber disconnects
+8. On dispose, pipeline disconnects observer, unsubscribes all push sources, releases pools
 
 ### Cross-Filtering
 
@@ -247,10 +265,13 @@ Decisions not captured inline in §4:
 | Decision | Rationale |
 |---|---|
 | Web Components over React for viz | Components must work inside any host framework (React, vanilla, GWT iframe). Web Components are framework-agnostic. |
-| Custom events over callback API | `pages-filter`, `pages-sort` decouple components from the runtime. Any host can intercept and handle events. |
+| Custom events over callback API | `pages-filter`, `pages-sort`, `pages-event` decouple components from the runtime. Any host can intercept and handle events. |
 | TypeScript DSL as primary API | Type-safe builders with IDE autocompletion. YAML supported for runtime-loaded pages (dynamic content). |
 | DashBuilder YAML backward compat | Existing DashBuilder YAML still parses and renders. Parser handles both DashBuilder legacy and clean casehub format. |
 | Unified event model for data mutations | snapshot/append/replace/remove as a discriminated union. All sources produce the same events. Enables reactive cascading. |
+| PushSource interface for push sources | Encapsulates subscription lifecycle, reconnection, error propagation. WebSocket and SSE share the same wire protocol (`op` field routing), eliminating duplication. Generic `PushPool` factory reduces boilerplate. |
+| Error propagation via `onError` callback | Separates data events (mutate datasets) from source health (component error state). Permanent errors set `target.error`, transient errors log and continue. |
+| Unified data + event bus | WebSocket and SSE route both dataset mutations and inter-panel events through one connection. `op: "event"` dispatches `pages-event` DOM events; other ops apply to `DataSetManager`. Grafana separates EventBus and Live — we unify. |
 
 ---
 
@@ -283,6 +304,11 @@ Decisions not captured inline in §4:
 | `ComponentNode` | A node in the parsed layout tree — carries type, props, slots (children), and optional dataset reference |
 | `loadSite()` | Entry point: accepts component tree or YAML string, renders into a DOM container, returns a dispose handle |
 | `NavTree` | Navigation structure: groups of named pages rendered as tabs, tree, menu, or tiles |
+| `PushSource` | Interface for push-based data sources (WebSocket, SSE). Encapsulates subscription lifecycle, reconnection, and error propagation. |
+| `PushSourceError` | Error from a push source — `message` and `permanent` flag. Permanent errors propagate to components (`target.error`), transient errors log and continue. |
+| `PushPool` | Generic pool factory for push sources. One connection per base URL, shared across subscriptions. Configurable via `DataProviderConfig`. |
+| `hostPanel` | Component type that mounts a registered custom Web Component inside the pages tree. Host app calls `registerPanel(typeName, tagName)` before `loadSite()`. |
+| `pages-event` | DOM custom event for inter-panel communication. Dispatched by panels, listened on `document`, bubbles through Shadow DOM via `composed: true`. |
 
 ---
 
