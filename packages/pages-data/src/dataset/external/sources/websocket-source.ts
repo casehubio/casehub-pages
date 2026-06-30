@@ -1,43 +1,14 @@
-import type { DataSetId, Column, ColumnId } from "../../types.js";
-import type { DataSetEvent, DataSetEventListener, AppendEvent, ReplaceEvent, RemoveEvent } from "../../events.js";
-import type { ExternalDataSetDef, WebSocketAuthConfig } from "../types.js";
-import { toTypedDataSet } from "../../conversion.js";
-import { columnId } from "../../types.js";
-
-interface Subscription {
-  readonly def: ExternalDataSetDef;
-  readonly listener: DataSetEventListener;
-}
-
-export interface WebSocketSource {
-  subscribe(dataSetId: DataSetId, def: ExternalDataSetDef, listener: DataSetEventListener): void;
-  unsubscribe(dataSetId: DataSetId): void;
-  close(): void;
-}
-
-export interface WebSocketSourceConfig {
-  readonly relay?: { readonly endpoint: string };
-  readonly auth?: WebSocketAuthConfig;
-  readonly eventTarget?: HTMLElement;
-}
-
-interface WireMessage {
-  dataset?: string;
-  op?: string;
-  seq?: string;
-  columns?: Column[];
-  rows?: (string | null)[][];
-  row?: (string | null)[];
-  key?: string;
-  topic?: string;
-  payload?: unknown;
-}
+import type { DataSetId } from "../../types.js";
+import type { DataSetEventListener } from "../../events.js";
+import type { ExternalDataSetDef } from "../types.js";
+import type { PushSource, PushSourceConfig, PushSourceError, Subscription, WireMessage } from "./push-source.js";
+import { processWireMessage } from "./push-source.js";
 
 export function createWebSocketSource(
   baseUrl: string,
-  config?: WebSocketSourceConfig,
+  config?: PushSourceConfig,
   WSConstructor: typeof WebSocket = WebSocket,
-): WebSocketSource {
+): PushSource {
   const subscriptions = new Map<DataSetId, Subscription>();
   const wireNameToId = new Map<string, DataSetId>();
   const idToWireName = new Map<DataSetId, string>();
@@ -96,7 +67,7 @@ export function createWebSocketSource(
     };
 
     ws.onmessage = (event) => {
-      handleMessage(event.data);
+      handleMessage(event.data as string);
     };
 
     ws.onclose = (event) => {
@@ -124,125 +95,13 @@ export function createWebSocketSource(
         console.warn("[WebSocketSource] Message is not an object:", msg);
         continue;
       }
-      processMessage(msg as WireMessage);
-    }
-  }
-
-  function processMessage(msg: WireMessage): void {
-    // Event op: dispatch as DOM event, bypass dataset routing
-    if (msg.op === "event" && msg.topic) {
-      if (config?.eventTarget) {
-        config.eventTarget.dispatchEvent(new CustomEvent("pages-event", {
-          bubbles: true,
-          composed: true,
-          detail: { topic: msg.topic, payload: msg.payload },
-        }));
-      }
-      return;
-    }
-
-    const wireName = msg.dataset;
-    let dataSetId = wireName !== undefined ? wireNameToId.get(wireName) : undefined;
-
-    if (dataSetId === undefined) {
-      if (wireName === undefined && subscriptions.size === 1) {
-        dataSetId = subscriptions.keys().next().value as DataSetId;
-      } else {
-        return;
-      }
-    }
-
-    const subscription = subscriptions.get(dataSetId);
-    if (!subscription) {
-      return;
-    }
-
-    const eventType = msg.op;
-    if (!eventType) {
-      console.warn("[WebSocketSource] Message missing op field:", msg);
-      return;
-    }
-
-    try {
-      switch (eventType) {
-        case "snapshot": {
-          if (!msg.columns || !msg.rows) {
-            console.warn("[WebSocketSource] snapshot event missing columns or rows:", msg);
-            return;
-          }
-          const dataset = toTypedDataSet({ columns: msg.columns, data: msg.rows });
-          subscription.listener({ type: "snapshot", dataset });
-          if (msg.seq !== undefined) lastSeq = msg.seq;
-          break;
-        }
-
-        case "append": {
-          if (!msg.columns || !msg.rows) {
-            console.warn("[WebSocketSource] append event missing columns or rows:", msg);
-            return;
-          }
-          const dataset = toTypedDataSet({ columns: msg.columns, data: msg.rows });
-          const event: AppendEvent = {
-            type: "append",
-            rows: dataset.rows,
-            ...(subscription.def.cacheMaxRows !== undefined && { maxRows: subscription.def.cacheMaxRows }),
-          };
-          subscription.listener(event);
-          if (msg.seq !== undefined) lastSeq = msg.seq;
-          break;
-        }
-
-        case "replace": {
-          if (!msg.columns || !msg.row || !msg.key) {
-            console.warn("[WebSocketSource] replace event missing columns, row, or key:", msg);
-            return;
-          }
-          const keyColumn = subscription.def.keyColumn;
-          if (!keyColumn) {
-            console.warn("[WebSocketSource] replace event requires keyColumn in def:", msg);
-            return;
-          }
-          const dataset = toTypedDataSet({ columns: msg.columns, data: [msg.row] });
-          if (dataset.rows.length === 0) {
-            console.warn("[WebSocketSource] replace event produced no rows:", msg);
-            return;
-          }
-          const event: ReplaceEvent = {
-            type: "replace",
-            keyColumn: columnId(keyColumn),
-            key: msg.key,
-            row: dataset.rows[0]!,
-          };
-          subscription.listener(event);
-          if (msg.seq !== undefined) lastSeq = msg.seq;
-          break;
-        }
-
-        case "remove": {
-          if (!msg.key) {
-            console.warn("[WebSocketSource] remove event missing key:", msg);
-            return;
-          }
-          const keyColumn = subscription.def.keyColumn;
-          if (!keyColumn) {
-            console.warn("[WebSocketSource] remove event requires keyColumn in def:", msg);
-            return;
-          }
-          const event: RemoveEvent = {
-            type: "remove",
-            keyColumn: columnId(keyColumn),
-            key: msg.key,
-          };
-          subscription.listener(event);
-          if (msg.seq !== undefined) lastSeq = msg.seq;
-          break;
-        }
-
-        default:
-          console.warn("[WebSocketSource] Unknown event type:", eventType);
-      }
-    } catch (error) {
-      console.warn("[WebSocketSource] Error processing message:", msg, error);
+      processWireMessage(
+        msg as WireMessage,
+        subscriptions,
+        wireNameToId,
+        config,
+        (seq) => { lastSeq = seq; },
+      );
     }
   }
 
@@ -258,18 +117,28 @@ export function createWebSocketSource(
       reconnectTimer = setTimeout(() => {
         connect();
       }, delay);
-    } else if (code >= 4000) {
-      console.warn(`[WebSocketSource] Application error (${code}): ${reason}`);
+    } else if (code >= 4000 && subscriptions.size > 0) {
+      const message = `Application error (${code.toString()}): ${reason}`;
+      for (const sub of subscriptions.values()) {
+        sub.onError({ message, permanent: true });
+      }
+    } else if (code >= 1002 && code <= 1015) {
+      console.warn(`[WebSocketSource] Protocol error (${code.toString()}): ${reason}`);
     }
   }
 
   return {
-    subscribe(dataSetId: DataSetId, def: ExternalDataSetDef, listener: DataSetEventListener): void {
+    subscribe(
+      dataSetId: DataSetId,
+      def: ExternalDataSetDef,
+      listener: DataSetEventListener,
+      onError: (error: PushSourceError) => void,
+    ): void {
       if (subscriptions.has(dataSetId)) return;
 
       const wireName = extractWireName(def.url, dataSetId);
 
-      subscriptions.set(dataSetId, { def, listener });
+      subscriptions.set(dataSetId, { def, listener, onError });
       wireNameToId.set(wireName, dataSetId);
       idToWireName.set(dataSetId, wireName);
 

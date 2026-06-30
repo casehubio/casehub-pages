@@ -7,8 +7,8 @@ import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/externa
 import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { resolveExternalDataSet } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import { evaluateGenerator, createWebSocketPool } from "@casehubio/pages-data/dist/dataset/external/index.js";
-import type { WebSocketPool } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import { evaluateGenerator, createPushPool, createWebSocketSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type { PushPool } from "@casehubio/pages-data/dist/dataset/external/index.js";
 import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { DataSetScope } from "./dataset-scope.js";
@@ -42,7 +42,7 @@ export interface DataPipeline {
   setResolverCtx(ctx: ResolverContext): void;
   readonly pendingResolutions: Map<DataSetId, Promise<ResolveResult>>;
   readonly refreshTimers: Map<DataSetId, ReturnType<typeof setInterval>>;
-  readonly pool: WebSocketPool;
+  readonly pool: PushPool;
 }
 
 function applyTextFilter(ds: TypedDataSet, term: string): TypedDataSet {
@@ -68,7 +68,7 @@ export function createDataPipeline(
   const refreshTimers = new Map<DataSetId, ReturnType<typeof setInterval>>();
   const abortControllers = new Map<DataSetId, AbortController>();
   const parameterisedConsumers = new Set<DataSetId>();
-  const pool = createWebSocketPool();
+  const pool = createPushPool((url, cfg) => createWebSocketSource(url, cfg));
   let resolverCtx: ResolverContext | undefined;
 
   function pushData(
@@ -238,23 +238,30 @@ export function createDataPipeline(
         const baseUrl = new URL(def.url);
         baseUrl.search = "";
         const source = pool.acquire(baseUrl.toString());
-        source.subscribe(lookup.dataSetId, def, (event: DataSetEvent) => {
-          manager.apply(lookup.dataSetId, event);
-          // Push updated data to all subscribing components
-          for (const [compId, compEntry] of registry) {
-            if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
-              const filterGroup = (compEntry.component.props as Record<string, unknown> | undefined)
-                ?.filter as { group?: string } | undefined;
-              pushData(
-                compEntry.vizElement,
-                compEntry.originalLookup,
-                compEntry.pagePath,
-                filterGroup?.group,
-                compId,
-              );
+        source.subscribe(
+          lookup.dataSetId,
+          def,
+          (event: DataSetEvent) => {
+            manager.apply(lookup.dataSetId, event);
+            // Push updated data to all subscribing components
+            for (const [compId, compEntry] of registry) {
+              if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
+                const filterGroup = (compEntry.component.props as Record<string, unknown> | undefined)
+                  ?.filter as { group?: string } | undefined;
+                pushData(
+                  compEntry.vizElement,
+                  compEntry.originalLookup,
+                  compEntry.pagePath,
+                  filterGroup?.group,
+                  compId,
+                );
+              }
             }
-          }
-        });
+          },
+          (error) => {
+            target.error = error.message;
+          },
+        );
         return;
       }
 

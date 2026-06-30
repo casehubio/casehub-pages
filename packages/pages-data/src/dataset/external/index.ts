@@ -52,8 +52,12 @@ export { PostMessageProvider } from "./providers/post-message.js";
 export { createDataProviderFactory } from "./provider-factory.js";
 export type { DataProviderFactory } from "./provider-factory.js";
 
+// Push source abstraction
+export type { PushSource, PushSourceConfig, PushSourceError } from "./sources/push-source.js";
+
 // WebSocket
 export { createWebSocketSource } from "./sources/websocket-source.js";
-export type { WebSocketSource, WebSocketSourceConfig } from "./sources/websocket-source.js";
-export { createWebSocketPool } from "./sources/websocket-pool.js";
-export type { WebSocketPool } from "./sources/websocket-pool.js";
+
+// Push pool (generic)
+export { createPushPool } from "./sources/push-pool.js";
+export type { PushPool } from "./sources/push-pool.js";
