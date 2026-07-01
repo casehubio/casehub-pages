@@ -179,6 +179,34 @@ describe("PagesTerminal", () => {
     });
   });
 
+  describe("configure/connectedCallback ordering", () => {
+    it("defers init when configure() is called before connectedCallback()", () => {
+      const el = document.createElement("pages-component-terminal") as HTMLElement & {
+        configure: (p: Record<string, unknown>) => void;
+      };
+
+      el.configure({ wsUrl: "ws://host/ws/{cols}/{rows}" });
+      expect(mockTerminal.open).not.toHaveBeenCalled();
+
+      container.appendChild(el);
+      expect(mockTerminal.open).toHaveBeenCalledOnce();
+      expect(MockWebSocket.instances).toHaveLength(1);
+    });
+
+    it("inits immediately when connectedCallback() fires before configure()", () => {
+      const el = document.createElement("pages-component-terminal") as HTMLElement & {
+        configure: (p: Record<string, unknown>) => void;
+      };
+
+      container.appendChild(el);
+      expect(mockTerminal.open).not.toHaveBeenCalled();
+
+      el.configure({ wsUrl: "ws://host/ws/{cols}/{rows}" });
+      expect(mockTerminal.open).toHaveBeenCalledOnce();
+      expect(MockWebSocket.instances).toHaveLength(1);
+    });
+  });
+
   describe("WebSocket lifecycle", () => {
     it("connects WebSocket with template-substituted URL", () => {
       const el = createElement({ wsUrl: "ws://host/ws/session-1/{cols}/{rows}" });
@@ -243,15 +271,18 @@ describe("PagesTerminal", () => {
       expect(disconnected!.detail.payload.reason).toBe("session-expired");
     });
 
-    it("does not reconnect on code 4001", async () => {
+    it("does not reconnect on code 4001", () => {
+      vi.useFakeTimers();
       const el = createElement({ wsUrl: "ws://host/ws/{cols}/{rows}" });
       container.appendChild(el);
       const ws = MockWebSocket.instances[0]!;
       ws.open();
       ws.onclose?.({ code: 4001, reason: "session-expired" } as CloseEvent);
 
-      await new Promise(r => setTimeout(r, 1500));
+      vi.advanceTimersByTime(5000);
       expect(MockWebSocket.instances).toHaveLength(1);
+
+      vi.useRealTimers();
     });
 
     it("reconnects with backoff on normal close", async () => {
@@ -295,6 +326,81 @@ describe("PagesTerminal", () => {
       expect(callOrder).toEqual(["reset", "websocket"]);
 
       vi.stubGlobal("WebSocket", OrigMockWS);
+      vi.useRealTimers();
+    });
+
+    it("doubles backoff delay on consecutive failures up to 30s cap", () => {
+      vi.useFakeTimers();
+      const el = createElement({ wsUrl: "ws://host/ws/{cols}/{rows}" });
+      container.appendChild(el);
+
+      // Initial connection opens then drops
+      MockWebSocket.instances[0]!.open();
+      MockWebSocket.instances[0]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+
+      // retry 0 → 1000ms delay
+      vi.advanceTimersByTime(999);
+      expect(MockWebSocket.instances).toHaveLength(1);
+      vi.advanceTimersByTime(1);
+      expect(MockWebSocket.instances).toHaveLength(2);
+
+      // Reconnected socket fails immediately (no open → retries not reset)
+      MockWebSocket.instances[1]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+
+      // retry 1 → 2000ms delay
+      vi.advanceTimersByTime(1999);
+      expect(MockWebSocket.instances).toHaveLength(2);
+      vi.advanceTimersByTime(1);
+      expect(MockWebSocket.instances).toHaveLength(3);
+
+      MockWebSocket.instances[2]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+
+      // retry 2 → 4000ms delay
+      vi.advanceTimersByTime(3999);
+      expect(MockWebSocket.instances).toHaveLength(3);
+      vi.advanceTimersByTime(1);
+      expect(MockWebSocket.instances).toHaveLength(4);
+
+      MockWebSocket.instances[3]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      vi.advanceTimersByTime(8000); // retry 3 → 8000ms
+      expect(MockWebSocket.instances).toHaveLength(5);
+
+      MockWebSocket.instances[4]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      vi.advanceTimersByTime(16000); // retry 4 → 16000ms
+      expect(MockWebSocket.instances).toHaveLength(6);
+
+      MockWebSocket.instances[5]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+
+      // retry 5 → capped at 30000ms (1000 * 2^5 = 32000 > cap)
+      vi.advanceTimersByTime(29999);
+      expect(MockWebSocket.instances).toHaveLength(6);
+      vi.advanceTimersByTime(1);
+      expect(MockWebSocket.instances).toHaveLength(7);
+
+      vi.useRealTimers();
+    });
+
+    it("resets backoff after successful reconnect", () => {
+      vi.useFakeTimers();
+      const el = createElement({ wsUrl: "ws://host/ws/{cols}/{rows}" });
+      container.appendChild(el);
+
+      // First failure → 1000ms backoff
+      MockWebSocket.instances[0]!.open();
+      MockWebSocket.instances[0]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      vi.advanceTimersByTime(1000);
+      expect(MockWebSocket.instances).toHaveLength(2);
+
+      // Successful reconnect resets retries
+      MockWebSocket.instances[1]!.open();
+      MockWebSocket.instances[1]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+
+      // Should be back to 1000ms, not 2000ms
+      vi.advanceTimersByTime(999);
+      expect(MockWebSocket.instances).toHaveLength(2);
+      vi.advanceTimersByTime(1);
+      expect(MockWebSocket.instances).toHaveLength(3);
+
       vi.useRealTimers();
     });
 
