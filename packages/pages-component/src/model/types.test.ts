@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Component, GridItem } from "./types.js";
+import type { Component, GridItem, LayoutState, PanelEntry } from "./types.js";
 import { ALLOW_ALL } from "./types.js";
 import type { TypedComponent } from "./index.js";
 import type { BarChartProps } from "./displayer-types.js";
@@ -87,5 +87,28 @@ describe("Component<T, P>", () => {
     // @ts-expect-error — P must be an object type, not a primitive
     const _bad: Component<"foo", number> = { type: "foo" };
     expect(_bad.type).toBe("foo");
+  });
+});
+
+describe("LayoutState type", () => {
+  it("accepts valid layout state", () => {
+    const state: LayoutState = {
+      splits: { "main-split": [60, 40] },
+      docks: { "debug-panel": false },
+      panels: { "editor": { typeName: "diff-viewer", props: { pathA: "a.md" } } },
+    };
+    expect(state.splits["main-split"]).toEqual([60, 40]);
+    expect(state.docks["debug-panel"]).toBe(false);
+    expect(state.panels["editor"]!.typeName).toBe("diff-viewer");
+  });
+
+  it("accepts empty layout state", () => {
+    const state: LayoutState = { splits: {}, docks: {}, panels: {} };
+    expect(Object.keys(state.splits)).toHaveLength(0);
+  });
+
+  it("accepts panel entry without props", () => {
+    const entry: PanelEntry = { typeName: "terminal" };
+    expect(entry.props).toBeUndefined();
   });
 });

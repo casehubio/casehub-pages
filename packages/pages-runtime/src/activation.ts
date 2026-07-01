@@ -255,6 +255,14 @@ export function createActivationCallback(
         return;
       }
 
+      // Register in component registry for layout panel capture
+      registry.set(componentId, {
+        element: el,
+        component,
+        pagePath,
+        hasExplicitId: component.id !== undefined,
+      });
+
       const panel = document.createElement(tagName);
       const panelAny = panel as unknown as { configure?: (p: Record<string, unknown>) => void };
       if (typeof panelAny.configure === "function") {

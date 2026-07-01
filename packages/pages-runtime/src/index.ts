@@ -20,3 +20,6 @@ export type { ComponentState, ComponentViewState } from "./component-view-state.
 export { createDataPipeline } from "./data-pipeline.js";
 export type { DataPipeline, VizTarget } from "./data-pipeline.js";
 export { registerPanel } from "./panel-registry.js";
+export type { LayoutStore } from "./layout-store.js";
+export { createLocalLayoutStore } from "./layout-store.js";
+export type { LayoutState, PanelEntry } from "@casehubio/pages-component/dist/model/types.js";

@@ -685,7 +685,7 @@ function wireSplit(
 
     currentPanel.insertAdjacentElement("afterend", handle);
 
-    attachDragHandler(handle, i, direction, slotNames, panels, minSizes);
+    attachDragHandler(handle, i, direction, slotNames, panels, minSizes, container.dataset.componentId ?? "");
   }
 }
 
@@ -696,6 +696,7 @@ function attachDragHandler(
   slotNames: readonly string[],
   panels: Map<string, HTMLElement>,
   minSizes: readonly number[] | undefined,
+  componentId: string,
 ): void {
   handle.addEventListener("mousedown", (startEvent: MouseEvent) => {
     startEvent.preventDefault();
@@ -731,6 +732,23 @@ function attachDragHandler(
     function onMouseUp(): void {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
+
+      const ratios: number[] = [];
+      for (const name of slotNames) {
+        const panel = panels.get(name);
+        if (panel) {
+          const size = direction === "horizontal" ? panel.offsetWidth : panel.offsetHeight;
+          ratios.push(size);
+        }
+      }
+      const total = ratios.reduce((a, b) => a + b, 0);
+      const normalized = total > 0 ? ratios.map(r => Math.round(r / total * 100)) : ratios;
+
+      handle.dispatchEvent(new CustomEvent("pages-split-resize", {
+        bubbles: true,
+        composed: true,
+        detail: { componentId, ratios: normalized },
+      }));
     }
 
     document.addEventListener("mousemove", onMouseMove);

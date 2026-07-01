@@ -1,5 +1,7 @@
-import type { Component, PermissionContext } from "@casehubio/pages-component/dist/model/types.js";
+import type { Component, PermissionContext, LayoutState, PanelEntry } from "@casehubio/pages-component/dist/model/types.js";
 import { ALLOW_ALL } from "@casehubio/pages-component/dist/model/types.js";
+import type { HostPanelProps } from "@casehubio/pages-component/dist/model/component-props.js";
+import type { LayoutStore } from "./layout-store.js";
 import { renderComponent } from "@casehubio/pages-component/dist/renderer/render.js";
 import type { DataSetId, ColumnId, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataProviderConfig, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
@@ -87,6 +89,7 @@ export interface LiveSite extends Site {
   navigate(path: string): void;
   setTheme(theme: "light" | "dark" | PagesTheme): void;
   dispose(): void;
+  readonly layout: LayoutState;
 }
 
 export interface SiteOptions {
@@ -95,9 +98,12 @@ export interface SiteOptions {
   readonly baseUrl?: string;
   readonly providerConfig?: DataProviderConfig;
   readonly adapters?: Readonly<Record<string, SaveAdapter>>;
+  readonly layout?: LayoutState;
+  readonly layoutStore?: LayoutStore;
+  readonly layoutKey?: string;
 }
 
-export function loadSite(
+export async function loadSite(
   target: HTMLElement,
   source: string | Component,
   options?: SiteOptions,
@@ -135,6 +141,8 @@ export function loadSite(
   const saveTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   const componentViewState = createComponentViewState();
   const dockState = new Map<string, boolean>();
+  const splitRatios = new Map<string, readonly number[]>();
+  let layoutSaveTimer: ReturnType<typeof setTimeout> | undefined;
   const actionExecutor = new ActionExecutor(
     options?.fetch ?? globalThis.fetch.bind(globalThis),
     options?.baseUrl ?? ""
@@ -413,6 +421,11 @@ export function loadSite(
     currentPage = computeCurrentPage(root, activeSlots);
     if (!_navigating) {
       syncUrl("pushState");
+    }
+    // Restore saved split ratios in newly-rendered lazy content
+    const containerEl = target.querySelector<HTMLElement>(`[data-component-id="${containerId}"]`);
+    if (containerEl) {
+      applySavedSplitRatios(containerEl);
     }
   }), { signal: abortController.signal });
 
@@ -822,6 +835,7 @@ export function loadSite(
     }
 
     syncUrl("replaceState");
+    scheduleLayoutSave();
   }), { signal: abortController.signal });
 
   target.addEventListener("pages-event", ((e: Event) => {
@@ -829,7 +843,89 @@ export function loadSite(
     console.debug("[pages-event]", topic, payload);
   }), { signal: abortController.signal });
 
-  // --- Render (AFTER event listeners — connectedCallback fires during render) ---
+  target.addEventListener("pages-split-resize", ((e: Event) => {
+    const { componentId, ratios } = (e as CustomEvent<{ componentId: string; ratios: number[] }>).detail;
+    // Hidden panel correction: if ratio is 0 and we had a non-zero value, keep the old value
+    const previous = splitRatios.get(componentId);
+    const corrected = ratios.map((r, i) => {
+      if (r === 0 && previous && previous[i] !== undefined && previous[i] !== 0) {
+        return previous[i]!;
+      }
+      return r;
+    });
+    splitRatios.set(componentId, corrected);
+    scheduleLayoutSave();
+  }), { signal: abortController.signal });
+
+  // --- Layout helpers ---
+
+  function applySavedSplitRatios(scope: HTMLElement): void {
+    for (const [componentId, ratios] of splitRatios) {
+      const splitEl = scope.querySelector<HTMLElement>(`[data-component-id="${componentId}"]`);
+      if (!splitEl) continue;
+      const slots = splitEl.querySelectorAll<HTMLElement>(`:scope > [data-slot]`);
+      if (ratios.length !== slots.length) continue;
+      slots.forEach((slot, i) => {
+        slot.style.flex = String(ratios[i]);
+      });
+    }
+  }
+
+  function scheduleLayoutSave(): void {
+    if (!options?.layoutStore || !options?.layoutKey) return;
+    if (layoutSaveTimer !== undefined) clearTimeout(layoutSaveTimer);
+    layoutSaveTimer = setTimeout(() => {
+      layoutSaveTimer = undefined;
+      options!.layoutStore!.save(options!.layoutKey!, captureLayout()).catch(() => {});
+    }, 500);
+  }
+
+  function captureHostPanels(): Readonly<Record<string, PanelEntry>> {
+    const result: Record<string, PanelEntry> = {};
+    for (const [id, entry] of registry) {
+      if (entry.component.type === "host-panel" && entry.hasExplicitId) {
+        const hp = entry.component.props as HostPanelProps | undefined;
+        if (hp?.typeName) {
+          result[id] = hp.panelProps
+            ? { typeName: hp.typeName, props: hp.panelProps }
+            : { typeName: hp.typeName };
+        }
+      }
+    }
+    return Object.freeze(result);
+  }
+
+  function captureLayout(): LayoutState {
+    return Object.freeze({
+      splits: Object.freeze(Object.fromEntries(splitRatios)),
+      docks: Object.freeze(Object.fromEntries(dockState)),
+      panels: captureHostPanels(),
+    });
+  }
+
+  // --- Seed layout state from store or direct injection (BEFORE render) ---
+
+  let seedLayout: LayoutState | null = null;
+  if (options?.layoutStore && options?.layoutKey) {
+    try {
+      seedLayout = await options.layoutStore.load(options.layoutKey);
+    } catch (err) {
+      console.warn("[pages] Failed to load layout from store:", err);
+    }
+  }
+  if (!seedLayout && options?.layout) {
+    seedLayout = options.layout;
+  }
+  if (seedLayout) {
+    for (const [id, ratios] of Object.entries(seedLayout.splits)) {
+      splitRatios.set(id, ratios);
+    }
+    for (const [id, visible] of Object.entries(seedLayout.docks)) {
+      dockState.set(id, visible);
+    }
+  }
+
+  // --- Render (AFTER event listeners and layout seed) ---
 
   const onNode = createActivationCallback(registry, pagePathMap, {
     fetchFn: options?.fetch ?? globalThis.fetch.bind(globalThis),
@@ -843,6 +939,9 @@ export function loadSite(
     lazyPageResolutions,
   }, contextManager);
   renderComponent(target, root, { permissions, onNode });
+
+  // Apply saved split ratios to rendered DOM
+  applySavedSplitRatios(target);
 
   // popstate — back/forward browser navigation
   if (typeof window !== "undefined") {
@@ -906,12 +1005,20 @@ export function loadSite(
       syncUrl("pushState");
     },
 
+    get layout(): LayoutState {
+      return captureLayout();
+    },
+
     dispose(): void {
       abortController.abort();
       if (typeof window !== "undefined") {
         window.removeEventListener("beforeunload", onBeforeUnload);
       }
       pipeline.dispose();
+      if (layoutSaveTimer !== undefined) {
+        clearTimeout(layoutSaveTimer);
+        layoutSaveTimer = undefined;
+      }
       for (const timer of saveTimers.values()) {
         clearTimeout(timer);
       }
@@ -937,7 +1044,7 @@ export function loadSite(
     syncUrl("replaceState");
   }
 
-  return Promise.resolve(site);
+  return site;
 }
 
 function showErrorBanner(container: HTMLElement, message: string): void {

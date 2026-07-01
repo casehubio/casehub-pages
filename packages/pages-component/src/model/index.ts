@@ -4,6 +4,8 @@ export type {
   GridPlacement,
   GridItem,
   PermissionContext,
+  LayoutState,
+  PanelEntry,
 } from "./types.js";
 export { ALLOW_ALL } from "./types.js";
 

@@ -38,3 +38,14 @@ export const ALLOW_ALL: PermissionContext = {
   hasRole: () => true,
   hasPermission: () => true,
 };
+
+export interface PanelEntry {
+  readonly typeName: string;
+  readonly props?: Readonly<Record<string, unknown>>;
+}
+
+export interface LayoutState {
+  readonly splits: Readonly<Record<string, readonly number[]>>;
+  readonly docks: Readonly<Record<string, boolean>>;
+  readonly panels: Readonly<Record<string, PanelEntry>>;
+}
