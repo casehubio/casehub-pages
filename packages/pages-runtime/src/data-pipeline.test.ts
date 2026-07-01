@@ -743,13 +743,14 @@ describe("pipeline — eventTarget injection", () => {
     const pipeline = createDataPipeline(
       manager, new Map() as DataSetScope, registry,
       createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+      undefined, target,
     );
 
     pipeline.setResolverCtx({
       manager,
       providerFactory: createDataProviderFactory(globalThis.fetch.bind(globalThis)),
       providerConfig: {
-        webSocket: { auth: { type: "query-param" as const, token: "t" }, eventTarget: target },
+        webSocket: { auth: { type: "query-param" as const, token: "t" } },
       },
       presetRegistry: { get: () => undefined, has: () => false },
     });
