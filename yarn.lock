@@ -1654,6 +1654,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/pages-component-terminal@workspace:components/pages-component-terminal":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-component-terminal@workspace:components/pages-component-terminal"
+  dependencies:
+    "@casehubio/pages-tsconfig": "workspace:*"
+    "@xterm/addon-fit": "npm:^0.11.0"
+    "@xterm/xterm": "npm:^6.0.0"
+    jsdom: "npm:^26.0.0"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/pages-component@workspace:*, @casehubio/pages-component@workspace:packages/pages-component":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-component@workspace:packages/pages-component"
@@ -4578,6 +4592,20 @@ __metadata:
     webpack-dev-server:
       optional: true
   checksum: 10c0/65245e45bfa35e11a5b30631b99cfed0c1b39b2cc8320fa2d2a4185264535618827d349ec032c58af4201d6236cbc43bec894fcb840fdd06314611537a80e210
+  languageName: node
+  linkType: hard
+
+"@xterm/addon-fit@npm:^0.11.0":
+  version: 0.11.0
+  resolution: "@xterm/addon-fit@npm:0.11.0"
+  checksum: 10c0/c0ce94f7e877d07e7197d15d041cc629ce2e853016400aadddc9810838ea8a26e836f87f325eba36df88c03feb72d9f13cd8c3bb41ee31e701f1058edb8553c3
+  languageName: node
+  linkType: hard
+
+"@xterm/xterm@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@xterm/xterm@npm:6.0.0"
+  checksum: 10c0/b99122553f323a65b708e5eba9903d4c5a1bcb59fe576d29d6e91a33002bccfd1b99403e1e839e1942f4952039db6d3d74ca9d65ed0399b4e9a0a5f35b8c12d9
   languageName: node
   linkType: hard
 
@@ -8723,7 +8751,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsdom@npm:^26.1.0":
+"jsdom@npm:^26.0.0, jsdom@npm:^26.1.0":
   version: 26.1.0
   resolution: "jsdom@npm:26.1.0"
   dependencies:
