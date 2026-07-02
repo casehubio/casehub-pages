@@ -41,8 +41,8 @@ const filterNodeSchema = z.lazy(() =>
   ])
 ) as z.ZodType<FilterNodeInput>;
 
-// Aggregation function type
-type AggregationFnType = "COUNT" | "DISTINCT" | "SUM" | "AVERAGE" | "MEDIAN" | "MIN" | "MAX" | "JOIN";
+// Aggregation function type — derived from Aggregation type union for compile-time sync
+type AggregationFnType = Aggregation["fn"];
 
 // Group strategy schemas
 const groupStrategySchema = z.string().default("distinct");
@@ -300,6 +300,8 @@ function parseAggregation(
       return { fn: "MAX" };
     case "JOIN":
       return { fn: "JOIN", separator: separator ?? ", " };
+    case "DISTINCTJOIN":
+      return { fn: "DISTINCTJOIN", separator: separator ?? ", " };
   }
 }
 

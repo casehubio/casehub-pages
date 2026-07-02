@@ -239,6 +239,7 @@ function inferAggregateType(
       return ColumnType.NUMBER;
 
     case "JOIN":
+    case "DISTINCTJOIN":
       return ColumnType.TEXT;
 
     case "MIN":

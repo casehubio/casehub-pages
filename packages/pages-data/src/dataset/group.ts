@@ -11,7 +11,8 @@ export type UniversalAggregation =
   | { readonly fn: "DISTINCT" }
   | { readonly fn: "MIN" }
   | { readonly fn: "MAX" }
-  | { readonly fn: "JOIN"; readonly separator: string };
+  | { readonly fn: "JOIN"; readonly separator: string }
+  | { readonly fn: "DISTINCTJOIN"; readonly separator: string };
 
 export type Aggregation = NumericAggregation | UniversalAggregation;
 

@@ -81,4 +81,5 @@ export {
   max,
   distinct,
   join,
+  distinctJoin,
 } from "./lookup-helpers.js";

@@ -40,6 +40,9 @@ export function computeAggregation(
 
     case "JOIN":
       return joinValues(values, fn.separator);
+
+    case "DISTINCTJOIN":
+      return distinctJoinValues(values, fn.separator);
   }
 }
 
@@ -71,6 +74,13 @@ function cellValueKey(val: CellValue): string {
     return `TEXT:${val.value}`;
   }
   return `LABEL:${val.value}`;
+}
+
+export function cellValueToString(val: CellValue): string | null {
+  if (val.type === "NULL") return null;
+  if (val.type === ColumnType.NUMBER) return String(val.value);
+  if (val.type === ColumnType.DATE) return val.value.toISOString();
+  return val.value;
 }
 
 function sumValues(values: readonly CellValue[]): CellValue {
@@ -198,21 +208,23 @@ function compareValues(a: CellValue, b: CellValue): number {
 
 function joinValues(values: readonly CellValue[], separator: string): CellValue {
   const parts: string[] = [];
-
   for (const val of values) {
-    if (val.type === "NULL") {
-      continue;
-    }
+    const str = cellValueToString(val);
+    if (str !== null) parts.push(str);
+  }
+  return { type: ColumnType.TEXT, value: parts.join(separator) };
+}
 
-    if (val.type === ColumnType.NUMBER) {
-      parts.push(String(val.value));
-    } else if (val.type === ColumnType.DATE) {
-      parts.push(val.value.toISOString());
-    } else {
-      parts.push(val.value);
+function distinctJoinValues(values: readonly CellValue[], separator: string): CellValue {
+  const seen = new Set<string>();
+  const parts: string[] = [];
+  for (const val of values) {
+    const str = cellValueToString(val);
+    if (str !== null && !seen.has(str)) {
+      seen.add(str);
+      parts.push(str);
     }
   }
-
   return { type: ColumnType.TEXT, value: parts.join(separator) };
 }
 
@@ -813,6 +825,7 @@ function inferAggregateColumnType(
     case "MAX":
       return findColumnInDataset(ds, rc.sourceId).type;
     case "JOIN":
+    case "DISTINCTJOIN":
       return ColumnType.TEXT;
   }
 }

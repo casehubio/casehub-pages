@@ -480,6 +480,63 @@ describe("parseLookup", () => {
     });
   });
 
+  it("parses DISTINCTJOIN aggregation with custom separator", () => {
+    const raw = {
+      uuid: "dataset-1",
+      group: [
+        {
+          columnGroup: {
+            source: "category",
+            strategy: "distinct",
+          },
+          columns: [
+            { source: "category" },
+            { source: "names", function: "DISTINCTJOIN", separator: "; " },
+          ],
+        },
+      ],
+    };
+
+    const lookup = parseLookup(raw);
+
+    expect(lookup.operations[0]).toMatchObject({
+      type: "group",
+      columns: [
+        { kind: "key", sourceId: "category", columnId: "category" },
+        {
+          kind: "aggregate",
+          sourceId: "names",
+          columnId: "names",
+          fn: { fn: "DISTINCTJOIN", separator: "; " },
+        },
+      ],
+    });
+  });
+
+  it("parses DISTINCTJOIN aggregation with default separator", () => {
+    const raw = {
+      uuid: "dataset-1",
+      group: [
+        {
+          columns: [
+            { source: "names", function: "DISTINCTJOIN" },
+          ],
+        },
+      ],
+    };
+
+    const lookup = parseLookup(raw);
+
+    expect(lookup.operations[0]).toMatchObject({
+      columns: [
+        {
+          kind: "aggregate",
+          fn: { fn: "DISTINCTJOIN", separator: ", " },
+        },
+      ],
+    });
+  });
+
   it("parses selectedIntervals and join", () => {
     const raw = {
       uuid: "dataset-1",

@@ -16,6 +16,7 @@ import {
   max,
   distinct,
   join,
+  distinctJoin,
 } from "./lookup-helpers.js";
 import type { UnresolvedLeaf } from "@casehubio/pages-data/dist/dataset/filter.js";
 import type { GroupOp } from "@casehubio/pages-data/dist/dataset/group.js";
@@ -219,6 +220,20 @@ describe("result column helpers", () => {
     const c = join("names", " | ");
     if (c.kind === "aggregate") {
       expect(c.fn).toEqual({ fn: "JOIN", separator: " | " });
+    }
+  });
+
+  it("distinctJoin() with default separator", () => {
+    const c = distinctJoin("names");
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "DISTINCTJOIN", separator: ", " });
+    }
+  });
+
+  it("distinctJoin() with custom separator", () => {
+    const c = distinctJoin("names", "; ");
+    if (c.kind === "aggregate") {
+      expect(c.fn).toEqual({ fn: "DISTINCTJOIN", separator: "; " });
     }
   });
 });

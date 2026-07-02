@@ -440,7 +440,7 @@ lookup("sales", groupBy("Region", col("Region"), sum("Revenue")))
 lookup("sales", groupBy(null, sum("Revenue"), count("Region")))
 ```
 
-**Aggregation functions:** `sum`, `avg`, `count`, `min`, `max`, `distinct`, `join`
+**Aggregation functions:** `sum`, `avg`, `count`, `min`, `max`, `distinct`, `join`, `distinctJoin`
 
 ### Filtering
 

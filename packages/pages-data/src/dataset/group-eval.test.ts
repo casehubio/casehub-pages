@@ -304,6 +304,101 @@ describe("computeAggregation", () => {
       ).toEqual(text("count: 42 end"));
     });
   });
+
+  describe("DISTINCTJOIN", () => {
+    it("deduplicates text values", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [text("a"), text("b"), text("a"), text("c")],
+      )).toEqual(text("a, b, c"));
+    });
+
+    it("deduplicates number values converted to string", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [num(1), num(2), num(1)],
+      )).toEqual(text("1, 2"));
+    });
+
+    it("deduplicates date values converted to ISO string", () => {
+      const d1 = date(2024, 6, 15);
+      const d2 = date(2024, 7, 1);
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [d1, d2, d1],
+      )).toEqual(text("2024-06-15T00:00:00.000Z, 2024-07-01T00:00:00.000Z"));
+    });
+
+    it("deduplicates label values", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [label("x"), label("y"), label("x")],
+      )).toEqual(text("x, y"));
+    });
+
+    it("skips NULLs", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [text("a"), NULL, text("b"), NULL],
+      )).toEqual(text("a, b"));
+    });
+
+    it("returns empty string for empty input", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [],
+      )).toEqual(text(""));
+    });
+
+    it("returns empty string for all-NULL input", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [NULL, NULL, NULL],
+      )).toEqual(text(""));
+    });
+
+    it("handles mixed types with dedup", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [text("a"), num(1), label("b"), text("a"), num(1)],
+      )).toEqual(text("a, 1, b"));
+    });
+
+    it("deduplicates NUMBER and TEXT producing same string", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [num(1), text("1")],
+      )).toEqual(text("1"));
+    });
+
+    it("deduplicates LABEL and TEXT producing same string", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [label("x"), text("x")],
+      )).toEqual(text("x"));
+    });
+
+    it("passes through single value", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [text("only")],
+      )).toEqual(text("only"));
+    });
+
+    it("uses custom separator", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: " | " },
+        [text("a"), text("b"), text("a")],
+      )).toEqual(text("a | b"));
+    });
+
+    it("preserves insertion order (first occurrence wins)", () => {
+      expect(computeAggregation(
+        { fn: "DISTINCTJOIN", separator: ", " },
+        [text("c"), text("a"), text("b"), text("a"), text("c")],
+      )).toEqual(text("c, a, b"));
+    });
+  });
 });
 
 // Test helper

@@ -243,3 +243,13 @@ export function join(source: string, separator: string = ", "): ResultColumn {
     fn,
   });
 }
+
+export function distinctJoin(source: string, separator: string = ", "): ResultColumn {
+  const fn: Aggregation = Object.freeze({ fn: "DISTINCTJOIN" as const, separator });
+  return Object.freeze({
+    kind: "aggregate" as const,
+    sourceId: source as ColumnId,
+    columnId: source as ColumnId,
+    fn,
+  });
+}
