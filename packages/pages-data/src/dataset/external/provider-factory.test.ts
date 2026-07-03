@@ -120,4 +120,66 @@ describe("createDataProviderFactory", () => {
     );
     expect(result.data).toEqual([1, 2, 3]);
   });
+
+  it("passes fetchFn and tokenFn to ServerRelayProvider", async () => {
+    const tokenFn = () => "test-jwt-token";
+    const customFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ value: 1 }), {
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const factoryWithAuth = createDataProviderFactory(customFetch);
+    const provider = factoryWithAuth.create(
+      def({ url: "https://api.example.com/data" }),
+      config({
+        defaultProvider: "server-relay",
+        serverRelay: { endpoint: "https://relay.example.com/fetch", tokenFn },
+      }),
+    );
+
+    expect(provider).toBeInstanceOf(ServerRelayProvider);
+
+    await provider!.fetch({
+      url: "https://api.example.com/data",
+      method: HttpMethod.GET,
+      query: {},
+      headers: {},
+    });
+
+    expect(customFetch).toHaveBeenCalledWith(
+      "https://relay.example.com/fetch",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer test-jwt-token",
+        }),
+      }),
+    );
+  });
+
+  it("omits Authorization header when tokenFn returns null", async () => {
+    const tokenFn = () => null;
+    const customFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ value: 1 }), {
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const factoryWithAuth = createDataProviderFactory(customFetch);
+    const provider = factoryWithAuth.create(
+      def({ url: "https://api.example.com/data" }),
+      config({
+        defaultProvider: "server-relay",
+        serverRelay: { endpoint: "https://relay.example.com/fetch", tokenFn },
+      }),
+    );
+
+    await provider!.fetch({
+      url: "https://api.example.com/data",
+      method: HttpMethod.GET,
+      query: {},
+      headers: {},
+    });
+
+    const calledHeaders = (customFetch.mock.calls[0]![1] as { headers: Record<string, string> }).headers;
+    expect(calledHeaders).not.toHaveProperty("Authorization");
+  });
 });

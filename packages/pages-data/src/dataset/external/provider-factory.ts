@@ -25,7 +25,7 @@ export function createDataProviderFactory(
       // url-based
       let provider: DataProvider =
         config.defaultProvider === "server-relay" && config.serverRelay
-          ? new ServerRelayProvider(config.serverRelay.endpoint)
+          ? new ServerRelayProvider(config.serverRelay.endpoint, fetchFn ?? globalThis.fetch.bind(globalThis), config.serverRelay.tokenFn)
           : new BrowserFetchProvider(fetchFn, baseUrl);
 
       if (config.corsProxy?.enabled && config.corsProxy.url) {

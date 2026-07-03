@@ -164,6 +164,12 @@ export async function loadSite(
           tokenFn: options.providerConfig.serverQuery.tokenFn ?? createDevAuthTokenFn(),
         },
       } : {}),
+      ...(options?.providerConfig?.serverRelay ? {
+        serverRelay: {
+          ...options.providerConfig.serverRelay,
+          tokenFn: options.providerConfig.serverRelay.tokenFn ?? createDevAuthTokenFn(),
+        },
+      } : {}),
     },
     presetRegistry: createPresetRegistry(),
   });

@@ -91,6 +91,7 @@ export interface DataProviderConfig {
   };
   readonly serverRelay?: {
     readonly endpoint: string;
+    readonly tokenFn?: () => string | null;
   };
   readonly webSocket?: {
     readonly relay?: { readonly endpoint: string };
