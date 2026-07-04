@@ -76,6 +76,7 @@ describe("parameterised dataset URLs", () => {
     registry.set(componentId, {
       element: el,
       vizElement: vizEl as unknown as import("@casehubio/pages-viz/dist/base/PagesElement.js").PagesElement<import("@casehubio/pages-viz/dist/base/types.js").VizComponentProps>,
+      originalLookup: { dataSetId: dsLookupId, operations: [] },
       component,
       pagePath,
       hasExplicitId: false,
@@ -258,11 +259,29 @@ describe("parameterised dataset URLs", () => {
     const def = createDef("/api/static/patients");
     scope.set("", new Map([[dsId, def]]));
 
+    const target = makeTarget();
+    const component: Component = {
+      type: "table",
+      props: { lookup: { dataSetId: dsId, operations: [] } },
+    };
+    registry.set("comp1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: dsId, operations: [] },
+      component,
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    // Re-create manager with onChanged wiring
+    manager = createDataSetManager({
+      onChanged: (id) => {
+        pipeline.refreshDataSet(id);
+      },
+    });
+
     pipeline = createDataPipeline(manager, scope, registry, filterState, dataScopeRegistry, componentViewState, contextManager);
     pipeline.setResolverCtx(makeResolverCtx());
-
-    registerComponent("comp1", dsId);
-    const target = makeTarget();
 
     // Non-parameterised URL → normal fetch path (immediate)
     pipeline.handleDataRequest(target, { dataSetId: dsId, operations: [] }, "comp1");

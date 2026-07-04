@@ -137,6 +137,7 @@ export async function loadSite(
   const manager = createDataSetManager({
     onChanged: (id, dataset) => {
       contextManager.updateDataset(id, dataset);
+      pipeline.refreshDataSet(id);
     },
   });
   const dataScopeRegistry = createDataScopeRegistry();
@@ -389,11 +390,7 @@ export async function loadSite(
       clearEditState(editState, pagePath);
 
       // Post-save sync: re-push all components referencing this dataset
-      for (const [id, entry] of registry) {
-        if (entry.originalLookup?.dataSetId === scope.dataset && entry.vizElement) {
-          pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, id);
-        }
-      }
+      pipeline.refreshDataSet(scope.dataset);
     } else {
       console.error(`Save failed for page "${pagePath}":`, result.error);
       target.dispatchEvent(
@@ -680,11 +677,7 @@ export async function loadSite(
       }
       updateFilter(filterState, scopePath, undefined, scope.idColumn, [newIdValue], false);
 
-      for (const [id, candidate] of registry) {
-        if (candidate.vizElement && candidate.originalLookup) {
-          pipeline.handleDataRequest(candidate.vizElement, candidate.originalLookup, id);
-        }
-      }
+      pipeline.refreshAll();
       break;
     }
   }), { signal: abortController.signal });
@@ -710,11 +703,7 @@ export async function loadSite(
     adapter.create(scope.dataset, record)
       .then((result) => {
         if (result.success) {
-          for (const [id, candidate] of registry) {
-            if (candidate.originalLookup?.dataSetId === scope.dataset && candidate.vizElement) {
-              pipeline.handleDataRequest(candidate.vizElement, candidate.originalLookup, id);
-            }
-          }
+          pipeline.refreshDataSet(scope.dataset);
         } else {
           target.dispatchEvent(new CustomEvent("pages-save-error", {
             bubbles: true,
@@ -751,11 +740,7 @@ export async function loadSite(
       .then((result) => {
         if (result.success) {
           clearEditState(editState, entry.pagePath);
-          for (const [id, candidate] of registry) {
-            if (candidate.originalLookup?.dataSetId === scope.dataset && candidate.vizElement) {
-              pipeline.handleDataRequest(candidate.vizElement, candidate.originalLookup, id);
-            }
-          }
+          pipeline.refreshDataSet(scope.dataset);
         } else {
           target.dispatchEvent(new CustomEvent("pages-save-error", {
             bubbles: true,
@@ -794,12 +779,8 @@ export async function loadSite(
     const { refresh } = (e as CustomEvent<PagesActionCompleteDetail>).detail;
 
     // Re-fetch listed datasets
-    for (const dataSetId of refresh) {
-      for (const [id, entry] of registry) {
-        if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
-          pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, id);
-        }
-      }
+    for (const dsId of refresh) {
+      pipeline.refreshDataSet(dsId as any);
     }
   }), { signal: abortController.signal });
 
@@ -977,11 +958,7 @@ export async function loadSite(
       restoreFromUrl(location.hash, filterState, componentViewState);
 
       // Re-push all registered components
-      for (const [id, entry] of registry) {
-        if (entry.vizElement && entry.originalLookup) {
-          pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, id);
-        }
-      }
+      pipeline.refreshAll();
     }, { signal: abortController.signal });
   }
 

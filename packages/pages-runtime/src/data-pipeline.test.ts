@@ -189,7 +189,6 @@ describe("data pipeline with filters", () => {
 
 describe("data pipeline deduplication", () => {
   it("shares one resolution promise for concurrent requests to same dataSetId", async () => {
-    const manager = createDataSetManager();
     const target1 = makeTarget();
     const target2 = makeTarget();
     const registry: ComponentRegistry = new Map();
@@ -197,12 +196,16 @@ describe("data pipeline deduplication", () => {
 
     registry.set("chart-1", {
       element: document.createElement("div"),
+      vizElement: target1,
+      originalLookup: lookup,
       component: { type: "bar-chart" },
       pagePath: "",
       hasExplicitId: false,
     });
     registry.set("chart-2", {
       element: document.createElement("div"),
+      vizElement: target2,
+      originalLookup: lookup,
       component: { type: "line-chart" },
       pagePath: "",
       hasExplicitId: false,
@@ -212,6 +215,12 @@ describe("data pipeline deduplication", () => {
     const scope: DataSetScope = new Map([
       ["", new Map([[def.uuid, def]])],
     ]);
+
+    const manager = createDataSetManager({
+      onChanged: (id) => {
+        pipeline.refreshDataSet(id);
+      },
+    });
 
     const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
 
@@ -756,5 +765,54 @@ describe("pipeline — eventTarget injection", () => {
     });
 
     expect(() => pipeline.dispose()).not.toThrow();
+  });
+});
+
+describe("refreshDataSet", () => {
+  it("pushes data to all components subscribing to the given dataSetId", () => {
+    const dsId = dataSetId("test-ds");
+    const manager = createDataSetManager();
+    const registry: ComponentRegistry = new Map();
+    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    const target1 = makeTarget();
+    const target2 = makeTarget();
+    const target3 = makeTarget();
+
+    registry.set("comp-1", { vizElement: target1, originalLookup: { dataSetId: dsId, operations: [] }, pagePath: "", component: { type: "test", props: {} } } as any);
+    registry.set("comp-2", { vizElement: target2, originalLookup: { dataSetId: dsId, operations: [] }, pagePath: "", component: { type: "test", props: {} } } as any);
+    registry.set("comp-3", { vizElement: target3, originalLookup: { dataSetId: dataSetId("other-ds"), operations: [] }, pagePath: "", component: { type: "test", props: {} } } as any);
+
+    manager.apply(dsId, { type: "snapshot", dataset: regionDataSet([["North"], ["South"]]) });
+
+    pipeline.refreshDataSet(dsId);
+
+    expect(target1.dataSet).toBeDefined();
+    expect(target2.dataSet).toBeDefined();
+    expect(target3.dataSet).toBeUndefined();
+  });
+});
+
+describe("refreshAll", () => {
+  it("pushes data to all registered components", () => {
+    const dsId1 = dataSetId("ds-1");
+    const dsId2 = dataSetId("ds-2");
+    const manager = createDataSetManager();
+    const registry: ComponentRegistry = new Map();
+    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    const target1 = makeTarget();
+    const target2 = makeTarget();
+
+    registry.set("comp-1", { vizElement: target1, originalLookup: { dataSetId: dsId1, operations: [] }, pagePath: "", component: { type: "test", props: {} } } as any);
+    registry.set("comp-2", { vizElement: target2, originalLookup: { dataSetId: dsId2, operations: [] }, pagePath: "", component: { type: "test", props: {} } } as any);
+
+    manager.apply(dsId1, { type: "snapshot", dataset: regionDataSet([["North"]]) });
+    manager.apply(dsId2, { type: "snapshot", dataset: regionDataSet([["South"]]) });
+
+    pipeline.refreshAll();
+
+    expect(target1.dataSet).toBeDefined();
+    expect(target2.dataSet).toBeDefined();
   });
 });

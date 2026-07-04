@@ -41,6 +41,8 @@ export interface DataPipeline {
 
   setResolverCtx(ctx: ResolverContext): void;
   dispose(): void;
+  refreshDataSet(dataSetId: DataSetId): void;
+  refreshAll(): void;
 }
 
 function applyTextFilter(ds: TypedDataSet, term: string): TypedDataSet {
@@ -165,14 +167,6 @@ export function createDataPipeline(
       def,
       (event: DataSetEvent) => {
         manager.apply(lookup.dataSetId, event);
-        // Push updated data to all subscribing components
-        for (const [compId, compEntry] of registry) {
-          if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
-            const fg = (compEntry.component.props as Record<string, unknown> | undefined)
-              ?.filter as { group?: string } | undefined;
-            pushData(compEntry.vizElement, compEntry.originalLookup, compEntry.pagePath, fg?.group, compId);
-          }
-        }
       },
       (error) => {
         if (!error.permanent) {
@@ -473,14 +467,6 @@ export function createDataPipeline(
                     .then(() => {
                       pendingResolutions.delete(lookup.dataSetId);
                       abortControllers.delete(lookup.dataSetId);
-                      // Re-push all components that reference this dataset
-                      for (const [compId, compEntry] of registry) {
-                        if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
-                          const fg = (compEntry.component.props as Record<string, unknown> | undefined)
-                            ?.filter as { group?: string } | undefined;
-                          pushData(compEntry.vizElement, compEntry.originalLookup, compEntry.pagePath, fg?.group, compId);
-                        }
-                      }
                     })
                     .catch((err: unknown) => {
                       pendingResolutions.delete(lookup.dataSetId);
@@ -524,13 +510,32 @@ export function createDataPipeline(
       pending
         .then(() => {
           pendingResolutions.delete(lookup.dataSetId);
-          pushData(target, lookup, entry.pagePath, filterGroup?.group, componentId);
           scheduleRefresh(def, lookup.dataSetId);
         })
         .catch((err: unknown) => {
           pendingResolutions.delete(lookup.dataSetId);
           target.error = err instanceof Error ? err.message : String(err);
         });
+    },
+
+    refreshDataSet(dataSetId: DataSetId): void {
+      for (const [compId, entry] of registry) {
+        if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
+          const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
+            ?.filter as { group?: string } | undefined;
+          pushData(entry.vizElement, entry.originalLookup, entry.pagePath, filterGroup?.group, compId);
+        }
+      }
+    },
+
+    refreshAll(): void {
+      for (const [compId, entry] of registry) {
+        if (entry.vizElement && entry.originalLookup) {
+          const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
+            ?.filter as { group?: string } | undefined;
+          pushData(entry.vizElement, entry.originalLookup, entry.pagePath, filterGroup?.group, compId);
+        }
+      }
     },
   };
 
@@ -545,15 +550,6 @@ export function createDataPipeline(
         const storedLookup = serverQueryLookups.get(dataSetId);
         if (!storedLookup) return;
         resolveExternalDataSet(def, resolverCtx, storedLookup)
-          .then(() => {
-            for (const [compId, entry] of registry) {
-              if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
-                const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
-                  ?.filter as { group?: string } | undefined;
-                pushData(entry.vizElement, entry.originalLookup, entry.pagePath, filterGroup?.group, compId);
-              }
-            }
-          })
           .catch((err: unknown) => {
             console.warn(`[DataPipeline] Server-query refresh failed for ${String(dataSetId)}:`, err);
           });
@@ -583,20 +579,6 @@ export function createDataPipeline(
               ? { type: "append", rows: generated.rows, maxRows: def.cacheMaxRows }
               : { type: "append", rows: generated.rows };
           manager.apply(dataSetId, event);
-          // Push updated data to all subscribing components
-          for (const [compId, entry] of registry) {
-            if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
-              const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
-                ?.filter as { group?: string } | undefined;
-              pushData(
-                entry.vizElement,
-                entry.originalLookup,
-                entry.pagePath,
-                filterGroup?.group,
-                compId,
-              );
-            }
-          }
         } catch (e) {
           console.warn(`Expression generator failed for ${String(dataSetId)}:`, e);
         }
@@ -608,23 +590,7 @@ export function createDataPipeline(
     // Existing URL refresh path
     const timerId = setInterval(() => {
       if (!resolverCtx) return;
-      resolveExternalDataSet(def, resolverCtx)
-        .then(() => {
-          for (const [compId, entry] of registry) {
-            if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
-              const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
-                ?.filter as { group?: string } | undefined;
-              pushData(
-                entry.vizElement,
-                entry.originalLookup,
-                entry.pagePath,
-                filterGroup?.group,
-                compId,
-              );
-            }
-          }
-        })
-        .catch(() => {});
+      resolveExternalDataSet(def, resolverCtx).catch(() => {});
     }, interval);
     refreshTimers.set(dataSetId, timerId);
   }
