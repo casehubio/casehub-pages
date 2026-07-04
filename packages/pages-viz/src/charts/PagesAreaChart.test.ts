@@ -74,7 +74,7 @@ describe("PagesAreaChart", () => {
   });
 
   describe("buildOption", () => {
-    it("default subtype (area) builds area chart", () => {
+    it("default subtype (area) builds area chart", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100], ["Feb", 150]],
@@ -84,7 +84,7 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -102,7 +102,7 @@ describe("PagesAreaChart", () => {
       expect(option.tooltip).toEqual({ trigger: "axis" });
     });
 
-    it("subtype=area builds area chart", () => {
+    it("subtype=area builds area chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10]],
@@ -112,7 +112,7 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -120,7 +120,7 @@ describe("PagesAreaChart", () => {
       ]);
     });
 
-    it("subtype=area-stacked builds stacked area chart", () => {
+    it("subtype=area-stacked builds stacked area chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["a", "NUMBER"], ["b", "NUMBER"]],
         [["X", 10, 5]],
@@ -130,7 +130,7 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -139,7 +139,7 @@ describe("PagesAreaChart", () => {
       ]);
     });
 
-    it("multiple data columns generate multiple series", () => {
+    it("multiple data columns generate multiple series", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"], ["profit", "NUMBER"], ["cost", "NUMBER"]],
         [["Jan", 100, 50, 70]],
@@ -149,7 +149,7 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -159,7 +159,7 @@ describe("PagesAreaChart", () => {
       ]);
     });
 
-    it("null values in dataset pass through to source", () => {
+    it("null values in dataset pass through to source", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100], ["Feb", null], ["Mar", 150]],
@@ -169,7 +169,7 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -184,7 +184,7 @@ describe("PagesAreaChart", () => {
   });
 
   describe("applyChartSettings", () => {
-    it("applies legend settings", () => {
+    it("applies legend settings", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100]],
@@ -197,13 +197,13 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: false });
     });
 
-    it("applies xAxis and yAxis settings", () => {
+    it("applies xAxis and yAxis settings", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100]],
@@ -217,7 +217,7 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.xAxis).toMatchObject({ type: "category", name: "Month", axisLabel: { show: true } });
@@ -226,7 +226,7 @@ describe("PagesAreaChart", () => {
   });
 
   describe("extra merge", () => {
-    it("deep merges extra settings onto option", () => {
+    it("deep merges extra settings onto option", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100]],
@@ -242,7 +242,7 @@ describe("PagesAreaChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Area Chart" });

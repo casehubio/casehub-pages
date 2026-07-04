@@ -72,7 +72,7 @@ describe("PagesPieChart", () => {
   });
 
   describe("buildOption", () => {
-    it("default subtype (pie) builds pie chart", () => {
+    it("default subtype (pie) builds pie chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 30], ["B", 50], ["C", 20]],
@@ -82,7 +82,7 @@ describe("PagesPieChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -101,7 +101,7 @@ describe("PagesPieChart", () => {
       expect(option.yAxis).toBeUndefined();
     });
 
-    it("subtype=pie builds pie chart", () => {
+    it("subtype=pie builds pie chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10]],
@@ -111,7 +111,7 @@ describe("PagesPieChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -119,7 +119,7 @@ describe("PagesPieChart", () => {
       ]);
     });
 
-    it("subtype=donut builds donut chart", () => {
+    it("subtype=donut builds donut chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10], ["B", 20]],
@@ -129,7 +129,7 @@ describe("PagesPieChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -137,7 +137,7 @@ describe("PagesPieChart", () => {
       ]);
     });
 
-    it("applies legend settings", () => {
+    it("applies legend settings", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10]],
@@ -150,13 +150,13 @@ describe("PagesPieChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, bottom: 0 });
     });
 
-    it("tooltip trigger is item not axis", () => {
+    it("tooltip trigger is item not axis", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10]],
@@ -166,13 +166,13 @@ describe("PagesPieChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.tooltip).toEqual({ trigger: "item" });
     });
 
-    it("deep merges extra settings onto option", () => {
+    it("deep merges extra settings onto option", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10]],
@@ -188,7 +188,7 @@ describe("PagesPieChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Distribution" });

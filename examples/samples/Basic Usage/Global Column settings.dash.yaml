@@ -5,7 +5,7 @@ global:
         columns:
             # this will be applied to all columns with the same ID
             - id: Column 0
-              expression: value + " - Global Change"
+              expression: value & " - Global Change"
         lookup:
             uuid: test
 datasets:
@@ -20,4 +20,4 @@ pages:
           - displayer:
                 columns:
                     - id: Column 0
-                      expression: value + " - Local Change"
+                      expression: value & " - Local Change"

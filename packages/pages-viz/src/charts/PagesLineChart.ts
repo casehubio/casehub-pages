@@ -17,12 +17,12 @@ import { deepMerge } from "../base/deep-merge.js";
 use([LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, DatasetComponent]);
 
 export class PagesLineChart extends PagesChartElement<LineChartProps> {
-  override buildOption(
+  override async buildOption(
     props: LineChartProps,
     dataset: TypedDataSet,
-  ): Record<string, unknown> {
+  ): Promise<Record<string, unknown>> {
     // Stage 1: Convert dataset to source
-    const source = datasetToSource(dataset, props.columns);
+    const source = await datasetToSource(dataset, props.columns);
 
     // Stage 2: Build base option
     const subtype = props.subtype || "line";

@@ -18,12 +18,12 @@ import { deepMerge } from "../base/deep-merge.js";
 use([LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, DatasetComponent]);
 
 export class PagesTimeseries extends PagesChartElement<TimeseriesProps> {
-  override buildOption(
+  override async buildOption(
     props: TimeseriesProps,
     dataset: TypedDataSet,
-  ): Record<string, unknown> {
+  ): Promise<Record<string, unknown>> {
     // Stage 1: Convert dataset to source
-    const source = datasetToSource(dataset, props.columns);
+    const source = await datasetToSource(dataset, props.columns);
 
     // Stage 2: Build base option
     // Determine time axis column: if column 0 is LABEL, use column 1 as time axis

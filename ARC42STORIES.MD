@@ -193,7 +193,7 @@ The examples gallery serves at `localhost:8080` via webpack-dev-server (monorepo
 | DashBuilder compatibility | `displayer-desugar.ts` maps DashBuilder YAML properties to casehub component model. `backwards-compat.ts` handles legacy field names. |
 | Case-insensitive column matching | `column-lookup.ts` provides `findColumnIndex` with case-insensitive fallback for filter/group/sort operations |
 | JSON resilience | `extraction.ts` handles trailing commas, single-quoted JSON, and flat primitive arrays from hand-authored YAML content |
-| Column expressions | `cell-extract.ts` evaluates per-cell expressions via `new Function("value", expression)` — author code, same trust model as GWT DashBuilder |
+| Column expressions | `cell-extract.ts` evaluates per-cell expressions via JSONata (`compileOrCached` from `jsonata-bridge.ts`). Sandboxed AST evaluation, CSP-safe. Replaces `new Function()` (#16) |
 
 ---
 
@@ -294,7 +294,7 @@ Decisions not captured inline in §4:
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| `new Function()` requires CSP `unsafe-eval` | Blocks deployment in strict CSP environments | Column expressions could be moved to a sandboxed evaluator (#16) |
+| ~~`new Function()` requires CSP `unsafe-eval`~~ | Resolved (#16) | Column expressions migrated to JSONata AST evaluation. No `unsafe-eval` required |
 | Map geo data requires CDN fetch | Maps depend on jsDelivr CDN at runtime for world GeoJSON | Resolved (#35) — lazy-loaded with cache and error handling; offline renders error instead of empty chart |
 
 ---

@@ -17,12 +17,12 @@ import { deepMerge } from "../base/deep-merge.js";
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, DatasetComponent]);
 
 export class PagesBarChart extends PagesChartElement<BarChartProps> {
-  override buildOption(
+  override async buildOption(
     props: BarChartProps,
     dataset: TypedDataSet,
-  ): Record<string, unknown> {
+  ): Promise<Record<string, unknown>> {
     // Stage 1: Convert dataset to source
-    const source = datasetToSource(dataset, props.columns);
+    const source = await datasetToSource(dataset, props.columns);
 
     // Stage 2: Build base option
     const subtype = props.subtype || "column";

@@ -75,7 +75,7 @@ describe("PagesMap", () => {
   });
 
   describe("buildOption - regions (choropleth)", () => {
-    it("default subtype (regions) builds map series with visualMap", () => {
+    it("default subtype (regions) builds map series with visualMap", async () => {
       const ds = makeDataSet(
         [["country", "LABEL"], ["value", "NUMBER"]],
         [["USA", 100], ["China", 200], ["Germany", 150]],
@@ -85,7 +85,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const series = option.series as Record<string, unknown>[];
@@ -116,7 +116,7 @@ describe("PagesMap", () => {
       expect(option.tooltip).toEqual({ trigger: "item" });
     });
 
-    it("custom mapName is respected", () => {
+    it("custom mapName is respected", async () => {
       const ds = makeDataSet(
         [["state", "LABEL"], ["value", "NUMBER"]],
         [["California", 100]],
@@ -126,7 +126,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const series = option.series as Record<string, unknown>[];
@@ -136,7 +136,7 @@ describe("PagesMap", () => {
       });
     });
 
-    it("custom colorScheme is applied", () => {
+    it("custom colorScheme is applied", async () => {
       const ds = makeDataSet(
         [["region", "LABEL"], ["value", "NUMBER"]],
         [["North", 50], ["South", 100]],
@@ -149,7 +149,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const visualMap = option.visualMap as Record<string, unknown>;
@@ -157,7 +157,7 @@ describe("PagesMap", () => {
       expect(inRange.color).toEqual(["#ff0000", "#00ff00", "#0000ff"]);
     });
 
-    it("handles empty data array without crashing", () => {
+    it("handles empty data array without crashing", async () => {
       const ds = makeDataSet(
         [["country", "LABEL"], ["value", "NUMBER"]],
         [],
@@ -167,7 +167,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.visualMap).toMatchObject({
@@ -179,7 +179,7 @@ describe("PagesMap", () => {
   });
 
   describe("buildOption - markers (scatter on geo)", () => {
-    it("subtype=markers builds scatter series on geo", () => {
+    it("subtype=markers builds scatter series on geo", async () => {
       const ds = makeDataSet(
         [["city", "LABEL"], ["lng", "NUMBER"], ["lat", "NUMBER"]],
         [["New York", -74.006, 40.7128], ["London", -0.1276, 51.5074]],
@@ -189,7 +189,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.geo).toMatchObject({
@@ -213,7 +213,7 @@ describe("PagesMap", () => {
       expect(option.tooltip).toEqual({ trigger: "item" });
     });
 
-    it("markers with 4th column (value) includes it in data", () => {
+    it("markers with 4th column (value) includes it in data", async () => {
       const ds = makeDataSet(
         [["city", "LABEL"], ["lng", "NUMBER"], ["lat", "NUMBER"], ["population", "NUMBER"]],
         [["Tokyo", 139.6917, 35.6895, 13960000]],
@@ -223,7 +223,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const series = option.series as Record<string, unknown>[];
@@ -239,7 +239,7 @@ describe("PagesMap", () => {
   });
 
   describe("applyChartSettings", () => {
-    it("applies legend settings", () => {
+    it("applies legend settings", async () => {
       const ds = makeDataSet(
         [["country", "LABEL"], ["value", "NUMBER"]],
         [["USA", 100]],
@@ -252,7 +252,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, top: 0 });
@@ -260,7 +260,7 @@ describe("PagesMap", () => {
   });
 
   describe("extra merge", () => {
-    it("deep merges extra settings onto option", () => {
+    it("deep merges extra settings onto option", async () => {
       const ds = makeDataSet(
         [["country", "LABEL"], ["value", "NUMBER"]],
         [["USA", 100]],
@@ -276,7 +276,7 @@ describe("PagesMap", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "World Map" });

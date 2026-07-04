@@ -14,7 +14,7 @@ function mockColumnSettings(id: string, name?: string): ColumnSettings {
 }
 
 describe("datasetToSource", () => {
-  it("converts basic 2-column, 2-row dataset to array-of-arrays", () => {
+  it("converts basic 2-column, 2-row dataset to array-of-arrays", async () => {
     const columns = [
       mockColumn("category", "Category", ColumnType.LABEL),
       mockColumn("value", "Value", ColumnType.NUMBER),
@@ -37,7 +37,7 @@ describe("datasetToSource", () => {
     ];
     const dataset: TypedDataSet = { columns, rows };
 
-    const result = datasetToSource(dataset);
+    const result = await datasetToSource(dataset);
 
     expect(result).toEqual([
       ["Category", "Value"],
@@ -46,7 +46,7 @@ describe("datasetToSource", () => {
     ]);
   });
 
-  it("resolves display names from propsColumns", () => {
+  it("resolves display names from propsColumns", async () => {
     const columns = [
       mockColumn("category", "Category", ColumnType.LABEL),
       mockColumn("value", "Value", ColumnType.NUMBER),
@@ -63,12 +63,12 @@ describe("datasetToSource", () => {
     const dataset: TypedDataSet = { columns, rows };
     const propsColumns = [mockColumnSettings("value", "Custom Value")];
 
-    const result = datasetToSource(dataset, propsColumns);
+    const result = await datasetToSource(dataset, propsColumns);
 
     expect(result[0]).toEqual(["Category", "Custom Value"]);
   });
 
-  it("converts null cell to null in output", () => {
+  it("converts null cell to null in output", async () => {
     const columns = [
       mockColumn("category", "Category", ColumnType.LABEL),
       mockColumn("value", "Value", ColumnType.NUMBER),
@@ -84,31 +84,31 @@ describe("datasetToSource", () => {
     ];
     const dataset: TypedDataSet = { columns, rows };
 
-    const result = datasetToSource(dataset);
+    const result = await datasetToSource(dataset);
 
     expect(result[1]).toEqual(["A", null]);
   });
 
-  it("preserves number values as numbers", () => {
+  it("preserves number values as numbers", async () => {
     const columns = [mockColumn("value", "Value", ColumnType.NUMBER)];
     const rows = [
       createTypedRow([{ type: ColumnType.NUMBER, value: 42.5 }], columns),
     ];
     const dataset: TypedDataSet = { columns, rows };
 
-    const result = datasetToSource(dataset);
+    const result = await datasetToSource(dataset);
 
     expect(result[1]![0]).toBe(42.5);
     expect(typeof result[1]![0]).toBe("number");
   });
 
-  it("preserves Date values as Date objects", () => {
+  it("preserves Date values as Date objects", async () => {
     const date = new Date("2024-01-15");
     const columns = [mockColumn("date", "Date", ColumnType.DATE)];
     const rows = [createTypedRow([{ type: ColumnType.DATE, value: date }], columns)];
     const dataset: TypedDataSet = { columns, rows };
 
-    const result = datasetToSource(dataset);
+    const result = await datasetToSource(dataset);
 
     expect(result[1]![0]).toBe(date);
     expect(result[1]![0]).toBeInstanceOf(Date);

@@ -74,7 +74,7 @@ describe("PagesTimeseries", () => {
   });
 
   describe("buildOption", () => {
-    it("xAxis type is time", () => {
+    it("xAxis type is time", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100], ["2024-01-02", 150]],
@@ -84,13 +84,13 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.xAxis).toEqual({ type: "time" });
     });
 
-    it("yAxis type is value", () => {
+    it("yAxis type is value", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100]],
@@ -100,13 +100,13 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.yAxis).toEqual({ type: "value" });
     });
 
-    it("multiple data columns generate multiple line series", () => {
+    it("multiple data columns generate multiple line series", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["sales", "NUMBER"], ["profit", "NUMBER"], ["cost", "NUMBER"]],
         [["2024-01-01", 100, 50, 70]],
@@ -116,7 +116,7 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -126,7 +126,7 @@ describe("PagesTimeseries", () => {
       ]);
     });
 
-    it("tooltip trigger is axis", () => {
+    it("tooltip trigger is axis", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100]],
@@ -136,13 +136,13 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.tooltip).toEqual({ trigger: "axis" });
     });
 
-    it("dataset source format matches expected structure", () => {
+    it("dataset source format matches expected structure", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100], ["2024-01-02", 150]],
@@ -152,7 +152,7 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       // DATE columns are converted to Date objects by toTypedDataSet
@@ -167,7 +167,7 @@ describe("PagesTimeseries", () => {
   });
 
   describe("applyChartSettings", () => {
-    it("applies legend settings", () => {
+    it("applies legend settings", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100]],
@@ -180,13 +180,13 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, top: 0 });
     });
 
-    it("applies margin settings via grid", () => {
+    it("applies margin settings via grid", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100]],
@@ -199,13 +199,13 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.grid).toMatchObject({ top: 20, right: 30, bottom: 40, left: 50 });
     });
 
-    it("applies zoom settings", () => {
+    it("applies zoom settings", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100]],
@@ -218,7 +218,7 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataZoom).toEqual([{ type: "inside" }, { type: "slider" }]);
@@ -226,7 +226,7 @@ describe("PagesTimeseries", () => {
   });
 
   describe("extra merge", () => {
-    it("deep merges extra settings onto option", () => {
+    it("deep merges extra settings onto option", async () => {
       const ds = makeDataSet(
         [["timestamp", "DATE"], ["value", "NUMBER"]],
         [["2024-01-01", 100]],
@@ -242,7 +242,7 @@ describe("PagesTimeseries", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Time Series Report" });
@@ -252,7 +252,7 @@ describe("PagesTimeseries", () => {
   });
 
   describe("time axis column detection", () => {
-    it("LABEL column 0 with 3+ columns → uses column 1 as time axis", () => {
+    it("LABEL column 0 with 3+ columns → uses column 1 as time axis", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["timestamp", "NUMBER"], ["value", "NUMBER"]],
         [["test", 1718546000000, 23], ["test", 1718546001000, 97]],
@@ -260,7 +260,7 @@ describe("PagesTimeseries", () => {
       el.props = { lookup: mockLookup("ts") };
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Record<string, unknown>[];
 
@@ -268,7 +268,7 @@ describe("PagesTimeseries", () => {
       expect(series[0]!.encode).toEqual({ x: 1, y: 2 });
     });
 
-    it("NUMBER column 0 → uses column 0 as time axis (default)", () => {
+    it("NUMBER column 0 → uses column 0 as time axis (default)", async () => {
       const ds = makeDataSet(
         [["timestamp", "NUMBER"], ["value", "NUMBER"]],
         [[1718546000000, 23], [1718546001000, 97]],
@@ -276,7 +276,7 @@ describe("PagesTimeseries", () => {
       el.props = { lookup: mockLookup("ts") };
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Record<string, unknown>[];
 

@@ -73,7 +73,7 @@ describe("PagesScatterChart", () => {
   });
 
   describe("buildOption", () => {
-    it("basic scatter with 2 columns", () => {
+    it("basic scatter with 2 columns", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"]],
         [[10, 20], [30, 40], [50, 60]],
@@ -83,7 +83,7 @@ describe("PagesScatterChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -102,7 +102,7 @@ describe("PagesScatterChart", () => {
       expect(option.tooltip).toEqual({ trigger: "item" });
     });
 
-    it("scatter with symbolSize callback when 3 columns", () => {
+    it("scatter with symbolSize callback when 3 columns", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, 5], [30, 40, 15]],
@@ -112,7 +112,7 @@ describe("PagesScatterChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
 
@@ -126,7 +126,7 @@ describe("PagesScatterChart", () => {
       expect(symbolSizeFn([30, 40, 15])).toBeCloseTo(Math.sqrt(15) * 3);
     });
 
-    it("symbolSize returns default when value is not a number", () => {
+    it("symbolSize returns default when value is not a number", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "LABEL"]],
         [[10, 20, null]],
@@ -136,7 +136,7 @@ describe("PagesScatterChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -144,7 +144,7 @@ describe("PagesScatterChart", () => {
       expect(symbolSizeFn([10, 20, null])).toBe(10);
     });
 
-    it("applies chart settings", () => {
+    it("applies chart settings", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"]],
         [[10, 20]],
@@ -159,7 +159,7 @@ describe("PagesScatterChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, right: 0, orient: "vertical" });
@@ -167,7 +167,7 @@ describe("PagesScatterChart", () => {
       expect(option.yAxis).toMatchObject({ type: "value", name: "Y Axis" });
     });
 
-    it("deep merges extra settings", () => {
+    it("deep merges extra settings", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"]],
         [[10, 20]],
@@ -183,7 +183,7 @@ describe("PagesScatterChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Scatter Plot" });

@@ -51,11 +51,26 @@ export class PagesMetric extends PagesElement<MetricProps> {
       return;
     }
     const colId = firstColumn.id;
-    let raw = cellToRaw(firstRow.cell(colId));
+    const raw = cellToRaw(firstRow.cell(colId));
     const expr = resolveColumnExpression(colId, props.columns);
-    if (expr) raw = applyCellExpression(raw, expr);
+    if (expr) {
+      void applyCellExpression(raw, expr).then(result => {
+        this.renderWithValue(container, props, dataset, title, result === null ? "" : String(result));
+      });
+      return;
+    }
     const value = raw === null ? "" : String(raw);
 
+    this.renderWithValue(container, props, dataset, title, value);
+  }
+
+  private renderWithValue(
+    container: HTMLDivElement,
+    props: MetricProps,
+    dataset: TypedDataSet,
+    title: string,
+    value: string,
+  ): void {
     // HTML template override
     if (props.html?.template) {
       const escaped = value

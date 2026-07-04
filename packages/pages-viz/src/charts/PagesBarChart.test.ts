@@ -74,7 +74,7 @@ describe("PagesBarChart", () => {
   });
 
   describe("buildOption", () => {
-    it("default subtype (column) builds vertical bar chart", () => {
+    it("default subtype (column) builds vertical bar chart", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100], ["Feb", 150]],
@@ -85,6 +85,7 @@ describe("PagesBarChart", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -102,7 +103,7 @@ describe("PagesBarChart", () => {
       expect(option.tooltip).toEqual({ trigger: "axis" });
     });
 
-    it("subtype=column builds vertical bar chart", () => {
+    it("subtype=column builds vertical bar chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10]],
@@ -112,7 +113,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.xAxis).toEqual({ type: "category" });
@@ -122,7 +123,7 @@ describe("PagesBarChart", () => {
       ]);
     });
 
-    it("subtype=bar builds horizontal bar chart", () => {
+    it("subtype=bar builds horizontal bar chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["value", "NUMBER"]],
         [["A", 10]],
@@ -132,7 +133,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.xAxis).toEqual({ type: "value" });
@@ -142,7 +143,7 @@ describe("PagesBarChart", () => {
       ]);
     });
 
-    it("subtype=column-stacked builds vertical stacked bar chart", () => {
+    it("subtype=column-stacked builds vertical stacked bar chart", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"], ["returns", "NUMBER"]],
         [["Jan", 100, 20]],
@@ -152,7 +153,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.xAxis).toEqual({ type: "category" });
@@ -163,7 +164,7 @@ describe("PagesBarChart", () => {
       ]);
     });
 
-    it("subtype=bar-stacked builds horizontal stacked bar chart", () => {
+    it("subtype=bar-stacked builds horizontal stacked bar chart", async () => {
       const ds = makeDataSet(
         [["category", "LABEL"], ["a", "NUMBER"], ["b", "NUMBER"]],
         [["X", 10, 5]],
@@ -173,7 +174,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.xAxis).toEqual({ type: "value" });
@@ -184,7 +185,7 @@ describe("PagesBarChart", () => {
       ]);
     });
 
-    it("multiple data columns generate multiple series", () => {
+    it("multiple data columns generate multiple series", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"], ["profit", "NUMBER"], ["cost", "NUMBER"]],
         [["Jan", 100, 50, 70]],
@@ -194,7 +195,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -204,7 +205,7 @@ describe("PagesBarChart", () => {
       ]);
     });
 
-    it("null values in dataset pass through to source", () => {
+    it("null values in dataset pass through to source", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100], ["Feb", null], ["Mar", 150]],
@@ -214,7 +215,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -229,7 +230,7 @@ describe("PagesBarChart", () => {
   });
 
   describe("applyChartSettings", () => {
-    it("applies legend settings", () => {
+    it("applies legend settings", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100]],
@@ -242,13 +243,13 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, top: 0 });
     });
 
-    it("applies margin settings via grid", () => {
+    it("applies margin settings via grid", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100]],
@@ -261,13 +262,13 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.grid).toMatchObject({ top: 20, right: 30, bottom: 40, left: 50 });
     });
 
-    it("applies zoom settings", () => {
+    it("applies zoom settings", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100]],
@@ -280,7 +281,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataZoom).toEqual([{ type: "inside" }, { type: "slider" }]);
@@ -288,7 +289,7 @@ describe("PagesBarChart", () => {
   });
 
   describe("extra merge", () => {
-    it("deep merges extra settings onto option", () => {
+    it("deep merges extra settings onto option", async () => {
       const ds = makeDataSet(
         [["month", "LABEL"], ["sales", "NUMBER"]],
         [["Jan", 100]],
@@ -304,7 +305,7 @@ describe("PagesBarChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Sales Report" });

@@ -73,7 +73,7 @@ describe("PagesBubbleChart", () => {
   });
 
   describe("buildOption", () => {
-    it("bubble with default minRadius/maxRadius (5/50)", () => {
+    it("bubble with default minRadius/maxRadius (5/50)", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, 10], [30, 40, 20], [50, 60, 30]],
@@ -83,7 +83,7 @@ describe("PagesBubbleChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -103,7 +103,7 @@ describe("PagesBubbleChart", () => {
       expect(typeof series.symbolSize).toBe("function");
     });
 
-    it("uses linear interpolation for symbolSize", () => {
+    it("uses linear interpolation for symbolSize", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, 10], [30, 40, 20], [50, 60, 30]],
@@ -113,7 +113,7 @@ describe("PagesBubbleChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -127,7 +127,7 @@ describe("PagesBubbleChart", () => {
       expect(symbolSizeFn([50, 60, 30])).toBeCloseTo(50);
     });
 
-    it("respects custom minRadius/maxRadius", () => {
+    it("respects custom minRadius/maxRadius", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, 100], [30, 40, 200]],
@@ -141,7 +141,7 @@ describe("PagesBubbleChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -153,7 +153,7 @@ describe("PagesBubbleChart", () => {
       expect(symbolSizeFn([30, 40, 200])).toBeCloseTo(100);
     });
 
-    it("returns minRadius when value is not a number", () => {
+    it("returns minRadius when value is not a number", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, null], [30, 40, 50]],
@@ -163,7 +163,7 @@ describe("PagesBubbleChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -171,7 +171,7 @@ describe("PagesBubbleChart", () => {
       expect(symbolSizeFn([10, 20, null])).toBe(5); // default minRadius
     });
 
-    it("applies chart settings", () => {
+    it("applies chart settings", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, 10]],
@@ -185,14 +185,14 @@ describe("PagesBubbleChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: false });
       expect(option.grid).toMatchObject({ top: 10, right: 20, bottom: 30, left: 40 });
     });
 
-    it("deep merges extra settings", () => {
+    it("deep merges extra settings", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, 10]],
@@ -207,13 +207,13 @@ describe("PagesBubbleChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Bubble Chart" });
     });
 
-    it("handles empty values array (all nulls) without crashing", () => {
+    it("handles empty values array (all nulls) without crashing", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "LABEL"]],
         [[10, 20, null], [30, 40, null], [50, 60, null]],
@@ -223,7 +223,7 @@ describe("PagesBubbleChart", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -236,7 +236,7 @@ describe("PagesBubbleChart", () => {
   });
 
   describe("axis type detection", () => {
-    it("LABEL column 0 → xAxis type category", () => {
+    it("LABEL column 0 → xAxis type category", async () => {
       const ds = makeDataSet(
         [["weather", "LABEL"], ["goals", "NUMBER"], ["count", "NUMBER"]],
         [["Sunny", 3, 5], ["Rainy", 2, 8]],
@@ -244,12 +244,12 @@ describe("PagesBubbleChart", () => {
       el.props = { lookup: mockLookup("test") };
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       expect((option.xAxis as Record<string, unknown>).type).toBe("category");
     });
 
-    it("NUMBER column 0 → xAxis type value", () => {
+    it("NUMBER column 0 → xAxis type value", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, 5], [30, 40, 10]],
@@ -257,7 +257,7 @@ describe("PagesBubbleChart", () => {
       el.props = { lookup: mockLookup("test") };
       document.body.appendChild(el);
       el.dataSet = ds;
-
+      await new Promise(resolve => setTimeout(resolve, 0));
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       expect((option.xAxis as Record<string, unknown>).type).toBe("value");
     });

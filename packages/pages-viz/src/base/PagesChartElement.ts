@@ -84,21 +84,33 @@ export abstract class PagesChartElement<
   abstract buildOption(
     props: P,
     dataset: TypedDataSet,
-  ): Record<string, unknown>;
+  ): Record<string, unknown> | Promise<Record<string, unknown>>;
 
   // ── Render pipeline ─────────────────────────────────────────────────
+
+  private _renderGen = 0;
 
   protected override render(
     container: HTMLDivElement,
     props: P,
     dataset: TypedDataSet,
   ): void {
+    const gen = ++this._renderGen;
     const chart = this.ensureChart(container);
-    const option = this.buildOption(props, dataset);
-    chart.setOption(option, true);
+    const result = this.buildOption(props, dataset);
 
-    if (this._selectedValue !== undefined && this._selectedDataIndex !== undefined) {
-      this.syncHighlight(chart, undefined, this._selectedDataIndex);
+    const apply = (option: Record<string, unknown>): void => {
+      if (this._renderGen !== gen) return;
+      chart.setOption(option, true);
+      if (this._selectedValue !== undefined && this._selectedDataIndex !== undefined) {
+        this.syncHighlight(chart, undefined, this._selectedDataIndex);
+      }
+    };
+
+    if (result instanceof Promise) {
+      void result.then(apply);
+    } else {
+      apply(result);
     }
   }
 

@@ -9,21 +9,26 @@ import { cellToRaw, resolveColumnName, applyCellExpression, resolveColumnExpress
  * - First row contains display names (resolved via resolveColumnName)
  * - Subsequent rows contain raw values (via cellToRaw)
  */
-export function datasetToSource(
+export async function datasetToSource(
   dataset: TypedDataSet,
   propsColumns?: readonly ColumnSettings[],
-): (string | number | Date | null)[][] {
+): Promise<(string | number | Date | null)[][]> {
   const expressions = dataset.columns.map((c) => resolveColumnExpression(c.id, propsColumns));
+  const dataRows = await Promise.all(
+    dataset.rows.map(async (row) =>
+      Promise.all(
+        dataset.columns.map(async (c, i) => {
+          const cell = row.cells[i];
+          if (!cell) return null;
+          const raw = cellToRaw(cell);
+          return expressions[i] ? applyCellExpression(raw, expressions[i]) : raw;
+        }),
+      ),
+    ),
+  );
   return [
     dataset.columns.map((c) => resolveColumnName(c, propsColumns)),
-    ...dataset.rows.map((row) =>
-      dataset.columns.map((c, i) => {
-        const cell = row.cells[i];
-        if (!cell) return null;
-        const raw = cellToRaw(cell);
-        return expressions[i] ? applyCellExpression(raw, expressions[i]) : raw;
-      }),
-    ),
+    ...dataRows,
   ];
 }
 

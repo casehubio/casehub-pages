@@ -681,12 +681,18 @@ export class PagesTable extends PagesElement<TableProps> {
       const td = document.createElement("td");
       const cell = row.cells[colIdx];
       if (!cell) continue;
-      let raw = cellToRaw(cell);
+      const raw = cellToRaw(cell);
       const col = dataset.columns[colIdx];
       if (!col) continue;
       const expr = resolveColumnExpression(col.id, props.columns);
-      if (expr) raw = applyCellExpression(raw, expr);
-      td.textContent = raw === null ? "" : String(raw);
+      if (expr) {
+        td.textContent = raw === null ? "" : String(raw);
+        void applyCellExpression(raw, expr).then(result => {
+          td.textContent = result === null ? "" : String(result);
+        });
+      } else {
+        td.textContent = raw === null ? "" : String(raw);
+      }
 
       if (props.filter?.enabled) {
         const columnId = col.id;
@@ -770,11 +776,10 @@ export class PagesTable extends PagesElement<TableProps> {
       const td = document.createElement("td");
       const cell = row.cells[colIdx];
       if (!cell) continue;
-      let raw = cellToRaw(cell);
+      const raw = cellToRaw(cell);
       const col = dataset.columns[colIdx];
       if (!col) continue;
       const expr = resolveColumnExpression(col.id, props.columns);
-      if (expr) raw = applyCellExpression(raw, expr);
 
       // First column gets indentation and toggle
       if (colIdx === 0) {
@@ -796,9 +801,19 @@ export class PagesTable extends PagesElement<TableProps> {
         // Add text after toggle
         const textSpan = document.createElement("span");
         textSpan.textContent = raw === null ? "" : String(raw);
+        if (expr) {
+          void applyCellExpression(raw, expr).then(result => {
+            textSpan.textContent = result === null ? "" : String(result);
+          });
+        }
         td.appendChild(textSpan);
       } else {
         td.textContent = raw === null ? "" : String(raw);
+        if (expr) {
+          void applyCellExpression(raw, expr).then(result => {
+            td.textContent = result === null ? "" : String(result);
+          });
+        }
       }
 
       tr.appendChild(td);

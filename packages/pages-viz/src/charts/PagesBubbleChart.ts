@@ -18,12 +18,12 @@ import { cellToRaw } from "../base/cell-extract.js";
 use([ScatterChart, GridComponent, TooltipComponent, LegendComponent, DatasetComponent]);
 
 export class PagesBubbleChart extends PagesChartElement<BubbleChartProps> {
-  override buildOption(
+  override async buildOption(
     props: BubbleChartProps,
     dataset: TypedDataSet,
-  ): Record<string, unknown> {
+  ): Promise<Record<string, unknown>> {
     // Stage 1: Convert dataset to source
-    const source = datasetToSource(dataset, props.columns);
+    const source = await datasetToSource(dataset, props.columns);
 
     // Stage 2: Build base option
     const minR = props.minRadius ?? 5;

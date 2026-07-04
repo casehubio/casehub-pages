@@ -60,12 +60,12 @@ export class PagesMap extends PagesChartElement<MapProps> {
     super.render(container, props, dataset);
   }
 
-  override buildOption(
+  override async buildOption(
     props: MapProps,
     dataSet: TypedDataSet,
-  ): Record<string, unknown> {
+  ): Promise<Record<string, unknown>> {
     // Stage 1: Convert dataset to source
-    const source = datasetToSource(dataSet, props.columns);
+    const source = await datasetToSource(dataSet, props.columns);
 
     // Stage 2: Build base option based on subtype
     const subtype = props.subtype || "regions";
