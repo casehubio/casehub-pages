@@ -57,6 +57,9 @@ export type { DataProviderFactory } from "./provider-factory.js";
 // Push source abstraction
 export type { PushSource, PushSourceConfig, PushSourceError } from "./sources/push-source.js";
 
+// Shared wire utilities
+export { buildConnectionUrl, sendListen, sendUnlisten, dispatchWireEvent } from "./sources/push-wire.js";
+
 // WebSocket
 export { createWebSocketSource } from "./sources/websocket-source.js";
 

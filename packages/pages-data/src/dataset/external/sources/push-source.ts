@@ -3,6 +3,7 @@ import { columnId } from "../../types.js";
 import type { ExternalDataSetDef } from "../types.js";
 import type { DataSetEventListener, AppendEvent, ReplaceEvent, RemoveEvent } from "../../events.js";
 import { toTypedDataSet } from "../../conversion.js";
+import { dispatchWireEvent } from "./push-wire.js";
 
 export interface PushSourceError {
   readonly message: string;
@@ -53,11 +54,7 @@ export function processWireMessage(
 ): void {
   if (msg.op === "event" && msg.topic) {
     if (config?.eventTarget) {
-      config.eventTarget.dispatchEvent(new CustomEvent("pages-event", {
-        bubbles: true,
-        composed: true,
-        detail: { topic: msg.topic, payload: msg.payload },
-      }));
+      dispatchWireEvent(msg, config.eventTarget);
     }
     return;
   }

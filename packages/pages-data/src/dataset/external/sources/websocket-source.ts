@@ -3,6 +3,7 @@ import type { DataSetEventListener } from "../../events.js";
 import type { ExternalDataSetDef } from "../types.js";
 import type { PushSource, PushSourceConfig, PushSourceError, Subscription, WireMessage } from "./push-source.js";
 import { processWireMessage } from "./push-source.js";
+import { buildConnectionUrl } from "./push-wire.js";
 
 export function createWebSocketSource(
   baseUrl: string,
@@ -17,21 +18,6 @@ export function createWebSocketSource(
   let reconnectAttempt = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let lastSeq: string | undefined;
-
-  function buildConnectionUrl(): string {
-    let url = new URL(baseUrl);
-
-    if (config?.relay) {
-      url = new URL(config.relay.endpoint);
-      url.searchParams.set("target", baseUrl);
-    }
-
-    if (config?.auth?.type === "query-param") {
-      url.searchParams.set(config.auth.paramName ?? "token", config.auth.token);
-    }
-
-    return url.toString();
-  }
 
   function extractWireName(url: string | undefined, fallbackId: DataSetId): string {
     if (!url) return fallbackId;
@@ -49,7 +35,7 @@ export function createWebSocketSource(
       return;
     }
 
-    ws = new WSConstructor(buildConnectionUrl());
+    ws = new WSConstructor(buildConnectionUrl(baseUrl, config));
 
     ws.onopen = () => {
       reconnectAttempt = 0;
