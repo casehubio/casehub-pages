@@ -22,6 +22,22 @@ class TestElement extends PagesElement<TestProps> {
 
 customElements.define("test-pages-element", TestElement);
 
+class AsyncTestElement extends PagesElement<TestProps> {
+  renderCalls: Array<{ props: TestProps; dataset: TypedDataSet }> = [];
+  lastRenderGen = -1;
+
+  protected override render(
+    _container: HTMLDivElement,
+    props: TestProps,
+    dataset: TypedDataSet,
+  ): void {
+    this.renderCalls.push({ props, dataset });
+    this.lastRenderGen = this.renderGen;
+  }
+}
+
+customElements.define("test-async-pages-element", AsyncTestElement);
+
 function mockLookup(id: string): DataSetLookup {
   return { dataSetId: id, operations: [] } as unknown as DataSetLookup;
 }
@@ -388,6 +404,58 @@ describe("PagesElement", () => {
       expect(typeof (el as unknown as Record<string, unknown>).onResize).toBe("function");
 
       resizeSpy.mockRestore();
+    });
+  });
+
+  describe("renderGen", () => {
+    let asyncEl: AsyncTestElement;
+
+    beforeEach(() => {
+      asyncEl = document.createElement("test-async-pages-element") as AsyncTestElement;
+    });
+
+    afterEach(() => {
+      if (asyncEl.isConnected) {
+        asyncEl.remove();
+      }
+    });
+
+    it("exposes a renderGen getter that increments on each update", () => {
+      asyncEl.props = { label: "test" };
+      document.body.appendChild(asyncEl);
+      asyncEl.dataSet = mockDataSet();
+
+      const gen1 = asyncEl.lastRenderGen;
+      expect(gen1).toBeGreaterThan(0);
+
+      asyncEl.dataSet = mockDataSet();
+      const gen2 = asyncEl.lastRenderGen;
+      expect(gen2).toBeGreaterThan(gen1);
+    });
+
+    it("increments renderGen even on error/loading transitions", () => {
+      asyncEl.props = { label: "test" };
+      document.body.appendChild(asyncEl);
+      asyncEl.dataSet = mockDataSet();
+
+      const genAfterRender = asyncEl.lastRenderGen;
+
+      // Error transition increments gen (but doesn't call render)
+      asyncEl.error = "fail";
+
+      // Recovery — new dataset triggers render again
+      asyncEl.dataSet = mockDataSet();
+      const genAfterRecovery = asyncEl.lastRenderGen;
+
+      // Gen should have incremented past the error transition
+      expect(genAfterRecovery).toBeGreaterThan(genAfterRender + 1);
+    });
+
+    it("does not increment renderGen when not connected", () => {
+      // Not connected — setting props+dataset should not increment
+      asyncEl.props = { label: "test" };
+      asyncEl.dataSet = mockDataSet();
+      expect(asyncEl.lastRenderGen).toBe(-1); // never rendered
     });
   });
 });

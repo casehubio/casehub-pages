@@ -88,19 +88,17 @@ export abstract class PagesChartElement<
 
   // ── Render pipeline ─────────────────────────────────────────────────
 
-  private _renderGen = 0;
-
   protected override render(
     container: HTMLDivElement,
     props: P,
     dataset: TypedDataSet,
   ): void {
-    const gen = ++this._renderGen;
+    const gen = this.renderGen;
     const chart = this.ensureChart(container);
     const result = this.buildOption(props, dataset);
 
     const apply = (option: Record<string, unknown>): void => {
-      if (this._renderGen !== gen) return;
+      if (this.renderGen !== gen) return;
       chart.setOption(option, true);
       if (this._selectedValue !== undefined && this._selectedDataIndex !== undefined) {
         this.syncHighlight(chart, undefined, this._selectedDataIndex);
@@ -108,7 +106,10 @@ export abstract class PagesChartElement<
     };
 
     if (result instanceof Promise) {
-      void result.then(apply);
+      void result.then(apply).catch((e: unknown) => {
+        if (this.renderGen !== gen) return;
+        this.error = e instanceof Error ? e.message : String(e);
+      });
     } else {
       apply(result);
     }

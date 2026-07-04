@@ -54,9 +54,16 @@ export class PagesMetric extends PagesElement<MetricProps> {
     const raw = cellToRaw(firstRow.cell(colId));
     const expr = resolveColumnExpression(colId, props.columns);
     if (expr) {
-      void applyCellExpression(raw, expr).then(result => {
-        this.renderWithValue(container, props, dataset, title, result === null ? "" : String(result));
-      });
+      const gen = this.renderGen;
+      void applyCellExpression(raw, expr)
+        .then(result => {
+          if (this.renderGen !== gen) return;
+          this.renderWithValue(container, props, dataset, title, result === null ? "" : String(result));
+        })
+        .catch((e: unknown) => {
+          if (this.renderGen !== gen) return;
+          this.error = e instanceof Error ? e.message : String(e);
+        });
       return;
     }
     const value = raw === null ? "" : String(raw);

@@ -18,6 +18,7 @@ export abstract class PagesElement<
   private _totalRows = -1;
   private _theme = "";
   private _error = "";
+  private _renderGen = 0;
   private _dataRequested = false;
   private _refreshTimer: ReturnType<typeof setInterval> | undefined;
   private _resizeObserver: ResizeObserver | undefined;
@@ -110,6 +111,10 @@ export abstract class PagesElement<
     this._activePage = value;
   }
 
+  protected get renderGen(): number {
+    return this._renderGen;
+  }
+
   // ── Lifecycle ───────────────────────────────────────────────────────
 
   connectedCallback(): void {
@@ -189,6 +194,8 @@ export abstract class PagesElement<
 
   private update(): void {
     if (!this.isConnected) return;
+
+    ++this._renderGen;
 
     if (this._error) {
       this.renderError(this.container, this._error);

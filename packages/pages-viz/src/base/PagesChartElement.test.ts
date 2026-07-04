@@ -60,6 +60,23 @@ class TestChart extends PagesChartElement<TestChartProps> {
 
 customElements.define("test-chart-element", TestChart);
 
+class AsyncTestChart extends PagesChartElement<TestChartProps> {
+  resolveOption?: (value: Record<string, unknown>) => void;
+  rejectOption?: (reason: Error) => void;
+
+  override buildOption(
+    _props: TestChartProps,
+    _dataset: TypedDataSet,
+  ): Promise<Record<string, unknown>> {
+    return new Promise((resolve, reject) => {
+      this.resolveOption = resolve;
+      this.rejectOption = reject;
+    });
+  }
+}
+
+customElements.define("test-async-chart", AsyncTestChart);
+
 // ── Helpers ───────────────────────────────────────────────────────────
 
 function mockLookup(id: string): DataSetLookup {
@@ -498,6 +515,82 @@ describe("PagesChartElement", () => {
       const container = el.shadowRoot.querySelector("div") as HTMLDivElement;
       expect(container.style.minHeight).toBe("300px");
       expect(container.style.width).toBe("100%");
+    });
+  });
+
+  describe("async buildOption", () => {
+    let asyncEl: AsyncTestChart;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      mockChart.getOption.mockReturnValue({ series: [{ type: "bar" }] });
+      asyncEl = document.createElement("test-async-chart") as AsyncTestChart;
+    });
+
+    afterEach(() => {
+      if (asyncEl.isConnected) {
+        asyncEl.remove();
+      }
+    });
+
+    it("stale async result is discarded when a newer render has started", async () => {
+      asyncEl.props = { lookup: mockLookup("sales") };
+      document.body.appendChild(asyncEl);
+      asyncEl.dataSet = mockDataSet();
+
+      const firstResolve = asyncEl.resolveOption!;
+
+      // Trigger second render — new dataset
+      asyncEl.dataSet = mockDataSet();
+      const secondResolve = asyncEl.resolveOption!;
+
+      // Resolve second first (fresh)
+      secondResolve({ series: [{ type: "bar", data: [4, 5, 6] }] });
+      await Promise.resolve();
+
+      expect(mockChart.setOption).toHaveBeenCalledTimes(1);
+      expect(mockChart.setOption).toHaveBeenCalledWith(
+        { series: [{ type: "bar", data: [4, 5, 6] }] },
+        true,
+      );
+
+      // Resolve first (stale) — should be discarded
+      mockChart.setOption.mockClear();
+      firstResolve({ series: [{ type: "bar", data: [1, 2, 3] }] });
+      await Promise.resolve();
+
+      expect(mockChart.setOption).not.toHaveBeenCalled();
+    });
+
+    it("rejected buildOption sets error state instead of unhandled rejection", async () => {
+      asyncEl.props = { lookup: mockLookup("sales") };
+      document.body.appendChild(asyncEl);
+      asyncEl.dataSet = mockDataSet();
+
+      const reject = asyncEl.rejectOption!;
+      reject(new Error("Expression evaluation failed"));
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(asyncEl.error).toBe("Expression evaluation failed");
+    });
+
+    it("stale rejection is silently discarded", async () => {
+      asyncEl.props = { lookup: mockLookup("sales") };
+      document.body.appendChild(asyncEl);
+      asyncEl.dataSet = mockDataSet();
+
+      const firstReject = asyncEl.rejectOption!;
+
+      // Trigger second render
+      asyncEl.dataSet = mockDataSet();
+
+      // Reject first (stale) — should not set error
+      firstReject(new Error("stale error"));
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(asyncEl.error).toBe("");
     });
   });
 });
