@@ -28,7 +28,7 @@ class NoOpDataProviderTest {
 
     @Test
     void query_returns_empty_columns_and_rows() {
-        DataSetLookup lookup = new DataSetLookup("any-id", List.of());
+        DataSetLookup lookup = new DataSetLookup("any-id", List.of(), null);
         DataSetResult result = provider.query(lookup);
 
         assertThat(result.columns()).isEmpty();

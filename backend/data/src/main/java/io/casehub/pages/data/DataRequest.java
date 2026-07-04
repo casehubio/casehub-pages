@@ -8,5 +8,6 @@ public record DataRequest(
     Map<String, String> headers,
     Map<String, String> query,
     Map<String, String> form,
-    String body
+    String body,
+    Integer refreshTimeSeconds
 ) {}

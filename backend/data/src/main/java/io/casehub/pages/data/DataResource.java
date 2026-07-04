@@ -6,8 +6,10 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -36,6 +38,9 @@ public class DataResource {
     @Any
     Instance<DataProvider> providers;
 
+    @Inject
+    DataCacheService cacheService;
+
     @POST
     @Path("/fetch")
     public Response fetch(DataRequest request) {
@@ -44,8 +49,10 @@ public class DataResource {
             return missingTenantResponse();
         }
 
-        relayClient.validateTarget(request.url());
-        FetchResult result = relayClient.fetch(request);
+        FetchResult result = cacheService.fetchCached(tenantId, request, () -> {
+            relayClient.validateTarget(request.url());
+            return relayClient.fetch(request);
+        });
         return Response.ok(result).build();
     }
 
@@ -64,8 +71,19 @@ public class DataResource {
                 .build();
         }
 
-        DataSetResult result = provider.query(lookup);
+        DataSetResult result = cacheService.queryCached(tenantId, lookup, () -> provider.query(lookup));
         return Response.ok(result).build();
+    }
+
+    @DELETE
+    @Path("/cache/{dataSetId}")
+    public Response invalidateCache(@PathParam("dataSetId") String dataSetId) {
+        String tenantId = extractTenant();
+        if (tenantId == null) {
+            return missingTenantResponse();
+        }
+        cacheService.invalidate(tenantId, dataSetId);
+        return Response.noContent().build();
     }
 
     private DataProvider resolveProvider(String dataSetId) {

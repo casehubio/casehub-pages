@@ -5,6 +5,7 @@ import { validateOpOrder } from "./ops.js";
 export interface DataSetLookup {
   readonly dataSetId: DataSetId;
   readonly operations: readonly DataSetOp[];
+  readonly refreshTimeSeconds?: number;
 }
 
 export function createLookup(

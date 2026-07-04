@@ -2,4 +2,4 @@ package io.casehub.pages.data;
 
 import java.util.List;
 
-public record DataSetLookup(String dataSetId, List<DataSetOp> operations) {}
+public record DataSetLookup(String dataSetId, List<DataSetOp> operations, Integer refreshTimeSeconds) {}

@@ -49,6 +49,7 @@ export interface DataRequest {
   readonly form?: Readonly<Record<string, string>>;
   readonly body?: string;
   readonly signal?: AbortSignal;
+  readonly refreshTimeSeconds?: number;
 }
 
 export interface FetchResult {
