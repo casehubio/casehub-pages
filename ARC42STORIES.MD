@@ -132,10 +132,11 @@ The filter flow (selector → `pages-filter` → listening component re-query) r
 
 | Package | Responsibility |
 |---|---|
-| `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), push sources (PushSource interface, WebSocket, SSE, generic pool), JSONata expressions |
+| `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), push sources (PushSource interface, WebSocket, SSE, generic pool), JSONata expressions, `DatasetContract`, `ConnectionStatus`, segment-level wildcard matching (`matchesTopic`) |
 | `@casehubio/pages-ui` | TypeScript DSL builders, YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
 | `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, table, metric, selector |
-| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), split layouts, dock bars, slot management |
+| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), split layouts, dock bars, slot management, `emitPagesEvent`/`onPagesEvent` event helpers |
+| `@casehubio/pages-primitives` | Lit web components: a11y mixins (RovingTabindex, FocusTrap, KeyboardShortcut, LiveRegion), `<pages-schema-form>` (JSON Schema form renderer), `<pages-filter-chips>` (multi-select toggle bar), `<pages-scope-selector>` (single-select radio pills) |
 | `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, panel hosting (`registerPanel`, `hostPanel`), page navigation, data pipeline, event delegation |
 | `@casehubio/pages-examples` | Examples gallery: dev server, Playwright tests, sample validation |
 
@@ -277,6 +278,8 @@ Decisions not captured inline in §4:
 | Three-layer SQL injection prevention | Filter values → bind parameters. Column IDs → validated against allowlist from base query metadata. Column names → ANSI-quoted in generated SQL. |
 | serverQuery as fourth source type | `ExternalDataSetDef.serverQuery` is a distinct source alongside url/content/join. YAML operations are pushed to SQL; runtime interactive ops (cross-filters, user sort) apply client-side on the aggregated result. |
 | SSRF relay: no redirect following | `HttpClient.Redirect.NEVER` prevents redirect-based SSRF bypassing validateTarget(). Redirects inside the HTTP client layer would skip application-level validation. |
+| Segment-level wildcard patterns | `*` matches one segment, `**` matches zero or more (last position only). MQTT-inspired convention adapted for `:` delimiters. `TopicRegistry.matches()` (Java) and `matchesTopic()` (TypeScript) produce identical results. |
+| Lit for UI component primitives | `pages-primitives` uses Lit 3.3 for a11y mixins, form components, and UI widgets. `pages-component` stays framework-agnostic (vanilla TypeScript). Separation keeps Lit at the leaf level — data and rendering pipeline are framework-free. |
 
 ---
 
