@@ -2,6 +2,7 @@
 let samplesData = null;
 let currentSample = null;
 let currentSite = null;
+let galleryThemeMode = 'light';
 
 // DOM Elements
 const categoriesNav = document.getElementById('categories-nav');
@@ -270,6 +271,7 @@ async function loadSampleInTarget(samplePath) {
         };
 
         currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, { baseUrl, fetch: galleryFetch });
+        currentSite.setTheme(galleryThemeMode);
     } catch (error) {
         console.error('Error loading sample:', error);
         sampleTarget.innerHTML = `
@@ -407,6 +409,27 @@ function setupEventListeners() {
         if (currentSample) {
             loadSample(currentSample);
         }
+    });
+
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    themeToggle.addEventListener('click', () => {
+        galleryThemeMode = galleryThemeMode === 'light' ? 'dark' : 'light';
+        document.documentElement.classList.remove('pages-theme-light', 'pages-theme-dark');
+        document.documentElement.classList.add(`pages-theme-${galleryThemeMode}`);
+        if (currentSite) {
+            currentSite.setTheme(galleryThemeMode);
+        }
+        themeToggle.textContent = galleryThemeMode === 'dark' ? '☀️' : '🌙';
+    });
+
+    // Density toggle
+    const densityToggle = document.getElementById('density-toggle');
+    let isCompact = false;
+    densityToggle.addEventListener('click', () => {
+        isCompact = !isCompact;
+        document.documentElement.classList.toggle('pages-density-compact', isCompact);
+        densityToggle.textContent = isCompact ? '⊞' : '⊟';
     });
 
     // Handle browser back/forward

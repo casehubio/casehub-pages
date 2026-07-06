@@ -98,40 +98,45 @@ export class PagesDevAuth extends HTMLElement {
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(0, 0, 0, 0.5);
+          background: oklch(0% 0 0 / 0.5);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 10000;
         }
         .dialog {
-          background: white;
-          padding: 2rem;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          background: var(--pages-neutral-1, white);
+          padding: var(--pages-space-8, 2rem);
+          border-radius: var(--pages-radius-lg, 8px);
+          box-shadow: var(--pages-shadow-3, 0 4px 12px rgba(0,0,0,0.3));
           min-width: 300px;
+          font-family: var(--pages-font-family, system-ui, sans-serif);
+          color: var(--pages-neutral-12, #333);
         }
         .dialog h2 {
           margin-top: 0;
+          font-weight: var(--pages-font-weight-semibold, 600);
         }
         .dialog select,
         .dialog input[type="text"] {
           width: 100%;
-          padding: 0.5rem;
-          margin-bottom: 1rem;
+          padding: var(--pages-space-2, 0.5rem);
+          margin-bottom: var(--pages-space-4, 1rem);
           box-sizing: border-box;
+          border: 1px solid var(--pages-neutral-4, #ddd);
+          border-radius: var(--pages-radius-sm, 4px);
         }
         .dialog button {
           width: 100%;
-          padding: 0.5rem 1rem;
-          background: #007bff;
+          padding: var(--pages-space-2, 0.5rem) var(--pages-space-4, 1rem);
+          background: var(--pages-accent-9, #007bff);
           color: white;
           border: none;
-          border-radius: 4px;
+          border-radius: var(--pages-radius-sm, 4px);
           cursor: pointer;
         }
         .dialog button:hover {
-          background: #0056b3;
+          background: var(--pages-accent-10, #0056b3);
         }
       </style>
       <div class="overlay">

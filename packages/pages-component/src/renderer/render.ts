@@ -88,7 +88,7 @@ function renderNode(
     el.style.display = "grid";
     el.style.gridTemplateColumns = "repeat(12, 1fr)";
     el.style.gridAutoRows = "min-content";
-    el.style.gap = "4px";
+    el.style.gap = "var(--pages-space-3, 12px)";
     for (const item of component.items) {
       renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);
       const child = el.lastElementChild;

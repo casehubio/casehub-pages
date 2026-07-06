@@ -50,6 +50,7 @@ export function applyLayoutCSS(
     case "tree":
       element.style.display = "grid";
       element.style.gridTemplateColumns = "auto 1fr";
+      element.style.gap = "var(--pages-space-4, 16px)";
       break;
     case "panel":
       break;

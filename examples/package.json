@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@casehubio/pages-runtime": "workspace:*",
+    "@casehubio/pages-ui-tokens": "workspace:*",
     "@casehubio/pages-viz": "workspace:*",
     "js-yaml": "^4.1.0"
   },

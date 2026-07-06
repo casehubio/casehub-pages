@@ -59,6 +59,9 @@ function injectNavStyles(doc: Document): void {
   border-bottom: 1px solid var(--pages-neutral-6, #e0e0e0);
   padding-bottom: 0;
 }
+.pages-tabs ~ [data-slot] {
+  padding-top: var(--pages-space-3, 12px);
+}
 .pages-tabs button[data-slot] {
   border: none;
   border-radius: 0;

@@ -44,19 +44,10 @@ input[type="range"] {
 
 export class PagesSelector extends PagesElement<SelectorProps> {
   private _selectedValue: string | undefined;
+  private _initialValues: Array<{ value: string | number | Date | null; rowIndex: number }> | undefined;
+  private _initialColumnId: ColumnId | undefined;
 
   override set dataSet(value: TypedDataSet | undefined) {
-    if (this._selectedValue !== undefined && value && value.columns.length > 0) {
-      const firstCol = value.columns[0];
-      if (firstCol) {
-        const colId = firstCol.id;
-        const found = value.rows.some(row => {
-          const cell = row.cell(colId);
-          return cell.type !== "NULL" && String(cellToRaw(cell)) === this._selectedValue;
-        });
-        if (!found) this._selectedValue = undefined;
-      }
-    }
     super.dataSet = value;
   }
 
@@ -80,16 +71,23 @@ export class PagesSelector extends PagesElement<SelectorProps> {
 
     const firstColumn = dataset.columns[0];
     if (!firstColumn) return;
-    const distinctValues = this.extractDistinctValues(dataset, firstColumn.id);
+
+    if (!this._initialValues) {
+      this._initialValues = this.extractDistinctValues(dataset, firstColumn.id);
+      this._initialColumnId = firstColumn.id;
+    }
+
+    const distinctValues = this._initialValues;
+    const columnId = this._initialColumnId ?? firstColumn.id;
 
     const subtype = props.subtype ?? "dropdown";
 
     if (subtype === "dropdown") {
-      this.renderDropdown(container, props, firstColumn.id, distinctValues);
+      this.renderDropdown(container, props, columnId, distinctValues);
     } else if (subtype === "slider") {
-      this.renderSlider(container, props, firstColumn.id, distinctValues);
+      this.renderSlider(container, props, columnId, distinctValues);
     } else {
-      this.renderLabels(container, props, firstColumn.id, distinctValues);
+      this.renderLabels(container, props, columnId, distinctValues);
     }
   }
 
@@ -142,11 +140,21 @@ export class PagesSelector extends PagesElement<SelectorProps> {
       select.appendChild(option);
     }
 
-    select.addEventListener("change", () => {
-      const selectedRowIndex = parseInt(select.value, 10);
+    if (this._selectedValue !== undefined) {
+      for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i]!.textContent === this._selectedValue) {
+          select.selectedIndex = i;
+          break;
+        }
+      }
+    }
 
-      if (selectedRowIndex === -1) {
-        // "All" selected — emit reset
+    select.addEventListener("change", () => {
+      const selectedOption = select.options[select.selectedIndex];
+      if (!selectedOption) return;
+
+      if (selectedOption.value === "-1") {
+        this._selectedValue = undefined;
         this.dispatchEvent(
           new CustomEvent<PagesFilterDetail>("pages-filter", {
             bubbles: true,
@@ -159,17 +167,17 @@ export class PagesSelector extends PagesElement<SelectorProps> {
           }),
         );
       } else {
-        // Find the row object and cell value from the dataset
+        const displayValue = selectedOption.textContent ?? "";
+        this._selectedValue = displayValue;
+
         const dataset = this.dataSet;
         if (!dataset) return;
 
-        const rowObj = dataset.rows[selectedRowIndex];
-        if (!rowObj) return;
-
-        const cell = rowObj.cell(columnId);
-        if (cell.type === "NULL") return;
-
-        const value = String(cellToRaw(cell));
+        const row = dataset.rows.find(r => {
+          const cell = r.cell(columnId);
+          return cell.type !== "NULL" && String(cellToRaw(cell)) === displayValue;
+        });
+        if (!row) return;
 
         this.dispatchEvent(
           new CustomEvent<PagesFilterDetail>("pages-filter", {
@@ -177,8 +185,8 @@ export class PagesSelector extends PagesElement<SelectorProps> {
             composed: true,
             detail: {
               columnId,
-              value,
-              row: rowObj,
+              value: displayValue,
+              row,
               reset: false,
               group: props.filter?.group,
             } satisfies PagesFilterApply,

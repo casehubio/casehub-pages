@@ -32,17 +32,16 @@ const BADGE_CSS = `
 }
 `;
 
-// Palette colors for auto-assignment (derived from --pages-accent variations)
 const DEFAULT_PALETTE = [
-  "#5470c6", // accent blue
-  "#91cc75", // green
-  "#fac858", // yellow
-  "#ee6666", // red
-  "#73c0de", // cyan
-  "#3ba272", // dark green
-  "#fc8452", // orange
-  "#9a60b4", // purple
-  "#ea7ccc", // pink
+  "var(--pages-accent-9)",
+  "var(--pages-success-9)",
+  "var(--pages-warning-9)",
+  "var(--pages-danger-9)",
+  "var(--pages-info-9)",
+  "var(--pages-accent-11)",
+  "var(--pages-success-11)",
+  "var(--pages-warning-11)",
+  "var(--pages-danger-11)",
 ];
 
 export class PagesBadge extends PagesElement<BadgeProps> {

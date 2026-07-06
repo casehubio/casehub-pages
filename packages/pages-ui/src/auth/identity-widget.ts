@@ -39,43 +39,49 @@ export class PagesIdentity extends HTMLElement {
       <style>
         .identity-display {
           display: inline-block;
-          padding: 0.5rem 1rem;
-          background: #f0f0f0;
-          border-radius: 4px;
+          padding: var(--pages-space-2, 0.5rem) var(--pages-space-4, 1rem);
+          background: var(--pages-neutral-2, #f0f0f0);
+          border-radius: var(--pages-radius-sm, 4px);
           cursor: pointer;
           user-select: none;
+          font-family: var(--pages-font-family, system-ui, sans-serif);
+          color: var(--pages-neutral-12, #333);
         }
         .identity-display:hover {
-          background: #e0e0e0;
+          background: var(--pages-neutral-4, #e0e0e0);
         }
         .picker-popover {
           position: absolute;
-          background: white;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          padding: 1rem;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          background: var(--pages-neutral-1, white);
+          border: 1px solid var(--pages-neutral-5, #ccc);
+          border-radius: var(--pages-radius-sm, 4px);
+          padding: var(--pages-space-4, 1rem);
+          box-shadow: var(--pages-shadow-2, 0 2px 8px rgba(0,0,0,0.2));
           z-index: 1000;
           min-width: 200px;
         }
         .picker-popover select,
         .picker-popover input[type="text"] {
           width: 100%;
-          padding: 0.5rem;
-          margin-bottom: 0.5rem;
+          padding: var(--pages-space-2, 0.5rem);
+          margin-bottom: var(--pages-space-2, 0.5rem);
           box-sizing: border-box;
+          font-family: var(--pages-font-family, system-ui, sans-serif);
+          border: 1px solid var(--pages-neutral-4, #ddd);
+          border-radius: var(--pages-radius-sm, 4px);
         }
         .picker-popover button {
           width: 100%;
-          padding: 0.5rem 1rem;
-          background: #007bff;
+          padding: var(--pages-space-2, 0.5rem) var(--pages-space-4, 1rem);
+          background: var(--pages-accent-9, #007bff);
           color: white;
           border: none;
-          border-radius: 4px;
+          border-radius: var(--pages-radius-sm, 4px);
           cursor: pointer;
+          font-family: var(--pages-font-family, system-ui, sans-serif);
         }
         .picker-popover button:hover {
-          background: #0056b3;
+          background: var(--pages-accent-10, #0056b3);
         }
       </style>
       <div class="identity-display" id="identity-display"></div>
