@@ -1,4 +1,3 @@
-import type { PagesTable } from "./components/PagesTable.js";
 import type { PagesMetric } from "./components/PagesMetric.js";
 import type { PagesSelector } from "./components/PagesSelector.js";
 import type { PagesIframePlugin } from "./components/PagesIframePlugin.js";
@@ -28,7 +27,6 @@ export {};
 
 declare global {
   interface HTMLElementTagNameMap {
-    "pages-table": PagesTable;
     "pages-metric": PagesMetric;
     "pages-selector": PagesSelector;
     "pages-iframe-plugin": PagesIframePlugin;

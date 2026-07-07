@@ -25,11 +25,9 @@ export { PagesMeter } from "./charts/PagesMeter.js";
 export { PagesMap } from "./charts/PagesMap.js";
 
 // HTML components
-export { PagesTable } from "./components/PagesTable.js";
 export { PagesMetric } from "./components/PagesMetric.js";
 export { PagesSelector } from "./components/PagesSelector.js";
 export { PagesIframePlugin } from "./components/PagesIframePlugin.js";
-export { tableToCsv, downloadCsv, copyToClipboard } from "./components/table-export.js";
 
 // Form inputs
 export { PagesFormInput } from "./form-inputs/PagesFormInput.js";

@@ -68,12 +68,12 @@ describe("parameterised dataset URLs", () => {
 
   function registerComponent(componentId: string, dsLookupId: DataSetId, pagePath = ""): void {
     const component: Component = {
-      type: "table",
+      type: "metric",
       props: { lookup: { dataSetId: dsLookupId, operations: [] } },
     };
     const el = document.createElement("div");
     el.dataset.componentId = componentId;
-    const vizEl = document.createElement("pages-table");
+    const vizEl = document.createElement("pages-metric");
     registry.set(componentId, {
       element: el,
       vizElement: vizEl as unknown as import("@casehubio/pages-viz/dist/base/PagesElement.js").PagesElement<import("@casehubio/pages-viz/dist/base/types.js").VizComponentProps>,
@@ -262,7 +262,7 @@ describe("parameterised dataset URLs", () => {
 
     const target = makeTarget();
     const component: Component = {
-      type: "table",
+      type: "metric",
       props: { lookup: { dataSetId: dsId, operations: [] } },
     };
     registry.set("comp1", {

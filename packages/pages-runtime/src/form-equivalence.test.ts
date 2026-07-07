@@ -15,7 +15,7 @@ import {
   checkbox,
   datePicker,
   textarea,
-  table,
+  metric,
   title,
   inlineDataset,
 } from "@casehubio/pages-ui/dist/dsl/builders.js";
@@ -56,13 +56,10 @@ pages:
     components:
       - title: Contact Manager
       - displayer:
-          type: TABLE
+          type: METRIC
           filter:
             enabled: true
             notification: true
-          table:
-            pageSize: 10
-            sortable: true
           lookup:
             uuid: contacts
       - page: Contact Form
@@ -135,9 +132,7 @@ function buildContactManagerTS() {
 
   return page("Contact List",
     title("Contact Manager"),
-    table({
-      pageSize: 10,
-      sortable: true,
+    metric({
       filter: { enabled: true, notification: true },
       lookup: createLookup(ds, []),
     }),
@@ -212,7 +207,7 @@ describe("YAML ↔ TS equivalence", () => {
     expect(tsTags.length).toBeGreaterThan(0);
 
     // Verify specific components are present
-    expect(tsTags).toContain("pages-table");
+    expect(tsTags).toContain("pages-metric");
     expect(tsTags).toContain("pages-text-input");
     expect(tsTags).toContain("pages-number-input");
     expect(tsTags).toContain("pages-dropdown");
@@ -237,11 +232,11 @@ describe("YAML ↔ TS equivalence", () => {
     sites.push(tsSite);
     await new Promise((r) => setTimeout(r, 200));
 
-    const yamlTable = yamlTarget.querySelector("pages-table");
-    const tsTable = tsTarget.querySelector("pages-table");
+    const yamlMetric = yamlTarget.querySelector("pages-metric") as any;
+    const tsMetric = tsTarget.querySelector("pages-metric") as any;
 
-    expect(yamlTable?.dataSet?.rows.length).toBe(3);
-    expect(tsTable?.dataSet?.rows.length).toBe(3);
+    expect(yamlMetric?.dataSet?.rows.length).toBe(3);
+    expect(tsMetric?.dataSet?.rows.length).toBe(3);
 
     const yamlInputs = yamlTarget.querySelectorAll("pages-text-input");
     const tsInputs = tsTarget.querySelectorAll("pages-text-input");

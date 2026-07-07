@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehubio/pages-viz";
-import type { PagesTable, PagesFormInput } from "@casehubio/pages-viz";
+import type { PagesElement, PagesFormInput } from "@casehubio/pages-viz";
 import type { PagesFilterApply } from "@casehubio/pages-viz/dist/base/filter-types.js";
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
 import { columnId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { FormInputCommon } from "@casehubio/pages-component";
+import type { VizComponentProps } from "@casehubio/pages-viz/dist/base/types.js";
 
 const CONTACT_MANAGER_YAML = `
 datasets:
@@ -33,7 +34,7 @@ pages:
   - name: Contact List
     components:
       - displayer:
-          type: TABLE
+          type: METRIC
           filter:
             enabled: true
             notification: true
@@ -101,18 +102,18 @@ describe("form integration — YAML end-to-end", () => {
     );
   }
 
-  function getTable(): PagesTable | null {
-    return target.querySelector("pages-table");
+  function getMetric(): PagesElement<VizComponentProps> | null {
+    return target.querySelector("pages-metric");
   }
 
-  it("loadSite renders table and form inputs from YAML", async () => {
+  it("loadSite renders metric and form inputs from YAML", async () => {
     site = await loadSite(target, CONTACT_MANAGER_YAML);
 
-    const table = getTable();
-    expect(table).not.toBeNull();
+    const metric = getMetric();
+    expect(metric).not.toBeNull();
 
-    await waitFor(() => !!table!.dataSet, "table data");
-    expect(table!.dataSet!.rows.length).toBe(3);
+    await waitFor(() => !!metric!.dataSet, "metric data");
+    expect(metric!.dataSet!.rows.length).toBe(3);
 
     const inputs = getFormInputs();
     expect(inputs.length).toBeGreaterThan(0);
@@ -131,19 +132,19 @@ describe("form integration — YAML end-to-end", () => {
     }
   });
 
-  it("table row click filters form inputs to one record", async () => {
+  it("filter event filters form inputs to one record", async () => {
     site = await loadSite(target, CONTACT_MANAGER_YAML);
 
-    const table = getTable();
-    await waitFor(() => !!table!.dataSet, "table data");
+    const metric = getMetric();
+    await waitFor(() => !!metric!.dataSet, "metric data");
 
     const inputs = getFormInputs();
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
-    // Simulate table row click — emit pages-filter for id column, row 0
-    const clickedRow = table!.dataSet!.rows[0]!;
+    // Simulate filter event — emit pages-filter for id column, row 0
+    const clickedRow = metric!.dataSet!.rows[0]!;
     const idValue = String(cellToRaw(clickedRow.cell(columnId("id"))));
-    table!.dispatchEvent(
+    metric!.dispatchEvent(
       new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
@@ -158,19 +159,19 @@ describe("form integration — YAML end-to-end", () => {
     }
   });
 
-  it("clicking a different row updates form inputs to the new record", async () => {
+  it("selecting a different record updates form inputs to the new record", async () => {
     site = await loadSite(target, CONTACT_MANAGER_YAML);
 
-    const table = getTable();
-    await waitFor(() => !!table!.dataSet, "table data");
+    const metric = getMetric();
+    await waitFor(() => !!metric!.dataSet, "metric data");
 
     const inputs = getFormInputs();
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
-    // Click row 0 (Alice)
-    const clickedRow0 = table!.dataSet!.rows[0]!;
+    // Select row 0 (Alice)
+    const clickedRow0 = metric!.dataSet!.rows[0]!;
     const idValue0 = String(cellToRaw(clickedRow0.cell(columnId("id"))));
-    table!.dispatchEvent(
+    metric!.dispatchEvent(
       new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
@@ -185,10 +186,10 @@ describe("form integration — YAML end-to-end", () => {
     const aliceNameCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
     expect(aliceNameCell.type !== "NULL" && aliceNameCell.value).toBe("Alice");
 
-    // Click row 1 (Bob)
-    const clickedRow1 = table!.dataSet!.rows[1]!;
+    // Select row 1 (Bob)
+    const clickedRow1 = metric!.dataSet!.rows[1]!;
     const idValue1 = String(cellToRaw(clickedRow1.cell(columnId("id"))));
-    table!.dispatchEvent(
+    metric!.dispatchEvent(
       new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
@@ -246,19 +247,19 @@ pages:
     }
   });
 
-  it("clicking different columns in table always filters by idColumn", async () => {
+  it("filtering by different columns always filters by idColumn", async () => {
     site = await loadSite(target, CONTACT_MANAGER_YAML);
 
-    const table = getTable();
-    await waitFor(() => !!table!.dataSet, "table data");
+    const metric = getMetric();
+    await waitFor(() => !!metric!.dataSet, "metric data");
 
     const inputs = getFormInputs();
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
-    // Click Alice's name cell (columnId: "name", rowIndex: 0)
-    const clickedRow0 = table!.dataSet!.rows[0]!;
+    // Filter by Alice's name cell (columnId: "name", rowIndex: 0)
+    const clickedRow0 = metric!.dataSet!.rows[0]!;
     const nameValue0 = String(cellToRaw(clickedRow0.cell(columnId("name"))));
-    table!.dispatchEvent(
+    metric!.dispatchEvent(
       new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
@@ -272,12 +273,12 @@ pages:
     const aliceCell = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
     expect(aliceCell.type !== "NULL" && aliceCell.value).toBe("Alice");
 
-    // Click Bob's email cell (different column! columnId: "email", rowIndex: 1)
+    // Filter by Bob's email cell (different column! columnId: "email", rowIndex: 1)
     // Without the fix, this would compound: name="Alice" AND email="bob@..."
     // With the fix, it translates to idColumn filter: id=2 (Bob)
-    const clickedRow1 = table!.dataSet!.rows[1]!;
+    const clickedRow1 = metric!.dataSet!.rows[1]!;
     const emailValue1 = String(cellToRaw(clickedRow1.cell(columnId("email"))));
-    table!.dispatchEvent(
+    metric!.dispatchEvent(
       new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
@@ -291,19 +292,19 @@ pages:
     expect(bobCell.type !== "NULL" && bobCell.value).toBe("Bob");
   });
 
-  it("selecting a row after text-filtering the table works correctly", async () => {
+  it("selecting a different row after initial selection works correctly", async () => {
     site = await loadSite(target, CONTACT_MANAGER_YAML);
 
-    const table = getTable();
-    await waitFor(() => !!table!.dataSet, "table data");
+    const metric = getMetric();
+    await waitFor(() => !!metric!.dataSet, "metric data");
 
     const inputs = getFormInputs();
     await waitFor(() => inputs.every((i) => i.dataSet), "form input data");
 
     // Select Alice first (row 0)
-    const clickedRow0 = table!.dataSet!.rows[0]!;
+    const clickedRow0 = metric!.dataSet!.rows[0]!;
     const idValue0 = String(cellToRaw(clickedRow0.cell(columnId("id"))));
-    table!.dispatchEvent(
+    metric!.dispatchEvent(
       new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
@@ -316,12 +317,10 @@ pages:
     const aliceNameCell2 = nameInput.dataSet!.rows[0]!.cell(columnId("name"));
     expect(aliceNameCell2.type !== "NULL" && aliceNameCell2.value).toBe("Alice");
 
-    // Now simulate what happens after table text-filter shows only Bob:
-    // The table emits with the ROW OBJECT directly (not rowIndex) because
-    // the display index doesn't match the dataset index after filtering.
-    const bobRow = table!.dataSet!.rows[1]!; // Bob is row 1 in the full dataset
+    // Now select Bob using the ROW OBJECT directly
+    const bobRow = metric!.dataSet!.rows[1]!; // Bob is row 1 in the full dataset
     const bobNameValue = String(cellToRaw(bobRow.cell(columnId("name"))));
-    table!.dispatchEvent(
+    metric!.dispatchEvent(
       new CustomEvent("pages-filter", {
         bubbles: true,
         composed: true,
@@ -353,6 +352,5 @@ pages:
     );
 
     await new Promise((r) => setTimeout(r, 50));
-    // No error thrown = pass
   });
 });
