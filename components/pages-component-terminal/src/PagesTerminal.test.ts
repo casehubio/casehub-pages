@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { ConfigurablePanel } from "@casehubio/pages-component";
 
 // Mock xterm.js before importing PagesTerminal
 const mockTerminal = {
@@ -73,7 +74,15 @@ class MockWebSocket {
 }
 vi.stubGlobal("WebSocket", MockWebSocket);
 
-import "./PagesTerminal.js";
+import { PagesTerminal, type TerminalProps } from "./PagesTerminal.js";
+
+describe("PagesTerminal ConfigurablePanel contract", () => {
+  it("satisfies ConfigurablePanel<TerminalProps> at compile time", () => {
+    const terminal = new PagesTerminal();
+    const configurable: ConfigurablePanel<TerminalProps> = terminal;
+    expect(typeof configurable.configure).toBe("function");
+  });
+});
 
 describe("PagesTerminal", () => {
   let container: HTMLElement;

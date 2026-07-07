@@ -1,8 +1,9 @@
 import { Terminal } from "@xterm/xterm";
 import type { ITheme } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
+import type { ConfigurablePanel } from "@casehubio/pages-component";
 
-export interface TerminalProps {
+export interface TerminalProps extends Record<string, unknown> {
   wsUrl: string;
   fontSize?: number;
   fontFamily?: string;
@@ -11,7 +12,7 @@ export interface TerminalProps {
   theme?: Partial<ITheme>;
 }
 
-export class PagesTerminal extends HTMLElement {
+export class PagesTerminal extends HTMLElement implements ConfigurablePanel<TerminalProps> {
   private _props: TerminalProps | undefined;
   private _terminal: Terminal | undefined;
   private _fitAddon: FitAddon | undefined;

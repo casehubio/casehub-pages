@@ -59,7 +59,7 @@ by the runtime event delegation layer:
 
 | Event name | Purpose | Dispatched by |
 |------------|---------|---------------|
-| `pages-data-request` | Component requests dataset resolution | `PagesElement` base class (`connectedCallback`) |
+| `pages-data-request` | Component requests dataset resolution | `PagesElement` base class (`connectedCallback`) and runtime activation layer (host panel data binding) |
 | `pages-filter` | Cross-filtering between components | Chart click handlers, selector changes |
 | `pages-sort` | Column sort requests | Table header interactions |
 | `pages-page` | Pagination offset changes | Table pagination controls |
