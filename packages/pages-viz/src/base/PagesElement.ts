@@ -1,6 +1,7 @@
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
 import type { VizComponentProps } from "./types.js";
 
 export interface PagesDataRequestDetail {
@@ -10,7 +11,7 @@ export interface PagesDataRequestDetail {
 
 export abstract class PagesElement<
   P extends VizComponentProps,
-> extends HTMLElement {
+> extends HTMLElement implements DataReceiver {
   declare readonly shadowRoot: ShadowRoot;
 
   private _props: P | undefined;
