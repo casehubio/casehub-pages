@@ -12,6 +12,11 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./sse/sse-manager.js": "./dist/sse/sse-manager.js",
+    "./dist/*": "./dist/*"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",

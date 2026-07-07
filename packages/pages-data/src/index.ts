@@ -79,3 +79,9 @@ export {
   isMatchedByRegistrations,
 } from "./dataset/external/index.js";
 
+export {
+  EventStream,
+  type EventStreamOptions,
+  createEventStreamPool,
+  type EventStreamPool,
+} from "./event-stream/index.js";

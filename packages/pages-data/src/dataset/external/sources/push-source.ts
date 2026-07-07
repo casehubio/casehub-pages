@@ -24,7 +24,7 @@ export interface PushSource {
 export interface PushSourceConfig {
   readonly relay?: { readonly endpoint: string };
   readonly auth?: { readonly type: "query-param"; readonly paramName?: string; readonly token: string };
-  readonly eventTarget?: HTMLElement;
+  readonly eventTarget?: EventTarget;
 }
 
 export interface WireMessage {
