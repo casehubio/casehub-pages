@@ -1,3 +1,5 @@
+import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+
 export interface GridProps {
   readonly columns: number;
 }
@@ -38,6 +40,7 @@ export interface DockBarProps {
 export interface HostPanelProps {
   readonly typeName: string;
   readonly panelProps?: Readonly<Record<string, unknown>>;
+  readonly lookup?: DataSetLookup;
 }
 
 export interface PanelProps {

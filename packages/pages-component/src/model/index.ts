@@ -35,6 +35,9 @@ export type {
   RefreshSettings,
 } from "./component-props.js";
 
+// Hosting contracts
+export type { ConfigurablePanel, DataReceiver } from "./hosting.js";
+
 // Displayer types
 export type {
   DataComponentCommon,
