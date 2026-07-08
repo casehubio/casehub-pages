@@ -23,6 +23,7 @@
         <module>data</module>
         <module>data-sql</module>
         <module>push</module>
+        <module>push-runtime</module>
     </modules>
 
     <properties>
@@ -63,6 +64,16 @@
             <dependency>
                 <groupId>io.casehub</groupId>
                 <artifactId>casehub-pages-data-backend</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.casehub</groupId>
+                <artifactId>casehub-pages-push</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.casehub</groupId>
+                <artifactId>casehub-pages-push-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
