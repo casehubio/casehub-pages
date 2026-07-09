@@ -83,12 +83,13 @@ describe("createLocalLayoutStore", () => {
 
   it("save catches QuotaExceededError and logs warning", async () => {
     const store = createLocalLayoutStore();
-    const original = localStorage.setItem;
-    localStorage.setItem = () => { throw new DOMException("quota", "QuotaExceededError"); };
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const stringifySpy = vi.spyOn(JSON, "stringify").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
     await expect(store.save("key1", sampleState)).resolves.toBeUndefined();
     expect(warnSpy).toHaveBeenCalled();
+    stringifySpy.mockRestore();
     warnSpy.mockRestore();
-    localStorage.setItem = original;
   });
 });
