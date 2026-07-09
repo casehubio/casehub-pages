@@ -72,9 +72,14 @@ export class PagesSelector extends PagesElement<SelectorProps> {
     const firstColumn = dataset.columns[0];
     if (!firstColumn) return;
 
-    if (!this._initialValues) {
-      this._initialValues = this.extractDistinctValues(dataset, firstColumn.id);
-      this._initialColumnId = firstColumn.id;
+    this._initialValues = this.extractDistinctValues(dataset, firstColumn.id);
+    this._initialColumnId = firstColumn.id;
+
+    if (this._selectedValue !== undefined) {
+      const stillPresent = this._initialValues.some(
+        v => v.value !== null && String(v.value) === this._selectedValue,
+      );
+      if (!stillPresent) this._selectedValue = undefined;
     }
 
     const distinctValues = this._initialValues;

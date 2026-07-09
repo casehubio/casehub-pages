@@ -17,6 +17,8 @@ const mockChart = {
 vi.mock("echarts/core", () => ({
   init: vi.fn(() => mockChart),
   use: vi.fn(),
+  getMap: vi.fn(() => ({ geoJSON: {} })),
+  registerMap: vi.fn(),
 }));
 
 vi.mock("echarts/renderers", () => ({
