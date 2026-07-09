@@ -16,6 +16,10 @@ export abstract class PagesElement<
 
   readonly controller = new DataSourceController({
     onChange: () => { if (!this._batchUpdate) this.update(); },
+    onRefresh: () => {
+      this._dataRequested = false;
+      this.requestDataIfNeeded();
+    },
   });
 
   private _props: P | undefined;

@@ -420,4 +420,108 @@ describe("DataSourceController", () => {
       expect(ctrl.loading).toBe(true);
     });
   });
+
+  describe("sourceFactory (#148)", () => {
+    it("uses sourceFactory to create source from endpoint URL", () => {
+      const ds = makeDataSet([["from-factory"]]);
+      const factory = vi.fn().mockReturnValue(immediateSource(ds));
+      const ctrl = new DataSourceController({ sourceFactory: factory });
+      ctrl.endpoint = "/api/items";
+      ctrl.connect();
+
+      expect(factory).toHaveBeenCalledWith("/api/items", expect.anything());
+      expect(ctrl.dataSet).toEqual(ds);
+    });
+
+    it("routes http URL through sourceFactory", () => {
+      const factory = vi.fn().mockReturnValue(immediateSource(makeDataSet([["ok"]])));
+      const ctrl = new DataSourceController({ sourceFactory: factory });
+      ctrl.endpoint = "https://api.example.com/data";
+      ctrl.connect();
+
+      expect(factory).toHaveBeenCalledWith("https://api.example.com/data", expect.anything());
+    });
+
+    it("endpoint without sourceFactory still creates a no-op source", () => {
+      const ctrl = new DataSourceController();
+      ctrl.endpoint = "/api/items";
+      ctrl.connect();
+      expect(ctrl.loading).toBe(true);
+      expect(ctrl.dataSet).toBeUndefined();
+    });
+
+    it("changing endpoint disconnects old source and creates new one", () => {
+      const ds1 = makeDataSet([["first"]]);
+      const ds2 = makeDataSet([["second"]]);
+      let callCount = 0;
+      const factory = vi.fn().mockImplementation(() => {
+        callCount++;
+        return immediateSource(callCount === 1 ? ds1 : ds2);
+      });
+      const ctrl = new DataSourceController({ sourceFactory: factory });
+      ctrl.endpoint = "/api/v1";
+      ctrl.connect();
+      expect(ctrl.dataSet).toEqual(ds1);
+
+      ctrl.endpoint = "/api/v2";
+      expect(factory).toHaveBeenCalledTimes(2);
+      expect(ctrl.dataSet).toEqual(ds2);
+    });
+
+    it("setting source directly bypasses sourceFactory", () => {
+      const factory = vi.fn();
+      const ds = makeDataSet([["direct"]]);
+      const ctrl = new DataSourceController({ sourceFactory: factory });
+      ctrl.source = immediateSource(ds);
+      ctrl.connect();
+
+      expect(factory).not.toHaveBeenCalled();
+      expect(ctrl.dataSet).toEqual(ds);
+    });
+  });
+
+  describe("onRefresh (#134)", () => {
+    it("calls onRefresh callback when refresh is called in hosted mode", () => {
+      const onRefresh = vi.fn();
+      const ctrl = new DataSourceController({ onRefresh });
+      ctrl.dataSet = "some data";
+      ctrl.refresh();
+
+      expect(onRefresh).toHaveBeenCalledOnce();
+    });
+
+    it("does not call onRefresh when source is connected (standalone mode)", () => {
+      const onRefresh = vi.fn();
+      let connectCount = 0;
+      const source: DataSource = {
+        connect(sink: DataSink) {
+          connectCount++;
+          sink.apply({ type: "snapshot", dataset: makeDataSet([["v" + String(connectCount)]]) });
+        },
+        disconnect() {},
+      };
+      const ctrl = new DataSourceController({ onRefresh });
+      ctrl.source = source;
+      ctrl.connect();
+      ctrl.refresh();
+
+      expect(onRefresh).not.toHaveBeenCalled();
+      expect(connectCount).toBe(2);
+    });
+
+    it("calls onRefresh when no source is connected and data exists", () => {
+      const onRefresh = vi.fn();
+      const ctrl = new DataSourceController({ onRefresh });
+      ctrl.dataSet = [1, 2, 3];
+      ctrl.refresh();
+      expect(onRefresh).toHaveBeenCalledOnce();
+    });
+
+    it("does not call onRefresh when no data and no source", () => {
+      const onRefresh = vi.fn();
+      const ctrl = new DataSourceController({ onRefresh });
+      ctrl.refresh();
+      expect(onRefresh).not.toHaveBeenCalled();
+    });
+  });
 });

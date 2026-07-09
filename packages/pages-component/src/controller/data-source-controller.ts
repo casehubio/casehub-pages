@@ -5,9 +5,13 @@ import type { TypedDataSet, DataSetId } from "@casehubio/pages-data/dist/dataset
 import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { VizTarget } from "../model/hosting.js";
 
+export type SourceFactory = (url: string, id: DataSetId) => DataSource;
+
 export interface DataSourceControllerOptions {
   onChange?: () => void;
+  onRefresh?: () => void;
   dataSetId?: DataSetId;
+  sourceFactory?: SourceFactory;
 }
 
 export class DataSourceController implements VizTarget {
@@ -25,9 +29,13 @@ export class DataSourceController implements VizTarget {
   private readonly _dataSetId: DataSetId;
 
   readonly onChange: (() => void) | undefined;
+  private readonly _onRefresh: (() => void) | undefined;
+  private readonly _sourceFactory: SourceFactory | undefined;
 
   constructor(options?: DataSourceControllerOptions) {
     this.onChange = options?.onChange;
+    this._onRefresh = options?.onRefresh;
+    this._sourceFactory = options?.sourceFactory;
     this._dataSetId = options?.dataSetId ?? dataSetId("ds-controller");
   }
 
@@ -98,10 +106,15 @@ export class DataSourceController implements VizTarget {
   }
 
   refresh(): void {
-    if (!this._source || !this._connected) return;
-    this.disconnectSource();
-    this.loading = true;
-    this.connectSource();
+    if (this._source && this._connected) {
+      this.disconnectSource();
+      this.loading = true;
+      this.connectSource();
+      return;
+    }
+    if (this._onRefresh && this._dataSet !== undefined) {
+      this._onRefresh();
+    }
   }
 
   dispose(): void {
@@ -178,11 +191,10 @@ export class DataSourceController implements VizTarget {
     }
   }
 
-  private createSourceFromUrl(_url: string): DataSource {
-    // URL scheme routing (restSource/sseSource/wsSource) requires a
-    // cross-package import from pages-data. Will be wired via a
-    // factory callback or dynamic import. The pipeline path (hosted
-    // mode) bypasses this — it pushes data via property setters.
+  private createSourceFromUrl(url: string): DataSource {
+    if (this._sourceFactory) {
+      return this._sourceFactory(url, this._dataSetId);
+    }
     return {
       connect() {},
       disconnect() {},
