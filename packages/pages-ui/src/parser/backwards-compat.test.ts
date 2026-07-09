@@ -8,27 +8,6 @@ import {globSync} from "glob";
 
 const EXAMPLES_DIR = join(__dirname, "../../../../examples/samples");
 
-function __findPageByName(root: Component, name: string): Component | undefined {
-  if (root.type === "page" && (root.props as Record<string, unknown>)["name"] === name) {
-    return root;
-  }
-  if (root.items) {
-    for (const item of root.items) {
-      const found = _findPageByName(item.component, name);
-      if (found) return found;
-    }
-  }
-  if (root.slots) {
-    for (const children of Object.values(root.slots)) {
-      for (const child of children) {
-        const found = _findPageByName(child, name);
-        if (found) return found;
-      }
-    }
-  }
-  return undefined;
-}
-
 describe("backwards compatibility — existing samples", () => {
   // Skip if examples directory doesn't exist (CI without examples)
   const dirExists = existsSync(EXAMPLES_DIR);
