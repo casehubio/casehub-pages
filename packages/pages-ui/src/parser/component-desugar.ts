@@ -1,5 +1,6 @@
 import type { Component } from "../model/types.js";
 import { desugarDisplayer } from "./displayer-desugar.js";
+import { parseLookup } from "@casehubio/pages-data/dist/dataset/lookup-parser.js";
 
 /**
  * Maps navigation component types to lowercase strings.
@@ -13,6 +14,27 @@ const NAV_TYPE_MAP: Record<string, string> = {
   TILES: "tiles",
   SIDEBAR: "sidebar",
   ACCORDION: "accordion",
+};
+
+const DATA_COMPONENT_TYPES = new Set([
+  "bar-chart", "line-chart", "area-chart", "pie-chart",
+  "scatter-chart", "bubble-chart", "timeseries",
+  "table", "metric", "meter", "selector", "map",
+  "grouped-view", "iframe-plugin",
+  "badge", "countdown", "timeline", "graph",
+  "text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea",
+  "action-button", "alert",
+  "grid", "columns", "rows", "stack", "panel",
+  "split", "dock-bar", "host-panel",
+  "html", "markdown", "title",
+]);
+
+const LEGACY_TYPE_MAP: Record<string, string> = {
+  BARCHART: "bar-chart", LINECHART: "line-chart", AREACHART: "area-chart",
+  PIECHART: "pie-chart", SCATTERCHART: "scatter-chart", BUBBLECHART: "bubble-chart",
+  TIMESERIES: "timeseries", TABLE: "table", METRIC: "metric", METERCHART: "meter",
+  SELECTOR: "selector", MAP: "map", GROUPED_VIEW: "grouped-view",
+  BADGE: "badge", COUNTDOWN: "countdown", TIMELINE: "timeline", GRAPH: "graph",
 };
 
 /**
@@ -212,8 +234,8 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
   if ("type" in raw && typeof raw.type === "string") {
     const rawType = raw.type;
 
-    // Navigation components
-    const mappedNavType = NAV_TYPE_MAP[rawType];
+    // Navigation components (case-insensitive lookup)
+    const mappedNavType = NAV_TYPE_MAP[rawType] ?? NAV_TYPE_MAP[rawType.toUpperCase()];
     if (mappedNavType) {
       const props = raw.properties as Record<string, unknown> | undefined;
       return {
@@ -266,6 +288,25 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     // Displayer type (type: "Displayer" or type: "displayer")
     if (rawType === "Displayer" || rawType === "displayer") {
       return desugarDisplayer(raw);
+    }
+
+    // Modern data component format: type + properties
+    const normalized = LEGACY_TYPE_MAP[rawType] ?? rawType.toLowerCase();
+    if (DATA_COMPONENT_TYPES.has(normalized)) {
+      const rawProps = raw.properties as Record<string, unknown> | undefined;
+      const visibleWhen = raw.visibleWhen as string | undefined;
+      let props: Record<string, unknown> | undefined;
+      if (rawProps) {
+        props = { ...rawProps };
+        if (props.lookup != null) {
+          props.lookup = parseLookup(props.lookup);
+        }
+      }
+      return {
+        type: normalized,
+        ...(props ? { props } : {}),
+        ...(visibleWhen ? { visibleWhen } : {}),
+      };
     }
   }
 
