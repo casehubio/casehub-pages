@@ -15,7 +15,6 @@ const CATEGORY_ORDER = [
   'Live Data',
   'Content',
   'Custom Components',
-  'Actions',
   'Theming',
   'Monitoring',
   'Domain Showcases',
