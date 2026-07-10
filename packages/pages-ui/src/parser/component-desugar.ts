@@ -238,9 +238,37 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     const mappedNavType = NAV_TYPE_MAP[rawType] ?? NAV_TYPE_MAP[rawType.toUpperCase()];
     if (mappedNavType) {
       const props = raw.properties as Record<string, unknown> | undefined;
+      const visibleWhen = raw.visibleWhen as string | undefined;
+
+      // Build slots from inline content keys (tabs:, sections:, sidebar:, content:)
+      let slots: Record<string, Component[]> | undefined;
+      const slotSource = (raw.tabs ?? raw.sections) as Record<string, unknown> | undefined;
+      if (slotSource && typeof slotSource === "object") {
+        slots = {};
+        for (const [name, content] of Object.entries(slotSource)) {
+          const contentObj = content as Record<string, unknown> | undefined;
+          const comps = (contentObj?.components ?? contentObj) as unknown[];
+          if (Array.isArray(comps)) {
+            slots[name] = comps.map(c => desugarComponent(c as Record<string, unknown>, displayerDefaults));
+          }
+        }
+      }
+
+      // Sidebar has sidebar: (nav) and content: (main) slots
+      if (raw.sidebar && Array.isArray(raw.sidebar)) {
+        slots = slots ?? {};
+        slots["nav"] = (raw.sidebar as unknown[]).map(c => desugarComponent(c as Record<string, unknown>, displayerDefaults));
+      }
+      if (raw.content && Array.isArray(raw.content)) {
+        slots = slots ?? {};
+        slots["main"] = (raw.content as unknown[]).map(c => desugarComponent(c as Record<string, unknown>, displayerDefaults));
+      }
+
       return {
         type: mappedNavType,
         ...(props ? { props } : {}),
+        ...(visibleWhen ? { visibleWhen } : {}),
+        ...(slots ? { slots } : {}),
       };
     }
 
