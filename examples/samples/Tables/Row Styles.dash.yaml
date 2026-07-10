@@ -54,24 +54,25 @@ pages:
           sortable: true
           pageSize: 15
           rowStyle:
-            - condition: "${status = 'Error'}"
+            - condition: "#{status} == 'Error'"
               style:
-                backgroundColor: "var(--pages-danger-3, #fce4ec)"
-                color: "var(--pages-danger-11, #b71c1c)"
-            - condition: "${priority > 7}"
+                backgroundColor: "#fce4ec"
+                color: "#b71c1c"
+            - condition: "#{priority} > 7"
               style:
                 fontWeight: bold
-            - condition: "${status = 'Pending'}"
+            - condition: "#{status} == 'Pending'"
               style:
-                backgroundColor: "var(--pages-warning-3, #fff8e1)"
-            - condition: "${status = 'Complete'}"
+                backgroundColor: "#fff8e1"
+            - condition: "#{status} == 'Complete'"
               style:
-                color: "var(--pages-success-11, #1b5e20)"
+                color: "#1b5e20"
 
       - type: markdown
         properties:
-          content: >
-            **Rules applied:** Error rows are red, high-priority rows (>7) are bold,
-            Pending rows are yellow, Complete rows are green text.
-            Multiple rules can match the same row — a high-priority Error row
-            gets both red background and bold text.
+          content: |
+            **Rules applied** (first match wins):
+            - `#{status} == 'Error'` → red background
+            - `#{priority} > 7` → bold text
+            - `#{status} == 'Pending'` → yellow background
+            - `#{status} == 'Complete'` → green text
