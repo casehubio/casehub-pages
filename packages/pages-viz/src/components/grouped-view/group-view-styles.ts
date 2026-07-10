@@ -55,6 +55,17 @@ export const GROUPED_VIEW_CSS = `
   border-bottom: 2px solid var(--pages-neutral-5, #ddd);
 }
 
+.column-header-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.column-header-table th {
+  text-align: left;
+  padding: 0;
+  border-bottom: 2px solid var(--pages-neutral-5, #ddd);
+}
+
 .col-header {
   background: none;
   border: none;
@@ -65,6 +76,7 @@ export const GROUPED_VIEW_CSS = `
   font-size: var(--pages-font-size-sm, 12px);
   color: var(--pages-neutral-9, #666);
   white-space: nowrap;
+  width: 100%;
 }
 
 .col-label {
