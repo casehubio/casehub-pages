@@ -28,22 +28,46 @@ pages:
     components:
       - type: title
         properties:
-          text: Column Formatting
+          text: Column Formatting & Cross-Filtering
           size: h2
 
       - type: markdown
         properties:
-          content: >
-            **Column settings** control how values display — number patterns,
-            date formats, and expressions that transform cell content.
+          content: |
+            **Column settings** control how values display. The `columns` property
+            overrides formatting per column:
+
+            - `salary` uses pattern `$#,###` — raw number 142000 displays as **$142,000**
+            - `growth` uses pattern `#.#%` — raw number 0.15 displays as **15%**
+
+            **Cross-filtering** is enabled by default on tables. Click any cell value
+            to filter — the bar chart below responds to the selection. Click again
+            to clear.
 
       - type: table
         properties:
           lookup:
             uuid: sales
           sortable: true
+          filter:
+            notification: true
           columns:
             - id: salary
               pattern: "$#,###"
             - id: growth
               pattern: "#.#%"
+
+      - type: bar-chart
+        properties:
+          title: Salary by Department
+          filter:
+            listening: true
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                    source: department
+                functions:
+                  - source: department
+                  - source: salary
+                    function: SUM
