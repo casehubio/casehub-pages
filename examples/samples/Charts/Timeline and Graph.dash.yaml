@@ -2,15 +2,15 @@ datasets:
   - uuid: milestones
     content: >
       [
-        ["Planning", "Research & Discovery", "2026-01-15", "2026-02-28"],
-        ["Planning", "Requirements Finalised", "2026-03-01", "2026-03-15"],
-        ["Development", "Core Architecture", "2026-03-01", "2026-04-30"],
-        ["Development", "API Implementation", "2026-04-01", "2026-06-15"],
-        ["Development", "Frontend Build", "2026-05-01", "2026-07-31"],
-        ["Testing", "Integration Testing", "2026-06-01", "2026-07-15"],
-        ["Testing", "Performance Audit", "2026-07-01", "2026-07-31"],
-        ["Release", "Beta Launch", "2026-08-01", "2026-08-15"],
-        ["Release", "GA Release", "2026-09-01", "2026-09-15"]
+        ["Planning", "Research & Discovery", "2026-01-15T00:00:00Z", "2026-02-28T00:00:00Z"],
+        ["Planning", "Requirements Finalised", "2026-03-01T00:00:00Z", "2026-03-15T00:00:00Z"],
+        ["Development", "Core Architecture", "2026-03-01T00:00:00Z", "2026-04-30T00:00:00Z"],
+        ["Development", "API Implementation", "2026-04-01T00:00:00Z", "2026-06-15T00:00:00Z"],
+        ["Development", "Frontend Build", "2026-05-01T00:00:00Z", "2026-07-31T00:00:00Z"],
+        ["Testing", "Integration Testing", "2026-06-01T00:00:00Z", "2026-07-15T00:00:00Z"],
+        ["Testing", "Performance Audit", "2026-07-01T00:00:00Z", "2026-07-31T00:00:00Z"],
+        ["Release", "Beta Launch", "2026-08-01T00:00:00Z", "2026-08-15T00:00:00Z"],
+        ["Release", "GA Release", "2026-09-01T00:00:00Z", "2026-09-15T00:00:00Z"]
       ]
     columns:
       - id: phase

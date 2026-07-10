@@ -375,6 +375,19 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     }
   }
 
+  // Pass through component-specific props not handled above
+  const handledKeys = new Set([
+    "type", "component", "general", "chart", "axis", "external", "table", "meter",
+    "badge", "countdown", "timeline", "graph", "subtype", "filter", "lookup",
+    "dataSetLookup", "columns", "refresh", "extraConfiguration", "dataSet",
+    "visibleWhen", "html", "properties",
+  ]);
+  for (const [key, value] of Object.entries(raw)) {
+    if (!handledKeys.has(key) && !(key in props)) {
+      props[key] = value;
+    }
+  }
+
   // Extract visibleWhen
   const visibleWhen = raw.visibleWhen as string | undefined;
 
