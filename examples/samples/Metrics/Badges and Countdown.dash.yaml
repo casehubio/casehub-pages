@@ -1,6 +1,6 @@
 datasets:
   - uuid: status-data
-    content: >
+    content: >-
       [
         ["API Gateway", "healthy", "99.9"],
         ["Database", "healthy", "99.7"],
@@ -25,94 +25,95 @@ datasets:
 
 pages:
   - name: Metrics Showcase
-    components:
-      - type: title
-        properties:
-          text: Status Badges
-          size: h2
-
-      - type: markdown
-        properties:
-          content: >
-            **Badge** components display a single value with a status colour.
-            Useful for service health, build status, or any categorical indicator.
-
-      - type: columns
-        properties:
-          span: "2,2,2,2,2,2"
-        columns:
+    rows:
+      - columns:
           - components:
+              - type: title
+                properties:
+                  text: Status Badges
+                  size: h2
+
+              - type: markdown
+                properties:
+                  content: >
+                    **Badge** components display a single value with a status colour.
+                    Useful for service health, build status, or any categorical indicator.
+
+      - columns:
+          - span: 2
+            components:
               - type: badge
                 properties:
                   lookup:
                     uuid: status-data
-                    operations:
-                      - type: filter
-                        column: service
-                        function: EQUALS
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
                         args: ["API Gateway"]
-          - components:
+          - span: 2
+            components:
               - type: badge
                 properties:
                   lookup:
                     uuid: status-data
-                    operations:
-                      - type: filter
-                        column: service
-                        function: EQUALS
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
                         args: ["Database"]
-          - components:
+          - span: 2
+            components:
               - type: badge
                 properties:
                   lookup:
                     uuid: status-data
-                    operations:
-                      - type: filter
-                        column: service
-                        function: EQUALS
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
                         args: ["Cache"]
-          - components:
+          - span: 2
+            components:
               - type: badge
                 properties:
                   lookup:
                     uuid: status-data
-                    operations:
-                      - type: filter
-                        column: service
-                        function: EQUALS
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
                         args: ["Queue"]
-          - components:
+          - span: 2
+            components:
               - type: badge
                 properties:
                   lookup:
                     uuid: status-data
-                    operations:
-                      - type: filter
-                        column: service
-                        function: EQUALS
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
                         args: ["Search"]
-          - components:
+          - span: 2
+            components:
               - type: badge
                 properties:
                   lookup:
                     uuid: status-data
-                    operations:
-                      - type: filter
-                        column: service
-                        function: EQUALS
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
                         args: ["Storage"]
 
-      - type: title
-        properties:
-          text: Countdown Timer
-          size: h2
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: Countdown Timer
+                  size: h2
 
-      - type: markdown
-        properties:
-          content: >
-            **Countdown** displays time remaining until a target date.
+              - type: markdown
+                properties:
+                  content: >
+                    **Countdown** displays time remaining until a target date.
 
-      - type: countdown
-        properties:
-          lookup:
-            uuid: launch-date
+              - type: countdown
+                properties:
+                  lookup:
+                    uuid: launch-date

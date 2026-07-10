@@ -23,7 +23,6 @@ const DATA_COMPONENT_TYPES = new Set([
   "badge", "countdown", "timeline", "graph",
   "text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea",
   "action-button", "alert",
-  "grid", "columns", "rows", "stack", "panel",
   "split", "dock-bar", "host-panel",
 ]);
 
