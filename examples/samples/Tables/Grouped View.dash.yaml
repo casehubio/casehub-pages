@@ -45,7 +45,8 @@ pages:
                 properties:
                   lookup:
                     uuid: team-data
-                  groupBy: department
+                  groupBy:
+                    column: department
                   preset: sectioned
                   defaultExpanded: true
                   showGroupSummary: true
@@ -64,7 +65,8 @@ pages:
                 properties:
                   lookup:
                     uuid: team-data
-                  groupBy: department
+                  groupBy:
+                    column: department
                   preset: spreadsheet
                   defaultExpanded: true
 
@@ -79,7 +81,8 @@ pages:
                 properties:
                   lookup:
                     uuid: team-data
-                  groupBy: department
+                  groupBy:
+                    column: department
                   preset: list
                   order: asc
 
@@ -94,7 +97,8 @@ pages:
                 properties:
                   lookup:
                     uuid: team-data
-                  groupBy: department
+                  groupBy:
+                    column: department
                   preset: sectioned
                   defaultExpanded: false
                   showGroupSummary: true

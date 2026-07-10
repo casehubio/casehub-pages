@@ -28,6 +28,7 @@ export { PagesMap } from "./charts/PagesMap.js";
 export { PagesMetric } from "./components/PagesMetric.js";
 export { PagesSelector } from "./components/PagesSelector.js";
 export { PagesIframePlugin } from "./components/PagesIframePlugin.js";
+export { PagesTable } from "./components/PagesTable.js";
 
 // Form inputs
 export { PagesFormInput } from "./form-inputs/PagesFormInput.js";

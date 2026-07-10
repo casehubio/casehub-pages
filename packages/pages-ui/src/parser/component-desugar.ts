@@ -1,6 +1,5 @@
 import type { Component } from "../model/types.js";
 import { desugarDisplayer } from "./displayer-desugar.js";
-import { parseLookup } from "@casehubio/pages-data/dist/dataset/lookup-parser.js";
 
 /**
  * Maps navigation component types to lowercase strings.
@@ -319,20 +318,15 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     }
 
     // Modern data component format: type + properties
+    // Route through displayer desugar for full normalization (lookup, groupBy, chart, axis, etc.)
     const normalized = LEGACY_TYPE_MAP[rawType] ?? rawType.toLowerCase();
     if (DATA_COMPONENT_TYPES.has(normalized)) {
-      const rawProps = raw.properties as Record<string, unknown> | undefined;
+      const rawProps = (raw.properties as Record<string, unknown> | undefined) ?? {};
+      const displayerInput = { type: rawType, ...rawProps };
+      const component = desugarDisplayer(displayerInput);
       const visibleWhen = raw.visibleWhen as string | undefined;
-      let props: Record<string, unknown> | undefined;
-      if (rawProps) {
-        props = { ...rawProps };
-        if (props.lookup != null) {
-          props.lookup = parseLookup(props.lookup);
-        }
-      }
       return {
-        type: normalized,
-        ...(props ? { props } : {}),
+        ...component,
         ...(visibleWhen ? { visibleWhen } : {}),
       };
     }

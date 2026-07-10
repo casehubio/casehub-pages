@@ -1,5 +1,6 @@
 import type { Component } from "../model/types.js";
 import { parseLookup } from "@casehubio/pages-data/dist/dataset/lookup-parser.js";
+import { desugarGroupedView } from "./grouped-view-desugar.js";
 
 /**
  * Maps DisplayerType enum values to component type strings.
@@ -22,6 +23,14 @@ const TYPE_MAP: Record<string, string> = {
   TIMELINE: "timeline",
   GRAPH: "graph",
   GROUPED_VIEW: "grouped-view",
+  // Modern lowercase names (identity mapping for modern format support)
+  "BAR-CHART": "bar-chart",
+  "LINE-CHART": "line-chart",
+  "AREA-CHART": "area-chart",
+  "PIE-CHART": "pie-chart",
+  "SCATTER-CHART": "scatter-chart",
+  "BUBBLE-CHART": "bubble-chart",
+  "GROUPED-VIEW": "grouped-view",
 };
 
 /**
@@ -86,6 +95,11 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     const rawType = raw.type as string | undefined;
     const normalised = rawType?.toUpperCase();
     type = normalised && TYPE_MAP[normalised] ? TYPE_MAP[normalised] : "table";
+
+    // Grouped view has its own desugar for groupBy/aggregations/preset
+    if (type === "grouped-view") {
+      return desugarGroupedView(raw);
+    }
   }
 
   // Extract general settings
