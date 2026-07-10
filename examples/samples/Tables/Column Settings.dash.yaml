@@ -2,14 +2,14 @@ datasets:
   - uuid: sales
     content: >-
       [
-        ["Alice Chen", "Engineering", 142000, 0.15, "2024-03-15T00:00:00Z"],
-        ["Bob Kim", "Marketing", 98000, 0.08, "2023-11-01T00:00:00Z"],
-        ["Carlos Ruiz", "Engineering", 128000, 0.22, "2022-06-20T00:00:00Z"],
-        ["Diana Park", "Sales", 115000, -0.05, "2024-01-10T00:00:00Z"],
-        ["Eve Johnson", "Marketing", 87000, 0.12, "2023-08-15T00:00:00Z"],
-        ["Frank Lee", "Sales", 135000, 0.18, "2021-04-01T00:00:00Z"],
-        ["Grace Wu", "Engineering", 155000, 0.25, "2020-09-15T00:00:00Z"],
-        ["Henry Zhang", "Sales", 105000, -0.03, "2024-06-01T00:00:00Z"]
+        ["Alice Chen", "Engineering", 142000, 15, "2024-03-15T00:00:00Z"],
+        ["Bob Kim", "Marketing", 98000, 8, "2023-11-01T00:00:00Z"],
+        ["Carlos Ruiz", "Engineering", 128000, 22, "2022-06-20T00:00:00Z"],
+        ["Diana Park", "Sales", 115000, -5, "2024-01-10T00:00:00Z"],
+        ["Eve Johnson", "Marketing", 87000, 12, "2023-08-15T00:00:00Z"],
+        ["Frank Lee", "Sales", 135000, 18, "2021-04-01T00:00:00Z"],
+        ["Grace Wu", "Engineering", 155000, 25, "2020-09-15T00:00:00Z"],
+        ["Henry Zhang", "Sales", 105000, -3, "2024-06-01T00:00:00Z"]
       ]
     columns:
       - id: name
@@ -28,21 +28,22 @@ pages:
     components:
       - type: title
         properties:
-          text: Column Formatting & Cross-Filtering
+          text: Column Expressions & Cross-Filtering
           size: h2
 
       - type: markdown
         properties:
           content: |
-            **Column settings** control how values display. The `columns` property
-            overrides formatting per column:
+            **Column expressions** transform how values display. The `columns`
+            property applies an `expression` per column — a formula that
+            receives the raw `value` and returns formatted text:
 
-            - `salary` uses pattern `$#,###` — raw number 142000 displays as **$142,000**
-            - `growth` uses pattern `#.#%` — raw number 0.15 displays as **15%**
+            - `salary` expression: `"$" & value` — prepends a dollar sign
+            - `growth` expression: `value & "%"` — appends a percent sign
 
-            **Cross-filtering** is enabled by default on tables. Click any cell value
-            to filter — the bar chart below responds to the selection. Click again
-            to clear.
+            **Cross-filtering** is enabled by default on tables. Click any
+            **department** cell to filter — the bar chart below responds.
+            Click again to clear.
 
       - type: table
         properties:
@@ -53,9 +54,9 @@ pages:
             notification: true
           columns:
             - id: salary
-              pattern: "$#,###"
+              expression: "'$' & value"
             - id: growth
-              pattern: "#.#%"
+              expression: "value & '%'"
 
       - type: bar-chart
         properties:
