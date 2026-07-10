@@ -1,7 +1,7 @@
 datasets:
-- uuid: employees
-  content: >-
-    [
+  - uuid: employees
+    content: >-
+      [
         ["Alice Johnson", "Engineering", "Senior Developer", 2018, 92000],
         ["Bob Smith", "Marketing", "Marketing Manager", 2019, 78000],
         ["Charlie Brown", "Engineering", "Staff Engineer", 2016, 115000],
@@ -22,24 +22,53 @@ datasets:
         ["Rachel Clark", "Sales", "Sales Representative", 2021, 58000],
         ["Sam Walker", "Engineering", "Security Engineer", 2018, 98000],
         ["Tina Hall", "Marketing", "Marketing Director", 2015, 125000]
-    ]
-  columns:
-  - id: Name
-    type: LABEL
-  - id: Department
-    type: LABEL
-  - id: Role
-    type: LABEL
-  - id: Joined
-    type: NUMBER
-  - id: Salary
-    type: NUMBER
+      ]
+    columns:
+      - id: Name
+        type: LABEL
+      - id: Department
+        type: LABEL
+      - id: Role
+        type: LABEL
+      - id: Joined
+        type: NUMBER
+      - id: Salary
+        type: NUMBER
+
 pages:
-- components:
-  - type: table
-    properties:
-      chart:
-        height: 600
-        resizable: true
-      lookup:
-        uuid: employees
+  - name: Table
+    components:
+      - type: title
+        properties:
+          text: Table with Pagination & Filtering
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Tables include a **filter box** (top-left), **pagination** (top-right),
+            and **sortable columns** (click headers). The `pageSize` property controls
+            rows per page. Click any **LABEL** cell to cross-filter — try clicking a
+            Department value.
+
+      - type: selector
+        properties:
+          subtype: labels
+          filter:
+            notification: true
+          lookup:
+            uuid: employees
+            group:
+              - columnGroup:
+                    source: Department
+                functions:
+                  - source: Department
+
+      - type: table
+        properties:
+          lookup:
+            uuid: employees
+          pageSize: 8
+          sortable: true
+          filter:
+            listening: true

@@ -54,17 +54,17 @@ pages:
           sortable: true
           pageSize: 15
           rowStyle:
-            - condition: "#{status} == 'Error'"
+            - condition: "#{row.status} == 'Error'"
               style:
                 backgroundColor: "#fce4ec"
                 color: "#b71c1c"
-            - condition: "#{priority} > 7"
+            - condition: "#{row.priority} > 7"
               style:
                 fontWeight: bold
-            - condition: "#{status} == 'Pending'"
+            - condition: "#{row.status} == 'Pending'"
               style:
                 backgroundColor: "#fff8e1"
-            - condition: "#{status} == 'Complete'"
+            - condition: "#{row.status} == 'Complete'"
               style:
                 color: "#1b5e20"
 
@@ -72,7 +72,7 @@ pages:
         properties:
           content: |
             **Rules applied** (first match wins):
-            - `#{status} == 'Error'` → red background
-            - `#{priority} > 7` → bold text
-            - `#{status} == 'Pending'` → yellow background
-            - `#{status} == 'Complete'` → green text
+            - `#{row.status} == 'Error'` → red background
+            - `#{row.priority} > 7` → bold text
+            - `#{row.status} == 'Pending'` → yellow background
+            - `#{row.status} == 'Complete'` → green text
