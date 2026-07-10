@@ -75,21 +75,25 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
 
   // Determine component type
   let type: string;
-  if (raw.component && typeof raw.component === "string") {
-    // External component
+  const componentRef = (raw.component ?? raw.componentId) as string | undefined;
+  if (componentRef && typeof componentRef === "string") {
+    // External/iframe component
     type = "iframe-plugin";
-    props.componentId = raw.component;
+    props.componentId = componentRef;
 
-    // Collect settings for the component
-    const componentId = raw.component;
-    const settings: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(raw)) {
-      if (key === componentId || key.startsWith(`${componentId}.`)) {
-        settings[key] = value;
+    // Collect settings: from raw.settings (modern) or from component-prefixed keys (legacy)
+    if (raw.settings && typeof raw.settings === "object") {
+      props.settings = raw.settings;
+    } else {
+      const settings: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(raw)) {
+        if (key === componentRef || key.startsWith(`${componentRef}.`)) {
+          settings[key] = value;
+        }
       }
-    }
-    if (Object.keys(settings).length > 0) {
-      props.settings = settings;
+      if (Object.keys(settings).length > 0) {
+        props.settings = settings;
+      }
     }
   } else {
     // Standard displayer — case-insensitive lookup

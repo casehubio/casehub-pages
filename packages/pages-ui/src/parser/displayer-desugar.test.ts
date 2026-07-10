@@ -479,6 +479,18 @@ describe("desugarDisplayer", () => {
       expect(result.type).toBe("meter");
     });
 
+    it("iframe-plugin with componentId and settings", () => {
+      const result = desugarDisplayer({
+        type: "iframe-plugin",
+        componentId: "svg-heatmap",
+        settings: { svg: "<svg></svg>" },
+        lookup: { uuid: "data" },
+      });
+      expect(result.type).toBe("iframe-plugin");
+      expect(result.props?.["componentId"]).toBe("svg-heatmap");
+      expect(result.props?.["settings"]).toEqual({ svg: "<svg></svg>" });
+    });
+
     it("grouped-view routes to grouped-view desugar", () => {
       const result = desugarDisplayer({
         type: "grouped-view",
