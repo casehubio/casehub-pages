@@ -49,6 +49,7 @@ pages:
               - source: register
               - source: value
                 function: SUM
+            uuid: history
   - columns:
     - span: 6
       components:

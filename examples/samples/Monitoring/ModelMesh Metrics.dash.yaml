@@ -70,6 +70,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -84,6 +85,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -98,6 +100,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -113,6 +116,7 @@ pages:
             - functions:
               - source: value
                 column: value_kb
+            uuid: metrics
           columns:
           - id: value_kb
             pattern: '#'

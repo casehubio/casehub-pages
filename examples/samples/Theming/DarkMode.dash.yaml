@@ -2,11 +2,7 @@ global:
   mode: dark
 datasets:
 - uuid: test
-  content: >-
-    [
-        ["Hello", 20, 12],
-        ["World", 10, 25],
-    ]
+  content: '[["Hello", 20, 12], ["World", 10, 25]]'
 pages:
 - components:
   - type: bar-chart

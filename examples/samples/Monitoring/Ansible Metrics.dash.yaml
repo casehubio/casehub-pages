@@ -53,6 +53,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -67,6 +68,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -81,6 +83,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -95,6 +98,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
   - columns:
     - components:
       - html: <p style="${subTitlesStyle}">Resources</p>
@@ -113,6 +117,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -127,6 +132,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -141,6 +147,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -155,6 +162,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
   - columns:
     - components:
       - html: <p style="${subTitlesStyle}">Misc</p>
@@ -173,6 +181,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -187,6 +196,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -205,6 +215,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -223,6 +234,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
   - properties:
       margin-top: 20px
     columns:
@@ -240,6 +252,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -254,6 +267,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -268,6 +282,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
     - span: '3'
       components:
       - type: metric
@@ -282,3 +297,4 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics

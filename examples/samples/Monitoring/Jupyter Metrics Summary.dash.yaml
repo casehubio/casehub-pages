@@ -30,6 +30,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
           columns:
           - id: value
             pattern: '#'
@@ -47,6 +48,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
           columns:
           - id: value
             pattern: '#'
@@ -64,6 +66,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
           columns:
           - id: value
             expression: value / 1014 / 1024
@@ -82,6 +85,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
           columns:
           - id: value
             pattern: '#'
@@ -104,6 +108,7 @@ pages:
               functions:
               - source: Label
               - source: Value
+            uuid: metrics
     - span: '4'
       components:
       - type: bar-chart
@@ -122,6 +127,7 @@ pages:
               functions:
               - source: Label
               - source: Value
+            uuid: metrics
     - span: '4'
       components:
       - type: bar-chart
@@ -138,6 +144,7 @@ pages:
               functions:
               - source: Label
               - source: Value
+            uuid: metrics
   - columns:
     - components:
       - type: bar-chart

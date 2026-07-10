@@ -29,6 +29,7 @@ pages:
             group:
             - functions:
               - source: labels
+            uuid: metrics
     - span: 3
       components:
       - type: metric
@@ -43,6 +44,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
           columns:
           - id: value
             expression: >-
@@ -63,6 +65,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
           columns:
           - id: value
             expression: parseInt(value / (1024 * 1024)) + " MB"
@@ -80,6 +83,7 @@ pages:
             group:
             - functions:
               - source: value
+            uuid: metrics
           columns:
           - id: value
             pattern: '#'
@@ -104,6 +108,7 @@ pages:
               function: EQUALS_TO
               args:
               - nodejs_active_resources
+            uuid: metrics
           columns:
           - id: value
             pattern: '#'
@@ -130,6 +135,7 @@ pages:
               - nodejs_eventloop_lag_min_seconds
               - nodejs_eventloop_lag_max_seconds
               - nodejs_eventloop_lag_mean_seconds
+            uuid: metrics
           columns:
           - id: metric
             expression: "lbl = \"Mean\"; if (value === \"nodejs_eventloop_lag_min_seconds\") \n  lbl = \"Min\";\nif (value\
@@ -153,6 +159,7 @@ pages:
               args:
               - nodejs_heap_size_total_bytes
               - nodejs_heap_size_used_bytes
+            uuid: metrics
           columns:
           - id: metric
             expression: value.replaceAll("nodejs_heap_size_", "") .replaceAll("_bytes", "")
@@ -189,3 +196,4 @@ pages:
               - source: value
               columnGroup:
                 source: metric
+            uuid: metrics

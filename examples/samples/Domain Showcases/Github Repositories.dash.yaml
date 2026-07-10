@@ -37,8 +37,13 @@ pages:
           functions:
           - source: name
           - source: stars
+        uuid: github_repos
       axis:
         x:
           labels_angle: -10
   - title: List of top repositories by stars
-  - {}
+  - type: table
+    properties:
+      lookup:
+        uuid: github_repos
+      sortable: true

@@ -1,11 +1,27 @@
 datasets:
-- uuid: test
-  content: '[ ''ABC'', 1]'
+  - uuid: test
+    content: "[ 'ABC', 1]"
+
 pages:
-- components:
-  - {}
-  - type: bar-chart
-  - properties:
-      columns:
-      - id: Column 0
-        expression: value & " - Local Change"
+  - components:
+      - type: bar-chart
+        properties:
+          chart:
+            height: 200
+          lookup:
+            uuid: test
+      - type: bar-chart
+        properties:
+          chart:
+            height: 200
+          lookup:
+            uuid: test
+      - type: bar-chart
+        properties:
+          chart:
+            height: 200
+          columns:
+            - id: Column 0
+              expression: value & " - Local Change"
+          lookup:
+            uuid: test

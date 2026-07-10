@@ -9,7 +9,7 @@ datasets:
         $.startTime /  1000,
         $.duration
     ]
-  .columns:
+  columns:
   - id: Trace ID
   - id: Span ID
   - id: Operation
@@ -18,7 +18,8 @@ datasets:
     type: NUMBER
 pages:
 - components:
-  - .displayer:
+  - type: table
+    properties:
       lookup:
         uuid: traces
   - type: selector

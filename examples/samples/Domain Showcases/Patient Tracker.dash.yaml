@@ -2,56 +2,31 @@ datasets:
 - uuid: patients
   content: >-
     [
-        [1, "Emily Rodriguez", 34, "F", "ICU", "Pneumonia", "2026-06-20", "Critical", "Dr. Sarah Mitchell", "Patient requires
-    close monitoring, high fever persists", "true"],
-        [2, "Michael Chen", 67, "M", "General", "Post-Op", "2026-06-18", "Stable", "Dr. James Anderson", "Recovery progressing
-    well", "false"],
-        [3, "Sophia Patel", 5, "F", "Pediatrics", "Asthma", "2026-06-24", "Monitoring", "Dr. Lisa Thompson", "Nebulizer treatment
-    4x daily", "false"],
-        [4, "James Wilson", 52, "M", "ICU", "Myocardial Infarction", "2026-06-19", "Critical", "Dr. Sarah Mitchell", "Cardiac
-    enzyme levels elevated, ECG abnormal", "true"],
-        [5, "Maria Santos", 28, "F", "Maternity", "Post-Delivery", "2026-06-25", "Stable", "Dr. Rachel Kim", "Normal vaginal
-    delivery, mother and baby healthy", "false"],
-        [6, "Robert Johnson", 45, "M", "General", "Fracture", "2026-06-23", "Stable", "Dr. James Anderson", "Right femur fracture,
-    surgery scheduled tomorrow", "false"],
-        [7, "Aisha Ibrahim", 72, "F", "General", "Diabetes", "2026-06-21", "Monitoring", "Dr. Michael Chang", "Blood sugar
-    levels fluctuating", "true"],
-        [8, "David Lee", 8, "M", "Pediatrics", "Appendicitis", "2026-06-24", "Monitoring", "Dr. Lisa Thompson", "Post-appendectomy
-    day 1", "false"],
-        [9, "Isabella Martinez", 82, "F", "ICU", "Stroke", "2026-06-20", "Critical", "Dr. Sarah Mitchell", "Left-sided weakness,
-    speech impairment", "true"],
-        [10, "Thomas Brown", 39, "M", "Outpatient", "Hypertension", "2026-06-26", "Stable", "Dr. Michael Chang", "Medication
-    adjustment follow-up", "false"],
-        [11, "Fatima Ahmed", 31, "F", "Maternity", "Labor", "2026-06-26", "Monitoring", "Dr. Rachel Kim", "First-time mother,
-    6cm dilated", "false"],
-        [12, "Christopher White", 55, "M", "General", "Pneumonia", "2026-06-22", "Stable", "Dr. James Anderson", "Responding
-    well to antibiotics", "false"],
-        [13, "Yuki Tanaka", 12, "F", "Pediatrics", "Fracture", "2026-06-25", "Stable", "Dr. Lisa Thompson", "Left arm fracture,
-    cast applied", "false"],
-        [14, "Antonio Garcia", 63, "M", "ICU", "Sepsis", "2026-06-21", "Stable", "Dr. Sarah Mitchell", "Broad-spectrum antibiotics
-    started, responding to treatment", "false"],
-        [15, "Hannah Cohen", 26, "F", "Outpatient", "Migraine", "2026-06-26", "Stable", "Dr. Michael Chang", "Preventive medication
-    prescribed", "false"],
-        [16, "Mohammed Ali", 48, "M", "General", "Diabetes", "2026-06-23", "Monitoring", "Dr. James Anderson", "Insulin adjustment
-    required", "false"],
-        [17, "Olivia Smith", 2, "F", "Pediatrics", "Bronchiolitis", "2026-06-25", "Monitoring", "Dr. Lisa Thompson", "Oxygen
-    saturation improving", "true"],
-        [18, "Samuel Davis", 71, "M", "General", "Post-Op", "2026-06-19", "Stable", "Dr. James Anderson", "Hip replacement
-    recovery day 7", "false"],
-        [19, "Priya Sharma", 35, "F", "Maternity", "Post-Delivery", "2026-06-24", "Stable", "Dr. Rachel Kim", "C-section day
-    2, incision healing well", "false"],
-        [20, "Lucas Anderson", 58, "M", "Outpatient", "Asthma", "2026-06-26", "Stable", "Dr. Michael Chang", "Inhaler technique
-    reviewed", "false"],
-        [21, "Grace Kim", 77, "F", "General", "Heart Failure", "2026-06-22", "Monitoring", "Dr. Michael Chang", "Diuretic
-    dose increased", "true"],
-        [22, "Ethan Taylor", 9, "M", "Pediatrics", "Gastroenteritis", "2026-06-25", "Stable", "Dr. Lisa Thompson", "Rehydration
-    therapy ongoing", "false"],
-        [23, "Amara Okafor", 42, "F", "ICU", "Respiratory Failure", "2026-06-21", "Stable", "Dr. Sarah Mitchell", "Extubated,
-    breathing spontaneously", "false"],
-        [24, "William Zhang", 60, "M", "General", "Cellulitis", "2026-06-24", "Stable", "Dr. James Anderson", "IV antibiotics
-    showing improvement", "false"],
-        [25, "Nina Petrova", 29, "F", "Outpatient", "Sprained Ankle", "2026-06-26", "Stable", "Dr. Michael Chang", "RICE protocol
-    advised, follow-up in 2 weeks", "false"]
+        [1, "Emily Rodriguez", 34, "F", "ICU", "Pneumonia", "2026-06-20", "Critical", "Dr. Sarah Mitchell", "Patient requires close monitoring, high fever persists", "true"],
+        [2, "Michael Chen", 67, "M", "General", "Post-Op", "2026-06-18", "Stable", "Dr. James Anderson", "Recovery progressing well", "false"],
+        [3, "Sophia Patel", 5, "F", "Pediatrics", "Asthma", "2026-06-24", "Monitoring", "Dr. Lisa Thompson", "Nebulizer treatment 4x daily", "false"],
+        [4, "James Wilson", 52, "M", "ICU", "Myocardial Infarction", "2026-06-19", "Critical", "Dr. Sarah Mitchell", "Cardiac enzyme levels elevated, ECG abnormal", "true"],
+        [5, "Maria Santos", 28, "F", "Maternity", "Post-Delivery", "2026-06-25", "Stable", "Dr. Rachel Kim", "Normal vaginal delivery, mother and baby healthy", "false"],
+        [6, "Robert Johnson", 45, "M", "General", "Fracture", "2026-06-23", "Stable", "Dr. James Anderson", "Right femur fracture, surgery scheduled tomorrow", "false"],
+        [7, "Aisha Ibrahim", 72, "F", "General", "Diabetes", "2026-06-21", "Monitoring", "Dr. Michael Chang", "Blood sugar levels fluctuating", "true"],
+        [8, "David Lee", 8, "M", "Pediatrics", "Appendicitis", "2026-06-24", "Monitoring", "Dr. Lisa Thompson", "Post-appendectomy day 1", "false"],
+        [9, "Isabella Martinez", 82, "F", "ICU", "Stroke", "2026-06-20", "Critical", "Dr. Sarah Mitchell", "Left-sided weakness, speech impairment", "true"],
+        [10, "Thomas Brown", 39, "M", "Outpatient", "Hypertension", "2026-06-26", "Stable", "Dr. Michael Chang", "Medication adjustment follow-up", "false"],
+        [11, "Fatima Ahmed", 31, "F", "Maternity", "Labor", "2026-06-26", "Monitoring", "Dr. Rachel Kim", "First-time mother, 6cm dilated", "false"],
+        [12, "Christopher White", 55, "M", "General", "Pneumonia", "2026-06-22", "Stable", "Dr. James Anderson", "Responding well to antibiotics", "false"],
+        [13, "Yuki Tanaka", 12, "F", "Pediatrics", "Fracture", "2026-06-25", "Stable", "Dr. Lisa Thompson", "Left arm fracture, cast applied", "false"],
+        [14, "Antonio Garcia", 63, "M", "ICU", "Sepsis", "2026-06-21", "Stable", "Dr. Sarah Mitchell", "Broad-spectrum antibiotics started, responding to treatment", "false"],
+        [15, "Hannah Cohen", 26, "F", "Outpatient", "Migraine", "2026-06-26", "Stable", "Dr. Michael Chang", "Preventive medication prescribed", "false"],
+        [16, "Mohammed Ali", 48, "M", "General", "Diabetes", "2026-06-23", "Monitoring", "Dr. James Anderson", "Insulin adjustment required", "false"],
+        [17, "Olivia Smith", 2, "F", "Pediatrics", "Bronchiolitis", "2026-06-25", "Monitoring", "Dr. Lisa Thompson", "Oxygen saturation improving", "true"],
+        [18, "Samuel Davis", 71, "M", "General", "Post-Op", "2026-06-19", "Stable", "Dr. James Anderson", "Hip replacement recovery day 7", "false"],
+        [19, "Priya Sharma", 35, "F", "Maternity", "Post-Delivery", "2026-06-24", "Stable", "Dr. Rachel Kim", "C-section day 2, incision healing well", "false"],
+        [20, "Lucas Anderson", 58, "M", "Outpatient", "Asthma", "2026-06-26", "Stable", "Dr. Michael Chang", "Inhaler technique reviewed", "false"],
+        [21, "Grace Kim", 77, "F", "General", "Heart Failure", "2026-06-22", "Monitoring", "Dr. Michael Chang", "Diuretic dose increased", "true"],
+        [22, "Ethan Taylor", 9, "M", "Pediatrics", "Gastroenteritis", "2026-06-25", "Stable", "Dr. Lisa Thompson", "Rehydration therapy ongoing", "false"],
+        [23, "Amara Okafor", 42, "F", "ICU", "Respiratory Failure", "2026-06-21", "Stable", "Dr. Sarah Mitchell", "Extubated, breathing spontaneously", "false"],
+        [24, "William Zhang", 60, "M", "General", "Cellulitis", "2026-06-24", "Stable", "Dr. James Anderson", "IV antibiotics showing improvement", "false"],
+        [25, "Nina Petrova", 29, "F", "Outpatient", "Sprained Ankle", "2026-06-26", "Stable", "Dr. Michael Chang", "RICE protocol advised, follow-up in 2 weeks", "false"]
     ]
   columns:
   - id: id
@@ -379,17 +354,13 @@ pages:
 
           **Current Status:** #{datasets.patients.rowCount} patients
 
-          **ICU Protocols:** - Vitals monitoring every 2 hours - Critical patients require attending physician approval for
-          transfers - Family visitation restricted to 15 minutes per hour
+          **ICU Protocols:** - Vitals monitoring every 2 hours - Critical patients require attending physician approval for transfers - Family visitation restricted to 15 minutes per hour
 
-          **General Ward:** - Standard vitals monitoring every 4 hours - Discharge planning begins at admission - Medication
-          reconciliation required within 24 hours
+          **General Ward:** - Standard vitals monitoring every 4 hours - Discharge planning begins at admission - Medication reconciliation required within 24 hours
 
-          **Pediatrics:** - Parent/guardian must remain with patient under 12 - Specialized dosing protocols for all medications
-          - Play therapy available 9 AM - 5 PM
+          **Pediatrics:** - Parent/guardian must remain with patient under 12 - Specialized dosing protocols for all medications - Play therapy available 9 AM - 5 PM
 
-          **Maternity:** - Rooming-in encouraged for all mothers - Lactation consultant available on request - Newborn screening
-          completed before discharge
+          **Maternity:** - Rooming-in encouraged for all mothers - Lactation consultant available on request - Newborn screening completed before discharge
     - span: 4
       components:
       - alert:
