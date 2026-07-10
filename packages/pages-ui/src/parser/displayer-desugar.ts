@@ -16,6 +16,7 @@ const TYPE_MAP: Record<string, string> = {
   TABLE: "table",
   METRIC: "metric",
   METERCHART: "meter",
+  METER: "meter",
   SELECTOR: "selector",
   MAP: "map",
   BADGE: "badge",

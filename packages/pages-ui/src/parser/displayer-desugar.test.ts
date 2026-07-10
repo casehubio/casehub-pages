@@ -474,6 +474,11 @@ describe("desugarDisplayer", () => {
       expect(result.type).toBe("line-chart");
     });
 
+    it("meter maps to meter (not table)", () => {
+      const result = desugarDisplayer({ type: "meter", lookup: { uuid: "d" } });
+      expect(result.type).toBe("meter");
+    });
+
     it("grouped-view routes to grouped-view desugar", () => {
       const result = desugarDisplayer({
         type: "grouped-view",
