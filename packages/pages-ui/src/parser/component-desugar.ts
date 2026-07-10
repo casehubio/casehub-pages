@@ -25,7 +25,6 @@ const DATA_COMPONENT_TYPES = new Set([
   "action-button", "alert",
   "grid", "columns", "rows", "stack", "panel",
   "split", "dock-bar", "host-panel",
-  "html", "markdown", "title",
 ]);
 
 const LEGACY_TYPE_MAP: Record<string, string> = {
@@ -294,21 +293,38 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       };
     }
 
-    // Legacy HTML component (type: "HTML" with properties.HTML_CODE)
+    // HTML component (legacy HTML_CODE or modern content)
     if (rawType === "HTML" || rawType === "html") {
       const properties = (raw.properties as Record<string, unknown> | undefined) || {};
-      const htmlCode = properties["HTML_CODE"] as string | undefined;
-      // Extract CSS-related properties (everything except HTML_CODE)
+      const content = (properties["HTML_CODE"] ?? properties["content"]) as string | undefined;
       const style: Record<string, string> = {};
       for (const [key, value] of Object.entries(properties)) {
-        if (key !== "HTML_CODE") {
+        if (key !== "HTML_CODE" && key !== "content") {
           style[key] = String(value);
         }
       }
       return {
         type: "html",
-        props: { content: htmlCode ?? "" },
+        props: { content: content ?? "" },
         ...(Object.keys(style).length > 0 ? { style } : {}),
+      };
+    }
+
+    // Markdown component
+    if (rawType === "markdown") {
+      const properties = (raw.properties as Record<string, unknown> | undefined) || {};
+      return {
+        type: "markdown",
+        props: { content: (properties["content"] as string) ?? "" },
+      };
+    }
+
+    // Title component
+    if (rawType === "title") {
+      const properties = (raw.properties as Record<string, unknown> | undefined) || {};
+      return {
+        type: "title",
+        props: { text: (properties["text"] as string) ?? "", size: properties["size"] as string | undefined },
       };
     }
 
