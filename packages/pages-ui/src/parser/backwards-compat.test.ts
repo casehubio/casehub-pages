@@ -78,7 +78,7 @@ describe("backwards compatibility — existing samples", () => {
 
   describe("Column with rows — nested layout", () => {
     const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Column with rows.dash.yaml"),
+      join(EXAMPLES_DIR, "Layout/Column with Rows.dash.yaml"),
       "utf-8",
     );
     const root = parsePage(load(content));
@@ -106,7 +106,7 @@ describe("backwards compatibility — existing samples", () => {
 
   describe("Developers Registration — legacy layoutTemplates format", () => {
     const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Developers Registration.yaml"),
+      join(EXAMPLES_DIR, "Forms/Developer Registration.dash.yaml"),
       "utf-8",
     );
     const root = parsePage(load(content));
@@ -129,7 +129,7 @@ describe("backwards compatibility — existing samples", () => {
 
   describe("DarkMode — lowercase displayer types", () => {
     const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/DarkMode.dash.yaml"),
+      join(EXAMPLES_DIR, "Theming/DarkMode.dash.yaml"),
       "utf-8",
     );
     const root = parsePage(load(content));
@@ -151,7 +151,7 @@ describe("backwards compatibility — existing samples", () => {
 
   describe("Global Column settings — empty displayer and global defaults", () => {
     const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Global Column settings.dash.yaml"),
+      join(EXAMPLES_DIR, "Tables/Column Settings.dash.yaml"),
       "utf-8",
     );
     const root = parsePage(load(content));
@@ -165,7 +165,7 @@ describe("backwards compatibility — existing samples", () => {
 
   describe("Prometheus Basic — property substitution and lowercase timeseries", () => {
     const content = readFileSync(
-      join(EXAMPLES_DIR, "Prometheus/Prometheus Basic.yml"),
+      join(EXAMPLES_DIR, "Monitoring/Prometheus Basic.yml"),
       "utf-8",
     );
     const root = parsePage(load(content));
@@ -193,7 +193,7 @@ describe("backwards compatibility — existing samples", () => {
 
   describe("InlineDataset — inline dataSet field", () => {
     const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/InlineDataset.dash.yaml"),
+      join(EXAMPLES_DIR, "Tables/Inline Dataset.dash.yaml"),
       "utf-8",
     );
     const root = parsePage(load(content));

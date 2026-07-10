@@ -68,8 +68,6 @@ pages:
                     uuid: products
 
       - type: markdown
-        properties:
-          visible: false
         visibleWhen: "#{filter.category}"
         properties:
           content: >
