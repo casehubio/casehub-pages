@@ -1,27 +1,49 @@
 datasets:
-  - uuid: test
-    content: "[ 'ABC', 1]"
+  - uuid: sales
+    content: >-
+      [
+        ["Alice Chen", "Engineering", 142000, 0.15, "2024-03-15T00:00:00Z"],
+        ["Bob Kim", "Marketing", 98000, 0.08, "2023-11-01T00:00:00Z"],
+        ["Carlos Ruiz", "Engineering", 128000, 0.22, "2022-06-20T00:00:00Z"],
+        ["Diana Park", "Sales", 115000, -0.05, "2024-01-10T00:00:00Z"],
+        ["Eve Johnson", "Marketing", 87000, 0.12, "2023-08-15T00:00:00Z"],
+        ["Frank Lee", "Sales", 135000, 0.18, "2021-04-01T00:00:00Z"],
+        ["Grace Wu", "Engineering", 155000, 0.25, "2020-09-15T00:00:00Z"],
+        ["Henry Zhang", "Sales", 105000, -0.03, "2024-06-01T00:00:00Z"]
+      ]
+    columns:
+      - id: name
+        type: TEXT
+      - id: department
+        type: LABEL
+      - id: salary
+        type: NUMBER
+      - id: growth
+        type: NUMBER
+      - id: startDate
+        type: DATE
 
 pages:
-  - components:
-      - type: bar-chart
+  - name: Column Settings
+    components:
+      - type: title
         properties:
-          chart:
-            height: 200
+          text: Column Formatting
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **Column settings** control how values display — number patterns,
+            date formats, and expressions that transform cell content.
+
+      - type: table
+        properties:
           lookup:
-            uuid: test
-      - type: bar-chart
-        properties:
-          chart:
-            height: 200
-          lookup:
-            uuid: test
-      - type: bar-chart
-        properties:
-          chart:
-            height: 200
+            uuid: sales
+          sortable: true
           columns:
-            - id: Column 0
-              expression: value & " - Local Change"
-          lookup:
-            uuid: test
+            - id: salary
+              pattern: "$#,###"
+            - id: growth
+              pattern: "#.#%"
