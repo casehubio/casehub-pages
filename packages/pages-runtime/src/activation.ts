@@ -1,6 +1,6 @@
 import type {Component, PermissionContext} from "@casehubio/pages-component/dist/model/types.js";
 import type {DataSetLookup} from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type {ColumnId, DataSetId} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
 import {ColumnType} from "@casehubio/pages-data/dist/dataset/types.js";
 import type {DataSetEntry, DataSetScope} from "./dataset-scope.js";
 import {extendDataSetScope} from "./dataset-scope.js";
@@ -75,7 +75,7 @@ function createHostPanelProxy(panel: DataReceiver): VizTarget {
   return {
     set loading(v: boolean) { panel.loading = v; },
     get loading() { return panel.loading; },
-    set dataSet(v: unknown) { panel.dataSet = v; },
+    set dataSet(v: TypedDataSet | undefined) { panel.dataSet = v; },
     get dataSet() { return panel.dataSet; },
     set error(v: string) { panel.error = v; },
     get error() { return panel.error; },

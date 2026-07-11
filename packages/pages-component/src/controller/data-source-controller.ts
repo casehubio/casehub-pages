@@ -2,14 +2,14 @@ import type {DataSource} from "@casehubio/pages-data/dist/datasource/types.js";
 import type {DataSetEvent} from "@casehubio/pages-data/dist/dataset/events.js";
 import type {SortColumn} from "@casehubio/pages-data/dist/dataset/sort.js";
 import type {DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
-import type {ExternalColumnDef} from "@casehubio/pages-data/dist/dataset/external/types.js";
 import {dataSetId} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {ExternalColumnDef} from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type {VizTarget} from "../model/hosting.js";
 
 export interface SourceFactoryOptions {
-  readonly columns?: readonly ExternalColumnDef[];
-  readonly dataPath?: string;
-  readonly totalPath?: string;
+  readonly columns?: readonly ExternalColumnDef[] | undefined;
+  readonly dataPath?: string | undefined;
+  readonly totalPath?: string | undefined;
 }
 
 export type SourceFactory = (url: string, id: DataSetId, options?: SourceFactoryOptions) => DataSource;
