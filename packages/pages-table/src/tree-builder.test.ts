@@ -69,8 +69,8 @@ describe('tree table (expandable)', () => {
     await el.updateComplete;
 
     const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-    const cells = rows[0]!.querySelectorAll('[role="gridcell"]');
-    expect(cells[2]!.textContent).toContain('Acme Corp');
+    const firstCell = rows[0]!.querySelector('[role="gridcell"]')!;
+    expect(firstCell.textContent).toContain('Acme Corp');
   });
 
   it('expand toggle click shows children', async () => {
@@ -186,9 +186,8 @@ describe('tree table (expandable)', () => {
     expect(rows[0]!.getAttribute('aria-posinset')).toBe('1');
     expect(rows[1]!.getAttribute('aria-setsize')).toBe('2');
     expect(rows[1]!.getAttribute('aria-posinset')).toBe('1');
-    const productRow = rows[4]!;
-    expect(productRow.getAttribute('aria-setsize')).toBe('2');
-    expect(productRow.getAttribute('aria-posinset')).toBe('2');
+    expect(rows[2]!.getAttribute('aria-setsize')).toBe('2');
+    expect(rows[2]!.getAttribute('aria-posinset')).toBe('2');
   });
 
   it('sets aria-expanded on expandable rows', async () => {
