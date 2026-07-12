@@ -7,9 +7,17 @@ import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, 
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
-import { resolveColumnName } from './cell-utils.js';
+import { resolveColumnName, cellToRaw } from './cell-utils.js';
+import { evaluateExpression, createRowContext } from '@casehubio/pages-component/dist/context/expression-evaluator.js';
+import { EMPTY_CONTEXT } from '@casehubio/pages-component/dist/context/types.js';
 
 const AUTO_THRESHOLD = 50;
+
+interface RowStyleRule {
+  readonly condition: string;
+  readonly className?: string;
+  readonly style?: Record<string, string>;
+}
 
 @customElement('pages-table')
 export class PagesTable extends LitElement {
@@ -92,6 +100,7 @@ export class PagesTable extends LitElement {
   private _sortableFromProps = false;
   private _dataRequestPending = false;
   private _propsColumns: readonly ColumnSettings[] | undefined;
+  private _rowStyleRules: readonly RowStyleRule[] = [];
 
   set props(p: Record<string, unknown>) {
     this._pipelineMode = true;
@@ -120,6 +129,11 @@ export class PagesTable extends LitElement {
     const columns = p.columns as readonly ColumnSettings[] | undefined;
     if (columns) {
       this._propsColumns = columns;
+    }
+
+    const rowStyle = p.rowStyle as readonly RowStyleRule[] | undefined;
+    if (rowStyle) {
+      this._rowStyleRules = rowStyle;
     }
 
     if (typeof p.height === 'string' || typeof p.height === 'number') {
@@ -299,6 +313,22 @@ export class PagesTable extends LitElement {
 
     .row.selected {
       background: var(--pages-accent-5, #d3e3fd);
+    }
+
+    .row.pages-row-danger {
+      background: var(--pages-danger-3, #ffe6e6);
+    }
+
+    .row.pages-row-warning {
+      background: var(--pages-warning-3, #fff4e6);
+    }
+
+    .row.pages-row-success {
+      background: var(--pages-success-3, #e6ffe6);
+    }
+
+    .row.pages-row-muted {
+      background: var(--pages-neutral-3, #f5f5f5);
     }
 
     .cell {
@@ -1545,6 +1575,30 @@ export class PagesTable extends LitElement {
     `;
   }
 
+  private _evaluateRowStyle(row: TypedRow): { className?: string; style?: Record<string, string> } | null {
+    if (this._rowStyleRules.length === 0) return null;
+
+    const rowCells: Record<string, unknown> = {};
+    for (const col of this._dataColumns) {
+      rowCells[String(col.id)] = cellToRaw(row.cell(col.id));
+    }
+    const rowContext = createRowContext(EMPTY_CONTEXT, rowCells);
+
+    for (const rule of this._rowStyleRules) {
+      try {
+        if (evaluateExpression(rule.condition, rowContext)) {
+          const result: { className?: string; style?: Record<string, string> } = {};
+          if (rule.className) result.className = rule.className;
+          if (rule.style) result.style = rule.style;
+          return result;
+        }
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }
+
   private _isFilterSelected(row: TypedRow): boolean {
     if (!this._selectedColumnId || !this._selectedValue) return false;
     try {
@@ -1561,18 +1615,23 @@ export class PagesTable extends LitElement {
     const tabindex = actualIndex === this._focusRowIndex ? '0' : '-1';
     const isClickable = this._filterConfig.enabled;
     const isFilterSelected = this._isFilterSelected(row);
+    const rowStyleResult = this._evaluateRowStyle(row);
+    const rowStyleClass = rowStyleResult?.className ?? '';
+    const rowInlineStyle = rowStyleResult?.style
+      ? Object.entries(rowStyleResult.style).map(([k, v]) => `${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}: ${v}`).join('; ')
+      : '';
 
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';
 
     return html`
       <div
-        class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''}"
+        class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''} ${rowStyleClass}"
+        style="grid-template-columns: ${this._gridTemplateColumns}; ${rowInlineStyle}"
         role="row"
         part="${part}"
         aria-rowindex="${ariaRowIndex}"
         aria-selected="${this.selection !== 'none' && isSelected ? 'true' : 'false'}"
         tabindex="${tabindex}"
-        style="grid-template-columns: ${this._gridTemplateColumns}"
         @click="${(e: MouseEvent) => this._handleRowClick(row, e)}"
         @dblclick="${(e: MouseEvent) => this._handleRowDoubleClick(row, e)}"
       >

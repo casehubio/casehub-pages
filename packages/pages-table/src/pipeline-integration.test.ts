@@ -492,4 +492,128 @@ describe('pipeline integration', () => {
       expect(rows[0]!.classList.contains('selected')).toBe(false);
     });
   });
+
+  describe('row styles', () => {
+    const statusCol = 'status' as ColumnId;
+    const valueCol = 'value' as ColumnId;
+    const styleDataSet = fromRows(
+      [
+        { status: 'Critical', value: 100 },
+        { status: 'Normal', value: 50 },
+        { status: 'Critical', value: 75 },
+      ],
+      [
+        { id: statusCol, name: 'Status', type: ColumnType.LABEL, getValue: (r: { status: string; value: number }) => r.status },
+        { id: valueCol, name: 'Value', type: ColumnType.NUMBER, getValue: (r: { status: string; value: number }) => r.value },
+      ],
+    );
+
+    it('applies pages-row-danger class when condition matches', async () => {
+      el.props = {
+        lookup: { dataSetId: 'test', operations: [] },
+        rowStyle: [{ condition: "#{row.status} == 'Critical'", className: 'pages-row-danger' }],
+      };
+      el.dataSet = styleDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('pages-row-danger')).toBe(true);
+      expect(rows[1]!.classList.contains('pages-row-danger')).toBe(false);
+      expect(rows[2]!.classList.contains('pages-row-danger')).toBe(true);
+    });
+
+    it('first matching rule wins — subsequent rules not evaluated', async () => {
+      el.props = {
+        lookup: { dataSetId: 'test', operations: [] },
+        rowStyle: [
+          { condition: "#{row.status} == 'Critical'", className: 'pages-row-danger' },
+          { condition: "#{row.value} > 50", className: 'pages-row-warning' },
+        ],
+      };
+      el.dataSet = styleDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('pages-row-danger')).toBe(true);
+      expect(rows[0]!.classList.contains('pages-row-warning')).toBe(false);
+    });
+
+    it('applies inline style when rule has style property', async () => {
+      el.props = {
+        lookup: { dataSetId: 'test', operations: [] },
+        rowStyle: [{ condition: "#{row.status} == 'Critical'", style: { backgroundColor: '#fce4ec', color: '#b71c1c' } }],
+      };
+      el.dataSet = styleDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      const style = (rows[0] as HTMLElement).getAttribute('style') ?? '';
+      expect(style).toContain('background-color');
+      expect(style).toContain('color');
+    });
+
+    it('no class or style applied when no rule matches', async () => {
+      el.props = {
+        lookup: { dataSetId: 'test', operations: [] },
+        rowStyle: [{ condition: "#{row.status} == 'Unknown'", className: 'pages-row-danger' }],
+      };
+      el.dataSet = styleDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('pages-row-danger')).toBe(false);
+      expect(rows[1]!.classList.contains('pages-row-danger')).toBe(false);
+    });
+
+    it('handles numeric comparisons in row conditions', async () => {
+      el.props = {
+        lookup: { dataSetId: 'test', operations: [] },
+        rowStyle: [{ condition: '#{row.value} > 70', className: 'pages-row-warning' }],
+      };
+      el.dataSet = styleDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('pages-row-warning')).toBe(true);
+      expect(rows[1]!.classList.contains('pages-row-warning')).toBe(false);
+      expect(rows[2]!.classList.contains('pages-row-warning')).toBe(true);
+    });
+
+    it('renders normally when rowStyle is undefined', async () => {
+      el.props = { lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = styleDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows.length).toBe(3);
+    });
+
+    it('renders normally when rowStyle is empty array', async () => {
+      el.props = { lookup: { dataSetId: 'test', operations: [] }, rowStyle: [] };
+      el.dataSet = styleDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows.length).toBe(3);
+    });
+
+    it('handles null values in row data', async () => {
+      const withNull = fromRows(
+        [{ status: null as string | null, value: 42 }],
+        [
+          { id: statusCol, name: 'Status', type: ColumnType.LABEL, getValue: (r: { status: string | null; value: number }) => r.status },
+          { id: valueCol, name: 'Value', type: ColumnType.NUMBER, getValue: (r: { status: string | null; value: number }) => r.value },
+        ],
+      );
+      el.props = {
+        lookup: { dataSetId: 'test', operations: [] },
+        rowStyle: [{ condition: "#{row.status} == 'Critical'", className: 'pages-row-danger' }],
+      };
+      el.dataSet = withNull;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('pages-row-danger')).toBe(false);
+    });
+  });
 });
