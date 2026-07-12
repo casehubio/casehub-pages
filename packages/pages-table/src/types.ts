@@ -1,4 +1,5 @@
 import type {TemplateResult} from 'lit';
+import type {DirectiveResult} from 'lit/directive.js';
 import type {CellValue, Column, ColumnId, TypedRow} from '@casehubio/pages-data/dist/dataset/types.js';
 
 export type DisplayMode = 'auto' | 'paginated' | 'scroll';
@@ -18,7 +19,7 @@ export interface TableColumnConfig {
   readonly compare?: (a: CellValue, b: CellValue) => number;
 }
 
-export type ColumnRenderer = (cell: CellValue, row: TypedRow, column: Column) => TemplateResult | string;
+export type ColumnRenderer = (cell: CellValue, row: TypedRow, column: Column) => TemplateResult | string | DirectiveResult;
 
 export interface SortEntry {
   readonly columnId: string;

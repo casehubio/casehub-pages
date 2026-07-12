@@ -616,4 +616,50 @@ describe('pipeline integration', () => {
       expect(rows[0]!.classList.contains('pages-row-danger')).toBe(false);
     });
   });
+
+  describe('column expressions', () => {
+    it('applies column expression to cell values', async () => {
+      const salaryCol = 'salary' as ColumnId;
+      const ds = fromRows(
+        [{ name: 'Alice', salary: 100000 }],
+        [
+          { id: nameCol, name: 'Name', type: ColumnType.TEXT, getValue: (r: { name: string; salary: number }) => r.name },
+          { id: salaryCol, name: 'Salary', type: ColumnType.NUMBER, getValue: (r: { name: string; salary: number }) => r.salary },
+        ],
+      );
+      el.props = {
+        lookup: { dataSetId: 'test', operations: [] },
+        columns: [{ id: salaryCol, expression: "'$' & value" }],
+      };
+      el.dataSet = ds;
+      await el.updateComplete;
+      await new Promise(r => setTimeout(r, 100));
+      await el.updateComplete;
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      expect(cells[1]!.textContent).toContain('$100000');
+    });
+  });
+
+  describe('CSV export buttons', () => {
+    it('shows export buttons when csvExport is true', async () => {
+      el.props = { csvExport: true, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const downloadBtn = el.shadowRoot!.querySelector('[aria-label="Download CSV"]');
+      const copyBtn = el.shadowRoot!.querySelector('[aria-label="Copy CSV"]');
+      expect(downloadBtn).not.toBeNull();
+      expect(copyBtn).not.toBeNull();
+    });
+
+    it('does not show export buttons when csvExport is not set', async () => {
+      el.props = { lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const downloadBtn = el.shadowRoot!.querySelector('[aria-label="Download CSV"]');
+      expect(downloadBtn).toBeNull();
+    });
+  });
 });

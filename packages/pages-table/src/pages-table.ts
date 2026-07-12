@@ -7,7 +7,9 @@ import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, 
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
-import { resolveColumnName, cellToRaw } from './cell-utils.js';
+import { resolveColumnName, cellToRaw, applyCellExpression, resolveColumnExpression } from './cell-utils.js';
+import { until } from 'lit/directives/until.js';
+import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
 import { evaluateExpression, createRowContext } from '@casehubio/pages-component/dist/context/expression-evaluator.js';
 import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, findMatchingNodes, rowMatchesText, sortTreeLevel, type TreeNode, type ExpandableConfig } from './tree-builder.js';
 import { EMPTY_CONTEXT } from '@casehubio/pages-component/dist/context/types.js';
@@ -108,6 +110,7 @@ export class PagesTable extends LitElement {
   private _treeExpandState = new Map<string, boolean>();
   private _treeExpandStateInitialized = false;
   private _treeNodeByRow = new Map<TypedRow, TreeNode>();
+  private _csvExportEnabled = false;
 
   set props(p: Record<string, unknown>) {
     this._pipelineMode = true;
@@ -148,6 +151,10 @@ export class PagesTable extends LitElement {
       this._rowStyleRules = rowStyle;
     }
 
+    if (p.csvExport === true) {
+      this._csvExportEnabled = true;
+    }
+
     if (typeof p.height === 'string' || typeof p.height === 'number') {
       this.style.height = typeof p.height === 'number' ? `${String(p.height)}px` : String(p.height);
     }
@@ -178,6 +185,27 @@ export class PagesTable extends LitElement {
       };
     });
     this.columnConfig = config;
+
+    if (this._propsColumns) {
+      const renderers = new Map<ColumnId, ColumnRenderer>();
+      for (const col of cols) {
+        const expr = resolveColumnExpression(col.id, this._propsColumns);
+        if (expr) {
+          const expression = expr;
+          renderers.set(col.id, (cell: CellValue) => {
+            const raw = cellToRaw(cell);
+            if (raw === null) return '';
+            return until(
+              applyCellExpression(raw, expression).then(r => r === null ? '' : String(r)),
+              String(raw),
+            );
+          });
+        }
+      }
+      if (renderers.size > 0) {
+        this.columnRenderers = renderers;
+      }
+    }
   }
 
   private _rebuildTree(): void {
@@ -219,6 +247,20 @@ export class PagesTable extends LitElement {
     );
     this.requestUpdate();
   }
+
+  private _handleCopyToClipboard = async (): Promise<void> => {
+    if (!this.dataSet) return;
+    const csv = tableToCsv(this.dataSet, this.columnConfig);
+    const success = await copyToClipboard(csv);
+    if (success) {
+      const btn = this.shadowRoot?.querySelector('[aria-label="Copy CSV"]');
+      if (btn) {
+        const original = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      }
+    }
+  };
 
   private _emitPipelineTextFilter(): void {
     this.dispatchEvent(new CustomEvent('pages-text-filter', {
@@ -1456,6 +1498,10 @@ export class PagesTable extends LitElement {
 
     return html`
       <div class="toolbar">
+        ${this._csvExportEnabled && this.dataSet ? html`
+          <button class="pagination-button" aria-label="Download CSV" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">⬇</button>
+          <button class="pagination-button" aria-label="Copy CSV" @click="${this._handleCopyToClipboard}">📋</button>
+        ` : nothing}
         ${showFilter ? html`
           <input
             type="text"
