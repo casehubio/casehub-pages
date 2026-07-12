@@ -1,5 +1,5 @@
-import type { TemplateResult } from 'lit';
-import type { ColumnId, CellValue, TypedRow, Column } from '@casehubio/pages-data/dist/dataset/types.js';
+import type {TemplateResult} from 'lit';
+import type {CellValue, Column, ColumnId, TypedRow} from '@casehubio/pages-data/dist/dataset/types.js';
 
 export type DisplayMode = 'auto' | 'paginated' | 'scroll';
 export type SelectionMode = 'none' | 'single' | 'multi';
@@ -57,3 +57,25 @@ export interface FilterChangeDetail {
 }
 
 export interface LoadMoreDetail {}
+
+export interface PagesFilterApply {
+    readonly columnId: string;
+    readonly value: string;
+    readonly row: TypedRow;
+    readonly reset: false;
+    readonly group: string | undefined;
+}
+
+export interface PagesFilterReset {
+    readonly columnId: string;
+    readonly reset: true;
+    readonly group: string | undefined;
+}
+
+export type PagesFilterDetail = PagesFilterApply | PagesFilterReset;
+
+export interface FilterConfig {
+    readonly enabled: boolean;
+    readonly group?: string | undefined;
+}
+

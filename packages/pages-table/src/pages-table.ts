@@ -1,11 +1,13 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue } from '@casehubio/pages-data/dist/dataset/types.js';
+import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data/dist/dataset/types.js';
 import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
-import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail } from './types.js';
+import type { SortColumn } from '@casehubio/pages-data/dist/dataset/sort.js';
+import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
+import { resolveColumnName } from './cell-utils.js';
 
 const AUTO_THRESHOLD = 50;
 
@@ -21,6 +23,22 @@ export class PagesTable extends LitElement {
   @property({ attribute: false }) getRowClass?: (row: TypedRow) => string;
   @property({ attribute: false }) getChildren?: (row: TypedRow) => readonly TypedRow[];
   @property({ type: Boolean }) loading = false;
+  @property({ type: String }) error = '';
+
+  set activeSort(sort: SortColumn | undefined) {
+    if (!sort) {
+      this._sortStack = [];
+    } else {
+      const dir = sort.order === 'ASCENDING' ? 'asc' as const : 'desc' as const;
+      this._sortStack = [{ columnId: String(sort.columnId), direction: dir }];
+    }
+  }
+
+  set activePage(page: number | undefined) {
+    if (page !== undefined) this.currentPage = page;
+  }
+  get activePage(): number | undefined { return this.currentPage; }
+
   @property({ type: String, attribute: 'empty-message' }) emptyMessage = 'No data';
   @property({ type: Number, attribute: 'row-height' }) rowHeight = 48;
   @property({ type: Number, attribute: 'buffer-size' }) bufferSize = 5;
@@ -66,6 +84,81 @@ export class PagesTable extends LitElement {
   @state() private _hiddenColumnIds = new Set<string>();
 
   private _filterDebounceTimer?: number;
+  private _pipelineMode = false;
+  private _lookup: unknown = undefined;
+  private _filterConfig: FilterConfig = { enabled: false };
+  private _sortableFromProps = false;
+  private _dataRequestPending = false;
+  private _propsColumns: readonly ColumnSettings[] | undefined;
+
+  set props(p: Record<string, unknown>) {
+    this._pipelineMode = true;
+
+    const lookup = p.lookup as unknown;
+    if (lookup) {
+      this._lookup = lookup;
+      this._dataRequestPending = true;
+    }
+
+    if (typeof p.pageSize === 'number') {
+      this.pageSize = p.pageSize;
+      this.mode = 'paginated';
+    }
+
+    this._sortableFromProps = p.sortable === true;
+
+    const filter = p.filter as Record<string, unknown> | undefined;
+    if (filter) {
+      this._filterConfig = {
+        enabled: filter.enabled !== false && (filter.notification === true || filter.listening === true),
+        group: typeof filter.group === 'string' ? filter.group : undefined,
+      };
+    }
+
+    const columns = p.columns as readonly ColumnSettings[] | undefined;
+    if (columns) {
+      this._propsColumns = columns;
+    }
+
+    if (typeof p.height === 'string' || typeof p.height === 'number') {
+      this.style.height = typeof p.height === 'number' ? `${String(p.height)}px` : String(p.height);
+    }
+  }
+
+  private _requestData(): void {
+    if (!this._lookup) return;
+    this.dispatchEvent(new CustomEvent('pages-data-request', {
+      bubbles: true,
+      composed: true,
+      detail: { element: this, lookup: this._lookup },
+    }));
+  }
+
+  private _rebuildConfigFromProps(): void {
+    if (!this.dataSet) return;
+    const cols = this.dataSet.columns;
+
+    const config: TableColumnConfig[] = cols.map(col => {
+      const label = this._propsColumns
+        ? resolveColumnName(col, this._propsColumns)
+        : col.name;
+      return {
+        id: col.id,
+        label,
+        sortable: this._sortableFromProps,
+        width: '1fr',
+      };
+    });
+    this.columnConfig = config;
+  }
+
+  private _emitPipelineTextFilter(): void {
+    this.dispatchEvent(new CustomEvent('pages-text-filter', {
+      detail: { text: this.filterText },
+      bubbles: true,
+      composed: true,
+    }));
+  }
 
   private get _dataRows(): readonly TypedRow[] {
     return this.dataSet?.rows ?? [];
@@ -490,6 +583,14 @@ export class PagesTable extends LitElement {
       bubbles: true,
       composed: true,
     }));
+
+    if (this._pipelineMode) {
+      this.dispatchEvent(new CustomEvent('pages-page', {
+        detail: { offset: page * this.pageSize, count: this.pageSize },
+        bubbles: true,
+        composed: true,
+      }));
+    }
   }
 
   private _goToFirstPage = (): void => {
@@ -526,6 +627,10 @@ export class PagesTable extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
     this._updateContainerHeight();
+    if (this._dataRequestPending) {
+      this._dataRequestPending = false;
+      void this.updateComplete.then(() => this._requestData());
+    }
   }
 
   override disconnectedCallback(): void {
@@ -549,6 +654,10 @@ export class PagesTable extends LitElement {
       this._loadingMore = false;
     }
 
+    if (changed.has('dataSet') && this._pipelineMode && this.dataSet) {
+      this._rebuildConfigFromProps();
+    }
+
     if (this.selection !== 'none' && !this.getRowKey) {
       throw new Error('getRowKey is required when selection is enabled');
     }
@@ -560,6 +669,10 @@ export class PagesTable extends LitElement {
     if (changed.has('filterText') && this.clientFilter) {
       this.currentPage = 0;
       this._emitFilterChange();
+    }
+
+    if (changed.has('filterText') && this._pipelineMode) {
+      this._emitPipelineTextFilter();
     }
   }
 
@@ -818,6 +931,15 @@ export class PagesTable extends LitElement {
       bubbles: true,
       composed: true,
     }));
+
+    if (this._pipelineMode && newDirection !== 'none') {
+      const order = newDirection === 'asc' ? 'ASCENDING' : 'DESCENDING';
+      this.dispatchEvent(new CustomEvent('pages-sort', {
+        detail: { columnId: column.id, order },
+        bubbles: true,
+        composed: true,
+      }));
+    }
   };
 
   private _setMode = (newMode: DisplayMode): void => {
@@ -1216,7 +1338,7 @@ export class PagesTable extends LitElement {
       { value: 'scroll', label: 'Scroll' },
     ];
 
-    const showFilter = this.clientFilter && this.totalRows === undefined;
+    const showFilter = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
 
     return html`
       <div class="toolbar">
@@ -1448,6 +1570,14 @@ export class PagesTable extends LitElement {
       return html`
         <div class="data-table" role="grid" aria-busy="true">
           <div class="loading-state">Loading...</div>
+        </div>
+      `;
+    }
+
+    if (this.error) {
+      return html`
+        <div class="data-table" role="grid">
+          <div class="empty-state" style="color: var(--pages-danger-9, #d32f2f)">${this.error}</div>
         </div>
       `;
     }
