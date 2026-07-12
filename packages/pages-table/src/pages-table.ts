@@ -9,6 +9,7 @@ import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
 import { resolveColumnName, cellToRaw } from './cell-utils.js';
 import { evaluateExpression, createRowContext } from '@casehubio/pages-component/dist/context/expression-evaluator.js';
+import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, findMatchingNodes, rowMatchesText, sortTreeLevel, type TreeNode, type ExpandableConfig } from './tree-builder.js';
 import { EMPTY_CONTEXT } from '@casehubio/pages-component/dist/context/types.js';
 
 const AUTO_THRESHOLD = 50;
@@ -101,6 +102,12 @@ export class PagesTable extends LitElement {
   private _dataRequestPending = false;
   private _propsColumns: readonly ColumnSettings[] | undefined;
   private _rowStyleRules: readonly RowStyleRule[] = [];
+  private _expandableConfig: ExpandableConfig | undefined;
+  private _treeRoots: TreeNode[] = [];
+  private _treeNodeMap = new Map<string, TreeNode>();
+  private _treeExpandState = new Map<string, boolean>();
+  private _treeExpandStateInitialized = false;
+  private _treeNodeByRow = new Map<TypedRow, TreeNode>();
 
   set props(p: Record<string, unknown>) {
     this._pipelineMode = true;
@@ -129,6 +136,11 @@ export class PagesTable extends LitElement {
     const columns = p.columns as readonly ColumnSettings[] | undefined;
     if (columns) {
       this._propsColumns = columns;
+    }
+
+    const expandable = p.expandable as ExpandableConfig | undefined;
+    if (expandable) {
+      this._expandableConfig = expandable;
     }
 
     const rowStyle = p.rowStyle as readonly RowStyleRule[] | undefined;
@@ -166,6 +178,46 @@ export class PagesTable extends LitElement {
       };
     });
     this.columnConfig = config;
+  }
+
+  private _rebuildTree(): void {
+    if (!this.dataSet || !this._expandableConfig) return;
+    const { roots, nodeMap } = buildTreeIndex(this.dataSet, this._expandableConfig);
+    this._treeRoots = roots;
+    this._treeNodeMap = nodeMap;
+
+    if (!this._treeExpandStateInitialized) {
+      this._treeExpandState = computeDefaultExpandState(roots, this._expandableConfig.defaultExpanded);
+      this._treeExpandStateInitialized = true;
+    }
+
+    this._treeNodeByRow.clear();
+    for (const [, node] of nodeMap) {
+      this._treeNodeByRow.set(node.row, node);
+    }
+
+    this.getRowKey = (row: TypedRow) => {
+      const node = this._treeNodeByRow.get(row);
+      return node?.id ?? '';
+    };
+    this.getChildren = (row: TypedRow) => {
+      const node = this._treeNodeByRow.get(row);
+      return node?.children.map(c => c.row) ?? [];
+    };
+
+    const expandState = this._treeExpandState;
+    this._expandedRowIds = new Set(
+      [...expandState.entries()].filter(([, v]) => v).map(([k]) => k)
+    );
+  }
+
+  private _toggleTreeExpand(nodeId: string): void {
+    const current = this._treeExpandState.get(nodeId) ?? false;
+    this._treeExpandState.set(nodeId, !current);
+    this._expandedRowIds = new Set(
+      [...this._treeExpandState.entries()].filter(([, v]) => v).map(([k]) => k)
+    );
+    this.requestUpdate();
   }
 
   private _emitPipelineTextFilter(): void {
@@ -712,6 +764,9 @@ export class PagesTable extends LitElement {
 
     if (changed.has('dataSet') && this._pipelineMode && this.dataSet) {
       this._rebuildConfigFromProps();
+      if (this._expandableConfig) {
+        this._rebuildTree();
+      }
     }
 
     if (this.selection !== 'none' && !this.getRowKey) {
@@ -1283,7 +1338,10 @@ export class PagesTable extends LitElement {
     }
 
     this._treeMetadata.clear();
-    if (this.getChildren && this.getRowKey) {
+    if (this._expandableConfig && this._treeRoots.length > 0) {
+      const visibleNodes = collectVisibleNodes(this._treeRoots, this._treeExpandState);
+      rows = visibleNodes.map(n => n.row);
+    } else if (this.getChildren && this.getRowKey) {
       const treeRows = flattenTree(rows, this.getChildren, this._expandedRowIds, this.getRowKey);
       rows = treeRows.map(tr => {
         this._treeMetadata.set(tr.row, tr);
@@ -1496,7 +1554,7 @@ export class PagesTable extends LitElement {
     this.requestUpdate();
   }
 
-  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false) {
+  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode) {
     const cell = row.cell(column.id);
     const renderer = this.columnRenderers?.get(column.id);
     const content = renderer
@@ -1505,15 +1563,23 @@ export class PagesTable extends LitElement {
 
     const config = this._configFor(column);
     const align = config?.align ?? 'start';
-    const treeMeta = this._treeMetadata.get(row);
+    const treeMeta = treeNode ?? this._treeMetadata.get(row);
     const filterClickHandler = this._filterConfig.enabled
       ? (e: MouseEvent) => { e.stopPropagation(); this._handleCellFilterClick(row, column.id); }
       : undefined;
 
     if (isFirstColumn && treeMeta) {
-      const indent = treeMeta.depth * 20;
-      const toggle = treeMeta.hasChildren
-        ? html`<button class="tree-toggle" @click="${(e: MouseEvent) => this._toggleExpand(row, e)}" aria-label="${treeMeta.expanded ? 'Collapse' : 'Expand'}">${treeMeta.expanded ? '▼' : '▶'}</button>`
+      const depth = 'depth' in treeMeta ? treeMeta.depth : 0;
+      const hasChildren = 'children' in treeMeta ? treeMeta.children.length > 0 : treeMeta.hasChildren;
+      const isExpanded = treeNode
+        ? this._treeExpandState.get(treeNode.id) === true
+        : (treeMeta as TreeRow).expanded;
+      const indent = depth * 20;
+      const toggleHandler = treeNode
+        ? (e: MouseEvent) => { e.stopPropagation(); this._toggleTreeExpand(treeNode.id); }
+        : (e: MouseEvent) => this._toggleExpand(row, e);
+      const toggle = hasChildren
+        ? html`<button class="tree-toggle" @click="${toggleHandler}" aria-label="${isExpanded ? 'Collapse' : 'Expand'}">${isExpanded ? '▼' : '▶'}</button>`
         : html`<span class="tree-spacer"></span>`;
 
       return html`
@@ -1615,6 +1681,7 @@ export class PagesTable extends LitElement {
     const tabindex = actualIndex === this._focusRowIndex ? '0' : '-1';
     const isClickable = this._filterConfig.enabled;
     const isFilterSelected = this._isFilterSelected(row);
+    const treeNode = this._treeNodeByRow.get(row);
     const rowStyleResult = this._evaluateRowStyle(row);
     const rowStyleClass = rowStyleResult?.className ?? '';
     const rowInlineStyle = rowStyleResult?.style
@@ -1631,12 +1698,16 @@ export class PagesTable extends LitElement {
         part="${part}"
         aria-rowindex="${ariaRowIndex}"
         aria-selected="${this.selection !== 'none' && isSelected ? 'true' : 'false'}"
+        aria-level="${treeNode ? String(treeNode.depth + 1) : nothing}"
+        aria-setsize="${treeNode ? String(treeNode.siblingCount) : nothing}"
+        aria-posinset="${treeNode ? String(treeNode.siblingIndex) : nothing}"
+        aria-expanded="${treeNode && treeNode.children.length > 0 ? String(this._treeExpandState.get(treeNode.id) === true) : nothing}"
         tabindex="${tabindex}"
         @click="${(e: MouseEvent) => this._handleRowClick(row, e)}"
         @dblclick="${(e: MouseEvent) => this._handleRowDoubleClick(row, e)}"
       >
         ${this._renderCheckbox(row)}
-        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0))}
+        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode))}
       </div>
     `;
   }
