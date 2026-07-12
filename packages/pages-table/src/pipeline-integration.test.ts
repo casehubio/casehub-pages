@@ -309,4 +309,187 @@ describe('pipeline integration', () => {
       expect(cells[1]!.textContent).toContain('42');
     });
   });
+
+  describe('cross-filter (click-to-filter)', () => {
+    const labelCol = 'dept' as ColumnId;
+    const labelDataSet = fromRows(
+      [
+        { name: 'Alice', dept: 'Engineering' },
+        { name: 'Bob', dept: 'Marketing' },
+        { name: 'Carol', dept: 'Engineering' },
+      ],
+      [
+        { id: nameCol, name: 'Name', type: ColumnType.TEXT, getValue: (r: { name: string; dept: string }) => r.name },
+        { id: labelCol, name: 'Dept', type: ColumnType.LABEL, getValue: (r: { name: string; dept: string }) => r.dept },
+      ],
+    );
+
+    it('click cell emits pages-filter with correct detail', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.columnId).toBe(String(labelCol));
+      expect(events[0]!.detail.value).toBe('Engineering');
+      expect(events[0]!.detail.reset).toBe(false);
+    });
+
+    it('filter event has correct columnId for non-first column', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[3] as HTMLElement).click();
+      await el.updateComplete;
+
+      expect(events[0]!.detail.columnId).toBe(String(labelCol));
+      expect(events[0]!.detail.value).toBe('Marketing');
+    });
+
+    it('click same cell twice toggles — second emits reset', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      expect(events.length).toBe(2);
+      expect(events[0]!.detail.reset).toBe(false);
+      expect(events[1]!.detail.reset).toBe(true);
+    });
+
+    it('column switch emits reset for old column then apply for new', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      (cells[0] as HTMLElement).click();
+      await el.updateComplete;
+
+      expect(events.length).toBe(3);
+      expect(events[1]!.detail.reset).toBe(true);
+      expect(events[1]!.detail.columnId).toBe(String(labelCol));
+      expect(events[2]!.detail.reset).toBe(false);
+      expect(events[2]!.detail.columnId).toBe(String(nameCol));
+    });
+
+    it('selected row gets .selected CSS class after click', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('selected')).toBe(true);
+      expect(rows[2]!.classList.contains('selected')).toBe(true);
+      expect(rows[1]!.classList.contains('selected')).toBe(false);
+    });
+
+    it('toggle off removes .selected class', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('selected')).toBe(false);
+    });
+
+    it('rows have clickable class when filter enabled', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('clickable')).toBe(true);
+    });
+
+    it('filter group is undefined when not set in props', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      expect(events[0]!.detail.group).toBeUndefined();
+    });
+
+    it('data re-push preserves selection when value exists', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('selected')).toBe(true);
+    });
+
+    it('data re-push clears selection when value absent', async () => {
+      el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
+      el.dataSet = labelDataSet;
+      await el.updateComplete;
+
+      const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
+      (cells[1] as HTMLElement).click();
+      await el.updateComplete;
+
+      const noEngineering = fromRows(
+        [{ name: 'Bob', dept: 'Marketing' }],
+        [
+          { id: nameCol, name: 'Name', type: ColumnType.TEXT, getValue: (r: { name: string; dept: string }) => r.name },
+          { id: labelCol, name: 'Dept', type: ColumnType.LABEL, getValue: (r: { name: string; dept: string }) => r.dept },
+        ],
+      );
+      el.dataSet = noEngineering;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.classList.contains('selected')).toBe(false);
+    });
+  });
 });

@@ -84,6 +84,8 @@ export class PagesTable extends LitElement {
   @state() private _hiddenColumnIds = new Set<string>();
 
   private _filterDebounceTimer?: number;
+  private _selectedColumnId: ColumnId | undefined;
+  private _selectedValue: string | undefined;
   private _pipelineMode = false;
   private _lookup: unknown = undefined;
   private _filterConfig: FilterConfig = { enabled: false };
@@ -288,6 +290,15 @@ export class PagesTable extends LitElement {
 
     .row[aria-selected="true"]:hover {
       background: var(--pages-primary-4, #bfdbfe);
+    }
+
+    .row.clickable:hover {
+      background: var(--pages-accent-4, #e8f0fe);
+      cursor: pointer;
+    }
+
+    .row.selected {
+      background: var(--pages-accent-5, #d3e3fd);
     }
 
     .cell {
@@ -652,6 +663,21 @@ export class PagesTable extends LitElement {
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
     if (changed.has('dataSet') && this.mode === 'scroll') {
       this._loadingMore = false;
+    }
+
+    if (changed.has('dataSet') && this._selectedColumnId !== undefined && this._selectedValue !== undefined && this.dataSet) {
+      const colId = this._selectedColumnId;
+      const selVal = this._selectedValue;
+      const found = this.dataSet.rows.some(row => {
+        try {
+          const cell = row.cell(colId);
+          return cell.type !== 'NULL' && String(cell.value) === selVal;
+        } catch { return false; }
+      });
+      if (!found) {
+        this._selectedColumnId = undefined;
+        this._selectedValue = undefined;
+      }
     }
 
     if (changed.has('dataSet') && this._pipelineMode && this.dataSet) {
@@ -1404,6 +1430,42 @@ export class PagesTable extends LitElement {
     return this._renderToolbar();
   }
 
+  private _handleCellFilterClick(row: TypedRow, columnId: ColumnId): void {
+    const cellVal = row.cell(columnId);
+    if (cellVal.type === 'NULL') return;
+    const value = String(cellVal.value);
+    const group = this._filterConfig.group;
+
+    if (columnId === this._selectedColumnId && value === this._selectedValue) {
+      this._selectedColumnId = undefined;
+      this._selectedValue = undefined;
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(columnId), reset: true, group },
+      }));
+    } else if (this._selectedColumnId !== undefined && this._selectedColumnId !== columnId) {
+      const oldColumnId = this._selectedColumnId;
+      this._selectedColumnId = columnId;
+      this._selectedValue = value;
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(oldColumnId), reset: true, group },
+      }));
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(columnId), value, row, reset: false, group },
+      }));
+    } else {
+      this._selectedColumnId = columnId;
+      this._selectedValue = value;
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(columnId), value, row, reset: false, group },
+      }));
+    }
+    this.requestUpdate();
+  }
+
   private _renderCell(row: TypedRow, column: Column, isFirstColumn = false) {
     const cell = row.cell(column.id);
     const renderer = this.columnRenderers?.get(column.id);
@@ -1414,6 +1476,9 @@ export class PagesTable extends LitElement {
     const config = this._configFor(column);
     const align = config?.align ?? 'start';
     const treeMeta = this._treeMetadata.get(row);
+    const filterClickHandler = this._filterConfig.enabled
+      ? (e: MouseEvent) => { e.stopPropagation(); this._handleCellFilterClick(row, column.id); }
+      : undefined;
 
     if (isFirstColumn && treeMeta) {
       const indent = treeMeta.depth * 20;
@@ -1422,7 +1487,8 @@ export class PagesTable extends LitElement {
         : html`<span class="tree-spacer"></span>`;
 
       return html`
-        <div class="cell tree-cell" role="gridcell" style="text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)">
+        <div class="cell tree-cell" role="gridcell" style="text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)"
+          @click="${filterClickHandler ?? nothing}">
           ${toggle}${content}
         </div>
       `;
@@ -1433,6 +1499,7 @@ export class PagesTable extends LitElement {
         class="cell"
         role="gridcell"
         style="text-align: ${align}"
+        @click="${filterClickHandler ?? nothing}"
       >
         ${content}
       </div>
@@ -1478,18 +1545,28 @@ export class PagesTable extends LitElement {
     `;
   }
 
+  private _isFilterSelected(row: TypedRow): boolean {
+    if (!this._selectedColumnId || !this._selectedValue) return false;
+    try {
+      const cell = row.cell(this._selectedColumnId);
+      return cell.type !== 'NULL' && String(cell.value) === this._selectedValue;
+    } catch { return false; }
+  }
+
   private _renderRow(row: TypedRow, actualIndex: number, displayIndex: number) {
     const rowClass = this.getRowClass?.(row) ?? '';
     const part = rowClass ? `row ${rowClass}` : 'row';
     const ariaRowIndex = actualIndex + 2;
     const isSelected = this._isRowSelected(row);
     const tabindex = actualIndex === this._focusRowIndex ? '0' : '-1';
+    const isClickable = this._filterConfig.enabled;
+    const isFilterSelected = this._isFilterSelected(row);
 
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';
 
     return html`
       <div
-        class="row ${stripe}"
+        class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''}"
         role="row"
         part="${part}"
         aria-rowindex="${ariaRowIndex}"
