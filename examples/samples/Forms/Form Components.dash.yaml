@@ -1,24 +1,34 @@
 datasets:
-  - uuid: countries
-    content: >
+  - uuid: sample
+    content: >-
       [
-        ["US", "United States"],
-        ["UK", "United Kingdom"],
-        ["DE", "Germany"],
-        ["FR", "France"],
-        ["JP", "Japan"],
-        ["AU", "Australia"],
-        ["CA", "Canada"],
-        ["BR", "Brazil"]
+        [1, "Example entry", "Option A", 42, "true", "2024-06-15", "Some notes"]
       ]
     columns:
-      - id: code
-        type: LABEL
+      - id: id
+        type: NUMBER
       - id: name
+        type: TEXT
+      - id: category
+        type: LABEL
+      - id: quantity
+        type: NUMBER
+      - id: active
+        type: LABEL
+      - id: startDate
+        type: DATE
+      - id: notes
         type: TEXT
 
 pages:
   - name: Form Components
+    dataScope:
+      dataset: sample
+      idColumn: id
+    save:
+      trigger: auto
+      delay: 1000
+      adapter: local
     components:
       - type: title
         properties:
@@ -28,58 +38,50 @@ pages:
       - type: markdown
         properties:
           content: >
-            All available form input types. Each input dispatches filter events
-            that can drive cross-filtering with other components on the page.
+            All available form input types. Each input is bound to a dataset
+            field via `dataScope`. Changes save automatically.
 
-      - type: columns
+      - type: title
         properties:
-          span: "6,6"
-        columns:
-          - components:
-              - type: title
-                properties:
-                  text: Text Inputs
-                  size: h3
+          text: Text Inputs
+          size: h3
 
-              - type: text-input
-                properties:
-                  label: Full Name
-                  placeholder: Enter your name
+      - text-input:
+          field: name
+          label: Full Name
+          placeholder: Enter your name
+          required: true
 
-              - type: text-input
-                properties:
-                  label: Email Address
-                  placeholder: user@example.com
+      - textarea:
+          field: notes
+          label: Notes
+          placeholder: Additional comments...
+          rows: 4
 
-              - type: textarea
-                properties:
-                  label: Notes
-                  placeholder: Additional comments...
-                  rows: 4
+      - type: title
+        properties:
+          text: Selection Inputs
+          size: h3
 
-          - components:
-              - type: title
-                properties:
-                  text: Selection Inputs
-                  size: h3
+      - dropdown:
+          field: category
+          label: Category
+          options:
+            values:
+            - Option A
+            - Option B
+            - Option C
 
-              - type: dropdown
-                properties:
-                  label: Country
-                  lookup:
-                    uuid: countries
+      - number-input:
+          field: quantity
+          label: Quantity
+          min: 0
+          max: 100
 
-              - type: number-input
-                properties:
-                  label: Quantity
-                  min: 0
-                  max: 100
-                  step: 1
+      - date-picker:
+          field: startDate
+          label: Start Date
 
-              - type: date-picker
-                properties:
-                  label: Start Date
-
-              - type: checkbox
-                properties:
-                  label: I agree to the terms and conditions
+      - checkbox:
+          field: active
+          label: Active

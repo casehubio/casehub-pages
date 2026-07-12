@@ -64,6 +64,8 @@ pages:
                   lookup:
                     uuid: org
                   sortable: true
+                  filter:
+                    notification: true
                   expandable:
                     idColumn: id
                     parentColumn: parentId
@@ -76,6 +78,8 @@ pages:
                   lookup:
                     uuid: org
                   sortable: true
+                  filter:
+                    notification: true
                   expandable:
                     idColumn: id
                     parentColumn: parentId
@@ -92,6 +96,8 @@ pages:
                   lookup:
                     uuid: org
                   sortable: true
+                  filter:
+                    notification: true
                   expandable:
                     idColumn: id
                     parentColumn: parentId

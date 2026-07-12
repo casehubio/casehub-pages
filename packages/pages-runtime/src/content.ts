@@ -16,10 +16,24 @@ export function renderHtml(el: HTMLElement, props: Record<string, unknown>): voi
   }
 }
 
+const MARKDOWN_STYLES = `
+.pages-markdown ul, .pages-markdown ol { padding-left: 1.5em; margin: 0.5em 0; }
+.pages-markdown li { margin: 0.25em 0; }
+`.trim();
+
+let markdownStyleInjected = false;
+
 export function renderMarkdown(el: HTMLElement, props: Record<string, unknown>): void {
   const content = typeof props.content === "string" ? props.content : "";
   const wrapper = document.createElement("div");
   wrapper.classList.add("pages-markdown");
   wrapper.innerHTML = marked.parse(content) as string;
   el.appendChild(wrapper);
+
+  if (!markdownStyleInjected) {
+    const style = document.createElement("style");
+    style.textContent = MARKDOWN_STYLES;
+    document.head.appendChild(style);
+    markdownStyleInjected = true;
+  }
 }

@@ -44,6 +44,8 @@ pages:
           lookup:
             uuid: products
           sortable: true
+          filter:
+            notification: true
 
       - type: bar-chart
         properties:

@@ -3,9 +3,7 @@ datasets:
   url: https://api.github.com/search/repositories?q=quarkus&sort=updated&per_page=30
   cacheEnabled: true
   expression: >-
-    $.items.[
-        [$.full_name, $.description, $.stargazers_count, $.language, $.updated_at]
-    ]
+    items.[full_name, description, stargazers_count, language, updated_at]
   columns:
   - id: Repository
     type: LABEL
@@ -26,5 +24,7 @@ pages:
       chart:
         height: 600
         resizable: true
+      filter:
+        notification: true
       lookup:
         uuid: quarkus_repos

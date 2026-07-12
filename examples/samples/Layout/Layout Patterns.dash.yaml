@@ -1,11 +1,11 @@
 datasets:
   - uuid: layout-data
-    content: >
+    content: >-
       [
-        ["Dashboard", "Overview metrics and charts", "12", "Active"],
-        ["Reports", "Generated analysis reports", "8", "Active"],
-        ["Settings", "Configuration and preferences", "3", "Draft"],
-        ["Users", "Team member management", "24", "Active"]
+        ["Dashboard", "Overview metrics and charts", 12, "Active"],
+        ["Reports", "Generated analysis reports", 8, "Active"],
+        ["Settings", "Configuration and preferences", 3, "Draft"],
+        ["Users", "Team member management", 24, "Active"]
       ]
     columns:
       - id: section
@@ -20,6 +20,17 @@ datasets:
 pages:
   - name: Layout Patterns
     components:
+      - type: title
+        properties:
+          text: Layout Patterns
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            Interactive containers for organising dashboard content.
+            Click each tab to see the pattern in action.
+
       - type: tabs
         properties:
           targetPage: true
@@ -35,84 +46,24 @@ pages:
                     components:
                       - type: metric
                         properties:
+                          subtype: card
                           lookup:
                             uuid: layout-data
-                            operations:
-                              - type: group
-                                columnGroup:
                   Details:
                     components:
                       - type: table
                         properties:
                           lookup:
                             uuid: layout-data
-
-          Sidebar:
-            components:
-              - type: markdown
-                properties:
-                  content: "**Sidebar** — collapsible side navigation with a main content area."
-              - type: sidebar
-                properties:
-                  width: 200px
-                sidebar:
-                  - type: markdown
-                    properties:
-                      content: |
-                        **Navigation**
-
-                        - Dashboard
-                        - Reports
-                        - Settings
-                content:
-                  - type: table
-                    properties:
-                      lookup:
-                        uuid: layout-data
-
-          Columns:
-            components:
-              - type: markdown
-                properties:
-                  content: "**Columns** — side-by-side layout. Each column is independent."
-              - type: columns
-                properties:
-                  span: "6,6"
-                columns:
-                  - components:
-                      - type: bar-chart
-                        properties:
-                          lookup:
-                            uuid: layout-data
-                  - components:
-                      - type: table
-                        properties:
-                          lookup:
-                            uuid: layout-data
-
-          Rows:
-            components:
-              - type: markdown
-                properties:
-                  content: "**Rows** — stacked vertical layout."
-              - type: rows
-                rows:
-                  - components:
-                      - type: metric
-                        properties:
-                          lookup:
-                            uuid: layout-data
-                  - components:
-                      - type: table
-                        properties:
-                          lookup:
-                            uuid: layout-data
+                          sortable: true
+                          filter:
+                            notification: true
 
           Accordion:
             components:
               - type: markdown
                 properties:
-                  content: "**Accordion** — collapsible sections. Only one section open at a time."
+                  content: "**Accordion** — collapsible sections. Click a header to expand it."
               - type: accordion
                 sections:
                   "Section Overview":
@@ -121,9 +72,33 @@ pages:
                         properties:
                           lookup:
                             uuid: layout-data
+                          sortable: true
                   "Chart View":
                     components:
                       - type: bar-chart
                         properties:
+                          chart:
+                            height: 250
                           lookup:
                             uuid: layout-data
+
+          Split:
+            components:
+              - type: markdown
+                properties:
+                  content: "**Split** — resizable side-by-side panes. Drag the divider to resize."
+              - split:
+                  direction: horizontal
+                  ratio: [50, 50]
+                  children:
+                    - type: bar-chart
+                      properties:
+                        chart:
+                          height: 300
+                        lookup:
+                          uuid: layout-data
+                    - type: table
+                      properties:
+                        lookup:
+                          uuid: layout-data
+                        sortable: true

@@ -1,4 +1,4 @@
-// Melviz Examples Gallery Application
+// CaseHub Pages Examples Gallery Application
 let samplesData = null;
 let currentSample = null;
 let currentSite = null;
@@ -294,15 +294,16 @@ async function loadSampleSourceCode(samplePath) {
         const response = await fetch(`samples/${samplePath}`);
         currentYamlSource = await response.text();
 
-        // Try to load TS companion file
-        const tsPath = samplePath.replace(/\.(dash\.ya?ml|ya?ml|yaml)$/i, '.ts');
+        // Load TS companion file only if the sample declares one
         currentTsSource = '';
-        try {
-            const tsResponse = await fetch(`samples/${tsPath}`);
-            if (tsResponse.ok) {
-                currentTsSource = await tsResponse.text();
-            }
-        } catch { /* no TS version */ }
+        if (currentSample && currentSample.tsPath) {
+            try {
+                const tsResponse = await fetch(`samples/${currentSample.tsPath}`);
+                if (tsResponse.ok) {
+                    currentTsSource = await tsResponse.text();
+                }
+            } catch { /* no TS version */ }
+        }
 
         // Show TS by default if available, otherwise YAML
         if (currentTsSource) {

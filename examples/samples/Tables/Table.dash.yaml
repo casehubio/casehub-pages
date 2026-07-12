@@ -71,4 +71,5 @@ pages:
           pageSize: 8
           sortable: true
           filter:
+            notification: true
             listening: true

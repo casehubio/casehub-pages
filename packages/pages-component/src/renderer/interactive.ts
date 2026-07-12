@@ -149,6 +149,108 @@ function injectNavStyles(doc: Document): void {
 }
 .pages-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--pages-neutral-6, #e0e0e0); }
 .pages-tiles-grid .tile-card[data-active] { border-color: var(--pages-accent-9, #5470c6); color: var(--pages-accent-9, #5470c6); box-shadow: 0 0 0 1px var(--pages-accent-9, #5470c6); }
+[data-accordion-header] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  margin: 2px 0;
+  border: 1px solid var(--pages-neutral-5, #e0e0e0);
+  border-radius: 6px;
+  background: var(--pages-neutral-2, #f5f5f5);
+  color: var(--pages-neutral-12, #333);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+[data-accordion-header]:hover {
+  background: var(--pages-accent-4, #e8f0fe);
+  border-color: var(--pages-accent-7, #7e9bd6);
+}
+[data-accordion-header]::before {
+  content: '▶';
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+[data-accordion-header][data-expanded]::before {
+  transform: rotate(90deg);
+}
+.pages-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+.pages-carousel-nav button {
+  font-family: var(--pages-font-family, system-ui, sans-serif);
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
+  border-radius: 50%;
+  background: var(--pages-neutral-1, #fff);
+  color: var(--pages-neutral-11, #888);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.pages-carousel-nav button:hover {
+  background: var(--pages-accent-4, #e8f0fe);
+  border-color: var(--pages-accent-9, #5470c6);
+  color: var(--pages-neutral-12, #333);
+}
+.pages-carousel-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.pages-carousel-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pages-neutral-6, #e0e0e0);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pages-carousel-dots .dot[data-active] {
+  background: var(--pages-accent-9, #5470c6);
+  width: 10px;
+  height: 10px;
+}
+.pages-carousel-dots .dot:hover {
+  background: var(--pages-accent-7, #7e9bd6);
+}
+.pages-stack-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0 12px;
+}
+.pages-stack-bar button {
+  font-family: var(--pages-font-family, system-ui, sans-serif);
+  font-size: 12px;
+  padding: 4px 12px;
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
+  border-radius: 4px;
+  background: var(--pages-neutral-1, #fff);
+  color: var(--pages-neutral-11, #888);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pages-stack-bar button:hover {
+  background: var(--pages-accent-4, #e8f0fe);
+}
+.pages-stack-bar button[data-active] {
+  background: var(--pages-neutral-12, #333);
+  color: var(--pages-neutral-1, #fff);
+  border-color: var(--pages-neutral-12, #333);
+}
 `;
   doc.head.appendChild(style);
 }
@@ -382,7 +484,10 @@ function wireAccordion(
         const wasHidden = panel.style.display === "none";
         panel.style.display = wasHidden ? "" : "none";
         if (wasHidden) {
+          header.setAttribute("data-expanded", "");
           dispatchSlotChange(container, name);
+        } else {
+          header.removeAttribute("data-expanded");
         }
       });
     }
@@ -396,24 +501,53 @@ function wireCarousel(
   doc: Document,
   lazy?: LazyConfig,
 ): void {
+  injectNavStyles(doc);
   let currentSlot = renderInitialSlot(slotNames, panels, lazy);
+
+  const dots: HTMLElement[] = [];
+
+  const updateDots = (): void => {
+    const idx = slotNames.indexOf(currentSlot);
+    dots.forEach((d, i) => {
+      if (i === idx) d.setAttribute("data-active", "");
+      else d.removeAttribute("data-active");
+    });
+  };
 
   const swap = buildSwap(
     container, slotNames, panels, lazy,
     () => currentSlot,
-    (s) => { currentSlot = s; },
+    (s) => { currentSlot = s; updateDots(); },
   );
 
   const nav = doc.createElement("div");
+  nav.className = "pages-carousel-nav";
+
   const prevButton = doc.createElement("button");
-  prevButton.dataset.carouselPrev = "";
-  prevButton.textContent = "←";
+  prevButton.textContent = "‹";
+  prevButton.setAttribute("aria-label", "Previous slide");
+
+  const dotsContainer = doc.createElement("div");
+  dotsContainer.className = "pages-carousel-dots";
+  slotNames.forEach((name, i) => {
+    const dot = doc.createElement("div");
+    dot.className = "dot";
+    dot.title = name;
+    if (i === slotNames.indexOf(currentSlot)) dot.setAttribute("data-active", "");
+    dot.addEventListener("click", () => {
+      const slot = slotNames[i];
+      if (slot !== undefined) swap(slot);
+    });
+    dots.push(dot);
+    dotsContainer.appendChild(dot);
+  });
 
   const nextButton = doc.createElement("button");
-  nextButton.dataset.carouselNext = "";
-  nextButton.textContent = "→";
+  nextButton.textContent = "›";
+  nextButton.setAttribute("aria-label", "Next slide");
 
   nav.appendChild(prevButton);
+  nav.appendChild(dotsContainer);
   nav.appendChild(nextButton);
   container.appendChild(nav);
 
@@ -438,13 +572,40 @@ function wireStack(
   panels: Map<string, HTMLElement>,
   lazy?: LazyConfig,
 ): void {
+  injectNavStyles(container.ownerDocument);
   let currentSlot = renderInitialSlot(slotNames, panels, lazy);
 
-  buildSwap(
+  const buttons: HTMLElement[] = [];
+
+  const updateButtons = (): void => {
+    buttons.forEach((btn, i) => {
+      if (slotNames[i] === currentSlot) btn.setAttribute("data-active", "");
+      else btn.removeAttribute("data-active");
+    });
+  };
+
+  const swap = buildSwap(
     container, slotNames, panels, lazy,
     () => currentSlot,
-    (s) => { currentSlot = s; },
+    (s) => { currentSlot = s; updateButtons(); },
   );
+
+  const bar = container.ownerDocument.createElement("div");
+  bar.className = "pages-stack-bar";
+
+  slotNames.forEach((name, i) => {
+    const btn = container.ownerDocument.createElement("button");
+    btn.textContent = name;
+    if (i === 0) btn.setAttribute("data-active", "");
+    btn.addEventListener("click", () => {
+      const slot = slotNames[i];
+      if (slot !== undefined) swap(slot);
+    });
+    buttons.push(btn);
+    bar.appendChild(btn);
+  });
+
+  container.insertBefore(bar, container.firstChild);
 }
 
 function wireTiles(

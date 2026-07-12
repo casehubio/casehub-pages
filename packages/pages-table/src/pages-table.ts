@@ -1,13 +1,26 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue } from '@casehubio/pages-data/dist/dataset/types.js';
+import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data/dist/dataset/types.js';
 import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
-import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail } from './types.js';
+import type { SortColumn } from '@casehubio/pages-data/dist/dataset/sort.js';
+import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
+import { resolveColumnName, cellToRaw, applyCellExpression, resolveColumnExpression } from './cell-utils.js';
+import { until } from 'lit/directives/until.js';
+import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
+import { evaluateExpression, createRowContext } from '@casehubio/pages-component/dist/context/expression-evaluator.js';
+import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, findMatchingNodes, rowMatchesText, sortTreeLevel, type TreeNode, type ExpandableConfig } from './tree-builder.js';
+import { EMPTY_CONTEXT } from '@casehubio/pages-component/dist/context/types.js';
 
 const AUTO_THRESHOLD = 50;
+
+interface RowStyleRule {
+  readonly condition: string;
+  readonly className?: string;
+  readonly style?: Record<string, string>;
+}
 
 @customElement('pages-table')
 export class PagesTable extends LitElement {
@@ -21,6 +34,22 @@ export class PagesTable extends LitElement {
   @property({ attribute: false }) getRowClass?: (row: TypedRow) => string;
   @property({ attribute: false }) getChildren?: (row: TypedRow) => readonly TypedRow[];
   @property({ type: Boolean }) loading = false;
+  @property({ type: String }) error = '';
+
+  set activeSort(sort: SortColumn | undefined) {
+    if (!sort) {
+      this._sortStack = [];
+    } else {
+      const dir = sort.order === 'ASCENDING' ? 'asc' as const : 'desc' as const;
+      this._sortStack = [{ columnId: String(sort.columnId), direction: dir }];
+    }
+  }
+
+  set activePage(page: number | undefined) {
+    if (page !== undefined) this.currentPage = page;
+  }
+  get activePage(): number | undefined { return this.currentPage; }
+
   @property({ type: String, attribute: 'empty-message' }) emptyMessage = 'No data';
   @property({ type: Number, attribute: 'row-height' }) rowHeight = 48;
   @property({ type: Number, attribute: 'buffer-size' }) bufferSize = 5;
@@ -66,6 +95,181 @@ export class PagesTable extends LitElement {
   @state() private _hiddenColumnIds = new Set<string>();
 
   private _filterDebounceTimer?: number;
+  private _selectedColumnId: ColumnId | undefined;
+  private _selectedValue: string | undefined;
+  private _pipelineMode = false;
+  private _lookup: unknown = undefined;
+  private _filterConfig: FilterConfig = { enabled: false };
+  private _sortableFromProps = false;
+  private _dataRequestPending = false;
+  private _propsColumns: readonly ColumnSettings[] | undefined;
+  private _rowStyleRules: readonly RowStyleRule[] = [];
+  private _expandableConfig: ExpandableConfig | undefined;
+  private _treeRoots: TreeNode[] = [];
+  private _treeNodeMap = new Map<string, TreeNode>();
+  private _treeExpandState = new Map<string, boolean>();
+  private _treeExpandStateInitialized = false;
+  private _treeNodeByRow = new Map<TypedRow, TreeNode>();
+  private _csvExportEnabled = false;
+
+  set props(p: Record<string, unknown>) {
+    this._pipelineMode = true;
+
+    const lookup = p.lookup as unknown;
+    if (lookup) {
+      this._lookup = lookup;
+      this._dataRequestPending = true;
+    }
+
+    if (typeof p.pageSize === 'number') {
+      this.pageSize = p.pageSize;
+      this.mode = 'paginated';
+    }
+
+    this._sortableFromProps = p.sortable === true;
+
+    const filter = p.filter as Record<string, unknown> | undefined;
+    if (filter) {
+      this._filterConfig = {
+        enabled: filter.enabled !== false && filter.notification === true,
+        group: typeof filter.group === 'string' ? filter.group : undefined,
+      };
+    }
+
+    const columns = p.columns as readonly ColumnSettings[] | undefined;
+    if (columns) {
+      this._propsColumns = columns;
+    }
+
+    const expandable = p.expandable as ExpandableConfig | undefined;
+    if (expandable) {
+      this._expandableConfig = expandable;
+      this.mode = 'auto';
+    }
+
+    const rowStyle = p.rowStyle as readonly RowStyleRule[] | undefined;
+    if (rowStyle) {
+      this._rowStyleRules = rowStyle;
+    }
+
+    if (p.csvExport === true) {
+      this._csvExportEnabled = true;
+    }
+
+    if (typeof p.height === 'string' || typeof p.height === 'number') {
+      this.style.height = typeof p.height === 'number' ? `${String(p.height)}px` : String(p.height);
+    }
+  }
+
+  private _requestData(): void {
+    if (!this._lookup) return;
+    this.dispatchEvent(new CustomEvent('pages-data-request', {
+      bubbles: true,
+      composed: true,
+      detail: { element: this, lookup: this._lookup },
+    }));
+  }
+
+  private _rebuildConfigFromProps(): void {
+    if (!this.dataSet) return;
+    const cols = this.dataSet.columns;
+
+    const config: TableColumnConfig[] = cols.map(col => {
+      const label = this._propsColumns
+        ? resolveColumnName(col, this._propsColumns)
+        : col.name;
+      return {
+        id: col.id,
+        label,
+        sortable: this._sortableFromProps,
+        width: '1fr',
+      };
+    });
+    this.columnConfig = config;
+
+    if (this._propsColumns) {
+      const renderers = new Map<ColumnId, ColumnRenderer>();
+      for (const col of cols) {
+        const expr = resolveColumnExpression(col.id, this._propsColumns);
+        if (expr) {
+          const expression = expr;
+          renderers.set(col.id, (cell: CellValue) => {
+            const raw = cellToRaw(cell);
+            if (raw === null) return '';
+            return until(
+              applyCellExpression(raw, expression).then(r => r === null ? '' : String(r)),
+              String(raw),
+            );
+          });
+        }
+      }
+      if (renderers.size > 0) {
+        this.columnRenderers = renderers;
+      }
+    }
+  }
+
+  private _rebuildTree(): void {
+    if (!this.dataSet || !this._expandableConfig) return;
+    const { roots, nodeMap } = buildTreeIndex(this.dataSet, this._expandableConfig);
+    this._treeRoots = roots;
+    this._treeNodeMap = nodeMap;
+
+    if (!this._treeExpandStateInitialized) {
+      this._treeExpandState = computeDefaultExpandState(roots, this._expandableConfig.defaultExpanded);
+      this._treeExpandStateInitialized = true;
+    }
+
+    this._treeNodeByRow.clear();
+    for (const [, node] of nodeMap) {
+      this._treeNodeByRow.set(node.row, node);
+    }
+
+    this.getRowKey = (row: TypedRow) => {
+      const node = this._treeNodeByRow.get(row);
+      return node?.id ?? '';
+    };
+    this.getChildren = (row: TypedRow) => {
+      const node = this._treeNodeByRow.get(row);
+      return node?.children.map(c => c.row) ?? [];
+    };
+
+    const expandState = this._treeExpandState;
+    this._expandedRowIds = new Set(
+      [...expandState.entries()].filter(([, v]) => v).map(([k]) => k)
+    );
+  }
+
+  private _toggleTreeExpand(nodeId: string): void {
+    const current = this._treeExpandState.get(nodeId) ?? false;
+    this._treeExpandState.set(nodeId, !current);
+    this._expandedRowIds = new Set(
+      [...this._treeExpandState.entries()].filter(([, v]) => v).map(([k]) => k)
+    );
+    this.requestUpdate();
+  }
+
+  private _handleCopyToClipboard = async (): Promise<void> => {
+    if (!this.dataSet) return;
+    const csv = tableToCsv(this.dataSet, this.columnConfig);
+    const success = await copyToClipboard(csv);
+    if (success) {
+      const btn = this.shadowRoot?.querySelector('[aria-label="Copy CSV"]');
+      if (btn) {
+        const original = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      }
+    }
+  };
+
+  private _emitPipelineTextFilter(): void {
+    this.dispatchEvent(new CustomEvent('pages-text-filter', {
+      detail: { text: this.filterText },
+      bubbles: true,
+      composed: true,
+    }));
+  }
 
   private get _dataRows(): readonly TypedRow[] {
     return this.dataSet?.rows ?? [];
@@ -195,6 +399,31 @@ export class PagesTable extends LitElement {
 
     .row[aria-selected="true"]:hover {
       background: var(--pages-primary-4, #bfdbfe);
+    }
+
+    .row.clickable:hover {
+      background: var(--pages-accent-4, #e8f0fe);
+      cursor: pointer;
+    }
+
+    .row.selected {
+      background: var(--pages-accent-5, #d3e3fd);
+    }
+
+    .row.pages-row-danger {
+      background: var(--pages-danger-3, #ffe6e6);
+    }
+
+    .row.pages-row-warning {
+      background: var(--pages-warning-3, #fff4e6);
+    }
+
+    .row.pages-row-success {
+      background: var(--pages-success-3, #e6ffe6);
+    }
+
+    .row.pages-row-muted {
+      background: var(--pages-neutral-3, #f5f5f5);
     }
 
     .cell {
@@ -481,6 +710,7 @@ export class PagesTable extends LitElement {
   };
 
   private _emitPageChange(page: number): void {
+    this._clearFilterSelection();
     const detail: PageChangeDetail = {
       page,
       pageSize: this.pageSize,
@@ -490,6 +720,14 @@ export class PagesTable extends LitElement {
       bubbles: true,
       composed: true,
     }));
+
+    if (this._pipelineMode) {
+      this.dispatchEvent(new CustomEvent('pages-page', {
+        detail: { offset: page * this.pageSize, count: this.pageSize },
+        bubbles: true,
+        composed: true,
+      }));
+    }
   }
 
   private _goToFirstPage = (): void => {
@@ -526,6 +764,10 @@ export class PagesTable extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
     this._updateContainerHeight();
+    if (this._dataRequestPending) {
+      this._dataRequestPending = false;
+      void this.updateComplete.then(() => this._requestData());
+    }
   }
 
   override disconnectedCallback(): void {
@@ -549,6 +791,28 @@ export class PagesTable extends LitElement {
       this._loadingMore = false;
     }
 
+    if (changed.has('dataSet') && this._selectedColumnId !== undefined && this._selectedValue !== undefined && this.dataSet) {
+      const colId = this._selectedColumnId;
+      const selVal = this._selectedValue;
+      const found = this.dataSet.rows.some(row => {
+        try {
+          const cell = row.cell(colId);
+          return cell.type !== 'NULL' && String(cell.value) === selVal;
+        } catch { return false; }
+      });
+      if (!found) {
+        this._selectedColumnId = undefined;
+        this._selectedValue = undefined;
+      }
+    }
+
+    if (changed.has('dataSet') && this._pipelineMode && this.dataSet) {
+      this._rebuildConfigFromProps();
+      if (this._expandableConfig) {
+        this._rebuildTree();
+      }
+    }
+
     if (this.selection !== 'none' && !this.getRowKey) {
       throw new Error('getRowKey is required when selection is enabled');
     }
@@ -560,6 +824,10 @@ export class PagesTable extends LitElement {
     if (changed.has('filterText') && this.clientFilter) {
       this.currentPage = 0;
       this._emitFilterChange();
+    }
+
+    if (changed.has('filterText') && this._pipelineMode) {
+      this._emitPipelineTextFilter();
     }
   }
 
@@ -786,6 +1054,7 @@ export class PagesTable extends LitElement {
   };
 
   private _handleHeaderClick = (column: Column, event?: MouseEvent): void => {
+    this._clearFilterSelection();
     const config = this._configFor(column);
     if (!config?.sortable) return;
 
@@ -818,6 +1087,15 @@ export class PagesTable extends LitElement {
       bubbles: true,
       composed: true,
     }));
+
+    if (this._pipelineMode && newDirection !== 'none') {
+      const order = newDirection === 'asc' ? 'ASCENDING' : 'DESCENDING';
+      this.dispatchEvent(new CustomEvent('pages-sort', {
+        detail: { columnId: column.id, order },
+        bubbles: true,
+        composed: true,
+      }));
+    }
   };
 
   private _setMode = (newMode: DisplayMode): void => {
@@ -1105,7 +1383,10 @@ export class PagesTable extends LitElement {
     }
 
     this._treeMetadata.clear();
-    if (this.getChildren && this.getRowKey) {
+    if (this._expandableConfig && this._treeRoots.length > 0) {
+      const visibleNodes = collectVisibleNodes(this._treeRoots, this._treeExpandState);
+      rows = visibleNodes.map(n => n.row);
+    } else if (this.getChildren && this.getRowKey) {
       const treeRows = flattenTree(rows, this.getChildren, this._expandedRowIds, this.getRowKey);
       rows = treeRows.map(tr => {
         this._treeMetadata.set(tr.row, tr);
@@ -1216,10 +1497,14 @@ export class PagesTable extends LitElement {
       { value: 'scroll', label: 'Scroll' },
     ];
 
-    const showFilter = this.clientFilter && this.totalRows === undefined;
+    const showFilter = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
 
     return html`
       <div class="toolbar">
+        ${this._csvExportEnabled && this.dataSet ? html`
+          <button class="pagination-button" aria-label="Download CSV" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">⬇</button>
+          <button class="pagination-button" aria-label="Copy CSV" @click="${this._handleCopyToClipboard}">📋</button>
+        ` : nothing}
         ${showFilter ? html`
           <input
             type="text"
@@ -1278,11 +1563,61 @@ export class PagesTable extends LitElement {
     `;
   }
 
+  private _clearFilterSelection(): void {
+    if (this._selectedColumnId === undefined) return;
+    const group = this._filterConfig.group;
+    const columnId = String(this._selectedColumnId);
+    this._selectedColumnId = undefined;
+    this._selectedValue = undefined;
+    this.dispatchEvent(new CustomEvent('pages-filter', {
+      bubbles: true, composed: true,
+      detail: { columnId, reset: true, group },
+    }));
+    if (this._pipelineMode) this._requestData();
+  }
+
   private _renderColumnPicker() {
     return this._renderToolbar();
   }
 
-  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false) {
+  private _handleCellFilterClick(row: TypedRow, columnId: ColumnId): void {
+    const cellVal = row.cell(columnId);
+    if (cellVal.type === 'NULL') return;
+    const value = String(cellVal.value);
+    const group = this._filterConfig.group;
+
+    if (columnId === this._selectedColumnId && value === this._selectedValue) {
+      this._selectedColumnId = undefined;
+      this._selectedValue = undefined;
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(columnId), reset: true, group },
+      }));
+      if (this._pipelineMode) this._requestData();
+    } else if (this._selectedColumnId !== undefined && this._selectedColumnId !== columnId) {
+      const oldColumnId = this._selectedColumnId;
+      this._selectedColumnId = columnId;
+      this._selectedValue = value;
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(oldColumnId), reset: true, group },
+      }));
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(columnId), value, row, reset: false, group },
+      }));
+    } else {
+      this._selectedColumnId = columnId;
+      this._selectedValue = value;
+      this.dispatchEvent(new CustomEvent('pages-filter', {
+        bubbles: true, composed: true,
+        detail: { columnId: String(columnId), value, row, reset: false, group },
+      }));
+    }
+    this.requestUpdate();
+  }
+
+  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode) {
     const cell = row.cell(column.id);
     const renderer = this.columnRenderers?.get(column.id);
     const content = renderer
@@ -1291,16 +1626,28 @@ export class PagesTable extends LitElement {
 
     const config = this._configFor(column);
     const align = config?.align ?? 'start';
-    const treeMeta = this._treeMetadata.get(row);
+    const treeMeta = treeNode ?? this._treeMetadata.get(row);
+    const filterClickHandler = this._filterConfig.enabled
+      ? (e: MouseEvent) => { e.stopPropagation(); this._handleCellFilterClick(row, column.id); }
+      : undefined;
 
     if (isFirstColumn && treeMeta) {
-      const indent = treeMeta.depth * 20;
-      const toggle = treeMeta.hasChildren
-        ? html`<button class="tree-toggle" @click="${(e: MouseEvent) => this._toggleExpand(row, e)}" aria-label="${treeMeta.expanded ? 'Collapse' : 'Expand'}">${treeMeta.expanded ? '▼' : '▶'}</button>`
+      const depth = 'depth' in treeMeta ? treeMeta.depth : 0;
+      const hasChildren = 'children' in treeMeta ? treeMeta.children.length > 0 : treeMeta.hasChildren;
+      const isExpanded = treeNode
+        ? this._treeExpandState.get(treeNode.id) === true
+        : (treeMeta as TreeRow).expanded;
+      const indent = depth * 20;
+      const toggleHandler = treeNode
+        ? (e: MouseEvent) => { e.stopPropagation(); this._toggleTreeExpand(treeNode.id); }
+        : (e: MouseEvent) => this._toggleExpand(row, e);
+      const toggle = hasChildren
+        ? html`<button class="tree-toggle" @click="${toggleHandler}" aria-label="${isExpanded ? 'Collapse' : 'Expand'}">${isExpanded ? '▼' : '▶'}</button>`
         : html`<span class="tree-spacer"></span>`;
 
       return html`
-        <div class="cell tree-cell" role="gridcell" style="text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)">
+        <div class="cell tree-cell" role="gridcell" style="text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)"
+          @click="${filterClickHandler ?? nothing}">
           ${toggle}${content}
         </div>
       `;
@@ -1311,6 +1658,7 @@ export class PagesTable extends LitElement {
         class="cell"
         role="gridcell"
         style="text-align: ${align}"
+        @click="${filterClickHandler ?? nothing}"
       >
         ${content}
       </div>
@@ -1356,29 +1704,76 @@ export class PagesTable extends LitElement {
     `;
   }
 
+  private _evaluateRowStyle(row: TypedRow): { className?: string; style?: Record<string, string> } | null {
+    if (this._rowStyleRules.length === 0) return null;
+
+    const rowCells: Record<string, unknown> = {};
+    for (const col of this._dataColumns) {
+      rowCells[String(col.id)] = cellToRaw(row.cell(col.id));
+    }
+    const rowContext = createRowContext(EMPTY_CONTEXT, rowCells);
+
+    for (const rule of this._rowStyleRules) {
+      try {
+        if (evaluateExpression(rule.condition, rowContext)) {
+          const result: { className?: string; style?: Record<string, string> } = {};
+          if (rule.className) result.className = rule.className;
+          if (rule.style) result.style = rule.style;
+          return result;
+        }
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }
+
+  private _isFilterSelected(row: TypedRow): boolean {
+    if (!this._selectedColumnId || !this._selectedValue) return false;
+    try {
+      const cell = row.cell(this._selectedColumnId);
+      return cell.type !== 'NULL' && String(cell.value) === this._selectedValue;
+    } catch { return false; }
+  }
+
   private _renderRow(row: TypedRow, actualIndex: number, displayIndex: number) {
     const rowClass = this.getRowClass?.(row) ?? '';
     const part = rowClass ? `row ${rowClass}` : 'row';
     const ariaRowIndex = actualIndex + 2;
     const isSelected = this._isRowSelected(row);
     const tabindex = actualIndex === this._focusRowIndex ? '0' : '-1';
+    const isClickable = this._filterConfig.enabled;
+    const isFilterSelected = this._isFilterSelected(row);
+    const treeNode = this._treeNodeByRow.get(row);
+    const rowStyleResult = this._evaluateRowStyle(row);
+    const rowStyleClass = isFilterSelected ? '' : (rowStyleResult?.className ?? '');
+    const effectiveStyle = isFilterSelected
+      ? { ...rowStyleResult?.style, backgroundColor: 'var(--pages-accent-5, #d3e3fd)' }
+      : rowStyleResult?.style;
+    const rowInlineStyle = effectiveStyle
+      ? Object.entries(effectiveStyle).map(([k, v]) => `${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}: ${String(v)}`).join('; ')
+      : '';
 
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';
 
     return html`
       <div
-        class="row ${stripe}"
+        class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''} ${rowStyleClass}"
+        style="grid-template-columns: ${this._gridTemplateColumns}; ${rowInlineStyle}"
         role="row"
         part="${part}"
         aria-rowindex="${ariaRowIndex}"
         aria-selected="${this.selection !== 'none' && isSelected ? 'true' : 'false'}"
+        aria-level="${treeNode ? String(treeNode.depth + 1) : nothing}"
+        aria-setsize="${treeNode ? String(treeNode.siblingCount) : nothing}"
+        aria-posinset="${treeNode ? String(treeNode.siblingIndex) : nothing}"
+        aria-expanded="${treeNode && treeNode.children.length > 0 ? String(this._treeExpandState.get(treeNode.id) === true) : nothing}"
         tabindex="${tabindex}"
-        style="grid-template-columns: ${this._gridTemplateColumns}"
         @click="${(e: MouseEvent) => this._handleRowClick(row, e)}"
         @dblclick="${(e: MouseEvent) => this._handleRowDoubleClick(row, e)}"
       >
         ${this._renderCheckbox(row)}
-        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0))}
+        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode))}
       </div>
     `;
   }
@@ -1448,6 +1843,14 @@ export class PagesTable extends LitElement {
       return html`
         <div class="data-table" role="grid" aria-busy="true">
           <div class="loading-state">Loading...</div>
+        </div>
+      `;
+    }
+
+    if (this.error) {
+      return html`
+        <div class="data-table" role="grid">
+          <div class="empty-state" style="color: var(--pages-danger-9, #d32f2f)">${this.error}</div>
         </div>
       `;
     }

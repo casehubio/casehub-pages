@@ -53,6 +53,8 @@ pages:
             uuid: tasks
           sortable: true
           pageSize: 15
+          filter:
+            notification: true
           rowStyle:
             - condition: "#{row.status} == 'Error'"
               style:

@@ -1,4 +1,5 @@
 import "@casehubio/pages-viz";
+import "@casehubio/pages-table";
 
 export { loadSite } from "./site.js";
 export type { LiveSite, SiteOptions } from "./site.js";

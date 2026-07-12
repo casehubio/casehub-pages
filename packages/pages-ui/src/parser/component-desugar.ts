@@ -10,6 +10,7 @@ const NAV_TYPE_MAP: Record<string, string> = {
   TREE: "tree",
   MENU: "menu",
   CAROUSEL: "carousel",
+  STACK: "stack",
   TILES: "tiles",
   SIDEBAR: "sidebar",
   ACCORDION: "accordion",

@@ -1,16 +1,16 @@
 datasets:
   - uuid: inventory
-    content: >
+    content: >-
       [
-        ["Widgets", "Widget A", "142", "In Stock"],
-        ["Widgets", "Widget B", "38", "Low Stock"],
-        ["Widgets", "Widget C", "210", "In Stock"],
-        ["Gadgets", "Gadget X", "0", "Out of Stock"],
-        ["Gadgets", "Gadget Y", "85", "In Stock"],
-        ["Gadgets", "Gadget Z", "12", "Low Stock"],
-        ["Parts", "Part Alpha", "500", "In Stock"],
-        ["Parts", "Part Beta", "67", "In Stock"],
-        ["Parts", "Part Gamma", "3", "Low Stock"]
+        ["Widgets", "Widget A", 142, "In Stock"],
+        ["Widgets", "Widget B", 38, "Low Stock"],
+        ["Widgets", "Widget C", 210, "In Stock"],
+        ["Gadgets", "Gadget X", 0, "Out of Stock"],
+        ["Gadgets", "Gadget Y", 85, "In Stock"],
+        ["Gadgets", "Gadget Z", 12, "Low Stock"],
+        ["Parts", "Part Alpha", 500, "In Stock"],
+        ["Parts", "Part Beta", 67, "In Stock"],
+        ["Parts", "Part Gamma", 3, "Low Stock"]
       ]
     columns:
       - id: category
@@ -25,6 +25,17 @@ datasets:
 pages:
   - name: Split and Dock
     components:
+      - type: title
+        properties:
+          text: Split and Dock
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **Split** creates resizable panes with a draggable divider.
+            Drag the handle between panes to resize.
+
       - type: tabs
         properties:
           targetPage: true
@@ -33,9 +44,7 @@ pages:
             components:
               - type: markdown
                 properties:
-                  content: >
-                    **Split** — resizable panes with a draggable divider. Horizontal
-                    split places children side by side. Drag the handle to resize.
+                  content: "**Horizontal** — side-by-side panes. Drag the divider to resize."
               - split:
                   direction: horizontal
                   ratio: [60, 40]
@@ -45,8 +54,14 @@ pages:
                         lookup:
                           uuid: inventory
                         sortable: true
+                        filter:
+                          notification: true
                     - type: bar-chart
                       properties:
+                        chart:
+                          height: 300
+                        filter:
+                          listening: true
                         lookup:
                           uuid: inventory
 
@@ -54,75 +69,59 @@ pages:
             components:
               - type: markdown
                 properties:
-                  content: >
-                    **Vertical split** — top and bottom panes.
+                  content: "**Vertical** — top and bottom panes."
               - split:
                   direction: vertical
                   ratio: [40, 60]
                   children:
                     - type: metric
                       properties:
+                        subtype: card
                         lookup:
                           uuid: inventory
-                          operations:
-                            - type: group
-                              columnGroup: category
                     - type: table
                       properties:
                         lookup:
                           uuid: inventory
                         sortable: true
 
-          Nested Split:
+          Three Panel:
             components:
               - type: markdown
                 properties:
-                  content: >
-                    **Nested splits** — a horizontal split where the right pane
-                    contains a vertical split, creating a three-panel layout.
+                  content: "**Nested** — horizontal split with a vertical split inside the right pane."
               - split:
                   direction: horizontal
                   ratio: [30, 70]
                   children:
-                    - type: markdown
+                    - type: selector
                       properties:
-                        content: |
-                          **Navigation**
-
-                          - Widgets
-                          - Gadgets
-                          - Parts
+                        subtype: labels
+                        filter:
+                          notification: true
+                        lookup:
+                          uuid: inventory
+                          group:
+                          - columnGroup:
+                                source: category
+                            functions:
+                            - source: category
                     - split:
                         direction: vertical
                         ratio: [50, 50]
                         children:
                           - type: bar-chart
                             properties:
+                              chart:
+                                height: 250
+                              filter:
+                                listening: true
                               lookup:
                                 uuid: inventory
                           - type: table
                             properties:
                               lookup:
                                 uuid: inventory
-
-          Dock Bar:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **Dock bar** — icon buttons that toggle associated panels.
-                    Each item has an `icon`, `label`, and `panelId`. The dock
-                    emits toggle events that panels can listen to.
-              - dock-bar:
-                  orientation: horizontal
-                  items:
-                    - icon: "\U0001F4CA"
-                      label: Charts
-                      panelId: charts
-                      defaultOpen: true
-                    - icon: "\U0001F4CB"
-                      label: Data
-                      panelId: data
-                    - icon: "\U00002699"
-                      label: Settings
-                      panelId: settings
+                              sortable: true
+                              filter:
+                                listening: true
