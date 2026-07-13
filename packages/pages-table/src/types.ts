@@ -1,6 +1,6 @@
 import type {TemplateResult} from 'lit';
 import type {DirectiveResult} from 'lit/directive.js';
-import type {CellValue, Column, ColumnId, TypedRow} from '@casehubio/pages-data/dist/dataset/types.js';
+import type {CellValue, Column, ColumnId, TypedRow} from '@casehubio/pages-data';
 
 export type DisplayMode = 'auto' | 'paginated' | 'scroll';
 export type SelectionMode = 'none' | 'single' | 'multi';

@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { loadSite } from "./site.js";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
-import type { LayoutState } from "@casehubio/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component";
+import type { LayoutState } from "@casehubio/pages-component";
 import type { LayoutStore } from "./layout-store.js";
 import { registerPanel, clearPanelRegistry } from "./panel-registry.js";
 

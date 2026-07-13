@@ -1,4 +1,4 @@
-import type { TypedRow } from '@casehubio/pages-data/dist/dataset/types.js';
+import type { TypedRow } from '@casehubio/pages-data';
 
 export interface TreeRow {
   readonly row: TypedRow;

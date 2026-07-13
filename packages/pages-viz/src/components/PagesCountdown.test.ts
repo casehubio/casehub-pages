@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
-import type { CountdownProps } from "@casehubio/pages-component/dist/model/displayer-types.js";
+import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
+import type { CountdownProps } from "@casehubio/pages-component";
 import { PagesCountdown } from "./PagesCountdown.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────

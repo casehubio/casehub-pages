@@ -3,7 +3,7 @@ import { CanvasRenderer } from "echarts/renderers";
 import { TitleComponent } from "echarts/components";
 import { PagesElement } from "./PagesElement.js";
 import type { VizComponentProps } from "./types.js";
-import type { TypedDataSet, Column } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, Column } from "@casehubio/pages-data";
 import type { ChartSettings } from "@casehubio/pages-component";
 import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset, ChartClickParams } from "./filter-types.js";
 import { cellToRaw } from "./cell-extract.js";

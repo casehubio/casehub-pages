@@ -1,9 +1,9 @@
 import {afterEach, beforeEach, describe, expect, it} from "vitest";
-import type {ColumnId, ColumnType, DataSet, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
-import type {DataSetLookup} from "@casehubio/pages-data/dist/dataset/lookup.js";
-import {toTypedDataSet} from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type {ColumnId, ColumnType, DataSet, TypedDataSet} from "@casehubio/pages-data";
+import type {DataSetLookup} from "@casehubio/pages-data";
+import {toTypedDataSet} from "@casehubio/pages-data";
 import {PagesTextInput} from "./PagesTextInput.js";
-import type {SubmitConfig} from "@casehubio/pages-component/dist/model/action-types.js";
+import type {SubmitConfig} from "@casehubio/pages-component";
 
 interface PagesActionRequestDetail {
   readonly config: {

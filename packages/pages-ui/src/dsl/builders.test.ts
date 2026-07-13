@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "../model/types.js";
 import type { PageSettings } from "../model/page-types.js";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehubio/pages-data";
 import { getProps } from "../model/type-guards.js";
-import type { DataSource, DataSink } from "@casehubio/pages-data/dist/datasource/types.js";
+import type { DataSource, DataSink } from "@casehubio/pages-data";
 import {
   page,
   grid,

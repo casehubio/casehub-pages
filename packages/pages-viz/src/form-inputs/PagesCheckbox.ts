@@ -1,7 +1,7 @@
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { CheckboxProps } from "@casehubio/pages-component";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { TypedDataSet } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
 
 const CHECKBOX_CSS = `
 :host {

@@ -1,14 +1,14 @@
-import type {Component, PermissionContext} from "@casehubio/pages-component/dist/model/types.js";
-import type {DataSetLookup} from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type {ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
-import {ColumnType} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {Component, PermissionContext} from "@casehubio/pages-component";
+import type {DataSetLookup} from "@casehubio/pages-data";
+import type {ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data";
+import {ColumnType} from "@casehubio/pages-data";
 import type {DataSetEntry, DataSetScope} from "./dataset-scope.js";
 import {extendDataSetScope} from "./dataset-scope.js";
-import {toTypedDataSet} from "@casehubio/pages-data/dist/dataset/conversion.js";
+import {toTypedDataSet} from "@casehubio/pages-data";
 import type {PagesElement} from "@casehubio/pages-viz/dist/base/PagesElement.js";
 import type {VizComponentProps} from "@casehubio/pages-viz/dist/base/types.js";
 import type {PageProps} from "@casehubio/pages-ui/dist/model/page-types.js";
-import {renderComponent} from "@casehubio/pages-component/dist/renderer/render.js";
+import {renderComponent} from "@casehubio/pages-component";
 import {parsePage} from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import {load as yamlLoad} from "js-yaml";
 import type {ComponentRegistry} from "./registry.js";
@@ -20,13 +20,13 @@ import type {DataScopeRegistry} from "./data-scope-registry.js";
 import type {SaveConfigRegistry} from "./save-config-registry.js";
 import {renderHtml, renderMarkdown, renderTitle} from "./content.js";
 import type {ContextManager} from "./context-wiring.js";
-import type {EscapeMode} from "@casehubio/pages-component/dist/context/index.js";
-import {evaluateExpression, hasTemplateVars, resolveTemplate} from "@casehubio/pages-component/dist/context/index.js";
+import type {EscapeMode} from "@casehubio/pages-component";
+import {evaluateExpression, hasTemplateVars, resolveTemplate} from "@casehubio/pages-component";
 import type {PagesContentElement} from "@casehubio/pages-viz/dist/base/PagesContentElement.js";
 import {lookupPanel} from "./panel-registry.js";
-import type {ConfigurablePanel, DataReceiver, VizTarget} from "@casehubio/pages-component/dist/model/hosting.js";
-import type {HostPanelProps} from "@casehubio/pages-component/dist/model/component-props.js";
-import type {SortColumn} from "@casehubio/pages-data/dist/dataset/sort.js";
+import type {ConfigurablePanel, DataReceiver, VizTarget} from "@casehubio/pages-component";
+import type {HostPanelProps} from "@casehubio/pages-component";
+import type {SortColumn} from "@casehubio/pages-data";
 
 const FORM_INPUT_TYPES = new Set([
   "text-input",

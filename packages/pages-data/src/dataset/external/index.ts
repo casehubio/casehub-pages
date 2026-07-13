@@ -15,7 +15,7 @@ export type {
   ServiceCapabilities,
 } from "./types.js";
 
-export { HttpMethod, LOCAL_CAPABILITIES, isServiceCapabilities } from "./types.js";
+export { HttpMethod, LOCAL_CAPABILITIES, isServiceCapabilities, parseRefreshTime } from "./types.js";
 
 // Contract
 export type { DatasetContract } from "../contract.js";

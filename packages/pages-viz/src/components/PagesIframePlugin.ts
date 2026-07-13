@@ -1,6 +1,6 @@
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet } from "@casehubio/pages-data";
 import type { IframePluginProps } from "@casehubio/pages-component";
-import { toWireDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import { toWireDataSet } from "@casehubio/pages-data";
 import { PagesElement } from "../base/PagesElement.js";
 import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";
 import { cellToRaw } from "../base/cell-extract.js";

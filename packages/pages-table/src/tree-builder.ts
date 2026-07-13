@@ -1,4 +1,4 @@
-import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data/dist/dataset/types.js';
+import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data';
 import { cellToRaw } from './cell-utils.js';
 
 export interface TreeNode {

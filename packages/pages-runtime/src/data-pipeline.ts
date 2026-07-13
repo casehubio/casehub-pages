@@ -1,20 +1,20 @@
-import type {DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
-import type {DataSetManager, LookupOptions} from "@casehubio/pages-data/dist/dataset/manager.js";
-import type {DataSetLookup} from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type {DataSetOp} from "@casehubio/pages-data/dist/dataset/ops.js";
-import type {ResolverContext} from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import {resolveExternalDataSet} from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import type {ExternalDataSetDef, ResolveResult} from "@casehubio/pages-data/dist/dataset/external/types.js";
-import {parseRefreshTime} from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type {PushSource} from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type {DataSetId, TypedDataSet} from "@casehubio/pages-data";
+import type {DataSetManager, LookupOptions} from "@casehubio/pages-data";
+import type {DataSetLookup} from "@casehubio/pages-data";
+import type {DataSetOp} from "@casehubio/pages-data";
+import type {ResolverContext} from "@casehubio/pages-data";
+import {resolveExternalDataSet} from "@casehubio/pages-data";
+import type {ExternalDataSetDef, ResolveResult} from "@casehubio/pages-data";
+import {parseRefreshTime} from "@casehubio/pages-data";
+import type {PushSource} from "@casehubio/pages-data";
 import {
     createPushPool,
     createSseSource,
     createWebSocketSource,
     evaluateGenerator
-} from "@casehubio/pages-data/dist/dataset/external/index.js";
-import type {DataSetEvent} from "@casehubio/pages-data/dist/dataset/events.js";
-import type {DataSink, DataSource, DataSourceBinding} from "@casehubio/pages-data/dist/datasource/types.js";
+} from "@casehubio/pages-data";
+import type {DataSetEvent} from "@casehubio/pages-data";
+import type {DataSink, DataSource, DataSourceBinding} from "@casehubio/pages-data";
 import type {ComponentRegistry} from "./registry.js";
 import type {DataSetScope} from "./dataset-scope.js";
 import {isBinding, resolveDataSetDef, resolveDataSetEntry} from "./dataset-scope.js";
@@ -30,10 +30,10 @@ import {
     allTemplateVarsResolved,
     hasTemplateVars,
     resolveTemplate
-} from "@casehubio/pages-component/dist/context/index.js";
-import type {VizTarget} from "@casehubio/pages-component/dist/model/hosting.js";
+} from "@casehubio/pages-component";
+import type {VizTarget} from "@casehubio/pages-component";
 
-export type { VizTarget } from "@casehubio/pages-component/dist/model/hosting.js";
+export type { VizTarget } from "@casehubio/pages-component";
 
 export interface DataPipeline {
   handleDataRequest(

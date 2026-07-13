@@ -10,11 +10,11 @@ import type {
   Site,
 } from "./page-types.js";
 import type { Component } from "./types.js";
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { columnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import { HttpMethod } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { DataSetId } from "@casehubio/pages-data";
+import { columnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
+import type { ExternalDataSetDef } from "@casehubio/pages-data";
+import { HttpMethod } from "@casehubio/pages-data";
 import { filterBy } from "../dsl/lookup-helpers.js";
 
 describe("PageProps", () => {

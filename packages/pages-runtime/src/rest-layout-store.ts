@@ -1,4 +1,4 @@
-import type {LayoutState} from "@casehubio/pages-component/dist/model/types.js";
+import type {LayoutState} from "@casehubio/pages-component";
 import type {LayoutStore} from "./layout-store.js";
 
 export function createRestLayoutStore(

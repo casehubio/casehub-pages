@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component";
 import { buildPageIndex, computeCurrentPage, walkNavigate, extendPageIndex } from "./navigation.js";
 import { buildPagePathMap, extendPagePathMap, type PagePathMap } from "./page-paths.js";
-import { wireInteractivity } from "@casehubio/pages-component/dist/renderer/interactive.js";
+import { wireInteractivity } from "@casehubio/pages-component";
 
 function renderInteractive(
   target: HTMLElement,

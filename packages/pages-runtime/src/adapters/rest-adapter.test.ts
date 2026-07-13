@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { createRestAdapter } from "./rest-adapter.js";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehubio/pages-data";
 
 describe("rest-adapter", () => {
   it("should send PATCH request with changed fields", async () => {

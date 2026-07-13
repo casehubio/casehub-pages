@@ -17,11 +17,11 @@ import type {
   DockBarProps,
   DockItem,
   HostPanelProps,
-} from "@casehubio/pages-component/dist/model/component-props.js";
+} from "@casehubio/pages-component";
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
-import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSourceBinding, DataSource } from "@casehubio/pages-data/dist/datasource/types.js";
+import type { ExternalDataSetDef } from "@casehubio/pages-data";
+import type { DataSetId } from "@casehubio/pages-data";
+import type { DataSourceBinding, DataSource } from "@casehubio/pages-data";
 import type {
   BarChartProps,
   LineChartProps,

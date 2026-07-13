@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createComparator, createMultiComparator } from './sort.js';
-import type { ColumnId } from '@casehubio/pages-data/dist/dataset/types.js';
-import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
-import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
+import type { ColumnId } from '@casehubio/pages-data';
+import { ColumnType } from '@casehubio/pages-data';
+import { fromRows } from '@casehubio/pages-data';
 
 const nameCol = 'name' as ColumnId;
 const ageCol = 'age' as ColumnId;

@@ -1,4 +1,4 @@
-import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data";
 
 const DEFAULT_SAMPLE_SIZE = 50;
 const MIN_COL_WIDTH = 60;

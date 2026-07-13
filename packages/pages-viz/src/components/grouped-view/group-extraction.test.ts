@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { extractGroupBoundaries } from "./group-extraction.js";
-import type { DataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type { DataSet, ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
 
 function makeGroupedDataset(groups: { key: string; rows: string[][] }[]) {
   const keyCol = "group_key" as ColumnId;

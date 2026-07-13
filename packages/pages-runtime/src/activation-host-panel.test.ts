@@ -1,6 +1,6 @@
 import {createActivationCallback} from "./activation.js";
 import {clearPanelRegistry, registerPanel} from "./panel-registry.js";
-import type {Component} from "@casehubio/pages-component/dist/model/types.js";
+import type {Component} from "@casehubio/pages-component";
 
 describe("host-panel activation", () => {
   afterEach(() => { clearPanelRegistry(); });

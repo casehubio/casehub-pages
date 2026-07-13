@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { TypedDataSet, Column, ColumnId, ColumnType, DataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { TypedDataSet, Column, ColumnId, ColumnType, DataSet } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
 import type {
   DataComponentCommon,
   ChartSettings,
 } from "@casehubio/pages-component";
 import type { PagesFilterApply, PagesFilterReset } from "./filter-types.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import { toTypedDataSet } from "@casehubio/pages-data";
 
 // ── Mock ECharts ──────────────────────────────────────────────────────
 

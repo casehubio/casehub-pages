@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { flattenTree } from './tree.js';
-import type { ColumnId, TypedRow } from '@casehubio/pages-data/dist/dataset/types.js';
-import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
-import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
+import type { ColumnId, TypedRow } from '@casehubio/pages-data';
+import { ColumnType } from '@casehubio/pages-data';
+import { fromRows } from '@casehubio/pages-data';
 
 const idCol = 'id' as ColumnId;
 

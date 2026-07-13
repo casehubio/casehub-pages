@@ -1,8 +1,8 @@
-import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { DataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetOp } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import type { DataSetManager } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 import type { DataScope, DataScopeRef } from "@casehubio/pages-ui";
 import type { FilterState } from "./cross-filter.js";
 import { collectAncestorFilterOps } from "./cross-filter.js";

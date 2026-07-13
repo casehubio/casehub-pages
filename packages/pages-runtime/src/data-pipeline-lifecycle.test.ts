@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import { LOCAL_CAPABILITIES } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
+import { dataSetId } from "@casehubio/pages-data";
+import type { DataSetId } from "@casehubio/pages-data";
+import type { ExternalDataSetDef } from "@casehubio/pages-data";
+import { LOCAL_CAPABILITIES } from "@casehubio/pages-data";
+import { createDataSetManager } from "@casehubio/pages-data";
 import { createDataPipeline } from "./data-pipeline.js";
 import type { VizTarget } from "./data-pipeline.js";
 import type { ComponentRegistry } from "./registry.js";

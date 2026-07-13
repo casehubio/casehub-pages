@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { computeColumnWidths } from "./column-widths.js";
-import type { DataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type { DataSet, ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
 
 function makeDataset(headers: string[], rows: string[][]) {
   const ds: DataSet = {

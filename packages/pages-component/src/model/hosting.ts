@@ -17,8 +17,8 @@ export interface ConfigurablePanel<P extends Record<string, unknown> = Record<st
   configure(props: P): void;
 }
 
-import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { SortColumn } from "@casehubio/pages-data";
+import type { TypedDataSet } from "@casehubio/pages-data";
 
 /**
  * Data delivery contract for components receiving pipeline data.

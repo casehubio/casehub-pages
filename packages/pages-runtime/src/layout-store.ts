@@ -1,4 +1,4 @@
-import type { LayoutState } from "@casehubio/pages-component/dist/model/types.js";
+import type { LayoutState } from "@casehubio/pages-component";
 
 export interface LayoutStore {
   load(key: string): Promise<LayoutState | null>;

@@ -6,7 +6,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import "@casehubio/pages-viz";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import { columnId, ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
+import { columnId, ColumnType } from "@casehubio/pages-data";
 import {
   page,
   textInput,
@@ -19,9 +19,9 @@ import {
   title,
   bind,
 } from "@casehubio/pages-ui/dist/dsl/builders.js";
-import { createLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { inlineSource } from "@casehubio/pages-data/dist/datasource/sources/inline-source.js";
+import { createLookup } from "@casehubio/pages-data";
+import type { DataSetId } from "@casehubio/pages-data";
+import { inlineSource } from "@casehubio/pages-data";
 
 const CONTACT_YAML = `
 datasets:

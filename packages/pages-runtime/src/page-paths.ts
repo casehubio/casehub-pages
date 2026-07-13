@@ -1,4 +1,4 @@
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component";
 
 export type PagePathMap = Map<Component, string>;
 

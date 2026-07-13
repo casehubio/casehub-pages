@@ -1,4 +1,4 @@
-import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data";
 
 export interface GroupBoundary {
   readonly name: string;

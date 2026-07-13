@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { DataSet, TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType, columnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type { DataSet, TypedDataSet, ColumnId } from "@casehubio/pages-data";
+import { ColumnType, columnId } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
 import type { BadgeProps } from "@casehubio/pages-component";
 import { PagesBadge } from "./PagesBadge.js";
 

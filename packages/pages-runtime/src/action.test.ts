@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { ActionExecutor } from "./action.js";
-import type { ActionRequest, ActionCallbacks } from "@casehubio/pages-component/dist/model/action-types.js";
-import type { RuntimeContext } from "@casehubio/pages-component/dist/context/types.js";
+import type { ActionRequest, ActionCallbacks } from "@casehubio/pages-component";
+import type { RuntimeContext } from "@casehubio/pages-component";
 
 describe("ActionExecutor", () => {
   const mockContext: RuntimeContext = {

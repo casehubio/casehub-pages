@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component";
 import { ContextManager } from "./context-wiring.js";
 import { createDataPipeline } from "./data-pipeline.js";
 import type { DataPipeline, VizTarget } from "./data-pipeline.js";
@@ -9,17 +9,17 @@ import type { DataScopeRegistry } from "./data-scope-registry.js";
 import type { ComponentViewState } from "./component-view-state.js";
 import { createComponentViewState } from "./component-view-state.js";
 import { createFilterState } from "./cross-filter.js";
-import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
-import type { DataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
+import { createDataSetManager } from "@casehubio/pages-data";
+import type { DataSetManager } from "@casehubio/pages-data";
 import {
   dataSetId,
-} from "@casehubio/pages-data/dist/dataset/types.js";
+} from "@casehubio/pages-data";
 import type {
   DataSetId,
-} from "@casehubio/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import { LOCAL_CAPABILITIES } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
+} from "@casehubio/pages-data";
+import type { ExternalDataSetDef } from "@casehubio/pages-data";
+import { LOCAL_CAPABILITIES } from "@casehubio/pages-data";
+import type { ResolverContext } from "@casehubio/pages-data";
 import { createDataScopeRegistry } from "./data-scope-registry.js";
 
 describe("parameterised dataset URLs", () => {

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { html } from 'lit';
-import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data/dist/dataset/types.js';
-import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
-import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
+import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data';
+import { ColumnType } from '@casehubio/pages-data';
+import { fromRows } from '@casehubio/pages-data';
 import type { TableColumnConfig, ColumnRenderer } from './types.js';
 
 type TableEl = HTMLElement & {

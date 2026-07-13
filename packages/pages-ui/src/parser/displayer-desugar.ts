@@ -1,5 +1,5 @@
 import type { Component } from "../model/types.js";
-import { parseLookup } from "@casehubio/pages-data/dist/dataset/lookup-parser.js";
+import { parseLookup } from "@casehubio/pages-data";
 import { desugarGroupedView } from "./grouped-view-desugar.js";
 
 /**

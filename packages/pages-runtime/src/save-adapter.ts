@@ -1,4 +1,4 @@
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/pages-data";
 
 export interface SaveAdapter {
   save(

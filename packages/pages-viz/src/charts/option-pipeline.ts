@@ -1,4 +1,4 @@
-import type { TypedDataSet, ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, ColumnSettings } from "@casehubio/pages-data";
 import type { ChartSettings } from "@casehubio/pages-component";
 import { cellToRaw, resolveColumnName, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 

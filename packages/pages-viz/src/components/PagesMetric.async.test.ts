@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
 import type { MetricProps } from "@casehubio/pages-component";
-import type { ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type { ColumnSettings } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
 
 // ── Controllable mock ────────────────────────────────────────────────
 

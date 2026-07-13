@@ -1,9 +1,9 @@
-import type {DataSource} from "@casehubio/pages-data/dist/datasource/types.js";
-import type {DataSetEvent} from "@casehubio/pages-data/dist/dataset/events.js";
-import type {SortColumn} from "@casehubio/pages-data/dist/dataset/sort.js";
-import type {DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
-import {dataSetId} from "@casehubio/pages-data/dist/dataset/types.js";
-import type {ExternalColumnDef} from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type {DataSource} from "@casehubio/pages-data";
+import type {DataSetEvent} from "@casehubio/pages-data";
+import type {SortColumn} from "@casehubio/pages-data";
+import type {DataSetId, TypedDataSet} from "@casehubio/pages-data";
+import {dataSetId} from "@casehubio/pages-data";
+import type {ExternalColumnDef} from "@casehubio/pages-data";
 import type {VizTarget} from "../model/hosting.js";
 
 export interface SourceFactoryOptions {

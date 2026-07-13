@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { AlertProps } from "@casehubio/pages-component/dist/model/action-types.js";
+import type { AlertProps } from "@casehubio/pages-component";
 import { PagesAlert } from "./PagesAlert.js";
 
 describe("PagesAlert", () => {

@@ -1,12 +1,12 @@
 import {describe, expect, it} from "vitest";
-import type {Column, ColumnId, DataSetId} from "@casehubio/pages-data/dist/dataset/types.js";
-import {ColumnType, dataSetId} from "@casehubio/pages-data/dist/dataset/types.js";
-import type {ExternalDataSetDef} from "@casehubio/pages-data/dist/dataset/external/types.js";
-import {LOCAL_CAPABILITIES} from "@casehubio/pages-data/dist/dataset/external/types.js";
-import {toTypedDataSet} from "@casehubio/pages-data/dist/dataset/conversion.js";
-import {createDataSetManager} from "@casehubio/pages-data/dist/dataset/manager.js";
-import type {DataSink, DataSource, DataSourceBinding} from "@casehubio/pages-data/dist/datasource/types.js";
-import {inlineSource} from "@casehubio/pages-data/dist/datasource/sources/inline-source.js";
+import type {Column, ColumnId, DataSetId} from "@casehubio/pages-data";
+import {ColumnType, dataSetId} from "@casehubio/pages-data";
+import type {ExternalDataSetDef} from "@casehubio/pages-data";
+import {LOCAL_CAPABILITIES} from "@casehubio/pages-data";
+import {toTypedDataSet} from "@casehubio/pages-data";
+import {createDataSetManager} from "@casehubio/pages-data";
+import type {DataSink, DataSource, DataSourceBinding} from "@casehubio/pages-data";
+import {inlineSource} from "@casehubio/pages-data";
 import type {VizTarget} from "./data-pipeline.js";
 import {createDataPipeline} from "./data-pipeline.js";
 import type {ComponentRegistry} from "./registry.js";
@@ -14,10 +14,10 @@ import type {DataSetEntry, DataSetScope} from "./dataset-scope.js";
 import type {FilterState} from "./cross-filter.js";
 import {createFilterState, getActiveFilterOps} from "./cross-filter.js";
 import {createDataScopeRegistry} from "./data-scope-registry.js";
-import type {ResolverContext} from "@casehubio/pages-data/dist/dataset/external/resolver.js";
+import type {ResolverContext} from "@casehubio/pages-data";
 import {createComponentViewState, updatePage, updateSort, updateTextFilter} from "./component-view-state.js";
-import type {SortColumn} from "@casehubio/pages-data/dist/dataset/sort.js";
-import {createDataProviderFactory} from "@casehubio/pages-data/dist/dataset/external/provider-factory.js";
+import type {SortColumn} from "@casehubio/pages-data";
+import {createDataProviderFactory} from "@casehubio/pages-data";
 
 function col(id: string, name: string, type: ColumnType): Column {
   return { id: id as ColumnId, name, type };

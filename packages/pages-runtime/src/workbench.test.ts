@@ -1,6 +1,6 @@
 import { loadSite } from "./site.js";
 import { registerPanel, clearPanelRegistry } from "./panel-registry.js";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component";
 
 describe("workbench integration", () => {
   afterEach(() => {

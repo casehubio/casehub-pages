@@ -18,11 +18,11 @@ export { createComponentViewState, updateSort, updatePage, getComponentState } f
 export type { ComponentState, ComponentViewState } from "./component-view-state.js";
 export { createDataPipeline } from "./data-pipeline.js";
 export type { DataPipeline, VizTarget } from "./data-pipeline.js";
-export type { DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
+export type { DataReceiver } from "@casehubio/pages-component";
 export { registerPanel } from "./panel-registry.js";
 export type { LayoutStore } from "./layout-store.js";
 export { createLocalLayoutStore } from "./layout-store.js";
 export { createRestLayoutStore } from "./rest-layout-store.js";
 export { createDevAuthTokenFn } from "./dev-auth.js";
 export type { DevAuthConfig } from "./dev-auth.js";
-export type { LayoutState, PanelEntry } from "@casehubio/pages-component/dist/model/types.js";
+export type { LayoutState, PanelEntry } from "@casehubio/pages-component";

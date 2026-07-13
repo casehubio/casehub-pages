@@ -1,8 +1,8 @@
 import type { SaveAdapter, SaveResult } from "../save-adapter.js";
-import type { ColumnId, TypedDataSet, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
-import { createTypedRow } from "@casehubio/pages-data/dist/dataset/conversion.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ColumnId, TypedDataSet, CellValue } from "@casehubio/pages-data";
+import type { DataSetManager } from "@casehubio/pages-data";
+import { createTypedRow } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 /** Stringify a record value that is known to be a non-null primitive at runtime. */
 function stringifyValue(value: unknown): string {

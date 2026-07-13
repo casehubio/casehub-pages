@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from "vitest";
-import type {Component} from "@casehubio/pages-component/dist/model/types.js";
+import type {Component} from "@casehubio/pages-component";
 import {createActivationCallback} from "./activation.js";
 import {ContextManager} from "./context-wiring.js";
 import type {ComponentRegistry} from "./registry.js";

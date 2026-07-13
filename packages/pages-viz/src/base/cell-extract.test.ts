@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { cellToRaw, resolveColumnName, applyCellExpression } from "./cell-extract.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { Column, ColumnId, ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
+import { ColumnType } from "@casehubio/pages-data";
+import type { Column, ColumnId, ColumnSettings } from "@casehubio/pages-data";
 
 describe("cellToRaw", () => {
   it("extracts number value", () => {

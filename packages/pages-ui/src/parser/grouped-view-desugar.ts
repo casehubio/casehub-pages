@@ -1,8 +1,8 @@
 import type {Component} from "../model/types.js";
-import type {ColumnId} from "@casehubio/pages-data/dist/dataset/types.js";
-import type {Aggregation, GroupingKey, GroupStrategy} from "@casehubio/pages-data/dist/dataset/group.js";
+import type {ColumnId} from "@casehubio/pages-data";
+import type {Aggregation, GroupingKey, GroupStrategy} from "@casehubio/pages-data";
 import type {AggregationBinding} from "@casehubio/pages-component";
-import { parseLookup } from "@casehubio/pages-data/dist/dataset/lookup-parser.js";
+import { parseLookup } from "@casehubio/pages-data";
 
 function parseStrategy(raw: Record<string, unknown>): GroupStrategy {
   const strategy = (raw.strategy as string | undefined) ?? "distinct";

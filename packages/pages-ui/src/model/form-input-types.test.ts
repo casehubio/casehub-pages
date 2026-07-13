@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { isFixedOptions } from "@casehubio/pages-component";
 import type { FixedOptions, DataSetOptions } from "@casehubio/pages-component";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehubio/pages-data";
 
 describe("form input type utilities", () => {
   it("isFixedOptions identifies FixedOptions correctly", () => {

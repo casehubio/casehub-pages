@@ -1,4 +1,4 @@
-import type { AlertProps } from "@casehubio/pages-component/dist/model/action-types.js";
+import type { AlertProps } from "@casehubio/pages-component";
 import { PagesContentElement } from "../base/PagesContentElement.js";
 
 /**

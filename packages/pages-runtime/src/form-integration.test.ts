@@ -5,7 +5,7 @@ import type { PagesFilterApply } from "@casehubio/pages-viz/dist/base/filter-typ
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
-import { columnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { columnId } from "@casehubio/pages-data";
 import type { FormInputCommon } from "@casehubio/pages-component";
 import type { VizComponentProps } from "@casehubio/pages-viz/dist/base/types.js";
 

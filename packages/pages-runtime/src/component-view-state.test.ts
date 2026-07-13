@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
+import type { ColumnId } from "@casehubio/pages-data";
+import type { SortColumn } from "@casehubio/pages-data";
 import {
   createComponentViewState,
   updateSort,

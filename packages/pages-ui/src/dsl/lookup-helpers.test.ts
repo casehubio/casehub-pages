@@ -18,8 +18,8 @@ import {
   join,
   distinctJoin,
 } from "./lookup-helpers.js";
-import type { UnresolvedLeaf } from "@casehubio/pages-data/dist/dataset/filter.js";
-import type { GroupOp } from "@casehubio/pages-data/dist/dataset/group.js";
+import type { UnresolvedLeaf } from "@casehubio/pages-data";
+import type { GroupOp } from "@casehubio/pages-data";
 
 describe("lookup()", () => {
   it("creates DataSetLookup with branded DataSetId", () => {

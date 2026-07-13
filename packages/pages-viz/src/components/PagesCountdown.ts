@@ -1,6 +1,6 @@
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { CountdownProps } from "@casehubio/pages-component/dist/model/displayer-types.js";
-import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { TypedDataSet } from "@casehubio/pages-data";
+import type { CountdownProps } from "@casehubio/pages-component";
+import { parseRefreshTime } from "@casehubio/pages-data";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
 

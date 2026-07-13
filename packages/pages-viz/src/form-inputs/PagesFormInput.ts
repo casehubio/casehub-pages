@@ -1,8 +1,8 @@
 import { PagesElement } from "../base/PagesElement.js";
 import type { FormInputCommon } from "@casehubio/pages-component";
-import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { ActionRequest, ActionCallbacks, SubmitConfig } from "@casehubio/pages-component/dist/model/action-types.js";
+import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import type { ActionRequest, ActionCallbacks, SubmitConfig } from "@casehubio/pages-component";
 
 export interface PagesFieldChangeDetail {
   readonly field: string;

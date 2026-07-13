@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import type { Component } from "@casehubio/pages-component";
 import { createActivationCallback } from "./activation.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { PagePathMap } from "./page-paths.js";

@@ -1,5 +1,5 @@
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { Component } from "@casehubio/pages-component";
+import type { DataSetLookup } from "@casehubio/pages-data";
 import type { VizTarget } from "./data-pipeline.js";
 
 export interface ComponentEntry {

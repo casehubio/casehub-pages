@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { DataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import type { DataSet, ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
 import type { GroupedViewProps } from "@casehubio/pages-component";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetLookup } from "@casehubio/pages-data";
 import { PagesGroupedView } from "./PagesGroupedView.js";
 
 function mockLookup(): DataSetLookup {

@@ -1,5 +1,5 @@
-import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
-import type { ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetOp } from "@casehubio/pages-data";
+import type { ColumnId } from "@casehubio/pages-data";
 
 export type FilterState = Map<string, Map<string | undefined, Map<string, string[]>>>;
 

@@ -8,7 +8,7 @@ import {
 } from "echarts/components";
 import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { MeterProps } from "@casehubio/pages-component";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet } from "@casehubio/pages-data";
 import { cellToRaw } from "../base/cell-extract.js";
 import { applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";

@@ -1,4 +1,4 @@
-import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { SelectorProps } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";

@@ -1,7 +1,7 @@
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type { DataSourceBinding } from "@casehubio/pages-data/dist/datasource/types.js";
+import type { Component } from "@casehubio/pages-component";
+import type { DataSetId } from "@casehubio/pages-data";
+import type { ExternalDataSetDef } from "@casehubio/pages-data";
+import type { DataSourceBinding } from "@casehubio/pages-data";
 import type { PagePathMap } from "./page-paths.js";
 
 /**

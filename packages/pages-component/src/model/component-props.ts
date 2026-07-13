@@ -1,4 +1,4 @@
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetLookup } from "@casehubio/pages-data";
 
 export interface GridProps {
   readonly columns: number;

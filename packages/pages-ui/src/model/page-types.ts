@@ -1,7 +1,7 @@
 import type { Component } from "./types.js";
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
+import type { DataSetId } from "@casehubio/pages-data";
+import type { ExternalDataSetDef } from "@casehubio/pages-data";
+import type { SortOrder } from "@casehubio/pages-data";
 
 // Re-export types that moved to pages-component
 export type {

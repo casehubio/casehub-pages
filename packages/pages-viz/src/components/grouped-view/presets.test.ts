@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { resolvePreset } from "./presets.js";
 import type { GroupedViewProps } from "@casehubio/pages-component";
-import type { ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { ColumnId } from "@casehubio/pages-data";
 
 function minProps(overrides: Partial<GroupedViewProps> = {}): GroupedViewProps {
   return {

@@ -9,8 +9,8 @@ import {
 } from "echarts/components";
 import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { TimeseriesProps } from "@casehubio/pages-component";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
 

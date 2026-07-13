@@ -4,7 +4,7 @@ import {DataZoomComponent, GridComponent, LegendComponent, TooltipComponent,} fr
 import {CanvasRenderer} from "echarts/renderers";
 import {PagesChartElement} from "../base/PagesChartElement.js";
 import type {TimelineProps} from "@casehubio/pages-component";
-import type {TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {TypedDataSet} from "@casehubio/pages-data";
 import {applyChartSettings} from "./option-pipeline.js";
 import {deepMerge} from "../base/deep-merge.js";
 import {cellToRaw} from "../base/cell-extract.js";

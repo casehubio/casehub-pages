@@ -1,5 +1,5 @@
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import type { ColumnSettings } from "@casehubio/pages-data";
 import type {
   FilterSettings,
   RefreshSettings,

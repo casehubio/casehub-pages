@@ -1,9 +1,9 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { RovingTabindexMixin, type RovingDirection } from '@casehubio/pages-primitives';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data/dist/dataset/types.js';
-import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
-import type { SortColumn } from '@casehubio/pages-data/dist/dataset/sort.js';
+import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data';
+import { ColumnType } from '@casehubio/pages-data';
+import type { SortColumn } from '@casehubio/pages-data';
 import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
@@ -11,9 +11,9 @@ import { flattenTree, type TreeRow } from './tree.js';
 import { resolveColumnName, cellToRaw, applyCellExpression, resolveColumnExpression } from './cell-utils.js';
 import { until } from 'lit/directives/until.js';
 import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
-import { evaluateExpression, createRowContext } from '@casehubio/pages-component/dist/context/expression-evaluator.js';
+import { evaluateExpression, createRowContext } from '@casehubio/pages-component';
 import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, paginateTreeByRoots, findMatchingNodes, rowMatchesText, sortTreeLevel, type TreeNode, type ExpandableConfig } from './tree-builder.js';
-import { EMPTY_CONTEXT } from '@casehubio/pages-component/dist/context/types.js';
+import { EMPTY_CONTEXT } from '@casehubio/pages-component';
 
 const AUTO_THRESHOLD = 50;
 

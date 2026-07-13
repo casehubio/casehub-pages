@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { ActionButtonProps, PagesActionRequestDetail, ActionResult } from "@casehubio/pages-component/dist/model/action-types.js";
+import type { ActionButtonProps, PagesActionRequestDetail, ActionResult } from "@casehubio/pages-component";
 import { PagesActionButton } from "./PagesActionButton.js";
 
 describe("PagesActionButton", () => {

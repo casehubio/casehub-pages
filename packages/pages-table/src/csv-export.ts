@@ -1,4 +1,4 @@
-import type { TypedDataSet, CellValue, Column } from '@casehubio/pages-data/dist/dataset/types.js';
+import type { TypedDataSet, CellValue, Column } from '@casehubio/pages-data';
 import type { TableColumnConfig } from './types.js';
 
 export function tableToCsv(dataSet: TypedDataSet, columnConfig?: readonly TableColumnConfig[]): string {

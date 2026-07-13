@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PagesIframePlugin } from "./PagesIframePlugin.js";
 import type { IframePluginProps } from "@casehubio/pages-component";
-import type { TypedDataSet, TypedRow, CellValue, DataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType, columnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, TypedRow, CellValue, DataSet } from "@casehubio/pages-data";
+import { ColumnType, columnId } from "@casehubio/pages-data";
 import type { PagesFilterApply } from "../base/filter-types.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
+import { toTypedDataSet } from "@casehubio/pages-data";
 
 
 function mockRow(cells: CellValue[]): TypedRow {

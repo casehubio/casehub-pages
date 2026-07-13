@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createDataScopeRegistry, hasDataScope, getDataScope } from "./data-scope-registry.js";
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/pages-data";
 
 describe("DataScopeRegistry", () => {
   it("registers and retrieves DataScope", () => {

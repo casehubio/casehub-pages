@@ -11,11 +11,27 @@ export type {
 } from "./dataset/types.js";
 export { ColumnType, dataSetId, columnId } from "./dataset/types.js";
 
+export type { SortColumn, SortOp, SortOrder } from "./dataset/sort.js";
+
 export type { DataSetOp } from "./dataset/ops.js";
 export { applyOps, validateOpOrder } from "./dataset/ops.js";
 
 export type { DataSetLookup } from "./dataset/lookup.js";
 export { createLookup } from "./dataset/lookup.js";
+export { parseLookup } from "./dataset/lookup-parser.js";
+
+export type { Aggregation, GroupingKey, GroupStrategy, GroupOp, ResultColumn, FixedCalendarUnit } from "./dataset/group.js";
+
+export type { FilterOp, FilterExpression, CoreFunctionType, UnresolvedLeaf } from "./dataset/filter.js";
+
+export type { DataSetEvent } from "./dataset/events.js";
+
+export { compileOrCached } from "./expression/jsonata-bridge.js";
+
+export { fromRows, toTypedDataSet, createTypedRow, toWireDataSet } from "./dataset/conversion.js";
+
+export type { DataSetManager, LookupOptions } from "./dataset/manager.js";
+export { createDataSetManager } from "./dataset/manager.js";
 
 export {
   type ExternalDataSetDef,
@@ -34,6 +50,7 @@ export {
   HttpMethod,
   LOCAL_CAPABILITIES,
   isServiceCapabilities,
+  parseRefreshTime,
   type ParsedExternalDataSetDef,
   parseExternalDataSetDef,
   type CsvParseOptions,

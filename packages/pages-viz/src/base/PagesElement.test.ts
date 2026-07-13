@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { PagesElement } from "./PagesElement.js";
 import type { VizComponentProps } from "./types.js";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { TypedDataSet } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
 
 interface TestProps extends VizComponentProps {
   readonly label?: string;

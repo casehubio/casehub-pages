@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { DataSourceController } from "./data-source-controller.js";
-import type { DataSource, DataSink } from "@casehubio/pages-data/dist/datasource/types.js";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import { ColumnType, columnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
-import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
+import type { DataSource, DataSink } from "@casehubio/pages-data";
+import type { TypedDataSet } from "@casehubio/pages-data";
+import { ColumnType, columnId } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
+import type { DataSetEvent } from "@casehubio/pages-data";
 
 function makeDataSet(values: string[][]): TypedDataSet {
   return toTypedDataSet({

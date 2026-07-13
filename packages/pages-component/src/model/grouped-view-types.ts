@@ -1,5 +1,5 @@
 import type { ColumnId } from "@casehubio/pages-data";
-import type { Aggregation, GroupingKey } from "@casehubio/pages-data/dist/dataset/group.js";
+import type { Aggregation, GroupingKey } from "@casehubio/pages-data";
 import type { DataComponentCommon } from "./displayer-types.js";
 
 export type GroupDisplayMode = "table-row" | "section-heading";

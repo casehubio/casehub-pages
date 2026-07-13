@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
-import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { Component } from "@casehubio/pages-component";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 import "@casehubio/pages-viz"; // side-effect: registers chart/table custom elements
 import { loadSite } from "./site.js";
 

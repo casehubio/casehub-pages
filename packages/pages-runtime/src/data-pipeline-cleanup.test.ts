@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { createDataPipeline } from "./data-pipeline.js";
-import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { createDataSetManager } from "@casehubio/pages-data";
+import { dataSetId } from "@casehubio/pages-data";
 import type { ComponentRegistry } from "./registry.js";
 import type { VizTarget } from "./data-pipeline.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetLookup } from "@casehubio/pages-data";
 
 describe("handleSubtreeRemoved with proxy vizElement", () => {
   it("cleans up when wrapper element is removed even if vizElement is not an HTMLElement", async () => {

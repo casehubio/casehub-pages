@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parsePage } from "./page-parser.js";
 import { getProps } from "@casehubio/pages-component";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetLookup } from "@casehubio/pages-data";
 
 describe("parsePage input boundary behavior", () => {
   it("throws on string input (not a parsed object)", () => {

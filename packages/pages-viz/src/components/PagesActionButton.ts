@@ -1,4 +1,4 @@
-import type { ActionButtonProps, ActionRequest, ActionCallbacks, ActionResult, PagesActionRequestDetail } from "@casehubio/pages-component/dist/model/action-types.js";
+import type { ActionButtonProps, ActionRequest, ActionCallbacks, ActionResult, PagesActionRequestDetail } from "@casehubio/pages-component";
 import { PagesContentElement } from "../base/PagesContentElement.js";
 
 export class PagesActionButton extends PagesContentElement<ActionButtonProps> {

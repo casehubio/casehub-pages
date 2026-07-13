@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ContextManager, type ContextConsumer } from "./context-wiring.js";
-import { EMPTY_CONTEXT } from "@casehubio/pages-component/dist/context/index.js";
+import { EMPTY_CONTEXT } from "@casehubio/pages-component";
 import {
   dataSetId,
   columnId,
   ColumnType,
-} from "@casehubio/pages-data/dist/dataset/types.js";
+} from "@casehubio/pages-data";
 import type {
   TypedDataSet,
   TypedRow,
-} from "@casehubio/pages-data/dist/dataset/types.js";
+} from "@casehubio/pages-data";
 
 describe("ContextManager", () => {
   let manager: ContextManager;

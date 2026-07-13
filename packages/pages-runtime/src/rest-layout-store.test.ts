@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createRestLayoutStore } from "./rest-layout-store.js";
-import type { LayoutState } from "@casehubio/pages-component/dist/model/types.js";
+import type { LayoutState } from "@casehubio/pages-component";
 
 describe("rest-layout-store", () => {
   const baseUrl = "https://api.example.com";

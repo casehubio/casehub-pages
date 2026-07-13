@@ -1,7 +1,7 @@
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
-import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import { DataSourceController } from "@casehubio/pages-component/dist/controller/data-source-controller.js";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import type { SortColumn } from "@casehubio/pages-data";
+import type { TypedDataSet } from "@casehubio/pages-data";
+import { DataSourceController } from "@casehubio/pages-component";
 import type { VizComponentProps } from "./types.js";
 
 export interface PagesDataRequestDetail {

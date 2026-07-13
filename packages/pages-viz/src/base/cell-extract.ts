@@ -1,5 +1,5 @@
-import type { CellValue, Column, ColumnSettings } from "@casehubio/pages-data/dist/dataset/types.js";
-import { compileOrCached } from "@casehubio/pages-data/dist/expression/jsonata-bridge.js";
+import type { CellValue, Column, ColumnSettings } from "@casehubio/pages-data";
+import { compileOrCached } from "@casehubio/pages-data";
 
 export function cellToRaw(cell: CellValue): string | number | Date | null {
   if (cell.type === "NULL") return null;

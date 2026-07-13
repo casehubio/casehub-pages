@@ -1,4 +1,4 @@
-import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data";
 import type { GroupedViewProps } from "@casehubio/pages-component";
 import { PagesElement } from "../../base/PagesElement.js";
 import { resolvePreset } from "./presets.js";

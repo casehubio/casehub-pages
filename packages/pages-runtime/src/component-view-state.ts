@@ -1,4 +1,4 @@
-import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
+import type { SortColumn } from "@casehubio/pages-data";
 
 export interface ComponentState {
   readonly sort?: SortColumn;

@@ -1,6 +1,6 @@
 import {beforeAll, beforeEach, describe, expect, it, vi} from "vitest";
 import {createLocalLayoutStore} from "./layout-store.js";
-import type {LayoutState} from "@casehubio/pages-component/dist/model/types.js";
+import type {LayoutState} from "@casehubio/pages-component";
 
 describe("createLocalLayoutStore", () => {
   // Mock localStorage if not available

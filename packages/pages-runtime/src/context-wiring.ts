@@ -2,16 +2,16 @@ import type {
   RuntimeContext,
   DataSetSnapshot,
   EscapeMode,
-} from "@casehubio/pages-component/dist/context/index.js";
+} from "@casehubio/pages-component";
 import {
   EMPTY_CONTEXT,
   resolveTemplate,
   evaluateExpression,
-} from "@casehubio/pages-component/dist/context/index.js";
+} from "@casehubio/pages-component";
 import type {
   TypedDataSet,
   DataSetId,
-} from "@casehubio/pages-data/dist/dataset/types.js";
+} from "@casehubio/pages-data";
 
 export interface ContextConsumer {
   element: Element;

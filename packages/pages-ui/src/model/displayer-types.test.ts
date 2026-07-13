@@ -8,8 +8,8 @@ import type {
   MapProps,
   MetricProps,
 } from "@casehubio/pages-component";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import { dataSetId, columnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import { dataSetId, columnId } from "@casehubio/pages-data";
 
 describe("DataComponentCommon", () => {
   it("requires lookup", () => {

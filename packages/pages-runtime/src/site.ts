@@ -3,26 +3,26 @@ import type {
     LayoutState,
     PanelEntry,
     PermissionContext
-} from "@casehubio/pages-component/dist/model/types.js";
-import {ALLOW_ALL} from "@casehubio/pages-component/dist/model/types.js";
-import type {HostPanelProps} from "@casehubio/pages-component/dist/model/component-props.js";
+} from "@casehubio/pages-component";
+import {ALLOW_ALL} from "@casehubio/pages-component";
+import type {HostPanelProps} from "@casehubio/pages-component";
 import type {LayoutStore} from "./layout-store.js";
-import {renderComponent} from "@casehubio/pages-component/dist/renderer/render.js";
-import type {CellValue, Column, ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import {renderComponent} from "@casehubio/pages-component";
+import type {CellValue, Column, ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data";
 import type {
     DataProviderConfig,
     ExternalDataSetDef,
     ServiceCapabilities
-} from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type {DataSetLookup} from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type {SortOrder} from "@casehubio/pages-data/dist/dataset/sort.js";
-import {createDataSetManager} from "@casehubio/pages-data/dist/dataset/manager.js";
+} from "@casehubio/pages-data";
+import type {DataSetLookup} from "@casehubio/pages-data";
+import type {SortOrder} from "@casehubio/pages-data";
+import {createDataSetManager} from "@casehubio/pages-data";
 import {
     createDataProviderFactory,
     createPresetRegistry,
     isServiceCapabilities,
     LOCAL_CAPABILITIES
-} from "@casehubio/pages-data/dist/dataset/external/index.js";
+} from "@casehubio/pages-data";
 import type {DeepLink, Site, ViewState} from "@casehubio/pages-ui/dist/model/page-types.js";
 import {parsePage} from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import {load as yamlLoad} from "js-yaml";
@@ -58,7 +58,7 @@ import {createRestAdapter} from "./adapters/rest-adapter.js";
 import {ContextManager} from "./context-wiring.js";
 import type {PagesActionCompleteDetail} from "./action.js";
 import {ActionExecutor} from "./action.js";
-import type {PagesActionRequestDetail} from "@casehubio/pages-component/dist/model/action-types.js";
+import type {PagesActionRequestDetail} from "@casehubio/pages-component";
 import type {DevAuthConfig} from "./dev-auth.js";
 import {createDevAuthTokenFn} from "./dev-auth.js";
 

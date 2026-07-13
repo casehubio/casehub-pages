@@ -1,16 +1,16 @@
-import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import { createLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
-import type { FilterOp, FilterExpression, CoreFunctionType } from "@casehubio/pages-data/dist/dataset/filter.js";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
+import type { DataSetLookup } from "@casehubio/pages-data";
+import { createLookup } from "@casehubio/pages-data";
+import type { DataSetOp } from "@casehubio/pages-data";
+import type { FilterOp, FilterExpression, CoreFunctionType } from "@casehubio/pages-data";
 import type {
   GroupOp,
   ResultColumn,
   GroupingKey,
   Aggregation,
   FixedCalendarUnit,
-} from "@casehubio/pages-data/dist/dataset/group.js";
-import type { SortOp, SortColumn, SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
+} from "@casehubio/pages-data";
+import type { SortOp, SortColumn, SortOrder } from "@casehubio/pages-data";
 
 // Main lookup builder
 export function lookup(dataSetId: string, ...ops: DataSetOp[]): DataSetLookup {
