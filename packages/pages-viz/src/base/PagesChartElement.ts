@@ -22,6 +22,7 @@ export abstract class PagesChartElement<
   constructor() {
     super();
     this.container.style.minHeight = "300px";
+    this.container.style.overflow = "hidden";
   }
 
   override set props(value: P) {

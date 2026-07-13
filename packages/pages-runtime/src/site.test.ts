@@ -693,6 +693,82 @@ describe("dock toggle integration", () => {
     site.dispose();
     document.body.removeChild(target);
   });
+
+  it("pages-dock-toggle restore preserves parent split display:flex", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const tree: Component = {
+      type: "split",
+      props: { direction: "horizontal", ratio: [50, 50] },
+      slots: {
+        "0": [{ type: "html", id: "left", props: { content: "Left" } }],
+        "1": [{ type: "html", id: "right", props: { content: "Right" } }],
+      },
+    };
+
+    const site = await loadSite(target, tree);
+
+    const splitEl = target.querySelector('[data-component-type="split"]') as HTMLElement;
+    expect(splitEl.style.display).toBe("flex");
+
+    // Hide both panels — split should collapse
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "left", visible: false },
+    }));
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "right", visible: false },
+    }));
+    expect(splitEl.style.display).toBe("none");
+
+    // Show one panel — split should restore to flex, not block
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "left", visible: true },
+    }));
+    expect(splitEl.style.display).toBe("flex");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("pages-dock-toggle restore preserves slot container display", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const tree: Component = {
+      type: "split",
+      props: { direction: "horizontal", ratio: [50, 50] },
+      slots: {
+        "0": [{ type: "html", id: "left", props: { content: "Left" } }],
+        "1": [{ type: "html", id: "right", props: { content: "Right" } }],
+      },
+    };
+
+    const site = await loadSite(target, tree);
+
+    const leftEl = target.querySelector('[data-component-id="left"]')!;
+    const slotContainer = leftEl.closest("[data-slot]") as HTMLElement;
+    const originalDisplay = slotContainer.style.display;
+
+    // Hide then restore
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "left", visible: false },
+    }));
+    expect(slotContainer.style.display).toBe("none");
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "left", visible: true },
+    }));
+    expect(slotContainer.style.display).toBe(originalDisplay);
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
 });
 
 // ── pages-event inter-panel communication ───────────────────────────

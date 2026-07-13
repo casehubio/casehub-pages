@@ -95,7 +95,7 @@ describe("PagesMeter", () => {
       expect(series.progress).toEqual({ show: true, overlap: false });
       expect(series.title).toEqual({ show: false });
       expect((series.detail as Record<string, unknown>).show).toBe(false);
-      expect(series.radius).toBe("100%");
+      expect(series.radius).toBe("85%");
     });
 
     it("renders one data entry per row", () => {

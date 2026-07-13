@@ -1158,3 +1158,120 @@ describe("pipeline — DataSourceBinding path", () => {
     expect(rows).toHaveLength(2);
   });
 });
+
+describe("pipeline — join dependency resolution", () => {
+  it("resolves join dataset when source datasets are not yet in manager", async () => {
+    const target = makeTarget();
+    const lookup = { dataSetId: "combined" as DataSetId, operations: [] };
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("table-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: lookup,
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const q1Def: ExternalDataSetDef = {
+      uuid: dataSetId("q1"),
+      content: JSON.stringify([{ month: "Jan", value: 100 }]),
+      columns: [
+        { id: "month" as ColumnId, type: ColumnType.LABEL },
+        { id: "value" as ColumnId, type: ColumnType.NUMBER },
+      ],
+    };
+    const q2Def: ExternalDataSetDef = {
+      uuid: dataSetId("q2"),
+      content: JSON.stringify([{ month: "Apr", value: 200 }]),
+      columns: [
+        { id: "month" as ColumnId, type: ColumnType.LABEL },
+        { id: "value" as ColumnId, type: ColumnType.NUMBER },
+      ],
+    };
+    const combinedDef: ExternalDataSetDef = {
+      uuid: dataSetId("combined"),
+      join: [dataSetId("q1"), dataSetId("q2")],
+    };
+
+    const scope: DataSetScope = new Map([
+      ["", new Map([
+        [q1Def.uuid, q1Def as DataSetEntry],
+        [q2Def.uuid, q2Def as DataSetEntry],
+        [combinedDef.uuid, combinedDef as DataSetEntry],
+      ])],
+    ]);
+
+    const manager = createDataSetManager({
+      onChanged: (id) => {
+        pipeline.refreshDataSet(id);
+      },
+    });
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    pipeline.setResolverCtx({
+      manager,
+      providerFactory: createDataProviderFactory(),
+      providerConfig: {},
+      presetRegistry: { get: () => undefined, has: () => false },
+      capabilities: LOCAL_CAPABILITIES,
+    });
+
+    pipeline.handleDataRequest(target, lookup, "table-1");
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(manager.has("combined" as DataSetId)).toBe(true);
+    expect(target.dataSet).toBeDefined();
+    expect((target.dataSet as unknown as { rows: readonly unknown[] }).rows).toHaveLength(2);
+  });
+
+  it("sets error when join source dataset is not in scope", async () => {
+    const target = makeTarget();
+    const lookup = { dataSetId: "combined" as DataSetId, operations: [] };
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("table-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: lookup,
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const combinedDef: ExternalDataSetDef = {
+      uuid: dataSetId("combined"),
+      join: [dataSetId("missing1"), dataSetId("missing2")],
+    };
+
+    const scope: DataSetScope = new Map([
+      ["", new Map([[combinedDef.uuid, combinedDef as DataSetEntry]])],
+    ]);
+
+    const manager = createDataSetManager();
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    pipeline.setResolverCtx({
+      manager,
+      providerFactory: createDataProviderFactory(),
+      providerConfig: {},
+      presetRegistry: { get: () => undefined, has: () => false },
+      capabilities: LOCAL_CAPABILITIES,
+    });
+
+    pipeline.handleDataRequest(target, lookup, "table-1");
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(target.error).toContain("missing1");
+  });
+});

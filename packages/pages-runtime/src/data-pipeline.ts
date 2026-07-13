@@ -482,6 +482,44 @@ export function createDataPipeline(
       return;
     }
 
+    // Join dependency resolution: ensure source datasets are in manager before join
+    if (def.join) {
+      const sourcePromises: Array<Promise<unknown>> = [];
+      for (const sourceId of def.join) {
+        if (manager.has(sourceId)) continue;
+        let sourcePending = pendingResolutions.get(sourceId);
+        if (!sourcePending) {
+          const sourceDef = resolveDataSetDef(sourceId, _entry.pagePath, scope);
+          if (!sourceDef) {
+            target.error = `Join source dataset "${String(sourceId)}" not found in scope`;
+            return;
+          }
+          sourcePending = resolveExternalDataSet(sourceDef, resolverCtx);
+          pendingResolutions.set(sourceId, sourcePending);
+        }
+        sourcePromises.push(sourcePending);
+      }
+      if (sourcePromises.length > 0) {
+        void Promise.all(sourcePromises)
+          .then(() => {
+            for (const sourceId of def.join!) {
+              pendingResolutions.delete(sourceId);
+            }
+            const joinPending = resolveExternalDataSet(def, resolverCtx!);
+            pendingResolutions.set(lookup.dataSetId, joinPending);
+            return joinPending;
+          })
+          .then(() => {
+            pendingResolutions.delete(lookup.dataSetId);
+          })
+          .catch((err: unknown) => {
+            pendingResolutions.delete(lookup.dataSetId);
+            target.error = err instanceof Error ? err.message : String(err);
+          });
+        return;
+      }
+    }
+
     let pending = pendingResolutions.get(lookup.dataSetId);
     if (!pending) {
       if (def.serverQuery) {

@@ -2,6 +2,7 @@ package io.casehub.pages.push.runtime;
 
 import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.EventStore;
+import io.casehub.pages.push.JsonWriter;
 import io.casehub.pages.push.InMemoryEventStore;
 import io.casehub.pages.push.SessionSender;
 import io.casehub.pages.push.TopicRegistry;
@@ -30,9 +31,18 @@ public class PushProducers {
 
     @Produces
     @ApplicationScoped
+    @DefaultBean
+    JsonWriter jsonWriter() {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        return mapper::writeValueAsString;
+    }
+
+    @Produces
+    @ApplicationScoped
     EventBroadcaster eventBroadcaster(EventStore eventStore,
-                                       TopicRegistry topicRegistry,
-                                       SessionSender sessionSender) {
-        return new EventBroadcaster(eventStore, topicRegistry, sessionSender);
+                                      TopicRegistry topicRegistry,
+                                      SessionSender sessionSender,
+                                      JsonWriter jsonWriter) {
+        return new EventBroadcaster(eventStore, topicRegistry, sessionSender, jsonWriter);
     }
 }

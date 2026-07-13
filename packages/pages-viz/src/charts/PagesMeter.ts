@@ -83,8 +83,8 @@ export class PagesMeter extends PagesChartElement<MeterProps> {
       };
     });
 
-    const radius = showLegend ? "110%" : "100%";
-    const centerY = showLegend ? "65%" : "75%";
+    const radius = showLegend ? "95%" : "85%";
+    const centerY = showLegend ? "70%" : "80%";
 
     let option: Record<string, unknown> = {
       series: [
@@ -100,9 +100,9 @@ export class PagesMeter extends PagesChartElement<MeterProps> {
           splitNumber: 4,
           pointer: { show: false },
           progress: { show: true, overlap: false },
-          axisLine: { lineStyle: { width: 40 } },
+          axisLine: { lineStyle: { width: 30 } },
           axisTick: { show: true },
-          axisLabel: { fontSize: 12, distance: 50 },
+          axisLabel: { fontSize: 11, distance: 38 },
           title: { show: showLegend },
           detail: {
             show: showLegend,

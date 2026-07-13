@@ -80,4 +80,17 @@ class BroadcastIntegrationTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("wildcard");
     }
+
+    @Test
+    void typed_broadcast_serializes_and_delivers_via_cdi() {
+        topicRegistry.listen("conn-1", List.of("metrics:cpu"));
+
+        record CpuMetric(double load, String host) {}
+        broadcaster.broadcast("metrics:cpu", new CpuMetric(0.75, "server1"));
+
+        assertThat(testConfig.sent()).hasSize(1);
+        assertThat(testConfig.sent().getFirst().message()).contains("\"load\":0.75");
+        assertThat(testConfig.sent().getFirst().message()).contains("\"host\":\"server1\"");
+    }
+
 }
