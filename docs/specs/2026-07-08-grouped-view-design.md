@@ -320,8 +320,27 @@ All styling uses existing `--pages-` tokens. No new token categories.
 
 The `hidden` attribute (for accessibility) and `max-height`/`opacity` transitions (for visual animation) are sequenced — they cannot be applied simultaneously.
 
-- **Expanding**: remove `hidden` attribute, then on the next animation frame start `max-height` + `opacity` transition using `--pages-duration-normal` and `--pages-ease-default`
-- **Collapsing**: start `max-height` + `opacity` transition, then set `hidden` attribute on `transitionend` event — content remains in the accessibility tree during the animation
+- **Expanding**: remove `hidden` attribute and `.collapsing` class, then on the next animation frame start `max-height` + `opacity` transition using `--pages-duration-normal` and `--pages-ease-default`
+- **Collapsing**:
+  1. Add `.collapsing` class → triggers `max-height` + `opacity` transition
+  2. On `transitionend` filtered for `e.propertyName === 'max-height'`
+     AND `.collapsing` class still present: set `hidden` attribute →
+     content removed from accessibility tree only after transition completes
+
+  Two guards on the `transitionend` handler:
+
+  - **Property filter** (`e.propertyName === 'max-height'`): `opacity`
+    and `max-height` have different durations. Listening for the shorter
+    `opacity` event would set `hidden` early, aborting the height
+    collapse mid-transition.
+
+  - **State guard** (`.collapsing` class still present): if the user
+    re-expands during an active collapse animation, CSS reverses the
+    transition. When `transitionend` fires at the expanded position,
+    the handler would set `hidden` on a fully expanded section without
+    this guard. The `.collapsing` class is removed on re-expand,
+    ensuring `hidden` is only set when the section is genuinely collapsed.
+
 - **`prefers-reduced-motion: reduce`**: skip transitions entirely — toggle `hidden` immediately with no animation
 
 ### YAML Surface
@@ -466,7 +485,7 @@ When a group collapses and focus is within the collapsed content, focus moves to
 **Section-heading mode:**
 - Shared column header bar provides visual column identification and sort affordance; each group's `<table>` includes a visually-hidden `<thead>` for screen reader column association
 - Toggle `<button>` has `aria-expanded` + `aria-controls` linking to content region via instance-scoped IDs (`${_instanceId}-group-${index}`)
-- Collapsed content has `hidden` attribute set on `transitionend` (see §Styling collapse animation) — element is removed from accessibility tree only after visual transition completes
+- Collapsed content has `hidden` attribute set on `transitionend` with property filter (`max-height`) and state guard (`.collapsing` still present) — element is removed from accessibility tree only after visual transition completes (see §Styling collapse animation)
 - Focus order: column header bar → first group header → content → next group header
 
 **List mode:**
@@ -558,7 +577,7 @@ test.describe('pages-grouped-view visual', () => {
 - **Shared column header bar for section/list modes** — renders once at the top rather than repeating `<thead>` per group. Provides visual column identification and sort affordance. Each group's `<table>` includes a visually-hidden `<thead>` for screen reader column association.
 - **Instance-scoped IDs** — `aria-controls` and `id` attributes prefixed with `crypto.randomUUID()` per component instance. Prevents ID collisions when multiple `<pages-grouped-view>` instances coexist.
 - **Item count always visible** — shown in every group header unconditionally. `showGroupSummary` controls only aggregate values alongside the count, not the count itself.
-- **Sequenced collapse animation** — `hidden` attribute set on `transitionend`, not simultaneously with `max-height` transition. Reduced-motion users get immediate `hidden` toggle.
+- **Sequenced collapse animation** — `hidden` attribute set on `transitionend` with two guards: property filter (`max-height`) prevents the shorter `opacity` transition from triggering early; state guard (`.collapsing` class) prevents re-expand race condition from hiding a fully expanded section. Same pattern as row-detail-expansion spec (R3-01 settled decision). Reduced-motion users get immediate `hidden` toggle.
 - **`<colgroup>` for table column widths** — `table-layout: fixed` + `<colgroup>`/`<col>` preserves full table semantics. CSS `grid-template-columns` on `<table>` requires `display: grid` which strips `<tr>` row semantics and causes screen reader issues.
 - **List mode omits sort** — list mode is for small, at-a-glance datasets; `<dl>` key-value semantics don't map to sortable columns. Header bar uses informational `<span>` labels, not interactive `<button>` controls.
 - **Focus rescue on collapse** — when focus is inside collapsing content, it moves to the group's toggle button (WAI-ARIA disclosure widget pattern). Prevents focus falling to `<body>`.

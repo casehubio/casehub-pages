@@ -4,10 +4,15 @@ import { isMatchedByRegistrations } from './topic-matching.js';
 
 export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
 
+export interface StatusChangeDetail {
+  readonly gaps?: readonly string[];
+}
+
 export interface EventConnectionOptions {
   readonly config?: PushSourceConfig;
   readonly batchEvents?: boolean;
-  readonly onStatusChange?: (status: ConnectionStatus) => void;
+  readonly cursorStorage?: Storage;
+  readonly onStatusChange?: (status: ConnectionStatus, detail?: StatusChangeDetail) => void;
 }
 
 export interface ListenAck {
@@ -38,6 +43,7 @@ export function createEventConnection(
 ): EventConnection {
   const config = options?.config;
   const batchEvents = options?.batchEvents ?? false;
+  const cursorStorage = options?.cursorStorage;
   const onStatusChange = options?.onStatusChange;
 
   let ws: WebSocket | null = null;
@@ -53,11 +59,37 @@ export function createEventConnection(
   let rafScheduled = false;
 
   const connectionUrl = buildConnectionUrl(url, config);
+  const storageKey = `pages-ec:${url}`;
 
-  function setStatus(newStatus: ConnectionStatus): void {
+  if (cursorStorage) {
+    try {
+      const raw = cursorStorage.getItem(storageKey);
+      if (raw) {
+        const persisted = JSON.parse(raw) as Record<string, unknown>;
+        for (const [topic, seq] of Object.entries(persisted)) {
+          if (typeof seq === "number") {
+            topicSeqs.set(topic, seq);
+          }
+        }
+      }
+    } catch {
+      // Corrupted storage — ignore
+    }
+  }
+
+  function persistCursors(): void {
+    if (!cursorStorage) return;
+    cursorStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(topicSeqs)));
+  }
+
+  function setStatus(newStatus: ConnectionStatus, detail?: StatusChangeDetail): void {
     if (currentStatus !== newStatus) {
       currentStatus = newStatus;
-      onStatusChange?.(newStatus);
+      if (detail) {
+        onStatusChange?.(newStatus, detail);
+      } else {
+        onStatusChange?.(newStatus);
+      }
     }
   }
 
@@ -74,20 +106,16 @@ export function createEventConnection(
     ws = new WebSocket(connectionUrl);
 
     ws.onopen = () => {
-      setStatus('connected');
       reconnectAttempt = 0;
       if (listenRegistrations.size > 0 && ws) {
-        // Two-phase reconnect since construction
         const since: Record<string, number> = {};
 
-        // Phase 1: seed exact topics from registrations
         for (const reg of listenRegistrations) {
           if (!reg.includes("*")) {
             since[reg] = topicSeqs.get(reg) ?? 0;
           }
         }
 
-        // Phase 2: add/override with concrete topic positions from topicSeqs
         for (const [topic, seq] of topicSeqs) {
           if (isMatchedByRegistrations(topic, listenRegistrations)) {
             since[topic] = seq;
@@ -101,7 +129,25 @@ export function createEventConnection(
           [...listenRegistrations],
           Object.keys(since).length > 0 ? since : undefined,
         );
-        // Reconnect listen is fire-and-forget — no Promise to resolve
+
+        const timer = setTimeout(() => {
+          pending.delete(id);
+          setStatus('connected');
+        }, DEFAULT_TIMEOUT_MS);
+
+        pending.set(id, {
+          resolve: (value: unknown) => {
+            const ack = value as ListenAck;
+            setStatus('connected', { gaps: ack.gaps ?? [] });
+          },
+          reject: () => {
+            // No status change — if connection dropped, ws.onclose handles it;
+            // if server error, timeout fallback will fire if still connected.
+          },
+          timer,
+        });
+      } else {
+        setStatus('connected');
       }
     };
 
@@ -179,6 +225,7 @@ export function createEventConnection(
             continue;
           }
           topicSeqs.set(topic, seq);
+          persistCursors();
         }
 
         if (batchEvents) {
@@ -256,6 +303,7 @@ export function createEventConnection(
           topicSeqs.delete(topic);
         }
       }
+      persistCursors();
 
       if (!ws || ws.readyState !== 1) {
         return Promise.resolve();
@@ -286,6 +334,7 @@ export function createEventConnection(
       if (reconnectTimer) clearTimeout(reconnectTimer);
       eventQueue.length = 0;
       rafScheduled = false;
+      cursorStorage?.removeItem(storageKey);
       ws?.close(1000, "client closed");
       ws = null;
     },

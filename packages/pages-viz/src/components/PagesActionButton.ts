@@ -67,6 +67,41 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
         background-color: var(--pages-neutral-9, #5a6268);
       }
 
+      .pages-btn-ghost {
+        background-color: transparent;
+        color: var(--pages-accent-9, #0066cc);
+      }
+
+      .pages-btn-ghost:hover:not(:disabled) {
+        background-color: var(--pages-neutral-3, #f0f0f0);
+      }
+
+      .pages-btn-outline {
+        background-color: transparent;
+        color: var(--pages-accent-9, #0066cc);
+        border: 1px solid var(--pages-accent-7, #99c2e6);
+      }
+
+      .pages-btn-outline:hover:not(:disabled) {
+        background-color: var(--pages-accent-3, #e6f0fa);
+      }
+
+      .pages-action-spinner {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+        margin-right: var(--pages-space-1, 0.25rem);
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: pages-spin 0.6s linear infinite;
+        vertical-align: middle;
+      }
+
+      @keyframes pages-spin {
+        to { transform: rotate(360deg); }
+      }
+
       .pages-action-success {
         padding: var(--pages-space-2, 0.5rem);
         background-color: var(--pages-success-3, #d4edda);
@@ -95,18 +130,22 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
     this.button = document.createElement("button");
     this.button.textContent = props.label;
 
-    // Apply style class
-    const styleClass = props.style === "danger"
-      ? "pages-btn-danger"
-      : props.style === "secondary"
-      ? "pages-btn-secondary"
-      : "pages-btn-primary";
-    this.button.className = styleClass;
+    const STYLE_CLASSES: Record<string, string> = {
+      primary: "pages-btn-primary",
+      danger: "pages-btn-danger",
+      secondary: "pages-btn-secondary",
+      ghost: "pages-btn-ghost",
+      outline: "pages-btn-outline",
+    };
+    this.button.className = STYLE_CLASSES[props.style ?? "primary"] ?? "pages-btn-primary";
 
-    // Set ARIA attributes
     this.button.setAttribute("aria-busy", "false");
 
-    // Attach click handler
+    if (props.disabled) {
+      this.button.disabled = true;
+      this.button.setAttribute("aria-disabled", "true");
+    }
+
     this.button.addEventListener("click", () => { this.handleClick(props); });
 
     wrapper.appendChild(this.button);
@@ -118,8 +157,10 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
     container.appendChild(wrapper);
   }
 
+  private spinnerEl: HTMLSpanElement | null = null;
+
   private handleClick(props: ActionButtonProps): void {
-    if (this.isLoading || !this.button) return;
+    if (this.isLoading || !this.button || props.disabled) return;
 
     // Show confirmation dialog if configured
     if (props.confirm) {
@@ -127,10 +168,13 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
       if (!confirmed) return;
     }
 
-    // Set loading state
     this.isLoading = true;
     this.button.disabled = true;
     this.button.setAttribute("aria-busy", "true");
+    this.spinnerEl = document.createElement("span");
+    this.spinnerEl.className = "pages-action-spinner";
+    this.spinnerEl.setAttribute("aria-hidden", "true");
+    this.button.prepend(this.spinnerEl);
 
     // Clear previous messages
     if (this.messageContainer) {
@@ -165,11 +209,14 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
   }
 
   private handleResult(result: ActionResult, props: ActionButtonProps): void {
-    // Clear loading state
     this.isLoading = false;
     if (this.button) {
-      this.button.disabled = false;
+      this.button.disabled = props.disabled ?? false;
       this.button.setAttribute("aria-busy", "false");
+      if (this.spinnerEl) {
+        this.spinnerEl.remove();
+        this.spinnerEl = null;
+      }
     }
 
     if (!this.messageContainer) return;

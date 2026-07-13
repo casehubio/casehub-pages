@@ -343,9 +343,104 @@ describe("PagesActionButton", () => {
       element.props = props;
       const button = element.shadowRoot?.querySelector("button") as HTMLButtonElement;
 
-      // Initially enabled (aria-disabled not set when false, only when true)
       expect(button.getAttribute("aria-disabled")).toBeNull();
       expect(button.disabled).toBe(false);
+    });
+
+    it("disables button when disabled prop is true", () => {
+      const props: ActionButtonProps = {
+        label: "Submit",
+        url: "/api/submit",
+        disabled: true,
+      };
+
+      element.props = props;
+      const button = element.shadowRoot?.querySelector("button") as HTMLButtonElement;
+
+      expect(button.disabled).toBe(true);
+      expect(button.getAttribute("aria-disabled")).toBe("true");
+    });
+
+    it("does not dispatch action when disabled", () => {
+      const props: ActionButtonProps = {
+        label: "Submit",
+        url: "/api/submit",
+        disabled: true,
+      };
+
+      element.props = props;
+
+      let eventFired = false;
+      element.addEventListener("pages-action-request", () => {
+        eventFired = true;
+      });
+
+      const button = element.shadowRoot?.querySelector("button");
+      button?.click();
+
+      expect(eventFired).toBe(false);
+    });
+  });
+
+  describe("ghost and outline variants", () => {
+    it("applies ghost style class", () => {
+      const props: ActionButtonProps = {
+        label: "Ghost",
+        url: "/api/action",
+        style: "ghost",
+      };
+
+      element.props = props;
+
+      const button = element.shadowRoot?.querySelector("button");
+      expect(button?.classList.contains("pages-btn-ghost")).toBe(true);
+    });
+
+    it("applies outline style class", () => {
+      const props: ActionButtonProps = {
+        label: "Outline",
+        url: "/api/action",
+        style: "outline",
+      };
+
+      element.props = props;
+
+      const button = element.shadowRoot?.querySelector("button");
+      expect(button?.classList.contains("pages-btn-outline")).toBe(true);
+    });
+  });
+
+  describe("loading spinner", () => {
+    it("shows spinner element during loading", async () => {
+      const props: ActionButtonProps = {
+        label: "Submit",
+        url: "/api/submit",
+      };
+
+      element.props = props;
+
+      let resolveFn: ((result: ActionResult) => void) | undefined;
+      const eventPromise = new Promise<void>((resolve) => {
+        element.addEventListener("pages-action-request", (e: Event) => {
+          const detail = (e as CustomEvent<PagesActionRequestDetail>).detail;
+          resolveFn = detail.resolve;
+          resolve();
+        });
+      });
+
+      const button = element.shadowRoot?.querySelector("button") as HTMLButtonElement;
+      button.click();
+
+      await eventPromise;
+
+      const spinner = element.shadowRoot?.querySelector(".pages-action-spinner");
+      expect(spinner).toBeTruthy();
+
+      resolveFn?.({ success: true });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const spinnerAfter = element.shadowRoot?.querySelector(".pages-action-spinner");
+      expect(spinnerAfter).toBeFalsy();
     });
   });
 });

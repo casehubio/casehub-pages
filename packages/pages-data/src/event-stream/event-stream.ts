@@ -1,4 +1,4 @@
-import type {ConnectionStatus} from "../dataset/external/sources/event-connection.js";
+import type {ConnectionStatus, StatusChangeDetail} from "../dataset/external/sources/event-connection.js";
 import {createEventConnection} from "../dataset/external/sources/event-connection.js";
 import {matchesTopic} from "../dataset/external/sources/topic-matching.js";
 import type {PushSourceConfig} from "../dataset/external/sources/push-source.js";
@@ -13,7 +13,7 @@ export interface EventStreamOptions<T = unknown> {
   parse?: (raw: unknown) => T;
   pool?: EventStreamPool;
   onChange?: () => void;
-  onReconnect?: () => void;
+  onReconnect?: (gaps: string[]) => void;
 }
 
 export class EventStream<T = unknown> {
@@ -26,7 +26,7 @@ export class EventStream<T = unknown> {
   private readonly pool: EventStreamPool;
   private readonly config: PushSourceConfig | undefined;
   private readonly onChange: (() => void) | undefined;
-  private readonly onReconnect: (() => void) | undefined;
+  private readonly onReconnect: ((gaps: string[]) => void) | undefined;
 
   private handle: PoolHandle | undefined;
   private listener: ((e: Event) => void) | undefined;
@@ -80,8 +80,8 @@ export class EventStream<T = unknown> {
           ? { ...this.config, eventTarget }
           : { eventTarget },
         batchEvents: this.batchEvents,
-        onStatusChange: (status) => {
-          this.handleStatusChange(status);
+        onStatusChange: (status, detail) => {
+          this.handleStatusChange(status, detail);
         },
       });
       conn.listen([...this.topics]).catch((err) => {
@@ -98,8 +98,8 @@ export class EventStream<T = unknown> {
     }
 
     if (this.shared && this.handle) {
-      this.handle.onStatusChange = (status) => {
-        this.handleStatusChange(status);
+      this.handle.onStatusChange = (status, detail) => {
+        this.handleStatusChange(status, detail);
       };
     }
 
@@ -155,9 +155,10 @@ export class EventStream<T = unknown> {
     this._prevStatus = "disconnected";
   }
 
-  private handleStatusChange(status: ConnectionStatus): void {
+  private handleStatusChange(status: ConnectionStatus, detail?: StatusChangeDetail): void {
     if (this._prevStatus === "reconnecting" && status === "connected") {
-      this.onReconnect?.();
+      const gaps = detail?.gaps ? [...detail.gaps] : [];
+      this.onReconnect?.(gaps);
     }
     this._prevStatus = status;
   }

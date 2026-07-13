@@ -711,14 +711,18 @@ describe("EventConnection reconnect since", () => {
     vi.useRealTimers();
   });
 
-  it("reconnect listen is fire-and-forget (no pending Promise)", () => {
+  it("reconnect listen awaits ack and defers connected status", () => {
     vi.useFakeTimers();
-    const conn = createEventConnection("wss://example.com/ws");
+    const onChange = vi.fn();
+    const conn = createEventConnection("wss://example.com/ws", {
+      onStatusChange: onChange,
+    });
     lastWs().simulateOpen();
 
     void conn.listen(["debate:abc"]);
     const listenSent = parseSent(lastWs(), 0);
     lastWs().simulateMessage(JSON.stringify({ op: "ack", id: listenSent.id, topics: ["debate:abc"] }));
+    onChange.mockClear();
 
     // Reconnect
     lastWs().simulateClose(1006);
@@ -726,10 +730,115 @@ describe("EventConnection reconnect since", () => {
     const reconnectedWs = lastWs();
     reconnectedWs.simulateOpen();
 
-    // Reconnect listen sent, but no pending entry — so timeout should not fire
-    vi.advanceTimersByTime(15_000); // Well past the 10s timeout
+    // Status should NOT be connected yet — waiting for listen ack
+    expect(conn.status).not.toBe("connected");
 
-    // No error thrown, no rejection — fire-and-forget
+    // Ack the reconnect listen
+    const reconnectSent = parseSent(reconnectedWs, 0);
+    reconnectedWs.simulateMessage(JSON.stringify({
+      op: "ack",
+      id: reconnectSent.id,
+      topics: ["debate:abc"],
+    }));
+
+    // Now connected
+    expect(conn.status).toBe("connected");
+
+    conn.close();
+    vi.useRealTimers();
+  });
+
+  it("reconnect ack passes gaps through onStatusChange", () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    const conn = createEventConnection("wss://example.com/ws", {
+      onStatusChange: onChange,
+    });
+    lastWs().simulateOpen();
+
+    void conn.listen(["debate:*"]);
+    const listenSent = parseSent(lastWs(), 0);
+    lastWs().simulateMessage(JSON.stringify({ op: "ack", id: listenSent.id, topics: ["debate:*"] }));
+    onChange.mockClear();
+
+    // Reconnect
+    lastWs().simulateClose(1006);
+    vi.advanceTimersByTime(1500);
+    const reconnectedWs = lastWs();
+    reconnectedWs.simulateOpen();
+
+    // Ack with gaps
+    const reconnectSent = parseSent(reconnectedWs, 0);
+    reconnectedWs.simulateMessage(JSON.stringify({
+      op: "ack",
+      id: reconnectSent.id,
+      topics: ["debate:*"],
+      gaps: ["debate:old-topic"],
+    }));
+
+    expect(onChange).toHaveBeenCalledWith("connected", { gaps: ["debate:old-topic"] });
+
+    conn.close();
+    vi.useRealTimers();
+  });
+
+  it("reconnect ack without gaps passes empty gaps array", () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    const conn = createEventConnection("wss://example.com/ws", {
+      onStatusChange: onChange,
+    });
+    lastWs().simulateOpen();
+
+    void conn.listen(["debate:abc"]);
+    const listenSent = parseSent(lastWs(), 0);
+    lastWs().simulateMessage(JSON.stringify({ op: "ack", id: listenSent.id, topics: ["debate:abc"] }));
+    onChange.mockClear();
+
+    // Reconnect
+    lastWs().simulateClose(1006);
+    vi.advanceTimersByTime(1500);
+    const reconnectedWs = lastWs();
+    reconnectedWs.simulateOpen();
+
+    // Ack without gaps
+    const reconnectSent = parseSent(reconnectedWs, 0);
+    reconnectedWs.simulateMessage(JSON.stringify({
+      op: "ack",
+      id: reconnectSent.id,
+      topics: ["debate:abc"],
+    }));
+
+    expect(onChange).toHaveBeenCalledWith("connected", { gaps: [] });
+
+    conn.close();
+    vi.useRealTimers();
+  });
+
+  it("reconnect listen timeout transitions to connected without detail", () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    const conn = createEventConnection("wss://example.com/ws", {
+      onStatusChange: onChange,
+    });
+    lastWs().simulateOpen();
+
+    void conn.listen(["debate:abc"]);
+    const listenSent = parseSent(lastWs(), 0);
+    lastWs().simulateMessage(JSON.stringify({ op: "ack", id: listenSent.id, topics: ["debate:abc"] }));
+    onChange.mockClear();
+
+    // Reconnect
+    lastWs().simulateClose(1006);
+    vi.advanceTimersByTime(1500);
+    lastWs().simulateOpen();
+
+    // No ack — wait for timeout
+    vi.advanceTimersByTime(10_000);
+
+    expect(conn.status).toBe("connected");
+    expect(onChange).toHaveBeenCalledWith("connected");
+
     conn.close();
     vi.useRealTimers();
   });
@@ -969,5 +1078,182 @@ describe('EventConnection rAF batching', () => {
 
     conn.close();
     vi.unstubAllGlobals();
+  });
+});
+
+describe("EventConnection cursor persistence", () => {
+  function createMockStorage(): Storage {
+    const store = new Map<string, string>();
+    return {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => { store.set(key, value); },
+      removeItem: (key: string) => { store.delete(key); },
+      clear: () => { store.clear(); },
+      get length() { return store.size; },
+      key: (index: number) => [...store.keys()][index] ?? null,
+    };
+  }
+
+  it("persists topicSeqs to storage on event receipt", () => {
+    const storage = createMockStorage();
+    const target = new EventTarget();
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+      cursorStorage: storage,
+    });
+    lastWs().simulateOpen();
+
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:abc", payload: {}, seq: 5,
+    }));
+
+    const stored = JSON.parse(storage.getItem("pages-ec:wss://example.com/ws") ?? "{}") as Record<string, number>;
+    expect(stored["debate:abc"]).toBe(5);
+
+    conn.close();
+  });
+
+  it("loads persisted cursors into topicSeqs on construction", () => {
+    vi.useFakeTimers();
+    const storage = createMockStorage();
+    const target = new EventTarget();
+    storage.setItem("pages-ec:wss://example.com/ws", JSON.stringify({ "debate:abc": 10 }));
+
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+      cursorStorage: storage,
+    });
+    lastWs().simulateOpen();
+
+    void conn.listen(["debate:abc"]);
+    const listenSent = parseSent(lastWs(), 0);
+    lastWs().simulateMessage(JSON.stringify({ op: "ack", id: listenSent.id, topics: ["debate:abc"] }));
+
+    // Reconnect — since should use persisted seq 10
+    lastWs().simulateClose(1006);
+    vi.advanceTimersByTime(1500);
+    const reconnectedWs = lastWs();
+    reconnectedWs.simulateOpen();
+
+    const sent = parseSent(reconnectedWs, 0);
+    expect(sent.since).toEqual({ "debate:abc": 10 });
+
+    conn.close();
+    vi.useRealTimers();
+  });
+
+  it("deduplicates events using persisted cursors", () => {
+    const storage = createMockStorage();
+    const target = new EventTarget();
+    const handler = vi.fn();
+    target.addEventListener("pages-event", handler);
+    storage.setItem("pages-ec:wss://example.com/ws", JSON.stringify({ "debate:abc": 10 }));
+
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+      cursorStorage: storage,
+    });
+    lastWs().simulateOpen();
+
+    // Event with seq <= persisted (10) should be deduped
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:abc", payload: {}, seq: 10,
+    }));
+    expect(handler).not.toHaveBeenCalled();
+
+    // Event with seq > persisted should dispatch
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:abc", payload: {}, seq: 11,
+    }));
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    conn.close();
+  });
+
+  it("cleans storage entry on close", () => {
+    const storage = createMockStorage();
+    const target = new EventTarget();
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+      cursorStorage: storage,
+    });
+    lastWs().simulateOpen();
+
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:abc", payload: {}, seq: 5,
+    }));
+    expect(storage.getItem("pages-ec:wss://example.com/ws")).not.toBeNull();
+
+    conn.close();
+    expect(storage.getItem("pages-ec:wss://example.com/ws")).toBeNull();
+  });
+
+  it("removes unlistened topics from storage", async () => {
+    const storage = createMockStorage();
+    const target = new EventTarget();
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+      cursorStorage: storage,
+    });
+    lastWs().simulateOpen();
+
+    void conn.listen(["debate:abc", "debate:xyz"]);
+    const listenSent = parseSent(lastWs(), 0);
+    lastWs().simulateMessage(JSON.stringify({ op: "ack", id: listenSent.id, topics: ["debate:abc", "debate:xyz"] }));
+
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:abc", payload: {}, seq: 5,
+    }));
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:xyz", payload: {}, seq: 8,
+    }));
+
+    const unlistenPromise = conn.unlisten(["debate:xyz"]);
+    const unlistenSent = parseSent(lastWs(), 1);
+    lastWs().simulateMessage(JSON.stringify({ op: "ack", id: unlistenSent.id }));
+    await unlistenPromise;
+
+    const stored = JSON.parse(storage.getItem("pages-ec:wss://example.com/ws") ?? "{}") as Record<string, number>;
+    expect(stored["debate:abc"]).toBe(5);
+    expect(stored["debate:xyz"]).toBeUndefined();
+
+    conn.close();
+  });
+
+  it("no persistence when cursorStorage is not set", () => {
+    const target = new EventTarget();
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+    });
+    lastWs().simulateOpen();
+
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:abc", payload: {}, seq: 5,
+    }));
+
+    // No storage used — nothing to check except no error thrown
+    conn.close();
+  });
+
+  it("handles corrupted storage gracefully", () => {
+    const storage = createMockStorage();
+    const target = new EventTarget();
+    storage.setItem("pages-ec:wss://example.com/ws", "not-json{{{");
+
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+      cursorStorage: storage,
+    });
+    lastWs().simulateOpen();
+
+    // Should not throw — corrupted data is ignored
+    lastWs().simulateMessage(JSON.stringify({
+      op: "event", topic: "debate:abc", payload: {}, seq: 1,
+    }));
+
+    const stored = JSON.parse(storage.getItem("pages-ec:wss://example.com/ws") ?? "{}") as Record<string, number>;
+    expect(stored["debate:abc"]).toBe(1);
+
+    conn.close();
   });
 });

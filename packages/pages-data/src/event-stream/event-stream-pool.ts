@@ -1,6 +1,6 @@
 import { createEventConnection } from "../dataset/external/sources/event-connection.js";
 import { buildConnectionUrl } from "../dataset/external/sources/push-wire.js";
-import type { EventConnection, ConnectionStatus } from "../dataset/external/sources/event-connection.js";
+import type { EventConnection, ConnectionStatus, StatusChangeDetail } from "../dataset/external/sources/event-connection.js";
 import type { PushSourceConfig } from "../dataset/external/sources/push-source.js";
 
 export interface EventStreamPool {
@@ -16,7 +16,7 @@ export interface PoolHandle {
   readonly eventTarget: EventTarget;
   readonly status: () => ConnectionStatus;
   release(topics: readonly string[]): void;
-  onStatusChange?: ((status: ConnectionStatus) => void) | undefined;
+  onStatusChange?: ((status: ConnectionStatus, detail?: StatusChangeDetail) => void) | undefined;
 }
 
 interface PoolEntry {
@@ -47,9 +47,9 @@ export function createEventStreamPool(): EventStreamPool {
         const conn = createEventConnection(url, {
           config: config ? { ...config, eventTarget } : { eventTarget },
           batchEvents,
-          onStatusChange: (status) => {
+          onStatusChange: (status, detail) => {
             for (const h of newEntry.handles) {
-              h.onStatusChange?.(status);
+              h.onStatusChange?.(status, detail);
             }
           },
         });

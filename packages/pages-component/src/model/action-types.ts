@@ -11,7 +11,8 @@ export interface ActionButtonProps {
   readonly body?: Record<string, unknown>;
   readonly headers?: Record<string, string>;
   readonly confirm?: string;
-  readonly style?: "primary" | "danger" | "secondary";
+  readonly style?: "primary" | "danger" | "secondary" | "ghost" | "outline";
+  readonly disabled?: boolean;
   readonly disabledWhen?: string;
   readonly onSuccess?: { readonly refresh?: string[]; readonly message?: string };
   readonly onError?: { readonly message?: string };

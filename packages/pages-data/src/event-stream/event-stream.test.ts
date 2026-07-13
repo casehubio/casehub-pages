@@ -15,10 +15,10 @@ interface MockConn {
 let lastMockConn: MockConn;
 let capturedEventTarget: EventTarget | undefined;
 let capturedBatchEvents: boolean | undefined;
-let capturedOnStatusChange: ((status: "connected" | "reconnecting" | "disconnected") => void) | undefined;
+let capturedOnStatusChange: ((status: "connected" | "reconnecting" | "disconnected", detail?: { gaps?: readonly string[] }) => void) | undefined;
 
 vi.mock("../dataset/external/sources/event-connection.js", () => ({
-  createEventConnection: (url: string, opts?: { config?: { eventTarget?: EventTarget }; batchEvents?: boolean; onStatusChange?: (status: "connected" | "reconnecting" | "disconnected") => void }) => {
+  createEventConnection: (url: string, opts?: { config?: { eventTarget?: EventTarget }; batchEvents?: boolean; onStatusChange?: (status: "connected" | "reconnecting" | "disconnected", detail?: { gaps?: readonly string[] }) => void }) => {
     capturedEventTarget = opts?.config?.eventTarget;
     capturedBatchEvents = opts?.batchEvents;
     capturedOnStatusChange = opts?.onStatusChange;
@@ -240,7 +240,7 @@ describe("EventStream", () => {
   });
 
   describe("onReconnect", () => {
-    it("fires when connection transitions from reconnecting to connected (shared pool)", () => {
+    it("fires with gaps when connection transitions from reconnecting to connected (shared pool)", () => {
       const onReconnect = vi.fn();
       const stream = new EventStream("ws://test", "t:**", { pool, onReconnect });
       stream.connect();
@@ -249,22 +249,48 @@ describe("EventStream", () => {
       capturedOnStatusChange!("reconnecting");
       expect(onReconnect).not.toHaveBeenCalled();
 
-      capturedOnStatusChange!("connected");
+      capturedOnStatusChange!("connected", { gaps: ["t:old"] });
       expect(onReconnect).toHaveBeenCalledOnce();
+      expect(onReconnect).toHaveBeenCalledWith(["t:old"]);
 
       stream.disconnect();
     });
 
-    it("fires when connection transitions from reconnecting to connected (dedicated)", () => {
+    it("fires with gaps when connection transitions from reconnecting to connected (dedicated)", () => {
       const onReconnect = vi.fn();
       const stream = new EventStream("ws://test", "t:**", { pool, shared: false, onReconnect });
       stream.connect();
 
       expect(capturedOnStatusChange).toBeDefined();
       capturedOnStatusChange!("reconnecting");
-      capturedOnStatusChange!("connected");
+      capturedOnStatusChange!("connected", { gaps: ["t:x", "t:y"] });
 
       expect(onReconnect).toHaveBeenCalledOnce();
+      expect(onReconnect).toHaveBeenCalledWith(["t:x", "t:y"]);
+      stream.disconnect();
+    });
+
+    it("fires with empty gaps when detail has no gaps", () => {
+      const onReconnect = vi.fn();
+      const stream = new EventStream("ws://test", "t:**", { pool, onReconnect });
+      stream.connect();
+
+      capturedOnStatusChange!("reconnecting");
+      capturedOnStatusChange!("connected", { gaps: [] });
+
+      expect(onReconnect).toHaveBeenCalledWith([]);
+      stream.disconnect();
+    });
+
+    it("fires with empty gaps when no detail provided", () => {
+      const onReconnect = vi.fn();
+      const stream = new EventStream("ws://test", "t:**", { pool, onReconnect });
+      stream.connect();
+
+      capturedOnStatusChange!("reconnecting");
+      capturedOnStatusChange!("connected");
+
+      expect(onReconnect).toHaveBeenCalledWith([]);
       stream.disconnect();
     });
 
@@ -287,7 +313,7 @@ describe("EventStream", () => {
       capturedOnStatusChange!("reconnecting");
       stream.disconnect();
 
-      capturedOnStatusChange!("connected");
+      capturedOnStatusChange!("connected", { gaps: ["t:x"] });
       expect(onReconnect).not.toHaveBeenCalled();
     });
 
@@ -297,11 +323,13 @@ describe("EventStream", () => {
       stream.connect();
 
       capturedOnStatusChange!("reconnecting");
-      capturedOnStatusChange!("connected");
+      capturedOnStatusChange!("connected", { gaps: ["t:a"] });
       capturedOnStatusChange!("reconnecting");
-      capturedOnStatusChange!("connected");
+      capturedOnStatusChange!("connected", { gaps: [] });
 
       expect(onReconnect).toHaveBeenCalledTimes(2);
+      expect(onReconnect).toHaveBeenNthCalledWith(1, ["t:a"]);
+      expect(onReconnect).toHaveBeenNthCalledWith(2, []);
       stream.disconnect();
     });
   });
