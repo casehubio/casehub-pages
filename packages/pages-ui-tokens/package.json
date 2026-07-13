@@ -1,6 +1,6 @@
 {
   "name": "@casehubio/pages-ui-tokens",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "CaseHub Pages design tokens — OKLCH 12-step colour scales, spacing, typography, elevation, motion",
   "repository": {
     "type": "git",

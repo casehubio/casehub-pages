@@ -1,6 +1,6 @@
 {
   "name": "@casehubio/pages-primitives",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CaseHub Pages Lit-dependent primitives — a11y mixins, form controls",
   "repository": {
     "type": "git",
