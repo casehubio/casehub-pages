@@ -1,6 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
-import { LitElement, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {

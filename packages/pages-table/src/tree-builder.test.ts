@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data';
+import type { TypedDataSet, ColumnId } from '@casehubio/pages-data';
 import { ColumnType } from '@casehubio/pages-data';
 import { fromRows } from '@casehubio/pages-data';
 import { buildTreeIndex, computeDefaultExpandState, paginateTreeByRoots } from './tree-builder.js';

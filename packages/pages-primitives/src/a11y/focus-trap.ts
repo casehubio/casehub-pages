@@ -1,6 +1,6 @@
 import type { LitElement } from 'lit';
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = LitElement> = new (...args: any[]) => T;
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -36,7 +36,7 @@ function collectFocusable(root: HTMLElement): HTMLElement[] {
   return result;
 }
 
-export function FocusTrapMixin<T extends Constructor<LitElement>>(Base: T) {
+export function FocusTrapMixin<T extends Constructor>(Base: T) {
   class FocusTrapHost extends Base {
     private _trapContainer: HTMLElement | null = null;
     private _previousFocus: Element | null = null;

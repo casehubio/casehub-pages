@@ -35,7 +35,7 @@ type TableEl = HTMLElement & {
 
 interface TestItem { id: string; name: string; age: number; created: Date; }
 
-const idCol = 'id' as ColumnId;
+const _idCol = 'id' as ColumnId;
 const nameCol = 'name' as ColumnId;
 const ageCol = 'age' as ColumnId;
 const createdCol = 'created' as ColumnId;

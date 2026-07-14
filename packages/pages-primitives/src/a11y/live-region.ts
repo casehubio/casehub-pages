@@ -1,8 +1,8 @@
 import type { LitElement } from 'lit';
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = LitElement> = new (...args: any[]) => T;
 
-export function LiveRegionMixin<T extends Constructor<LitElement>>(Base: T) {
+export function LiveRegionMixin<T extends Constructor>(Base: T) {
   class LiveRegionHost extends Base {
     private _liveRegion: HTMLElement | null = null;
 

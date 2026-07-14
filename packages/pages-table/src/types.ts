@@ -57,7 +57,7 @@ export interface FilterChangeDetail {
   readonly matchCount: number;
 }
 
-export interface LoadMoreDetail {}
+export type LoadMoreDetail = Record<string, never>;
 
 export interface PageSizeChangeDetail {
   readonly pageSize: number;

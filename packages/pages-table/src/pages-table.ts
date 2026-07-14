@@ -12,7 +12,7 @@ import { resolveColumnName, cellToRaw, applyCellExpression, resolveColumnExpress
 import { until } from 'lit/directives/until.js';
 import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
 import { evaluateExpression, createRowContext } from '@casehubio/pages-component';
-import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, paginateTreeByRoots, findMatchingNodes, rowMatchesText, sortTreeLevel, type TreeNode, type ExpandableConfig } from './tree-builder.js';
+import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, paginateTreeByRoots, type TreeNode, type ExpandableConfig } from './tree-builder.js';
 import { EMPTY_CONTEXT } from '@casehubio/pages-component';
 
 const AUTO_THRESHOLD = 50;
@@ -181,7 +181,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     }
 
     if (typeof p.height === 'string' || typeof p.height === 'number') {
-      this.style.height = typeof p.height === 'number' ? `${String(p.height)}px` : String(p.height);
+      this.style.height = typeof p.height === 'number' ? `${String(p.height)}px` : p.height;
     }
   }
 
@@ -1283,7 +1283,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     }
   };
 
-  private _handleDetailTransitionEnd = (e: TransitionEvent, key: string): void => {
+  private _handleDetailTransitionEnd = (e: TransitionEvent, _key: string): void => {
     if (e.propertyName !== 'grid-template-rows') return;
     const panel = e.currentTarget as HTMLElement;
     if (!panel.classList.contains('expanded')) {
@@ -1865,7 +1865,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       case ColumnType.TEXT:
       case ColumnType.LABEL:
       default:
-        return String(cell.value);
+        return cell.value;
     }
   }
 
@@ -2231,7 +2231,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     `;
   }
 
-  private _renderRow(row: TypedRow, actualIndex: number, displayIndex: number) {
+  private _renderRow(row: TypedRow, actualIndex: number, _displayIndex: number) {
     const rowClass = this.getRowClass?.(row) ?? '';
     const part = rowClass ? `row ${rowClass}` : 'row';
     const ariaRowIndex = actualIndex + 2;
@@ -2246,7 +2246,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       ? { ...rowStyleResult?.style, backgroundColor: 'var(--pages-accent-5, #d3e3fd)' }
       : rowStyleResult?.style;
     const rowInlineStyle = effectiveStyle
-      ? Object.entries(effectiveStyle).map(([k, v]) => `${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}: ${String(v)}`).join('; ')
+      ? Object.entries(effectiveStyle).map(([k, v]) => `${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}: ${v}`).join('; ')
       : '';
 
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';

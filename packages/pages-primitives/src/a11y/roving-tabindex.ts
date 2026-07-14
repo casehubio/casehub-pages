@@ -1,11 +1,11 @@
 import { type LitElement } from 'lit';
 import { state } from 'lit/decorators.js';
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = LitElement> = new (...args: any[]) => T;
 
 export type RovingDirection = 'horizontal' | 'vertical' | 'both';
 
-export function RovingTabindexMixin<T extends Constructor<LitElement>>(Base: T) {
+export function RovingTabindexMixin<T extends Constructor>(Base: T) {
   abstract class RovingTabindexHost extends Base {
     abstract rovingSelector: string;
     abstract rovingDirection: RovingDirection;

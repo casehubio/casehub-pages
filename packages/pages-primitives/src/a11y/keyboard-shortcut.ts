@@ -1,6 +1,6 @@
 import type { LitElement } from 'lit';
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = LitElement> = new (...args: any[]) => T;
 
 interface ShortcutRegistration {
   readonly key: string;
@@ -27,7 +27,7 @@ function isInTextInput(): boolean {
   return false;
 }
 
-export function KeyboardShortcutMixin<T extends Constructor<LitElement>>(Base: T) {
+export function KeyboardShortcutMixin<T extends Constructor>(Base: T) {
   class KeyboardShortcutHost extends Base {
     private _shortcuts: ShortcutRegistration[] = [];
 
