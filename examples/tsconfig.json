@@ -1,12 +1,13 @@
 {
   "extends": "@casehubio/pages-tsconfig/tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": ".typecheck",
     "emitDeclarationOnly": true
   },
   "include": [
-    "src"
+    "src",
+    "samples"
   ],
   "references": [
     {
@@ -14,6 +15,12 @@
     },
     {
       "path": "../packages/pages-viz"
+    },
+    {
+      "path": "../packages/pages-data"
+    },
+    {
+      "path": "../packages/pages-ui"
     }
   ]
 }

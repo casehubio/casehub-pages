@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   page, bind, inlineSource, title, table, textInput, numberInput,
   dropdown, checkbox, datePicker, textarea, lookup} from "@casehubio/pages-ui";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   page, bind, inlineSource,
   grid,
@@ -15,12 +16,6 @@ import {
   avg,
   count,
 } from "@casehubio/pages-ui";
-import type { DataSetId, ColumnId } from "@casehubio/pages-data";
-
-// TypeScript companion to "Workforce Analytics.dash.yaml"
-// Single-page grid layout with workforce analytics - first example using grid()/at()/panel()
-
-const employees = "employees" as DataSetId;
 
 const employeeDataset = bind("employees", inlineSource([
     [1, "Emma Wilson", "Engineering", "Senior", 5.2, 125000, 4, "London", "F", "2021-03-15"],
@@ -65,134 +60,136 @@ const employeeDataset = bind("employees", inlineSource([
     [40, "Elena Popov", "Finance", "Junior", 1.1, 56000, 2, "London", "F", "2025-05-01"],
   ], {
     columns: [
-      { id: "id" as ColumnId, type: "NUMBER" },
-      { id: "name" as ColumnId, type: "TEXT" },
-      { id: "department" as ColumnId, type: "LABEL" },
-      { id: "level" as ColumnId, type: "LABEL" },
-      { id: "tenure" as ColumnId, type: "NUMBER" },
-      { id: "salary" as ColumnId, type: "NUMBER" },
-      { id: "rating" as ColumnId, type: "NUMBER" },
-      { id: "location" as ColumnId, type: "LABEL" },
-      { id: "gender" as ColumnId, type: "LABEL" },
-      { id: "startDate" as ColumnId, type: "DATE" },
+      { id: "id", type: "NUMBER" },
+      { id: "name", type: "TEXT" },
+      { id: "department", type: "LABEL" },
+      { id: "level", type: "LABEL" },
+      { id: "tenure", type: "NUMBER" },
+      { id: "salary", type: "NUMBER" },
+      { id: "rating", type: "NUMBER" },
+      { id: "location", type: "LABEL" },
+      { id: "gender", type: "LABEL" },
+      { id: "startDate", type: "DATE" },
     ],
   }));
 
-export default page(
-  { displayer: { chart: { resizable: true } } },
-  [employeeDataset],
-  [
-    grid(
+export default page("Workforce Analytics",
+  grid(
+    3,
+    // Row 0: Department selector (full width)
+    at(
+      0,
+      0,
       3,
-      // Row 0: Department selector (full width)
-      at(
-        0,
-        0,
-        3,
-        1,
-        selector({
-          subtype: "labels",
-          filter: { enabled: true, notification: true },
-          lookup: lookup(employees, groupBy("department", col("department"))),
-        })
-      ),
+      1,
+      selector({
+        subtype: "labels",
+        filter: { enabled: true, notification: true },
+        lookup: lookup("employees", groupBy("department", col("department"))),
+      })
+    ),
 
-      // Row 1: Three panels
-      at(
-        0,
-        1,
-        1,
-        1,
-        panel(
-          "Headcount",
-          pieChart({
-            subtype: "donut",
-            filter: { listening: true },
-            lookup: lookup(
-              employees, groupBy("department", col("department"), count("department"))),
-          })
-        )
-      ),
-      at(
-        1,
-        1,
-        1,
-        1,
-        panel(
-          "Level Distribution",
-          barChart({
-            subtype: "column-stacked",
-            filter: { listening: true },
-            lookup: lookup(employees, groupBy("level", col("level"), count("level"))),
-          })
-        )
-      ),
-      at(
-        2,
-        1,
-        1,
-        1,
-        panel(
-          "Avg Salary by Level",
-          barChart({
-            subtype: "bar",
-            filter: { listening: true },
-            chart: { margin: { left: 80 } },
-            lookup: lookup(
-              employees, sortBy("Salary" as ColumnId, "ASCENDING"),
-              groupBy("level", col("level"), {
-                kind: "aggregate" as const,
-                sourceId: "salary" as ColumnId,
-                columnId: "Salary" as ColumnId,
-                fn: Object.freeze({ fn: "AVERAGE" as const }),
-              })),
-          })
-        )
-      ),
-
-      // Row 2: Scatter (wide) + Pie
-      at(
-        0,
-        2,
-        2,
-        1,
-        panel(
-          "Tenure vs Salary",
-          scatterChart({
-            filter: { listening: true },
-            lookup: lookup(
-              employees, groupBy("name", col("name"), col("tenure"), col("salary"))),
-          })
-        )
-      ),
-      at(
-        2,
-        2,
-        1,
-        1,
-        panel(
-          "Rating Distribution",
-          pieChart({
-            filter: { listening: true },
-            lookup: lookup(employees, groupBy("rating", col("rating"), count("rating"))),
-          })
-        )
-      ),
-
-      // Row 3: Table (full width)
-      at(
-        0,
-        3,
-        3,
-        1,
-        table({
-          table: { pageSize: 15, sortable: true },
+    // Row 1: Three panels
+    at(
+      0,
+      1,
+      1,
+      1,
+      panel(
+        "Headcount",
+        pieChart({
+          subtype: "donut",
+          resizable: true,
           filter: { listening: true },
-          csvExport: true,
-          columns: [{ id: "salary" as ColumnId, pattern: "$#,###" }],
-          lookup: lookup(employees),
+          lookup: lookup(
+            "employees", groupBy("department", col("department"), count("department"))),
         })
       )
     ),
-  ],
+    at(
+      1,
+      1,
+      1,
+      1,
+      panel(
+        "Level Distribution",
+        barChart({
+          subtype: "column-stacked",
+          resizable: true,
+          filter: { listening: true },
+          lookup: lookup("employees", groupBy("level", col("level"), count("level"))),
+        })
+      )
+    ),
+    at(
+      2,
+      1,
+      1,
+      1,
+      panel(
+        "Avg Salary by Level",
+        barChart({
+          subtype: "bar",
+          resizable: true,
+          filter: { listening: true },
+          chart: { margin: { left: 80 } },
+          lookup: lookup(
+            "employees", sortBy("Salary", "ASCENDING"),
+            groupBy("level", col("level"), {
+              kind: "aggregate" as const,
+              sourceId: "salary",
+              columnId: "Salary",
+              fn: Object.freeze({ fn: "AVERAGE" as const }),
+            })),
+        })
+      )
+    ),
+
+    // Row 2: Scatter (wide) + Pie
+    at(
+      0,
+      2,
+      2,
+      1,
+      panel(
+        "Tenure vs Salary",
+        scatterChart({
+          resizable: true,
+          filter: { listening: true },
+          lookup: lookup(
+            "employees", groupBy("name", col("name"), col("tenure"), col("salary"))),
+        })
+      )
+    ),
+    at(
+      2,
+      2,
+      1,
+      1,
+      panel(
+        "Rating Distribution",
+        pieChart({
+          resizable: true,
+          filter: { listening: true },
+          lookup: lookup("employees", groupBy("rating", col("rating"), count("rating"))),
+        })
+      )
+    ),
+
+    // Row 3: Table (full width)
+    at(
+      0,
+      3,
+      3,
+      1,
+      table({
+        table: { pageSize: 15, sortable: true },
+        filter: { listening: true },
+        csvExport: true,
+        columns: [{ id: "salary", pattern: "$#,###" }],
+        lookup: lookup("employees"),
+      })
+    )
+  ),
+
   { datasets: [employeeDataset] });

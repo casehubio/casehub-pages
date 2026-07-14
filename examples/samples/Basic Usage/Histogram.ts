@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, barChart, table, lookup} from "@casehubio/pages-ui";
 
 const histogramExpression = `

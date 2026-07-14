@@ -1,19 +1,11 @@
-import { page, bind, restSource, timeseries, lookup} from "@casehubio/pages-ui";
-
-import type { DataSetId } from "@casehubio/pages-data";
-
-// TypeScript companion to "TimeSeries.dash.yaml"
-// Simple timeseries example
+import { page, bind, restSource, timeseries, lookup } from "@casehubio/pages-ui";
 
 const timeseriesDs = bind("timeseries", restSource("data/sample_timeseries.json", {}));
 
-export default page(
-  {},
-  {},
-  [
-    timeseries({
-      lookup: lookup("timeseries" as DataSetId, ),
-      chart: { resizable: true },
-    })
-  ],
-  { datasets: [timeseriesDs] });
+export default page("TimeSeries",
+  timeseries({
+    lookup: lookup("timeseries"),
+    resizable: true,
+  }),
+  { datasets: [timeseriesDs] }
+);

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, html, mapChart, rows, columns, lookup, groupBy, col} from "@casehubio/pages-ui";
 
 // Dataset

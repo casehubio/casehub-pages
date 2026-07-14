@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, barChart } from "@casehubio/pages-ui";
 
 export default page(

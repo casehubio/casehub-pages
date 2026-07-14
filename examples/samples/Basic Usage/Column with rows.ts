@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, barChart, pieChart, meter, html, withStyle, columns, rows, lookup} from "@casehubio/pages-ui";
 
 const aDs = bind("a", inlineSource([

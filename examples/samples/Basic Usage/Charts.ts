@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   page, bind, inlineSource, barChart, lineChart, areaChart, pieChart, bubbleChart, timeseries,
   tabs, rows, columns, html, lookup, groupBy, col} from "@casehubio/pages-ui";

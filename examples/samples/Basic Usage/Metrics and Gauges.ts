@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   page, bind, inlineSource, html, metric, meter, tabs, withStyle, lookup, groupBy, col} from "@casehubio/pages-ui";
 

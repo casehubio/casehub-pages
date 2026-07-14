@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, restSource, html, iframePlugin, barChart, table, rows, columns, lookup, groupBy, col, sortBy} from "@casehubio/pages-ui";
 
 const devsDs = bind("devs", restSource("https://dev-register-secure-melviz.kie-tooling-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/developers", {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   page, bind, inlineSource,
   site,

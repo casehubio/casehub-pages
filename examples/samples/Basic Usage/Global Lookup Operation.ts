@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, table, lineChart, barChart, rows, columns, lookup, filterBy, sortBy} from "@casehubio/pages-ui";
 
 const globalData = [

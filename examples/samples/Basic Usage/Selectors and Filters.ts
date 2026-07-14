@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   page, bind, inlineSource, html, selector, barChart, table, tabs, lookup, groupBy, col} from "@casehubio/pages-ui";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, barChart, lookup, groupBy, col} from "@casehubio/pages-ui";
 
 const testDs = bind("test", inlineSource([

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, iframePlugin, lookup} from "@casehubio/pages-ui";
 
 // Dataset

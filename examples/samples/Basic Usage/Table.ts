@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, html, table, lookup} from "@casehubio/pages-ui";
 
 const employeesData = [

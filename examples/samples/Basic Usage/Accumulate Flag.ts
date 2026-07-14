@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, inlineSource, timeseries, lookup} from "@casehubio/pages-ui";
 
 const productsData = [

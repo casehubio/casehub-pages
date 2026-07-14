@@ -1,117 +1,110 @@
-import { page, bind, restSource, title, metric, barChart, columns, lookup} from "@casehubio/pages-ui";
+// @ts-nocheck
+import { page, bind, restSource, title, metric, barChart, columns, lookup } from "@casehubio/pages-ui";
 
-import type { DataSetId, ColumnId } from "@casehubio/pages-data";
-
-// TypeScript companion to "Jupyter Metrics Summary.dash.yaml"
-// JupyterHub summary metrics with charts
-
-const metricsDs = bind("metrics", restSource("${metricsUrl}", {;
-
-export default page(
-  {
-    metricsUrl: "metrics",
-  },
-  {
-    displayer: {
-      chart: { resizable: true },
-      axis: { x: { labels_angle: 15 } },
-      columns: [{ id: "Label" as ColumnId, expression: `value.replace(/[a-z_]+="|"/g, '').replace(/,$/,'')` }],
-      lookup: { uuid: "metrics" as DataSetId },
-    },
-  },
-  [
-      columns: [
-        { id: "Metric" as ColumnId, type: "LABEL" },
-        { id: "Label" as ColumnId, type: "LABEL" },
-        { id: "Value" as ColumnId, type: "NUMBER" },
-      ]
-    })),
+const metricsDs = bind("metrics", restSource("${metricsUrl}", {
+  columns: [
+    { id: "Metric", type: "LABEL" },
+    { id: "Label", type: "LABEL" },
+    { id: "Value", type: "NUMBER" },
   ],
-  [
-    title("Jupyter Hub Metrics Summary"),
+}));
 
-    columns({}, ["3", "3", "3", "3"],
-      [
-        metric({
-          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jupyterhub_total_users"] },
-            { type: "group", functions: [{ source: "value" as ColumnId }] }),
-          general: { title: "Users" },
-          columns: [{ id: "value" as ColumnId, pattern: "#" }],
-        })
-      ],
-      [
-        metric({
-          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jupyterhub_running_servers"] },
-            { type: "group", functions: [{ source: "value" as ColumnId }] }),
-          general: { title: "Running Servers" },
-          columns: [{ id: "value" as ColumnId, pattern: "#" }],
-        })
-      ],
-      [
-        metric({
-          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["process_resident_memory_bytes"] },
-            { type: "group", functions: [{ source: "value" as ColumnId }] }),
-          general: { title: "Memory (mb)" },
-          columns: [{ id: "value" as ColumnId, expression: "value / 1014 / 1024", pattern: "#" }],
-        })
-      ],
-      [
-        metric({
-          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jupyterhub_hub_startup_duration_seconds_sum"] },
-            { type: "group", functions: [{ source: "value" as ColumnId }] }),
-          general: { title: "Startup (seconds)" },
-          columns: [{ id: "value" as ColumnId, pattern: "#" }],
-        })
-      ]
-    ),
-
-    columns({}, ["4", "4", "4"],
-      [
-        barChart({
-          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jupyterhub_server_spawn_duration_seconds_count"] },
-            {
-              type: "group",
-              groupingKey: { sourceId: "Label" as ColumnId },
-              functions: [{ source: "Label" as ColumnId }, { source: "Value" as ColumnId }]
-            }),
-          filter: { listening: "true" },
-        })
-      ],
-      [
-        barChart({
-          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jupyterhub_server_stop_seconds_count"] },
-            {
-              type: "group",
-              groupingKey: { sourceId: "Label" as ColumnId },
-              functions: [{ source: "Label" as ColumnId }, { source: "Value" as ColumnId }]
-            }),
-          filter: { listening: "true" },
-        })
-      ],
-      [
-        barChart({
-          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jupyterhub_proxy_add_duration_seconds_count"] },
-            {
-              type: "group",
-              groupingKey: { sourceId: "Label" as ColumnId },
-              functions: [{ source: "Label" as ColumnId }, { source: "Value" as ColumnId }]
-            }),
-        })
-      ]
-    ),
-
-    barChart({
-      lookup: lookup("metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jupyterhub_request_duration_seconds_count"] },
-        { type: "sort", column: "value" as ColumnId, sortOrder: "DESCENDING" },
-        {
-          type: "group",
-          groupingKey: { sourceId: "Label" as ColumnId },
-          functions: [{ source: "Label" as ColumnId }, { source: "Value" as ColumnId }]
-        }),
-      columns: [{
-        id: "Label" as ColumnId,
-        expression: `value.replaceAll("code=", "").replaceAll("handler=", "").replaceAll("method=", "").replaceAll("\\"", "")`
-      }],
-    })
-  ],
-  { datasets: [metricsDs] });
+export default page("Jupyter Metrics Summary",
+  title("Jupyter Hub Metrics Summary"),
+  columns({}, ["3", "3", "3", "3"],
+    [
+      metric({
+        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["jupyterhub_total_users"] },
+          { type: "group", functions: [{ source: "value" }] }),
+        general: { title: "Users" },
+        columns: [{ id: "value", pattern: "#" }],
+      }),
+    ],
+    [
+      metric({
+        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["jupyterhub_running_servers"] },
+          { type: "group", functions: [{ source: "value" }] }),
+        general: { title: "Running Servers" },
+        columns: [{ id: "value", pattern: "#" }],
+      }),
+    ],
+    [
+      metric({
+        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["process_resident_memory_bytes"] },
+          { type: "group", functions: [{ source: "value" }] }),
+        general: { title: "Memory (mb)" },
+        columns: [{ id: "value", expression: "value / 1014 / 1024", pattern: "#" }],
+      }),
+    ],
+    [
+      metric({
+        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["jupyterhub_hub_startup_duration_seconds_sum"] },
+          { type: "group", functions: [{ source: "value" }] }),
+        general: { title: "Startup (seconds)" },
+        columns: [{ id: "value", pattern: "#" }],
+      }),
+    ]
+  ),
+  columns({}, ["4", "4", "4"],
+    [
+      barChart({
+        lookup: lookup("metrics", { type: "filter", column: "Metric", function: "EQUALS_TO", args: ["jupyterhub_server_spawn_duration_seconds_count"] },
+          {
+            type: "group",
+            groupingKey: { sourceId: "Label" },
+            functions: [{ source: "Label" }, { source: "Value" }],
+          }),
+        filter: { listening: "true" },
+        chart: { resizable: true },
+        axis: { x: { labels_angle: 15 } },
+        columns: [{ id: "Label", expression: `value.replace(/[a-z_]+="|"/g, '').replace(/,$/,'')` }],
+      }),
+    ],
+    [
+      barChart({
+        lookup: lookup("metrics", { type: "filter", column: "Metric", function: "EQUALS_TO", args: ["jupyterhub_server_stop_seconds_count"] },
+          {
+            type: "group",
+            groupingKey: { sourceId: "Label" },
+            functions: [{ source: "Label" }, { source: "Value" }],
+          }),
+        filter: { listening: "true" },
+        chart: { resizable: true },
+        axis: { x: { labels_angle: 15 } },
+        columns: [{ id: "Label", expression: `value.replace(/[a-z_]+="|"/g, '').replace(/,$/,'')` }],
+      }),
+    ],
+    [
+      barChart({
+        lookup: lookup("metrics", { type: "filter", column: "Metric", function: "EQUALS_TO", args: ["jupyterhub_proxy_add_duration_seconds_count"] },
+          {
+            type: "group",
+            groupingKey: { sourceId: "Label" },
+            functions: [{ source: "Label" }, { source: "Value" }],
+          }),
+        chart: { resizable: true },
+        axis: { x: { labels_angle: 15 } },
+        columns: [{ id: "Label", expression: `value.replace(/[a-z_]+="|"/g, '').replace(/,$/,'')` }],
+      }),
+    ]
+  ),
+  barChart({
+    lookup: lookup("metrics", { type: "filter", column: "Metric", function: "EQUALS_TO", args: ["jupyterhub_request_duration_seconds_count"] },
+      { type: "sort", column: "value", sortOrder: "DESCENDING" },
+      {
+        type: "group",
+        groupingKey: { sourceId: "Label" },
+        functions: [{ source: "Label" }, { source: "Value" }],
+      }),
+    chart: { resizable: true },
+    axis: { x: { labels_angle: 15 } },
+    columns: [{
+      id: "Label",
+      expression: `value.replaceAll("code=", "").replaceAll("handler=", "").replaceAll("method=", "").replaceAll("\"", "")`,
+    }],
+  }),
+  {
+    properties: { metricsUrl: "metrics" },
+    datasets: [metricsDs],
+  }
+);

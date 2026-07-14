@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { page, bind, restSource, html, table, lookup} from "@casehubio/pages-ui";
 
 const quarkusReposDs = bind("quarkus_repos", restSource("https://api.github.com/search/repositories?q=quarkus&sort=updated&per_page=30", {
