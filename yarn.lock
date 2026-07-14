@@ -1503,7 +1503,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-examples@workspace:examples"
   dependencies:
+    "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-runtime": "workspace:*"
+    "@casehubio/pages-ui": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
     "@casehubio/pages-viz": "workspace:*"
     "@casehubio/pages-webpack-base": "workspace:*"
