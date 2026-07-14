@@ -1,12 +1,14 @@
-import { page, metric, barChart, table, columns, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, metric, barChart, table, columns, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Backstage Metrics.dash.yaml"
 // Node.js Backstage metrics with screens/panels navigation
 
 // Note: The YAML uses screens and panels (Cards, Charts, Metrics Table).
 // This translation presents all components sequentially.
+
+const metricsDs = bind("metrics", restSource("metrics", { cacheEnabled: true }));
 
 export default page(
   {},
@@ -19,46 +21,35 @@ export default page(
     },
   },
   [
-    dataset("metrics" as DataSetId, "metrics", { cacheEnabled: true }),
-  ],
-  [
     // Cards (screen: Cards)
     columns({ "margin-top": "10px" }, ["3", "3", "3", "3"],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nodejs_version_info"] },
-            { type: "group", functions: [{ source: "labels" as ColumnId }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nodejs_version_info"] },
+            { type: "group", functions: [{ source: "labels" as ColumnId }] }),
           general: { title: "Node Version" },
         })
       ],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["process_start_time_seconds"] },
-            { type: "group", functions: [{ source: "value" as ColumnId }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["process_start_time_seconds"] },
+            { type: "group", functions: [{ source: "value" as ColumnId }] }),
           general: { title: "Started" },
           columns: [{ id: "value" as ColumnId, expression: `new Date(value * 1000).toISOString().substring(0, 19).replace("T", " ")` }],
         })
       ],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["process_heap_bytes"] },
-            { type: "group", functions: [{ source: "value" as ColumnId }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["process_heap_bytes"] },
+            { type: "group", functions: [{ source: "value" as ColumnId }] }),
           general: { title: "Heap Bytes" },
           columns: [{ id: "value" as ColumnId, expression: `parseInt(value / (1024 * 1024)) + " MB"` }],
         })
       ],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["process_open_fds"] },
-            { type: "group", functions: [{ source: "value" as ColumnId }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["process_open_fds"] },
+            { type: "group", functions: [{ source: "value" as ColumnId }] }),
           general: { title: "Open Files" },
           columns: [{ id: "value" as ColumnId, pattern: "#" }],
         })
@@ -69,11 +60,9 @@ export default page(
     columns({}, ["4", "4", "4"],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nodejs_active_resources"] },
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nodejs_active_resources"] },
             { type: "sort", column: "value" as ColumnId, order: "DESCENDING" },
-            { type: "group", functions: [{ source: "labels" as ColumnId }, { source: "value" as ColumnId }] }
-          ]),
+            { type: "group", functions: [{ source: "labels" as ColumnId }, { source: "value" as ColumnId }] }),
           general: { title: "Active Resources" },
           axis: { x: { labels_angle: -10 } },
           columns: [{ id: "value" as ColumnId, pattern: "#" }],
@@ -81,16 +70,14 @@ export default page(
       ],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            {
+          lookup: lookup("metrics" as DataSetId, {
               type: "filter",
               column: "metric" as ColumnId,
               function: "EQUALS_TO",
               args: ["nodejs_eventloop_lag_min_seconds", "nodejs_eventloop_lag_max_seconds", "nodejs_eventloop_lag_mean_seconds"]
             },
             { type: "sort", column: "metric" as ColumnId, order: "DESCENDING" },
-            { type: "group", functions: [{ source: "metric" as ColumnId }, { source: "value" as ColumnId }] }
-          ]),
+            { type: "group", functions: [{ source: "metric" as ColumnId }, { source: "value" as ColumnId }] }),
           general: { title: "Event Loop Lag (seconds)" },
           columns: [{
             id: "metric" as ColumnId,
@@ -100,16 +87,14 @@ export default page(
       ],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            {
+          lookup: lookup("metrics" as DataSetId, {
               type: "filter",
               column: "metric" as ColumnId,
               function: "EQUALS_TO",
               args: ["nodejs_heap_size_total_bytes", "nodejs_heap_size_used_bytes"]
             },
             { type: "sort", column: "value" as ColumnId, order: "DESCENDING" },
-            { type: "group", functions: [{ source: "metric" as ColumnId }, { source: "value" as ColumnId }] }
-          ]),
+            { type: "group", functions: [{ source: "metric" as ColumnId }, { source: "value" as ColumnId }] }),
           general: { title: "Used Bytes (MB)" },
           columns: [
             { id: "metric" as ColumnId, expression: `value.replaceAll("nodejs_heap_size_", "").replaceAll("_bytes", "")` },
@@ -121,8 +106,7 @@ export default page(
 
     // Metrics Table (screen: Metrics Table)
     table({
-      lookup: createLookup("metrics" as DataSetId, [
-        {
+      lookup: lookup("metrics" as DataSetId, {
           type: ".filter",  // Note: original YAML has typo ".filter" instead of "filter"
           column: "metric" as ColumnId,
           function: "NOT_EQUALS_TO",
@@ -138,8 +122,7 @@ export default page(
           type: "group",
           groupingKey: { sourceId: "metric" as ColumnId },
           functions: [{ source: "metric" as ColumnId }, { source: "value" as ColumnId }]
-        }
-      ]),
+        }),
     })
-  ]
-);
+  ],
+  { datasets: [metricsDs] });

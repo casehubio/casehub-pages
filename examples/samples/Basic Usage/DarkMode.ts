@@ -1,21 +1,15 @@
-import { page, barChart, inlineDataset } from "@casehubio/ui";
-import { createLookup, groupOp } from "@casehubio/data";
+import { page, bind, inlineSource, barChart, lookup, groupBy, col} from "@casehubio/pages-ui";
 
-inlineDataset("test", JSON.stringify([
+const testDs = bind("test", inlineSource([
   ["Hello", 20, 12],
   ["World", 10, 25]
 ]));
 
 export default page(
+  "DarkMode",
   barChart({
     mode: "dark",
     resizable: true,
-    lookup: createLookup("test", [
-      groupOp("Column 0", [
-        { source: "Column 0" },
-        { source: "Column 1" },
-        { source: "Column 2" }
-      ])
-    ])
-  })
-);
+    lookup: lookup("test", groupBy("Column 0", col("Column 0"), col("Column 1"), col("Column 2")))
+  }),
+  { datasets: [testDs] });

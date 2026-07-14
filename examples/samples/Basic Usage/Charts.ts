@@ -1,28 +1,26 @@
 import {
-  page, barChart, lineChart, areaChart, pieChart, bubbleChart, timeseries,
-  tabs, rows, columns, html, inlineDataset
-} from "@casehubio/ui";
-import { createLookup, groupOp } from "@casehubio/data";
+  page, bind, inlineSource, barChart, lineChart, areaChart, pieChart, bubbleChart, timeseries,
+  tabs, rows, columns, html, lookup, groupBy, col} from "@casehubio/pages-ui";
 
 // Datasets
-const productsData = JSON.stringify([
+const productsData = [
   ["Computers", "Scanner", 5, 3],
   ["Computers", "Printer", 7, 4],
   ["Computers", "Laptop", 3, 2],
   ["Electronics", "Camera", 10, 7],
   ["Electronics", "Headphones", 5, 9]
-]);
+];
 
-inlineDataset("products", productsData, {
+const productsDs = bind("products", inlineSource(productsData, {
   columns: [
     { id: "Section", type: "LABEL" },
     { id: "Product", type: "LABEL" },
     { id: "Quantity", type: "NUMBER" },
     { id: "Quantity2", type: "NUMBER" }
   ]
-});
+}));
 
-const timeseriesData = JSON.stringify([
+const timeseriesData = [
   ["2024-01-01", 120, 80],
   ["2024-02-01", 135, 95],
   ["2024-03-01", 150, 110],
@@ -35,35 +33,24 @@ const timeseriesData = JSON.stringify([
   ["2024-10-01", 210, 160],
   ["2024-11-01", 195, 150],
   ["2024-12-01", 220, 170]
-]);
+];
 
-inlineDataset("timeseries", timeseriesData, {
+const timeseriesDs = bind("timeseries", inlineSource(timeseriesData, {
   columns: [
     { id: "Date", type: "DATE" },
     { id: "Series A", type: "NUMBER" },
     { id: "Series B", type: "NUMBER" }
   ]
-});
+}));
 
 // Reusable lookup for product charts (Product, Quantity, Quantity2)
 function productLookup() {
-  return createLookup("products", [
-    groupOp("Product", [
-      { source: "Product" },
-      { source: "Quantity" },
-      { source: "Quantity2" }
-    ])
-  ]);
+  return lookup("products", groupBy("Product", col("Product"), col("Quantity"), col("Quantity2")));
 }
 
 // Reusable lookup for pie charts (Product, Quantity only)
 function pieLookup() {
-  return createLookup("products", [
-    groupOp("Product", [
-      { source: "Product" },
-      { source: "Quantity" }
-    ])
-  ]);
+  return lookup("products", groupBy("Product", col("Product"), col("Quantity")));
 }
 
 function barChartPage() {
@@ -188,14 +175,7 @@ function bubbleChartPage() {
   return bubbleChart({
     title: "Bubble Chart",
     resizable: true,
-    lookup: createLookup("products", [
-      groupOp("Product", [
-        { source: "Product" },
-        { source: "Quantity" },
-        { source: "Quantity2" },
-        { source: "Product" }
-      ])
-    ])
+    lookup: lookup("products", groupBy("Product", col("Product"), col("Quantity"), col("Quantity2"), col("Product")))
   });
 }
 
@@ -205,11 +185,12 @@ function timeseriesPage() {
     zoom: true,
     width: "100%",
     resizable: true,
-    lookup: createLookup("timeseries", [])
+    lookup: lookup("timeseries", )
   });
 }
 
 export default page(
+  "Charts",
   tabs(
     ["Bar Chart", barChartPage()],
     ["Line Chart", lineChartPage()],
@@ -217,5 +198,5 @@ export default page(
     ["Pie Chart", pieChartPage()],
     ["Bubble Chart", bubbleChartPage()],
     ["Timeseries", timeseriesPage()]
-  )
-);
+  ),
+  { datasets: [productsDs, timeseriesDs] });

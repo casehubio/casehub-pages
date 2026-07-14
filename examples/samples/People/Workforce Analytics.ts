@@ -1,5 +1,5 @@
 import {
-  page,
+  page, bind, inlineSource,
   grid,
   at,
   panel,
@@ -8,24 +8,21 @@ import {
   barChart,
   scatterChart,
   table,
-  inlineDataset,
   lookup,
   groupBy,
   sortBy,
   col,
   avg,
   count,
-} from "@casehubio/ui";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+} from "@casehubio/pages-ui";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Workforce Analytics.dash.yaml"
 // Single-page grid layout with workforce analytics - first example using grid()/at()/panel()
 
 const employees = "employees" as DataSetId;
 
-const employeeDataset = inlineDataset(
-  "employees",
-  JSON.stringify([
+const employeeDataset = bind("employees", inlineSource([
     [1, "Emma Wilson", "Engineering", "Senior", 5.2, 125000, 4, "London", "F", "2021-03-15"],
     [2, "James Chen", "Engineering", "Lead", 7.8, 155000, 5, "London", "M", "2018-09-01"],
     [3, "Sofia Rodriguez", "Product", "Mid", 2.1, 85000, 3, "New York", "F", "2024-05-20"],
@@ -66,8 +63,7 @@ const employeeDataset = inlineDataset(
     [38, "Tanya Reddy", "Engineering", "Mid", 2.9, 96000, 3, "Singapore", "F", "2023-07-01"],
     [39, "Chris Anderson", "Operations", "Lead", 8.3, 140000, 5, "London", "M", "2018-03-20"],
     [40, "Elena Popov", "Finance", "Junior", 1.1, 56000, 2, "London", "F", "2025-05-01"],
-  ]),
-  {
+  ], {
     columns: [
       { id: "id" as ColumnId, type: "NUMBER" },
       { id: "name" as ColumnId, type: "TEXT" },
@@ -80,8 +76,7 @@ const employeeDataset = inlineDataset(
       { id: "gender" as ColumnId, type: "LABEL" },
       { id: "startDate" as ColumnId, type: "DATE" },
     ],
-  }
-);
+  }));
 
 export default page(
   { displayer: { chart: { resizable: true } } },
@@ -114,9 +109,7 @@ export default page(
             subtype: "donut",
             filter: { listening: true },
             lookup: lookup(
-              employees,
-              groupBy("department", col("department"), count("department"))
-            ),
+              employees, groupBy("department", col("department"), count("department"))),
           })
         )
       ),
@@ -146,15 +139,13 @@ export default page(
             filter: { listening: true },
             chart: { margin: { left: 80 } },
             lookup: lookup(
-              employees,
-              sortBy("Salary" as ColumnId, "ASCENDING"),
+              employees, sortBy("Salary" as ColumnId, "ASCENDING"),
               groupBy("level", col("level"), {
                 kind: "aggregate" as const,
                 sourceId: "salary" as ColumnId,
                 columnId: "Salary" as ColumnId,
                 fn: Object.freeze({ fn: "AVERAGE" as const }),
-              })
-            ),
+              })),
           })
         )
       ),
@@ -170,9 +161,7 @@ export default page(
           scatterChart({
             filter: { listening: true },
             lookup: lookup(
-              employees,
-              groupBy("name", col("name"), col("tenure"), col("salary"))
-            ),
+              employees, groupBy("name", col("name"), col("tenure"), col("salary"))),
           })
         )
       ),
@@ -205,5 +194,5 @@ export default page(
         })
       )
     ),
-  ]
-);
+  ],
+  { datasets: [employeeDataset] });

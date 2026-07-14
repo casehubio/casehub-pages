@@ -1,9 +1,11 @@
-import { page, html, metric, lineChart, barChart, bubbleChart, table, columns, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, html, metric, lineChart, barChart, bubbleChart, table, columns, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "FIFA 2022 Goals.dash.yaml"
 // FIFA World Cup Qatar 2022 Goals Score Statistics
+
+const fifaMatchesDs = bind("fifa_matches", restSource("https://api.fifa.com/api/v3/calendar/matches?from=2022-11-20T00%3A00%3A00Z&to=2022-12-20T23%3A59%3A59Z&language=en&count=500&idSeason=255711", {;
 
 export default page(
   {
@@ -26,7 +28,6 @@ export default page(
     },
   },
   [
-    dataset("fifa_matches" as DataSetId, "https://api.fifa.com/api/v3/calendar/matches?from=2022-11-20T00%3A00%3A00Z&to=2022-12-20T23%3A59%3A59Z&language=en&count=500&idSeason=255711", {
       cacheEnabled: true,
       // Complex JSONata expression transforms match data
       expression: `$.Results.[ ( $.MatchStatus = 0 ? [$.IdMatch, $.LocalDate = null ? "" : $.LocalDate, $toMillis($.LocalDate) ~>  $fromMillis('[D]-[M]-[Y]'), $toMillis($.LocalDate) ~>  $fromMillis('[H]:[m]'), $.Weather.Humidity != null ? $.Weather.Humidity : "-1", $.Weather.Temperature != null ? $.Weather.Temperature : "-1", $.Weather.WindSpeed != null ? $.Weather.WindSpeed :  "-1", $.Weather.TypeLocalized[0].Description != null ? $.Weather.TypeLocalized[0].Description :  "", $.Home.IdCountry != null ? $.Home.IdCountry : "", $.Home.ShortClubName != null ? $.Home.ShortClubName : "", $.HomeTeamScore != null ? $.HomeTeamScore : "-1", $.Away.IdCountry != null ? $.Away.IdCountry : "", $.Away.ShortClubName != null ? $.Away.ShortClubName : "", $.Away.Score != null ? $.Away.Score : "-1", $.Stadium.Name[0].Description, $.Stadium.CityName[0].Description, $.Attendance != null ? $.Attendance :  "-1", $.HomeTeamScore + $.AwayTeamScore, $join([$.Home.ShortClubName, $.Away.ShortClubName], ' vs ')] ) ]`,
@@ -51,7 +52,7 @@ export default page(
         { id: "Total Goals" as ColumnId, type: "NUMBER" },
         { id: "Match Name" as ColumnId, type: "LABEL" },
       ]
-    }),
+    })),
   ],
   [
     // Header
@@ -61,34 +62,26 @@ export default page(
     columns({ "margin-bottom": "100px", "margin-top": "50px" }, ["3", "3", "3", "3"],
       [
         metric({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            { type: "group", functions: [{ source: "Total Goals" as ColumnId, function: "SUM" }] }
-          ]),
+          lookup: lookup("fifa_matches" as DataSetId, { type: "group", functions: [{ source: "Total Goals" as ColumnId, function: "SUM" }] }),
           general: { title: "Total Goals" },
           columns: [{ id: "Total Goals" as ColumnId, pattern: "#" }],
         })
       ],
       [
         metric({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            { type: "group", functions: [{ source: "Total Goals" as ColumnId, function: "AVERAGE" }] }
-          ]),
+          lookup: lookup("fifa_matches" as DataSetId, { type: "group", functions: [{ source: "Total Goals" as ColumnId, function: "AVERAGE" }] }),
           general: { title: "Average Goals by Match" },
         })
       ],
       [
         metric({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            { type: "group", functions: [{ source: "Temperature" as ColumnId, function: "AVERAGE" }] }
-          ]),
+          lookup: lookup("fifa_matches" as DataSetId, { type: "group", functions: [{ source: "Temperature" as ColumnId, function: "AVERAGE" }] }),
           general: { title: "Average Temperature" },
         })
       ],
       [
         metric({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            { type: "group", functions: [{ source: "Attendance" as ColumnId, function: "AVERAGE" }] }
-          ]),
+          lookup: lookup("fifa_matches" as DataSetId, { type: "group", functions: [{ source: "Attendance" as ColumnId, function: "AVERAGE" }] }),
           general: { title: "Average Attendance" },
         })
       ]
@@ -98,24 +91,21 @@ export default page(
     columns({}, ["6", "6"],
       [
         lineChart({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            {
+          lookup: lookup("fifa_matches" as DataSetId, {
               type: "group",
               groupingKey: { sourceId: "Day" as ColumnId },
               functions: [
                 { source: "Day" as ColumnId },
                 { source: "Total Goals" as ColumnId, column: "Goals" as ColumnId, function: "${GoalsFunction}" }
               ]
-            }
-          ]),
+            }),
           general: { title: "Goals by Day" },
           axis: { x: { labels_angle: 30 } },
         })
       ],
       [
         barChart({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            { type: "sort", column: "Goals" as ColumnId, order: "DESCENDING" },
+          lookup: lookup("fifa_matches" as DataSetId, { type: "sort", column: "Goals" as ColumnId, order: "DESCENDING" },
             {
               type: "group",
               groupingKey: { sourceId: "Stadium Name" as ColumnId },
@@ -123,8 +113,7 @@ export default page(
                 { source: "Stadium Name" as ColumnId },
                 { source: "Total Goals" as ColumnId, function: "${GoalsFunction}", column: "Goals" as ColumnId }
               ]
-            }
-          ]),
+            }),
           general: { title: "Goals by Stadium" },
           axis: { x: { labels_angle: 15 } },
         })
@@ -135,8 +124,7 @@ export default page(
     columns({ "margin-top": "20px" }, ["6", "6"],
       [
         bubbleChart({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            { type: "sort", column: "TOTAL MATCHES" as ColumnId, order: "ASCENDING" },
+          lookup: lookup("fifa_matches" as DataSetId, { type: "sort", column: "TOTAL MATCHES" as ColumnId, order: "ASCENDING" },
             {
               type: "group",
               groupingKey: { sourceId: "Weather" as ColumnId },
@@ -146,15 +134,13 @@ export default page(
                 { source: "Weather" as ColumnId, function: "COUNT", column: "TOTAL MATCHES" as ColumnId },
                 { source: "Weather" as ColumnId, function: "COUNT", column: "TOTAL MATCHES" as ColumnId }
               ]
-            }
-          ]),
+            }),
           general: { title: "Goals by Weather", subtitle: "Bubble shows total matches" },
         })
       ],
       [
         bubbleChart({
-          lookup: createLookup("fifa_matches" as DataSetId, [
-            {
+          lookup: lookup("fifa_matches" as DataSetId, {
               type: "group",
               groupingKey: { sourceId: "Match Name" as ColumnId },
               functions: [
@@ -163,8 +149,7 @@ export default page(
                 { source: "Total Goals" as ColumnId, column: "Goals" as ColumnId },
                 { source: "Total Goals" as ColumnId, column: "Goals" as ColumnId }
               ]
-            }
-          ]),
+            }),
           general: { title: "Goals by Attendance", subtitle: "Bubble shows total goals" },
           chart: { zoom: true },
           axis: { x: { labels_show: false }, y: { title: "Attendance" } },
@@ -176,8 +161,7 @@ export default page(
     html(`<hr style="width: 2px; border: dashed 1px" /><p style="margin: 1px 10px 30px 10px; font-size: x-large"><strong>All Matches</strong></p>`),
 
     table({
-      lookup: createLookup("fifa_matches" as DataSetId, [
-        {
+      lookup: lookup("fifa_matches" as DataSetId, {
           type: "group",
           functions: [
             { source: "Temperature" as ColumnId },
@@ -190,8 +174,7 @@ export default page(
             { source: "Stadium Name" as ColumnId },
             { source: "Attendance" as ColumnId }
           ]
-        }
-      ]),
+        }),
       chart: { resizable: true },
       columns: [
         { id: "Date" as ColumnId, expression: `new Date(value).toLocaleDateString() + " " + new Date(value).toLocaleTimeString()` },
@@ -199,5 +182,5 @@ export default page(
         { id: "Team 2 Score" as ColumnId, pattern: "#" }
       ],
     })
-  ]
-);
+  ],
+  { datasets: [fifaMatchesDs] });

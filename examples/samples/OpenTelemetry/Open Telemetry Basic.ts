@@ -1,6 +1,6 @@
-import { page, table, selector, bubbleChart, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, table, selector, bubbleChart, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Open Telemetry Basic.yaml"
 // OpenTelemetry traces visualization
@@ -8,11 +8,12 @@ import type { DataSetId, ColumnId } from "@casehubio/data";
 // Note: The YAML has some malformed syntax (`.displayer:` and `.columns:` with leading dots).
 // This translation corrects those to valid DSL calls.
 
+const tracesDs = bind("traces", restSource("traces.json", {;
+
 export default page(
   {},
   {},
   [
-    dataset("traces" as DataSetId, "traces.json", {
       expression: `$.data.spans.[$.traceID, $.spanID, $.operationName, $.startTime / 1000, $.duration]`,
       columns: [
         { id: "Trace ID" as ColumnId },
@@ -21,28 +22,25 @@ export default page(
         { id: "Start Time" as ColumnId },
         { id: "Duration" as ColumnId, type: "NUMBER" },
       ]
-    }),
+    })),
   ],
   [
     // Note: Original YAML has `.displayer:` which is likely a typo
     table({
-      lookup: createLookup("traces" as DataSetId, []),
+      lookup: lookup("traces" as DataSetId, ),
     }),
 
     selector({
-      lookup: createLookup("traces" as DataSetId, [
-        {
+      lookup: lookup("traces" as DataSetId, {
           type: "group",
           groupingKey: { sourceId: "Column 2" as ColumnId },
           functions: [{ source: "Column 2" as ColumnId }]
-        }
-      ]),
+        }),
       filter: { notification: true },
     }),
 
     bubbleChart({
-      lookup: createLookup("traces" as DataSetId, [
-        {
+      lookup: lookup("traces" as DataSetId, {
           type: "group",
           functions: [
             { source: "Column 3" as ColumnId },
@@ -50,11 +48,10 @@ export default page(
             { source: "Column 4" as ColumnId },
             { source: "Column 2" as ColumnId }
           ]
-        }
-      ]),
+        }),
       filter: { listening: true },
       axis: { x: { labels_show: false } },
       chart: { resizable: true, height: 700, zoom: true },
     })
-  ]
-);
+  ],
+  { datasets: [tracesDs] });

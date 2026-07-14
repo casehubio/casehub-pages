@@ -1,32 +1,26 @@
 import {
-  page, html, selector, barChart, table, tabs, inlineDataset
-} from "@casehubio/ui";
-import { createLookup, groupOp } from "@casehubio/data";
+  page, bind, inlineSource, html, selector, barChart, table, tabs, lookup, groupBy, col} from "@casehubio/pages-ui";
 
 // Dataset
-const productsData = JSON.stringify([
+const productsData = [
   ["Computers", "Scanner", 5, 3],
   ["Computers", "Printer", 7, 4],
   ["Computers", "Laptop", 3, 2],
   ["Electronics", "Camera", 10, 7],
   ["Electronics", "Headphones", 5, 9]
-]);
+];
 
-inlineDataset("products", productsData, {
+const productsDs = bind("products", inlineSource(productsData, {
   columns: [
     { id: "Section", type: "LABEL" },
     { id: "Product", type: "LABEL" },
     { id: "Quantity", type: "NUMBER" },
     { id: "Quantity2", type: "NUMBER" }
   ]
-});
+}));
 
 function sectionLookup() {
-  return createLookup("products", [
-    groupOp("Section", [
-      { source: "Section" }
-    ])
-  ]);
+  return lookup("products", groupBy("Section", col("Section")));
 }
 
 function selectorsPage() {
@@ -52,13 +46,7 @@ filter:
     barChart({
       filter: { listening: true },
       resizable: true,
-      lookup: createLookup("products", [
-        groupOp("Product", [
-          { source: "Product" },
-          { source: "Quantity" },
-          { source: "Quantity2" }
-        ])
-      ])
+      lookup: lookup("products", groupBy("Product", col("Product"), col("Quantity"), col("Quantity2")))
     })
   ];
 }
@@ -72,13 +60,7 @@ function filterWithChartPage() {
     barChart({
       filter: { listening: true },
       resizable: true,
-      lookup: createLookup("products", [
-        groupOp("Product", [
-          { source: "Product" },
-          { source: "Quantity", function: "SUM" },
-          { source: "Quantity2", function: "SUM" }
-        ])
-      ])
+      lookup: lookup("products", groupBy("Product", col("Product")))
     })
   ];
 }
@@ -92,15 +74,16 @@ function filterWithTablePage() {
     }),
     table({
       filter: { listening: true },
-      lookup: createLookup("products", [])
+      lookup: lookup("products", )
     })
   ];
 }
 
 export default page(
+  "Selectors and Filters",
   tabs(
     ["Selectors", selectorsPage()],
     ["Filter with Chart", filterWithChartPage()],
     ["Filter with Table", filterWithTablePage()]
-  )
-);
+  ),
+  { datasets: [productsDs] });

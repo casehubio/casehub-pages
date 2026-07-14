@@ -1,6 +1,5 @@
 import type { DataSource, DataSink } from "../types.js";
-import type { DataSetId } from "../../dataset/types.js";
-import type { ExternalColumnDef, ExternalDataSetDef } from "../../dataset/external/types.js";
+import type { ExternalColumnDef, ExtractionDef } from "../../dataset/external/types.js";
 import type { PresetRegistry } from "../../dataset/external/types.js";
 import { HttpMethod, parseRefreshTime } from "../../dataset/external/types.js";
 import { extractDataSet } from "../../dataset/external/extraction.js";
@@ -18,7 +17,7 @@ export interface RestSourceOptions {
   readonly columns?: readonly ExternalColumnDef[];
   readonly refreshTime?: string;
   readonly accumulate?: boolean;
-  readonly maxRows?: number;
+
   readonly cacheEnabled?: boolean;
   readonly fetchFn?: typeof globalThis.fetch;
   readonly presets?: PresetRegistry;
@@ -26,7 +25,6 @@ export interface RestSourceOptions {
 
 export function restSource(
   url: string,
-  dataSetId: DataSetId,
   options?: RestSourceOptions,
 ): DataSource {
   let refreshTimer: ReturnType<typeof setInterval> | null = null;
@@ -59,8 +57,8 @@ export function restSource(
     return init;
   }
 
-  function buildDef(): ExternalDataSetDef {
-    const def: ExternalDataSetDef = { uuid: dataSetId, url };
+  function buildDef(): ExtractionDef {
+    const def: ExtractionDef = { url };
     if (!options) return def;
     return {
       ...def,
@@ -69,7 +67,6 @@ export function restSource(
       ...(options.expression !== undefined && { expression: options.expression }),
       ...(options.columns !== undefined && { columns: options.columns }),
       ...(options.accumulate !== undefined && { accumulate: options.accumulate }),
-      ...(options.maxRows !== undefined && { cacheMaxRows: options.maxRows }),
     };
   }
 

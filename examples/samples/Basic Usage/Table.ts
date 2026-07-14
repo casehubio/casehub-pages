@@ -1,7 +1,6 @@
-import { page, html, table, inlineDataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
+import { page, bind, inlineSource, html, table, lookup} from "@casehubio/pages-ui";
 
-const employeesData = JSON.stringify([
+const employeesData = [
   ["Alice Johnson", "Engineering", "Senior Developer", 2018, 92000],
   ["Bob Smith", "Marketing", "Marketing Manager", 2019, 78000],
   ["Charlie Brown", "Engineering", "Staff Engineer", 2016, 115000],
@@ -22,9 +21,9 @@ const employeesData = JSON.stringify([
   ["Rachel Clark", "Sales", "Sales Representative", 2021, 58000],
   ["Sam Walker", "Engineering", "Security Engineer", 2018, 98000],
   ["Tina Hall", "Marketing", "Marketing Director", 2015, 125000]
-]);
+];
 
-inlineDataset("employees", employeesData, {
+const employeesDs = bind("employees", inlineSource(employeesData, {
   columns: [
     { id: "Name", type: "LABEL" },
     { id: "Department", type: "LABEL" },
@@ -32,12 +31,13 @@ inlineDataset("employees", employeesData, {
     { id: "Joined", type: "NUMBER" },
     { id: "Salary", type: "NUMBER" }
   ]
-});
+}));
 
 export default page(
+  "Table",
   table({
     height: 600,
     resizable: true,
-    lookup: createLookup("employees", [])
-  })
-);
+    lookup: lookup("employees", )
+  }),
+  { datasets: [employeesDs] });

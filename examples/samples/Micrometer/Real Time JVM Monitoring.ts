@@ -1,12 +1,15 @@
-import { page, timeseries, columns, table, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, timeseries, columns, table, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Real Time JVM Monitoring.dash.yaml"
 // Real-time accumulating JVM metrics with timeseries charts
 
 // Note: The YAML uses `accumulate: true` on the metrics dataset, which buffers incoming
 // data over time. The expression transforms incoming metrics and adds a timestamp.
+
+const historyDs = bind("history", restSource("${historyUrl}", {}));
+const metricsDs = bind("metrics", restSource("${metricsUrl}", {;
 
 export default page(
   {
@@ -20,8 +23,6 @@ export default page(
     },
   },
   [
-    dataset("history" as DataSetId, "${historyUrl}", {}),
-    dataset("metrics" as DataSetId, "${metricsUrl}", {
       accumulate: true,
       cacheMaxRows: 30000,
       refreshTime: "2second",
@@ -32,15 +33,14 @@ export default page(
         { id: "value" as ColumnId, type: "number" },
         { id: "register" as ColumnId, type: "number" },
       ]
-    }),
+    })),
   ],
   [
     // Row 1: Table showing accumulated metrics
     columns({ "margin-left": "10px" }, ["6"],
       [
         table({
-          lookup: createLookup("metrics" as DataSetId, [
-            {
+          lookup: lookup("metrics" as DataSetId, {
               type: "group",
               groupingKey: { sourceId: "register" as ColumnId },
               functions: [
@@ -48,8 +48,7 @@ export default page(
                 { source: "register" as ColumnId },
                 { source: "value" as ColumnId, function: "SUM" }
               ]
-            }
-          ]),
+            }),
         })
       ]
     ),
@@ -58,8 +57,7 @@ export default page(
     columns({}, ["6", "6"],
       [
         timeseries({
-          lookup: createLookup("history" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
+          lookup: lookup("history" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
             { type: "filter", column: "labels" as ColumnId, function: "LIKE_TO", args: ['%heap%'] },
             {
               type: "group",
@@ -68,16 +66,14 @@ export default page(
                 { source: "timestamp" as ColumnId },
                 { source: "value" as ColumnId }
               ]
-            }
-          ]),
+            }),
           general: { title: "Heap Memory Usage" },
           chart: { height: 300 },
         })
       ],
       [
         timeseries({
-          lookup: createLookup("history" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_threads_live_threads"] },
+          lookup: lookup("history" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_threads_live_threads"] },
             {
               type: "group",
               functions: [
@@ -85,8 +81,7 @@ export default page(
                 { source: "timestamp" as ColumnId },
                 { source: "value" as ColumnId }
               ]
-            }
-          ]),
+            }),
           general: { title: "Live Threads" },
           chart: { height: 300 },
         })
@@ -97,8 +92,7 @@ export default page(
     columns({ "margin-top": "20px" }, ["6", "6"],
       [
         timeseries({
-          lookup: createLookup("history" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_classes_loaded_classes"] },
+          lookup: lookup("history" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_classes_loaded_classes"] },
             {
               type: "group",
               functions: [
@@ -106,16 +100,14 @@ export default page(
                 { source: "timestamp" as ColumnId },
                 { source: "value" as ColumnId }
               ]
-            }
-          ]),
+            }),
           general: { title: "Loaded Classes" },
           chart: { height: 300 },
         })
       ],
       [
         timeseries({
-          lookup: createLookup("history" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["system_cpu_usage"] },
+          lookup: lookup("history" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["system_cpu_usage"] },
             {
               type: "group",
               functions: [
@@ -123,12 +115,11 @@ export default page(
                 { source: "timestamp" as ColumnId },
                 { source: "value" as ColumnId }
               ]
-            }
-          ]),
+            }),
           general: { title: "CPU Usage" },
           chart: { height: 300 },
         })
       ]
     )
-  ]
-);
+  ],
+  { datasets: [historyDs, metricsDs] });

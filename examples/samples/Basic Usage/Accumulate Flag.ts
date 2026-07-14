@@ -1,7 +1,6 @@
-import { page, timeseries, inlineDataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
+import { page, bind, inlineSource, timeseries, lookup} from "@casehubio/pages-ui";
 
-const productsData = JSON.stringify([
+const productsData = [
   ["test", 1718460000000, 23],
   ["test", 1718463600000, 97],
   ["test", 1718467200000, 86],
@@ -22,18 +21,19 @@ const productsData = JSON.stringify([
   ["test", 1718521200000, 63],
   ["test", 1718524800000, 32],
   ["test", 1718528400000, 51]
-]);
+];
 
-inlineDataset("products", productsData, {
+const productsDs = bind("products", inlineSource(productsData, {
   accumulate: true,
   cacheMaxRows: 20,
   refreshTime: "1second",
   expression: '[["test", $now() ~> $toMillis(), ($random() * 100)]]'
-});
+}));
 
 export default page(
+  "Accumulate Flag",
   timeseries({
     resizable: true,
-    lookup: createLookup("products", [])
-  })
-);
+    lookup: lookup("products", )
+  }),
+  { datasets: [productsDs] });

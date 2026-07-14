@@ -1,9 +1,11 @@
-import { page, metric, barChart, columns, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, metric, barChart, columns, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Quarkus Monitoring.dash.yaml"
 // Dark mode Quarkus JVM monitoring dashboard
+
+const allMetricsDs = bind("all_metrics", restSource("${metricsUrl}", {;
 
 export default page(
   {
@@ -23,7 +25,6 @@ export default page(
     },
   },
   [
-    dataset("all_metrics" as DataSetId, "${metricsUrl}", {
       cacheEnabled: true,
       refreshTime: "5second",
       columns: [
@@ -31,46 +32,38 @@ export default page(
         { id: "Labels" as ColumnId, type: "LABEL" },
         { id: "Value" as ColumnId, type: "NUMBER" },
       ]
-    }),
+    })),
   ],
   [
     // Row 1: Four metric cards
     columns({}, ["3", "3", "3", "3"],
       [
         metric({
-          lookup: createLookup("all_metrics" as DataSetId, [
-            { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["system_cpu_usage"] },
-            { type: "group", functions: [{ source: "Value" as ColumnId, function: "MAX", column: "CPU" as ColumnId }] }
-          ]),
+          lookup: lookup("all_metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["system_cpu_usage"] },
+            { type: "group", functions: [{ source: "Value" as ColumnId, function: "MAX", column: "CPU" as ColumnId }] }),
           general: { title: "CPU Usage" },
           columns: [{ id: "CPU" as ColumnId, expression: "value * 100", pattern: "#" }],
         })
       ],
       [
         metric({
-          lookup: createLookup("all_metrics" as DataSetId, [
-            { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["process_files_open_files"] },
-            { type: "group", functions: [{ source: "Value" as ColumnId, function: "MAX", column: "Total" as ColumnId }] }
-          ]),
+          lookup: lookup("all_metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["process_files_open_files"] },
+            { type: "group", functions: [{ source: "Value" as ColumnId, function: "MAX", column: "Total" as ColumnId }] }),
           general: { title: "Open Files" },
         })
       ],
       [
         metric({
-          lookup: createLookup("all_metrics" as DataSetId, [
-            { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["process_uptime_seconds"] },
-            { type: "group", functions: [{ source: "Value" as ColumnId, function: "MAX", column: "UPTIME" as ColumnId }] }
-          ]),
+          lookup: lookup("all_metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["process_uptime_seconds"] },
+            { type: "group", functions: [{ source: "Value" as ColumnId, function: "MAX", column: "UPTIME" as ColumnId }] }),
           general: { visible: true, title: "Uptime" },
           columns: [{ id: "UPTIME" as ColumnId, pattern: "#", expression: "value / 60" }],
         })
       ],
       [
         metric({
-          lookup: createLookup("all_metrics" as DataSetId, [
-            { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_threads_peak_threads"] },
-            { type: "group", functions: [{ source: "Value" as ColumnId }] }
-          ]),
+          lookup: lookup("all_metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_threads_peak_threads"] },
+            { type: "group", functions: [{ source: "Value" as ColumnId }] }),
           general: { title: "Peak Threads" },
         })
       ]
@@ -80,8 +73,7 @@ export default page(
     columns({ "margin-top": "50px" }, ["6", "6"],
       [
         barChart({
-          lookup: createLookup("all_metrics" as DataSetId, [
-            { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
+          lookup: lookup("all_metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
             { type: "filter", column: "labels" as ColumnId, function: "LIKE_TO", args: ['area="heap"%'] },
             { type: "sort", column: "Total" as ColumnId, sortOrder: "DESCENDING" },
             {
@@ -91,8 +83,7 @@ export default page(
                 { source: "Labels" as ColumnId },
                 { source: "Value" as ColumnId, function: "MAX", column: "Total" as ColumnId }
               ]
-            }
-          ]),
+            }),
           extraConfiguration: `{ "color" : ["#5ec962"] }`,
           general: { title: "JVM Memory Used Bytes (heap)" },
           columns: [{ id: "Labels" as ColumnId, expression: `value.replaceAll("area=\\"heap\\",id=\\"", "").replace("\\",", "")` }],
@@ -100,8 +91,7 @@ export default page(
       ],
       [
         barChart({
-          lookup: createLookup("all_metrics" as DataSetId, [
-            { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
+          lookup: lookup("all_metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
             { type: "filter", column: "labels" as ColumnId, function: "LIKE_TO", args: ['area="nonheap"%'] },
             { type: "sort", column: "Total" as ColumnId, sortOrder: "DESCENDING" },
             {
@@ -111,8 +101,7 @@ export default page(
                 { source: "Labels" as ColumnId },
                 { source: "Value" as ColumnId, function: "MAX", column: "Total" as ColumnId }
               ]
-            }
-          ]),
+            }),
           extraConfiguration: `{ "color" : ["#5ec962"] }`,
           general: { title: "JVM Memory Used Bytes (nonheap)" },
           columns: [{ id: "Labels" as ColumnId, expression: `value.replaceAll("area=\\"nonheap\\",id=\\"", "").replace("\\",", "")` }],
@@ -124,8 +113,7 @@ export default page(
     columns({ "margin-top": "20px" }, ["12"],
       [
         barChart({
-          lookup: createLookup("all_metrics" as DataSetId, [
-            { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_threads_states_threads"] },
+          lookup: lookup("all_metrics" as DataSetId, { type: "filter", column: "Metric" as ColumnId, function: "EQUALS_TO", args: ["jvm_threads_states_threads"] },
             { type: "sort", column: "Total" as ColumnId, sortOrder: "DESCENDING" },
             {
               type: "group",
@@ -134,13 +122,12 @@ export default page(
                 { source: "Labels" as ColumnId },
                 { source: "Value" as ColumnId, function: "MAX", column: "Total" as ColumnId }
               ]
-            }
-          ]),
+            }),
           extraConfiguration: `{ "color" : ["#4695EB"] }`,
           general: { title: "Threads" },
           columns: [{ id: "Labels" as ColumnId, expression: `value.replaceAll("state=\\"", "").replace("\\",", "")` }],
         })
       ]
     )
-  ]
-);
+  ],
+  { datasets: [allMetricsDs] });

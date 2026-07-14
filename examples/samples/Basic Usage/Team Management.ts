@@ -1,9 +1,8 @@
 import {
-  page,
+  page, bind, inlineSource,
   html,
   table,
   metric,
-  inlineDataset,
   withAccess,
   rows,
   columns,
@@ -12,9 +11,9 @@ import {
   col,
   join,
   count,
-} from "@casehubio/ui";
+} from "@casehubio/pages-ui";
 
-const teamData = JSON.stringify([
+const teamData = [
   ["Platform", "Alice Johnson", "Tech Lead", "alice@example.com", "Engineering"],
   ["Platform", "Bob Smith", "Senior Developer", "bob@example.com", "Engineering"],
   ["Platform", "Charlie Brown", "Developer", "charlie@example.com", "Engineering"],
@@ -27,9 +26,9 @@ const teamData = JSON.stringify([
   ["Frontend", "Jack Taylor", "Senior Frontend Dev", "jack@example.com", "Engineering"],
   ["Frontend", "Karen White", "Frontend Developer", "karen@example.com", "Engineering"],
   ["Frontend", "Leo Martinez", "UX Engineer", "leo@example.com", "Design"],
-]);
+];
 
-inlineDataset("team_members", teamData, {
+const teamMembersDs = bind("team_members", inlineSource(teamData, {
   columns: [
     { id: "Team", type: "LABEL" },
     { id: "Member", type: "LABEL" },
@@ -37,7 +36,7 @@ inlineDataset("team_members", teamData, {
     { id: "Email", type: "LABEL" },
     { id: "Department", type: "LABEL" },
   ],
-});
+}));
 
 // Overview page - visible to all
 const overviewPage = page(
@@ -55,9 +54,7 @@ const overviewPage = page(
         pageSize: 10,
         sortable: true,
         lookup: lookup(
-          "team_members",
-          groupBy("Team", col("Team"), join("Member", ", "), count("Member")),
-        ),
+          "team_members", groupBy("Team", col("Team"), join("Member", ", "), count("Member")),),
       }),
     ]),
   ),
@@ -122,6 +119,7 @@ const adminSettingsPage = page(
 );
 
 export default page(
+  "Team Management",
   overviewPage,
   teamDetailPage,
   withAccess({ roles: ["admin"] }, adminSettingsPage),

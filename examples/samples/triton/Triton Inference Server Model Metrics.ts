@@ -1,9 +1,11 @@
-import { page, html, metric, barChart, selector, columns, withStyle, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, html, metric, barChart, selector, columns, withStyle, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Triton Inference Server Model Metrics.dash.yaml"
 // Triton inference server monitoring dashboard
+
+const metricsDs = bind("metrics", restSource("${metricsUrl}", {;
 
 export default page(
   {
@@ -16,13 +18,12 @@ export default page(
     },
   },
   [
-    dataset("metrics" as DataSetId, "${metricsUrl}", {
       columns: [
         { id: "metric" as ColumnId, type: "LABEL" },
         { id: "labels" as ColumnId, type: "LABEL" },
         { id: "value" as ColumnId, type: "NUMBER" },
       ]
-    }),
+    })),
   ],
   [
     // Header
@@ -33,40 +34,32 @@ export default page(
     columns({}, ["3", "3", "3", "3"],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
-            { type: "group", functions: [{ source: "labels" as ColumnId, function: "COUNT" }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
+            { type: "group", functions: [{ source: "labels" as ColumnId, function: "COUNT" }] }),
           general: { title: "Running Models" },
           columns: [{ id: "labels" as ColumnId, pattern: "#" }],
         })
       ],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
-            { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
+            { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }),
           general: { title: "Inference Count", visible: "true" },
           columns: [{ id: "value" as ColumnId, pattern: "#" }],
         })
       ],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_success"] },
-            { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_success"] },
+            { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }),
           general: { title: "Inference Requests Success", visible: "true" },
           columns: [{ id: "value" as ColumnId, pattern: "#" }],
         })
       ],
       [
         metric({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_failure"] },
-            { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }
-          ]),
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_failure"] },
+            { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }),
           general: { title: "Inference Requests Failure", visible: "true" },
           columns: [{ id: "value" as ColumnId, pattern: "#" }],
         })
@@ -76,14 +69,12 @@ export default page(
     // Filter
     withStyle({ width: "220px", "margin-top": "20px" }, html("<strong>Filter by Model</strong>")),
     selector({
-      lookup: createLookup("metrics" as DataSetId, [
-        { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
+      lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
         {
           type: "group",
           groupingKey: { sourceId: "labels" as ColumnId },
           functions: [{ source: "labels" as ColumnId, column: "model" as ColumnId }]
-        }
-      ]),
+        }),
       filter: { notification: "true" },
       columns: [{
         id: "model" as ColumnId,
@@ -95,8 +86,7 @@ export default page(
     columns({ "margin-top": "20px" }, ["4", "4", "4"],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_count"] },
             { type: "filter", column: "value" as ColumnId, function: "GREATER_THAN", args: [0] },
             { type: "sort", column: "value" as ColumnId, sortOrder: "DESCENDING" },
             {
@@ -106,8 +96,7 @@ export default page(
                 { source: "labels" as ColumnId },
                 { source: "value" as ColumnId, function: "SUM" }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Inference Count" },
           columns: [
@@ -121,8 +110,7 @@ export default page(
       ],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_success"] },
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_success"] },
             { type: "filter", column: "value" as ColumnId, function: "GREATER_THAN", args: [0] },
             { type: "sort", column: "value" as ColumnId, sortOrder: "DESCENDING" },
             {
@@ -132,8 +120,7 @@ export default page(
                 { source: "labels" as ColumnId },
                 { source: "value" as ColumnId, function: "SUM" }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Sucessful Inferences" },
           columns: [
@@ -147,8 +134,7 @@ export default page(
       ],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_failure"] },
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_failure"] },
             { type: "filter", column: "value" as ColumnId, function: "GREATER_THAN", args: [0] },
             { type: "sort", column: "value" as ColumnId, sortOrder: "DESCENDING" },
             {
@@ -158,8 +144,7 @@ export default page(
                 { source: "labels" as ColumnId },
                 { source: "value" as ColumnId, function: "SUM" }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Failed Inferences" },
           columns: [
@@ -177,8 +162,7 @@ export default page(
     columns({ "margin-top": "20px" }, ["4", "4", "4"],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_duration_us"] },
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_request_duration_us"] },
             { type: "sort", column: "value" as ColumnId, sortOrder: "DESCENDING" },
             {
               type: "group",
@@ -187,8 +171,7 @@ export default page(
                 { source: "labels" as ColumnId },
                 { source: "value" as ColumnId, column: "Duration" as ColumnId }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Inference Request Duration" },
           axis: { x: { labels_angle: 15 } },
@@ -200,8 +183,7 @@ export default page(
       ],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_compute_infer_duration_us"] },
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_compute_infer_duration_us"] },
             { type: "filter", column: "value" as ColumnId, function: "GREATER_THAN", args: [0] },
             { type: "sort", column: "value" as ColumnId, sortOrder: "DESCENDING" },
             {
@@ -211,8 +193,7 @@ export default page(
                 { source: "labels" as ColumnId },
                 { source: "value" as ColumnId, column: "Duration" as ColumnId }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Inference Total Duration" },
           columns: [{
@@ -223,8 +204,7 @@ export default page(
       ],
       [
         barChart({
-          lookup: createLookup("metrics" as DataSetId, [
-            { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_queue_duration_us"] },
+          lookup: lookup("metrics" as DataSetId, { type: "filter", column: "metric" as ColumnId, function: "EQUALS_TO", args: ["nv_inference_queue_duration_us"] },
             { type: "filter", column: "value" as ColumnId, function: "GREATER_THAN", args: [0] },
             { type: "sort", column: "value" as ColumnId, sortOrder: "DESCENDING" },
             {
@@ -234,8 +214,7 @@ export default page(
                 { source: "labels" as ColumnId },
                 { source: "value" as ColumnId, column: "Duration" as ColumnId }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Queue Wait" },
           columns: [{
@@ -245,5 +224,5 @@ export default page(
         })
       ]
     )
-  ]
-);
+  ],
+  { datasets: [metricsDs] });

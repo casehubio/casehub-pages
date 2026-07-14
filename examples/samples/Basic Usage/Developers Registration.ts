@@ -1,18 +1,13 @@
-import { page, html, iframePlugin, barChart, table, rows, columns, dataset } from "@casehubio/ui";
-import { createLookup, groupOp, sortOp } from "@casehubio/data";
+import { page, bind, restSource, html, iframePlugin, barChart, table, rows, columns, lookup, groupBy, col, sortBy} from "@casehubio/pages-ui";
 
-dataset(
-  "devs",
-  "https://dev-register-secure-melviz.kie-tooling-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/developers",
-  {
+const devsDs = bind("devs", restSource("https://dev-register-secure-melviz.kie-tooling-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/developers", {
     expression: "$.[name, language, workingYears]",
     columns: [
       { id: "Name", type: "Text" },
       { id: "Language", type: "Label" },
       { id: "Working Years", type: "label" }
     ]
-  }
-);
+  }));
 
 const uniformsSchema = {
   title: "Developers",
@@ -31,6 +26,7 @@ const uniformsSchema = {
 };
 
 export default page(
+  "Developers Registration",
   rows(
     columns(
       [12],
@@ -60,13 +56,8 @@ export default page(
           margin: { left: 30 },
           refresh: { interval: 2 },
           columns: [{ id: "Total", pattern: "#" }],
-          lookup: createLookup("devs", [
-            sortOp("Total", "DESCENDING"),
-            groupOp("Working Years", [
-              { source: "Working Years" },
-              { source: "Working Years", function: "count", column: "Total" }
-            ], { groupStrategy: "DYNAMIC" })
-          ])
+          lookup: lookup("devs", sortBy("Total", "DESCENDING"),
+            groupBy("Working Years", col("Working Years")))
         })
       ],
       [4],
@@ -78,13 +69,8 @@ export default page(
           margin: { left: 80 },
           refresh: { interval: 2 },
           columns: [{ id: "Total", pattern: "#" }],
-          lookup: createLookup("devs", [
-            sortOp("Total", "DESCENDING"),
-            groupOp("Language", [
-              { source: "Language" },
-              { source: "Language", function: "count", column: "Total" }
-            ], { groupStrategy: "DYNAMIC" })
-          ])
+          lookup: lookup("devs", sortBy("Total", "DESCENDING"),
+            groupBy("Language", col("Language")))
         })
       ]
     ),
@@ -95,9 +81,9 @@ export default page(
           resizable: true,
           sort: { enabled: true },
           refresh: { interval: 2 },
-          lookup: createLookup("devs", [])
+          lookup: lookup("devs", )
         })
       ]
     )
-  )
-);
+  ),
+  { datasets: [devsDs] });

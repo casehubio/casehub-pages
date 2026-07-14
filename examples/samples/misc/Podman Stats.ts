@@ -1,6 +1,6 @@
-import { page, html, markdown, barChart, table, columns, selector, tabs, div, withStyle, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, html, markdown, barChart, table, columns, selector, tabs, div, withStyle, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Podman Stats.dash.yaml"
 // Podman container and image statistics dashboard with tabs and navigation
@@ -17,6 +17,9 @@ import type { DataSetId, ColumnId } from "@casehubio/data";
 //         - page: Containers
 //         - page: Images
 
+const imagesDs = bind("images", restSource("${baseUrl}/images/json", {;
+const containersDs = bind("containers", restSource("${baseUrl}/containers/json?filters={%22status%22:%20[%22created%22,%22running%22,%22paused%22,%22exited%22]}", {;
+
 export default page(
   {
     baseUrl: "http://localhost:8000",
@@ -28,7 +31,6 @@ export default page(
     },
   },
   [
-    dataset("images" as DataSetId, "${baseUrl}/images/json", {
       expression: `$.[Id, Names[0], $fromMillis(Created * 1000), Size, Containers]`,
       columns: [
         { id: "ID" as ColumnId, type: "label" },
@@ -37,8 +39,7 @@ export default page(
         { id: "size" as ColumnId, type: "number" },
         { id: "containers" as ColumnId, type: "number" },
       ]
-    }),
-    dataset("containers" as DataSetId, "${baseUrl}/containers/json?filters={%22status%22:%20[%22created%22,%22running%22,%22paused%22,%22exited%22]}", {
+    })),
       expression: `$.[Id, Names[0], Image, $fromMillis(Created * 1000), State, Status]`,
       columns: [
         { id: "ID" as ColumnId, type: "label" },
@@ -48,7 +49,7 @@ export default page(
         { id: "State" as ColumnId, type: "label" },
         { id: "Status" as ColumnId, type: "label" },
       ]
-    }),
+    })),
   ],
   [
     // Index page (entry point)
@@ -69,8 +70,7 @@ export default page(
         barChart({
           subtype: "BAR",
           extraConfiguration: `"series": { "label": { "position": "top" } }`,
-          lookup: createLookup("images" as DataSetId, [
-            { type: "rowCount", count: 7 },
+          lookup: lookup("images" as DataSetId, { type: "rowCount", count: 7 },
             {
               type: "group",
               groupingKey: { sourceId: "name" as ColumnId },
@@ -79,8 +79,7 @@ export default page(
                 { source: "size" as ColumnId, column: "Total Size" as ColumnId }
               ]
             },
-            { type: "sortOps", column: "Total Size" as ColumnId, sortOrder: "DESCENDING" }
-          ]),
+            { type: "sortOps", column: "Total Size" as ColumnId, sortOrder: "DESCENDING" }),
           chart: { height: "350", margin: { left: "120" } },
         })
       ],
@@ -88,8 +87,7 @@ export default page(
         markdown("**Containers by Image**"),
         barChart({
           subtype: "BAR",
-          lookup: createLookup("images" as DataSetId, [
-            { type: "rowCount", count: 7 },
+          lookup: lookup("images" as DataSetId, { type: "rowCount", count: 7 },
             {
               type: "filter",
               column: "containers" as ColumnId,
@@ -104,8 +102,7 @@ export default page(
                 { source: "containers" as ColumnId, column: "containers total" as ColumnId }
               ]
             },
-            { type: "sort", column: "containers total" as ColumnId, sortOrder: "DESCENDING" }
-          ]),
+            { type: "sort", column: "containers total" as ColumnId, sortOrder: "DESCENDING" }),
           chart: { width: "500", height: "350", margin: { left: "120" } },
           columns: [{ id: "containers total" as ColumnId, pattern: "#" }],
         })
@@ -115,7 +112,7 @@ export default page(
     // Images table
     markdown("**Images List**"),
     table({
-      lookup: createLookup("images" as DataSetId, []),
+      lookup: lookup("images" as DataSetId, ),
     }),
 
     // Containers page (name: "Containers")
@@ -127,13 +124,11 @@ export default page(
       [
         withStyle({ width: "200px" },
           selector({
-            lookup: createLookup("containers" as DataSetId, [
-              {
+            lookup: lookup("containers" as DataSetId, {
                 type: "groupOps",
                 groupingKey: { sourceId: "image" as ColumnId },
                 functions: [{ source: "image" as ColumnId, column: "image" as ColumnId }]
-              }
-            ]),
+              }),
             filter: { notification: "true" },
           })
         )
@@ -141,13 +136,11 @@ export default page(
       [
         withStyle({ width: "200px" },
           selector({
-            lookup: createLookup("containers" as DataSetId, [
-              {
+            lookup: lookup("containers" as DataSetId, {
                 type: "groupOps",
                 groupingKey: { sourceId: "state" as ColumnId },
                 functions: [{ source: "state" as ColumnId, column: "state" as ColumnId }]
-              }
-            ]),
+              }),
             filter: { notification: true },
           })
         )
@@ -160,8 +153,7 @@ export default page(
         withStyle({ "font-size": "medium" }, html("<strong>Containers by State</strong>")),
         barChart({
           subtype: "BAR",
-          lookup: createLookup("containers" as DataSetId, [
-            { type: "rowCount", count: 7 },
+          lookup: lookup("containers" as DataSetId, { type: "rowCount", count: 7 },
             {
               type: "group",
               groupingKey: { sourceId: "state" as ColumnId },
@@ -169,8 +161,7 @@ export default page(
                 { source: "state" as ColumnId },
                 { source: "state" as ColumnId, function: "COUNT", column: "total" as ColumnId }
               ]
-            }
-          ]),
+            }),
           filter: { listening: true },
           chart: { width: "500", height: "350", margin: { left: "70" } },
           columns: [{ id: "total" as ColumnId, pattern: "#" }],
@@ -181,8 +172,7 @@ export default page(
         withStyle({ "font-size": "medium" }, html("")),
         barChart({
           subtype: "BAR",
-          lookup: createLookup("containers" as DataSetId, [
-            { type: "rowCount", count: 7 },
+          lookup: lookup("containers" as DataSetId, { type: "rowCount", count: 7 },
             {
               type: "group",
               groupingKey: { sourceId: "image" as ColumnId },
@@ -191,8 +181,7 @@ export default page(
                 { source: "image" as ColumnId, function: "Count", column: "Total" as ColumnId }
               ]
             },
-            { type: "sort", column: "Total" as ColumnId, sortOrder: "DESCENDING" }
-          ]),
+            { type: "sort", column: "Total" as ColumnId, sortOrder: "DESCENDING" }),
           filter: { listening: true },
           chart: { width: "500", height: "350", margin: { left: "120" } },
         })
@@ -203,10 +192,10 @@ export default page(
     withStyle({ size: "xl" }, html("")),
     // title("Containers List"),  // Alternatively
     table({
-      lookup: createLookup("containers" as DataSetId, []),
+      lookup: lookup("containers" as DataSetId, ),
     })
-  ]
-);
+  ],
+  { datasets: [imagesDs, containersDs] });
 
 // Note: The YAML defines three named pages (index, Images, Containers) with a navigation tree.
 // The TypeScript DSL as written here represents all components sequentially. A full translation

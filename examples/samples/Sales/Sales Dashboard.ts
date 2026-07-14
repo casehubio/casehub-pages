@@ -1,5 +1,5 @@
 import {
-  page,
+  page, bind, inlineSource,
   sidebar,
   columns,
   metric,
@@ -8,7 +8,6 @@ import {
   lineChart,
   selector,
   table,
-  inlineDataset,
   lookup,
   groupBy,
   groupByCalendar,
@@ -18,8 +17,8 @@ import {
   sum,
   avg,
   count,
-} from "@casehubio/ui";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+} from "@casehubio/pages-ui";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Sales Dashboard.dash.yaml"
 // 4-page sidebar dashboard with sales transactions and pipeline data
@@ -27,9 +26,7 @@ import type { DataSetId, ColumnId } from "@casehubio/data";
 const salesTransactions = "sales_transactions" as DataSetId;
 const pipeline = "pipeline" as DataSetId;
 
-const salesDataset = inlineDataset(
-  "sales_transactions",
-  JSON.stringify([
+const salesDataset = bind("sales_transactions", inlineSource([
     [1, "2025-07-15", "EMEA", "Sarah Chen", "CloudSync Pro", "Platform", 42000, 1, "Won"],
     [2, "2025-07-22", "APAC", "James Park", "DevOps Suite", "Platform", 38500, 1, "Won"],
     [3, "2025-08-03", "Americas", "Maria Garcia", "Support Basic", "Support", 2400, 12, "Lost"],
@@ -90,8 +87,7 @@ const salesDataset = inlineDataset(
     [58, "2025-10-20", "EMEA", "Thomas Dubois", "Migration Workshop", "Services", 20000, 4, "Won"],
     [59, "2025-12-08", "Americas", "David Kim", "Consulting 10-day", "Services", 32000, 10, "Won"],
     [60, "2026-04-05", "APAC", "James Park", "CloudSync Pro", "Platform", 38500, 1, "Pending"],
-  ]),
-  {
+  ], {
     columns: [
       { id: "id" as ColumnId, type: "NUMBER" },
       { id: "date" as ColumnId, type: "DATE" },
@@ -103,12 +99,9 @@ const salesDataset = inlineDataset(
       { id: "quantity" as ColumnId, type: "NUMBER" },
       { id: "status" as ColumnId, type: "LABEL" },
     ],
-  }
-);
+  }));
 
-const pipelineDataset = inlineDataset(
-  "pipeline",
-  JSON.stringify([
+const pipelineDataset = bind("pipeline", inlineSource([
     ["Acme Corp Migration", "Acme Corp", "Negotiation", 85000, 75, "Sarah Chen", "2026-07-15"],
     ["GlobalTech Platform", "GlobalTech Inc", "Proposal", 120000, 40, "David Kim", "2026-08-01"],
     ["StartupX DevOps", "StartupX", "Qualified", 35000, 25, "James Park", "2026-09-10"],
@@ -124,8 +117,7 @@ const pipelineDataset = inlineDataset(
     ["FinServ Consulting", "FinServ Ltd", "Qualified", 55000, 20, "Anna Müller", "2026-09-20"],
     ["TravelEx Platform", "TravelEx", "Prospect", 88000, 5, "Yuki Tanaka", "2026-12-01"],
     ["BuildCo Support", "BuildCo", "Proposal", 31000, 45, "Liam Walsh", "2026-08-10"],
-  ]),
-  {
+  ], {
     columns: [
       { id: "deal" as ColumnId, type: "TEXT" },
       { id: "account" as ColumnId, type: "TEXT" },
@@ -135,8 +127,7 @@ const pipelineDataset = inlineDataset(
       { id: "rep" as ColumnId, type: "LABEL" },
       { id: "closeDate" as ColumnId, type: "DATE" },
     ],
-  }
-);
+  }));
 
 export default page(
   { GoalsFunction: "SUM" },
@@ -153,20 +144,16 @@ export default page(
       columns({}, ["3", "3", "3", "3"], [
         metric({
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-            groupBy(null, sum("amount"))
-          ),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            groupBy(null, sum("amount"))),
           general: { title: "Total Revenue" },
           columns: [{ id: "amount" as ColumnId, pattern: "$#,###" }],
         }),
       ], [
         metric({
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-            groupBy(null, count("amount"))
-          ),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            groupBy(null, count("amount"))),
           general: { title: "Won Deals" },
           columns: [{ id: "amount" as ColumnId, pattern: "#" }],
         }),
@@ -189,10 +176,8 @@ export default page(
         barChart({
           subtype: "column-stacked",
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-            groupBy("region", col("region"), sum("amount"))
-          ),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            groupBy("region", col("region"), sum("amount"))),
           general: { title: "Revenue by Region" },
           filter: { listening: true },
         }),
@@ -200,10 +185,8 @@ export default page(
         pieChart({
           subtype: "donut",
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-            groupBy("category", col("category"), sum("amount"))
-          ),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            groupBy("category", col("category"), sum("amount"))),
           general: { title: "Revenue by Category" },
           filter: { listening: true },
         }),
@@ -220,26 +203,22 @@ export default page(
       columns({}, ["6", "6"], [
         lineChart({
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-            groupByCalendar("date", "MONTH", col("date"), sum("amount"))
-          ),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            groupByCalendar("date", "MONTH", col("date"), sum("amount"))),
           general: { title: "Monthly Revenue" },
           filter: { listening: true },
         }),
       ], [
         barChart({
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
             groupBy("rep", col("rep"), {
               kind: "aggregate" as const,
               sourceId: "amount" as ColumnId,
               columnId: "Revenue" as ColumnId,
               fn: Object.freeze({ fn: "SUM" as const }),
             }),
-            sortBy("Revenue" as ColumnId, "DESCENDING")
-          ),
+            sortBy("Revenue" as ColumnId, "DESCENDING")),
           general: { title: "Top Reps" },
           filter: { listening: true },
         }),
@@ -300,10 +279,8 @@ export default page(
       lineChart({
         subtype: "smooth",
         lookup: lookup(
-          salesTransactions,
-          filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-          groupByCalendar("date", "MONTH", col("date"), sum("amount"))
-        ),
+          salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+          groupByCalendar("date", "MONTH", col("date"), sum("amount"))),
         general: { title: "Revenue Trend" },
         chart: { zoom: true },
       }),
@@ -312,20 +289,16 @@ export default page(
       columns({}, ["6", "6"], [
         barChart({
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-            groupByCalendar("date", "QUARTER", col("date"), sum("amount"))
-          ),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            groupByCalendar("date", "QUARTER", col("date"), sum("amount"))),
           general: { title: "Quarterly Revenue" },
         }),
       ], [
         barChart({
           subtype: "column-stacked",
           lookup: lookup(
-            salesTransactions,
-            filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
-            groupBy("category", col("category"), sum("amount"))
-          ),
+            salesTransactions, filterBy("status" as ColumnId, "EQUALS_TO", "Won"),
+            groupBy("category", col("category"), sum("amount"))),
           general: { title: "Category Trend" },
         }),
       ])
@@ -341,5 +314,5 @@ export default page(
         columns: [{ id: "amount" as ColumnId, pattern: "$#,###" }],
       })
     ),
-  ]
-);
+  ],
+  { datasets: [salesDataset, pipelineDataset] });

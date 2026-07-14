@@ -56,7 +56,7 @@ function buildRestOpts(def: ExternalDataSetDef): RestSourceOptions {
   if (def.columns !== undefined) (opts as { columns: typeof def.columns }).columns = def.columns;
   if (def.refreshTime !== undefined) (opts as { refreshTime: string }).refreshTime = def.refreshTime;
   if (def.accumulate !== undefined) (opts as { accumulate: boolean }).accumulate = def.accumulate;
-  if (def.cacheMaxRows !== undefined) (opts as { maxRows: number }).maxRows = def.cacheMaxRows;
+
   if (def.cacheEnabled !== undefined) (opts as { cacheEnabled: boolean }).cacheEnabled = def.cacheEnabled;
   return opts;
 }
@@ -111,6 +111,6 @@ export function defToBinding(
       ...(deps.fetchFn !== undefined && { fetchFn: deps.fetchFn }),
       ...(deps.presets !== undefined && { presets: deps.presets }),
     };
-    return { ...base, source: restSource(url, def.uuid, opts) };
+    return { ...base, source: restSource(url, opts) };
   }
 }

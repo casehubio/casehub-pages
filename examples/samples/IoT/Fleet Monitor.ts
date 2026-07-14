@@ -1,5 +1,5 @@
 import {
-  page,
+  page, bind, inlineSource,
   sidebar,
   columns,
   metric,
@@ -11,15 +11,14 @@ import {
   selector,
   table,
   meter,
-  inlineDataset,
   lookup,
   groupBy,
   filterBy,
   col,
   avg,
   count,
-} from "@casehubio/ui";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+} from "@casehubio/pages-ui";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Fleet Monitor.dash.yaml"
 // 3-page sidebar dashboard in dark mode with IoT sensor data
@@ -27,9 +26,7 @@ import type { DataSetId, ColumnId } from "@casehubio/data";
 const sensorReadings = "sensor_readings" as DataSetId;
 const devices = "devices" as DataSetId;
 
-const sensorDataset = inlineDataset(
-  "sensor_readings",
-  JSON.stringify([
+const sensorDataset = bind("sensor_readings", inlineSource([
     ["2026-06-25T00:00", "DEV-001", "Warehouse A", 21.3, 45, 1013, 98, "Online"],
     ["2026-06-25T01:00", "DEV-001", "Warehouse A", 21.1, 46, 1013, 97, "Online"],
     ["2026-06-25T02:00", "DEV-001", "Warehouse A", 20.8, 47, 1014, 96, "Online"],
@@ -76,8 +73,7 @@ const sensorDataset = inlineDataset(
     ["2026-06-25T08:00", "DEV-003", "Factory Floor", 36.1, 70, 1007, 52, "Warning"],
     ["2026-06-25T07:00", "DEV-005", "Loading Dock", 25.8, 62, 1011, 11, "Online"],
     ["2026-06-25T08:00", "DEV-005", "Loading Dock", 26.3, 60, 1011, 8, "Online"],
-  ]),
-  {
+  ], {
     columns: [
       { id: "timestamp" as ColumnId, type: "DATE" },
       { id: "deviceId" as ColumnId, type: "LABEL" },
@@ -88,20 +84,16 @@ const sensorDataset = inlineDataset(
       { id: "battery" as ColumnId, type: "NUMBER" },
       { id: "status" as ColumnId, type: "LABEL" },
     ],
-  }
-);
+  }));
 
-const devicesDataset = inlineDataset(
-  "devices",
-  JSON.stringify([
+const devicesDataset = bind("devices", inlineSource([
     ["DEV-001", "Environmental Sensor A1", 51.5074, -0.1278, "Environmental", "2025-01-15", "Online"],
     ["DEV-002", "Environmental Sensor B1", 51.5080, -0.1290, "Environmental", "2025-02-20", "Online"],
     ["DEV-003", "Industrial Monitor F1", 51.5060, -0.1250, "Industrial", "2025-03-10", "Warning"],
     ["DEV-004", "Cold Chain Tracker C1", 51.5090, -0.1300, "Storage", "2025-04-05", "Online"],
     ["DEV-005", "Dock Sensor L1", 51.5055, -0.1240, "Environmental", "2025-05-12", "Online"],
     ["DEV-006", "Server Room Monitor S1", 51.5070, -0.1265, "Industrial", "2024-11-01", "Offline"],
-  ]),
-  {
+  ], {
     columns: [
       { id: "deviceId" as ColumnId, type: "LABEL" },
       { id: "name" as ColumnId, type: "TEXT" },
@@ -111,8 +103,7 @@ const devicesDataset = inlineDataset(
       { id: "installDate" as ColumnId, type: "DATE" },
       { id: "status" as ColumnId, type: "LABEL" },
     ],
-  }
-);
+  }));
 
 export default page(
   {},
@@ -138,10 +129,8 @@ export default page(
       columns({}, ["3", "3", "3", "3"], [
         metric({
           lookup: lookup(
-            devices,
-            filterBy("status" as ColumnId, "NOT_IN", ["Offline"]),
-            groupBy(null, count("deviceId"))
-          ),
+            devices, filterBy("status" as ColumnId, "NOT_IN", ["Offline"]),
+            groupBy(null, count("deviceId"))),
           title: "Devices Online",
           columns: [{ id: "deviceId" as ColumnId, pattern: "#" }],
         }),
@@ -158,10 +147,8 @@ export default page(
       ], [
         metric({
           lookup: lookup(
-            sensorReadings,
-            filterBy("battery" as ColumnId, "LOWER_THAN", "20"),
-            groupBy(null, count("battery"))
-          ),
+            sensorReadings, filterBy("battery" as ColumnId, "LOWER_THAN", "20"),
+            groupBy(null, count("battery"))),
           title: "Low Battery",
           columns: [{ id: "battery" as ColumnId, pattern: "#" }],
         }),
@@ -217,9 +204,7 @@ export default page(
       areaChart({
         subtype: "area-stacked",
         lookup: lookup(
-          sensorReadings,
-          groupBy("deviceId", col("deviceId"), avg("temperature"))
-        ),
+          sensorReadings, groupBy("deviceId", col("deviceId"), avg("temperature"))),
         title: "Temperature by Device",
         zoom: true,
       }),
@@ -229,17 +214,13 @@ export default page(
         lineChart({
           subtype: "smooth",
           lookup: lookup(
-            sensorReadings,
-            groupBy("deviceId", col("deviceId"), avg("humidity"))
-          ),
+            sensorReadings, groupBy("deviceId", col("deviceId"), avg("humidity"))),
           title: "Humidity by Device",
         }),
       ], [
         areaChart({
           lookup: lookup(
-            sensorReadings,
-            groupBy("deviceId", col("deviceId"), avg("pressure"))
-          ),
+            sensorReadings, groupBy("deviceId", col("deviceId"), avg("pressure"))),
           title: "Pressure by Device",
         }),
       ]),
@@ -247,9 +228,7 @@ export default page(
       // Row 3: Battery level timeseries
       timeseries({
         lookup: lookup(
-          sensorReadings,
-          groupBy("timestamp", col("timestamp"), avg("battery"))
-        ),
+          sensorReadings, groupBy("timestamp", col("timestamp"), avg("battery"))),
         title: "Battery Level",
       })
     ),
@@ -269,9 +248,7 @@ export default page(
       columns({}, ["6", "6"], [
         barChart({
           lookup: lookup(
-            sensorReadings,
-            groupBy("deviceId", col("deviceId"), avg("temperature"), avg("humidity"))
-          ),
+            sensorReadings, groupBy("deviceId", col("deviceId"), avg("temperature"), avg("humidity"))),
           title: "Readings by Device",
           filter: { listening: true },
         }),
@@ -279,9 +256,7 @@ export default page(
         pieChart({
           subtype: "donut",
           lookup: lookup(
-            devices,
-            groupBy("type", col("type"), count("type"))
-          ),
+            devices, groupBy("type", col("type"), count("type"))),
           title: "Devices by Type",
           filter: { listening: true },
         }),
@@ -297,5 +272,5 @@ export default page(
         columns: [{ id: "battery" as ColumnId, pattern: "##%" }],
       })
     ),
-  ]
-);
+  ],
+  { datasets: [sensorDataset, devicesDataset] });

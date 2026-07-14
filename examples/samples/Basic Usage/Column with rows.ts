@@ -1,13 +1,13 @@
-import { page, barChart, pieChart, meter, html, inlineDataset, withStyle, columns, rows } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
+import { page, bind, inlineSource, barChart, pieChart, meter, html, withStyle, columns, rows, lookup} from "@casehubio/pages-ui";
 
-inlineDataset("a", JSON.stringify([
+const aDs = bind("a", inlineSource([
   ["A", 1],
   ["B", 2],
   ["C", 3]
 ]));
 
 export default page(
+  "Column with rows",
   rows(
     columns(
       [6],
@@ -17,7 +17,7 @@ export default page(
           barChart({
             height: 300,
             resizable: true,
-            lookup: createLookup("a", [])
+            lookup: lookup("a", )
           })
         )
       ],
@@ -32,7 +32,7 @@ export default page(
                 pieChart({
                   height: 150,
                   resizable: true,
-                  lookup: createLookup("a", [])
+                  lookup: lookup("a", )
                 })
               ]
             )
@@ -45,7 +45,7 @@ export default page(
                 meter({
                   height: 150,
                   resizable: true,
-                  lookup: createLookup("a", [])
+                  lookup: lookup("a", )
                 })
               ]
             )
@@ -60,5 +60,5 @@ export default page(
         [html("ROW 2")]
       )
     )
-  )
-);
+  ),
+  { datasets: [aDs] });

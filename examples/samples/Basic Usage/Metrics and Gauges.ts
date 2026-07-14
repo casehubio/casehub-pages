@@ -1,39 +1,37 @@
 import {
-  page, html, metric, meter, tabs, withStyle, inlineDataset
-} from "@casehubio/ui";
-import { createLookup, groupOp } from "@casehubio/data";
+  page, bind, inlineSource, html, metric, meter, tabs, withStyle, lookup, groupBy, col} from "@casehubio/pages-ui";
 
 // Datasets
-const productsData = JSON.stringify([
+const productsData = [
   ["Computers", "Scanner", 5, 3],
   ["Computers", "Printer", 7, 4],
   ["Computers", "Laptop", 3, 2],
   ["Electronics", "Camera", 10, 7],
   ["Electronics", "Headphones", 5, 9]
-]);
+];
 
-inlineDataset("products", productsData, {
+const productsDs = bind("products", inlineSource(productsData, {
   columns: [
     { id: "Section", type: "LABEL" },
     { id: "Product", type: "LABEL" },
     { id: "Quantity", type: "NUMBER" },
     { id: "Quantity2", type: "NUMBER" }
   ]
-});
+}));
 
-const memoryData = JSON.stringify([
+const memoryData = [
   ["Server 1", 2512],
   ["Server 2", 1900],
   ["Server 3", 3200],
   ["Server 4", 1200]
-]);
+];
 
-inlineDataset("memory_usage", memoryData, {
+const memoryUsageDs = bind("memory_usage", inlineSource(memoryData, {
   columns: [
     { id: "Server", type: "LABEL" },
     { id: "Usage", type: "NUMBER" }
   ]
-});
+}));
 
 function metricPage() {
   return [
@@ -43,11 +41,9 @@ function metricPage() {
       title: "Total Products",
       height: 100,
       width: 150,
-      lookup: createLookup("products", [
-        groupOp(null, [
+      lookup: lookup("products", groupBy(null, [
           { source: "Quantity", function: "SUM" }
-        ])
-      ])
+        ]))
     }),
     withStyle(
       { marginTop: "20px", marginBottom: "20px" },
@@ -66,11 +62,9 @@ function metricPage() {
             \${this}.style.color = "black";
           };
         `,
-        lookup: createLookup("products", [
-          groupOp(null, [
+        lookup: lookup("products", groupBy(null, [
             { source: "Quantity", function: "SUM" }
-          ])
-        ])
+          ]))
       })
     )
   ];
@@ -88,20 +82,16 @@ function meterPage() {
         end: 4120,
         critical: 3000,
         warning: 2000,
-        lookup: createLookup("memory_usage", [
-          groupOp("Server", [
-            { source: "Server" },
-            { source: "Usage", function: "SUM" }
-          ])
-        ])
+        lookup: lookup("memory_usage", groupBy("Server", col("Server")))
       })
     )
   );
 }
 
 export default page(
+  "Metrics and Gauges",
   tabs(
     ["Metric", metricPage()],
     ["Meter", meterPage()]
-  )
-);
+  ),
+  { datasets: [productsDs, memoryUsageDs] });

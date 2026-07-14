@@ -1,23 +1,22 @@
-import { page, iframePlugin, inlineDataset } from "@casehubio/ui";
-import { createLookup, groupOp } from "@casehubio/data";
+import { page, bind, inlineSource, iframePlugin, lookup, groupBy, col} from "@casehubio/pages-ui";
 
 // Dataset
-const productsData = JSON.stringify([
+const productsData = [
   ["Computers", "Scanner", 5, 3],
   ["Computers", "Printer", 7, 4],
   ["Computers", "Laptop", 3, 2],
   ["Electronics", "Camera", 10, 7],
   ["Electronics", "Headphones", 5, 9]
-]);
+];
 
-inlineDataset("products", productsData, {
+const productsDs = bind("products", inlineSource(productsData, {
   columns: [
     { id: "Section", type: "LABEL" },
     { id: "Product", type: "LABEL" },
     { id: "Quantity", type: "NUMBER" },
     { id: "Quantity2", type: "NUMBER" }
   ]
-});
+}));
 
 const echartsOption = {
   toolbox: {
@@ -46,6 +45,7 @@ const echartsOption = {
 };
 
 export default page(
+  "ECharts Custom",
   iframePlugin({
     componentId: "echarts",
     width: "100%",
@@ -54,12 +54,6 @@ export default page(
       "echarts.title": JSON.stringify({ text: "Products", left: "center" }),
       "echarts.option": JSON.stringify(echartsOption)
     },
-    lookup: createLookup("products", [
-      groupOp("product", [
-        { source: "product" },
-        { source: "quantity" },
-        { source: "quantity2" }
-      ])
-    ])
-  })
-);
+    lookup: lookup("products", groupBy("product", col("product"), col("quantity"), col("quantity2")))
+  }),
+  { datasets: [productsDs] });

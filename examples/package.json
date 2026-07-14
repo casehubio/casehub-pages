@@ -18,7 +18,9 @@
     "test:headed": "npx playwright test --headed"
   },
   "dependencies": {
+    "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-runtime": "workspace:*",
+    "@casehubio/pages-ui": "workspace:*",
     "@casehubio/pages-ui-tokens": "workspace:*",
     "@casehubio/pages-viz": "workspace:*",
     "js-yaml": "^4.1.0"

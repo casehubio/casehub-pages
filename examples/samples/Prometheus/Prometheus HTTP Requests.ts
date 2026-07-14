@@ -1,9 +1,12 @@
-import { page, html, selector, metric, timeseries, barChart, pieChart, table, columns, withStyle, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+import { page, bind, restSource, html, selector, metric, timeseries, barChart, pieChart, table, columns, withStyle, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Prometheus HTTP Requests.yml"
 // Real-time HTTP endpoint monitoring with filters and breakdowns
+
+const recentHttpRequestsDs = bind("recent_http_requests", restSource("${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total[1m:1s]", { type: "prometheus" }));
+const httpRequestsDs = bind("http_requests", restSource("${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total", { type: "prometheus" }));
 
 export default page(
   {
@@ -16,10 +19,6 @@ export default page(
       chart: { resizable: true },
     },
   },
-  [
-    dataset("recent_http_requests" as DataSetId, "${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total[1m:1s]", { type: "prometheus" }),
-    dataset("http_requests" as DataSetId, "${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total", { type: "prometheus" }),
-  ],
   [
     // Row 1: Header
     withStyle({ "background-color": "#1a1a2e", color: "white", padding: "16px 24px", "border-radius": "8px", "margin-bottom": "16px" },
@@ -37,13 +36,11 @@ export default page(
         ),
         withStyle({ width: "100%" },
           selector({
-            lookup: createLookup("http_requests" as DataSetId, [
-              {
+            lookup: lookup("http_requests" as DataSetId, {
                 type: "group",
                 groupingKey: { sourceId: "handler" as ColumnId },
                 functions: [{ source: "handler" as ColumnId }]
-              }
-            ]),
+              }),
             filter: { notification: "true" },
           })
         )
@@ -56,9 +53,7 @@ export default page(
       ["3", "3", "3", "3"],
       [
         metric({
-          lookup: createLookup("http_requests" as DataSetId, [
-            { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }
-          ]),
+          lookup: lookup("http_requests" as DataSetId, { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }),
           filter: { listening: "true" },
           general: { title: "Total Requests" },
           chart: { height: "90" },
@@ -68,15 +63,13 @@ export default page(
       [
         withStyle({ color: "#2e7d32" },
           metric({
-            lookup: createLookup("http_requests" as DataSetId, [
-              {
+            lookup: lookup("http_requests" as DataSetId, {
                 type: "filter",
                 column: "code" as ColumnId,
                 function: "EQUALS_TO",
                 args: [200]
               },
-              { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }
-            ]),
+              { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }),
             filter: { listening: "true" },
             general: { title: "Success (2xx)" },
             columns: [{ id: "value" as ColumnId, pattern: "#,000" }],
@@ -86,15 +79,13 @@ export default page(
       [
         withStyle({ color: "#d32f2f" },
           metric({
-            lookup: createLookup("http_requests" as DataSetId, [
-              {
+            lookup: lookup("http_requests" as DataSetId, {
                 type: "filter",
                 column: "code" as ColumnId,
                 function: "GREATER_THAN",
                 args: [399]
               },
-              { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }
-            ]),
+              { type: "group", functions: [{ source: "value" as ColumnId, function: "SUM" }] }),
             filter: { listening: "true" },
             general: { title: "Errors (4xx/5xx)" },
             columns: [{ id: "value" as ColumnId, pattern: "#,000" }],
@@ -104,13 +95,11 @@ export default page(
       [
         withStyle({ color: "#1565c0" },
           metric({
-            lookup: createLookup("http_requests" as DataSetId, [
-              {
+            lookup: lookup("http_requests" as DataSetId, {
                 type: "group",
                 groupingKey: { sourceId: "handler" as ColumnId },
                 functions: [{ source: "handler" as ColumnId, function: "COUNT" }]
-              }
-            ]),
+              }),
             filter: { listening: "true" },
             general: { title: "Endpoints" },
           })
@@ -124,8 +113,7 @@ export default page(
       ["8", "4"],
       [
         timeseries({
-          lookup: createLookup("recent_http_requests" as DataSetId, [
-            {
+          lookup: lookup("recent_http_requests" as DataSetId, {
               type: "filter",
               column: "value" as ColumnId,
               function: "GREATER_THAN",
@@ -138,8 +126,7 @@ export default page(
                 { source: "timestamp" as ColumnId },
                 { source: "value" as ColumnId }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Request Volume Over Time" },
           chart: { height: 350 },
@@ -148,16 +135,14 @@ export default page(
       [
         pieChart({
           type: "DONUT",
-          lookup: createLookup("http_requests" as DataSetId, [
-            {
+          lookup: lookup("http_requests" as DataSetId, {
               type: "group",
               groupingKey: { sourceId: "handler" as ColumnId },
               functions: [
                 { source: "handler" as ColumnId },
                 { source: "value" as ColumnId, function: "SUM" }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Requests by Endpoint" },
           chart: { height: 350 },
@@ -171,16 +156,14 @@ export default page(
       ["6", "6"],
       [
         barChart({
-          lookup: createLookup("http_requests" as DataSetId, [
-            {
+          lookup: lookup("http_requests" as DataSetId, {
               type: "group",
               groupingKey: { sourceId: "handler" as ColumnId },
               functions: [
                 { source: "handler" as ColumnId },
                 { source: "value" as ColumnId, function: "SUM" }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Requests by Handler" },
           chart: { height: 300 },
@@ -189,16 +172,14 @@ export default page(
       [
         barChart({
           subtype: "BAR",
-          lookup: createLookup("http_requests" as DataSetId, [
-            {
+          lookup: lookup("http_requests" as DataSetId, {
               type: "group",
               groupingKey: { sourceId: "code" as ColumnId },
               functions: [
                 { source: "code" as ColumnId },
                 { source: "value" as ColumnId, function: "SUM" }
               ]
-            }
-          ]),
+            }),
           filter: { listening: "true" },
           general: { title: "Requests by Status Code" },
           chart: { height: 300, margin: { left: 80 } },
@@ -208,10 +189,10 @@ export default page(
 
     // Row 5: Detail table
     table({
-      lookup: createLookup("http_requests" as DataSetId, []),
+      lookup: lookup("http_requests" as DataSetId, ),
       filter: { listening: "true" },
       general: { title: "Request Details" },
       table: { sort: { enabled: true }, show_column_picker: true },
     })
-  ]
-);
+  ],
+  { datasets: [recentHttpRequestsDs, httpRequestsDs] });

@@ -1,19 +1,16 @@
 import {
-  page, title, table, textInput, numberInput,
-  dropdown, checkbox, datePicker, textarea, inlineDataset,
-} from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
-import type { DataSetId } from "@casehubio/data";
+  page, bind, inlineSource, title, table, textInput, numberInput,
+  dropdown, checkbox, datePicker, textarea, lookup} from "@casehubio/pages-ui";
+
+import type { DataSetId } from "@casehubio/pages-data";
 
 const contacts = "contacts" as DataSetId;
 
-const dataset = inlineDataset("contacts",
-  JSON.stringify([
+const dataset = bind("contacts", inlineSource([
     [1, "Alice Johnson", "alice@example.com", "+1-555-0101", "Work", "true", "2024-03-15", "Key client contact", 1],
     [2, "Bob Smith", "bob@example.com", "+1-555-0102", "Personal", "true", "2023-11-20", "", 2],
     [3, "Carol Davis", "carol@example.com", "+1-555-0103", "Work", "false", "2025-01-08", "On leave until March", 3],
-  ]),
-  {
+  ], {
     columns: [
       { id: "id", type: "NUMBER" },
       { id: "name", type: "TEXT" },
@@ -25,8 +22,7 @@ const dataset = inlineDataset("contacts",
       { id: "notes", type: "TEXT" },
       { id: "priority", type: "NUMBER" },
     ],
-  },
-);
+  }));
 
 export default page("Contact List",
   title("Contact Manager"),
@@ -34,7 +30,7 @@ export default page("Contact List",
     pageSize: 10,
     sortable: true,
     filter: { enabled: true, notification: true },
-    lookup: createLookup(contacts, []),
+    lookup: lookup(contacts, ),
   }),
   page("Contact Form",
     textInput({ field: "name", label: "Full Name", required: true }),

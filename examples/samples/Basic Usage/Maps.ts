@@ -1,8 +1,7 @@
-import { page, html, mapChart, rows, columns, inlineDataset } from "@casehubio/ui";
-import { createLookup, groupOp } from "@casehubio/data";
+import { page, bind, inlineSource, html, mapChart, rows, columns, lookup, groupBy, col} from "@casehubio/pages-ui";
 
 // Dataset
-const countriesData = JSON.stringify([
+const countriesData = [
   ["Brazil", 6],
   ["USA", 3],
   ["China", 5],
@@ -12,25 +11,21 @@ const countriesData = JSON.stringify([
   ["Australia", 9],
   ["Mali", 4],
   ["South Africa", 11]
-]);
+];
 
-inlineDataset("countries", countriesData, {
+const countriesDs = bind("countries", inlineSource(countriesData, {
   columns: [
     { id: "Country", type: "LABEL" },
     { id: "Value", type: "NUMBER" }
   ]
-});
+}));
 
 function countryLookup() {
-  return createLookup("countries", [
-    groupOp("Country", [
-      { source: "Country" },
-      { source: "Value" }
-    ])
-  ]);
+  return lookup("countries", groupBy("Country", col("Country"), col("Value")));
 }
 
 export default page(
+  "Maps",
   rows(
     columns(
       [6],
@@ -51,5 +46,5 @@ export default page(
         })
       ]
     )
-  )
-);
+  ),
+  { datasets: [countriesDs] });

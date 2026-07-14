@@ -1,10 +1,6 @@
-import { page, html, table, dataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
+import { page, bind, restSource, html, table, lookup} from "@casehubio/pages-ui";
 
-dataset(
-  "quarkus_repos",
-  "https://api.github.com/search/repositories?q=quarkus&sort=updated&per_page=30",
-  {
+const quarkusReposDs = bind("quarkus_repos", restSource("https://api.github.com/search/repositories?q=quarkus&sort=updated&per_page=30", {
     cacheEnabled: true,
     expression: '$.items.[[$full_name, $.description, $.stargazers_count, $.language, $.updated_at]]',
     columns: [
@@ -14,10 +10,10 @@ dataset(
       { id: "Language", type: "LABEL" },
       { id: "Updated", type: "LABEL" }
     ]
-  }
-);
+  }));
 
 export default page(
+  "GitHub Quarkus Repos",
   html(`
     <p style="font-size: x-large"><strong>Quarkus Repositories</strong></p>
     <small>Recently updated repositories matching "quarkus" on GitHub</small>
@@ -26,6 +22,6 @@ export default page(
   table({
     height: 600,
     resizable: true,
-    lookup: createLookup("quarkus_repos", [])
-  })
-);
+    lookup: lookup("quarkus_repos", )
+  }),
+  { datasets: [quarkusReposDs] });

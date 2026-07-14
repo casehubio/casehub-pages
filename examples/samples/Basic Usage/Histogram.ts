@@ -1,5 +1,4 @@
-import { page, barChart, table, inlineDataset } from "@casehubio/ui";
-import { createLookup } from "@casehubio/data";
+import { page, bind, inlineSource, barChart, table, lookup} from "@casehubio/pages-ui";
 
 const histogramExpression = `
 (
@@ -14,14 +13,14 @@ const histogramExpression = `
 )
 `;
 
-const rawData = JSON.stringify([
+const rawData = [
   5, 6, 7, 10, 3, 5, 11, 20, 6, 10, 5, 17,
   13, 22, 13, 50, 2, 4, 6, 10, 12, 5, 8, 10
-]);
+];
 
-inlineDataset("histogram", rawData, {
+const histogramDs = bind("histogram", inlineSource(rawData, {
   expression: histogramExpression
-});
+}));
 
 const extraConfig = {
   series: {
@@ -30,11 +29,12 @@ const extraConfig = {
 };
 
 export default page(
+  "Histogram",
   barChart({
     extraConfiguration: JSON.stringify(extraConfig),
-    lookup: createLookup("histogram", [])
+    lookup: lookup("histogram", )
   }),
   table({
-    lookup: createLookup("histogram", [])
-  })
-);
+    lookup: lookup("histogram", )
+  }),
+  { datasets: [histogramDs] });

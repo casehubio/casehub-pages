@@ -1,5 +1,5 @@
 import {
-  page,
+  page, bind, inlineSource,
   tabs,
   columns,
   metric,
@@ -17,7 +17,6 @@ import {
   textarea,
   checkbox,
   datePicker,
-  inlineDataset,
   lookup,
   groupBy,
   filterBy,
@@ -25,8 +24,8 @@ import {
   sum,
   avg,
   count,
-} from "@casehubio/ui";
-import type { DataSetId, ColumnId } from "@casehubio/data";
+} from "@casehubio/pages-ui";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
 
 // TypeScript companion to "Patient Tracker.dash.yaml"
 // 3-page tabs dashboard with clinical patient and vitals data
@@ -34,9 +33,7 @@ import type { DataSetId, ColumnId } from "@casehubio/data";
 const patients = "patients" as DataSetId;
 const vitals = "vitals" as DataSetId;
 
-const patientsDataset = inlineDataset(
-  "patients",
-  JSON.stringify([
+const patientsDataset = bind("patients", inlineSource([
     [1, "Emily Rodriguez", 34, "F", "ICU", "Pneumonia", "2026-06-20", "Critical", "Dr. Sarah Mitchell", "Patient requires close monitoring, high fever persists", "true"],
     [2, "Michael Chen", 67, "M", "General", "Post-Op", "2026-06-18", "Stable", "Dr. James Anderson", "Recovery progressing well", "false"],
     [3, "Sophia Patel", 5, "F", "Pediatrics", "Asthma", "2026-06-24", "Monitoring", "Dr. Lisa Thompson", "Nebulizer treatment 4x daily", "false"],
@@ -62,8 +59,7 @@ const patientsDataset = inlineDataset(
     [23, "Amara Okafor", 42, "F", "ICU", "Respiratory Failure", "2026-06-21", "Stable", "Dr. Sarah Mitchell", "Extubated, breathing spontaneously", "false"],
     [24, "William Zhang", 60, "M", "General", "Cellulitis", "2026-06-24", "Stable", "Dr. James Anderson", "IV antibiotics showing improvement", "false"],
     [25, "Nina Petrova", 29, "F", "Outpatient", "Sprained Ankle", "2026-06-26", "Stable", "Dr. Michael Chang", "RICE protocol advised, follow-up in 2 weeks", "false"],
-  ]),
-  {
+  ], {
     columns: [
       { id: "id" as ColumnId, type: "NUMBER" },
       { id: "name" as ColumnId, type: "TEXT" },
@@ -77,12 +73,9 @@ const patientsDataset = inlineDataset(
       { id: "notes" as ColumnId, type: "TEXT" },
       { id: "flagged" as ColumnId, type: "LABEL" },
     ],
-  }
-);
+  }));
 
-const vitalsDataset = inlineDataset(
-  "vitals",
-  JSON.stringify([
+const vitalsDataset = bind("vitals", inlineSource([
     [1, "2026-06-25T08:00", 112, 145, 92, 38.9, 91],
     [1, "2026-06-25T14:00", 118, 148, 94, 39.1, 90],
     [1, "2026-06-25T20:00", 115, 142, 90, 38.7, 92],
@@ -143,8 +136,7 @@ const vitalsDataset = inlineDataset(
     [20, "2026-06-25T08:00", 78, 125, 82, 36.9, 98],
     [22, "2026-06-25T08:00", 92, 105, 68, 37.2, 97],
     [25, "2026-06-25T08:00", 74, 122, 80, 36.8, 99],
-  ]),
-  {
+  ], {
     columns: [
       { id: "patientId" as ColumnId, type: "NUMBER" },
       { id: "timestamp" as ColumnId, type: "DATE" },
@@ -154,8 +146,7 @@ const vitalsDataset = inlineDataset(
       { id: "temperature" as ColumnId, type: "NUMBER" },
       { id: "o2Saturation" as ColumnId, type: "NUMBER" },
     ],
-  }
-);
+  }));
 
 export default page(
   { displayer: { chart: { resizable: true } } },
@@ -171,57 +162,53 @@ export default page(
         { span: 3 },
         metric({
           title: "Total Patients",
-          lookup: lookup(patients, [], [groupBy([], [count("id", "id", "#")])]),
+          lookup: lookup(patients, ], [groupBy([], [count("id", "id", "#")])),
         }),
         { span: 3 },
         metric({
           title: "Critical Count",
           lookup: lookup(
-            patients,
-            [filterBy("status", "EQUALS_TO", "Critical")],
-            [groupBy([], [count("id", "id", "#")])]
-          ),
+            patients, filterBy("status", "EQUALS_TO", "Critical")],
+            [groupBy([], [count("id", "id", "#")])),
         }),
         { span: 3 },
         metric({
           title: "Avg Age",
-          lookup: lookup(patients, [], [groupBy([], [avg("age", "age", "#.#")])]),
+          lookup: lookup(patients, ], [groupBy([], [avg("age", "age", "#.#")])),
         }),
         { span: 3 },
         metric({
           title: "Flagged",
           lookup: lookup(
-            patients,
-            [filterBy("flagged", "EQUALS_TO", "true")],
-            [groupBy([], [count("id", "id", "#")])]
-          ),
+            patients, filterBy("flagged", "EQUALS_TO", "true")],
+            [groupBy([], [count("id", "id", "#")])),
         })
       ),
       selector({
         subtype: "dropdown",
         selfApply: true,
         notification: true,
-        lookup: lookup(patients, [], [groupBy(["ward"], [col("ward")])]),
+        lookup: lookup(patients, ], [groupBy(["ward"], [col("ward")])),
       }),
       columns(
         { span: 4 },
         pieChart({
           title: "Patients by Diagnosis",
           listening: true,
-          lookup: lookup(patients, [], [groupBy(["diagnosis"], [col("diagnosis"), count("id")])]),
+          lookup: lookup(patients, ], [groupBy(["diagnosis"], [col("diagnosis"), count("id")])),
         }),
         { span: 4 },
         barChart({
           title: "Patients by Ward",
           listening: true,
-          lookup: lookup(patients, [], [groupBy(["ward"], [col("ward"), count("id")])]),
+          lookup: lookup(patients, ], [groupBy(["ward"], [col("ward"), count("id")])),
         }),
         { span: 4 },
         pieChart({
           subtype: "donut",
           title: "Patients by Status",
           listening: true,
-          lookup: lookup(patients, [], [groupBy(["status"], [col("status"), count("id")])]),
+          lookup: lookup(patients, ], [groupBy(["status"], [col("status"), count("id")])),
         })
       ),
       markdown(`## Ward Protocol Notes
@@ -254,10 +241,8 @@ export default page(
         title: "Heart Rate by Patient",
         listening: true,
         lookup: lookup(
-          vitals,
-          [],
-          [groupBy(["patientId"], [col("patientId"), avg("heartRate")])]
-        ),
+          vitals, ],
+          [groupBy(["patientId"], [col("patientId"), avg("heartRate")])),
       }),
       columns(
         { span: 6 },
@@ -265,20 +250,16 @@ export default page(
           title: "Blood Pressure",
           listening: true,
           lookup: lookup(
-            vitals,
-            [],
-            [groupBy(["timestamp"], [col("timestamp"), avg("systolic"), avg("diastolic")])]
-          ),
+            vitals, ],
+            [groupBy(["timestamp"], [col("timestamp"), avg("systolic"), avg("diastolic")])),
         }),
         { span: 6 },
         lineChart({
           title: "Oxygen Saturation",
           listening: true,
           lookup: lookup(
-            vitals,
-            [],
-            [groupBy(["timestamp"], [col("timestamp"), avg("o2Saturation")])]
-          ),
+            vitals, ],
+            [groupBy(["timestamp"], [col("timestamp"), avg("o2Saturation")])),
         })
       ),
       table({
@@ -290,7 +271,7 @@ export default page(
             expression: 'value > 38.5 ? "⚠️ " + value : value',
           },
         ],
-        lookup: lookup(vitals, [], []),
+        lookup: lookup(vitals, ], [),
       })
     ),
 
@@ -303,7 +284,7 @@ export default page(
           sortable: true,
           listening: true,
           notification: true,
-          lookup: lookup(patients, [], []),
+          lookup: lookup(patients, ], [),
         })
       ),
       panel(
@@ -330,5 +311,5 @@ export default page(
         save: { trigger: "auto", delay: 2000, adapter: "local" },
       }
     ),
-  ]
-);
+  ],
+  { datasets: [patientsDataset, vitalsDataset] });

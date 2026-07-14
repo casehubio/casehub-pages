@@ -1,22 +1,21 @@
-import { page, barChart, inlineDataset } from "@casehubio/ui";
-import { createLookup, groupOp } from "@casehubio/data";
+import { page, bind, inlineSource, barChart, lookup, groupBy, col} from "@casehubio/pages-ui";
 
-const productsData = JSON.stringify([
+const productsData = [
   ["Computers", "Scanner", 5, 3],
   ["Computers", "Printer", 7, 4],
   ["Computers", "Laptop", 3, 2],
   ["Electronics", "Camera", 10, 7],
   ["Electronics", "Headphones", 5, 9]
-]);
+];
 
-inlineDataset("products", productsData, {
+const productsDs = bind("products", inlineSource(productsData, {
   columns: [
     { id: "Section", type: "LABEL" },
     { id: "Product", type: "LABEL" },
     { id: "Quantity", type: "NUMBER" },
     { id: "Quantity2", type: "NUMBER" }
   ]
-});
+}));
 
 const extraConfig = {
   color: ["gray", "gray"],
@@ -39,14 +38,9 @@ const extraConfig = {
 };
 
 export default page(
+  "Decal Pattern",
   barChart({
     extraConfiguration: JSON.stringify(extraConfig),
-    lookup: createLookup("products", [
-      groupOp("Product", [
-        { source: "Product" },
-        { source: "Quantity", function: "SUM" },
-        { source: "Quantity2", function: "SUM" }
-      ])
-    ])
-  })
-);
+    lookup: lookup("products", groupBy("Product", col("Product")))
+  }),
+  { datasets: [productsDs] });
