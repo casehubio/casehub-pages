@@ -27,6 +27,7 @@ export interface DataSetManager {
   has(id: DataSetId): boolean;
   apply(id: DataSetId, event: DataSetEvent): void;
   lookup(query: DataSetLookup, options?: LookupOptions): LookupResult;
+  age(id: DataSetId): number | undefined;
 }
 
 function resolveOps(
@@ -57,6 +58,7 @@ function paginate(
 
 class DataSetManagerImpl implements DataSetManager {
   private readonly datasets = new Map<DataSetId, TypedDataSet>();
+  private readonly timestamps = new Map<DataSetId, number>();
   private readonly options: DataSetManagerOptions | undefined;
 
   constructor(options?: DataSetManagerOptions) {
@@ -68,6 +70,7 @@ class DataSetManagerImpl implements DataSetManager {
   }
 
   remove(id: DataSetId): boolean {
+    this.timestamps.delete(id);
     return this.datasets.delete(id);
   }
 
@@ -79,6 +82,7 @@ class DataSetManagerImpl implements DataSetManager {
     switch (event.type) {
       case "snapshot":
         this.datasets.set(id, event.dataset);
+        this.timestamps.set(id, Date.now());
         this.options?.onChanged?.(id, event.dataset);
         break;
       case "append": {
@@ -99,6 +103,7 @@ class DataSetManagerImpl implements DataSetManager {
           : combined;
         const result: TypedDataSet = { columns: existing.columns, rows: trimmed };
         this.datasets.set(id, result);
+        this.timestamps.set(id, Date.now());
         this.options?.onChanged?.(id, result);
         break;
       }
@@ -117,6 +122,7 @@ class DataSetManagerImpl implements DataSetManager {
         if (!matched) return;
         const result: TypedDataSet = { columns: existing.columns, rows };
         this.datasets.set(id, result);
+        this.timestamps.set(id, Date.now());
         this.options?.onChanged?.(id, result);
         break;
       }
@@ -130,10 +136,17 @@ class DataSetManagerImpl implements DataSetManager {
         if (rows.length === existing.rows.length) return;
         const result: TypedDataSet = { columns: existing.columns, rows };
         this.datasets.set(id, result);
+        this.timestamps.set(id, Date.now());
         this.options?.onChanged?.(id, result);
         break;
       }
     }
+  }
+
+  age(id: DataSetId): number | undefined {
+    const ts = this.timestamps.get(id);
+    if (ts === undefined) return undefined;
+    return Date.now() - ts;
   }
 
   lookup(query: DataSetLookup, options?: LookupOptions): LookupResult {

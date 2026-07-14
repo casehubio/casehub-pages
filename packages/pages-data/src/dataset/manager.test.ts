@@ -743,3 +743,60 @@ describe("DataSetManager — append validation", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+describe("DataSetManager — TTL", () => {
+  it("age() returns undefined for unknown dataset", () => {
+    const mgr = createDataSetManager();
+    expect(mgr.age(ID_UNKNOWN)).toBeUndefined();
+  });
+
+  it("age() returns milliseconds since apply()", () => {
+    const mgr = createDataSetManager();
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+
+    const age = mgr.age(ID_A);
+    expect(age).toBeDefined();
+    expect(age!).toBeGreaterThanOrEqual(0);
+    expect(age!).toBeLessThan(100);
+  });
+
+  it("age() resets after subsequent apply()", async () => {
+    const mgr = createDataSetManager();
+    const ds1 = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds1 });
+
+    await new Promise(r => setTimeout(r, 15));
+    const ageBefore = mgr.age(ID_A)!;
+
+    const ds2 = testDataSet([["Bob", "200"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds2 });
+    const ageAfter = mgr.age(ID_A)!;
+
+    expect(ageAfter).toBeLessThan(ageBefore);
+  });
+
+  it("remove() clears timestamp", () => {
+    const mgr = createDataSetManager();
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+    expect(mgr.age(ID_A)).toBeDefined();
+
+    mgr.remove(ID_A);
+    expect(mgr.age(ID_A)).toBeUndefined();
+  });
+
+  it("age() updates on append events", () => {
+    const mgr = createDataSetManager();
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+
+    mgr.apply(ID_A, {
+      type: "append",
+      rows: [ds.rows[0]!],
+    });
+    const age = mgr.age(ID_A);
+    expect(age).toBeDefined();
+    expect(age!).toBeLessThan(50);
+  });
+});
