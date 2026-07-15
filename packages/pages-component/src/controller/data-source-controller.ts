@@ -1,5 +1,4 @@
-import type {DataSource} from "@casehubio/pages-data";
-import type {DataSetEvent} from "@casehubio/pages-data";
+import type {DataSource, DataSourceBinding, SourceConnector} from "@casehubio/pages-data";
 import type {SortColumn} from "@casehubio/pages-data";
 import type {DataSetId, TypedDataSet} from "@casehubio/pages-data";
 import {dataSetId} from "@casehubio/pages-data";
@@ -15,6 +14,8 @@ export interface DataSourceControllerOptions {
   columns?: readonly ExternalColumnDef[];
   dataPath?: string;
   totalPath?: string;
+  refreshTime?: string;
+  cacheTtl?: string;
 }
 
 export class DataSourceController implements VizTarget {
@@ -26,9 +27,8 @@ export class DataSourceController implements VizTarget {
   private _activeSort: SortColumn | undefined;
   private _activePage: number | undefined;
 
-  private _source: DataSource | undefined;
   private _endpoint: string | undefined;
-  private _connected = false;
+  private _connector: SourceConnector | undefined;
   private readonly _dataSetId: DataSetId;
 
   readonly onChange: (() => void) | undefined;
@@ -37,6 +37,8 @@ export class DataSourceController implements VizTarget {
   private readonly _columns: readonly ExternalColumnDef[] | undefined;
   private readonly _dataPath: string | undefined;
   private readonly _totalPath: string | undefined;
+  private readonly _refreshTime: string | undefined;
+  private readonly _cacheTtl: string | undefined;
 
   constructor(options?: DataSourceControllerOptions) {
     this.onChange = options?.onChange;
@@ -46,6 +48,8 @@ export class DataSourceController implements VizTarget {
     this._columns = options?.columns;
     this._dataPath = options?.dataPath;
     this._totalPath = options?.totalPath;
+    this._refreshTime = options?.refreshTime;
+    this._cacheTtl = options?.cacheTtl;
   }
 
   get loading(): boolean { return this._loading; }
@@ -82,43 +86,58 @@ export class DataSourceController implements VizTarget {
   get activePage(): number | undefined { return this._activePage; }
   set activePage(v: number | undefined) { this._activePage = v; }
 
+  get dataSetId(): DataSetId { return this._dataSetId; }
+
   get endpoint(): string | undefined { return this._endpoint; }
   set endpoint(url: string | undefined) {
     if (url === this._endpoint) return;
-    this.disconnectSource();
     this._endpoint = url;
-    if (url) {
-      this._source = this.createSourceFromUrl(url);
-      if (this._connected) this.connectSource();
+    if (this._connector) {
+      if (url) {
+        const source = this.createSource();
+        if (source) this._connector.replace(source);
+      } else {
+        this._connector.disconnect();
+      }
     }
   }
 
-  get source(): DataSource | undefined { return this._source; }
-  set source(s: DataSource | undefined) {
-    if (s === this._source) return;
-    this.disconnectSource();
-    this._endpoint = undefined;
-    this._source = s;
-    if (s && this._connected) this.connectSource();
+  get connector(): SourceConnector | undefined { return this._connector; }
+  set connector(c: SourceConnector | undefined) {
+    this._connector?.disconnect();
+    this._connector = c;
+    if (c && this._endpoint) {
+      const source = this.createSource();
+      if (source) c.connect(source);
+    }
   }
 
-  connect(): void {
-    if (this._connected) return;
-    this._connected = true;
-    this.connectSource();
+  createSource(): DataSource | undefined {
+    if (!this._endpoint) return undefined;
+    if (this._sourceFactory) {
+      return this._sourceFactory(this._endpoint, this._dataSetId, {
+        columns: this._columns,
+        dataPath: this._dataPath,
+        totalPath: this._totalPath,
+      });
+    }
+    return { connect() {}, disconnect() {} };
   }
 
-  disconnect(): void {
-    if (!this._connected) return;
-    this._connected = false;
-    this.disconnectSource();
+  toBinding(): DataSourceBinding | undefined {
+    const source = this.createSource();
+    if (!source) return undefined;
+    return {
+      id: this._dataSetId,
+      source,
+      ...(this._refreshTime !== undefined && { refreshTime: this._refreshTime }),
+      ...(this._cacheTtl !== undefined && { cacheTtl: this._cacheTtl }),
+    };
   }
 
   refresh(): void {
-    if (this._source && this._connected) {
-      this.disconnectSource();
-      this.loading = true;
-      this.connectSource();
+    if (this._connector?.connected) {
+      this._connector.refresh();
       return;
     }
     if (this._onRefresh && this._dataSet !== undefined) {
@@ -127,91 +146,8 @@ export class DataSourceController implements VizTarget {
   }
 
   dispose(): void {
-    this.disconnect();
-    this._source = undefined;
+    this._connector?.dispose();
+    this._connector = undefined;
     this._endpoint = undefined;
-  }
-
-  private connectSource(): void {
-    if (!this._source) return;
-    this.loading = true;
-    const capturedSource = this._source;
-    this._source.connect({
-      apply: (event: DataSetEvent) => {
-        if (this._source !== capturedSource) return;
-        this.handleEvent(event);
-      },
-      error: (err) => {
-        if (this._source !== capturedSource) return;
-        if (err.permanent) {
-          this.error = err.message;
-        }
-      },
-    });
-  }
-
-  private disconnectSource(): void {
-    this._source?.disconnect();
-  }
-
-  private handleEvent(event: DataSetEvent): void {
-    switch (event.type) {
-      case "snapshot":
-        this.dataSet = event.dataset;
-        if (event.totalRows !== undefined) this.totalRows = event.totalRows;
-        break;
-      case "append": {
-        const ds = this._dataSet as TypedDataSet | undefined;
-        if (!ds) break;
-        const colCount = ds.columns.length;
-        if (event.rows.some(r => r.cells.length !== colCount)) break;
-        const combined = [...ds.rows, ...event.rows];
-        const rows = event.maxRows !== undefined
-          ? combined.slice(-event.maxRows) : combined;
-        this.dataSet = { columns: ds.columns, rows };
-        break;
-      }
-      case "replace": {
-        const ds = this._dataSet as TypedDataSet | undefined;
-        if (!ds) break;
-        let matched = false;
-        const rows = ds.rows.map(r => {
-          const cell = r.cell(event.keyColumn);
-          if (cell.type !== "NULL" && String(cell.value) === event.key) {
-            matched = true;
-            return event.row;
-          }
-          return r;
-        });
-        if (!matched) break;
-        this.dataSet = { columns: ds.columns, rows };
-        break;
-      }
-      case "remove": {
-        const ds = this._dataSet as TypedDataSet | undefined;
-        if (!ds) break;
-        const rows = ds.rows.filter(r => {
-          const cell = r.cell(event.keyColumn);
-          return cell.type === "NULL" || String(cell.value) !== event.key;
-        });
-        if (rows.length === ds.rows.length) break;
-        this.dataSet = { columns: ds.columns, rows };
-        break;
-      }
-    }
-  }
-
-  private createSourceFromUrl(url: string): DataSource {
-    if (this._sourceFactory) {
-      return this._sourceFactory(url, this._dataSetId, {
-        columns: this._columns,
-        dataPath: this._dataPath,
-        totalPath: this._totalPath,
-      });
-    }
-    return {
-      connect() {},
-      disconnect() {},
-    };
   }
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { DataSourceController } from "./data-source-controller.js";
+import { createStandaloneConnector } from "./standalone-connector.js";
 import type { DataSource, DataSink } from "@casehubio/pages-data";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { ColumnType, columnId } from "@casehubio/pages-data";
@@ -47,6 +48,12 @@ function deferredSource(): {
     emitError(msg: string) { sink?.error({ message: msg, permanent: true }); },
     disconnectSpy,
   };
+}
+
+function standaloneCtrl(options?: ConstructorParameters<typeof DataSourceController>[0]) {
+  const ctrl = new DataSourceController(options);
+  ctrl.connector = createStandaloneConnector(ctrl);
+  return ctrl;
 }
 
 describe("DataSourceController", () => {
@@ -134,11 +141,10 @@ describe("DataSourceController", () => {
   });
 
   describe("source lifecycle — snapshot", () => {
-    it("delivers snapshot from source on connect", () => {
+    it("delivers snapshot from source via connector", () => {
       const ds = makeDataSet([["alice"]]);
-      const ctrl = new DataSourceController();
-      ctrl.source = immediateSource(ds);
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(immediateSource(ds));
       expect(ctrl.dataSet).toEqual(ds);
       expect(ctrl.loading).toBe(false);
     });
@@ -146,38 +152,34 @@ describe("DataSourceController", () => {
     it("sets loading on connect before data arrives", () => {
       const { source } = deferredSource();
       const states: boolean[] = [];
-      const ctrl = new DataSourceController({
+      const ctrl = standaloneCtrl({
         onChange: () => { states.push(ctrl.loading); },
       });
-      ctrl.source = source;
-      ctrl.connect();
+      ctrl.connector!.connect(source);
       expect(states[0]).toBe(true);
     });
 
     it("delivers error from source", () => {
-      const ctrl = new DataSourceController();
-      ctrl.source = failingSource("boom");
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(failingSource("boom"));
       expect(ctrl.error).toBe("boom");
       expect(ctrl.loading).toBe(false);
     });
 
     it("disconnect stops delivery", () => {
       const { source, emitSnapshot } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
-      ctrl.disconnect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
+      ctrl.connector!.disconnect();
       emitSnapshot(makeDataSet([["late"]]));
       expect(ctrl.dataSet).toBeUndefined();
     });
 
-    it("setting new source disconnects old source", () => {
+    it("replacing source disconnects old source", () => {
       const { source: s1, disconnectSpy } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = s1;
-      ctrl.connect();
-      ctrl.source = immediateSource(makeDataSet([["new"]]));
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(s1);
+      ctrl.connector!.replace(immediateSource(makeDataSet([["new"]])));
       expect(disconnectSpy).toHaveBeenCalled();
     });
   });
@@ -186,9 +188,8 @@ describe("DataSourceController", () => {
     it("appends rows to existing dataset", () => {
       const ds = makeDataSet([["alice"]]);
       const { source, emitSnapshot, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       emitSnapshot(ds);
       expect((ctrl.dataSet as TypedDataSet).rows).toHaveLength(1);
 
@@ -204,9 +205,8 @@ describe("DataSourceController", () => {
     it("respects maxRows on append", () => {
       const ds = makeDataSet([["a"], ["b"]]);
       const { source, emitSnapshot, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       emitSnapshot(ds);
 
       const newRow = toTypedDataSet({
@@ -223,9 +223,8 @@ describe("DataSourceController", () => {
 
     it("ignores append when no existing dataset", () => {
       const { source, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
 
       const newRow = toTypedDataSet({
         columns: [{ id: columnId("name"), name: "name", type: ColumnType.TEXT }],
@@ -239,9 +238,8 @@ describe("DataSourceController", () => {
     it("ignores append with mismatched column count", () => {
       const ds = makeDataSet([["alice"]]);
       const { source, emitSnapshot, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       emitSnapshot(ds);
 
       const badRow = toTypedDataSet({
@@ -267,9 +265,8 @@ describe("DataSourceController", () => {
         data: [["1", "old"]],
       });
       const { source, emitSnapshot, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       emitSnapshot(ds);
 
       const replacement = toTypedDataSet({
@@ -295,9 +292,8 @@ describe("DataSourceController", () => {
     it("ignores replace when key not found", () => {
       const ds = makeDataSet([["alice"]]);
       const { source, emitSnapshot, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       emitSnapshot(ds);
 
       const replacement = makeDataSet([["bob"]]).rows[0]!;
@@ -317,9 +313,8 @@ describe("DataSourceController", () => {
     it("removes row by key", () => {
       const ds = makeDataSet([["alice"], ["bob"]]);
       const { source, emitSnapshot, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       emitSnapshot(ds);
 
       emitAppend({
@@ -336,9 +331,8 @@ describe("DataSourceController", () => {
     it("ignores remove when key not found", () => {
       const ds = makeDataSet([["alice"]]);
       const { source, emitSnapshot, emitAppend } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       emitSnapshot(ds);
 
       emitAppend({
@@ -352,7 +346,7 @@ describe("DataSourceController", () => {
   });
 
   describe("refresh", () => {
-    it("reconnects the source", () => {
+    it("reconnects the source via connector", () => {
       let connectCount = 0;
       const source: DataSource = {
         connect(sink: DataSink) {
@@ -361,9 +355,8 @@ describe("DataSourceController", () => {
         },
         disconnect() {},
       };
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       expect(connectCount).toBe(1);
       ctrl.refresh();
       expect(connectCount).toBe(2);
@@ -372,9 +365,8 @@ describe("DataSourceController", () => {
     it("does not double-fire onChange on refresh", () => {
       const onChange = vi.fn();
       const { source, emitSnapshot } = deferredSource();
-      const ctrl = new DataSourceController({ onChange });
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl({ onChange });
+      ctrl.connector!.connect(source);
       emitSnapshot(makeDataSet([["a"]]));
       onChange.mockClear();
 
@@ -384,14 +376,13 @@ describe("DataSourceController", () => {
   });
 
   describe("dispose", () => {
-    it("disconnects and clears source", () => {
+    it("disconnects and clears connector", () => {
       const { source, disconnectSpy } = deferredSource();
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       ctrl.dispose();
       expect(disconnectSpy).toHaveBeenCalled();
-      expect(ctrl.source).toBeUndefined();
+      expect(ctrl.connector).toBeUndefined();
       expect(ctrl.endpoint).toBeUndefined();
     });
   });
@@ -415,9 +406,8 @@ describe("DataSourceController", () => {
         },
         disconnect() {},
       };
-      const ctrl = new DataSourceController();
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl();
+      ctrl.connector!.connect(source);
       expect(ctrl.error).toBe("");
       expect(ctrl.loading).toBe(true);
     });
@@ -427,9 +417,8 @@ describe("DataSourceController", () => {
     it("uses sourceFactory to create source from endpoint URL", () => {
       const ds = makeDataSet([["from-factory"]]);
       const factory = vi.fn().mockReturnValue(immediateSource(ds));
-      const ctrl = new DataSourceController({ sourceFactory: factory });
+      const ctrl = standaloneCtrl({ sourceFactory: factory });
       ctrl.endpoint = "/api/items";
-      ctrl.connect();
 
       expect(factory).toHaveBeenCalledWith("/api/items", expect.anything(), expect.anything());
       expect(ctrl.dataSet).toEqual(ds);
@@ -437,22 +426,20 @@ describe("DataSourceController", () => {
 
     it("routes http URL through sourceFactory", () => {
       const factory = vi.fn().mockReturnValue(immediateSource(makeDataSet([["ok"]])));
-      const ctrl = new DataSourceController({ sourceFactory: factory });
+      const ctrl = standaloneCtrl({ sourceFactory: factory });
       ctrl.endpoint = "https://api.example.com/data";
-      ctrl.connect();
 
       expect(factory).toHaveBeenCalledWith("https://api.example.com/data", expect.anything(), expect.anything());
     });
 
     it("endpoint without sourceFactory still creates a no-op source", () => {
-      const ctrl = new DataSourceController();
+      const ctrl = standaloneCtrl();
       ctrl.endpoint = "/api/items";
-      ctrl.connect();
       expect(ctrl.loading).toBe(true);
       expect(ctrl.dataSet).toBeUndefined();
     });
 
-    it("changing endpoint disconnects old source and creates new one", () => {
+    it("changing endpoint replaces source via connector", () => {
       const ds1 = makeDataSet([["first"]]);
       const ds2 = makeDataSet([["second"]]);
       let callCount = 0;
@@ -460,9 +447,8 @@ describe("DataSourceController", () => {
         callCount++;
         return immediateSource(callCount === 1 ? ds1 : ds2);
       });
-      const ctrl = new DataSourceController({ sourceFactory: factory });
+      const ctrl = standaloneCtrl({ sourceFactory: factory });
       ctrl.endpoint = "/api/v1";
-      ctrl.connect();
       expect(ctrl.dataSet).toEqual(ds1);
 
       ctrl.endpoint = "/api/v2";
@@ -470,12 +456,11 @@ describe("DataSourceController", () => {
       expect(ctrl.dataSet).toEqual(ds2);
     });
 
-    it("setting source directly bypasses sourceFactory", () => {
+    it("connector.connect bypasses sourceFactory", () => {
       const factory = vi.fn();
       const ds = makeDataSet([["direct"]]);
-      const ctrl = new DataSourceController({ sourceFactory: factory });
-      ctrl.source = immediateSource(ds);
-      ctrl.connect();
+      const ctrl = standaloneCtrl({ sourceFactory: factory });
+      ctrl.connector!.connect(immediateSource(ds));
 
       expect(factory).not.toHaveBeenCalled();
       expect(ctrl.dataSet).toEqual(ds);
@@ -483,7 +468,7 @@ describe("DataSourceController", () => {
   });
 
   describe("onRefresh (#134)", () => {
-    it("calls onRefresh callback when refresh is called in hosted mode", () => {
+    it("calls onRefresh callback when no connector is connected", () => {
       const onRefresh = vi.fn();
       const ctrl = new DataSourceController({ onRefresh });
       ctrl.dataSet = makeDataSet([["some data"]]);
@@ -492,7 +477,7 @@ describe("DataSourceController", () => {
       expect(onRefresh).toHaveBeenCalledOnce();
     });
 
-    it("does not call onRefresh when source is connected (standalone mode)", () => {
+    it("does not call onRefresh when connector is connected (standalone mode)", () => {
       const onRefresh = vi.fn();
       let connectCount = 0;
       const source: DataSource = {
@@ -502,16 +487,15 @@ describe("DataSourceController", () => {
         },
         disconnect() {},
       };
-      const ctrl = new DataSourceController({ onRefresh });
-      ctrl.source = source;
-      ctrl.connect();
+      const ctrl = standaloneCtrl({ onRefresh });
+      ctrl.connector!.connect(source);
       ctrl.refresh();
 
       expect(onRefresh).not.toHaveBeenCalled();
       expect(connectCount).toBe(2);
     });
 
-    it("calls onRefresh when no source is connected and data exists", () => {
+    it("calls onRefresh when no connector and data exists", () => {
       const onRefresh = vi.fn();
       const ctrl = new DataSourceController({ onRefresh });
       ctrl.dataSet = makeDataSet([["a"]]);
@@ -519,7 +503,7 @@ describe("DataSourceController", () => {
       expect(onRefresh).toHaveBeenCalledOnce();
     });
 
-    it("does not call onRefresh when no data and no source", () => {
+    it("does not call onRefresh when no data and no connector", () => {
       const onRefresh = vi.fn();
       const ctrl = new DataSourceController({ onRefresh });
       ctrl.refresh();
@@ -534,10 +518,9 @@ describe("DataSourceController with createSourceFactory", () => {
       JSON.stringify([["alice"]]),
       { headers: { "content-type": "application/json" } },
     ));
-    const ctrl = new DataSourceController({
+    const ctrl = standaloneCtrl({
       sourceFactory: createSourceFactory({ fetchFn }),
     });
-    ctrl.connect();
     ctrl.endpoint = "/api/items";
     await vi.waitFor(() => { expect(ctrl.dataSet).toBeDefined(); });
     expect(ctrl.dataSet!.rows).toHaveLength(1);
@@ -553,10 +536,9 @@ describe("DataSourceController with createSourceFactory", () => {
       }),
       releaseAll: vi.fn(),
     };
-    const ctrl = new DataSourceController({
+    const ctrl = standaloneCtrl({
       sourceFactory: createSourceFactory({ wsPool: mockPool }),
     });
-    ctrl.connect();
     ctrl.endpoint = "ws://host/events";
     expect(mockPool.acquire).toHaveBeenCalled();
     ctrl.dispose();
@@ -571,10 +553,9 @@ describe("DataSourceController with createSourceFactory", () => {
       }),
       releaseAll: vi.fn(),
     };
-    const ctrl = new DataSourceController({
+    const ctrl = standaloneCtrl({
       sourceFactory: createSourceFactory({ ssePool: mockPool }),
     });
-    ctrl.connect();
     ctrl.endpoint = "sse://host/topic";
     expect(mockPool.acquire).toHaveBeenCalled();
     ctrl.dispose();
@@ -585,15 +566,36 @@ describe("DataSourceController with createSourceFactory", () => {
       JSON.stringify({ _meta: { total: 200 }, items: [["alice"]] }),
       { headers: { "content-type": "application/json" } },
     ));
-    const ctrl = new DataSourceController({
+    const ctrl = standaloneCtrl({
       sourceFactory: createSourceFactory({ fetchFn }),
       totalPath: "_meta.total",
       dataPath: "items",
     });
-    ctrl.connect();
     ctrl.endpoint = "/api/items";
     await vi.waitFor(() => { expect(ctrl.dataSet).toBeDefined(); });
     expect(ctrl.totalRows).toBe(200);
     ctrl.dispose();
+  });
+});
+
+describe("DataSourceController — toBinding", () => {
+  it("produces binding from endpoint + factory config", () => {
+    const factory = vi.fn().mockReturnValue(immediateSource(makeDataSet([["x"]])));
+    const ctrl = new DataSourceController({
+      sourceFactory: factory,
+      refreshTime: "30second",
+      cacheTtl: "5minute",
+    });
+    ctrl.endpoint = "/api/items";
+    const binding = ctrl.toBinding();
+    expect(binding).toBeDefined();
+    expect(binding!.id).toBe(ctrl.dataSetId);
+    expect(binding!.refreshTime).toBe("30second");
+    expect(binding!.cacheTtl).toBe("5minute");
+  });
+
+  it("returns undefined when no endpoint", () => {
+    const ctrl = new DataSourceController();
+    expect(ctrl.toBinding()).toBeUndefined();
   });
 });

@@ -14,7 +14,8 @@ import {
     evaluateGenerator
 } from "@casehubio/pages-data";
 import type {DataSetEvent} from "@casehubio/pages-data";
-import type {DataSink, DataSource, DataSourceBinding} from "@casehubio/pages-data";
+import type {DataSourceBinding, SourceConnector} from "@casehubio/pages-data";
+import {createSourceConnector} from "@casehubio/pages-data";
 import type {ComponentRegistry} from "./registry.js";
 import type {DataSetScope} from "./dataset-scope.js";
 import {isBinding, resolveDataSetDef, resolveDataSetEntry} from "./dataset-scope.js";
@@ -40,6 +41,7 @@ export interface DataPipeline {
     target: VizTarget,
     lookup: DataSetLookup,
     componentId: string,
+    binding?: DataSourceBinding,
   ): void;
 
   setResolverCtx(ctx: ResolverContext): void;
@@ -82,7 +84,7 @@ export function createDataPipeline(
   const serverQueryLookups = new Map<DataSetId, DataSetLookup>();
 
   // --- DataSource path state ---
-  const connectedSources = new Map<DataSetId, DataSource>();
+  const connectors = new Map<DataSetId, SourceConnector>();
 
   // --- Refresh state ---
   const reFetchCallbacks = new Map<DataSetId, () => void>();
@@ -152,10 +154,10 @@ export function createDataPipeline(
     manager.remove(dsId);
     datasetConsumers.delete(dsId);
 
-    const source = connectedSources.get(dsId);
-    if (source) {
-      source.disconnect();
-      connectedSources.delete(dsId);
+    const connector = connectors.get(dsId);
+    if (connector) {
+      connector.dispose();
+      connectors.delete(dsId);
     }
 
     const timer = refreshTimers.get(dsId);
@@ -180,28 +182,25 @@ export function createDataPipeline(
 
   // --- DataSource connect/disconnect ---
 
-  function connectSource(dataSetId: DataSetId, source: DataSource): void {
-    if (connectedSources.has(dataSetId)) return;
-
-    const sink: DataSink = {
-      apply(event: DataSetEvent): void {
-        manager.apply(dataSetId, event);
-      },
-      error(err): void {
-        if (!err.permanent) {
-          console.warn(`[DataPipeline] Transient source error for ${String(dataSetId)}: ${err.message}`);
-          return;
-        }
-        for (const [, compEntry] of registry) {
-          if (compEntry.originalLookup?.dataSetId === dataSetId && compEntry.vizElement) {
-            compEntry.vizElement.error = err.message;
+  function getOrCreateConnector(dataSetId: DataSetId): SourceConnector {
+    let connector = connectors.get(dataSetId);
+    if (!connector) {
+      connector = createSourceConnector(dataSetId, manager, {
+        onError: (err) => {
+          if (!err.permanent) {
+            console.warn(`[DataPipeline] Transient source error for ${String(dataSetId)}: ${err.message}`);
+            return;
           }
-        }
-      },
-    };
-
-    source.connect(sink);
-    connectedSources.set(dataSetId, source);
+          for (const [, compEntry] of registry) {
+            if (compEntry.originalLookup?.dataSetId === dataSetId && compEntry.vizElement) {
+              compEntry.vizElement.error = err.message;
+            }
+          }
+        },
+      });
+      connectors.set(dataSetId, connector);
+    }
+    return connector;
   }
 
   // --- Legacy push source management (ExternalDataSetDef path) ---
@@ -405,18 +404,56 @@ export function createDataPipeline(
     componentId: string,
     binding: DataSourceBinding,
   ): void {
-    // Source already connected and data in manager — serve immediately
-    if (connectedSources.has(lookup.dataSetId) && manager.has(lookup.dataSetId)) {
+    const connector = getOrCreateConnector(lookup.dataSetId);
+
+    // Source replacement: binding carries a different source
+    if (connector.connected && connector.source !== binding.source) {
+      connector.replace(binding.source);
+      return;
+    }
+
+    // Source already connected and data in manager — serve from cache
+    if (connector.connected && manager.has(lookup.dataSetId)) {
       const entry = registry.get(componentId);
       if (!entry) return;
       const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
         ?.filter as { group?: string } | undefined;
       pushData(target, lookup, entry.pagePath, filterGroup?.group, componentId);
+
+      // Stale-while-revalidate for binding path
+      if (!pendingRefreshes.has(lookup.dataSetId)) {
+        const age = manager.age(lookup.dataSetId);
+        const ttl = binding.cacheTtl ? parseRefreshTime(binding.cacheTtl)
+          : binding.refreshTime ? parseRefreshTime(binding.refreshTime)
+          : DEFAULT_TTL_MS;
+        if (age !== undefined && age > ttl) {
+          pendingRefreshes.add(lookup.dataSetId);
+          connector.refresh();
+        }
+      }
       return;
     }
 
-    // Connect the source — it will feed into manager.apply() via the sink
-    connectSource(lookup.dataSetId, binding.source);
+    // Fresh connect + schedule polling
+    connector.connect(binding.source);
+    if (binding.refreshTime) {
+      scheduleBindingRefresh(lookup.dataSetId, binding, connector);
+    }
+  }
+
+  function scheduleBindingRefresh(
+    dataSetId: DataSetId,
+    binding: DataSourceBinding,
+    connector: SourceConnector,
+  ): void {
+    if (!binding.refreshTime || refreshTimers.has(dataSetId)) return;
+    const interval = parseRefreshTime(binding.refreshTime);
+    const timerId = setInterval(() => {
+      if (connector.connected) {
+        connector.refresh();
+      }
+    }, interval);
+    refreshTimers.set(dataSetId, timerId);
   }
 
   // --- Handle legacy ExternalDataSetDef path ---
@@ -644,17 +681,18 @@ export function createDataPipeline(
       serverQueryDatasets.clear();
       serverQueryLookups.clear();
 
-      // Disconnect all DataSource instances
-      for (const [, source] of connectedSources) {
-        source.disconnect();
+      // Dispose all SourceConnector instances
+      for (const [, connector] of connectors) {
+        connector.dispose();
       }
-      connectedSources.clear();
+      connectors.clear();
     },
 
     handleDataRequest(
       target: VizTarget,
       lookup: DataSetLookup,
       componentId: string,
+      binding?: DataSourceBinding,
     ): void {
       const entry = registry.get(componentId);
       if (!entry) return;
@@ -665,6 +703,12 @@ export function createDataPipeline(
         datasetConsumers.set(lookup.dataSetId, consumers);
       }
       consumers.add(componentId);
+
+      // Event-carried binding — route directly, bypassing scope
+      if (binding) {
+        handleBindingRequest(target, lookup, componentId, binding);
+        return;
+      }
 
       const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
         ?.filter as { group?: string } | undefined;
@@ -721,11 +765,9 @@ export function createDataPipeline(
     refreshDataSet(dataSetId: DataSetId): void {
       if (pushSubscriptions.has(dataSetId)) return;
 
-      const connectedSource = connectedSources.get(dataSetId);
-      if (connectedSource) {
-        connectedSource.disconnect();
-        connectedSources.delete(dataSetId);
-        connectSource(dataSetId, connectedSource);
+      const connector = connectors.get(dataSetId);
+      if (connector?.connected) {
+        connector.refresh();
         pendingRefreshes.delete(dataSetId);
         return;
       }

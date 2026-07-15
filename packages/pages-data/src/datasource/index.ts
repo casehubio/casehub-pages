@@ -1,3 +1,6 @@
+export type { SourceConnector, SourceConnectorOptions } from "./source-connector.js";
+export { createSourceConnector } from "./source-connector.js";
+
 export type {
   DataSource,
   DataSink,

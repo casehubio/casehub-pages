@@ -34,6 +34,8 @@ export interface DataSourceBinding {
   readonly id: DataSetId;
   readonly source: DataSource;
   readonly keyColumn?: string;
+  readonly refreshTime?: string;
+  readonly cacheTtl?: string;
 }
 
 export interface SourceFactoryOptions {

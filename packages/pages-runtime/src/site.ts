@@ -14,7 +14,7 @@ import type {
     ExternalDataSetDef,
     ServiceCapabilities
 } from "@casehubio/pages-data";
-import type {DataSetLookup} from "@casehubio/pages-data";
+import type {DataSetLookup, DataSourceBinding} from "@casehubio/pages-data";
 import type {SortOrder} from "@casehubio/pages-data";
 import {createDataSetManager} from "@casehubio/pages-data";
 import {
@@ -67,6 +67,7 @@ import {createDevAuthTokenFn} from "./dev-auth.js";
 interface DataRequestDetail {
   readonly element: VizTarget;
   readonly lookup: DataSetLookup;
+  readonly binding?: DataSourceBinding;
 }
 
 interface SlotChangeDetail {
@@ -461,10 +462,10 @@ export async function loadSite(
   // --- Event delegation ---
 
   target.addEventListener("pages-data-request", ((e: Event) => {
-    const { element, lookup } = (e as CustomEvent<DataRequestDetail>).detail;
+    const { element, lookup, binding } = (e as CustomEvent<DataRequestDetail>).detail;
     const componentId = findComponentId(e);
     if (componentId) {
-      pipeline.handleDataRequest(element, lookup, componentId);
+      pipeline.handleDataRequest(element, lookup, componentId, binding);
     }
   }), { signal: abortController.signal });
 
