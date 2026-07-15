@@ -278,7 +278,7 @@ describe("parameterised dataset URLs", () => {
     // Re-create manager with onChanged wiring
     manager = createDataSetManager({
       onChanged: (id) => {
-        pipeline.refreshDataSet(id);
+        pipeline.deliverDataSet(id);
       },
     });
 
