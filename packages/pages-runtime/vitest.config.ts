@@ -8,7 +8,7 @@ export default defineConfig({
     pool: "vmForks",
     poolOptions: {
       vmForks: {
-        execArgv: ["--max-old-space-size=6144"],
+        memoryLimit: "512MB",
       },
     },
     coverage: {
