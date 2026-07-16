@@ -56,6 +56,7 @@ jobs:
               - 'packages/**'
               - 'components/**'
               - 'webapp/**'
+              - 'examples/**'
               - 'package.json'
               - 'yarn.lock'
 
@@ -92,13 +93,13 @@ jobs:
         id: js-build
         if: steps.js-changes.outputs.js == 'true'
         continue-on-error: true
-        run: yarn build
+        run: yarn build:prod
 
       - name: Test JavaScript packages
         id: js-test
         if: steps.js-changes.outputs.js == 'true'
         continue-on-error: true
-        run: yarn test
+        run: yarn workspace @casehubio/pages-data run test && yarn workspace @casehubio/pages-component run test && yarn workspace @casehubio/pages-ui run test && yarn workspace @casehubio/pages-viz run test && yarn workspace @casehubio/pages-table run test && yarn workspace @casehubio/pages-runtime run test
 
       - name: Publish JavaScript test results
         if: steps.js-changes.outputs.js == 'true' && always()
@@ -111,6 +112,7 @@ jobs:
 
       - name: Comment PR
         if: always()
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |

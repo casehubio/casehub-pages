@@ -12,16 +12,11 @@ import { resolveColumnName, cellToRaw, applyCellExpression, resolveColumnExpress
 import { until } from 'lit/directives/until.js';
 import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
 import { evaluateExpression, createRowContext } from '@casehubio/pages-component';
+import type { RowStyleRule } from '@casehubio/pages-component';
 import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, paginateTreeByRoots, type TreeNode, type ExpandableConfig } from './tree-builder.js';
 import { EMPTY_CONTEXT } from '@casehubio/pages-component';
 
 const AUTO_THRESHOLD = 50;
-
-interface RowStyleRule {
-  readonly condition: string;
-  readonly className?: string;
-  readonly style?: Record<string, string>;
-}
 
 @customElement('pages-table')
 export class PagesTable extends RovingTabindexMixin(LitElement) {
@@ -42,6 +37,10 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @property({ type: Array, attribute: false }) expandedDetailKeys?: readonly string[];
   @property({ type: Boolean }) loading = false;
   @property({ type: String }) error = '';
+  @property({ type: Boolean }) embedded = false;
+  @property({ type: Boolean, attribute: 'header-visible' }) headerVisible = true;
+  @property({ type: Boolean }) sortable = false;
+  @property({ attribute: false }) rowStyle?: readonly RowStyleRule[];
 
   set activeSort(sort: SortColumn | undefined) {
     if (!sort) {
@@ -912,6 +911,18 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         transition: none !important;
       }
     }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   `;
 
   private _onScroll = (e: Event): void => {
@@ -1099,6 +1110,14 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     if (changed.has('filterText') && this._pipelineMode) {
       this._emitPipelineTextFilter();
+    }
+
+    if (changed.has('rowStyle') && this.rowStyle) {
+      this._rowStyleRules = this.rowStyle;
+    }
+
+    if (changed.has('sortable') && this.sortable) {
+      this._sortableFromProps = true;
     }
   }
 
@@ -2386,10 +2405,10 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     if (this._dataRows.length === 0) {
       return html`
         <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}">
-          ${this._renderToolbar()}
+          ${this.embedded ? nothing : this._renderToolbar()}
           <div class="header-container">
             <div
-              class="header"
+              class="header${this.headerVisible ? '' : ' visually-hidden'}"
               role="row"
               part="header-row"
               style="grid-template-columns: ${this._gridTemplateColumns}"
@@ -2408,10 +2427,10 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     return html`
       <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}" aria-label="Data table" @keydown="${this._handleKeyDown}">
-        ${this._renderToolbar()}
+        ${this.embedded ? nothing : this._renderToolbar()}
         <div class="header-container">
           <div
-            class="header"
+            class="header${this.headerVisible ? '' : ' visually-hidden'}"
             role="row"
             part="header-row"
             style="grid-template-columns: ${this._gridTemplateColumns}"
@@ -2444,7 +2463,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
                 </div>
               `}
         </div>
-        ${this._renderPaginationFooter()}
+        ${this.embedded ? nothing : this._renderPaginationFooter()}
       </div>
     `;
   }

@@ -1336,4 +1336,65 @@ describe('pages-table', () => {
       expect(rows[2]!.getAttribute('tabindex')).toBe('-1');
     });
   });
+
+  describe('embedded mode', () => {
+    it('suppresses toolbar when embedded is true', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      (el as any).embedded = true;
+      await el.updateComplete;
+      const toolbar = el.shadowRoot!.querySelector('.toolbar');
+      expect(toolbar).toBeNull();
+    });
+
+    it('suppresses pagination footer when embedded is true', async () => {
+      el.dataSet = makeLargeDataSet(100);
+      el.columnConfig = testConfig;
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      (el as any).embedded = true;
+      await el.updateComplete;
+      const footer = el.shadowRoot!.querySelector('.pagination');
+      expect(footer).toBeNull();
+    });
+
+    it('shows toolbar when embedded is false (default)', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      await el.updateComplete;
+      const toolbar = el.shadowRoot!.querySelector('.toolbar');
+      expect(toolbar).not.toBeNull();
+    });
+  });
+
+  describe('headerVisible', () => {
+    it('hides header row when headerVisible is false', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      (el as any).headerVisible = false;
+      await el.updateComplete;
+      const header = el.shadowRoot!.querySelector('.header');
+      expect(header!.classList.contains('visually-hidden')).toBe(true);
+    });
+
+    it('shows header row by default', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      await el.updateComplete;
+      const header = el.shadowRoot!.querySelector('.header');
+      expect(header!.classList.contains('visually-hidden')).toBe(false);
+    });
+  });
+
+  describe('direct property API', () => {
+    it('applies rowStyle via direct property without entering pipeline mode', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      (el as any).rowStyle = [{ condition: 'true', className: 'highlighted' }];
+      await el.updateComplete;
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows[0]!.classList.contains('highlighted')).toBe(true);
+    });
+  });
 });

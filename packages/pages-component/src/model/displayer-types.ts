@@ -1,4 +1,4 @@
-import type { DataSetLookup, ColumnSettings, ColumnId } from "@casehubio/pages-data";
+import type { DataSetLookup, ColumnSettings, ColumnId, CellValue, TypedRow, Column } from "@casehubio/pages-data";
 import type { FilterSettings, RefreshSettings } from "./component-props.js";
 
 export interface DataComponentCommon {
@@ -72,6 +72,23 @@ export interface ExpandableConfig {
   readonly parentColumn: ColumnId;
   readonly defaultExpanded?: boolean | number;
 }
+
+export type ColumnAlign = "start" | "center" | "end";
+
+export interface TableColumnConfig {
+  readonly id: ColumnId;
+  readonly label?: string;
+  readonly sortable?: boolean;
+  readonly visible?: boolean;
+  readonly width?: string;
+  readonly minWidth?: string;
+  readonly align?: ColumnAlign;
+  readonly filterable?: boolean;
+}
+
+export type SelectionMode = "none" | "single" | "multi";
+
+export type ColumnRenderer = (cell: CellValue, row: TypedRow, column: Column) => unknown;
 
 export interface TableProps extends DataComponentCommon {
   readonly pageSize?: number;

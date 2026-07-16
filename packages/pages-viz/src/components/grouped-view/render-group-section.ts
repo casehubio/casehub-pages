@@ -6,31 +6,35 @@ export function renderGroupSectionHeader(
   instanceId: string,
   index: number,
   showSummary: boolean,
-): string {
-  const chevronClass = expanded ? "section-chevron expanded" : "section-chevron";
-  let summaryText = "";
+): HTMLElement {
+  const section = document.createElement("div");
+  section.className = "group-section";
+
+  const btn = document.createElement("button");
+  btn.className = "section-toggle";
+  btn.setAttribute("aria-expanded", String(expanded));
+  btn.setAttribute("aria-controls", `${instanceId}-group-${index}`);
+  btn.setAttribute("data-group", boundary.name);
+
+  const chevron = document.createElement("span");
+  chevron.className = expanded ? "section-chevron expanded" : "section-chevron";
+  chevron.textContent = "▶";
+
+  const title = document.createElement("span");
+  title.className = "section-title";
+  title.textContent = boundary.name;
+
+  const summary = document.createElement("span");
+  summary.className = "section-summary";
+  let summaryText = `${boundary.rowCount} items`;
   if (showSummary && boundary.aggregates.size > 0) {
-    summaryText = " · " + Array.from(boundary.aggregates.values())
+    summaryText += " · " + Array.from(boundary.aggregates.values())
       .map((v) => String(v))
       .join(", ");
   }
-  const ariaId = `${instanceId}-group-${index}`;
+  summary.textContent = summaryText;
 
-  return `<div class="group-section">
-    <button class="section-toggle"
-            aria-expanded="${expanded}"
-            aria-controls="${ariaId}"
-            data-group="${escapeAttr(boundary.name)}">
-      <span class="${chevronClass}">▶</span>
-      <span class="section-title">${escapeHtml(boundary.name)}</span>
-      <span class="section-summary">${boundary.rowCount} items${escapeHtml(summaryText)}</span>
-    </button>`;
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  btn.append(chevron, title, summary);
+  section.appendChild(btn);
+  return section;
 }

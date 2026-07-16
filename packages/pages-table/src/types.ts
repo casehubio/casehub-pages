@@ -1,25 +1,23 @@
 import type {TemplateResult} from 'lit';
 import type {DirectiveResult} from 'lit/directive.js';
-import type {CellValue, Column, ColumnId, TypedRow} from '@casehubio/pages-data';
+import type {CellValue, TypedRow} from '@casehubio/pages-data';
+import type {
+  TableColumnConfig as BaseTableColumnConfig,
+  ColumnRenderer as BaseColumnRenderer,
+  ColumnAlign,
+  SelectionMode,
+} from '@casehubio/pages-component';
+
+export type { ColumnAlign, SelectionMode };
+
+export type TableColumnConfig = BaseTableColumnConfig & {
+  readonly compare?: (a: CellValue, b: CellValue) => number;
+};
+
+export type ColumnRenderer = (...args: Parameters<BaseColumnRenderer>) => TemplateResult | string | DirectiveResult;
 
 export type DisplayMode = 'auto' | 'paginated' | 'scroll';
-export type SelectionMode = 'none' | 'single' | 'multi';
 export type SortDirection = 'asc' | 'desc' | 'none';
-export type ColumnAlign = 'start' | 'center' | 'end';
-
-export interface TableColumnConfig {
-  readonly id: ColumnId;
-  readonly label?: string;
-  readonly sortable?: boolean;
-  readonly visible?: boolean;
-  readonly width?: string;
-  readonly minWidth?: string;
-  readonly align?: ColumnAlign;
-  readonly filterable?: boolean;
-  readonly compare?: (a: CellValue, b: CellValue) => number;
-}
-
-export type ColumnRenderer = (cell: CellValue, row: TypedRow, column: Column) => TemplateResult | string | DirectiveResult;
 
 export interface SortEntry {
   readonly columnId: string;

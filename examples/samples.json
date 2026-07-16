@@ -93,8 +93,7 @@
           "name": "Row Detail",
           "path": "Tables/Row Detail.dash.yaml",
           "category": "Tables",
-          "file": "Row Detail.dash.yaml",
-          "tsPath": "Tables/Row Detail.ts"
+          "file": "Row Detail.dash.yaml"
         },
         {
           "name": "Row Styles",

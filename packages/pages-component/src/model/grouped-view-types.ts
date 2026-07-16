@@ -1,6 +1,6 @@
 import type { ColumnId } from "@casehubio/pages-data";
 import type { Aggregation, GroupingKey } from "@casehubio/pages-data";
-import type { DataComponentCommon } from "./displayer-types.js";
+import type { DataComponentCommon, TableColumnConfig, RowStyleRule, SelectionMode } from "./displayer-types.js";
 
 export type GroupDisplayMode = "table-row" | "section-heading";
 export type ContentDisplayMode = "table" | "list";
@@ -26,4 +26,8 @@ export interface GroupedViewProps extends DataComponentCommon {
   readonly aggregations?: readonly AggregationBinding[];
   readonly order?: "asc" | "desc";
   readonly emptyGroups?: boolean;
+  readonly columnConfig?: readonly TableColumnConfig[];
+  readonly rowStyle?: readonly RowStyleRule[];
+  readonly selection?: SelectionMode;
+  readonly sortable?: boolean;
 }

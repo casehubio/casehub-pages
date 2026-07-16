@@ -111,3 +111,34 @@ pages:
                       fn: MAX
                     - column: name
                       fn: COUNT
+
+          Sortable with Column Config:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Groups with **column configuration** — sortable columns and
+                    row styling. Click column headers to sort across all groups.
+              - type: grouped-view
+                properties:
+                  lookup:
+                    uuid: team-data
+                  groupBy:
+                    column: department
+                  preset: sectioned
+                  sortable: true
+                  columnConfig:
+                    - id: name
+                      width: "2fr"
+                      sortable: true
+                    - id: role
+                      width: "2fr"
+                    - id: score
+                      width: "1fr"
+                      sortable: true
+                      align: end
+                    - id: status
+                      width: "1fr"
+                  rowStyle:
+                    - condition: "row.cell('score').value >= 90"
+                      className: highlight-row
