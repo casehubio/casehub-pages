@@ -2,37 +2,35 @@ import type { GroupBoundary } from "./group-extraction.js";
 
 export function renderGroupTableRowHeader(
   boundary: GroupBoundary,
-  colSpan: number,
   expanded: boolean,
   instanceId: string,
   index: number,
   showSummary: boolean,
-): string {
-  const chevron = expanded ? "▼" : "▶";
-  let summaryText = "";
+): HTMLElement {
+  const section = document.createElement("div");
+  section.className = "group-section spreadsheet-group";
+
+  const btn = document.createElement("button");
+  btn.className = "group-toggle";
+  btn.setAttribute("aria-expanded", String(expanded));
+  btn.setAttribute("aria-controls", `${instanceId}-group-${index}`);
+  btn.setAttribute("data-group", boundary.name);
+
+  const chevron = document.createElement("span");
+  chevron.className = "group-chevron";
+  chevron.textContent = expanded ? "▼" : "▶";
+
+  let text = `${boundary.name} (${boundary.rowCount})`;
   if (showSummary && boundary.aggregates.size > 0) {
-    summaryText = " · " + Array.from(boundary.aggregates.values())
+    text += " · " + Array.from(boundary.aggregates.values())
       .map((v) => String(v))
       .join(", ");
   }
-  const ariaId = `${instanceId}-group-${index}`;
 
-  return `<tr class="group-header">
-    <td colspan="${colSpan}">
-      <button class="group-toggle"
-              aria-expanded="${expanded}"
-              aria-controls="${ariaId}"
-              data-group="${escapeAttr(boundary.name)}">
-        ${chevron} ${escapeHtml(boundary.name)} (${boundary.rowCount})${escapeHtml(summaryText)}
-      </button>
-    </td>
-  </tr>`;
-}
+  const label = document.createElement("span");
+  label.textContent = text;
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  btn.append(chevron, label);
+  section.appendChild(btn);
+  return section;
 }

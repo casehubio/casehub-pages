@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { DataSet, ColumnId } from "@casehubio/pages-data";
+import type { DataSet, ColumnId, SortColumn } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import { toTypedDataSet } from "@casehubio/pages-data";
-import type { GroupedViewProps } from "@casehubio/pages-component";
+import type { GroupedViewProps, TableColumnConfig, RowStyleRule, ColumnRenderer } from "@casehubio/pages-component";
 import type { DataSetLookup } from "@casehubio/pages-data";
 import { PagesGroupedView } from "./PagesGroupedView.js";
 
@@ -41,6 +41,44 @@ function makeProps(overrides: Partial<GroupedViewProps> = {}): GroupedViewProps 
   };
 }
 
+interface MockTable extends HTMLElement {
+  dataSet: any;
+  columnConfig: any;
+  columnRenderers: any;
+  rowStyle: any;
+  selection: any;
+  sortable: any;
+  embedded: any;
+  headerVisible: any;
+  activeSort: any;
+  getRowKey: any;
+  getRowDetail: any;
+  getRowClass: any;
+  clientSort: any;
+  mode: any;
+}
+
+class MockPagesTable extends HTMLElement {
+  dataSet: any;
+  columnConfig: any;
+  columnRenderers: any;
+  rowStyle: any;
+  selection: any;
+  sortable: any;
+  embedded: any;
+  headerVisible: any;
+  activeSort: any;
+  getRowKey: any;
+  getRowDetail: any;
+  getRowClass: any;
+  clientSort: any;
+  mode: any;
+}
+
+if (!customElements.get("pages-table")) {
+  customElements.define("pages-table", MockPagesTable);
+}
+
 describe("PagesGroupedView", () => {
   let element: PagesGroupedView;
 
@@ -53,144 +91,308 @@ describe("PagesGroupedView", () => {
     element.remove();
   });
 
-  it("renders in sectioned mode by default", async () => {
-    element.props = makeProps();
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
+  describe("basic rendering", () => {
+    it("sectioned mode creates pages-table per group", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      expect(tables.length).toBe(2);
+    });
 
-    const shadow = element.shadowRoot;
-    const sections = shadow.querySelectorAll(".group-section");
-    expect(sections.length).toBe(2);
+    it("spreadsheet mode creates pages-table per group", async () => {
+      element.props = makeProps({ preset: "spreadsheet" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      expect(tables.length).toBe(2);
+    });
+
+    it("list mode renders dl elements, no pages-table", async () => {
+      element.props = makeProps({ preset: "list" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      expect(tables.length).toBe(0);
+      const dls = element.shadowRoot!.querySelectorAll("dl");
+      expect(dls.length).toBe(2);
+    });
+
+    it("each table receives correct data subset", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const t0 = tables[0] as MockTable;
+      const t1 = tables[1] as MockTable;
+      expect(t0.dataSet.rows.length).toBe(2);
+      expect(t1.dataSet.rows.length).toBe(1);
+    });
+
+    it("per-group tables have embedded=true and headerVisible=false", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      for (const table of tables) {
+        expect((table as MockTable).embedded).toBe(true);
+        expect((table as MockTable).headerVisible).toBe(false);
+      }
+    });
   });
 
-  it("renders spreadsheet mode with single table", async () => {
-    element.props = makeProps({ preset: "spreadsheet" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
+  describe("shared header bar", () => {
+    it("renders shared column header bar once at top", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const bars = element.shadowRoot!.querySelectorAll(".column-header-bar");
+      expect(bars.length).toBe(1);
+    });
 
-    const shadow = element.shadowRoot;
-    const tables = shadow.querySelectorAll("table");
-    expect(tables.length).toBe(1);
-    const groupHeaders = shadow.querySelectorAll(".group-header");
-    expect(groupHeaders.length).toBe(2);
+    it("header bar is outside any group-section", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const bar = element.shadowRoot!.querySelector(".column-header-bar");
+      expect(bar!.closest(".group-section")).toBeNull();
+    });
+
+    it("header bar shows column names", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const labels = element.shadowRoot!.querySelectorAll(".column-header-bar .col-label, .column-header-bar .col-header");
+      expect(labels.length).toBe(2);
+      expect(labels[0]!.textContent).toContain("Name");
+      expect(labels[1]!.textContent).toContain("Date");
+    });
   });
 
-  it("renders list mode with dl elements", async () => {
-    element.props = makeProps({ preset: "list" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
+  describe("column alignment", () => {
+    it("all tables receive identical columnConfig widths", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const configs = Array.from(tables).map((t) => (t as MockTable).columnConfig);
+      expect(configs[0]).toEqual(configs[1]);
+      const visibleCols = configs[0].filter((c: any) => c.visible !== false);
+      expect(visibleCols.length).toBeGreaterThan(0);
+      for (const col of visibleCols) {
+        expect(col.width).toMatch(/fr$/);
+      }
+    });
 
-    const shadow = element.shadowRoot;
-    const dls = shadow.querySelectorAll("dl");
-    expect(dls.length).toBe(2);
+    it("consumer columnConfig width overrides computed widths", async () => {
+      element.props = makeProps({
+        preset: "sectioned",
+        columnConfig: [{ id: "name" as ColumnId, width: "200px" }],
+      });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const cfg = (tables[0] as MockTable).columnConfig;
+      const nameCol = cfg.find((c: TableColumnConfig) => c.id === "name");
+      expect(nameCol!.width).toBe("200px");
+    });
   });
 
-  it("toggles expand/collapse on group click", async () => {
-    element.props = makeProps({ preset: "sectioned" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
+  describe("expand/collapse", () => {
+    it("toggles hidden attribute on section content", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const toggle = element.shadowRoot!.querySelector("[data-group='Critical']") as HTMLButtonElement;
+      expect(toggle.getAttribute("aria-expanded")).toBe("true");
+      const contentId = toggle.getAttribute("aria-controls")!;
+      const content = element.shadowRoot!.getElementById(contentId)!;
+      expect(content.hidden).toBe(false);
 
-    const shadow = element.shadowRoot;
-    let toggleBtn = shadow.querySelector(".section-toggle") as HTMLButtonElement;
-    expect(toggleBtn.getAttribute("aria-expanded")).toBe("true");
+      toggle.click();
+      await new Promise((r) => setTimeout(r, 0));
+      expect(toggle.getAttribute("aria-expanded")).toBe("false");
+      expect(content.hidden).toBe(true);
+    });
 
-    toggleBtn.click();
-    await new Promise((r) => setTimeout(r, 0));
+    it("preserves table DOM reference after toggle", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tableBefore = element.shadowRoot!.querySelector("pages-table");
+      const toggle = element.shadowRoot!.querySelector("[data-group='Critical']") as HTMLButtonElement;
+      toggle.click();
+      await new Promise((r) => setTimeout(r, 0));
+      toggle.click();
+      await new Promise((r) => setTimeout(r, 0));
+      const tableAfter = element.shadowRoot!.querySelector("pages-table");
+      expect(tableAfter).toBe(tableBefore);
+    });
 
-    toggleBtn = shadow.querySelector(".section-toggle") as HTMLButtonElement;
-    expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
+    it("emits pages-event on group toggle", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const events: CustomEvent[] = [];
+      element.addEventListener("pages-event", (e: Event) => events.push(e as CustomEvent));
+      const toggle = element.shadowRoot!.querySelector(".section-toggle") as HTMLButtonElement;
+      toggle.click();
+      await new Promise((r) => setTimeout(r, 0));
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.topic).toBe("group-toggle");
+    });
+
+    it("hides content when defaultExpanded is false", async () => {
+      element.props = makeProps({ preset: "sectioned", defaultExpanded: false });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const contents = element.shadowRoot!.querySelectorAll(".section-content");
+      for (const content of contents) {
+        expect((content as HTMLElement).hidden).toBe(true);
+      }
+    });
+
+    it("has unique aria-controls IDs", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const toggles = element.shadowRoot!.querySelectorAll("[data-group]");
+      const ids = Array.from(toggles).map((t) => t.getAttribute("aria-controls"));
+      expect(new Set(ids).size).toBe(ids.length);
+      for (const id of ids) {
+        expect(element.shadowRoot!.getElementById(id!)).not.toBeNull();
+      }
+    });
   });
 
-  it("has unique aria-controls IDs", async () => {
-    element.props = makeProps({ preset: "sectioned" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
+  describe("property forwarding", () => {
+    it("forwards columnRenderers to all tables", async () => {
+      const renderers = new Map([["name" as ColumnId, (() => "custom") as unknown as ColumnRenderer]]);
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      (element as any).setColumnRenderers(renderers);
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      for (const table of tables) {
+        expect((table as MockTable).columnRenderers).toBe(renderers);
+      }
+    });
 
-    const shadow = element.shadowRoot;
-    const toggles = shadow.querySelectorAll(".section-toggle");
-    const ids = Array.from(toggles).map((t) => t.getAttribute("aria-controls"));
-    expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) {
-      expect(shadow.getElementById(id!)).not.toBeNull();
-    }
+    it("forwards rowStyle from props to all tables", async () => {
+      const rules: readonly RowStyleRule[] = [{ condition: "true", className: "highlight" }];
+      element.props = makeProps({ preset: "sectioned", rowStyle: rules });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      for (const table of tables) {
+        expect((table as MockTable).rowStyle).toEqual(rules);
+      }
+    });
+
+    it("forwards selection from props to all tables", async () => {
+      element.props = makeProps({ preset: "sectioned", selection: "multi" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      for (const table of tables) {
+        expect((table as MockTable).selection).toBe("multi");
+      }
+    });
   });
 
-  it("emits pages-event on group toggle", async () => {
-    element.props = makeProps({ preset: "sectioned" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
+  describe("reconciliation", () => {
+    it("reuses table DOM elements when data refreshes with same groups", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tableBefore = element.shadowRoot!.querySelector("pages-table");
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tableAfter = element.shadowRoot!.querySelector("pages-table");
+      expect(tableAfter).toBe(tableBefore);
+    });
 
-    const events: CustomEvent[] = [];
-    element.addEventListener("pages-event", (e: Event) => events.push(e as CustomEvent));
+    it("rebuilds tables when group structure changes", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const tableBefore = element.shadowRoot!.querySelector("pages-table");
 
-    const shadow = element.shadowRoot;
-    const toggleBtn = shadow.querySelector(".section-toggle") as HTMLButtonElement;
-    toggleBtn.click();
-    await new Promise((r) => setTimeout(r, 0));
+      const newDs: DataSet = {
+        columns: [
+          { id: "status" as ColumnId, name: "Status", type: ColumnType.LABEL },
+          { id: "name" as ColumnId, name: "Name", type: ColumnType.LABEL },
+          { id: "date" as ColumnId, name: "Date", type: ColumnType.LABEL },
+        ],
+        data: [
+          ["Info", "New item", "Jul 8"],
+        ],
+      };
+      element.dataSet = toTypedDataSet(newDs);
+      await new Promise((r) => setTimeout(r, 0));
+      const tableAfter = element.shadowRoot!.querySelector("pages-table");
+      expect(tableAfter).not.toBe(tableBefore);
+    });
 
-    expect(events.length).toBe(1);
-    expect(events[0]!.detail.topic).toBe("group-toggle");
-    expect(events[0]!.detail.payload.group).toBe("Critical");
-    expect(events[0]!.detail.payload.expanded).toBe(false);
+    it("handles empty dataset without crash", async () => {
+      const ds: DataSet = {
+        columns: [
+          { id: "status" as ColumnId, name: "Status", type: ColumnType.LABEL },
+          { id: "name" as ColumnId, name: "Name", type: ColumnType.LABEL },
+        ],
+        data: [],
+      };
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = toTypedDataSet(ds);
+      await new Promise((r) => setTimeout(r, 0));
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      expect(tables.length).toBe(0);
+    });
   });
 
-  it("shows column header table in sectioned mode", async () => {
-    element.props = makeProps({ preset: "sectioned" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
+  describe("sort coordination", () => {
+    it("sort buttons dispatch pages-sort from grouped view", async () => {
+      element.props = makeProps({ preset: "sectioned", sortable: true });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const events: CustomEvent[] = [];
+      element.addEventListener("pages-sort", (e: Event) => events.push(e as CustomEvent));
+      const sortBtn = element.shadowRoot!.querySelector(".col-header") as HTMLButtonElement;
+      sortBtn.click();
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.order).toBe("ASCENDING");
+    });
 
-    const shadow = element.shadowRoot;
-    const headerTable = shadow.querySelector(".column-header-table");
-    expect(headerTable).not.toBeNull();
-    const buttons = headerTable!.querySelectorAll(".col-header");
-    expect(buttons.length).toBe(2);
+    it("renders static labels when sortable is false", async () => {
+      element.props = makeProps({ preset: "sectioned", sortable: false });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const buttons = element.shadowRoot!.querySelectorAll(".col-header");
+      expect(buttons.length).toBe(0);
+      const labels = element.shadowRoot!.querySelectorAll(".column-header-bar .col-label");
+      expect(labels.length).toBe(2);
+    });
+
+    it("updates sort indicators when activeSort changes", async () => {
+      element.props = makeProps({ preset: "sectioned", sortable: true });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      element.activeSort = { columnId: "name" as ColumnId, order: "ASCENDING" } as SortColumn;
+      const active = element.shadowRoot!.querySelector(".col-header[data-column='name']");
+      expect(active!.getAttribute("aria-sort")).toBe("ascending");
+      expect(active!.classList.contains("sort-asc")).toBe(true);
+    });
   });
 
-  it("shows col-label spans in list mode", async () => {
-    element.props = makeProps({ preset: "list" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
-
-    const shadow = element.shadowRoot;
-    const headerBar = shadow.querySelector(".column-header-bar");
-    expect(headerBar).not.toBeNull();
-    const labels = headerBar!.querySelectorAll(".col-label");
-    expect(labels.length).toBe(2);
-  });
-
-  it("hides content when defaultExpanded is false", async () => {
-    element.props = makeProps({ preset: "sectioned", defaultExpanded: false });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
-
-    const shadow = element.shadowRoot;
-    const contents = shadow.querySelectorAll(".section-content");
-    for (const content of contents) {
-      expect(content.hasAttribute("hidden")).toBe(true);
-    }
-  });
-
-  it("sectioned mode renders column headers inside a table, not a separate grid", async () => {
-    element.props = makeProps({ preset: "sectioned" });
-    element.dataSet = makeGroupedDataset();
-    await new Promise((r) => setTimeout(r, 0));
-
-    const shadow = element.shadowRoot;
-    const headerBar = shadow.querySelector(".column-header-bar");
-    expect(headerBar).toBeNull();
-
-    const headerTable = shadow.querySelector(".column-header-table");
-    expect(headerTable).not.toBeNull();
-    expect(headerTable!.tagName).toBe("TABLE");
-
-    const ths = headerTable!.querySelectorAll("th");
-    expect(ths.length).toBeGreaterThan(0);
-
-    const contentTable = shadow.querySelector(".section-content table");
-    expect(contentTable).not.toBeNull();
-    const contentColgroup = contentTable!.querySelector("colgroup");
-    const headerColgroup = headerTable!.querySelector("colgroup");
-    expect(headerColgroup).not.toBeNull();
-    expect(headerColgroup!.innerHTML).toBe(contentColgroup!.innerHTML);
+  describe("list mode column header bar", () => {
+    it("shows col-label spans in list mode", async () => {
+      element.props = makeProps({ preset: "list" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const headerBar = element.shadowRoot!.querySelector(".column-header-bar");
+      expect(headerBar).not.toBeNull();
+      const labels = headerBar!.querySelectorAll(".col-label");
+      expect(labels.length).toBe(2);
+    });
   });
 });

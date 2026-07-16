@@ -150,4 +150,48 @@ describe("desugarGroupedView", () => {
     expect(props.defaultExpanded).toBe(true);
     expect(props.showGroupSummary).toBe(true);
   });
+
+  it("passes through columnConfig", () => {
+    const result = desugarGroupedView({
+      groupBy: { column: "status" },
+      lookup: { uuid: "test" },
+      columnConfig: [
+        { id: "name", width: "2fr", sortable: true },
+        { id: "age", width: "1fr", align: "center" },
+      ],
+    });
+    expect((result.props as any).columnConfig).toEqual([
+      { id: "name", width: "2fr", sortable: true },
+      { id: "age", width: "1fr", align: "center" },
+    ]);
+  });
+
+  it("passes through rowStyle", () => {
+    const result = desugarGroupedView({
+      groupBy: { column: "status" },
+      lookup: { uuid: "test" },
+      rowStyle: [{ condition: "true", className: "highlight" }],
+    });
+    expect((result.props as any).rowStyle).toEqual([
+      { condition: "true", className: "highlight" },
+    ]);
+  });
+
+  it("passes through selection", () => {
+    const result = desugarGroupedView({
+      groupBy: { column: "status" },
+      lookup: { uuid: "test" },
+      selection: "multi",
+    });
+    expect((result.props as any).selection).toBe("multi");
+  });
+
+  it("passes through sortable", () => {
+    const result = desugarGroupedView({
+      groupBy: { column: "status" },
+      lookup: { uuid: "test" },
+      sortable: true,
+    });
+    expect((result.props as any).sortable).toBe(true);
+  });
 });

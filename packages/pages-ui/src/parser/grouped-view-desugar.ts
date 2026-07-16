@@ -79,6 +79,10 @@ export function desugarGroupedView(raw: Record<string, unknown>): Component {
   if (aggregations.length > 0) props.aggregations = aggregations;
   if (order != null) props.order = order;
   if (raw.emptyGroups != null) props.emptyGroups = raw.emptyGroups;
+  if (raw.columnConfig != null) props.columnConfig = raw.columnConfig;
+  if (raw.rowStyle != null) props.rowStyle = raw.rowStyle;
+  if (raw.selection != null) props.selection = raw.selection;
+  if (raw.sortable != null) props.sortable = raw.sortable;
 
   if (raw.lookup != null) {
     props.lookup = parseLookup(raw.lookup);
