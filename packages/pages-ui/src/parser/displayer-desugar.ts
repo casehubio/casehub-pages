@@ -365,7 +365,20 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     props.inlineDataSet = raw.dataSet;
   }
 
-  // Table defaults: pageSize 10 and filter enabled (matching GWT behaviour)
+  // Pass through component-specific props not handled above
+  const handledKeys = new Set([
+    "type", "component", "general", "chart", "axis", "external", "table", "meter",
+    "badge", "countdown", "timeline", "graph", "subtype", "filter", "lookup",
+    "dataSetLookup", "columns", "refresh", "extraConfiguration", "dataSet",
+    "visibleWhen", "html", "properties",
+  ]);
+  for (const [key, value] of Object.entries(raw)) {
+    if (!handledKeys.has(key) && !(key in props)) {
+      props[key] = value;
+    }
+  }
+
+  // Table defaults — runs AFTER passthrough so user-specified values win
   if (type === "table") {
     if (props.pageSize === undefined) {
       props.pageSize = 10;
@@ -377,19 +390,6 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
       if (filterObj["enabled"] === undefined) {
         props.filter = { ...filterObj, enabled: true };
       }
-    }
-  }
-
-  // Pass through component-specific props not handled above
-  const handledKeys = new Set([
-    "type", "component", "general", "chart", "axis", "external", "table", "meter",
-    "badge", "countdown", "timeline", "graph", "subtype", "filter", "lookup",
-    "dataSetLookup", "columns", "refresh", "extraConfiguration", "dataSet",
-    "visibleWhen", "html", "properties",
-  ]);
-  for (const [key, value] of Object.entries(raw)) {
-    if (!handledKeys.has(key) && !(key in props)) {
-      props[key] = value;
     }
   }
 

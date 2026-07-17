@@ -1,0 +1,121 @@
+datasets:
+  - uuid: roadmap
+    content: >
+      [
+        ["UI Pipeline", "blocks", "blocks#44", "epic: agentic planning architecture", "done", "33 issues closed since v2"],
+        ["UI Pipeline", "blocks", "blocks#28", "epic: shared pattern consolidation", "done", "Core blocks extracted"],
+        ["UI Pipeline", "blocks-ui", "blocks-ui#4", "Work Item Management UI", "done", "Inbox, detail, queue board"],
+        ["UI Pipeline", "blocks-ui", "blocks-ui#37", "epic: AML workbench migration", "done", "Closed 2026-07-08"],
+        ["UI Pipeline", "blocks-ui", "blocks-ui#39", "epic: claudony component migration", "done", "Closed 2026-07-13"],
+        ["UI Pipeline", "blocks-ui", "blocks-ui#55", "feat: unified pluggable timeline", "done", "Closed 2026-07-14"],
+        ["UI Pipeline", "pages", "pages#152", "refactor: TypedDataSet native", "done", "Unified pipeline + table"],
+        ["UI Pipeline", "pages", "pages#154", "wire pages-table into runtime", "done", "All PagesTable tests ported"],
+        ["UI Pipeline", "blocks-ui", "blocks-ui#38", "epic: clinical trial UI migration", "newly-done", ""],
+        ["UI Pipeline", "pages", "pages#140", "feat: DataSource abstraction", "open", "Live/mock/simulated/replay"],
+        ["UI Pipeline", "pages", "pages#142", "epic: Scenario Engine", "open", "Composition, triggers, remote"],
+        ["UI Pipeline", "blocks-ui", "blocks-ui#41", "epic: devtown governance workbench", "critical", "CRITICAL PATH"],
+        ["Trust & CBR", "devtown", "devtown#130", "PR similarity model", "done", "Closed 2026-07-10"],
+        ["Trust & CBR", "devtown", "devtown#131", "CBR retrieval service", "done", "Closed 2026-07-10"],
+        ["Trust & CBR", "devtown", "devtown#132", "CBR-enhanced capability activation", "done", "Closed 2026-07-13"],
+        ["Trust & CBR", "devtown", "devtown#141", "EvidentialChecker V1-V4 integration", "done", "Closed 2026-07-13"],
+        ["Trust & CBR", "devtown", "devtown#134", "Merge queue batch risk scoring", "newly-done", "CBR Phase 3"],
+        ["Trust & CBR", "devtown", "devtown#135", "Bisection heuristics", "newly-done", "CBR Phase 3"],
+        ["Trust & CBR", "devtown", "devtown#136", "SLA calibration", "newly-done", "Timing data resolved"],
+        ["Trust & CBR", "devtown", "devtown#98", "Trust visibility UI", "blocked", "Blocked by blocks-ui#41"],
+        ["Trust & CBR", "parent", "parent#365", "Temporal learning without retraining", "new", "Continuous intelligence"],
+        ["Trust & CBR", "parent", "parent#367", "Time-weighted CBR similarity", "new", "Recent cases outweigh stale"],
+        ["Merge Queue", "devtown", "devtown#101", "GitHub webhook receiver", "done", ""],
+        ["Merge Queue", "devtown", "devtown#103", "Adaptive batch sizing", "done", ""],
+        ["Merge Queue", "devtown", "devtown#108", "Batch failure rate API", "done", "v3 batch"],
+        ["Merge Queue", "devtown", "devtown#124", "PR supersede/relink", "newly-done", ""],
+        ["Merge Queue", "devtown", "devtown#127", "PrReviewCaseTracker hydration", "newly-done", "Durable persistence resolved"],
+        ["Merge Queue", "devtown", "devtown#119", "CasePlanModel browser", "blocked", "Blocked by blocks-ui#41"],
+        ["Merge Queue", "devtown", "devtown#120", "Case dependency graph", "blocked", "Blocked by blocks-ui#41"],
+        ["Merge Queue", "work", "work#288", "Queue summary REST endpoint", "open", "For dashboard cards"]
+      ]
+    columns:
+      - id: phase
+        type: LABEL
+      - id: repo
+        type: LABEL
+      - id: issue
+        type: TEXT
+      - id: title
+        type: TEXT
+      - id: status
+        type: LABEL
+      - id: notes
+        type: TEXT
+
+pages:
+  - name: Grouped Roadmap
+    components:
+      - type: title
+        properties:
+          text: Cross-Repo Roadmap — Multi-Level Grouped View
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Demonstrates **recursive multi-level grouping**: data grouped by Phase (top level),
+            then by Status (sub-level). Tables render at leaf nodes only. Each level has
+            independent expand/collapse.
+
+      - type: legend
+        properties:
+          entries:
+            - label: devtown
+              color: "#1976d2"
+            - label: blocks
+              color: "#7cb342"
+            - label: blocks-ui
+              color: "#f57c00"
+            - label: pages
+              color: "#e91e63"
+            - label: parent
+              color: "#607d8b"
+            - label: work
+              color: "#5c6bc0"
+          layout: linear
+
+      - type: grouped-view
+        style:
+          border: "1px solid var(--pages-neutral-4, #e5e5e5)"
+          border-radius: "var(--pages-radius-md, 8px)"
+          overflow: hidden
+          padding: "var(--pages-space-2, 8px)"
+        properties:
+          lookup:
+            uuid: roadmap
+          groupBy:
+            - column: phase
+            - column: status
+          preset: sectioned
+          defaultExpanded: true
+          showGroupSummary: true
+          rowAccent:
+            column: status
+            colorMap:
+              newly-done: "#2e7d32"
+              critical: "#d32f2f"
+              blocked: "#e65100"
+          rowStyle:
+            - condition: "#{row.status} == 'done'"
+              style:
+                backgroundColor: "#f0faf0"
+                color: "#2d7d2d"
+            - condition: "#{row.status} == 'newly-done'"
+              style:
+                backgroundColor: "#e8f5e9"
+                color: "#2e7d32"
+            - condition: "#{row.status} == 'blocked'"
+              style:
+                backgroundColor: "#fff8f0"
+                color: "#b35900"
+            - condition: "#{row.status} == 'critical'"
+              style:
+                backgroundColor: "#fff0f0"
+            - condition: "#{row.status} == 'new'"
+              style:
+                backgroundColor: "#f0f5ff"

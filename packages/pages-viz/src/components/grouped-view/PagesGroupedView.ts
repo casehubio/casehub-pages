@@ -8,8 +8,9 @@ import type {
 } from "@casehubio/pages-component";
 import { PagesElement } from "../../base/PagesElement.js";
 import { resolvePreset } from "./presets.js";
-import { extractGroupBoundaries } from "./group-extraction.js";
+import { extractGroupBoundaries, extractGroupTree } from "./group-extraction.js";
 import type { GroupBoundary } from "./group-extraction.js";
+import type { GroupNode, AggregationBinding } from "@casehubio/pages-component";
 import { computeColumnWidths } from "./column-widths.js";
 import { renderGroupTableRowHeader } from "./render-group-table-row.js";
 import { renderGroupSectionHeader } from "./render-group-section.js";
@@ -33,6 +34,7 @@ interface PagesTableHost extends HTMLElement {
   embedded?: boolean | undefined;
   headerVisible?: boolean | undefined;
   activeSort?: SortColumn | undefined;
+  getRowAccent?: ((row: import("@casehubio/pages-data").TypedRow) => string | undefined) | undefined;
 }
 
 export class PagesGroupedView extends PagesElement<GroupedViewProps> {
@@ -46,6 +48,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
   private _getRowKey: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined = undefined;
   private _getRowDetail: ((row: import("@casehubio/pages-data").TypedRow) => unknown) | undefined = undefined;
   private _getRowClass: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined = undefined;
+  private _getRowAccent: ((row: import("@casehubio/pages-data").TypedRow) => string | undefined) | undefined = undefined;
 
   setColumnRenderers(value: ReadonlyMap<ColumnId, ColumnRenderer> | undefined): void {
     this._columnRenderers = value;
@@ -104,14 +107,61 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     props: GroupedViewProps,
     dataset: TypedDataSet,
   ): void {
-    const mode = resolvePreset(props);
-    const keyColumnId = props.groupBy.columnId;
-    const aggColumnIds = (props.aggregations ?? []).map((a) => a.column);
-    const boundaries = extractGroupBoundaries(dataset, keyColumnId, aggColumnIds);
+    if (props.rowAccent && !this._getRowAccent) {
+      const ra = props.rowAccent as { column: string; colorMap: Record<string, string>; default?: string };
+      const accentColId = ra.column as ColumnId;
+      const colorLookup = new Map<string, string>(Object.entries(ra.colorMap));
+      const defaultColor: string | undefined = ra.default;
+      this._getRowAccent = (row: import("@casehubio/pages-data").TypedRow): string | undefined => {
+        const cell = row.cell(accentColId);
+        if (cell.type === "NULL") return defaultColor;
+        return colorLookup.get(String(cell.value)) ?? defaultColor;
+      };
+    }
 
+    const mode = resolvePreset(props);
+    const groupByKeys: readonly import("@casehubio/pages-data").GroupingKey[] = Array.isArray(props.groupBy) ? props.groupBy as readonly import("@casehubio/pages-data").GroupingKey[] : [props.groupBy as import("@casehubio/pages-data").GroupingKey];
+    const isMultiLevel = groupByKeys.length > 1;
+    const primaryKey = groupByKeys[0]!;
+    const keyColumnId = primaryKey.columnId;
+    const aggColumnIds = (props.aggregations ?? []).map((a) => a.column);
+    const aggBindings = (props.aggregations ?? []) as readonly AggregationBinding[];
+
+    const allGroupColumnIds = groupByKeys.map((k) => k.columnId);
     const contentColumnIds = dataset.columns
-      .filter((c) => c.id !== keyColumnId)
+      .filter((c) => !allGroupColumnIds.includes(c.id))
       .map((c) => c.id);
+
+    const isListMode = mode.contentDisplay === "list";
+    const isSpreadsheet = mode.groupDisplay === "table-row";
+    const showSummary = props.showGroupSummary ?? false;
+
+    if (isMultiLevel && !isListMode) {
+      const tree = extractGroupTree(
+        dataset,
+        groupByKeys,
+        aggBindings.map((a) => ({ column: a.column, fn: a.fn as { fn: string } })),
+      );
+
+      this._groupTables.clear();
+      container.textContent = "";
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "pages-grouped-view sectioned";
+
+      const columnConfig = this._buildColumnConfig(dataset, contentColumnIds, props);
+      const headerBar = this._buildHeaderBar(dataset, contentColumnIds, props, columnConfig);
+      wrapper.appendChild(headerBar);
+
+      for (const node of tree) {
+        this._renderNode(node, wrapper, columnConfig, props, dataset, contentColumnIds, "", showSummary);
+      }
+
+      container.appendChild(wrapper);
+      return;
+    }
+
+    const boundaries = extractGroupBoundaries(dataset, keyColumnId, aggColumnIds);
 
     const defaultExpanded = props.defaultExpanded ?? true;
     for (const b of boundaries) {
@@ -119,10 +169,6 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
         this._expandState.set(b.name, b.rowCount === 0 ? false : defaultExpanded);
       }
     }
-
-    const isListMode = mode.contentDisplay === "list";
-    const isSpreadsheet = mode.groupDisplay === "table-row";
-    const showSummary = props.showGroupSummary ?? false;
 
     if (this._canReconcile(boundaries)) {
       this._updateExistingTables(dataset, boundaries, contentColumnIds, props);
@@ -165,6 +211,21 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
         ? renderGroupTableRowHeader(b, expanded, this._instanceId, gi, showSummary)
         : renderGroupSectionHeader(b, expanded, this._instanceId, gi, showSummary);
 
+      if (props.renderAfterHeader) {
+        const node: GroupNode = {
+          name: b.name,
+          depth: 0,
+          startRow: b.startRow,
+          rowCount: b.rowCount,
+          children: [],
+          aggregates: b.aggregates,
+        };
+        const interstitial = props.renderAfterHeader(node);
+        if (interstitial) {
+          section.appendChild(interstitial);
+        }
+      }
+
       const contentWrapper = document.createElement("div");
       contentWrapper.className = "section-content";
       contentWrapper.id = `${this._instanceId}-group-${gi}`;
@@ -197,6 +258,19 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     this._lastBoundaries = boundaries;
   }
 
+  private _forwardPropsToTable(table: PagesTableHost, props: GroupedViewProps): void {
+    if (this._columnRenderers) table.columnRenderers = this._columnRenderers;
+    if (props.rowStyle) table.rowStyle = props.rowStyle;
+    if (this._getRowAccent) table.getRowAccent = this._getRowAccent;
+    if (props.selection) table.selection = props.selection;
+    if (this._getRowKey) table.getRowKey = this._getRowKey;
+    if (this._getRowDetail) table.getRowDetail = this._getRowDetail;
+    if (this._getRowClass) table.getRowClass = this._getRowClass;
+    table.sortable = props.sortable ?? false;
+    table.clientSort = props.clientSort ?? false;
+    table.activeSort = this.activeSort;
+  }
+
   private _createGroupTable(
     dataset: TypedDataSet,
     boundary: GroupBoundary,
@@ -208,14 +282,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     table.headerVisible = false;
     table.dataSet = this._sliceDataset(dataset, boundary);
     table.columnConfig = columnConfig;
-    if (props.rowStyle) table.rowStyle = props.rowStyle;
-    if (props.selection) table.selection = props.selection;
-    if (props.sortable !== undefined) table.sortable = props.sortable;
-    if (this._columnRenderers) table.columnRenderers = this._columnRenderers;
-    if (this._getRowKey) table.getRowKey = this._getRowKey;
-    if (this._getRowDetail) table.getRowDetail = this._getRowDetail;
-    if (this._getRowClass) table.getRowClass = this._getRowClass;
-    if (this.activeSort) table.activeSort = this.activeSort;
+    this._forwardPropsToTable(table, props);
     return table;
   }
 
@@ -389,11 +456,110 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     });
   }
 
-  private _sliceDataset(dataset: TypedDataSet, boundary: GroupBoundary): TypedDataSet {
+  private _sliceDataset(dataset: TypedDataSet, slice: { startRow: number; rowCount: number }): TypedDataSet {
     return {
       columns: dataset.columns,
-      rows: dataset.rows.slice(boundary.startRow, boundary.startRow + boundary.rowCount),
+      rows: dataset.rows.slice(slice.startRow, slice.startRow + slice.rowCount),
     };
+  }
+
+  private _nodeKey(parentPath: string, name: string): string {
+    return parentPath ? `${parentPath}\x1F${name}` : name;
+  }
+
+  private _renderNode(
+    node: GroupNode,
+    wrapper: HTMLElement,
+    columnConfig: readonly TableColumnConfig[],
+    props: GroupedViewProps,
+    dataset: TypedDataSet,
+    contentColumnIds: readonly ColumnId[],
+    parentPath: string,
+    showSummary: boolean,
+  ): void {
+    const path = this._nodeKey(parentPath, node.name);
+    const defaultExpanded = props.defaultExpanded ?? true;
+    if (!this._expandState.has(path)) {
+      this._expandState.set(path, node.rowCount === 0 ? false : defaultExpanded);
+    }
+    const expanded = this._expandState.get(path) ?? true;
+
+    const section = document.createElement("div");
+    section.className = "group-section";
+
+    const isSubLevel = node.depth > 0;
+    const btn = document.createElement("button");
+    btn.className = isSubLevel ? "sub-section-toggle" : "section-toggle";
+    btn.setAttribute("aria-expanded", String(expanded));
+    btn.setAttribute("data-group", path);
+    if (isSubLevel) {
+      btn.style.paddingLeft = `${node.depth * 16}px`;
+    }
+
+    const chevron = document.createElement("span");
+    chevron.className = expanded ? "section-chevron expanded" : "section-chevron";
+    chevron.textContent = "▶";
+
+    const title = document.createElement("span");
+    title.className = "section-title";
+    title.textContent = node.name;
+
+    const summary = document.createElement("span");
+    summary.className = "section-summary";
+    let summaryText = `${node.rowCount} items`;
+    if (showSummary && node.aggregates && node.aggregates.size > 0) {
+      summaryText += " · " + Array.from(node.aggregates.values())
+        .map((v) => String(v))
+        .join(", ");
+    }
+    summary.textContent = summaryText;
+
+    btn.append(chevron, title, summary);
+    section.appendChild(btn);
+
+    if (props.renderAfterHeader) {
+      const interstitial = props.renderAfterHeader(node);
+      if (interstitial) {
+        section.appendChild(interstitial);
+      }
+    }
+
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className = "section-content";
+    if (!expanded) contentWrapper.hidden = true;
+
+    if (node.children.length > 0) {
+      for (const child of node.children) {
+        this._renderNode(child, contentWrapper, columnConfig, props, dataset, contentColumnIds, path, showSummary);
+      }
+    } else {
+      const table = this._createGroupTableFromNode(dataset, node, columnConfig, props);
+      this._groupTables.set(path, table);
+      contentWrapper.appendChild(table);
+    }
+
+    section.appendChild(contentWrapper);
+
+    btn.addEventListener("click", () => {
+      this._handleToggle(btn, path, contentWrapper);
+    });
+
+    wrapper.appendChild(section);
+  }
+
+  private _createGroupTableFromNode(
+    dataset: TypedDataSet,
+    node: GroupNode,
+    columnConfig: readonly TableColumnConfig[],
+    props: GroupedViewProps,
+  ): PagesTableHost {
+    const table = document.createElement("pages-table") as PagesTableHost;
+    table.embedded = true;
+    table.headerVisible = false;
+    table.dataSet = this._sliceDataset(dataset, node);
+    table.columnConfig = columnConfig;
+    this._forwardPropsToTable(table, props);
+    return table;
   }
 }
 

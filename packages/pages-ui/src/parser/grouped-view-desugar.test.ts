@@ -194,4 +194,47 @@ describe("desugarGroupedView", () => {
     });
     expect((result.props as any).sortable).toBe(true);
   });
+
+  it("parses array groupBy into multiple GroupingKeys", () => {
+    const result = desugarGroupedView({
+      groupBy: [{ column: "phase" }, { column: "status" }],
+      lookup: { uuid: "data" },
+    });
+    const gb = (result.props as any).groupBy;
+    expect(Array.isArray(gb)).toBe(true);
+    expect(gb.length).toBe(2);
+    expect(gb[0].columnId).toBe("phase");
+    expect(gb[1].columnId).toBe("status");
+  });
+
+  it("parses single object groupBy as before (not array)", () => {
+    const result = desugarGroupedView({
+      groupBy: { column: "dept" },
+      lookup: { uuid: "data" },
+    });
+    const gb = (result.props as any).groupBy;
+    expect(Array.isArray(gb)).toBe(false);
+    expect(gb.columnId).toBe("dept");
+  });
+
+  it("passes through rowAccent config", () => {
+    const result = desugarGroupedView({
+      groupBy: { column: "dept" },
+      lookup: { uuid: "data" },
+      rowAccent: { column: "status", colorMap: { done: "#2e7d32" } },
+    });
+    expect((result.props as any).rowAccent).toEqual({
+      column: "status",
+      colorMap: { done: "#2e7d32" },
+    });
+  });
+
+  it("passes through clientSort", () => {
+    const result = desugarGroupedView({
+      groupBy: { column: "dept" },
+      lookup: { uuid: "data" },
+      clientSort: true,
+    });
+    expect((result.props as any).clientSort).toBe(true);
+  });
 });

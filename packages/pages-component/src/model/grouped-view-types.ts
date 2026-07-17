@@ -16,8 +16,24 @@ export interface AggregationBinding {
   readonly fn: Aggregation;
 }
 
+export interface GroupNode {
+  readonly name: string;
+  readonly depth: number;
+  readonly startRow: number;
+  readonly rowCount: number;
+  readonly children: readonly GroupNode[];
+  readonly aggregates?: ReadonlyMap<ColumnId, unknown>;
+}
+
+export interface RowAccentConfig {
+  readonly column: string;
+  readonly colorMap: Readonly<Record<string, string>>;
+  readonly default?: string;
+  readonly columns?: 'all' | readonly string[];
+}
+
 export interface GroupedViewProps extends DataComponentCommon {
-  readonly groupBy: GroupingKey;
+  readonly groupBy: GroupingKey | readonly GroupingKey[];
   readonly preset?: GroupedViewPreset;
   readonly groupDisplay?: GroupDisplayMode;
   readonly contentDisplay?: ContentDisplayMode;
@@ -28,6 +44,9 @@ export interface GroupedViewProps extends DataComponentCommon {
   readonly emptyGroups?: boolean;
   readonly columnConfig?: readonly TableColumnConfig[];
   readonly rowStyle?: readonly RowStyleRule[];
+  readonly rowAccent?: RowAccentConfig;
   readonly selection?: SelectionMode;
   readonly sortable?: boolean;
+  readonly clientSort?: boolean;
+  readonly renderAfterHeader?: (node: GroupNode) => HTMLElement | undefined;
 }

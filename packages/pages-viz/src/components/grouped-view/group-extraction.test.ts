@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { extractGroupBoundaries } from "./group-extraction.js";
+import { extractGroupBoundaries, extractGroupTree } from "./group-extraction.js";
 import type { DataSet, ColumnId } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import { toTypedDataSet } from "@casehubio/pages-data";
+import type { GroupingKey } from "@casehubio/pages-data";
 
 function makeGroupedDataset(groups: { key: string; rows: string[][] }[]) {
   const keyCol = "group_key" as ColumnId;
@@ -96,5 +97,101 @@ describe("extractGroupBoundaries", () => {
     expect(boundaries[2]!.name).toBe("C");
     expect(boundaries[2]!.startRow).toBe(3);
     expect(boundaries[2]!.rowCount).toBe(1);
+  });
+});
+
+function makeKey(column: string): GroupingKey {
+  return {
+    sourceId: column as ColumnId,
+    columnId: column as ColumnId,
+    strategy: { mode: "distinct" },
+    maxIntervals: 100,
+    emptyIntervals: false,
+    ascendingOrder: true,
+  };
+}
+
+function makeMultiLevelDataset(rows: { phase: string; status: string; name: string }[]) {
+  const ds: DataSet = {
+    columns: [
+      { id: "phase" as ColumnId, name: "Phase", type: ColumnType.LABEL },
+      { id: "status" as ColumnId, name: "Status", type: ColumnType.LABEL },
+      { id: "name" as ColumnId, name: "Name", type: ColumnType.LABEL },
+    ],
+    data: rows.map((r) => [r.phase, r.status, r.name]),
+  };
+  return toTypedDataSet(ds);
+}
+
+describe("extractGroupTree", () => {
+  it("single key produces flat GroupNode list (backward compat)", () => {
+    const { dataset } = makeGroupedDataset([
+      { key: "A", rows: [["x", "1"], ["y", "2"]] },
+      { key: "B", rows: [["z", "3"]] },
+    ]);
+    const nodes = extractGroupTree(dataset, [makeKey("group_key")], []);
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0]!.name).toBe("A");
+    expect(nodes[0]!.depth).toBe(0);
+    expect(nodes[0]!.children).toHaveLength(0);
+    expect(nodes[0]!.rowCount).toBe(2);
+    expect(nodes[1]!.name).toBe("B");
+    expect(nodes[1]!.rowCount).toBe(1);
+  });
+
+  it("two keys produce nested GroupNode tree", () => {
+    const dataset = makeMultiLevelDataset([
+      { phase: "UI", status: "done", name: "a" },
+      { phase: "UI", status: "done", name: "b" },
+      { phase: "UI", status: "open", name: "c" },
+      { phase: "API", status: "done", name: "d" },
+    ]);
+    const nodes = extractGroupTree(dataset, [makeKey("phase"), makeKey("status")], []);
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0]!.name).toBe("UI");
+    expect(nodes[0]!.depth).toBe(0);
+    expect(nodes[0]!.children).toHaveLength(2);
+    expect(nodes[0]!.children[0]!.name).toBe("done");
+    expect(nodes[0]!.children[0]!.depth).toBe(1);
+    expect(nodes[0]!.children[0]!.rowCount).toBe(2);
+    expect(nodes[0]!.children[0]!.startRow).toBe(0);
+    expect(nodes[0]!.children[1]!.name).toBe("open");
+    expect(nodes[0]!.children[1]!.rowCount).toBe(1);
+    expect(nodes[0]!.children[1]!.startRow).toBe(2);
+    expect(nodes[1]!.name).toBe("API");
+    expect(nodes[1]!.children).toHaveLength(1);
+    expect(nodes[1]!.children[0]!.name).toBe("done");
+    expect(nodes[1]!.children[0]!.rowCount).toBe(1);
+  });
+
+  it("parent rowCount spans all children", () => {
+    const dataset = makeMultiLevelDataset([
+      { phase: "UI", status: "done", name: "a" },
+      { phase: "UI", status: "open", name: "b" },
+      { phase: "UI", status: "open", name: "c" },
+    ]);
+    const nodes = extractGroupTree(dataset, [makeKey("phase"), makeKey("status")], []);
+    expect(nodes[0]!.rowCount).toBe(3);
+    expect(nodes[0]!.children[0]!.rowCount).toBe(1);
+    expect(nodes[0]!.children[1]!.rowCount).toBe(2);
+  });
+
+  it("empty dataset produces empty array", () => {
+    const ds: DataSet = {
+      columns: [
+        { id: "k" as ColumnId, name: "Key", type: ColumnType.LABEL },
+      ],
+      data: [],
+    };
+    const nodes = extractGroupTree(toTypedDataSet(ds), [makeKey("k")], []);
+    expect(nodes).toHaveLength(0);
+  });
+
+  it("no keys produces empty array", () => {
+    const { dataset } = makeGroupedDataset([
+      { key: "A", rows: [["x", "1"]] },
+    ]);
+    const nodes = extractGroupTree(dataset, [], []);
+    expect(nodes).toHaveLength(0);
   });
 });

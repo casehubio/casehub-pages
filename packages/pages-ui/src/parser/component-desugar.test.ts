@@ -692,4 +692,48 @@ describe("desugarComponent", () => {
       expect(result.props?.["text"]).toBe("");
     });
   });
+
+  describe("container styling for data components", () => {
+    it("extracts style key for data components", () => {
+      const result = desugarComponent({
+        type: "table",
+        style: {
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+        },
+        properties: {
+          lookup: { uuid: "data" },
+        },
+      });
+      expect(result.style).toEqual({
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+      });
+      expect(result.props?.["lookup"]).toBeDefined();
+    });
+
+    it("data component without style key has no style", () => {
+      const result = desugarComponent({
+        type: "table",
+        properties: {
+          lookup: { uuid: "data" },
+        },
+      });
+      expect(result.style).toBeUndefined();
+    });
+
+    it("style key works for grouped-view", () => {
+      const result = desugarComponent({
+        type: "grouped-view",
+        style: {
+          padding: "16px",
+        },
+        properties: {
+          groupBy: { column: "dept" },
+          lookup: { uuid: "data" },
+        },
+      });
+      expect(result.style).toEqual({ padding: "16px" });
+    });
+  });
 });

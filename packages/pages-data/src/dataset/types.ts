@@ -21,6 +21,11 @@ export interface ColumnSettings {
   readonly expression?: string;
   readonly pattern?: string;
   readonly empty?: string;
+  readonly width?: string;
+  readonly align?: 'start' | 'center' | 'end';
+  readonly sortable?: boolean;
+  readonly minWidth?: string;
+  readonly pill?: Readonly<Record<string, string>>;
 }
 
 export type CellValue =
