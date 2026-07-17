@@ -56,6 +56,8 @@ interface MockTable extends HTMLElement {
   getRowClass: any;
   clientSort: any;
   mode: any;
+  hiddenColumns: any;
+  selectedKeys: any;
 }
 
 class MockPagesTable extends HTMLElement {
@@ -73,6 +75,8 @@ class MockPagesTable extends HTMLElement {
   getRowClass: any;
   clientSort: any;
   mode: any;
+  hiddenColumns: any;
+  selectedKeys: any;
 }
 
 if (!customElements.get("pages-table")) {
@@ -542,6 +546,232 @@ describe("PagesGroupedView", () => {
 
       const sections = element.shadowRoot!.querySelectorAll(".section-toggle");
       expect(sections.length).toBe(2);
+    });
+  });
+
+  describe("list mode column renderers", () => {
+    it("applies column renderer returning string in list mode", async () => {
+      const renderers = new Map([
+        ["name" as ColumnId, ((cell: any) => `[${String(cell.value)}]`) as unknown as ColumnRenderer],
+      ]);
+      element.props = makeProps({ preset: "list" });
+      (element as any).setColumnRenderers(renderers);
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const dds = element.shadowRoot!.querySelectorAll("dd");
+      const nameValues = Array.from(dds).filter((_, i) => i % 2 === 0).map((dd) => dd.textContent);
+      expect(nameValues[0]).toBe("[Server outage]");
+    });
+
+    it("applies column renderer returning HTMLElement in list mode", async () => {
+      const renderers = new Map([
+        ["name" as ColumnId, ((cell: any) => {
+          const span = document.createElement("span");
+          span.className = "custom-render";
+          span.textContent = String(cell.value);
+          return span;
+        }) as unknown as ColumnRenderer],
+      ]);
+      element.props = makeProps({ preset: "list" });
+      (element as any).setColumnRenderers(renderers);
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const customSpans = element.shadowRoot!.querySelectorAll(".custom-render");
+      expect(customSpans.length).toBeGreaterThan(0);
+      expect(customSpans[0]!.textContent).toBe("Server outage");
+    });
+
+    it("falls back to plain text when no renderer for column", async () => {
+      const renderers = new Map([
+        ["nonexistent" as ColumnId, (() => "nope") as unknown as ColumnRenderer],
+      ]);
+      element.props = makeProps({ preset: "list" });
+      element.dataSet = makeGroupedDataset();
+      (element as any).setColumnRenderers(renderers);
+      await new Promise((r) => setTimeout(r, 0));
+      const dds = element.shadowRoot!.querySelectorAll("dd");
+      expect(dds[0]!.textContent).toBe("Server outage");
+      expect(dds[0]!.children.length).toBe(0);
+    });
+  });
+
+  describe("column visibility", () => {
+    it("renders column picker button in header bar", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const picker = element.shadowRoot!.querySelector(".column-picker-trigger");
+      expect(picker).not.toBeNull();
+    });
+
+    it("toggling column visibility hides column from all tables", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
+      trigger.click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
+      expect(checkboxes.length).toBeGreaterThan(0);
+      (checkboxes[0] as HTMLInputElement).click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      for (const table of tables) {
+        const t = table as MockTable;
+        expect(t.hiddenColumns).toBeDefined();
+        expect(t.hiddenColumns.length).toBeGreaterThan(0);
+      }
+    });
+
+    it("emits column-change event from grouped view", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const events: CustomEvent[] = [];
+      element.addEventListener("column-change", (e: Event) => events.push(e as CustomEvent));
+
+      const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
+      trigger.click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
+      (checkboxes[0] as HTMLInputElement).click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.visibleColumns).toBeDefined();
+    });
+
+    it("hides column header in shared header bar when column is toggled", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
+      trigger.click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
+      (checkboxes[0] as HTMLInputElement).click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const visibleHeaders = element.shadowRoot!.querySelectorAll("[data-column]:not([hidden])");
+      expect(visibleHeaders.length).toBe(1);
+    });
+
+    it("prevents hiding the last visible column", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
+      trigger.click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      // Hide first column
+      const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
+      (checkboxes[0] as HTMLInputElement).click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      // Re-open picker — the remaining visible column should be disabled
+      trigger.click();
+      await new Promise((r) => setTimeout(r, 0));
+      trigger.click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const updatedCheckboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
+      const checkedEnabled = Array.from(updatedCheckboxes).filter(
+        (cb) => (cb as HTMLInputElement).checked && !(cb as HTMLInputElement).disabled
+      );
+      expect(checkedEnabled.length).toBe(0);
+    });
+  });
+
+  describe("cross-group unified selection", () => {
+    it("selection in one group is reflected across all tables", async () => {
+      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      element.props = makeProps({ preset: "sectioned", selection: "multi" });
+      (element as any).setGetRowKey(getRowKey);
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const tables = element.shadowRoot!.querySelectorAll("pages-table") as NodeListOf<MockTable>;
+      expect(tables.length).toBe(2);
+
+      tables[0]!.dispatchEvent(new CustomEvent("selection-change", {
+        detail: { selectedKeys: ["Server outage"], selectedRows: [] },
+        bubbles: true,
+        composed: true,
+      }));
+      await new Promise((r) => setTimeout(r, 0));
+
+      for (const table of tables) {
+        expect((table as MockTable).selectedKeys).toBeDefined();
+      }
+    });
+
+    it("emits unified selection-change from grouped view", async () => {
+      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      element.props = makeProps({ preset: "sectioned", selection: "multi" });
+      (element as any).setGetRowKey(getRowKey);
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const events: CustomEvent[] = [];
+      element.addEventListener("selection-change", (e: Event) => events.push(e as CustomEvent));
+
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      tables[0]!.dispatchEvent(new CustomEvent("selection-change", {
+        detail: { selectedKeys: ["Server outage"], selectedRows: [] },
+        bubbles: true,
+        composed: true,
+      }));
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.selectedKeys).toContain("Server outage");
+    });
+
+    it("renders select-all checkbox in header when selection=multi", async () => {
+      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      element.props = makeProps({ preset: "sectioned", selection: "multi" });
+      (element as any).setGetRowKey(getRowKey);
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const selectAll = element.shadowRoot!.querySelector(".select-all-checkbox");
+      expect(selectAll).not.toBeNull();
+    });
+
+    it("select-all toggles all rows across all groups", async () => {
+      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      element.props = makeProps({ preset: "sectioned", selection: "multi" });
+      (element as any).setGetRowKey(getRowKey);
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const events: CustomEvent[] = [];
+      element.addEventListener("selection-change", (e: Event) => events.push(e as CustomEvent));
+
+      const selectAll = element.shadowRoot!.querySelector(".select-all-checkbox") as HTMLInputElement;
+      selectAll.click();
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.selectedKeys.length).toBe(3);
+    });
+
+    it("no select-all when selection is not multi", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const selectAll = element.shadowRoot!.querySelector(".select-all-checkbox");
+      expect(selectAll).toBeNull();
     });
   });
 });

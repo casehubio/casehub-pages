@@ -104,3 +104,6 @@ export {
 } from "./event-stream/index.js";
 
 export * from "./datasource/index.js";
+
+export type { GroupBoundary } from "./group-extraction.js";
+export { extractGroupBoundaries, extractGroupTree } from "./group-extraction.js";

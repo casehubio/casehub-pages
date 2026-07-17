@@ -1,8 +1,8 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { RovingTabindexMixin, type RovingDirection } from '@casehubio/pages-primitives';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data';
-import { ColumnType } from '@casehubio/pages-data';
+import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings, GroupBoundary } from '@casehubio/pages-data';
+import { ColumnType, extractGroupBoundaries } from '@casehubio/pages-data';
 import type { SortColumn } from '@casehubio/pages-data';
 import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail, RowAccentConfig } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
@@ -42,6 +42,8 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @property({ type: Boolean }) sortable = false;
   @property({ attribute: false }) rowStyle?: readonly RowStyleRule[];
   @property({ attribute: false }) getRowAccent?: (row: TypedRow) => string | undefined;
+  @property({ type: Array, attribute: false }) hiddenColumns?: readonly string[];
+  @property({ attribute: false }) groupBy?: ColumnId;
 
   set activeSort(sort: SortColumn | undefined) {
     if (!sort) {
@@ -100,6 +102,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @state() private _columnPickerOpen = false;
   @state() private _focusColIndex = 0;
   @state() private _hiddenColumnIds = new Set<string>();
+  @state() private _groupBoundaries: readonly GroupBoundary[] = [];
 
   private _filterDebounceTimer?: number;
   private _pickerCloseTimer: number | undefined = undefined;
@@ -954,6 +957,29 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       white-space: nowrap;
       border: 0;
     }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      background: var(--pages-neutral-3, #f5f5f5);
+      border-bottom: 1px solid var(--pages-neutral-5, #e0e0e0);
+      font-weight: 600;
+      font-size: 13px;
+      gap: 8px;
+    }
+    .group-header-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .group-header-count {
+      font-weight: 400;
+      color: var(--pages-neutral-9, #616161);
+      font-size: 12px;
+    }
+    .group-header-count::before { content: "("; }
+    .group-header-count::after { content: ")"; }
   `;
 
   private _onScroll = (e: Event): void => {
@@ -1126,12 +1152,26 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       throw new Error("getRowDetail is incompatible with mode='scroll' — virtual scrolling requires fixed row heights");
     }
 
+    if (this.groupBy && this.getChildren) {
+      throw new Error("groupBy and getChildren are mutually exclusive — use PagesGroupedView for grouped trees");
+    }
+
+    if ((changed.has('dataSet') || changed.has('groupBy')) && this.groupBy && this.dataSet) {
+      this._groupBoundaries = extractGroupBoundaries(this.dataSet, this.groupBy, []);
+    } else if (changed.has('groupBy') && !this.groupBy) {
+      this._groupBoundaries = [];
+    }
+
     if (changed.has('expandedDetailKeys') && this.expandedDetailKeys !== undefined) {
       this._internalExpandedDetailKeys = new Set(this.expandedDetailKeys);
     }
 
     if (changed.has('selectedKeys') && this.selectedKeys !== undefined) {
       this._internalSelectedKeys = new Set(this.selectedKeys);
+    }
+
+    if (changed.has('hiddenColumns') && this.hiddenColumns !== undefined) {
+      this._hiddenColumnIds = new Set(this.hiddenColumns);
     }
 
     if (changed.has('filterText') && this.clientFilter) {
@@ -1807,12 +1847,14 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   }
 
   private get _useVirtualScroll(): boolean {
+    if (this.groupBy) return false;
     if (this.getRowDetail) return false;
     if (this.mode === 'scroll') return true;
     return this.mode === 'auto' && this._dataRows.length > AUTO_THRESHOLD;
   }
 
   private get _usePagination(): boolean {
+    if (this.groupBy) return false;
     return this.mode === 'paginated';
   }
 
@@ -2479,27 +2521,44 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
           </div>
         </div>
         <div class="body" @scroll="${this._onScroll}">
-          ${this._useVirtualScroll && window
+          ${this.groupBy && this._groupBoundaries.length > 0
             ? html`
-                <div class="body-content" style="height: ${window.totalHeight}px">
-                  <div style="transform: translateY(${window.offsetY}px)">
+                <div class="body-content">
+                  ${this._groupBoundaries.map(boundary => {
+                    const rows = this._dataRows.slice(boundary.startRow, boundary.startRow + boundary.rowCount);
+                    return html`
+                      <div class="group-header">
+                        <div class="group-header-content" style="grid-column: 1 / -1">
+                          <span class="group-header-name">${boundary.name}</span>
+                          <span class="group-header-count">${boundary.rowCount}</span>
+                        </div>
+                      </div>
+                      ${rows.map((row, idx) => this._renderRow(row, boundary.startRow + idx, boundary.startRow + idx))}
+                    `;
+                  })}
+                </div>
+              `
+            : this._useVirtualScroll && window
+              ? html`
+                  <div class="body-content" style="height: ${window.totalHeight}px">
+                    <div style="transform: translateY(${window.offsetY}px)">
+                      ${this._visibleRows.map((row, idx) => {
+                        const actualIndex = window.startIndex + idx;
+                        return this._renderRow(row, actualIndex, idx);
+                      })}
+                    </div>
+                  </div>
+                `
+              : html`
+                  <div class="body-content">
                     ${this._visibleRows.map((row, idx) => {
-                      const actualIndex = window.startIndex + idx;
+                      const actualIndex = this._usePagination && this.totalRows === undefined
+                        ? this.currentPage * this.pageSize + idx
+                        : idx;
                       return this._renderRow(row, actualIndex, idx);
                     })}
                   </div>
-                </div>
-              `
-            : html`
-                <div class="body-content">
-                  ${this._visibleRows.map((row, idx) => {
-                    const actualIndex = this._usePagination && this.totalRows === undefined
-                      ? this.currentPage * this.pageSize + idx
-                      : idx;
-                    return this._renderRow(row, actualIndex, idx);
-                  })}
-                </div>
-              `}
+                `}
         </div>
         ${this.embedded ? nothing : this._renderPaginationFooter()}
       </div>

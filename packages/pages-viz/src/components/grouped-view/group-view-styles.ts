@@ -166,6 +166,57 @@ export const GROUPED_VIEW_CSS = `
   border: 0;
 }
 
+/* Column picker */
+.column-picker-wrapper {
+  position: relative;
+  margin-left: auto;
+}
+
+.column-picker-trigger {
+  background: none;
+  border: 1px solid var(--pages-neutral-6, #9e9e9e);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.column-picker-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--pages-neutral-1, #fff);
+  border: 1px solid var(--pages-neutral-6, #9e9e9e);
+  border-radius: 4px;
+  padding: 8px;
+  z-index: 10;
+  min-width: 160px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.picker-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--pages-neutral-9, #616161);
+  margin-bottom: 4px;
+}
+
+.column-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.column-picker-item input[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .section-content,
   .section-chevron {

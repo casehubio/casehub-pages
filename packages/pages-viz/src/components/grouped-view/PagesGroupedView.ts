@@ -43,6 +43,10 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
   private _styleEl: HTMLStyleElement;
   private _groupTables = new Map<string, PagesTableHost>();
   private _lastBoundaries: readonly GroupBoundary[] = [];
+  private _hiddenColumnIds = new Set<string>();
+  private _pickerOpen = false;
+  private _selectedKeys = new Set<string>();
+  private _selectionListeners = new Map<PagesTableHost, (e: Event) => void>();
 
   private _columnRenderers: ReadonlyMap<ColumnId, ColumnRenderer> | undefined = undefined;
   private _getRowKey: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined = undefined;
@@ -74,6 +78,127 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     for (const table of this._groupTables.values()) {
       (table as unknown as Record<string, unknown>)[prop] = value;
     }
+  }
+
+  private _toggleColumnVisibility(columnId: string, contentColumnIds: readonly ColumnId[]): void {
+    const visibleCount = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id))).length;
+    const isHidden = this._hiddenColumnIds.has(columnId);
+
+    if (!isHidden && visibleCount <= 1) return;
+
+    const newHidden = new Set(this._hiddenColumnIds);
+    if (isHidden) {
+      newHidden.delete(columnId);
+    } else {
+      newHidden.add(columnId);
+    }
+    this._hiddenColumnIds = newHidden;
+
+    const hiddenArray = Array.from(newHidden);
+    for (const table of this._groupTables.values()) {
+      (table as unknown as Record<string, unknown>).hiddenColumns = hiddenArray;
+    }
+
+    const visibleColumns = contentColumnIds
+      .filter((id) => !newHidden.has(String(id)))
+      .map(String);
+
+    this.dispatchEvent(new CustomEvent("column-change", {
+      detail: { visibleColumns },
+      bubbles: true,
+      composed: true,
+    }));
+
+    this._updateHeaderBarVisibility(contentColumnIds);
+  }
+
+  private _updateHeaderBarVisibility(contentColumnIds: readonly ColumnId[]): void {
+    const bar = this.shadowRoot.querySelector(".column-header-bar");
+    if (!bar) return;
+    const headers = bar.querySelectorAll("[data-column]");
+    for (const header of headers) {
+      const colId = header.getAttribute("data-column")!;
+      (header as HTMLElement).hidden = this._hiddenColumnIds.has(colId);
+    }
+
+    const prefix: string[] = [];
+    if (this._getRowDetail) prefix.push("40px");
+    if (bar.querySelector(".select-all-wrapper")) prefix.push("40px");
+
+    const visibleCount = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id))).length;
+    const widths = Array.from({ length: visibleCount }, () => "1fr");
+
+    const pickerWidth = bar.querySelector(".column-picker-wrapper") ? ["auto"] : [];
+    bar.setAttribute("style", `grid-template-columns: ${[...prefix, ...widths, ...pickerWidth].join(" ")}`);
+  }
+
+  private _handleChildSelectionChange(e: CustomEvent): void {
+    e.stopPropagation();
+    const childKeys: readonly string[] = e.detail.selectedKeys ?? [];
+    const table = e.target as PagesTableHost;
+    const tableRows = table.dataSet?.rows ?? [];
+    const getRowKey = this._getRowKey;
+    if (!getRowKey) return;
+
+    const tableKeys = new Set(tableRows.map((row) => getRowKey(row)));
+    const newSelected = new Set(this._selectedKeys);
+    for (const key of tableKeys) {
+      newSelected.delete(key);
+    }
+    for (const key of childKeys) {
+      newSelected.add(key);
+    }
+
+    this._selectedKeys = newSelected;
+    const selectedArray = Array.from(newSelected);
+
+    for (const t of this._groupTables.values()) {
+      (t as unknown as Record<string, unknown>).selectedKeys = selectedArray;
+    }
+
+    this.dispatchEvent(new CustomEvent("selection-change", {
+      detail: { selectedKeys: selectedArray, selectedRows: [] },
+      bubbles: true,
+      composed: true,
+    }));
+
+    this._updateSelectAllCheckbox();
+  }
+
+  private _handleSelectAll(dataset: import("@casehubio/pages-data").TypedDataSet): void {
+    const getRowKey = this._getRowKey;
+    if (!getRowKey) return;
+
+    const allKeys = dataset.rows.map((row) => getRowKey(row));
+    const allSelected = allKeys.length > 0 && allKeys.every((k) => this._selectedKeys.has(k));
+
+    if (allSelected) {
+      this._selectedKeys = new Set();
+    } else {
+      this._selectedKeys = new Set(allKeys);
+    }
+
+    const selectedArray = Array.from(this._selectedKeys);
+    for (const t of this._groupTables.values()) {
+      (t as unknown as Record<string, unknown>).selectedKeys = selectedArray;
+    }
+
+    this.dispatchEvent(new CustomEvent("selection-change", {
+      detail: { selectedKeys: selectedArray, selectedRows: [] },
+      bubbles: true,
+      composed: true,
+    }));
+
+    this._updateSelectAllCheckbox();
+  }
+
+  private _updateSelectAllCheckbox(): void {
+    const cb = this.shadowRoot.querySelector(".select-all-checkbox") as HTMLInputElement | null;
+    if (!cb) return;
+    const totalRows = Array.from(this._groupTables.values())
+      .reduce((sum, t) => sum + (t.dataSet?.rows.length ?? 0), 0);
+    cb.checked = this._selectedKeys.size > 0 && this._selectedKeys.size >= totalRows;
+    cb.indeterminate = this._selectedKeys.size > 0 && this._selectedKeys.size < totalRows;
   }
 
   override set activeSort(value: SortColumn | undefined) {
@@ -143,6 +268,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
         aggBindings.map((a) => ({ column: a.column, fn: a.fn as { fn: string } })),
       );
 
+      this._cleanupSelectionListeners();
       this._groupTables.clear();
       container.textContent = "";
 
@@ -176,6 +302,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
       return;
     }
 
+    this._cleanupSelectionListeners();
     this._groupTables.clear();
     container.textContent = "";
 
@@ -234,7 +361,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
       if (isListMode) {
         const colWidths = computeColumnWidths(dataset, contentColumnIds, "14px sans-serif");
         const colWidthsCss = colWidths.map((w) => `${w}px`).join(" ");
-        const listEl = renderContentList(dataset, b, contentColumnIds, colWidthsCss);
+        const listEl = renderContentList(dataset, b, contentColumnIds, colWidthsCss, this._columnRenderers);
         contentWrapper.appendChild(listEl);
       } else {
         const table = this._createGroupTable(dataset, b, columnConfig!, props);
@@ -269,6 +396,12 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     table.sortable = props.sortable ?? false;
     table.clientSort = props.clientSort ?? false;
     table.activeSort = this.activeSort;
+    if (this._hiddenColumnIds.size > 0) {
+      (table as unknown as Record<string, unknown>).hiddenColumns = Array.from(this._hiddenColumnIds);
+    }
+    if (this._selectedKeys.size > 0) {
+      (table as unknown as Record<string, unknown>).selectedKeys = Array.from(this._selectedKeys);
+    }
   }
 
   private _createGroupTable(
@@ -283,6 +416,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     table.dataSet = this._sliceDataset(dataset, boundary);
     table.columnConfig = columnConfig;
     this._forwardPropsToTable(table, props);
+    this._wireSelectionListener(table, props);
     return table;
   }
 
@@ -353,8 +487,10 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     const bar = document.createElement("div");
     bar.className = "column-header-bar";
 
+    const visibleColumnIds = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id)));
+
     const contentWidths = columnConfig
-      .filter((c) => c.visible !== false)
+      .filter((c) => c.visible !== false && !this._hiddenColumnIds.has(String(c.id)))
       .map((c) => c.width ?? "1fr");
 
     const prefix: string[] = [];
@@ -364,14 +500,25 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     const gridCols = [...prefix, ...contentWidths].join(" ");
     bar.style.gridTemplateColumns = gridCols;
 
-    for (const _p of prefix) {
+    if (this._getRowDetail) {
       const spacer = document.createElement("div");
       bar.appendChild(spacer);
     }
+    if (props.selection === "multi") {
+      const selectAllWrapper = document.createElement("div");
+      selectAllWrapper.className = "select-all-wrapper";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "select-all-checkbox";
+      cb.setAttribute("aria-label", "Select all rows");
+      cb.addEventListener("click", () => this._handleSelectAll(dataset));
+      selectAllWrapper.appendChild(cb);
+      bar.appendChild(selectAllWrapper);
+    }
 
     const sortable = props.sortable === true;
-    for (let i = 0; i < contentColumnIds.length; i++) {
-      const id = contentColumnIds[i]!;
+    for (let i = 0; i < visibleColumnIds.length; i++) {
+      const id = visibleColumnIds[i]!;
       const col = dataset.columns.find((c) => c.id === id);
       const colConfig = props.columnConfig?.find((c) => c.id === id);
       const colSortable = sortable && colConfig?.sortable !== false;
@@ -386,6 +533,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
       } else {
         const span = document.createElement("span");
         span.className = "col-label";
+        span.setAttribute("data-column", String(id));
         span.textContent = colConfig?.label ?? col?.name ?? String(id);
         bar.appendChild(span);
       }
@@ -394,6 +542,58 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     if (this.activeSort) {
       this._updateHeaderBarSortOnElement(bar, this.activeSort);
     }
+
+    const pickerWrapper = document.createElement("div");
+    pickerWrapper.className = "column-picker-wrapper";
+
+    const trigger = document.createElement("button");
+    trigger.className = "column-picker-trigger";
+    trigger.setAttribute("aria-label", "Column options");
+    trigger.textContent = "⋮";
+    const dropdown = document.createElement("div");
+    dropdown.className = "column-picker-dropdown";
+    dropdown.hidden = true;
+
+    const rebuildDropdown = (): void => {
+      dropdown.textContent = "";
+      const lbl = document.createElement("div");
+      lbl.className = "picker-section-label";
+      lbl.textContent = "Columns";
+      dropdown.appendChild(lbl);
+
+      const visibleCount = contentColumnIds.filter((cid) => !this._hiddenColumnIds.has(String(cid))).length;
+
+      for (const id of contentColumnIds) {
+        const col = dataset.columns.find((c) => c.id === id);
+        const isHidden = this._hiddenColumnIds.has(String(id));
+        const isLastVisible = !isHidden && visibleCount === 1;
+
+        const item = document.createElement("label");
+        item.className = "column-picker-item";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !isHidden;
+        cb.disabled = isLastVisible;
+        cb.addEventListener("change", () => {
+          this._toggleColumnVisibility(String(id), contentColumnIds);
+          rebuildDropdown();
+        });
+        const span = document.createElement("span");
+        span.textContent = col?.name ?? String(id);
+        item.append(cb, span);
+        dropdown.appendChild(item);
+      }
+    };
+
+    trigger.addEventListener("click", () => {
+      this._pickerOpen = !this._pickerOpen;
+      dropdown.hidden = !this._pickerOpen;
+      if (this._pickerOpen) rebuildDropdown();
+    });
+
+    rebuildDropdown();
+    pickerWrapper.append(trigger, dropdown);
+    bar.appendChild(pickerWrapper);
 
     return bar;
   }
@@ -559,7 +759,23 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     table.dataSet = this._sliceDataset(dataset, node);
     table.columnConfig = columnConfig;
     this._forwardPropsToTable(table, props);
+    this._wireSelectionListener(table, props);
     return table;
+  }
+
+  private _cleanupSelectionListeners(): void {
+    for (const [table, listener] of this._selectionListeners) {
+      table.removeEventListener("selection-change", listener);
+    }
+    this._selectionListeners.clear();
+  }
+
+  private _wireSelectionListener(table: PagesTableHost, props: GroupedViewProps): void {
+    if (props.selection && props.selection !== "none") {
+      const listener = (e: Event) => this._handleChildSelectionChange(e as CustomEvent);
+      table.addEventListener("selection-change", listener);
+      this._selectionListeners.set(table, listener);
+    }
   }
 }
 

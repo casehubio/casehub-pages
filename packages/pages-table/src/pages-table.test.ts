@@ -20,6 +20,8 @@ type TableEl = HTMLElement & {
   detailMode?: string;
   expandedDetailKeys?: readonly string[];
   selectedKeys?: readonly string[];
+  hiddenColumns?: readonly string[];
+  groupBy?: ColumnId;
   clientSort: boolean;
   clientFilter: boolean;
   filterText: string;
@@ -1395,6 +1397,106 @@ describe('pages-table', () => {
       const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
       expect(rows.length).toBeGreaterThan(0);
       expect(rows[0]!.classList.contains('highlighted')).toBe(true);
+    });
+  });
+
+  describe('hiddenColumns external control', () => {
+    it('hides columns when hiddenColumns is set', async () => {
+      el.dataSet = testDataSet;
+      el.hiddenColumns = [String(nameCol)];
+      await el.updateComplete;
+      const headers = el.shadowRoot!.querySelectorAll('.header [role="columnheader"]');
+      const headerTexts = Array.from(headers).map((h) => h.textContent?.trim());
+      expect(headerTexts).not.toContain('Name');
+      expect(headerTexts).toContain('Age');
+    });
+
+    it('shows column again when removed from hiddenColumns', async () => {
+      el.dataSet = testDataSet;
+      el.hiddenColumns = [String(nameCol)];
+      await el.updateComplete;
+      el.hiddenColumns = [];
+      await el.updateComplete;
+      const headers = el.shadowRoot!.querySelectorAll('.header [role="columnheader"]');
+      const headerTexts = Array.from(headers).map((h) => h.textContent?.trim());
+      expect(headerTexts).toContain('Name');
+      expect(headerTexts).toContain('Age');
+    });
+
+    it('does not affect standalone toggle behavior when unset', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      const headers = el.shadowRoot!.querySelectorAll('.header [role="columnheader"]');
+      expect(headers.length).toBe(2);
+    });
+  });
+
+  describe('groupBy', () => {
+    const statusCol = 'status' as ColumnId;
+
+    const groupedColumnDefs = [
+      { id: statusCol, name: 'Status', type: ColumnType.TEXT, getValue: (r: { status: string; name: string; value: number }) => r.status },
+      { id: nameCol, name: 'Name', type: ColumnType.TEXT, getValue: (r: { status: string; name: string; value: number }) => r.name },
+      { id: ageCol, name: 'Value', type: ColumnType.NUMBER, getValue: (r: { status: string; name: string; value: number }) => r.value },
+    ] as const;
+
+    function makeGroupedDataSet() {
+      return fromRows([
+        { status: 'Critical', name: 'Outage', value: 100 },
+        { status: 'Critical', name: 'Data loss', value: 90 },
+        { status: 'Warning', name: 'Slow query', value: 30 },
+      ], groupedColumnDefs);
+    }
+
+    it('renders group header rows when groupBy is set', async () => {
+      el.dataSet = makeGroupedDataSet();
+      el.groupBy = statusCol;
+      await el.updateComplete;
+      const groupHeaders = el.shadowRoot!.querySelectorAll('.group-header');
+      expect(groupHeaders.length).toBe(2);
+      expect(groupHeaders[0]!.textContent).toContain('Critical');
+      expect(groupHeaders[0]!.textContent).toContain('2');
+      expect(groupHeaders[1]!.textContent).toContain('Warning');
+      expect(groupHeaders[1]!.textContent).toContain('1');
+    });
+
+    it('renders data rows after each group header', async () => {
+      el.dataSet = makeGroupedDataSet();
+      el.groupBy = statusCol;
+      await el.updateComplete;
+      const rows = el.shadowRoot!.querySelectorAll('.row:not(.group-header)');
+      expect(rows.length).toBe(3);
+    });
+
+    it('no group headers when groupBy is not set', async () => {
+      el.dataSet = makeGroupedDataSet();
+      await el.updateComplete;
+      const groupHeaders = el.shadowRoot!.querySelectorAll('.group-header');
+      expect(groupHeaders.length).toBe(0);
+    });
+
+    it('disables virtual scroll when groupBy is set', async () => {
+      el.dataSet = makeGroupedDataSet();
+      el.groupBy = statusCol;
+      el.mode = 'scroll';
+      await el.updateComplete;
+      const bodyContent = el.shadowRoot!.querySelector('.body-content');
+      expect(bodyContent?.querySelector('[style*="translateY"]')).toBeNull();
+    });
+
+    it('throws when groupBy and getChildren are both set', async () => {
+      el.dataSet = makeGroupedDataSet();
+      el.groupBy = statusCol;
+      el.getChildren = () => [];
+      el.getRowKey = (row) => { const c = row.cell(nameCol); return c.type === 'NULL' ? '' : String(c.value); };
+      let caught = false;
+      try {
+        await el.updateComplete;
+      } catch (e: any) {
+        caught = true;
+        expect(e.message).toContain('groupBy');
+      }
+      expect(caught).toBe(true);
     });
   });
 });

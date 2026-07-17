@@ -1,4 +1,5 @@
 import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data";
+import type { ColumnRenderer } from "@casehubio/pages-component";
 import type { GroupBoundary } from "./group-extraction.js";
 
 function cellToDisplay(cell: CellValue): string {
@@ -11,6 +12,7 @@ export function renderContentList(
   boundary: GroupBoundary,
   contentColumns: readonly ColumnId[],
   colWidthsCss: string,
+  renderers?: ReadonlyMap<ColumnId, ColumnRenderer>,
 ): HTMLElement {
   const dl = document.createElement("dl");
   dl.className = "aligned-list";
@@ -27,7 +29,20 @@ export function renderContentList(
       dt.className = "visually-hidden";
       dt.textContent = col?.name ?? String(id);
       const dd = document.createElement("dd");
-      dd.textContent = cellToDisplay(row.cell(id));
+
+      const renderer = renderers?.get(id);
+      if (renderer && col) {
+        const cell = row.cell(id);
+        const result = renderer(cell, row, col);
+        if (result instanceof HTMLElement) {
+          dd.appendChild(result);
+        } else {
+          dd.textContent = String(result);
+        }
+      } else {
+        dd.textContent = cellToDisplay(row.cell(id));
+      }
+
       item.append(dt, dd);
     }
     dl.appendChild(item);
