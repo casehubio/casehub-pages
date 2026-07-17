@@ -1,6 +1,6 @@
 {
   "name": "@casehubio/pages-ui",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "CaseHub Pages UI — component model, layout primitives, DSL, YAML parser",
   "repository": {
     "type": "git",

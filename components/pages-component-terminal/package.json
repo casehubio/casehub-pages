@@ -1,6 +1,6 @@
 {
   "name": "@casehubio/pages-component-terminal",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "CaseHub Pages terminal component — xterm.js Web Component",
   "license": "Apache-2.0",
   "homepage": "https://github.com/casehubio/casehub-pages",
