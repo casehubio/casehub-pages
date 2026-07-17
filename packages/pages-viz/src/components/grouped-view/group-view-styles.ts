@@ -83,6 +83,22 @@ export const GROUPED_VIEW_CSS = `
   overflow: hidden;
 }
 
+/* Depth-based sub-section styling for multi-level grouping */
+.sub-section-toggle {
+  font-size: var(--pages-font-size-base, 14px);
+  font-weight: var(--pages-font-weight-semibold, 600);
+  color: var(--pages-neutral-10, #555);
+  background: none;
+  border: none;
+  padding: var(--pages-space-2, 8px) 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--pages-space-2, 8px);
+  width: 100%;
+  border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+}
+
 /* Spreadsheet mode — compact group headers */
 .group-toggle {
   background: var(--pages-neutral-3, #f5f5f5);

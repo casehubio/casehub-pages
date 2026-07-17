@@ -91,3 +91,10 @@ export interface DetailChangeDetail {
   readonly expanded: boolean;
 }
 
+export interface RowAccentConfig {
+  readonly column: string;
+  readonly colorMap: Readonly<Record<string, string>>;
+  readonly default?: string;
+  readonly columns?: 'all' | readonly string[];
+}
+

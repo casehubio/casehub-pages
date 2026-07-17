@@ -1,0 +1,606 @@
+datasets:
+  - uuid: ui-pipeline
+    content: >
+      [
+        ["blocks", "#44", "blocks#44", "epic: agentic planning architecture", "done", "33 issues closed since v2"],
+        ["blocks", "#28", "blocks#28", "epic: shared pattern consolidation", "done", "Core blocks extracted"],
+        ["blocks-ui", "#4", "blocks-ui#4", "Work Item Management UI", "done", "Inbox, detail, queue board"],
+        ["blocks-ui", "#37", "blocks-ui#37", "epic: AML workbench migration", "done", "Closed 2026-07-08"],
+        ["blocks-ui", "#39", "blocks-ui#39", "epic: claudony component migration", "done", "Closed 2026-07-13"],
+        ["blocks-ui", "#55", "blocks-ui#55", "feat: unified pluggable timeline", "done", "Closed 2026-07-14"],
+        ["pages", "#152", "pages#152", "refactor: TypedDataSet native", "done", "Unified pipeline + table"],
+        ["pages", "#154", "pages#154", "wire pages-table into runtime", "done", "All PagesTable tests ported"],
+        ["pages", "#164", "pages#164", "epic: Examples Gallery sweep", "done", "All broken examples fixed"],
+        ["blocks-ui", "#38", "blocks-ui#38", "epic: clinical trial UI migration", "newly-done", ""],
+        ["pages", "#140", "pages#140", "feat: DataSource abstraction", "open", "Live/mock/simulated/replay"],
+        ["pages", "#159", "pages#159", "feat: pages-schema-form", "open", "JSON Schema driven forms"],
+        ["pages", "#142", "pages#142", "epic: Scenario Engine", "open", "Composition, triggers, remote"],
+        ["blocks-ui", "#56", "blocks-ui#56", "epic: app delivery — all blocks-ui work for apps", "critical", "Umbrella for all app consumption"],
+        ["blocks-ui", "#41", "blocks-ui#41", "epic: devtown governance workbench migration", "critical", "CRITICAL PATH — gates all devtown UI"],
+        ["blocks-ui", "#36", "blocks-ui#36", "epic: openclaw demo UI migration", "open", ""],
+        ["blocks-ui", "#53", "blocks-ui#53", "feat: queue-board component", "open", ""],
+        ["blocks-ui", "#54", "blocks-ui#54", "feat: routing-rationale component", "open", ""]
+      ]
+    columns:
+      - id: repo
+        type: LABEL
+      - id: num
+        type: TEXT
+      - id: issue
+        type: TEXT
+      - id: title
+        type: TEXT
+      - id: status
+        type: LABEL
+      - id: notes
+        type: TEXT
+
+  - uuid: trust-cbr
+    content: >
+      [
+        ["devtown", "#130", "devtown#130", "PR similarity model — feature vectors + distance", "done", "Closed 2026-07-10"],
+        ["devtown", "#131", "devtown#131", "CBR retrieval service — find K similar cases", "done", "Closed 2026-07-10"],
+        ["devtown", "#132", "devtown#132", "CBR-enhanced capability activation", "done", "Closed 2026-07-13"],
+        ["devtown", "#133", "devtown#133", "CBR-enhanced reviewer matching", "done", "Closed 2026-07-13"],
+        ["devtown", "#143", "devtown#143", "CBR similarity hard gates", "done", "Closed 2026-07-12"],
+        ["devtown", "#141", "devtown#141", "EvidentialChecker V1-V4 integration", "done", "Closed 2026-07-13"],
+        ["devtown", "#148", "devtown#148", "activationSource attribution", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#146", "devtown#146", "Per-capability precedent thresholds", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#147", "devtown#147", "Similarity-weighted evidence accumulation", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#145", "devtown#145", "Persist BenchmarkViolation details", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#138", "devtown#138", "Similarity weight refinement from outcomes", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#137", "devtown#137", "CBR memory browser MCP tools", "done", "v3 batch — 2026-07-14"],
+        ["parent", "#361", "parent#361", "docs: sync casehub-devtown.md for CBR", "newly-done", "Doc sync"],
+        ["devtown", "#134", "devtown#134", "Merge queue batch risk scoring from precedent", "newly-done", "CBR Phase 3"],
+        ["devtown", "#135", "devtown#135", "Bisection heuristics — similarity to past failures", "newly-done", "CBR Phase 3"],
+        ["devtown", "#136", "devtown#136", "SLA calibration from past assignments", "newly-done", "Was BLOCKED — timing data resolved"],
+        ["devtown", "#150", "devtown#150", "Migrate CaseMemoryEmitter to MemoryEmitter", "newly-done", "Housekeeping"],
+        ["devtown", "#98", "devtown#98", "Trust visibility UI", "blocked", "Blocked by blocks-ui#41"],
+        ["parent", "#365", "parent#365", "Epic: temporal learning without retraining", "new", "Continuous platform intelligence"],
+        ["parent", "#367", "parent#367", "Time-weighted CBR similarity", "new", "Recent cases outweigh stale"],
+        ["parent", "#368", "parent#368", "Trust score temporal decay", "new", "Stale evidence regresses to prior"],
+        ["parent", "#363", "parent#363", "Explainable decisions end-to-end", "new", "Full decision lineage"],
+        ["parent", "#364", "parent#364", "Agent reputation as a service", "new", "Externalized trust scoring"]
+      ]
+    columns:
+      - id: repo
+        type: LABEL
+      - id: num
+        type: TEXT
+      - id: issue
+        type: TEXT
+      - id: title
+        type: TEXT
+      - id: status
+        type: LABEL
+      - id: notes
+        type: TEXT
+
+  - uuid: merge-queue
+    content: >
+      [
+        ["devtown", "#101", "devtown#101", "GitHub webhook receiver for admission", "done", ""],
+        ["devtown", "#103", "devtown#103", "Adaptive batch sizing feedback loop", "done", ""],
+        ["devtown", "#108", "devtown#108", "Batch failure rate API", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#109", "devtown#109", "Alerting on sustained high failure rates", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#110", "devtown#110", "Update parent merge queue spec §3.1", "done", "Stale — closed"],
+        ["devtown", "#95", "devtown#95", "CI: repository_dispatch trigger", "done", "v3 batch — 2026-07-14"],
+        ["devtown", "#124", "devtown#124", "PR supersede/relink — case state transitions", "newly-done", ""],
+        ["devtown", "#127", "devtown#127", "PrReviewCaseTracker startup hydration", "newly-done", "Was BLOCKED — durable persistence resolved"],
+        ["devtown", "#104", "devtown#104", "Batch branch management — git ops", "newly-done", ""],
+        ["devtown", "#119", "devtown#119", "CasePlanModel browser", "blocked", "Blocked by blocks-ui#41"],
+        ["devtown", "#120", "devtown#120", "Case dependency graph — D3 viz", "blocked", "Blocked by blocks-ui#41"],
+        ["work", "#288", "work#288", "Queue summary REST endpoint", "open", "For dashboard cards"],
+        ["platform", "#175", "platform#175", "Generic queue toolkit", "new", "AbstractQueueEntity SPI"],
+        ["devtown", "#12", "devtown#12", "Epic 5: Cross-repo coordinated merge", "open", "Epic — multi-repo"]
+      ]
+    columns:
+      - id: repo
+        type: LABEL
+      - id: num
+        type: TEXT
+      - id: issue
+        type: TEXT
+      - id: title
+        type: TEXT
+      - id: status
+        type: LABEL
+      - id: notes
+        type: TEXT
+
+  - uuid: summary
+    content: >
+      [
+        ["devtown issues closed (all time)", "107", "114", "+7"],
+        ["Cross-repo closures since v3", "—", "2", "parent#361, blocks-ui#38"],
+        ["Trust & CBR", "3 open + 1 blocked", "0 open + 1 blocked", "Layer complete (except UI-gated #98)"],
+        ["Merge Queue", "1 open + 2 blocked", "0 open + 2 blocked", "Only UI-gated items + epic remain"],
+        ["Critical path", "blocks-ui#41", "blocks-ui#41 (unchanged)", ""]
+      ]
+    columns:
+      - id: metric
+        type: TEXT
+      - id: v3
+        type: TEXT
+      - id: v4
+        type: TEXT
+      - id: delta
+        type: TEXT
+
+pages:
+  - name: Project Roadmap
+    components:
+      - type: title
+        properties:
+          text: Cross-Repo Roadmap — Gantt Chart with Critical Path (v4)
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Generated 2026-07-16 · All repos scanned · ✅ Done · ✅ Done since v3 · 🔵 Open · 🟠 Blocked
+
+      - html: >
+          <div style="background: #f8f8f8; padding: 10px 15px; border-radius: 6px; margin: 10px 0; font-size: 13px;">
+          <strong>Since v3 (2026-07-14):</strong> 7 devtown issues closed (#104, #124, #127, #134, #135, #136, #150),
+          plus blocks-ui#38, parent#361. Trust &amp; CBR layer is now <strong>fully complete</strong> (only UI-blocked #98 remains).
+          Merge Queue layer has only UI-blocked items and the cross-repo epic remaining.
+          blocks-ui#41 (devtown governance workbench migration) remains the critical UI gate.
+          </div>
+
+      - type: tabs
+        tabs:
+          Rounded Borders:
+            components:
+              - type: legend
+                properties:
+                  entries:
+                    - label: devtown
+                      color: "#1976d2"
+                    - label: engine
+                      color: "#388e3c"
+                    - label: blocks
+                      color: "#7cb342"
+                    - label: blocks-ui
+                      color: "#f57c00"
+                    - label: pages
+                      color: "#e91e63"
+                    - label: parent
+                      color: "#607d8b"
+                    - label: work
+                      color: "#5c6bc0"
+                    - label: qhorus
+                      color: "#00897b"
+                    - label: claudony
+                      color: "#8e24aa"
+                    - label: platform
+                      color: "#455a64"
+                    - label: ledger
+                      color: "#c62828"
+                  layout: linear
+
+              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
+              - html: >
+                  <div style="background:#fff3e0; border:2px solid #f57c00; border-radius:6px; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
+                  🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
+
+              - type: table
+                style:
+                  border: "1px solid #ddd"
+                  border-radius: "8px"
+                  padding: "15px"
+                  margin-bottom: "20px"
+                  overflow: hidden
+                properties:
+                  lookup:
+                    uuid: ui-pipeline
+                  pageSize: 25
+                  columns:
+                    - id: repo
+                      name: Repo
+                      width: "100px"
+                      pill:
+                        blocks: "#7cb342"
+                        blocks-ui: "#f57c00"
+                        pages: "#e91e63"
+                        devtown: "#1976d2"
+                        parent: "#607d8b"
+                        work: "#5c6bc0"
+                        platform: "#455a64"
+                    - id: issue
+                      name: Issue
+                      width: "130px"
+                    - id: title
+                      name: Title
+                      width: "3fr"
+                    - id: status
+                      name: Status
+                      width: "140px"
+                      expression: >-
+                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","critical":"🔵 OPEN","new":"🆕 NEW"}, value)
+                    - id: notes
+                      name: Notes
+                      width: "2fr"
+                  rowAccent:
+                    column: status
+                    columns: all
+                    colorMap:
+                      newly-done: "#2e7d32"
+                      critical: "#d32f2f"
+                      blocked: "#e65100"
+                  rowStyle:
+                    - condition: "#{row.status} == 'done'"
+                      style:
+                        backgroundColor: "#f0faf0"
+                        color: "#2d7d2d"
+                    - condition: "#{row.status} == 'newly-done'"
+                      style:
+                        backgroundColor: "#e8f5e9"
+                        color: "#2e7d32"
+                    - condition: "#{row.status} == 'blocked'"
+                      style:
+                        backgroundColor: "#fff8f0"
+                        color: "#b35900"
+                    - condition: "#{row.status} == 'critical'"
+                      style:
+                        backgroundColor: "#fff0f0"
+                    - condition: "#{row.status} == 'new'"
+                      style:
+                        backgroundColor: "#f0f5ff"
+
+              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Trust &amp; CBR</h3>'
+              - type: table
+                style:
+                  border: "1px solid #ddd"
+                  border-radius: "8px"
+                  padding: "15px"
+                  margin-bottom: "20px"
+                  overflow: hidden
+                properties:
+                  lookup:
+                    uuid: trust-cbr
+                  pageSize: 25
+                  columns:
+                    - id: repo
+                      name: Repo
+                      width: "100px"
+                      pill:
+                        devtown: "#1976d2"
+                        parent: "#607d8b"
+                        work: "#5c6bc0"
+                        platform: "#455a64"
+                    - id: issue
+                      name: Issue
+                      width: "130px"
+                    - id: title
+                      name: Title
+                      width: "3fr"
+                    - id: status
+                      name: Status
+                      width: "140px"
+                      expression: >-
+                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","new":"🆕 NEW"}, value)
+                    - id: notes
+                      name: Notes
+                      width: "2fr"
+                  rowAccent:
+                    column: status
+                    columns: all
+                    colorMap:
+                      newly-done: "#2e7d32"
+                      blocked: "#e65100"
+                  rowStyle:
+                    - condition: "#{row.status} == 'done'"
+                      style:
+                        backgroundColor: "#f0faf0"
+                        color: "#2d7d2d"
+                    - condition: "#{row.status} == 'newly-done'"
+                      style:
+                        backgroundColor: "#e8f5e9"
+                        color: "#2e7d32"
+                    - condition: "#{row.status} == 'blocked'"
+                      style:
+                        backgroundColor: "#fff8f0"
+                        color: "#b35900"
+                    - condition: "#{row.status} == 'new'"
+                      style:
+                        backgroundColor: "#f0f5ff"
+
+              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Merge Queue</h3>'
+              - type: table
+                style:
+                  border: "1px solid #ddd"
+                  border-radius: "8px"
+                  padding: "15px"
+                  margin-bottom: "20px"
+                  overflow: hidden
+                properties:
+                  lookup:
+                    uuid: merge-queue
+                  pageSize: 25
+                  columns:
+                    - id: repo
+                      name: Repo
+                      width: "100px"
+                      pill:
+                        devtown: "#1976d2"
+                        parent: "#607d8b"
+                        work: "#5c6bc0"
+                        platform: "#455a64"
+                    - id: issue
+                      name: Issue
+                      width: "130px"
+                    - id: title
+                      name: Title
+                      width: "3fr"
+                    - id: status
+                      name: Status
+                      width: "140px"
+                      expression: >-
+                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","new":"🆕 NEW"}, value)
+                    - id: notes
+                      name: Notes
+                      width: "2fr"
+                  rowAccent:
+                    column: status
+                    columns: all
+                    colorMap:
+                      newly-done: "#2e7d32"
+                      blocked: "#e65100"
+                  rowStyle:
+                    - condition: "#{row.status} == 'done'"
+                      style:
+                        backgroundColor: "#f0faf0"
+                        color: "#2d7d2d"
+                    - condition: "#{row.status} == 'newly-done'"
+                      style:
+                        backgroundColor: "#e8f5e9"
+                        color: "#2e7d32"
+                    - condition: "#{row.status} == 'blocked'"
+                      style:
+                        backgroundColor: "#fff8f0"
+                        color: "#b35900"
+                    - condition: "#{row.status} == 'new'"
+                      style:
+                        backgroundColor: "#f0f5ff"
+
+              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Summary — v3 → v4 Delta</h3>'
+              - type: table
+                style:
+                  border: "1px solid #ddd"
+                  border-radius: "8px"
+                  padding: "15px"
+                  overflow: hidden
+                properties:
+                  lookup:
+                    uuid: summary
+                  columns:
+                    - id: metric
+                      name: Metric
+                      width: "2fr"
+                    - id: v3
+                      name: v3
+                      width: "1fr"
+                    - id: v4
+                      name: v4
+                      width: "1fr"
+                    - id: delta
+                      name: Delta
+                      width: "2fr"
+
+          Square Borders:
+            components:
+              - type: markdown
+                properties:
+                  content: "Same roadmap with **square-cut borders** (no border-radius) and no padding."
+              - type: legend
+                properties:
+                  entries:
+                    - label: devtown
+                      color: "#1976d2"
+                    - label: blocks
+                      color: "#7cb342"
+                    - label: blocks-ui
+                      color: "#f57c00"
+                    - label: pages
+                      color: "#e91e63"
+                  layout: linear
+              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
+              - html: >
+                  <div style="background:#fff3e0; border:2px solid #f57c00; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
+                  🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
+              - type: table
+                style:
+                  border: "1px solid #ddd"
+                properties:
+                  lookup:
+                    uuid: ui-pipeline
+                  pageSize: 25
+                  columns:
+                    - id: repo
+                      name: Repo
+                      width: "100px"
+                      pill:
+                        blocks: "#7cb342"
+                        blocks-ui: "#f57c00"
+                        pages: "#e91e63"
+                        devtown: "#1976d2"
+                        parent: "#607d8b"
+                        work: "#5c6bc0"
+                        platform: "#455a64"
+                    - id: issue
+                      name: Issue
+                      width: "130px"
+                    - id: title
+                      name: Title
+                      width: "3fr"
+                    - id: status
+                      name: Status
+                      width: "140px"
+                      expression: >-
+                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","critical":"🔵 OPEN","new":"🆕 NEW"}, value)
+                    - id: notes
+                      name: Notes
+                      width: "2fr"
+                  rowAccent:
+                    column: status
+                    columns: all
+                    colorMap:
+                      newly-done: "#2e7d32"
+                      critical: "#d32f2f"
+                      blocked: "#e65100"
+                  rowStyle:
+                    - condition: "#{row.status} == 'done'"
+                      style:
+                        backgroundColor: "#f0faf0"
+                        color: "#2d7d2d"
+                    - condition: "#{row.status} == 'newly-done'"
+                      style:
+                        backgroundColor: "#e8f5e9"
+                        color: "#2e7d32"
+                    - condition: "#{row.status} == 'blocked'"
+                      style:
+                        backgroundColor: "#fff8f0"
+                        color: "#b35900"
+                    - condition: "#{row.status} == 'critical'"
+                      style:
+                        backgroundColor: "#fff0f0"
+                    - condition: "#{row.status} == 'new'"
+                      style:
+                        backgroundColor: "#f0f5ff"
+
+          Legend Layouts:
+            components:
+              - type: markdown
+                properties:
+                  content: "**Linear** (default) — wraps naturally, one dimension resizes with the browser:"
+              - type: legend
+                properties:
+                  entries:
+                    - label: devtown
+                      color: "#1976d2"
+                    - label: engine
+                      color: "#388e3c"
+                    - label: blocks
+                      color: "#7cb342"
+                    - label: blocks-ui
+                      color: "#f57c00"
+                    - label: pages
+                      color: "#e91e63"
+                    - label: parent
+                      color: "#607d8b"
+                    - label: work
+                      color: "#5c6bc0"
+                    - label: qhorus
+                      color: "#00897b"
+                    - label: claudony
+                      color: "#8e24aa"
+                    - label: platform
+                      color: "#455a64"
+                    - label: ledger
+                      color: "#c62828"
+                  layout: linear
+
+              - type: markdown
+                properties:
+                  content: "**Horizontal** — fixed height to 1 row, scrolls horizontally:"
+              - type: legend
+                properties:
+                  entries:
+                    - label: devtown
+                      color: "#1976d2"
+                    - label: engine
+                      color: "#388e3c"
+                    - label: blocks
+                      color: "#7cb342"
+                    - label: blocks-ui
+                      color: "#f57c00"
+                    - label: pages
+                      color: "#e91e63"
+                    - label: parent
+                      color: "#607d8b"
+                    - label: work
+                      color: "#5c6bc0"
+                    - label: qhorus
+                      color: "#00897b"
+                    - label: claudony
+                      color: "#8e24aa"
+                    - label: platform
+                      color: "#455a64"
+                    - label: ledger
+                      color: "#c62828"
+                  layout: horizontal
+
+              - type: markdown
+                properties:
+                  content: "**Vertical** — fixed width to 1 column, grows downward:"
+              - type: legend
+                properties:
+                  entries:
+                    - label: devtown
+                      color: "#1976d2"
+                    - label: engine
+                      color: "#388e3c"
+                    - label: blocks
+                      color: "#7cb342"
+                    - label: blocks-ui
+                      color: "#f57c00"
+                    - label: pages
+                      color: "#e91e63"
+                    - label: parent
+                      color: "#607d8b"
+                  layout: vertical
+
+              - type: markdown
+                properties:
+                  content: "**Grid** — constrained width forces multi-row wrapping:"
+              - type: legend
+                style:
+                  max-width: "350px"
+                  border: "1px dashed #ccc"
+                  padding: "8px"
+                  border-radius: "4px"
+                properties:
+                  entries:
+                    - label: devtown
+                      color: "#1976d2"
+                    - label: engine
+                      color: "#388e3c"
+                    - label: blocks
+                      color: "#7cb342"
+                    - label: blocks-ui
+                      color: "#f57c00"
+                    - label: pages
+                      color: "#e91e63"
+                    - label: parent
+                      color: "#607d8b"
+                    - label: work
+                      color: "#5c6bc0"
+                    - label: qhorus
+                      color: "#00897b"
+                    - label: claudony
+                      color: "#8e24aa"
+                    - label: platform
+                      color: "#455a64"
+                    - label: ledger
+                      color: "#c62828"
+                  layout: grid
+
+              - type: markdown
+                properties:
+                  content: "**Circle swatches:**"
+              - type: legend
+                properties:
+                  entries:
+                    - label: devtown
+                      color: "#1976d2"
+                    - label: engine
+                      color: "#388e3c"
+                    - label: blocks
+                      color: "#7cb342"
+                    - label: blocks-ui
+                      color: "#f57c00"
+                    - label: pages
+                      color: "#e91e63"
+                  layout: linear
+                  swatchShape: circle

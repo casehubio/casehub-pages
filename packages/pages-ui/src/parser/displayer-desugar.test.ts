@@ -544,6 +544,33 @@ describe("desugarDisplayer", () => {
       expect(result.props?.["directed"]).toBe(true);
     });
 
+    it("user-specified pageSize wins over table default", () => {
+      const result = desugarDisplayer({
+        type: "TABLE",
+        pageSize: 25,
+        lookup: { uuid: "data" },
+      });
+      expect(result.props?.["pageSize"]).toBe(25);
+    });
+
+    it("user-specified filter wins over table default", () => {
+      const result = desugarDisplayer({
+        type: "TABLE",
+        filter: { enabled: false },
+        lookup: { uuid: "data" },
+      });
+      expect(result.props?.["filter"]).toEqual({ enabled: false });
+    });
+
+    it("table defaults still apply when user omits pageSize and filter", () => {
+      const result = desugarDisplayer({
+        type: "TABLE",
+        lookup: { uuid: "data" },
+      });
+      expect(result.props?.["pageSize"]).toBe(10);
+      expect((result.props?.["filter"] as Record<string, unknown>)?.["enabled"]).toBe(true);
+    });
+
     it("does not pass through handled keys", () => {
       const result = desugarDisplayer({
         type: "BARCHART",

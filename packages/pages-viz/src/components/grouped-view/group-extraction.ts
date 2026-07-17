@@ -1,4 +1,5 @@
-import type { TypedDataSet, ColumnId, CellValue } from "@casehubio/pages-data";
+import type { TypedDataSet, ColumnId, CellValue, GroupingKey } from "@casehubio/pages-data";
+import type { GroupNode } from "@casehubio/pages-component";
 
 export interface GroupBoundary {
   readonly name: string;
@@ -41,4 +42,78 @@ export function extractGroupBoundaries(
   }
 
   return boundaries;
+}
+
+export function extractGroupTree(
+  dataset: TypedDataSet,
+  keys: readonly GroupingKey[],
+  aggregations: readonly { column: ColumnId; fn: { fn: string } }[],
+): readonly GroupNode[] {
+  if (keys.length === 0 || dataset.rows.length === 0) return [];
+  return buildLevel(dataset, keys, 0, 0, dataset.rows.length, aggregations);
+}
+
+function buildLevel(
+  dataset: TypedDataSet,
+  keys: readonly GroupingKey[],
+  depth: number,
+  startRow: number,
+  endRow: number,
+  aggregations: readonly { column: ColumnId; fn: { fn: string } }[],
+): GroupNode[] {
+  if (depth >= keys.length) return [];
+  const keyCol = keys[depth]!.columnId;
+  const nodes: GroupNode[] = [];
+  let currentName = cellToString(dataset.rows[startRow]!.cell(keyCol));
+  let segStart = startRow;
+
+  for (let i = startRow + 1; i <= endRow; i++) {
+    const name = i < endRow ? cellToString(dataset.rows[i]!.cell(keyCol)) : null;
+    if (name !== currentName) {
+      const children = buildLevel(dataset, keys, depth + 1, segStart, i, aggregations);
+      const aggregates = computeAggregates(dataset, segStart, i, aggregations);
+      nodes.push({
+        name: currentName,
+        depth,
+        startRow: segStart,
+        rowCount: i - segStart,
+        children,
+        ...(aggregates.size > 0 ? { aggregates } : {}),
+      });
+      if (name !== null) {
+        currentName = name;
+        segStart = i;
+      }
+    }
+  }
+
+  return nodes;
+}
+
+function computeAggregates(
+  dataset: TypedDataSet,
+  startRow: number,
+  endRow: number,
+  aggregations: readonly { column: ColumnId; fn: { fn: string } }[],
+): ReadonlyMap<ColumnId, unknown> {
+  if (aggregations.length === 0) return new Map();
+  const result = new Map<ColumnId, unknown>();
+  for (const agg of aggregations) {
+    const values: number[] = [];
+    for (let i = startRow; i < endRow; i++) {
+      const cell = dataset.rows[i]!.cell(agg.column);
+      if (cell.type !== "NULL" && typeof cell.value === "number") {
+        values.push(cell.value);
+      }
+    }
+    switch (agg.fn.fn) {
+      case "COUNT": result.set(agg.column, endRow - startRow); break;
+      case "SUM": result.set(agg.column, values.reduce((a, b) => a + b, 0)); break;
+      case "AVERAGE": result.set(agg.column, values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0); break;
+      case "MIN": result.set(agg.column, values.length > 0 ? Math.min(...values) : null); break;
+      case "MAX": result.set(agg.column, values.length > 0 ? Math.max(...values) : null); break;
+      default: result.set(agg.column, null);
+    }
+  }
+  return result;
 }

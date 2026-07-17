@@ -172,4 +172,6 @@ export type {
   GroupedViewMode,
   AggregationBinding,
   GroupedViewProps,
+  GroupNode,
+  RowAccentConfig,
 } from "./grouped-view-types.js";

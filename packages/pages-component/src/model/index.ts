@@ -71,6 +71,8 @@ export type {
   GroupedViewMode,
   AggregationBinding,
   GroupedViewProps,
+  GroupNode,
+  RowAccentConfig,
 } from "./displayer-types.js";
 
 // Action types

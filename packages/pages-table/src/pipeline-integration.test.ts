@@ -18,7 +18,7 @@ type TableEl = HTMLElement & {
   clientSort: boolean;
   clientFilter: boolean;
   filterText: string;
-  columnConfig?: readonly { id: ColumnId; label?: string; sortable?: boolean }[];
+  columnConfig?: readonly { id: ColumnId; label?: string; sortable?: boolean; width?: string; align?: string; minWidth?: string }[];
   updateComplete: Promise<boolean>;
 };
 
@@ -779,6 +779,127 @@ describe('pipeline integration', () => {
 
       expect(events).toHaveLength(1);
       expect(events[0]!.key).toBe('Alice');
+    });
+  });
+
+  describe('column display hints', () => {
+    let el: TableEl;
+
+    beforeEach(async () => {
+      el = document.createElement('pages-table') as unknown as TableEl;
+      document.body.appendChild(el);
+    });
+
+    afterEach(() => {
+      document.body.removeChild(el);
+    });
+
+    it('merges width from ColumnSettings into columnConfig', async () => {
+      el.props = {
+        columns: [
+          { id: 'name', name: 'Name', width: '3fr' },
+          { id: 'age', name: 'Age', width: '120px', align: 'center' },
+        ],
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      expect(el.columnConfig![0]!.width).toBe('3fr');
+      expect(el.columnConfig![1]!.width).toBe('120px');
+    });
+
+    it('defaults to 1fr when no width hint', async () => {
+      el.props = {
+        columns: [{ id: 'name', name: 'Name' }],
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      expect(el.columnConfig![0]!.width).toBe('1fr');
+    });
+
+    it('per-column sortable overrides global sortable', async () => {
+      el.props = {
+        sortable: true,
+        columns: [
+          { id: 'name', name: 'Name', sortable: false },
+          { id: 'age', name: 'Age' },
+        ],
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      expect(el.columnConfig![0]!.sortable).toBe(false);
+      expect(el.columnConfig![1]!.sortable).toBe(true);
+    });
+  });
+
+  describe('rowAccent', () => {
+    let el: TableEl & { getRowAccent?: (row: any) => string | undefined };
+
+    beforeEach(async () => {
+      el = document.createElement('pages-table') as unknown as TableEl & { getRowAccent?: (row: any) => string | undefined };
+      document.body.appendChild(el);
+    });
+
+    afterEach(() => {
+      document.body.removeChild(el);
+    });
+
+    it('YAML rowAccent config converts to getRowAccent function', async () => {
+      el.props = {
+        rowAccent: {
+          column: 'name',
+          colorMap: { Alice: '#2e7d32', Bob: '#e65100' },
+        },
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      expect(el.getRowAccent).toBeDefined();
+      const row = el.dataSet!.rows[0]!;
+      expect(el.getRowAccent!(row)).toBe('#2e7d32');
+    });
+
+    it('rowAccent default color applies for unmapped values', async () => {
+      el.props = {
+        rowAccent: {
+          column: 'name',
+          colorMap: { Alice: '#2e7d32' },
+          default: '#9e9e9e',
+        },
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      const bob = el.dataSet!.rows[1]!;
+      expect(el.getRowAccent!(bob)).toBe('#9e9e9e');
+    });
+
+    it('rowAccent returns undefined for unmapped values without default', async () => {
+      el.props = {
+        rowAccent: {
+          column: 'name',
+          colorMap: { Alice: '#2e7d32' },
+        },
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      const bob = el.dataSet!.rows[1]!;
+      expect(el.getRowAccent!(bob)).toBeUndefined();
+    });
+
+    it('getRowAccent renders border-left on row', async () => {
+      el.getRowAccent = (row: any) => {
+        const val = row.text('name' as any);
+        return val === 'Bob' ? '#e65100' : undefined;
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row');
+      const bobRow = rows[1] as HTMLElement;
+      const bobStyle = bobRow.getAttribute('style') ?? '';
+      expect(bobStyle).toContain('border-left');
+      expect(bobStyle).toContain('#e65100');
+      const aliceRow = rows[0] as HTMLElement;
+      const aliceStyle = aliceRow.getAttribute('style') ?? '';
+      expect(aliceStyle).not.toContain('border-left');
     });
   });
 });

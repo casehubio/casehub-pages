@@ -395,4 +395,153 @@ describe("PagesGroupedView", () => {
       expect(labels.length).toBe(2);
     });
   });
+
+  describe("interstitial hook", () => {
+    it("renderAfterHeader inserts content between header and table", async () => {
+      element.props = makeProps({
+        preset: "sectioned",
+        renderAfterHeader: (node) => {
+          if (node.name === "Critical") {
+            const div = document.createElement("div");
+            div.className = "gate-marker";
+            div.textContent = "GATE: blocks-ui#41";
+            return div;
+          }
+          return undefined;
+        },
+      });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const gateMarker = element.shadowRoot!.querySelector(".gate-marker");
+      expect(gateMarker).not.toBeNull();
+      expect(gateMarker!.textContent).toBe("GATE: blocks-ui#41");
+    });
+
+    it("renderAfterHeader does not insert for groups returning undefined", async () => {
+      element.props = makeProps({
+        preset: "sectioned",
+        renderAfterHeader: (node) => {
+          if (node.name === "NonExistent") {
+            const div = document.createElement("div");
+            div.className = "gate-marker";
+            return div;
+          }
+          return undefined;
+        },
+      });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+      const gateMarker = element.shadowRoot!.querySelector(".gate-marker");
+      expect(gateMarker).toBeNull();
+    });
+  });
+
+  describe("multi-level grouping", () => {
+    function makeMultiLevelDataset() {
+      const ds: DataSet = {
+        columns: [
+          { id: "phase" as ColumnId, name: "Phase", type: ColumnType.LABEL },
+          { id: "status" as ColumnId, name: "Status", type: ColumnType.LABEL },
+          { id: "title" as ColumnId, name: "Title", type: ColumnType.LABEL },
+        ],
+        data: [
+          ["UI", "done", "Task A"],
+          ["UI", "done", "Task B"],
+          ["UI", "open", "Task C"],
+          ["API", "done", "Task D"],
+          ["API", "blocked", "Task E"],
+        ],
+      };
+      return toTypedDataSet(ds);
+    }
+
+    function makeMultiLevelKey(column: string) {
+      return {
+        sourceId: column as ColumnId,
+        columnId: column as ColumnId,
+        strategy: { mode: "distinct" as const },
+        maxIntervals: 100,
+        emptyIntervals: false,
+        ascendingOrder: true,
+      };
+    }
+
+    it("renders nested section headers for multi-level groupBy", async () => {
+      element.props = makeProps({
+        groupBy: [makeMultiLevelKey("phase"), makeMultiLevelKey("status")],
+        preset: "sectioned",
+        defaultExpanded: true,
+      });
+      element.dataSet = makeMultiLevelDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const topSections = element.shadowRoot!.querySelectorAll(".section-toggle");
+      expect(topSections.length).toBe(2);
+      expect(topSections[0]!.querySelector(".section-title")!.textContent).toBe("UI");
+      expect(topSections[1]!.querySelector(".section-title")!.textContent).toBe("API");
+
+      const subSections = element.shadowRoot!.querySelectorAll(".sub-section-toggle");
+      expect(subSections.length).toBe(4);
+    });
+
+    it("renders tables only at leaf level", async () => {
+      element.props = makeProps({
+        groupBy: [makeMultiLevelKey("phase"), makeMultiLevelKey("status")],
+        preset: "sectioned",
+        defaultExpanded: true,
+      });
+      element.dataSet = makeMultiLevelDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      expect(tables.length).toBe(4);
+    });
+
+    it("leaf tables have correct row counts", async () => {
+      element.props = makeProps({
+        groupBy: [makeMultiLevelKey("phase"), makeMultiLevelKey("status")],
+        preset: "sectioned",
+        defaultExpanded: true,
+      });
+      element.dataSet = makeMultiLevelDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const tables = element.shadowRoot!.querySelectorAll("pages-table") as NodeListOf<MockTable>;
+      expect(tables[0]!.dataSet.rows.length).toBe(2);
+      expect(tables[1]!.dataSet.rows.length).toBe(1);
+      expect(tables[2]!.dataSet.rows.length).toBe(1);
+      expect(tables[3]!.dataSet.rows.length).toBe(1);
+    });
+
+    it("excludes all groupBy columns from content", async () => {
+      element.props = makeProps({
+        groupBy: [makeMultiLevelKey("phase"), makeMultiLevelKey("status")],
+        preset: "sectioned",
+        defaultExpanded: true,
+      });
+      element.dataSet = makeMultiLevelDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const headerBar = element.shadowRoot!.querySelector(".column-header-bar");
+      expect(headerBar).not.toBeNull();
+      const headers = headerBar!.querySelectorAll(".col-header, .col-label");
+      const headerTexts = Array.from(headers).map((h) => h.textContent?.trim());
+      expect(headerTexts).not.toContain("Phase");
+      expect(headerTexts).not.toContain("Status");
+      expect(headerTexts).toContain("Title");
+    });
+
+    it("single-key array behaves same as single object", async () => {
+      element.props = makeProps({
+        groupBy: [makeMultiLevelKey("status")],
+        preset: "sectioned",
+        defaultExpanded: true,
+      });
+      element.dataSet = makeGroupedDataset();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const sections = element.shadowRoot!.querySelectorAll(".section-toggle");
+      expect(sections.length).toBe(2);
+    });
+  });
 });

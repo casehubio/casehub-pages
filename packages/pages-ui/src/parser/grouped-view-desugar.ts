@@ -40,20 +40,26 @@ function parseAggregation(fnStr: string): Aggregation {
 }
 
 export function desugarGroupedView(raw: Record<string, unknown>): Component {
-  const groupByRaw = raw.groupBy as Record<string, unknown>;
+  const groupByRaw = raw.groupBy;
   if (!groupByRaw) throw new Error("grouped-view requires a groupBy field");
 
-  const column = groupByRaw.column as string;
   const order = raw.order as string | undefined;
 
-  const groupBy: GroupingKey = {
-    sourceId: column as ColumnId,
-    columnId: column as ColumnId,
-    strategy: parseStrategy(groupByRaw),
-    maxIntervals: (groupByRaw.maxIntervals as number) ?? 100,
-    emptyIntervals: (raw.emptyGroups as boolean) ?? false,
-    ascendingOrder: order === "desc" ? false : true,
-  };
+  function parseSingleGroupBy(g: Record<string, unknown>): GroupingKey {
+    const column = g.column as string;
+    return {
+      sourceId: column as ColumnId,
+      columnId: column as ColumnId,
+      strategy: parseStrategy(g),
+      maxIntervals: (g.maxIntervals as number) ?? 100,
+      emptyIntervals: (raw.emptyGroups as boolean) ?? false,
+      ascendingOrder: order === "desc" ? false : true,
+    };
+  }
+
+  const groupBy: GroupingKey | GroupingKey[] = Array.isArray(groupByRaw)
+    ? (groupByRaw as Record<string, unknown>[]).map(parseSingleGroupBy)
+    : parseSingleGroupBy(groupByRaw as Record<string, unknown>);
 
   const aggregations: AggregationBinding[] = ((raw.aggregations as Array<Record<string, unknown>>) ?? []).map((a) => ({
     column: a.column as ColumnId,
@@ -83,6 +89,8 @@ export function desugarGroupedView(raw: Record<string, unknown>): Component {
   if (raw.rowStyle != null) props.rowStyle = raw.rowStyle;
   if (raw.selection != null) props.selection = raw.selection;
   if (raw.sortable != null) props.sortable = raw.sortable;
+  if (raw.clientSort != null) props.clientSort = raw.clientSort;
+  if (raw.rowAccent != null) props.rowAccent = raw.rowAccent;
 
   if (raw.lookup != null) {
     props.lookup = parseLookup(raw.lookup);

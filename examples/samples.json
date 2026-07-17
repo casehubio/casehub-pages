@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 60,
+  "totalSamples": 62,
   "categories": [
     {
       "category": "Charts",
@@ -72,6 +72,12 @@
           "file": "Google Spreadsheet.dash.yaml"
         },
         {
+          "name": "Grouped Roadmap",
+          "path": "Tables/Grouped Roadmap.dash.yaml",
+          "category": "Tables",
+          "file": "Grouped Roadmap.dash.yaml"
+        },
+        {
           "name": "Grouped View",
           "path": "Tables/Grouped View.dash.yaml",
           "category": "Tables",
@@ -88,6 +94,12 @@
           "path": "Tables/Lookup Operations.dash.yaml",
           "category": "Tables",
           "file": "Lookup Operations.dash.yaml"
+        },
+        {
+          "name": "Project Roadmap",
+          "path": "Tables/Project Roadmap.dash.yaml",
+          "category": "Tables",
+          "file": "Project Roadmap.dash.yaml"
         },
         {
           "name": "Row Detail",

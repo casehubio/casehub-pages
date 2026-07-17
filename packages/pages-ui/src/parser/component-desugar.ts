@@ -358,6 +358,19 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       };
     }
 
+    // Legend component (content component — no dataset binding)
+    if (rawType === "legend") {
+      const properties = (raw.properties as Record<string, unknown> | undefined) || {};
+      const style = extractStyle(raw.style);
+      const visibleWhen = raw.visibleWhen as string | undefined;
+      return {
+        type: "legend",
+        props: properties,
+        ...(style ? { style } : {}),
+        ...(visibleWhen ? { visibleWhen } : {}),
+      };
+    }
+
     // Displayer type (type: "Displayer" or type: "displayer")
     if (rawType === "Displayer" || rawType === "displayer") {
       return desugarDisplayer(raw);
@@ -368,12 +381,14 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     const normalized = LEGACY_TYPE_MAP[rawType] ?? rawType.toLowerCase();
     if (DATA_COMPONENT_TYPES.has(normalized)) {
       const rawProps = (raw.properties as Record<string, unknown> | undefined) ?? {};
+      const style = extractStyle(raw.style);
       const displayerInput = { type: rawType, ...rawProps };
       const component = desugarDisplayer(displayerInput);
       const visibleWhen = raw.visibleWhen as string | undefined;
       const rawId = raw.id as string | undefined;
       return {
         ...component,
+        ...(style ? { style } : {}),
         ...(rawId ? { id: rawId } : {}),
         ...(visibleWhen ? { visibleWhen } : {}),
       };

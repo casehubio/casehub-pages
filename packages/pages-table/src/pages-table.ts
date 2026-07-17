@@ -4,11 +4,11 @@ import { customElement, property, state } from 'lit/decorators.js';
 import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data';
 import { ColumnType } from '@casehubio/pages-data';
 import type { SortColumn } from '@casehubio/pages-data';
-import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail } from './types.js';
+import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail, RowAccentConfig } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
-import { resolveColumnName, cellToRaw, applyCellExpression, resolveColumnExpression } from './cell-utils.js';
+import { cellToRaw, applyCellExpression } from './cell-utils.js';
 import { until } from 'lit/directives/until.js';
 import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
 import { evaluateExpression, createRowContext } from '@casehubio/pages-component';
@@ -41,6 +41,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @property({ type: Boolean, attribute: 'header-visible' }) headerVisible = true;
   @property({ type: Boolean }) sortable = false;
   @property({ attribute: false }) rowStyle?: readonly RowStyleRule[];
+  @property({ attribute: false }) getRowAccent?: (row: TypedRow) => string | undefined;
 
   set activeSort(sort: SortColumn | undefined) {
     if (!sort) {
@@ -118,6 +119,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   private _treeExpandStateInitialized = false;
   private _treeNodeByRow = new Map<TypedRow, TreeNode>();
   private _csvExportEnabled = false;
+  private _rowAccentColumns: 'all' | readonly string[] | undefined = undefined;
   private _rowDetailConfig?: { mode?: string; columns?: readonly { id: string; label?: string }[] };
   @state() private _internalExpandedDetailKeys = new Set<string>();
   private _instanceId = '';
@@ -167,6 +169,20 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       this._rowStyleRules = rowStyle;
     }
 
+    const rowAccent = p.rowAccent as RowAccentConfig | undefined;
+    if (rowAccent) {
+      const colId = rowAccent.column as ColumnId;
+      const map = rowAccent.colorMap;
+      const fallback = rowAccent.default;
+      this._rowAccentColumns = rowAccent.columns;
+      this.getRowAccent = (row: TypedRow) => {
+        const cell = row.cell(colId);
+        if (cell.type === 'NULL') return fallback;
+        const color = map[String(cell.value)];
+        return color ?? fallback;
+      };
+    }
+
     const rowDetail = p.rowDetail as { mode?: string; columns?: readonly { id: string; label?: string }[] } | undefined;
     if (rowDetail) {
       this._rowDetailConfig = rowDetail;
@@ -198,14 +214,15 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     const cols = this.dataSet.columns;
 
     const config: TableColumnConfig[] = cols.map(col => {
-      const label = this._propsColumns
-        ? resolveColumnName(col, this._propsColumns)
-        : col.name;
+      const override = this._propsColumns?.find(c => String(c.id) === String(col.id));
+      const label = override?.name ?? col.settings?.name ?? col.name;
       return {
         id: col.id,
         label,
-        sortable: this._sortableFromProps,
-        width: '1fr',
+        sortable: override?.sortable ?? this._sortableFromProps,
+        width: override?.width ?? '1fr',
+        ...(override?.align && { align: override.align }),
+        ...(override?.minWidth && { minWidth: override.minWidth }),
       };
     });
     this.columnConfig = config;
@@ -213,7 +230,8 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     if (this._propsColumns) {
       const renderers = new Map<ColumnId, ColumnRenderer>();
       for (const col of cols) {
-        const expr = resolveColumnExpression(col.id, this._propsColumns);
+        const override = this._propsColumns.find(c => String(c.id) === String(col.id));
+        const expr = override?.expression;
         if (expr) {
           const expression = expr;
           renderers.set(col.id, (cell: CellValue) => {
@@ -223,6 +241,19 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
               applyCellExpression(raw, expression).then(r => r === null ? '' : String(r)),
               String(raw),
             );
+          });
+        }
+        if (override?.pill) {
+          const pillMap = override.pill;
+          renderers.set(col.id, (cell: CellValue) => {
+            const raw = cellToRaw(cell);
+            if (raw === null) return '';
+            const value = String(raw);
+            const color = pillMap[value];
+            if (color) {
+              return html`<span style="font-size:10px; padding:1px 6px; border-radius:3px; color:#fff; background:${color}; display:inline-block; min-width:55px; text-align:center;">${value}</span>`;
+            }
+            return value;
           });
         }
       }
@@ -2062,7 +2093,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     this.requestUpdate();
   }
 
-  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode) {
+  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode, cellAccent?: string) {
     const cell = row.cell(column.id);
     const renderer = this.columnRenderers?.get(column.id);
     const content = renderer
@@ -2075,6 +2106,9 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     const filterClickHandler = this._filterConfig.enabled
       ? (e: MouseEvent) => { e.stopPropagation(); this._handleCellFilterClick(row, column.id); }
       : undefined;
+
+    const showAccent = cellAccent && (this._rowAccentColumns === 'all' || (Array.isArray(this._rowAccentColumns) && this._rowAccentColumns.includes(String(column.id))));
+    const accentBorder = showAccent ? `border-left: 3px solid ${cellAccent}` : '';
 
     if (isFirstColumn && treeMeta) {
       const depth = 'depth' in treeMeta ? treeMeta.depth : 0;
@@ -2091,7 +2125,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         : html`<span class="tree-spacer"></span>`;
 
       return html`
-        <div class="cell tree-cell" role="gridcell" style="text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)"
+        <div class="cell tree-cell" role="gridcell" style="text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)${accentBorder ? `; ${accentBorder}` : ''}"
           @click="${filterClickHandler ?? nothing}">
           ${toggle}${content}
         </div>
@@ -2102,7 +2136,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       <div
         class="cell"
         role="gridcell"
-        style="text-align: ${align}"
+        style="text-align: ${align}${accentBorder ? `; ${accentBorder}` : ''}"
         @click="${filterClickHandler ?? nothing}"
       >
         ${content}
@@ -2268,6 +2302,10 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       ? Object.entries(effectiveStyle).map(([k, v]) => `${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}: ${v}`).join('; ')
       : '';
 
+    const accent = this.getRowAccent?.(row);
+    const perCellAccent = accent && this._rowAccentColumns;
+    const rowAccentStyle = accent && !perCellAccent ? `border-left: 4px solid ${accent}` : '';
+
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';
 
     const isDetailExpanded = this.getRowDetail && this.getRowKey
@@ -2277,7 +2315,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     return html`
       <div
         class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''} ${rowStyleClass} ${isDetailExpanded ? 'detail-expanded' : ''}"
-        style="grid-template-columns: ${this._gridTemplateColumns}; ${rowInlineStyle}"
+        style="grid-template-columns: ${this._gridTemplateColumns}; ${rowInlineStyle}${rowAccentStyle ? `; ${rowAccentStyle}` : ''}"
         role="row"
         part="${part}"
         aria-rowindex="${ariaRowIndex}"
@@ -2292,7 +2330,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       >
         ${this._renderExpandCell(row)}
         ${this._renderCheckbox(row)}
-        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode))}
+        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode, perCellAccent ? accent : undefined))}
       </div>
       ${this._renderDetailPanel(row)}
     `;
