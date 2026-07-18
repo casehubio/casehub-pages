@@ -25,6 +25,15 @@ export class PagesSchemaForm extends LitElement {
     input:focus, select:focus, textarea:focus { outline: 2px solid var(--pages-accent-9, #2563eb); outline-offset: -1px; border-color: var(--pages-accent-9, #2563eb); }
     textarea { min-height: 80px; resize: vertical; }
     .error { color: var(--pages-danger-9, #dc2626); font-size: var(--pages-font-size-xs, 11px); margin-top: var(--pages-space-0-5, 2px); }
+    .array-item { margin-bottom: var(--pages-space-3, 12px); padding-bottom: var(--pages-space-3, 12px); border-bottom: 1px solid var(--pages-neutral-4, #eee); }
+    .array-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--pages-space-1, 4px); }
+    .array-index { font-size: var(--pages-font-size-sm, 12px); font-weight: var(--pages-font-weight-medium, 500); color: var(--pages-neutral-9, #888); }
+    .array-item-inline { display: flex; gap: var(--pages-space-2, 8px); align-items: center; margin-bottom: var(--pages-space-1, 4px); }
+    .array-item-inline input { flex: 1; }
+    .array-remove { background: none; border: 1px solid var(--pages-danger-6, #fca5a5); color: var(--pages-danger-9, #dc2626); border-radius: var(--pages-radius-sm, 4px); padding: 2px 8px; cursor: pointer; font-size: var(--pages-font-size-xs, 11px); }
+    .array-remove:hover { background: var(--pages-danger-2, #fee); }
+    .array-add { background: none; border: 1px dashed var(--pages-neutral-6, #ccc); color: var(--pages-neutral-10, #666); border-radius: var(--pages-radius-sm, 4px); padding: var(--pages-space-1, 4px) var(--pages-space-3, 12px); cursor: pointer; font-size: var(--pages-font-size-sm, 12px); width: 100%; margin-top: var(--pages-space-2, 8px); }
+    .array-add:hover { background: var(--pages-neutral-2, #f5f5f5); border-color: var(--pages-neutral-8, #999); }
   `;
 
   override willUpdate(changed: Map<string, unknown>): void {

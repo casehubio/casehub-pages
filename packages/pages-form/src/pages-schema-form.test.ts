@@ -117,6 +117,134 @@ describe('pages-schema-form', () => {
     });
   });
 
+  describe('nested objects', () => {
+    const nestedSchema = {
+      type: 'object',
+      properties: {
+        address: {
+          type: 'object',
+          properties: {
+            street: { type: 'string' },
+            city: { type: 'string' },
+          },
+        },
+      },
+    };
+
+    it('renders nested fields in display mode', async () => {
+      el.schema = nestedSchema;
+      el.data = { address: { street: '123 Main St', city: 'Springfield' } };
+      el.mode = 'display';
+      await (el as any).updateComplete;
+      const text = el.shadowRoot!.textContent!;
+      expect(text).toContain('123 Main St');
+      expect(text).toContain('Springfield');
+    });
+
+    it('renders nested inputs in edit mode', async () => {
+      el.schema = nestedSchema;
+      el.data = { address: { street: '123 Main St', city: 'Springfield' } };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const inputs = el.shadowRoot!.querySelectorAll<HTMLInputElement>('input[type="text"]');
+      expect(inputs.length).toBe(2);
+      expect(inputs[0]!.value).toBe('123 Main St');
+      expect(inputs[1]!.value).toBe('Springfield');
+    });
+
+    it('emits change with merged nested value', async () => {
+      el.schema = nestedSchema;
+      el.data = { address: { street: '123 Main St', city: 'Springfield' } };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const handler = vi.fn();
+      el.addEventListener('pages-form-change', handler);
+      const input = el.shadowRoot!.querySelector<HTMLInputElement>('input[id="city"]')!;
+      input.value = 'Shelbyville';
+      input.dispatchEvent(new Event('input'));
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0]?.[0].detail.key).toBe('address');
+      expect(handler.mock.calls[0]?.[0].detail.value).toEqual({ street: '123 Main St', city: 'Shelbyville' });
+    });
+  });
+
+  describe('arrays', () => {
+    const arraySchema = {
+      type: 'object',
+      properties: {
+        tags: { type: 'array', items: { type: 'string' } },
+      },
+    };
+
+    it('renders array items as comma-separated in display mode', async () => {
+      el.schema = arraySchema;
+      el.data = { tags: ['red', 'green', 'blue'] };
+      el.mode = 'display';
+      await (el as any).updateComplete;
+      expect(el.shadowRoot!.textContent).toContain('red, green, blue');
+    });
+
+    it('renders editable inputs for each array item', async () => {
+      el.schema = arraySchema;
+      el.data = { tags: ['alpha', 'beta'] };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const inputs = el.shadowRoot!.querySelectorAll<HTMLInputElement>('.array-item-inline input');
+      expect(inputs.length).toBe(2);
+      expect(inputs[0]!.value).toBe('alpha');
+      expect(inputs[1]!.value).toBe('beta');
+    });
+
+    it('adds an item when add button is clicked', async () => {
+      el.schema = arraySchema;
+      el.data = { tags: ['one'] };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const handler = vi.fn();
+      el.addEventListener('pages-form-change', handler);
+      const addBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.array-add')!;
+      addBtn.click();
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0]?.[0].detail.value).toEqual(['one', '']);
+    });
+
+    it('removes an item when remove button is clicked', async () => {
+      el.schema = arraySchema;
+      el.data = { tags: ['a', 'b', 'c'] };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const handler = vi.fn();
+      el.addEventListener('pages-form-change', handler);
+      const removeBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.array-remove')!;
+      removeBtn.click();
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0]?.[0].detail.value).toEqual(['b', 'c']);
+    });
+
+    it('renders object array items with nested fields', async () => {
+      const objArraySchema = {
+        type: 'object',
+        properties: {
+          contacts: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { name: { type: 'string' }, role: { type: 'string' } },
+            },
+          },
+        },
+      };
+      el.schema = objArraySchema;
+      el.data = { contacts: [{ name: 'Alice', role: 'Lead' }] };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const inputs = el.shadowRoot!.querySelectorAll<HTMLInputElement>('.array-item input[type="text"]');
+      expect(inputs.length).toBe(2);
+      expect(inputs[0]!.value).toBe('Alice');
+      expect(inputs[1]!.value).toBe('Lead');
+    });
+  });
+
   describe('date fields', () => {
     const dateSchema = {
       type: 'object',

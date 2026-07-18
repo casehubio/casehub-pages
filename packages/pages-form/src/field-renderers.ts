@@ -25,6 +25,13 @@ function toDateTimeInputValue(value: unknown): string {
   return date.toISOString().slice(0, 16);
 }
 
+function defaultForType(schema: FieldSchema): unknown {
+  if (schema.type === 'object') return {};
+  if (schema.type === 'number' || schema.type === 'integer') return 0;
+  if (schema.type === 'boolean') return false;
+  return '';
+}
+
 export function renderDisplayField(
   key: string,
   schema: FieldSchema,
@@ -56,6 +63,23 @@ export function renderDisplayField(
   }
 
   if (schema.type === 'array' && Array.isArray(value)) {
+    if (schema.items?.type === 'object' && schema.items.properties) {
+      const itemSchema = schema.items;
+      return html`
+        <div class="field nested">
+          <span class="label">${key}</span>
+          <div class="nested-content">
+            ${(value as Record<string, unknown>[]).map((item, i) => html`
+              <div class="array-item">
+                <span class="array-index">${i + 1}.</span>
+                ${Object.entries(itemSchema.properties!).map(([k, s]) =>
+                  renderDisplayField(k, s, item[k])
+                )}
+              </div>
+            `)}
+          </div>
+        </div>`;
+    }
     return html`<div class="field"><span class="label">${key}</span><span class="value">${(value as unknown[]).join(', ')}</span></div>`;
   }
 
@@ -112,6 +136,27 @@ export function renderEditField(
       </div>`;
   }
 
+  if (schema.type === 'object' && schema.properties) {
+    const obj = (value ?? {}) as Record<string, unknown>;
+    const nestedChange = (nestedKey: string, nestedValue: unknown) => {
+      onChange(key, { ...obj, [nestedKey]: nestedValue });
+    };
+    return html`
+      <div class="field nested">
+        <span class="label">${key}</span>
+        <div class="nested-content">
+          ${Object.entries(schema.properties).map(([k, s]) =>
+            renderEditField(k, s, obj[k], nestedChange)
+          )}
+        </div>
+      </div>`;
+  }
+
+  if (schema.type === 'array' && schema.items) {
+    const arr = Array.isArray(value) ? [...value] as unknown[] : [];
+    return renderArrayEditor(key, schema.items, arr, onChange);
+  }
+
   if (schema.type === 'string' && (schema.maxLength ?? 0) > 200) {
     return html`
       <div class="field">
@@ -124,5 +169,64 @@ export function renderEditField(
     <div class="field">
       <label for="${key}">${key}</label>
       <input id="${key}" type="text" .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} />
+    </div>`;
+}
+
+function renderArrayEditor(
+  key: string,
+  itemSchema: FieldSchema,
+  items: unknown[],
+  onChange: (key: string, value: unknown) => void,
+): TemplateResult {
+  const updateItem = (index: number, val: unknown) => {
+    const updated = [...items];
+    updated[index] = val;
+    onChange(key, updated);
+  };
+  const removeItem = (index: number) => {
+    onChange(key, items.filter((_, i) => i !== index));
+  };
+  const addItem = () => {
+    onChange(key, [...items, defaultForType(itemSchema)]);
+  };
+
+  if (itemSchema.type === 'object' && itemSchema.properties) {
+    return html`
+      <div class="field nested">
+        <span class="label">${key}</span>
+        <div class="nested-content">
+          ${items.map((item, i) => {
+            const obj = (item ?? {}) as Record<string, unknown>;
+            const nestedChange = (nestedKey: string, nestedValue: unknown) => {
+              updateItem(i, { ...obj, [nestedKey]: nestedValue });
+            };
+            return html`
+              <div class="array-item">
+                <div class="array-item-header">
+                  <span class="array-index">${i + 1}.</span>
+                  <button type="button" class="array-remove" @click=${() => removeItem(i)}>✕</button>
+                </div>
+                ${Object.entries(itemSchema.properties!).map(([k, s]) =>
+                  renderEditField(k, s, obj[k], nestedChange)
+                )}
+              </div>`;
+          })}
+          <button type="button" class="array-add" @click=${addItem}>+ Add ${key}</button>
+        </div>
+      </div>`;
+  }
+
+  return html`
+    <div class="field nested">
+      <span class="label">${key}</span>
+      <div class="nested-content">
+        ${items.map((item, i) => html`
+          <div class="array-item-inline">
+            <input type="text" .value=${String(item ?? '')} @input=${(e: Event) => updateItem(i, (e.target as HTMLInputElement).value)} />
+            <button type="button" class="array-remove" @click=${() => removeItem(i)}>✕</button>
+          </div>
+        `)}
+        <button type="button" class="array-add" @click=${addItem}>+ Add ${key}</button>
+      </div>
     </div>`;
 }
