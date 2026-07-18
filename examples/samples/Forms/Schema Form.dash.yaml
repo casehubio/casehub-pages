@@ -52,21 +52,19 @@ pages:
         properties:
           targetPage: true
         tabs:
-          Schema-Driven:
+          Schema:
             components:
               - type: html
                 properties:
                   content: <schema-form-demo></schema-form-demo>
 
-          Manual:
+          YAML:
             components:
               - type: markdown
                 properties:
                   content: |
-                    Each field wired individually via the YAML DSL. Compare with
-                    the schema-driven tab — same data, more YAML. Nested objects
-                    require manual section headers. Arrays require a separate
-                    table — no inline add/remove.
+                    Pure YAML DSL — each field wired individually. No nesting,
+                    no array editing, no display mode, no datetime-local.
 
               - text-input:
                   field: transactionId
@@ -104,11 +102,6 @@ pages:
                   label: Notes
                   rows: 4
 
-              - type: title
-                properties:
-                  text: Parties
-                  size: h4
-
               - text-input:
                   field: sender
                   label: Sender
@@ -116,21 +109,3 @@ pages:
               - text-input:
                   field: receiver
                   label: Receiver
-
-              - type: title
-                properties:
-                  text: Tags
-                  size: h4
-
-              - type: markdown
-                properties:
-                  content: "high-risk, cross-border, layering *(static — no inline add/remove)*"
-
-              - type: title
-                properties:
-                  text: Linked Transactions
-                  size: h4
-
-              - type: markdown
-                properties:
-                  content: "*(Array editing not available with individual inputs — requires a table or custom component)*"
