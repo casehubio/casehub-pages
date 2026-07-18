@@ -1504,6 +1504,7 @@ __metadata:
   resolution: "@casehubio/pages-examples@workspace:examples"
   dependencies:
     "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-form": "workspace:*"
     "@casehubio/pages-runtime": "workspace:*"
     "@casehubio/pages-ui": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
@@ -1523,7 +1524,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-form@workspace:packages/pages-form":
+"@casehubio/pages-form@workspace:*, @casehubio/pages-form@workspace:packages/pages-form":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-form@workspace:packages/pages-form"
   dependencies:
