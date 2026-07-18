@@ -64,7 +64,9 @@ pages:
                 properties:
                   content: |
                     Each field wired individually via the YAML DSL. Compare with
-                    the schema-driven tab — same data, more YAML.
+                    the schema-driven tab — same data, more YAML. Nested objects
+                    require manual section headers. Arrays require a separate
+                    table — no inline add/remove.
 
               - text-input:
                   field: transactionId
@@ -93,10 +95,19 @@ pages:
                   field: reportDate
                   label: Report Date
 
+              - date-picker:
+                  field: detectedAt
+                  label: Detected At
+
               - textarea:
                   field: notes
                   label: Notes
                   rows: 4
+
+              - type: title
+                properties:
+                  text: Parties
+                  size: h4
 
               - text-input:
                   field: sender
@@ -105,3 +116,21 @@ pages:
               - text-input:
                   field: receiver
                   label: Receiver
+
+              - type: title
+                properties:
+                  text: Tags
+                  size: h4
+
+              - type: markdown
+                properties:
+                  content: "high-risk, cross-border, layering *(static — no inline add/remove)*"
+
+              - type: title
+                properties:
+                  text: Linked Transactions
+                  size: h4
+
+              - type: markdown
+                properties:
+                  content: "*(Array editing not available with individual inputs — requires a table or custom component)*"
