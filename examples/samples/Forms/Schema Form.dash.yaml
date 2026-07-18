@@ -44,9 +44,10 @@ pages:
       - type: markdown
         properties:
           content: |
-            Same AML transaction payload, two approaches. **Schema-driven** passes
-            a JSON Schema and gets a complete form with display/edit modes, nested
-            objects, arrays, and submit. **Manual** wires each field individually.
+            Same AML transaction payload, two approaches. **Schema** passes
+            a JSON Schema and gets a complete form with display/edit modes,
+            nested objects, arrays, and submit. **YAML** wires each field
+            individually — flat fields only, no nesting or arrays.
 
       - type: tabs
         properties:
