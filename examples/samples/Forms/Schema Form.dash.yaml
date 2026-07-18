@@ -44,10 +44,10 @@ pages:
       - type: markdown
         properties:
           content: |
-            Same AML transaction payload, two approaches. **Schema** passes
-            a JSON Schema and gets a complete form with display/edit modes,
-            nested objects, arrays, and submit. **YAML** wires each field
-            individually — flat fields only, no nesting or arrays.
+            Same AML transaction payload, three approaches. **Schema** passes
+            one JSON Schema — full automation. **HTML** uses `type: html` for
+            full layout control. **YAML** uses DSL form inputs — flat fields
+            only.
 
       - type: tabs
         properties:
@@ -58,6 +58,57 @@ pages:
               - type: html
                 properties:
                   content: <schema-form-demo></schema-form-demo>
+
+          HTML:
+            components:
+              - type: markdown
+                properties:
+                  content: |
+                    Raw HTML via `type: html` — full layout control including
+                    nesting and arrays. More verbose, but no DSL limitations.
+
+              - type: html
+                properties:
+                  content: >
+                    <div style="font-family:var(--pages-font-family,system-ui,sans-serif);font-size:14px;">
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">TransactionId</label><input type="text" value="TXN-2026-04521" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Amount</label><input type="number" value="125000" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Currency</label><select style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;"><option selected>USD</option><option>EUR</option><option>GBP</option></select></div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" checked style="width:18px;height:18px;" /> Flagged</label></div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">ReportDate</label><input type="date" value="2026-07-06" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">DetectedAt</label><input type="datetime-local" value="2026-07-06T14:30" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Notes</label><textarea rows="4" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;font-family:inherit;background:#fff;color:#333;box-sizing:border-box;resize:vertical;">Multiple rapid transfers to high-risk jurisdictions.</textarea></div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
+                        <span style="font-size:14px;font-weight:500;color:#333;">Parties</span>
+                        <div style="padding-left:16px;border-left:2px solid #e0e0e0;">
+                          <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Sender</label><input type="text" value="Acme Holdings Ltd" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                          <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Receiver</label><input type="text" value="Shell Corp 42 LLC" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                        </div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
+                        <span style="font-size:14px;font-weight:500;color:#333;">Tags</span>
+                        <div style="padding-left:16px;border-left:2px solid #e0e0e0;">
+                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="high-risk" style="flex:1;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;" /></div>
+                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="cross-border" style="flex:1;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;" /></div>
+                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="layering" style="flex:1;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;" /></div>
+                        </div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
+                        <span style="font-size:14px;font-weight:500;color:#333;">LinkedTransactions</span>
+                        <div style="padding-left:16px;border-left:2px solid #e0e0e0;">
+                          <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee;">
+                            <span style="font-size:12px;font-weight:500;color:#888;">1.</span>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Id</label><input type="text" value="TXN-2026-04519" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Amount</label><input type="number" value="50000" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                          </div>
+                          <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee;">
+                            <span style="font-size:12px;font-weight:500;color:#888;">2.</span>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Id</label><input type="text" value="TXN-2026-04520" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:#333;">Amount</label><input type="number" value="75000" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:4px;font-size:14px;background:#fff;color:#333;box-sizing:border-box;" /></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
           YAML:
             components:
