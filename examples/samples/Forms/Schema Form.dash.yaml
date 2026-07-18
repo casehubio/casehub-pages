@@ -9,20 +9,11 @@ pages:
       - type: markdown
         properties:
           content: |
-            **`<pages-schema-form>`** renders a JSON Schema as a complete form
-            automatically — no manual field wiring needed.
+            Pass a JSON Schema and data — get a complete form. Toggle between
+            **display** (read-only) and **edit** (interactive) modes. Supports
+            nested objects, arrays with add/remove, required field validation,
+            and a pluggable field renderer registry.
 
-            **What it adds beyond individual form inputs:**
-
-            | Capability | Individual inputs | pages-schema-form |
-            |---|---|---|
-            | Schema-driven rendering | Manual per field | Automatic from JSON Schema |
-            | Display mode (read-only) | Not available | Built-in formatted display |
-            | Nested objects | Not supported | Recursive sub-forms |
-            | Array editing | Not supported | Add / remove items |
-            | Form-level submit | Per-field events | Collected data + validation |
-            | Custom format renderers | N/A | Pluggable registry |
-
-            Switch to the **TypeScript** tab to see the full API — all field types,
-            nested objects, arrays, display/edit toggle, submit with validation,
-            and custom format renderers.
+      - type: html
+        properties:
+          content: <schema-form-demo></schema-form-demo>

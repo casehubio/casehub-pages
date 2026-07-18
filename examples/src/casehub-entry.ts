@@ -1,5 +1,7 @@
 import { loadSite } from "@casehubio/pages-runtime";
 import "@casehubio/pages-primitives";
+import "@casehubio/pages-form";
+import "./schema-form-demo";
 import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 import { injectTheme, applyThemeMode, DEFAULT_THEME } from "@casehubio/pages-ui-tokens";
 
