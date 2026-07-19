@@ -84,6 +84,9 @@ export interface TableColumnConfig {
   readonly minWidth?: string;
   readonly align?: ColumnAlign;
   readonly filterable?: boolean;
+  readonly cellSpan?: (row: TypedRow, rowIndex: number) =>
+    { colSpan?: number; rowSpan?: number } | undefined;
+  readonly mergeRows?: boolean | ((valueA: CellValue, valueB: CellValue) => boolean);
 }
 
 export type SelectionMode = "none" | "single" | "multi";
