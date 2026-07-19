@@ -283,4 +283,296 @@ describe('pages-schema-form', () => {
       expect(dtInput).toBeTruthy();
     });
   });
+
+  describe('field metadata — title, description, placeholder (#207)', () => {
+    const metaSchema = {
+      type: 'object',
+      properties: {
+        firstName: {
+          type: 'string',
+          title: 'First Name',
+          description: 'Your legal first name',
+          placeholder: 'Enter your first name',
+        },
+        age: {
+          type: 'number',
+          title: 'Your Age',
+          description: 'Must be 18 or older',
+          placeholder: '25',
+        },
+        role: {
+          type: 'string',
+          title: 'Job Role',
+          description: 'Select your primary role',
+          enum: ['engineer', 'designer', 'manager'],
+        },
+        bio: {
+          type: 'string',
+          title: 'Biography',
+          description: 'Tell us about yourself',
+          placeholder: 'Write a short bio...',
+          maxLength: 500,
+        },
+        untitled: { type: 'string' },
+      },
+    };
+
+    describe('display mode', () => {
+      beforeEach(async () => {
+        el.schema = metaSchema;
+        el.data = { firstName: 'Alice', age: 30, role: 'engineer', bio: 'A developer', untitled: 'value' };
+        el.mode = 'display';
+        await (el as any).updateComplete;
+      });
+
+      it('uses title as label when present', () => {
+        const labels = el.shadowRoot!.querySelectorAll('.label');
+        const labelTexts = Array.from(labels).map(l => l.textContent?.trim());
+        expect(labelTexts).toContain('First Name');
+        expect(labelTexts).not.toContain('firstName');
+      });
+
+      it('falls back to key when title is absent', () => {
+        const labels = el.shadowRoot!.querySelectorAll('.label');
+        const labelTexts = Array.from(labels).map(l => l.textContent?.trim());
+        expect(labelTexts).toContain('untitled');
+      });
+
+      it('renders description as help text', () => {
+        const descriptions = el.shadowRoot!.querySelectorAll('.description');
+        expect(descriptions.length).toBeGreaterThan(0);
+        const descTexts = Array.from(descriptions).map(d => d.textContent?.trim());
+        expect(descTexts).toContain('Your legal first name');
+      });
+    });
+
+    describe('edit mode', () => {
+      beforeEach(async () => {
+        el.schema = metaSchema;
+        el.data = { firstName: '', age: 0, role: 'engineer', bio: '', untitled: '' };
+        el.mode = 'edit';
+        await (el as any).updateComplete;
+      });
+
+      it('uses title as label when present', () => {
+        const labels = el.shadowRoot!.querySelectorAll('label');
+        const labelTexts = Array.from(labels).map(l => l.textContent?.trim());
+        expect(labelTexts).toContain('First Name');
+        expect(labelTexts).not.toContain('firstName');
+      });
+
+      it('falls back to key when title is absent', () => {
+        const labels = el.shadowRoot!.querySelectorAll('label');
+        const labelTexts = Array.from(labels).map(l => l.textContent?.trim());
+        expect(labelTexts).toContain('untitled');
+      });
+
+      it('sets placeholder on text input', () => {
+        const input = el.shadowRoot!.querySelector<HTMLInputElement>('input[id="firstName"]');
+        expect(input).toBeTruthy();
+        expect(input!.placeholder).toBe('Enter your first name');
+      });
+
+      it('sets placeholder on number input', () => {
+        const input = el.shadowRoot!.querySelector<HTMLInputElement>('input[id="age"]');
+        expect(input).toBeTruthy();
+        expect(input!.placeholder).toBe('25');
+      });
+
+      it('sets placeholder on textarea', () => {
+        const textarea = el.shadowRoot!.querySelector<HTMLTextAreaElement>('textarea[id="bio"]');
+        expect(textarea).toBeTruthy();
+        expect(textarea!.placeholder).toBe('Write a short bio...');
+      });
+
+      it('renders description as help text below fields', () => {
+        const descriptions = el.shadowRoot!.querySelectorAll('.description');
+        expect(descriptions.length).toBeGreaterThan(0);
+        const descTexts = Array.from(descriptions).map(d => d.textContent?.trim());
+        expect(descTexts).toContain('Your legal first name');
+        expect(descTexts).toContain('Must be 18 or older');
+      });
+
+      it('does not render description when absent', () => {
+        const fields = el.shadowRoot!.querySelectorAll('.field');
+        const untitledField = Array.from(fields).find(f =>
+          f.querySelector('label')?.textContent?.trim() === 'untitled'
+        );
+        expect(untitledField).toBeTruthy();
+        expect(untitledField!.querySelector('.description')).toBeNull();
+      });
+    });
+  });
+
+  describe('validation and error display (#208)', () => {
+    describe('validateField', () => {
+      let validateField: typeof import('./validation.js').validateField;
+
+      beforeEach(async () => {
+        const mod = await import('./validation.js');
+        validateField = mod.validateField;
+      });
+
+      it('returns null for valid values', () => {
+        expect(validateField('x', { type: 'string' }, 'hello', false)).toBeNull();
+      });
+
+      it('validates required — empty string', () => {
+        expect(validateField('name', { type: 'string' }, '', true)).toBe('Required');
+      });
+
+      it('validates required — null', () => {
+        expect(validateField('name', { type: 'string' }, null, true)).toBe('Required');
+      });
+
+      it('validates required — undefined', () => {
+        expect(validateField('name', { type: 'string' }, undefined, true)).toBe('Required');
+      });
+
+      it('skips required check when not required', () => {
+        expect(validateField('name', { type: 'string' }, '', false)).toBeNull();
+      });
+
+      it('validates pattern', () => {
+        expect(validateField('email', { type: 'string', pattern: '^[^@]+@[^@]+$' }, 'bad', false)).toBe('Invalid format');
+      });
+
+      it('passes valid pattern', () => {
+        expect(validateField('email', { type: 'string', pattern: '^[^@]+@[^@]+$' }, 'a@b.c', false)).toBeNull();
+      });
+
+      it('validates minLength', () => {
+        expect(validateField('name', { type: 'string', minLength: 3 }, 'ab', false)).toBe('Must be at least 3 characters');
+      });
+
+      it('validates maxLength', () => {
+        expect(validateField('name', { type: 'string', maxLength: 5 }, 'abcdef', false)).toBe('Must be at most 5 characters');
+      });
+
+      it('validates minimum', () => {
+        expect(validateField('age', { type: 'number', minimum: 18 }, 17, false)).toBe('Must be at least 18');
+      });
+
+      it('validates maximum', () => {
+        expect(validateField('age', { type: 'number', maximum: 100 }, 101, false)).toBe('Must be at most 100');
+      });
+
+      it('passes valid number within range', () => {
+        expect(validateField('age', { type: 'number', minimum: 0, maximum: 100 }, 50, false)).toBeNull();
+      });
+
+      it('returns first failing rule only', () => {
+        const msg = validateField('x', { type: 'string', minLength: 5, pattern: '^[A-Z]+$' }, 'ab', false);
+        expect(msg).toBeTruthy();
+      });
+    });
+
+    describe('inline error rendering', () => {
+      const validationSchema = {
+        type: 'object',
+        properties: {
+          username: { type: 'string', minLength: 3 },
+          age: { type: 'number', minimum: 18 },
+          email: { type: 'string', pattern: '^[^@]+@[^@]+$' },
+        },
+        required: ['username'],
+      };
+
+      beforeEach(async () => {
+        el.schema = validationSchema;
+        el.data = { username: '', age: 10, email: 'bad' };
+        el.mode = 'edit';
+        await (el as any).updateComplete;
+      });
+
+      it('shows errors after submit with invalid data', async () => {
+        const result = (el as any).submit();
+        expect(result).toBeNull();
+        await (el as any).updateComplete;
+        const errors = el.shadowRoot!.querySelectorAll('.error');
+        expect(errors.length).toBeGreaterThan(0);
+      });
+
+      it('shows required error for empty required field', async () => {
+        (el as any).submit();
+        await (el as any).updateComplete;
+        const errors = el.shadowRoot!.querySelectorAll('.error');
+        const errorTexts = Array.from(errors).map(e => e.textContent?.trim());
+        expect(errorTexts).toContain('Required');
+      });
+
+      it('shows minimum error for out-of-range number', async () => {
+        (el as any).submit();
+        await (el as any).updateComplete;
+        const errors = el.shadowRoot!.querySelectorAll('.error');
+        const errorTexts = Array.from(errors).map(e => e.textContent?.trim());
+        expect(errorTexts).toContain('Must be at least 18');
+      });
+
+      it('shows pattern error for invalid format', async () => {
+        (el as any).submit();
+        await (el as any).updateComplete;
+        const errors = el.shadowRoot!.querySelectorAll('.error');
+        const errorTexts = Array.from(errors).map(e => e.textContent?.trim());
+        expect(errorTexts).toContain('Invalid format');
+      });
+
+      it('clears errors when data becomes valid', async () => {
+        (el as any).submit();
+        await (el as any).updateComplete;
+        expect(el.shadowRoot!.querySelectorAll('.error').length).toBeGreaterThan(0);
+
+        const input = el.shadowRoot!.querySelector<HTMLInputElement>('input[id="username"]')!;
+        input.value = 'alice';
+        input.dispatchEvent(new Event('input'));
+        await (el as any).updateComplete;
+
+        (el as any).submit();
+        await (el as any).updateComplete;
+        const usernameField = Array.from(el.shadowRoot!.querySelectorAll('.field')).find(f =>
+          f.querySelector('label')?.textContent?.trim() === 'username'
+        );
+        expect(usernameField?.querySelector('.error')).toBeNull();
+      });
+
+      it('returns data when all fields are valid', async () => {
+        el.data = { username: 'alice', age: 25, email: 'a@b.c' };
+        await (el as any).updateComplete;
+        const result = (el as any).submit();
+        expect(result).toEqual({ username: 'alice', age: 25, email: 'a@b.c' });
+      });
+    });
+
+    describe('blur validation', () => {
+      beforeEach(async () => {
+        el.schema = {
+          type: 'object',
+          properties: { name: { type: 'string', minLength: 3 } },
+          required: ['name'],
+        };
+        el.data = { name: '' };
+        el.mode = 'edit';
+        (el as any).validateOnBlur = true;
+        await (el as any).updateComplete;
+      });
+
+      it('shows error on blur when validateOnBlur is true', async () => {
+        const input = el.shadowRoot!.querySelector<HTMLInputElement>('input[id="name"]')!;
+        input.dispatchEvent(new Event('blur'));
+        await (el as any).updateComplete;
+        const errors = el.shadowRoot!.querySelectorAll('.error');
+        expect(errors.length).toBeGreaterThan(0);
+      });
+
+      it('does not show error on blur when validateOnBlur is false', async () => {
+        (el as any).validateOnBlur = false;
+        await (el as any).updateComplete;
+        const input = el.shadowRoot!.querySelector<HTMLInputElement>('input[id="name"]')!;
+        input.dispatchEvent(new Event('blur'));
+        await (el as any).updateComplete;
+        const errors = el.shadowRoot!.querySelectorAll('.error');
+        expect(errors.length).toBe(0);
+      });
+    });
+  });
 });

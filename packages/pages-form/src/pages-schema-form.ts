@@ -3,14 +3,17 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { renderDisplayField, renderEditField } from './field-renderers.js';
 import { getFieldRenderer, hasFieldRenderer } from './field-registry.js';
 import type { FieldSchema, FieldRendererElement } from './types.js';
+import { validateField } from './validation.js';
 
 @customElement('pages-schema-form')
 export class PagesSchemaForm extends LitElement {
   @property({ type: Object }) schema: FieldSchema | null = null;
   @property({ type: Object }) data: Record<string, unknown> | null = null;
   @property({ type: String }) mode: 'display' | 'edit' = 'display';
+  @property({ type: Boolean }) validateOnBlur = false;
 
   @state() private _editData: Record<string, unknown> = {};
+  @state() private _errors: Record<string, string> = {};
 
   static override styles = css`
     :host { display: block; font-family: var(--pages-font-family, system-ui, sans-serif); font-size: var(--pages-font-size-base, 14px); }
@@ -25,6 +28,7 @@ export class PagesSchemaForm extends LitElement {
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--pages-accent-9, #5470c6); }
     input:read-only { background: var(--pages-neutral-3, #f5f5f5); cursor: not-allowed; }
     textarea { min-height: 80px; resize: vertical; }
+    .description { color: var(--pages-neutral-9, #888); font-size: var(--pages-font-size-xs, 11px); margin-top: var(--pages-space-0-5, 2px); }
     .error { color: var(--pages-danger-9, #dc2626); font-size: var(--pages-font-size-xs, 11px); margin-top: var(--pages-space-0-5, 2px); }
     .array-item { margin-bottom: var(--pages-space-3, 12px); padding-bottom: var(--pages-space-3, 12px); border-bottom: 1px solid var(--pages-neutral-4, #eee); }
     .array-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--pages-space-1, 4px); }
@@ -65,7 +69,7 @@ export class PagesSchemaForm extends LitElement {
           }
           return this.mode === 'display'
             ? renderDisplayField(key, fieldSchema, dataSource[key])
-            : renderEditField(key, fieldSchema, dataSource[key], this._handleFieldChange);
+            : renderEditField(key, fieldSchema, dataSource[key], this._handleFieldChange, this._errors[key], this._handleBlur);
         })}
         ${this.mode === 'edit' ? html`<slot name="actions"></slot>` : html``}
       </div>
@@ -80,12 +84,30 @@ export class PagesSchemaForm extends LitElement {
     }));
   };
 
-  submit(): Record<string, unknown> | null {
-    const required = new Set(this.schema?.required ?? []);
-    for (const field of required) {
-      const val = this._editData[field];
-      if (val === null || val === undefined || val === '') return null;
+  private _handleBlur = (key: string): void => {
+    if (!this.validateOnBlur || !this.schema?.properties) return;
+    const fieldSchema = this.schema.properties[key];
+    if (!fieldSchema) return;
+    const required = this.schema.required?.includes(key) ?? false;
+    const error = validateField(key, fieldSchema, this._editData[key], required);
+    if (error) {
+      this._errors = { ...this._errors, [key]: error };
+    } else {
+      const { [key]: _, ...rest } = this._errors;
+      this._errors = rest;
     }
+  };
+
+  submit(): Record<string, unknown> | null {
+    if (!this.schema?.properties) return null;
+    const requiredSet = new Set(this.schema.required ?? []);
+    const errors: Record<string, string> = {};
+    for (const [key, fieldSchema] of Object.entries(this.schema.properties)) {
+      const error = validateField(key, fieldSchema, this._editData[key], requiredSet.has(key));
+      if (error) errors[key] = error;
+    }
+    this._errors = errors;
+    if (Object.keys(errors).length > 0) return null;
     this.dispatchEvent(new CustomEvent('pages-form-submit', {
       bubbles: true, composed: true,
       detail: { data: { ...this._editData } },

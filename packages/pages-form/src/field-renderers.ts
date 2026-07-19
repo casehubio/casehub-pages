@@ -38,22 +38,22 @@ export function renderDisplayField(
   value: unknown,
 ): TemplateResult {
   if (value === null || value === undefined) {
-    return html`<div class="field"><span class="label">${key}</span><span class="value muted">—</span></div>`;
+    return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value muted">—</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
   }
 
   if (schema.format === 'date' || schema.format === 'date-time') {
-    return html`<div class="field"><span class="label">${key}</span><span class="value">${formatDateValue(value, schema.format)}</span></div>`;
+    return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value">${formatDateValue(value, schema.format)}</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
   }
 
   if (schema.type === 'boolean') {
-    return html`<div class="field"><span class="label">${key}</span><span class="value">${value ? 'Yes' : 'No'}</span></div>`;
+    return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value">${value ? 'Yes' : 'No'}</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
   }
 
   if (schema.type === 'object' && schema.properties) {
     const obj = value as Record<string, unknown>;
     return html`
       <div class="field nested">
-        <span class="label">${key}</span>
+        <span class="label">${schema.title ?? key}</span>
         <div class="nested-content">
           ${Object.entries(schema.properties).map(([k, s]) =>
             renderDisplayField(k, s, obj[k])
@@ -67,7 +67,7 @@ export function renderDisplayField(
       const itemSchema = schema.items;
       return html`
         <div class="field nested">
-          <span class="label">${key}</span>
+          <span class="label">${schema.title ?? key}</span>
           <div class="nested-content">
             ${(value as Record<string, unknown>[]).map((item, i) => html`
               <div class="array-item">
@@ -80,10 +80,10 @@ export function renderDisplayField(
           </div>
         </div>`;
     }
-    return html`<div class="field"><span class="label">${key}</span><span class="value">${(value as unknown[]).join(', ')}</span></div>`;
+    return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value">${(value as unknown[]).join(', ')}</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
   }
 
-  return html`<div class="field"><span class="label">${key}</span><span class="value">${String(value)}</span></div>`;
+  return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value">${String(value)}</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
 }
 
 export function renderEditField(
@@ -91,14 +91,18 @@ export function renderEditField(
   schema: FieldSchema,
   value: unknown,
   onChange: (key: string, value: unknown) => void,
+  error?: string,
+  onBlur?: (key: string) => void,
 ): TemplateResult {
   if (schema.enum) {
     return html`
       <div class="field">
-        <label for="${key}">${key}</label>
-        <select id="${key}" @change=${(e: Event) => onChange(key, (e.target as HTMLSelectElement).value)}>
+        <label for="${key}">${schema.title ?? key}</label>
+        <select id="${key}" @change=${(e: Event) => onChange(key, (e.target as HTMLSelectElement).value)} @blur=${() => onBlur?.(key)}>
           ${schema.enum.map(opt => html`<option value=${opt} ?selected=${value === opt}>${opt}</option>`)}
         </select>
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
       </div>`;
   }
 
@@ -106,33 +110,41 @@ export function renderEditField(
     return html`
       <div class="field">
         <label>
-          <input type="checkbox" ?checked=${Boolean(value)} @change=${(e: Event) => onChange(key, (e.target as HTMLInputElement).checked)} />
-          ${key}
+          <input type="checkbox" ?checked=${Boolean(value)} @change=${(e: Event) => onChange(key, (e.target as HTMLInputElement).checked)} @blur=${() => onBlur?.(key)} />
+          ${schema.title ?? key}
         </label>
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
       </div>`;
   }
 
   if (schema.type === 'number' || schema.type === 'integer') {
     return html`
       <div class="field">
-        <label for="${key}">${key}</label>
-        <input id="${key}" type="number" .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, Number((e.target as HTMLInputElement).value))} />
+        <label for="${key}">${schema.title ?? key}</label>
+        <input id="${key}" type="number" placeholder=${schema.placeholder ?? ''} .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, Number((e.target as HTMLInputElement).value))} @blur=${() => onBlur?.(key)} />
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
       </div>`;
   }
 
   if (schema.format === 'date') {
     return html`
       <div class="field">
-        <label for="${key}">${key}</label>
-        <input id="${key}" type="date" .value=${toDateInputValue(value)} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} />
+        <label for="${key}">${schema.title ?? key}</label>
+        <input id="${key}" type="date" .value=${toDateInputValue(value)} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} @blur=${() => onBlur?.(key)} />
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
       </div>`;
   }
 
   if (schema.format === 'date-time') {
     return html`
       <div class="field">
-        <label for="${key}">${key}</label>
-        <input id="${key}" type="datetime-local" .value=${toDateTimeInputValue(value)} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} />
+        <label for="${key}">${schema.title ?? key}</label>
+        <input id="${key}" type="datetime-local" .value=${toDateTimeInputValue(value)} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} @blur=${() => onBlur?.(key)} />
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
       </div>`;
   }
 
@@ -143,7 +155,7 @@ export function renderEditField(
     };
     return html`
       <div class="field nested">
-        <span class="label">${key}</span>
+        <span class="label">${schema.title ?? key}</span>
         <div class="nested-content">
           ${Object.entries(schema.properties).map(([k, s]) =>
             renderEditField(k, s, obj[k], nestedChange)
@@ -154,26 +166,31 @@ export function renderEditField(
 
   if (schema.type === 'array' && schema.items) {
     const arr = Array.isArray(value) ? [...value] as unknown[] : [];
-    return renderArrayEditor(key, schema.items, arr, onChange);
+    return renderArrayEditor(key, schema.title ?? key, schema.items, arr, onChange);
   }
 
   if (schema.type === 'string' && (schema.maxLength ?? 0) > 200) {
     return html`
       <div class="field">
-        <label for="${key}">${key}</label>
-        <textarea id="${key}" .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, (e.target as HTMLTextAreaElement).value)}></textarea>
+        <label for="${key}">${schema.title ?? key}</label>
+        <textarea id="${key}" placeholder=${schema.placeholder ?? ''} .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, (e.target as HTMLTextAreaElement).value)} @blur=${() => onBlur?.(key)}></textarea>
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
       </div>`;
   }
 
   return html`
     <div class="field">
-      <label for="${key}">${key}</label>
-      <input id="${key}" type="text" .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} />
+      <label for="${key}">${schema.title ?? key}</label>
+      <input id="${key}" type="text" placeholder=${schema.placeholder ?? ''} .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} @blur=${() => onBlur?.(key)} />
+      ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+      ${error ? html`<span class="error">${error}</span>` : ''}
     </div>`;
 }
 
 function renderArrayEditor(
   key: string,
+  label: string,
   itemSchema: FieldSchema,
   items: unknown[],
   onChange: (key: string, value: unknown) => void,
@@ -193,7 +210,7 @@ function renderArrayEditor(
   if (itemSchema.type === 'object' && itemSchema.properties) {
     return html`
       <div class="field nested">
-        <span class="label">${key}</span>
+        <span class="label">${label}</span>
         <div class="nested-content">
           ${items.map((item, i) => {
             const obj = (item ?? {}) as Record<string, unknown>;
@@ -211,14 +228,14 @@ function renderArrayEditor(
                 )}
               </div>`;
           })}
-          <button type="button" class="array-add" @click=${addItem}>+ Add ${key}</button>
+          <button type="button" class="array-add" @click=${addItem}>+ Add ${label}</button>
         </div>
       </div>`;
   }
 
   return html`
     <div class="field nested">
-      <span class="label">${key}</span>
+      <span class="label">${label}</span>
       <div class="nested-content">
         ${items.map((item, i) => html`
           <div class="array-item-inline">
@@ -226,7 +243,7 @@ function renderArrayEditor(
             <button type="button" class="array-remove" @click=${() => removeItem(i)}>✕</button>
           </div>
         `)}
-        <button type="button" class="array-add" @click=${addItem}>+ Add ${key}</button>
+        <button type="button" class="array-add" @click=${addItem}>+ Add ${label}</button>
       </div>
     </div>`;
 }
