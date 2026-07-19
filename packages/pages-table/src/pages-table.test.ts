@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html } from 'lit';
 import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data';
 import { ColumnType } from '@casehubio/pages-data';
@@ -1607,6 +1607,108 @@ describe('pages-table', () => {
       expect(originCell).toBeTruthy();
       expect(originCell!.getAttribute('aria-rowspan')).toBe('2');
       expect(originCell!.getAttribute('aria-colspan')).toBe('2');
+    });
+  });
+
+  describe('span interactions', () => {
+    const spanItems: TestItem[] = [
+      { id: '1', name: 'Alice', age: 30, created: new Date('2024-01-01') },
+      { id: '2', name: 'Alice', age: 25, created: new Date('2024-01-01') },
+      { id: '3', name: 'Alice', age: 35, created: new Date('2024-01-01') },
+      { id: '4', name: 'Bob', age: 28, created: new Date('2024-01-01') },
+    ];
+
+    it('hover highlights all rows in span', async () => {
+      el.dataSet = makeDataSet(spanItems);
+      el.columnConfig = [{ id: nameCol, width: '1fr', mergeRows: true }, { id: ageCol, width: '80px' }];
+      await el.updateComplete;
+
+      const spanCell = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')]
+        .find(c => (c.getAttribute('style') ?? '').includes('span 3')) as HTMLElement;
+      expect(spanCell).toBeTruthy();
+
+      spanCell.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      await el.updateComplete;
+
+      const hoverCells = el.shadowRoot!.querySelectorAll('.cell.hover');
+      expect(hoverCells.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('keyboard ArrowDown skips spanned rows', async () => {
+      el.dataSet = makeDataSet(spanItems);
+      el.columnConfig = [{ id: nameCol, width: '1fr', mergeRows: true }, { id: ageCol, width: '80px' }];
+      el.selection = 'single';
+      el.getRowKey = (r: any) => { const c = r.cell(nameCol); const a = r.cell(ageCol); return c.type === 'NULL' ? '' : String(c.value) + String(a.type === 'NULL' ? '' : a.value); };
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      const firstRow = rows[0] as HTMLElement;
+      firstRow.focus();
+      await el.updateComplete;
+
+      firstRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      await el.updateComplete;
+
+      expect((el as any).rovingIndex).toBe(3);
+    });
+
+    it('keyboard ArrowUp skips spanned rows', async () => {
+      el.dataSet = makeDataSet(spanItems);
+      el.columnConfig = [{ id: nameCol, width: '1fr', mergeRows: true }, { id: ageCol, width: '80px' }];
+      el.selection = 'single';
+      el.getRowKey = (r: any) => { const c = r.cell(nameCol); const a = r.cell(ageCol); return c.type === 'NULL' ? '' : String(c.value) + String(a.type === 'NULL' ? '' : a.value); };
+      await el.updateComplete;
+
+      (el as any).rovingIndex = 3;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      const bobRow = rows[3] as HTMLElement;
+      bobRow.focus();
+      await el.updateComplete;
+
+      bobRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+      await el.updateComplete;
+
+      expect((el as any).rovingIndex).toBe(0);
+    });
+
+    it('selection on spanned cell selects origin row', async () => {
+      el.dataSet = makeDataSet(spanItems);
+      el.columnConfig = [{ id: nameCol, width: '1fr', mergeRows: true }, { id: ageCol, width: '80px' }];
+      el.selection = 'single';
+      el.getRowKey = (r: any) => { const c = r.cell(nameCol); const a = r.cell(ageCol); return c.type === 'NULL' ? '' : String(c.value) + String(a.type === 'NULL' ? '' : a.value); };
+      await el.updateComplete;
+
+      const handler = vi.fn();
+      el.addEventListener('selection-change', handler);
+      const spanCell = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')]
+        .find(c => (c.getAttribute('style') ?? '').includes('span 3')) as HTMLElement;
+      spanCell.click();
+      await el.updateComplete;
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0][0].detail.selectedKeys.length).toBe(1);
+    });
+
+    it('spanned cell shows selected only when ALL covered rows are selected', async () => {
+      el.dataSet = makeDataSet(spanItems);
+      el.columnConfig = [{ id: nameCol, width: '1fr', mergeRows: true }, { id: ageCol, width: '80px' }];
+      el.selection = 'multi';
+      el.getRowKey = (r: any) => { const c = r.cell(nameCol); const a = r.cell(ageCol); return c.type === 'NULL' ? '' : String(c.value) + String(a.type === 'NULL' ? '' : a.value); };
+      el.selectedKeys = ['Alice30'];
+      await el.updateComplete;
+
+      const spanCell = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')]
+        .find(c => (c.getAttribute('style') ?? '').includes('span 3')) as HTMLElement;
+      expect(spanCell.classList.contains('selected')).toBe(false);
+
+      el.selectedKeys = ['Alice30', 'Alice25', 'Alice35'];
+      await el.updateComplete;
+
+      const spanCell2 = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')]
+        .find(c => (c.getAttribute('style') ?? '').includes('span 3')) as HTMLElement;
+      expect(spanCell2.classList.contains('selected')).toBe(true);
     });
   });
 });
