@@ -26,6 +26,7 @@ export interface ColumnSettings {
   readonly sortable?: boolean;
   readonly minWidth?: string;
   readonly pill?: Readonly<Record<string, string>>;
+  readonly mergeRows?: boolean;
 }
 
 export type CellValue =

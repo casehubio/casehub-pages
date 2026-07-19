@@ -231,6 +231,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         width: override?.width ?? '1fr',
         ...(override?.align && { align: override.align }),
         ...(override?.minWidth && { minWidth: override.minWidth }),
+        ...(override?.mergeRows != null && { mergeRows: override.mergeRows }),
       };
     });
     this.columnConfig = config;

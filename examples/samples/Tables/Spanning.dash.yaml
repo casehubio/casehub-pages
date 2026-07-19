@@ -1,0 +1,117 @@
+datasets:
+  - uuid: team-roadmap
+    content: >-
+      [
+        ["Engineering", "Platform", "Alice Chen", "API Gateway", "Unknown", ""],
+        ["Engineering", "Platform", "Bob Kim", "Service Mesh", "In Progress", "Q3"],
+        ["Engineering", "Platform", "Carlos Ruiz", "CI Pipeline", "Done", "Q2"],
+        ["Engineering", "Data", "Diana Park", "ETL Rewrite", "In Progress", "Q3"],
+        ["Engineering", "Data", "Eve Johnson", "Schema Migration", "Planned", "Q4"],
+        ["Design", "UX", "Frank Lee", "Design System", "In Progress", "Q3"],
+        ["Design", "UX", "Grace Wu", "Component Library", "In Progress", "Q3"],
+        ["Design", "UX", "Henry Zhang", "Accessibility Audit", "Unknown", ""],
+        ["Product", "Growth", "Iris Patel", "Onboarding Flow", "Done", "Q2"],
+        ["Product", "Growth", "Jack Brown", "Retention Dashboard", "In Progress", "Q3"],
+        ["Product", "Enterprise", "Kate Liu", "SSO Integration", "In Progress", "Q3"],
+        ["Product", "Enterprise", "Leo Garcia", "Audit Logging", "Unknown", ""]
+      ]
+    columns:
+      - id: department
+        type: LABEL
+      - id: team
+        type: LABEL
+      - id: name
+        type: TEXT
+      - id: project
+        type: TEXT
+      - id: status
+        type: LABEL
+      - id: quarter
+        type: LABEL
+
+pages:
+  - name: Spanning
+    components:
+      - type: title
+        properties:
+          text: Cell Spanning
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Demonstrates **cell spanning** — merging adjacent cells with
+            identical values into a single visual block.
+
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          mergeRows (YAML):
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Department and Team columns use `mergeRows: true` in the
+                    YAML column config. Adjacent rows with the same value
+                    collapse into a single spanning cell.
+              - type: table
+                properties:
+                  lookup:
+                    uuid: team-roadmap
+                  sortable: true
+                  columns:
+                    - id: department
+                      name: Dept
+                      width: "120px"
+                      mergeRows: true
+                    - id: team
+                      name: Team
+                      width: "100px"
+                      mergeRows: true
+                    - id: name
+                      name: Person
+                      width: "1fr"
+                    - id: project
+                      name: Project
+                      width: "1fr"
+                    - id: status
+                      name: Status
+                      width: "100px"
+                    - id: quarter
+                      name: Quarter
+                      width: "80px"
+
+          cellSpan (TypeScript):
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Uses `cellSpan` callbacks set via TypeScript. Rows with
+                    **Unknown** status merge the Status and Quarter columns
+                    into a single cell. The Department column also uses
+                    `mergeRows` for vertical merging. Toggle the **source
+                    code** panel to see the TypeScript.
+              - type: table
+                properties:
+                  lookup:
+                    uuid: team-roadmap
+                  columns:
+                    - id: department
+                      name: Dept
+                      width: "120px"
+                    - id: team
+                      name: Team
+                      width: "100px"
+                    - id: name
+                      name: Person
+                      width: "1fr"
+                    - id: project
+                      name: Project
+                      width: "1fr"
+                    - id: status
+                      name: Status
+                      width: "100px"
+                    - id: quarter
+                      name: Quarter
+                      width: "80px"

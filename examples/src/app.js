@@ -4,6 +4,17 @@ let currentSample = null;
 let currentSite = null;
 let galleryThemeMode = 'light';
 
+// Strip TypeScript syntax for companion script execution
+function stripTs(src) {
+    return src
+        .replace(/^import\s+type\s+.*?;\s*$/gm, '')
+        .replace(/^import\s*\{[^}]*\}\s*from\s*['"][^'"]+['"];\s*$/gm, '')
+        .replace(/^export\s+/gm, '')
+        .replace(/\bas\s+\w+(?:<[^>]*>)?/g, '')
+        .replace(/:\s*(?:readonly\s+)?(?:[A-Z]\w*(?:<[^>]*>)?(?:\[\])?(?:\s*\|\s*\w+(?:<[^>]*>)?)*)/g, '')
+        .replace(/<[A-Z]\w*(?:,\s*[A-Z]\w*)*>/g, '');
+}
+
 // DOM Elements
 const categoriesNav = document.getElementById('categories-nav');
 const searchInput = document.getElementById('search');
@@ -272,6 +283,21 @@ async function loadSampleInTarget(samplePath) {
 
         currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, { baseUrl, fetch: galleryFetch });
         currentSite.setTheme(galleryThemeMode);
+
+        // Execute companion TS/JS script if present
+        if (currentSample && currentSample.tsPath) {
+            try {
+                const tsResp = await fetch(`samples/${currentSample.tsPath}`);
+                if (tsResp.ok) {
+                    const tsCode = await tsResp.text();
+                    const jsCode = stripTs(tsCode);
+                    const fn = new Function(jsCode);
+                    fn();
+                }
+            } catch (e) {
+                console.warn('Companion script error:', e);
+            }
+        }
     } catch (error) {
         console.error('Error loading sample:', error);
         sampleTarget.innerHTML = `

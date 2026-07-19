@@ -18,7 +18,7 @@ type TableEl = HTMLElement & {
   clientSort: boolean;
   clientFilter: boolean;
   filterText: string;
-  columnConfig?: readonly { id: ColumnId; label?: string; sortable?: boolean; width?: string; align?: string; minWidth?: string }[];
+  columnConfig?: readonly { id: ColumnId; label?: string; sortable?: boolean; width?: string; align?: string; minWidth?: string; mergeRows?: boolean }[];
   updateComplete: Promise<boolean>;
 };
 
@@ -829,6 +829,19 @@ describe('pipeline integration', () => {
       await el.updateComplete;
       expect(el.columnConfig![0]!.sortable).toBe(false);
       expect(el.columnConfig![1]!.sortable).toBe(true);
+    });
+
+    it('maps mergeRows from YAML columns config', async () => {
+      el.props = {
+        columns: [
+          { id: 'name', name: 'Name', mergeRows: true },
+          { id: 'age', name: 'Age' },
+        ],
+      };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+      expect(el.columnConfig![0]!.mergeRows).toBe(true);
+      expect(el.columnConfig![1]!.mergeRows).toBeUndefined();
     });
   });
 
