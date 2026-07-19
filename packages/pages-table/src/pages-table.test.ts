@@ -165,10 +165,13 @@ describe('pages-table', () => {
     it('alternating rows have even/odd classes for zebra striping', async () => {
       el.dataSet = testDataSet;
       await el.updateComplete;
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows[0]!.classList.contains('row-even')).toBe(true);
-      expect(rows[1]!.classList.contains('row-odd')).toBe(true);
-      expect(rows[2]!.classList.contains('row-even')).toBe(true);
+      const cells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      const firstRowCell = cells[0]!;
+      const secondRowCell = cells[2]!;
+      const thirdRowCell = cells[4]!;
+      expect(firstRowCell.classList.contains('row-even')).toBe(true);
+      expect(secondRowCell.classList.contains('row-odd')).toBe(true);
+      expect(thirdRowCell.classList.contains('row-even')).toBe(true);
     });
   });
 
@@ -288,7 +291,7 @@ describe('pages-table', () => {
       el.rowHeight = 48;
       await el.updateComplete;
       const spacer = el.shadowRoot!.querySelector('.body-content') as HTMLElement;
-      expect(spacer.style.height).toBe('4800px');
+      expect(spacer.style.gridTemplateRows).toBe('repeat(100, 48px)');
     });
 
     it('sets aria-rowindex on virtual rows', async () => {
@@ -981,8 +984,10 @@ describe('pages-table', () => {
         btn.click();
         await el.updateComplete;
 
-        const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]');
-        expect(rows[0]!.classList.contains('detail-expanded')).toBe(true);
+        const cells = el.shadowRoot!.querySelectorAll('.cell');
+        const firstRowCells = [...cells].filter(c => c.getAttribute('style')?.includes('grid-row: 1'));
+        expect(firstRowCells.length).toBeGreaterThan(0);
+        expect(firstRowCells[0]!.classList.contains('detail-expanded')).toBe(true);
       });
 
       it('detail panel has hidden attribute when collapsed', async () => {
@@ -1394,9 +1399,9 @@ describe('pages-table', () => {
       el.columnConfig = testConfig;
       (el as any).rowStyle = [{ condition: 'true', className: 'highlighted' }];
       await el.updateComplete;
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows.length).toBeGreaterThan(0);
-      expect(rows[0]!.classList.contains('highlighted')).toBe(true);
+      const cells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      expect(cells.length).toBeGreaterThan(0);
+      expect(cells[0]!.classList.contains('highlighted')).toBe(true);
     });
   });
 

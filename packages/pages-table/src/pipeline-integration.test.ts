@@ -465,7 +465,7 @@ describe('pipeline integration', () => {
       expect(dataRequests.length).toBeGreaterThan(0);
     });
 
-    it('selected row gets .selected CSS class after click', async () => {
+    it('selected row gets .filter-selected CSS class after click', async () => {
       el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = labelDataSet;
       await el.updateComplete;
@@ -474,10 +474,11 @@ describe('pipeline integration', () => {
       (cells[1] as HTMLElement).click();
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows[0]!.classList.contains('selected')).toBe(true);
-      expect(rows[2]!.classList.contains('selected')).toBe(true);
-      expect(rows[1]!.classList.contains('selected')).toBe(false);
+      const allCells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      const row0Cell = allCells[0]!;
+      const row1Cell = allCells[3]!;
+      expect(row0Cell.classList.contains('filter-selected')).toBe(true);
+      expect(row1Cell.classList.contains('filter-selected')).toBe(false);
     });
 
     it('toggle off removes .selected class', async () => {
@@ -495,13 +496,13 @@ describe('pipeline integration', () => {
       expect(rows[0]!.classList.contains('selected')).toBe(false);
     });
 
-    it('rows have clickable class when filter enabled', async () => {
+    it('cells have clickable class when filter enabled', async () => {
       el.props = { filter: { notification: true }, lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = labelDataSet;
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows[0]!.classList.contains('clickable')).toBe(true);
+      const cells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      expect(cells[0]!.classList.contains('clickable')).toBe(true);
     });
 
     it('filter group is undefined when not set in props', async () => {
@@ -531,8 +532,8 @@ describe('pipeline integration', () => {
       el.dataSet = labelDataSet;
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows[0]!.classList.contains('selected')).toBe(true);
+      const allCells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      expect(allCells[0]!.classList.contains('filter-selected')).toBe(true);
     });
 
     it('data re-push clears selection when value absent', async () => {
@@ -582,10 +583,10 @@ describe('pipeline integration', () => {
       el.dataSet = styleDataSet;
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows[0]!.classList.contains('pages-row-danger')).toBe(true);
-      expect(rows[1]!.classList.contains('pages-row-danger')).toBe(false);
-      expect(rows[2]!.classList.contains('pages-row-danger')).toBe(true);
+      const cells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      expect(cells[0]!.classList.contains('pages-row-danger')).toBe(true);
+      expect(cells[3]!.classList.contains('pages-row-danger')).toBe(false);
+      expect(cells[4]!.classList.contains('pages-row-danger')).toBe(true);
     });
 
     it('first matching rule wins — subsequent rules not evaluated', async () => {
@@ -599,9 +600,9 @@ describe('pipeline integration', () => {
       el.dataSet = styleDataSet;
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows[0]!.classList.contains('pages-row-danger')).toBe(true);
-      expect(rows[0]!.classList.contains('pages-row-warning')).toBe(false);
+      const cells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      expect(cells[0]!.classList.contains('pages-row-danger')).toBe(true);
+      expect(cells[0]!.classList.contains('pages-row-warning')).toBe(false);
     });
 
     it('applies inline style when rule has style property', async () => {
@@ -612,8 +613,8 @@ describe('pipeline integration', () => {
       el.dataSet = styleDataSet;
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      const style = (rows[0] as HTMLElement).getAttribute('style') ?? '';
+      const cells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      const style = (cells[0] as HTMLElement).getAttribute('style') ?? '';
       expect(style).toContain('background-color');
       expect(style).toContain('color');
     });
@@ -639,10 +640,10 @@ describe('pipeline integration', () => {
       el.dataSet = styleDataSet;
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-      expect(rows[0]!.classList.contains('pages-row-warning')).toBe(true);
-      expect(rows[1]!.classList.contains('pages-row-warning')).toBe(false);
-      expect(rows[2]!.classList.contains('pages-row-warning')).toBe(true);
+      const cells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      expect(cells[0]!.classList.contains('pages-row-warning')).toBe(true);
+      expect(cells[2]!.classList.contains('pages-row-warning')).toBe(false);
+      expect(cells[4]!.classList.contains('pages-row-warning')).toBe(true);
     });
 
     it('renders normally when rowStyle is undefined', async () => {
@@ -884,7 +885,7 @@ describe('pipeline integration', () => {
       expect(el.getRowAccent!(bob)).toBeUndefined();
     });
 
-    it('getRowAccent renders border-left on row', async () => {
+    it('getRowAccent renders border-left on first cell', async () => {
       el.getRowAccent = (row: any) => {
         const val = row.text('name' as any);
         return val === 'Bob' ? '#e65100' : undefined;
@@ -892,13 +893,13 @@ describe('pipeline integration', () => {
       el.dataSet = testDataSet;
       await el.updateComplete;
 
-      const rows = el.shadowRoot!.querySelectorAll('.row');
-      const bobRow = rows[1] as HTMLElement;
-      const bobStyle = bobRow.getAttribute('style') ?? '';
+      const cells = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')] as HTMLElement[];
+      const bobFirstCell = cells.find(c => (c.getAttribute('style') ?? '').includes('grid-row: 2') && (c.getAttribute('style') ?? '').includes('grid-column: 1'))!;
+      const bobStyle = bobFirstCell.getAttribute('style') ?? '';
       expect(bobStyle).toContain('border-left');
       expect(bobStyle).toContain('#e65100');
-      const aliceRow = rows[0] as HTMLElement;
-      const aliceStyle = aliceRow.getAttribute('style') ?? '';
+      const aliceFirstCell = cells.find(c => (c.getAttribute('style') ?? '').includes('grid-row: 1') && (c.getAttribute('style') ?? '').includes('grid-column: 1'))!;
+      const aliceStyle = aliceFirstCell.getAttribute('style') ?? '';
       expect(aliceStyle).not.toContain('border-left');
     });
   });

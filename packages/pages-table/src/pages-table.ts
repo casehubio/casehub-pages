@@ -97,6 +97,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @state() private _scrollTop = 0;
   @state() private _containerHeight = 0;
   @state() private _loadingMore = false;
+  @state() private _hoverRowIndex = -1;
   @state() private _internalSelectedKeys = new Set<string>();
   @state() private _lastClickedKey: string | null = null;
   @state() private _columnPickerOpen = false;
@@ -469,53 +470,52 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     }
 
     .row {
-      display: grid;
-      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+      display: contents;
     }
 
-    .row-odd {
+    .cell.row-odd {
       background: var(--pages-neutral-2, #fafafa);
     }
 
-    .row:hover {
+    .cell.hover {
       background: var(--pages-neutral-3, #f5f5f5);
     }
 
-    .row:focus {
+    .cell.focus-row {
       outline: 2px solid var(--pages-primary-9, #3b82f6);
       outline-offset: -2px;
     }
 
-    .row[aria-selected="true"] {
+    .cell.selected {
       background: var(--pages-primary-3, #dbeafe);
     }
 
-    .row[aria-selected="true"]:hover {
+    .cell.selected.hover {
       background: var(--pages-primary-4, #bfdbfe);
     }
 
-    .row.clickable:hover {
+    .cell.clickable.hover {
       background: var(--pages-accent-4, #e8f0fe);
       cursor: pointer;
     }
 
-    .row.selected {
+    .cell.filter-selected {
       background: var(--pages-accent-5, #d3e3fd);
     }
 
-    .row.pages-row-danger {
+    .cell.pages-row-danger {
       background: var(--pages-danger-3, #ffe6e6);
     }
 
-    .row.pages-row-warning {
+    .cell.pages-row-warning {
       background: var(--pages-warning-3, #fff4e6);
     }
 
-    .row.pages-row-success {
+    .cell.pages-row-success {
       background: var(--pages-success-3, #e6ffe6);
     }
 
-    .row.pages-row-muted {
+    .cell.pages-row-muted {
       background: var(--pages-neutral-3, #f5f5f5);
     }
 
@@ -526,6 +526,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
     }
 
     .empty-state,
@@ -906,7 +907,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       color: var(--pages-neutral-12, #171717);
     }
 
-    .row.detail-expanded {
+    .cell.detail-expanded {
       background: var(--pages-surface-1);
       border-bottom: none;
     }
@@ -915,6 +916,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       display: grid;
       grid-template-rows: 0fr;
       transition: grid-template-rows var(--pages-duration-normal, 200ms) var(--pages-ease-out, ease-out);
+      grid-column: 1 / -1;
     }
 
     .detail-panel[hidden] {
@@ -2135,7 +2137,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     this.requestUpdate();
   }
 
-  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode, cellAccent?: string) {
+  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode, cellAccent?: string, gridRow = 1, gridCol = 1, cellStateClasses = '', cellInlineStyle = '', rowAccentStyle = '', hoverHandler?: () => void) {
     const cell = row.cell(column.id);
     const renderer = this.columnRenderers?.get(column.id);
     const content = renderer
@@ -2151,6 +2153,10 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     const showAccent = cellAccent && (this._rowAccentColumns === 'all' || (Array.isArray(this._rowAccentColumns) && this._rowAccentColumns.includes(String(column.id))));
     const accentBorder = showAccent ? `border-left: 3px solid ${cellAccent}` : '';
+    const firstCellAccent = isFirstColumn && rowAccentStyle ? rowAccentStyle : '';
+
+    const gridStyle = `grid-row: ${gridRow}; grid-column: ${gridCol}`;
+    const extraStyles = [gridStyle, `text-align: ${align}`, cellInlineStyle, accentBorder, firstCellAccent].filter(Boolean).join('; ');
 
     if (isFirstColumn && treeMeta) {
       const depth = 'depth' in treeMeta ? treeMeta.depth : 0;
@@ -2167,8 +2173,9 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         : html`<span class="tree-spacer"></span>`;
 
       return html`
-        <div class="cell tree-cell" role="gridcell" style="text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)${accentBorder ? `; ${accentBorder}` : ''}"
-          @click="${filterClickHandler ?? nothing}">
+        <div class="cell tree-cell ${cellStateClasses}" role="gridcell" style="${gridStyle}; text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)${cellInlineStyle ? `; ${cellInlineStyle}` : ''}${accentBorder ? `; ${accentBorder}` : ''}${firstCellAccent ? `; ${firstCellAccent}` : ''}"
+          @click="${filterClickHandler ?? nothing}"
+          @mouseenter="${hoverHandler ?? nothing}">
           ${toggle}${content}
         </div>
       `;
@@ -2176,17 +2183,18 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     return html`
       <div
-        class="cell"
+        class="cell ${cellStateClasses}"
         role="gridcell"
-        style="text-align: ${align}${accentBorder ? `; ${accentBorder}` : ''}"
+        style="${extraStyles}"
         @click="${filterClickHandler ?? nothing}"
+        @mouseenter="${hoverHandler ?? nothing}"
       >
         ${content}
       </div>
     `;
   }
 
-  private _renderCheckbox(row: TypedRow, isHeader = false) {
+  private _renderCheckbox(row: TypedRow, isHeader = false, gridRow = 1, gridCol = 1, cellStateClasses = '', cellInlineStyle = '', hoverHandler?: () => void) {
     if (this.selection !== 'multi') return nothing;
 
     if (isHeader) {
@@ -2211,9 +2219,11 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       `;
     }
 
+    const gridStyle = `grid-row: ${gridRow}; grid-column: ${gridCol}`;
     const isSelected = this._isRowSelected(row);
     return html`
-      <div class="checkbox-cell">
+      <div class="checkbox-cell cell ${cellStateClasses}" style="${gridStyle}${cellInlineStyle ? `; ${cellInlineStyle}` : ''}"
+        @mouseenter="${hoverHandler ?? nothing}">
         <div
           class="checkbox"
           role="checkbox"
@@ -2276,18 +2286,19 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     return html`<div class="expand-header"></div>`;
   }
 
-  private _renderExpandCell(row: TypedRow) {
+  private _renderExpandCell(row: TypedRow, gridRow = 1, gridCol = 1, cellStateClasses = '', cellInlineStyle = '', hoverHandler?: () => void) {
     if (!this.getRowDetail) return nothing;
     const detail = this.getRowDetail(row);
+    const gridStyle = `grid-row: ${gridRow}; grid-column: ${gridCol}`;
     if (detail === undefined) {
-      return html`<div class="expand-cell"></div>`;
+      return html`<div class="expand-cell cell ${cellStateClasses}" style="${gridStyle}${cellInlineStyle ? `; ${cellInlineStyle}` : ''}" @mouseenter="${hoverHandler ?? nothing}"></div>`;
     }
     const key = this.getRowKey!(row);
     const isExpanded = this._isDetailExpanded(key);
     const panelId = `${this._instanceId}-detail-${key}`;
     const btnId = `${this._instanceId}-detail-btn-${key}`;
     return html`
-      <div class="expand-cell">
+      <div class="expand-cell cell ${cellStateClasses}" style="${gridStyle}${cellInlineStyle ? `; ${cellInlineStyle}` : ''}" @mouseenter="${hoverHandler ?? nothing}">
         <button
           id="${btnId}"
           class="expand-toggle"
@@ -2302,7 +2313,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     `;
   }
 
-  private _renderDetailPanel(row: TypedRow) {
+  private _renderDetailPanel(row: TypedRow, gridRow = 1) {
     if (!this.getRowDetail) return nothing;
     const detail = this.getRowDetail(row);
     if (detail === undefined) return nothing;
@@ -2316,6 +2327,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         class="detail-panel ${isExpanded ? 'expanded' : ''}"
         role="region"
         aria-labelledby="${btnId}"
+        style="grid-row: ${gridRow + 1}"
         ?hidden="${!isExpanded}"
         @transitionend="${(e: TransitionEvent) => this._handleDetailTransitionEnd(e, key)}"
       >
@@ -2324,6 +2336,16 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         </div>
       </div>
     `;
+  }
+
+  private get _prefixColCount(): number {
+    return (this.getRowDetail ? 1 : 0) + (this.selection === 'multi' ? 1 : 0);
+  }
+
+  private _gridRowFor(actualIndex: number): number {
+    return this.getRowDetail && !this._useVirtualScroll
+      ? 2 * actualIndex + 1
+      : actualIndex + 1;
   }
 
   private _renderRow(row: TypedRow, actualIndex: number, _displayIndex: number) {
@@ -2340,7 +2362,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     const effectiveStyle = isFilterSelected
       ? { ...rowStyleResult?.style, backgroundColor: 'var(--pages-accent-5, #d3e3fd)' }
       : rowStyleResult?.style;
-    const rowInlineStyle = effectiveStyle
+    const cellInlineStyle = effectiveStyle
       ? Object.entries(effectiveStyle).map(([k, v]) => `${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}: ${v}`).join('; ')
       : '';
 
@@ -2349,15 +2371,30 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     const rowAccentStyle = accent && !perCellAccent ? `border-left: 4px solid ${accent}` : '';
 
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';
+    const isHovered = actualIndex === this._hoverRowIndex;
 
     const isDetailExpanded = this.getRowDetail && this.getRowKey
       ? this._isDetailExpanded(this.getRowKey(row))
       : false;
 
+    const cellStateClasses = [
+      stripe,
+      isHovered ? 'hover' : '',
+      isSelected ? 'selected' : '',
+      isClickable ? 'clickable' : '',
+      isFilterSelected ? 'filter-selected' : '',
+      isDetailExpanded ? 'detail-expanded' : '',
+      rowStyleClass,
+    ].filter(Boolean).join(' ');
+
+    const gridRow = this._gridRowFor(actualIndex);
+    const hoverHandler = () => { this._hoverRowIndex = actualIndex; };
+    const expandCol = 1;
+    const checkboxCol = this.getRowDetail ? 2 : 1;
+
     return html`
       <div
-        class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''} ${rowStyleClass} ${isDetailExpanded ? 'detail-expanded' : ''}"
-        style="grid-template-columns: ${this._gridTemplateColumns}; ${rowInlineStyle}${rowAccentStyle ? `; ${rowAccentStyle}` : ''}"
+        class="row"
         role="row"
         part="${part}"
         aria-rowindex="${ariaRowIndex}"
@@ -2367,14 +2404,15 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         aria-posinset="${treeNode ? String(treeNode.siblingIndex) : nothing}"
         aria-expanded="${treeNode && treeNode.children.length > 0 ? String(this._treeExpandState.get(treeNode.id) === true) : nothing}"
         tabindex="${tabindex}"
+        data-row="${actualIndex}"
         @click="${(e: MouseEvent) => this._handleRowClick(row, e)}"
         @dblclick="${(e: MouseEvent) => this._handleRowDoubleClick(row, e)}"
       >
-        ${this._renderExpandCell(row)}
-        ${this._renderCheckbox(row)}
-        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode, perCellAccent ? accent : undefined))}
+        ${this._renderExpandCell(row, gridRow, expandCol, cellStateClasses, cellInlineStyle, hoverHandler)}
+        ${this._renderCheckbox(row, false, gridRow, checkboxCol, cellStateClasses, cellInlineStyle, hoverHandler)}
+        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode, perCellAccent ? accent : undefined, gridRow, this._prefixColCount + i + 1, cellStateClasses, cellInlineStyle, rowAccentStyle, hoverHandler))}
       </div>
-      ${this._renderDetailPanel(row)}
+      ${this._renderDetailPanel(row, gridRow)}
     `;
   }
 
@@ -2523,12 +2561,12 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         <div class="body" @scroll="${this._onScroll}">
           ${this.groupBy && this._groupBoundaries.length > 0
             ? html`
-                <div class="body-content">
+                <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}" @mouseleave="${() => { this._hoverRowIndex = -1; }}">
                   ${this._groupBoundaries.map(boundary => {
                     const rows = this._dataRows.slice(boundary.startRow, boundary.startRow + boundary.rowCount);
                     return html`
-                      <div class="group-header">
-                        <div class="group-header-content" style="grid-column: 1 / -1">
+                      <div class="group-header" style="grid-column: 1 / -1">
+                        <div class="group-header-content">
                           <span class="group-header-name">${boundary.name}</span>
                           <span class="group-header-count">${boundary.rowCount}</span>
                         </div>
@@ -2540,17 +2578,15 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
               `
             : this._useVirtualScroll && window
               ? html`
-                  <div class="body-content" style="height: ${window.totalHeight}px">
-                    <div style="transform: translateY(${window.offsetY}px)">
-                      ${this._visibleRows.map((row, idx) => {
-                        const actualIndex = window.startIndex + idx;
-                        return this._renderRow(row, actualIndex, idx);
-                      })}
-                    </div>
+                  <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}; grid-template-rows: repeat(${this._dataRows.length}, ${this.rowHeight}px)" @mouseleave="${() => { this._hoverRowIndex = -1; }}">
+                    ${this._visibleRows.map((row, idx) => {
+                      const actualIndex = window.startIndex + idx;
+                      return this._renderRow(row, actualIndex, idx);
+                    })}
                   </div>
                 `
               : html`
-                  <div class="body-content">
+                  <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}" @mouseleave="${() => { this._hoverRowIndex = -1; }}">
                     ${this._visibleRows.map((row, idx) => {
                       const actualIndex = this._usePagination && this.totalRows === undefined
                         ? this.currentPage * this.pageSize + idx
