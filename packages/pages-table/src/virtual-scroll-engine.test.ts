@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeScrollWindow, extendWindowForSpans } from './virtual-scroll-engine.js';
-import type { SpanMap } from './span-map.js';
+import type { SpanMap, SpanEntry } from './span-map.js';
 
 describe('computeScrollWindow', () => {
   it('returns full range for small datasets', () => {
@@ -52,10 +52,10 @@ describe('computeScrollWindow', () => {
 describe('extendWindowForSpans', () => {
   it('extends startIndex when a suppressed cell points to an earlier origin', () => {
     const spanMap: SpanMap = new Map([
-      [5, new Map([['country', { colSpan: 1, rowSpan: 4 }]])],
-      [6, new Map([['country', { originRow: 5, originCol: 'country' }]])],
-      [7, new Map([['country', { originRow: 5, originCol: 'country' }]])],
-      [8, new Map([['country', { originRow: 5, originCol: 'country' }]])],
+      [5, new Map<string, SpanEntry>([['country', { colSpan: 1, rowSpan: 4 }]])],
+      [6, new Map<string, SpanEntry>([['country', { originRow: 5, originCol: 'country' }]])],
+      [7, new Map<string, SpanEntry>([['country', { originRow: 5, originCol: 'country' }]])],
+      [8, new Map<string, SpanEntry>([['country', { originRow: 5, originCol: 'country' }]])],
     ]);
     const window = { startIndex: 7, endIndex: 20, offsetY: 336, totalHeight: 4800 };
     const result = extendWindowForSpans(window, spanMap, new Set(['country']));
@@ -72,7 +72,7 @@ describe('extendWindowForSpans', () => {
 
   it('extends endIndex when an origin span exceeds the window', () => {
     const spanMap: SpanMap = new Map([
-      [23, new Map([['country', { colSpan: 1, rowSpan: 5 }]])],
+      [23, new Map<string, SpanEntry>([['country', { colSpan: 1, rowSpan: 5 }]])],
     ]);
     const window = { startIndex: 10, endIndex: 25, offsetY: 480, totalHeight: 4800 };
     const result = extendWindowForSpans(window, spanMap, new Set(['country']));
@@ -81,9 +81,9 @@ describe('extendWindowForSpans', () => {
 
   it('handles multiple span columns — extends to earliest origin', () => {
     const spanMap: SpanMap = new Map([
-      [3, new Map([['name', { colSpan: 1, rowSpan: 5 }]])],
-      [5, new Map([['country', { colSpan: 1, rowSpan: 4 }]])],
-      [7, new Map([
+      [3, new Map<string, SpanEntry>([['name', { colSpan: 1, rowSpan: 5 }]])],
+      [5, new Map<string, SpanEntry>([['country', { colSpan: 1, rowSpan: 4 }]])],
+      [7, new Map<string, SpanEntry>([
         ['country', { originRow: 5, originCol: 'country' }],
         ['name', { originRow: 3, originCol: 'name' }],
       ])],
@@ -95,8 +95,8 @@ describe('extendWindowForSpans', () => {
 
   it('ignores columns not in spanColumns set', () => {
     const spanMap: SpanMap = new Map([
-      [5, new Map([['country', { colSpan: 1, rowSpan: 4 }]])],
-      [7, new Map([['country', { originRow: 5, originCol: 'country' }]])],
+      [5, new Map<string, SpanEntry>([['country', { colSpan: 1, rowSpan: 4 }]])],
+      [7, new Map<string, SpanEntry>([['country', { originRow: 5, originCol: 'country' }]])],
     ]);
     const window = { startIndex: 7, endIndex: 20, offsetY: 336, totalHeight: 4800 };
     const result = extendWindowForSpans(window, spanMap, new Set(['name']));
@@ -105,7 +105,7 @@ describe('extendWindowForSpans', () => {
 
   it('does not extend when startIndex cell is an origin (not suppressed)', () => {
     const spanMap: SpanMap = new Map([
-      [7, new Map([['country', { colSpan: 1, rowSpan: 3 }]])],
+      [7, new Map<string, SpanEntry>([['country', { colSpan: 1, rowSpan: 3 }]])],
     ]);
     const window = { startIndex: 7, endIndex: 20, offsetY: 336, totalHeight: 4800 };
     const result = extendWindowForSpans(window, spanMap, new Set(['country']));

@@ -1688,7 +1688,7 @@ describe('pages-table', () => {
       await el.updateComplete;
 
       expect(handler).toHaveBeenCalledTimes(1);
-      expect(handler.mock.calls[0][0].detail.selectedKeys.length).toBe(1);
+      expect(handler.mock.calls[0]![0].detail.selectedKeys.length).toBe(1);
     });
 
     it('spanned cell shows selected only when ALL covered rows are selected', async () => {
