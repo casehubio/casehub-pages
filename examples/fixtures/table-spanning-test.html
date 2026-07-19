@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" class="pages-theme-light">
+<head>
+  <meta charset="utf-8" />
+  <title>pages-table spanning test fixture</title>
+  <script src="/casehub-bundle.js"></script>
+  <style>
+    body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; background: #fff; }
+    #test-target { width: 760px; }
+  </style>
+</head>
+<body>
+  <div id="test-target"></div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const scenario = params.get('scenario') || 'rowspan';
+
+    const DEPTS = ['Engineering', 'Design', 'Product', 'Sales', 'Marketing', 'Support', 'Legal', 'Finance'];
+
+    function generateRows(count, colCount) {
+      const rows = [];
+      let deptIdx = 0;
+      let deptRemaining = 0;
+      let currentDept = '';
+      for (let i = 0; i < count; i++) {
+        if (deptRemaining <= 0) {
+          currentDept = DEPTS[deptIdx % DEPTS.length];
+          deptRemaining = 3 + (deptIdx % 5);
+          deptIdx++;
+        }
+        const row = [currentDept, 'Person ' + i, 20 + (i % 50), 'Role ' + (i % 8)];
+        if (colCount > 4) row.push(50000 + i * 1000);
+        rows.push(row);
+        deptRemaining--;
+      }
+      return JSON.stringify(rows);
+    }
+
+    function makeYaml(rowData, extraCols) {
+      const cols = extraCols || '';
+      return `
+datasets:
+  - uuid: test-data
+    content: >-
+      ${rowData}
+    columns:
+      - id: department
+        type: LABEL
+      - id: name
+        type: TEXT
+      - id: age
+        type: NUMBER
+      - id: role
+        type: TEXT
+${cols}
+pages:
+  - name: Test
+    components:
+      - type: table
+        properties:
+          lookup:
+            uuid: test-data
+          sortable: true
+`;
+    }
+
+    function makeYamlWithPageSize(rowData, pageSize) {
+      return `
+datasets:
+  - uuid: test-data
+    content: >-
+      ${rowData}
+    columns:
+      - id: department
+        type: LABEL
+      - id: name
+        type: TEXT
+      - id: age
+        type: NUMBER
+      - id: role
+        type: TEXT
+
+pages:
+  - name: Test
+    components:
+      - type: table
+        properties:
+          lookup:
+            uuid: test-data
+          sortable: true
+          pageSize: ${pageSize}
+`;
+    }
+
+    const SMALL_DATA = JSON.stringify([
+      ["Engineering", "Alice Chen", 32, "Staff Engineer"],
+      ["Engineering", "Bob Kim", 28, "Senior Engineer"],
+      ["Engineering", "Carlos Ruiz", 25, "Engineer"],
+      ["Design", "Diana Park", 35, "Lead Designer"],
+      ["Design", "Eve Johnson", 29, "UX Researcher"],
+      ["Product", "Frank Lee", 31, "Product Manager"],
+      ["Product", "Grace Wu", 27, "Product Analyst"],
+      ["Product", "Henry Zhang", 34, "Program Manager"]
+    ]);
+
+    const SIX_ROW_DATA = JSON.stringify([
+      ["Engineering", "Alice Chen", 32, "Staff Engineer"],
+      ["Engineering", "Bob Kim", 28, "Senior Engineer"],
+      ["Design", "Diana Park", 35, "Lead Designer"],
+      ["Design", "Eve Johnson", 29, "UX Researcher"],
+      ["Product", "Frank Lee", 31, "Product Manager"],
+      ["Product", "Grace Wu", 27, "Product Analyst"]
+    ]);
+
+    async function setup() {
+      const target = document.getElementById('test-target');
+      let yaml, postConfig;
+
+      switch (scenario) {
+        case 'colspan': {
+          yaml = makeYaml(SIX_ROW_DATA);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) {
+                return { ...c, cellSpan: (_row, ri) => ri === 1 ? { colSpan: 3 } : undefined };
+              }
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'rowspan': {
+          yaml = makeYaml(SMALL_DATA);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, mergeRows: true };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'both': {
+          yaml = makeYaml(SMALL_DATA);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) {
+                return {
+                  ...c,
+                  mergeRows: true,
+                  cellSpan: (_row, ri) => ri === 0 ? { colSpan: 4 } : undefined
+                };
+              }
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'scroll-mid': {
+          const data = generateRows(200, 4);
+          yaml = makeYaml(data);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, mergeRows: true };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'scroll-past': {
+          const data = generateRows(200, 4);
+          yaml = makeYaml(data);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, mergeRows: true };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'fast-scroll': {
+          const data = generateRows(500, 4);
+          yaml = makeYaml(data);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, mergeRows: true };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'page-boundary': {
+          const rows = [];
+          for (let i = 0; i < 50; i++) {
+            const dept = (i >= 22 && i <= 27) ? 'Shared-Dept' :
+              DEPTS[Math.floor(i / 4) % DEPTS.length];
+            rows.push([dept, 'Person ' + i, 20 + i, 'Role ' + (i % 5)]);
+          }
+          yaml = makeYamlWithPageSize(JSON.stringify(rows), 25);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, mergeRows: true };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'hover': {
+          yaml = makeYaml(SMALL_DATA);
+          postConfig = (table) => {
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, mergeRows: true };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'no-spans':
+        default: {
+          yaml = makeYaml(SMALL_DATA);
+          postConfig = null;
+          break;
+        }
+      }
+
+      casehubPages.injectTheme(casehubPages.DEFAULT_THEME);
+      casehubPages.applyThemeMode(document.documentElement, 'light');
+
+      await casehubPages.loadSite(target, yaml);
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const table = target.querySelector('pages-table');
+      if (table && postConfig) {
+        postConfig(table);
+        await table.updateComplete;
+      }
+
+      await new Promise(r => setTimeout(r, 200));
+      document.body.dataset.ready = 'true';
+    }
+
+    setup().catch(err => {
+      console.error('Fixture setup failed:', err);
+      document.body.dataset.ready = 'error';
+      document.body.dataset.error = err.message;
+    });
+  </script>
+</body>
+</html>
