@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
-import { RovingTabindexMixin, type RovingDirection } from '@casehubio/pages-primitives';
+import { RovingTabindexMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings, GroupBoundary } from '@casehubio/pages-data';
 import { ColumnType, extractGroupBoundaries } from '@casehubio/pages-data';

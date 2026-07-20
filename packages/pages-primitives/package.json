@@ -12,6 +12,28 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./a11y": {
+      "types": "./dist/a11y/index.d.ts",
+      "default": "./dist/a11y/index.js"
+    },
+    "./modal": {
+      "types": "./dist/modal/index.d.ts",
+      "default": "./dist/modal/index.js"
+    }
+  },
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/modal/index.js",
+    "./dist/modal/pages-modal.js",
+    "./src/index.ts",
+    "./src/modal/index.ts",
+    "./src/modal/pages-modal.ts"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",

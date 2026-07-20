@@ -28,7 +28,14 @@ composition, no scoped CSS via `css` tagged literals.
 
 ## Lit conventions
 
-- `@customElement('pages-<name>')` decorator for registration
+- `@customElement('pages-<name>')` decorator for registration — or guarded
+  manual registration when the component is re-exported through a barrel
+  that may be evaluated twice in aliased bundler setups:
+  ```ts
+  if (!customElements.get('pages-<name>')) {
+    customElements.define('pages-<name>', ClassName);
+  }
+  ```
 - `@property()` for public API, `@state()` for internal state
 - Immutable collection updates — replace Set/Map/Array, never mutate in
   place (see garden protocol
@@ -62,6 +69,22 @@ HTMLElement
 MutationObserver). `PagesContentElement` is genuinely one-shot — props trigger
 render, no data machinery. New viz components should extend the appropriate
 base class rather than raw `HTMLElement`.
+
+## Sub-path exports for side-effect isolation
+
+Packages that mix side-effect-free code (mixins, utilities) with
+side-effect code (element registration) must declare an `"exports"` map
+in `package.json` with separate sub-paths. This prevents consumers from
+pulling in unwanted `customElements.define()` calls when they only need
+a utility export.
+
+Example (`pages-primitives`):
+- `@casehubio/pages-primitives/a11y` — mixins only, no side effects
+- `@casehubio/pages-primitives/modal` — registers `pages-modal`
+- `@casehubio/pages-primitives` — barrel, re-exports everything
+
+Internal consumers must import from the narrowest sub-path that
+provides what they need.
 
 ## Element naming
 
