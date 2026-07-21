@@ -11,7 +11,7 @@ import type { PagesTable } from '@casehubio/pages-table';
 var deptCol = 'department' as ColumnId;
 var statusCol = 'status' as ColumnId;
 
-function applySpanConfig(table as PagesTable) {
+function applySpanConfig(table: PagesTable) {
   if (!table.columnConfig) return;
   if (table.columnConfig.some(function(c) { return !!c.mergeRows; })) return;
 
@@ -21,7 +21,7 @@ function applySpanConfig(table as PagesTable) {
     }
     if (String(c.id) === String(statusCol)) {
       return Object.assign({}, c, {
-        cellSpan: function(row, _rowIndex) {
+        cellSpan: function(row: any, _rowIndex: number) {
           var cell = row.cell(statusCol);
           if (cell.type !== 'NULL' && cell.value === 'Unknown') {
             return { colSpan: 2 };
