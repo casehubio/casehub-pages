@@ -752,3 +752,212 @@ describe("PagesDropdown", () => {
     wrapper.remove();
   });
 });
+
+// ── currentValue getter ─────────────────────────────────────────────
+
+describe("currentValue getter", () => {
+  afterEach(() => {
+    document.querySelectorAll("pages-text-input, pages-number-input, pages-checkbox, pages-dropdown, pages-date-picker, pages-textarea").forEach(el => el.remove());
+  });
+
+  it("PagesTextInput returns current input value", async () => {
+    const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
+    const el = new PagesTextInput();
+    el.props = { field: "name", lookup: mockLookup("test") };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    expect(el.currentValue).toBe("Alice");
+  });
+
+  it("PagesNumberInput returns current numeric value", async () => {
+    const ds = makeDataSet([["age", "NUMBER"]], [[42]]);
+    const el = new PagesNumberInput();
+    el.props = { field: "age", lookup: mockLookup("test") };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    expect(el.currentValue).toBe(42);
+  });
+
+  it("PagesNumberInput returns null for empty input", async () => {
+    const ds = makeDataSet([["age", "NUMBER"]], [[null]]);
+    const el = new PagesNumberInput();
+    el.props = { field: "age", lookup: mockLookup("test") };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    expect(el.currentValue).toBeNull();
+  });
+
+  it("PagesCheckbox returns boolean checked state", async () => {
+    const ds = makeDataSet([["active", "LABEL"]], [["true"]]);
+    const el = new PagesCheckbox();
+    el.props = { field: "active", lookup: mockLookup("test") };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    expect(el.currentValue).toBe(true);
+  });
+
+  it("PagesDropdown returns selected option value", async () => {
+    const ds = makeDataSet([["status", "LABEL"]], [["inactive"]]);
+    const el = new PagesDropdown();
+    el.props = {
+      field: "status",
+      options: { values: ["active", "inactive", "pending"] },
+      lookup: mockLookup("test"),
+    };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    expect(el.currentValue).toBe("inactive");
+  });
+
+  it("PagesDatePicker returns current date string", async () => {
+    const ds = makeDataSet([["start", "DATE"]], [["2024-06-15"]]);
+    const el = new PagesDatePicker();
+    el.props = { field: "start", lookup: mockLookup("test") };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    expect(el.currentValue).toBe("2024-06-15");
+  });
+
+  it("PagesTextarea returns current textarea value", async () => {
+    const ds = makeDataSet([["notes", "TEXT"]], [["Hello"]]);
+    const el = new PagesTextarea();
+    el.props = { field: "notes", lookup: mockLookup("test") };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    expect(el.currentValue).toBe("Hello");
+  });
+});
+
+// ── a11y properties ─────────────────────────────────────────────────
+
+describe("a11y properties", () => {
+  afterEach(() => {
+    document.querySelectorAll("pages-text-input, pages-number-input, pages-checkbox, pages-dropdown, pages-date-picker, pages-textarea").forEach(el => el.remove());
+  });
+
+  it("errorMessage sets aria-invalid and renders error text on text-input", async () => {
+    const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
+    const el = new PagesTextInput();
+    el.props = { field: "name", label: "Name", lookup: mockLookup("test") };
+    el.editable = true;
+    el.errorMessage = "Required";
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    const input = el.shadowRoot!.querySelector("input")!;
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    const errorEl = el.shadowRoot!.querySelector(".field-error");
+    expect(errorEl?.textContent).toBe("Required");
+  });
+
+  it("no errorMessage means no aria-invalid on text-input", async () => {
+    const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
+    const el = new PagesTextInput();
+    el.props = { field: "name", label: "Name", lookup: mockLookup("test") };
+    el.editable = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    const input = el.shadowRoot!.querySelector("input")!;
+    expect(input.hasAttribute("aria-invalid")).toBe(false);
+  });
+
+  it("required sets aria-required on number-input", async () => {
+    const ds = makeDataSet([["age", "NUMBER"]], [[30]]);
+    const el = new PagesNumberInput();
+    el.props = { field: "age", label: "Age", lookup: mockLookup("test") };
+    el.editable = true;
+    el.required = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    const input = el.shadowRoot!.querySelector("input")!;
+    expect(input.getAttribute("aria-required")).toBe("true");
+  });
+
+  it("describedBy sets aria-describedby on checkbox", async () => {
+    const ds = makeDataSet([["active", "LABEL"]], [["true"]]);
+    const el = new PagesCheckbox();
+    el.props = { field: "active", label: "Active", lookup: mockLookup("test") };
+    el.editable = true;
+    el.describedBy = "active-error";
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    const input = el.shadowRoot!.querySelector("input")!;
+    expect(input.getAttribute("aria-describedby")).toBe("active-error");
+  });
+
+  it("errorMessage renders error on dropdown", async () => {
+    const ds = makeDataSet([["status", "LABEL"]], [["active"]]);
+    const el = new PagesDropdown();
+    el.props = { field: "status", options: { values: ["active", "inactive"] }, lookup: mockLookup("test") };
+    el.editable = true;
+    el.errorMessage = "Invalid selection";
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    const select = el.shadowRoot!.querySelector("select")!;
+    expect(select.getAttribute("aria-invalid")).toBe("true");
+    const errorEl = el.shadowRoot!.querySelector(".field-error");
+    expect(errorEl?.textContent).toBe("Invalid selection");
+  });
+
+  it("errorMessage renders error on textarea", async () => {
+    const ds = makeDataSet([["notes", "TEXT"]], [["x"]]);
+    const el = new PagesTextarea();
+    el.props = { field: "notes", lookup: mockLookup("test") };
+    el.editable = true;
+    el.errorMessage = "Too short";
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    const textarea = el.shadowRoot!.querySelector("textarea")!;
+    expect(textarea.getAttribute("aria-invalid")).toBe("true");
+    const errorEl = el.shadowRoot!.querySelector(".field-error");
+    expect(errorEl?.textContent).toBe("Too short");
+  });
+
+  it("errorMessage renders error on date-picker", async () => {
+    const ds = makeDataSet([["start", "DATE"]], [["2024-01-01"]]);
+    const el = new PagesDatePicker();
+    el.props = { field: "start", lookup: mockLookup("test") };
+    el.editable = true;
+    el.errorMessage = "Date out of range";
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = ds;
+    await el.updateComplete;
+    const input = el.shadowRoot!.querySelector("input")!;
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    const errorEl = el.shadowRoot!.querySelector(".field-error");
+    expect(errorEl?.textContent).toBe("Date out of range");
+  });
+});

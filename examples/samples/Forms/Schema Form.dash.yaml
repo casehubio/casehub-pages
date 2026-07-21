@@ -55,9 +55,27 @@ pages:
         tabs:
           Schema:
             components:
-              - type: html
+              - type: markdown
                 properties:
-                  content: <schema-form-demo></schema-form-demo>
+                  content: |
+                    **Schema-driven form** — one component, one JSON Schema.
+                    Auto-derives field types, labels, and validation from the
+                    schema. Edit a field — changes auto-save after 1 second.
+
+              - schema-form:
+                  schema:
+                    properties:
+                      transactionId: { type: string, minLength: 1 }
+                      amount: { type: number, minimum: 0 }
+                      currency: { type: string, enum: [USD, EUR, GBP] }
+                      flagged: { type: boolean }
+                      reportDate: { type: string, format: date }
+                      detectedAt: { type: string, format: datetime-local }
+                      notes: { type: string, format: textarea }
+                      sender: { type: string }
+                      receiver: { type: string }
+                    required: [transactionId, amount]
+                  excludeFields: [id]
 
           HTML:
             components:

@@ -56,6 +56,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "timeline",
   "graph",
   "grouped-view",
+  "schema-form",
   ...FORM_INPUT_TYPES,
 ]);
 
@@ -141,6 +142,18 @@ export function createActivationCallback(
         }
       }
 
+      // Schema form — implicit lookup from dataScope (only if no explicit lookup)
+      if (component.type === "schema-form" && options) {
+        const pageDataScope = options.dataScopeRegistry.get(pagePath);
+        if (pageDataScope && !lookup) {
+          lookup = { dataSetId: pageDataScope.dataset, operations: [] };
+        }
+        const hasSave = pageDataScope
+          ? options.saveConfigRegistry.has(pagePath)
+          : false;
+        (vizEl as unknown as { editable: boolean }).editable = hasSave;
+      }
+
       const hasExplicitId = component.id !== undefined;
 
       const entry = {
@@ -153,8 +166,7 @@ export function createActivationCallback(
       };
       registry.set(componentId, entry);
 
-      if (isFormInput && lookup) {
-        // Merge implicit lookup into props for form inputs
+      if ((isFormInput || component.type === "schema-form") && lookup) {
         vizEl.props = { ...component.props, lookup };
       } else if (component.props) {
         vizEl.props = component.props;

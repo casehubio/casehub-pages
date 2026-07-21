@@ -83,3 +83,40 @@ pages:
       field: notes
       label: Notes
       rows: 3
+
+- name: Contact Form (Schema)
+  dataScope:
+    dataset: contacts
+    idColumn: id
+  save:
+    trigger: auto
+    delay: 2000
+    adapter: local
+  components:
+  - type: title
+    properties:
+      text: Contact Form (Schema-Driven)
+      size: h3
+
+  - type: markdown
+    properties:
+      content: |
+        Same contact data, but the form is auto-generated from a schema.
+        Field types, labels, and constraints come from the JSON Schema.
+
+  - schema-form:
+      schema:
+        properties:
+          name: { type: string, minLength: 1 }
+          email: { type: string, minLength: 1 }
+          phone: { type: string }
+          priority: { type: integer, minimum: 1, maximum: 5 }
+          category: { type: string, enum: [Work, Personal, Family, Other] }
+          active: { type: boolean }
+          startDate: { type: string, format: date }
+          notes: { type: string, format: textarea }
+        required: [name, email]
+      excludeFields: [id]
+      labels:
+        name: Full Name
+        startDate: Start Date

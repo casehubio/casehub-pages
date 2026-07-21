@@ -55,6 +55,41 @@ describe("form input desugaring", () => {
     const item = root.slots!.content![0]!.items![0]!;
     expect(item.component.type).toBe("textarea");
   });
+
+  it("desugars schema-form shorthand", () => {
+    const root = parsePage({
+      pages: [{
+        components: [{
+          "schema-form": {
+            schema: { properties: { name: { type: "string" } } },
+            excludeFields: ["id"],
+          },
+        }],
+      }],
+    });
+    const item = root.slots!.content![0]!.items![0]!;
+    expect(item.component.type).toBe("schema-form");
+    expect(item.component.props).toEqual({
+      schema: { properties: { name: { type: "string" } } },
+      excludeFields: ["id"],
+    });
+  });
+
+  it("desugars type: schema-form with properties", () => {
+    const root = parsePage({
+      pages: [{
+        components: [{
+          type: "schema-form",
+          properties: {
+            schema: { properties: { age: { type: "number" } } },
+            lookup: { uuid: "devs" },
+          },
+        }],
+      }],
+    });
+    const item = root.slots!.content![0]!.items![0]!;
+    expect(item.component.type).toBe("schema-form");
+  });
 });
 
 describe("page src desugaring", () => {

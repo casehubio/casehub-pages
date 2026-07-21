@@ -1,10 +1,12 @@
 import { html, css, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { TextInputProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 
+@customElement("pages-text-input")
 export class PagesTextInput extends PagesFormInput<TextInputProps> {
   static override styles = css`
     :host {
@@ -37,7 +39,16 @@ export class PagesTextInput extends PagesFormInput<TextInputProps> {
       background: var(--pages-neutral-3, #f5f5f5);
       cursor: not-allowed;
     }
+    .field-error {
+      color: var(--pages-danger-9, #dc2626);
+      font-size: var(--pages-font-size-xs, 11px);
+      margin-top: var(--pages-space-0-5, 2px);
+    }
   `;
+
+  get currentValue(): string {
+    return this.shadowRoot?.querySelector('input')?.value ?? '';
+  }
 
   protected override renderContent(
     props: TextInputProps & { lookup?: DataSetLookup },
@@ -57,22 +68,16 @@ export class PagesTextInput extends PagesFormInput<TextInputProps> {
           .value=${inputValue}
           placeholder=${ifDefined(props.placeholder)}
           maxlength=${ifDefined(props.maxLength)}
-          ?required=${!!props.required}
+          ?required=${!!props.required || this.required}
           ?readonly=${isReadonly}
+          aria-required=${ifDefined(this.required ? "true" : undefined)}
+          aria-invalid=${ifDefined(this.errorMessage ? "true" : undefined)}
+          aria-describedby=${ifDefined(this.describedBy)}
           @input=${(e: Event) => this.emitFieldChange((e.target as HTMLInputElement).value, false)}
           @blur=${(e: Event) => this.emitFieldChange((e.target as HTMLInputElement).value, true)}
         />
+        ${this.errorMessage ? html`<span class="field-error" role="alert">${this.errorMessage}</span>` : ""}
       </div>
     `;
-  }
-}
-
-if (!customElements.get('pages-text-input')) {
-  customElements.define('pages-text-input', PagesTextInput);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'pages-text-input': PagesTextInput;
   }
 }

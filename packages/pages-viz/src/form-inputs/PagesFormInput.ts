@@ -1,4 +1,5 @@
 import { type PropertyValues } from "lit";
+import { property } from "lit/decorators.js";
 import { PagesElement } from "../base/PagesElement.js";
 import type { FormInputCommon } from "@casehubio/pages-component";
 import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
@@ -21,6 +22,10 @@ export abstract class PagesFormInput<
 > extends PagesElement<P & { lookup?: DataSetLookup }> {
   protected _editable = false;
   protected inputElement: HTMLInputElement | HTMLTextAreaElement | null = null;
+
+  @property({ attribute: false }) errorMessage: string | undefined;
+  @property({ type: Boolean, attribute: false }) required = false;
+  @property({ attribute: false }) describedBy: string | undefined;
 
   set editable(value: boolean) {
     this._editable = value;
@@ -126,6 +131,8 @@ export abstract class PagesFormInput<
   protected asFormProps(props: P & { lookup?: DataSetLookup }): P {
     return props;
   }
+
+  abstract get currentValue(): unknown;
 
   protected emitFieldChange(value: unknown, committed: boolean): void {
     if (!this._editable) return;

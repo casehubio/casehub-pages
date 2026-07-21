@@ -23,6 +23,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "grouped-view", "iframe-plugin",
   "badge", "countdown", "timeline", "graph",
   "text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea",
+  "schema-form",
   "action-button", "alert",
   "split", "dock-bar", "host-panel",
 ]);
@@ -99,6 +100,19 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
         ...(visibleWhen ? { visibleWhen } : {}),
       };
     }
+  }
+
+  // Schema form shorthand
+  if ("schema-form" in raw) {
+    const props = raw["schema-form"] as Record<string, unknown>;
+    const style = extractStyle(raw.properties);
+    const visibleWhen = raw.visibleWhen as string | undefined;
+    return {
+      type: "schema-form",
+      props,
+      ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
+    };
   }
 
   // Workbench primitives
@@ -355,6 +369,19 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       return {
         type: "title",
         props: { text: (properties["text"] as string) ?? "", size: properties["size"] as string | undefined },
+      };
+    }
+
+    // Schema form — pass through props directly (not a displayer)
+    if (rawType === "schema-form") {
+      const properties = (raw.properties as Record<string, unknown> | undefined) ?? {};
+      const style = extractStyle(raw.style);
+      const visibleWhen = raw.visibleWhen as string | undefined;
+      return {
+        type: "schema-form",
+        props: properties,
+        ...(style ? { style } : {}),
+        ...(visibleWhen ? { visibleWhen } : {}),
       };
     }
 

@@ -90,13 +90,12 @@ describe('pipeline integration', () => {
       table.remove();
     });
 
-    it('shows filter bar input in pipeline mode when filter bar is open', async () => {
+    it('shows filter input in pipeline mode', async () => {
       el.props = { lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = testDataSet;
-      (el as any)._filterBarOpen = true;
       await el.updateComplete;
 
-      const input = el.shadowRoot!.querySelector('.filter-bar-input');
+      const input = el.shadowRoot!.querySelector('.filter-input');
       expect(input).not.toBeNull();
     });
 
@@ -710,33 +709,24 @@ describe('pipeline integration', () => {
   });
 
   describe('CSV export buttons', () => {
-    it('shows export buttons in dropdown when csvExport is true', async () => {
+    it('shows export buttons when csvExport is true', async () => {
       el.props = { csvExport: true, lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = testDataSet;
       await el.updateComplete;
 
-      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLButtonElement;
-      trigger.click();
-      await el.updateComplete;
-
-      const menuItems = el.shadowRoot!.querySelectorAll('.picker-menu-item');
-      const labels = Array.from(menuItems).map(i => i.textContent?.trim());
-      expect(labels).toContain('⬇ Download CSV');
-      expect(labels).toContain('📋 Copy CSV');
+      const downloadBtn = el.shadowRoot!.querySelector('[aria-label="Download CSV"]');
+      const copyBtn = el.shadowRoot!.querySelector('[aria-label="Copy CSV"]');
+      expect(downloadBtn).not.toBeNull();
+      expect(copyBtn).not.toBeNull();
     });
 
-    it('does not show export buttons in dropdown when csvExport is not set', async () => {
+    it('does not show export buttons when csvExport is not set', async () => {
       el.props = { lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = testDataSet;
       await el.updateComplete;
 
-      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLButtonElement;
-      trigger.click();
-      await el.updateComplete;
-
-      const menuItems = el.shadowRoot!.querySelectorAll('.picker-menu-item');
-      const labels = Array.from(menuItems).map(i => i.textContent?.trim());
-      expect(labels).not.toContain('⬇ Download CSV');
+      const downloadBtn = el.shadowRoot!.querySelector('[aria-label="Download CSV"]');
+      expect(downloadBtn).toBeNull();
     });
   });
 

@@ -134,9 +134,9 @@ The filter flow (selector → `pages-filter` → listening component re-query) r
 |---|---|
 | `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), push sources (PushSource interface, WebSocket, SSE, generic pool), JSONata expressions, `DatasetContract`, `ConnectionStatus`, segment-level wildcard matching (`matchesTopic`) |
 | `@casehubio/pages-ui` | TypeScript DSL builders, YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
-| `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, metric, selector |
+| `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, metric, selector, schema-form (JSON Schema → auto-derived form input delegation), form inputs (text, number, dropdown, checkbox, date, textarea) |
 | `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), split layouts, dock bars, slot management, `emitPagesEvent`/`onPagesEvent` event helpers |
-| `@casehubio/pages-primitives` | Lit-dependent UI primitives: a11y mixins (RovingTabindex, FocusTrap, KeyboardShortcut, LiveRegion). Future: `<pages-schema-form>`, `<pages-filter-chips>`, `<pages-scope-selector>` |
+| `@casehubio/pages-primitives` | Lit-dependent UI primitives: a11y mixins (RovingTabindex, FocusTrap, KeyboardShortcut, LiveRegion). Future: `<pages-filter-chips>`, `<pages-scope-selector>` |
 | `@casehubio/pages-table` | Data table Web Component (`<pages-table>`): TypedDataSet-native API with `columnRenderers` and `TableColumnConfig`, CSS Grid rendering, virtual scroll, sorting, filtering, column visibility, multi-mode selection, multi-column sort, tree/expandable rows, CSV export, ARIA grid, keyboard navigation. Renamed from `pages-data-table` and integrated TypedDataSet in #152 |
 | `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, panel hosting (`registerPanel`, `hostPanel`), page navigation, data pipeline, event delegation |
 | `@casehubio/pages-examples` | Examples gallery: dev server, Playwright tests, sample validation |

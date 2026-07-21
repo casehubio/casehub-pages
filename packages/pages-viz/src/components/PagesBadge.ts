@@ -1,4 +1,5 @@
 import { html, css, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
 import type { TypedDataSet, Column } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import type { BadgeProps } from "@casehubio/pages-component";
@@ -17,6 +18,7 @@ const DEFAULT_PALETTE = [
   "var(--pages-danger-11)",
 ];
 
+@customElement("pages-badge")
 export class PagesBadge extends PagesElement<BadgeProps> {
   private _colorCache = new Map<string, string>();
 
@@ -108,15 +110,5 @@ export class PagesBadge extends PagesElement<BadgeProps> {
     const color = DEFAULT_PALETTE[index]!;
     this._colorCache.set(value, color);
     return color;
-  }
-}
-
-if (!customElements.get('pages-badge')) {
-  customElements.define('pages-badge', PagesBadge);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'pages-badge': PagesBadge;
   }
 }

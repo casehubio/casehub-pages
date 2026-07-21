@@ -118,3 +118,34 @@ pages:
         label: Working Years
         min: 0
         max: 50
+
+- name: Edit Developer (Schema)
+  dataScope:
+    dataset: devs
+    idColumn: id
+  save:
+    trigger: auto
+    delay: 2000
+    adapter: local
+  components:
+    - type: title
+      properties:
+        text: Edit Developer (Schema Form)
+        size: h3
+
+    - type: markdown
+      properties:
+        content: |
+          Same data as the DSL form, but driven by a single
+          `schema-form:` component with explicit schema constraints.
+
+    - schema-form:
+        schema:
+          properties:
+            name: { type: string, minLength: 1 }
+            language: { type: string, enum: [Java, TypeScript, Python, Go, Rust, Kotlin, C++] }
+            workingYears: { type: integer, minimum: 0, maximum: 50 }
+          required: [name]
+        excludeFields: [id]
+        labels:
+          workingYears: Years of Experience

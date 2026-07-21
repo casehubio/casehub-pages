@@ -8,6 +8,7 @@ import type {TypedDataSet} from "@casehubio/pages-data";
 import {applyChartSettings} from "./option-pipeline.js";
 import {deepMerge} from "../base/deep-merge.js";
 import {cellToRaw} from "../base/cell-extract.js";
+import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([CanvasRenderer, CustomChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent]);
@@ -20,6 +21,7 @@ interface TimelineDataItem {
   readonly isMilestone?: boolean;
 }
 
+@customElement("pages-timeline")
 export class PagesTimeline extends PagesChartElement<TimelineProps> {
   override buildOption(
     props: TimelineProps,
@@ -175,12 +177,3 @@ export class PagesTimeline extends PagesChartElement<TimelineProps> {
   }
 }
 
-if (!customElements.get('pages-timeline')) {
-  customElements.define('pages-timeline', PagesTimeline);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'pages-timeline': PagesTimeline;
-  }
-}

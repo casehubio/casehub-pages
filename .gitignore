@@ -187,3 +187,4 @@ wksp
 *.ear
 *.zip
 .idea/
+.playwright-mcp/

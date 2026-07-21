@@ -29,6 +29,10 @@ export { PagesMetric } from "./components/PagesMetric.js";
 export { PagesSelector } from "./components/PagesSelector.js";
 export { PagesIframePlugin } from "./components/PagesIframePlugin.js";
 
+// Schema form
+export { PagesSchemaForm } from "./form-inputs/PagesSchemaForm.js";
+export type { FieldSchema, SchemaFormProps } from "./form-inputs/schema-types.js";
+
 // Form inputs
 export { PagesFormInput } from "./form-inputs/PagesFormInput.js";
 export type { PagesFieldChangeDetail } from "./form-inputs/PagesFormInput.js";

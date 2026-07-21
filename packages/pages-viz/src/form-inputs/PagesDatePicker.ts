@@ -1,10 +1,12 @@
 import { html, css, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { DatePickerProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 
+@customElement("pages-date-picker")
 export class PagesDatePicker extends PagesFormInput<DatePickerProps> {
   static override styles = css`
     :host {
@@ -37,7 +39,16 @@ export class PagesDatePicker extends PagesFormInput<DatePickerProps> {
       background: var(--pages-neutral-3, #f5f5f5);
       cursor: not-allowed;
     }
+    .field-error {
+      color: var(--pages-danger-9, #dc2626);
+      font-size: var(--pages-font-size-xs, 11px);
+      margin-top: var(--pages-space-0-5, 2px);
+    }
   `;
+
+  get currentValue(): string {
+    return this.shadowRoot?.querySelector('input')?.value ?? '';
+  }
 
   protected override renderContent(
     props: DatePickerProps & { lookup?: DataSetLookup },
@@ -67,23 +78,17 @@ export class PagesDatePicker extends PagesFormInput<DatePickerProps> {
           .value=${isoDate ?? ""}
           min=${ifDefined(props.min)}
           max=${ifDefined(props.max)}
-          ?required=${!!props.required}
+          ?required=${!!props.required || this.required}
           ?readonly=${isReadonly}
+          aria-required=${ifDefined(this.required ? "true" : undefined)}
+          aria-invalid=${ifDefined(this.errorMessage ? "true" : undefined)}
+          aria-describedby=${ifDefined(this.describedBy)}
           @change=${(e: Event) => {
             this.emitFieldChange((e.target as HTMLInputElement).value || null, true);
           }}
         />
+        ${this.errorMessage ? html`<span class="field-error" role="alert">${this.errorMessage}</span>` : ""}
       </div>
     `;
-  }
-}
-
-if (!customElements.get('pages-date-picker')) {
-  customElements.define('pages-date-picker', PagesDatePicker);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'pages-date-picker': PagesDatePicker;
   }
 }

@@ -1,10 +1,12 @@
 import { html, css, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { NumberInputProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 
+@customElement("pages-number-input")
 export class PagesNumberInput extends PagesFormInput<NumberInputProps> {
   static override styles = css`
     :host {
@@ -37,7 +39,18 @@ export class PagesNumberInput extends PagesFormInput<NumberInputProps> {
       background: var(--pages-neutral-3, #f5f5f5);
       cursor: not-allowed;
     }
+    .field-error {
+      color: var(--pages-danger-9, #dc2626);
+      font-size: var(--pages-font-size-xs, 11px);
+      margin-top: var(--pages-space-0-5, 2px);
+    }
   `;
+
+  get currentValue(): number | null {
+    const raw = this.shadowRoot?.querySelector('input')?.value ?? '';
+    const num = parseFloat(raw);
+    return isNaN(num) ? null : num;
+  }
 
   protected override renderContent(
     props: NumberInputProps & { lookup?: DataSetLookup },
@@ -60,8 +73,11 @@ export class PagesNumberInput extends PagesFormInput<NumberInputProps> {
           min=${ifDefined(props.min !== undefined ? String(props.min) : undefined)}
           max=${ifDefined(props.max !== undefined ? String(props.max) : undefined)}
           step=${ifDefined(props.step !== undefined ? String(props.step) : undefined)}
-          ?required=${!!props.required}
+          ?required=${!!props.required || this.required}
           ?readonly=${isReadonly}
+          aria-required=${ifDefined(this.required ? "true" : undefined)}
+          aria-invalid=${ifDefined(this.errorMessage ? "true" : undefined)}
+          aria-describedby=${ifDefined(this.describedBy)}
           @input=${(e: Event) => {
             const numValue = parseFloat((e.target as HTMLInputElement).value);
             this.emitFieldChange(isNaN(numValue) ? null : numValue, false);
@@ -71,17 +87,8 @@ export class PagesNumberInput extends PagesFormInput<NumberInputProps> {
             this.emitFieldChange(isNaN(numValue) ? null : numValue, true);
           }}
         />
+        ${this.errorMessage ? html`<span class="field-error" role="alert">${this.errorMessage}</span>` : ""}
       </div>
     `;
-  }
-}
-
-if (!customElements.get('pages-number-input')) {
-  customElements.define('pages-number-input', PagesNumberInput);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'pages-number-input': PagesNumberInput;
   }
 }

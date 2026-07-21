@@ -18,6 +18,7 @@ import type { PagesDropdown } from "./form-inputs/PagesDropdown.js";
 import type { PagesNumberInput } from "./form-inputs/PagesNumberInput.js";
 import type { PagesTextInput } from "./form-inputs/PagesTextInput.js";
 import type { PagesTextarea } from "./form-inputs/PagesTextarea.js";
+import type { PagesSchemaForm } from "./form-inputs/PagesSchemaForm.js";
 import type { PagesActionButton } from "./components/PagesActionButton.js";
 import type { PagesAlert } from "./components/PagesAlert.js";
 import type { PagesBadge } from "./components/PagesBadge.js";
@@ -48,6 +49,7 @@ declare global {
     "pages-number-input": PagesNumberInput;
     "pages-text-input": PagesTextInput;
     "pages-textarea": PagesTextarea;
+    "pages-schema-form": PagesSchemaForm;
     "pages-action-button": PagesActionButton;
     "pages-alert": PagesAlert;
     "pages-badge": PagesBadge;

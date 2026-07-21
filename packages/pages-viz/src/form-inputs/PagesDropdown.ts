@@ -1,4 +1,6 @@
 import { html, css, type TemplateResult, type PropertyValues } from "lit";
+import { customElement } from "lit/decorators.js";
+import { ifDefined } from "lit/directives/if-defined.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { DropdownProps, FixedOptions, DataSetOptions } from "@casehubio/pages-component";
 import { isFixedOptions } from "@casehubio/pages-component";
@@ -7,6 +9,7 @@ import type { DataSetLookup } from "@casehubio/pages-data";
 import type { DataSetOp } from "@casehubio/pages-data";
 import { cellToRaw } from "../base/cell-extract.js";
 
+@customElement("pages-dropdown")
 export class PagesDropdown extends PagesFormInput<DropdownProps> {
   static override styles = css`
     :host {
@@ -39,7 +42,16 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
       background: var(--pages-neutral-3, #f5f5f5);
       cursor: not-allowed;
     }
+    .field-error {
+      color: var(--pages-danger-9, #dc2626);
+      font-size: var(--pages-font-size-xs, 11px);
+      margin-top: var(--pages-space-0-5, 2px);
+    }
   `;
+
+  get currentValue(): string {
+    return this.shadowRoot?.querySelector('select')?.value ?? '';
+  }
 
   private _optionsDataSet: TypedDataSet | undefined;
   private _optionsRequested = false;
@@ -80,8 +92,11 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
       <div class="pages-form-field">
         ${props.label ? html`<label>${props.label}</label>` : ""}
         <select
-          ?required=${!!props.required}
+          ?required=${!!props.required || this.required}
           ?disabled=${isDisabled}
+          aria-required=${ifDefined(this.required ? "true" : undefined)}
+          aria-invalid=${ifDefined(this.errorMessage ? "true" : undefined)}
+          aria-describedby=${ifDefined(this.describedBy)}
           @change=${(e: Event) => this.emitFieldChange((e.target as HTMLSelectElement).value, true)}
         >
           ${optionEntries.map((opt) => html`
@@ -90,6 +105,7 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
             </option>
           `)}
         </select>
+        ${this.errorMessage ? html`<span class="field-error" role="alert">${this.errorMessage}</span>` : ""}
       </div>
     `;
   }
@@ -182,15 +198,5 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
       this.removeEventListener("pages-field-change", this._cascadeListener);
       this._cascadeListener = undefined;
     }
-  }
-}
-
-if (!customElements.get('pages-dropdown')) {
-  customElements.define('pages-dropdown', PagesDropdown);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'pages-dropdown': PagesDropdown;
   }
 }

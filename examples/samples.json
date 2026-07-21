@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 62,
+  "totalSamples": 63,
   "categories": [
     {
       "category": "Charts",
@@ -113,6 +113,13 @@
           "path": "Tables/Row Styles.dash.yaml",
           "category": "Tables",
           "file": "Row Styles.dash.yaml"
+        },
+        {
+          "name": "Spanning",
+          "path": "Tables/Spanning.dash.yaml",
+          "category": "Tables",
+          "file": "Spanning.dash.yaml",
+          "tsPath": "Tables/Spanning.ts"
         },
         {
           "name": "Table",

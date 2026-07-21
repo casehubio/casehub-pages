@@ -1,8 +1,9 @@
 import { html, css, type TemplateResult } from "lit";
-import { state } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import type { AlertProps } from "@casehubio/pages-component";
 import { PagesContentElement } from "../base/PagesContentElement.js";
 
+@customElement("pages-alert")
 export class PagesAlert extends PagesContentElement<AlertProps> {
   @state() private _dismissedContent: string | null = null;
 
@@ -34,15 +35,5 @@ export class PagesAlert extends PagesContentElement<AlertProps> {
         ` : ""}
       </div>
     `;
-  }
-}
-
-if (!customElements.get('pages-alert')) {
-  customElements.define('pages-alert', PagesAlert);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'pages-alert': PagesAlert;
   }
 }
