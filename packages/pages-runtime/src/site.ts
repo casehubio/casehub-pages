@@ -144,7 +144,6 @@ export async function loadSite(
 
   const settings = root.props?.["settings"] as Record<string, unknown> | undefined;
   const isDark = settings?.["mode"] === "dark";
-  injectTheme(options?.themeConfig ?? DEFAULT_THEME, target);
   applyThemeMode(target, isDark ? "dark" : "light");
 
   const pagePathMap = buildPagePathMap(root);
@@ -989,6 +988,7 @@ export async function loadSite(
     lazyPageResolutions,
   }, contextManager);
   renderComponent(target, root, { permissions, onNode });
+  injectTheme(options?.themeConfig ?? DEFAULT_THEME, target);
 
   // Apply saved split ratios to rendered DOM
   applySavedSplitRatios(target);
