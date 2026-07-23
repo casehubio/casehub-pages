@@ -299,6 +299,67 @@ describe("pages-grid-table", () => {
     });
   });
 
+  describe("transpose", () => {
+    it("single row becomes vertical key-value list", async () => {
+      el.props = { lookup: L, transpose: true, rowHeaders: true, columnHeaders: false };
+      el.dataSet = ds(
+        [col("activeCases"), col("fleetSize"), col("openCommitments")],
+        [["1", "0", "3"]],
+      );
+      await el.updateComplete;
+
+      const rowThs = el.shadowRoot!.querySelectorAll("th[scope='row']");
+      expect(rowThs.length).toBe(3);
+      expect(rowThs[0]!.textContent).toBe("activeCases");
+      expect(rowThs[1]!.textContent).toBe("fleetSize");
+      expect(rowThs[2]!.textContent).toBe("openCommitments");
+
+      const tds = el.shadowRoot!.querySelectorAll("tbody td");
+      expect(tds.length).toBe(3);
+      expect(tds[0]!.textContent).toBe("1");
+      expect(tds[1]!.textContent).toBe("0");
+      expect(tds[2]!.textContent).toBe("3");
+    });
+
+    it("multi-row transpose produces one value column per original row", async () => {
+      el.props = { lookup: L, transpose: true, rowHeaders: true, columnHeaders: false };
+      el.dataSet = ds(
+        [col("cpu"), col("mem")],
+        [["80", "60"], ["90", "70"]],
+      );
+      await el.updateComplete;
+
+      const rowThs = el.shadowRoot!.querySelectorAll("th[scope='row']");
+      expect(rowThs.length).toBe(2);
+      expect(rowThs[0]!.textContent).toBe("cpu");
+      expect(rowThs[1]!.textContent).toBe("mem");
+
+      const tds = el.shadowRoot!.querySelectorAll("tbody td");
+      expect(tds.length).toBe(4);
+      expect(tds[0]!.textContent).toBe("80");
+      expect(tds[1]!.textContent).toBe("90");
+      expect(tds[2]!.textContent).toBe("60");
+      expect(tds[3]!.textContent).toBe("70");
+    });
+
+    it("transpose with no rows produces empty cells", async () => {
+      el.props = { lookup: L, transpose: true, columnHeaders: false };
+      el.dataSet = ds([col("a"), col("b")], []);
+      await el.updateComplete;
+      const rows = el.shadowRoot!.querySelectorAll("tbody tr");
+      expect(rows.length).toBe(2);
+    });
+
+    it("transpose: false (default) does not transpose", async () => {
+      el.props = { lookup: L };
+      el.dataSet = ds([col("a"), col("b")], [["1", "2"]]);
+      await el.updateComplete;
+      const ths = el.shadowRoot!.querySelectorAll("thead th");
+      expect(ths.length).toBe(2);
+      expect(ths[0]!.textContent).toBe("a");
+    });
+  });
+
   describe("combined options", () => {
     it("compact + stripe + verticalLines all apply together", async () => {
       el.props = { lookup: L, compact: true, stripe: "both", verticalLines: true };

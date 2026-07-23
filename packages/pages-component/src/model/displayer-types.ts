@@ -112,6 +112,7 @@ export interface GridTableProps extends DataComponentCommon {
   readonly compact?: boolean;
   readonly stripe?: GridStripe;
   readonly verticalLines?: boolean;
+  readonly transpose?: boolean;
 }
 
 export interface MetricProps extends DataComponentCommon {

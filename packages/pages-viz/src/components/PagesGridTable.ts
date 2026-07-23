@@ -1,6 +1,7 @@
 import { html, css, nothing, type TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
-import type { TypedDataSet, TypedRow, Column } from "@casehubio/pages-data";
+import { createTypedRow, ColumnType, columnId } from "@casehubio/pages-data";
+import type { TypedDataSet, TypedRow, Column, CellValue } from "@casehubio/pages-data";
 import type { GridTableProps, CellDisplay, GridStripe } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
@@ -34,10 +35,29 @@ export class PagesGridTable extends PagesElement<GridTableProps> {
     .cell-number { text-align: right; font-variant-numeric: tabular-nums; }
   `;
 
+  private _transpose(dataset: TypedDataSet): TypedDataSet {
+    const nameCol: Column = { id: columnId("name"), name: "Name", type: ColumnType.LABEL };
+    const valueCols: Column[] = dataset.rows.length <= 1
+      ? [{ id: columnId("value"), name: "Value", type: ColumnType.TEXT }]
+      : dataset.rows.map((_, i) => ({ id: columnId(`value-${String(i)}`), name: `Value ${String(i + 1)}`, type: ColumnType.TEXT }));
+    const columns: Column[] = [nameCol, ...valueCols];
+
+    const rows: TypedRow[] = dataset.columns.map(col => {
+      const nameCv: CellValue = { type: ColumnType.LABEL, value: col.name };
+      const valCvs: CellValue[] = dataset.rows.length === 0
+        ? [{ type: "NULL" as const }]
+        : dataset.rows.map(row => row.cell(col.id));
+      return createTypedRow([nameCv, ...valCvs], columns);
+    });
+
+    return { columns, rows };
+  }
+
   protected override renderContent(
     props: GridTableProps,
     dataset: TypedDataSet,
   ): TemplateResult {
+    if (props.transpose) dataset = this._transpose(dataset);
     const showColHeaders = props.columnHeaders !== false;
     const showRowHeaders = props.rowHeaders === true;
     const cellDisplayMap = props.cellDisplay;
