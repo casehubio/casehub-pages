@@ -9,8 +9,9 @@ export function generateScale(
   chroma: number,
   contrast: number,
   isDark: boolean,
+  customSteps?: readonly number[],
 ): Record<string, string> {
-  const steps = isDark ? DARK_STEPS : LIGHT_STEPS;
+  const steps = customSteps ?? (isDark ? DARK_STEPS : LIGHT_STEPS);
   const scale: Record<string, string> = {};
 
   for (let i = 0; i < 12; i++) {

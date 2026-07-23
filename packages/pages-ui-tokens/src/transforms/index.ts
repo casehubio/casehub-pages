@@ -57,15 +57,16 @@ export function registerCoreTransforms(): void {
 
 const CASEHUB_BRAND_HUES = { hues: { violet: 270, green: 160, magenta: 320 } };
 
+const CASEHUB_STEPS = [16, 21, 25, 29, 35, 42, 49, 55, 68, 76, 86, 93];
+
 const CASEHUB_DARK_PRESET: PresetConfig = {
   $name: 'casehub-dark',
   $description: 'CaseHub brand dark theme — Claudony / casehub.org look',
   $extends: 'default-dark',
   pipeline: [
-    { transform: 'oklch-scale', params: { hues: { accent: 200, neutral: 210 }, chroma: 0.10 } },
-    { transform: 'oklch-scale', params: CASEHUB_BRAND_HUES },
-    { transform: 'lightness-steps', params: { steps: [16, 20, 24, 28, 33, 38, 44, 50, 57, 66, 79, 92] } },
-    { transform: 'chroma-curve', params: { curve: 'flat', neutral: 1.5, accent: 0.8 } },
+    { transform: 'oklch-scale', params: { hues: { accent: 215, neutral: 220 }, chroma: 0.30, steps: CASEHUB_STEPS } },
+    { transform: 'oklch-scale', params: { ...CASEHUB_BRAND_HUES, steps: CASEHUB_STEPS, chroma: 0.12 } },
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 1.3, accent: 0.52 } },
     { transform: 'semantic-hues', params: { success: 175, warning: 85 } },
     { transform: 'semantic-map' },
     { transform: 'gamut-clamp' },
