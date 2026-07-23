@@ -1,0 +1,82 @@
+pages:
+- name: index
+  properties:
+    margin: 16px
+  components:
+  - type: title
+    properties:
+      text: Metric Density Patterns
+      size: h2
+
+  - html: "<h4>card (default) — full card with border, 2em value</h4>"
+  - type: metric
+    properties:
+      title: Active Cases
+      lookup:
+        uuid: ds-cases
+        group:
+        - functions:
+          - source: val
+            function: SUM
+
+  - html: "<h4>card2 — horizontal value + label</h4>"
+  - type: metric
+    properties:
+      title: Active Cases
+      subtype: card2
+      lookup:
+        uuid: ds-cases
+        group:
+        - functions:
+          - source: val
+            function: SUM
+
+  - html: "<h4>plain-text — no border, stacked label/value</h4>"
+  - type: metric
+    properties:
+      title: Active Cases
+      subtype: plain-text
+      lookup:
+        uuid: ds-cases
+        group:
+        - functions:
+          - source: val
+            function: SUM
+
+  - html: "<h4>quota — progress bar</h4>"
+  - type: metric
+    properties:
+      title: CPU Usage
+      subtype: quota
+      lookup:
+        uuid: ds-cpu
+        group:
+        - functions:
+          - source: used
+            function: SUM
+          - source: total
+            function: SUM
+
+datasets:
+- uuid: ds-cases
+  content: >-
+    [
+      ["cases", 12]
+    ]
+  columns:
+  - id: name
+    type: LABEL
+  - id: val
+    type: NUMBER
+- uuid: ds-cpu
+  content: >-
+    [
+      ["cpu", 72, 100]
+    ]
+  columns:
+  - id: name
+    type: LABEL
+  - id: used
+    type: NUMBER
+  - id: total
+    type: NUMBER

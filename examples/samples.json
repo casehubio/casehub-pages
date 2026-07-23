@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 63,
+  "totalSamples": 64,
   "categories": [
     {
       "category": "Charts",
@@ -143,6 +143,12 @@
           "path": "Metrics/Badges and Countdown.dash.yaml",
           "category": "Metrics",
           "file": "Badges and Countdown.dash.yaml"
+        },
+        {
+          "name": "Metric Patterns",
+          "path": "Metrics/Metric Patterns.dash.yaml",
+          "category": "Metrics",
+          "file": "Metric Patterns.dash.yaml"
         },
         {
           "name": "Metrics and Gauges",
