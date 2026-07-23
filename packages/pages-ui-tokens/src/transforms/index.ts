@@ -65,7 +65,7 @@ const CASEHUB_DARK_PRESET: PresetConfig = {
     { transform: 'oklch-scale', params: { hues: { accent: 200, neutral: 210 }, chroma: 0.10 } },
     { transform: 'oklch-scale', params: CASEHUB_BRAND_HUES },
     { transform: 'lightness-steps', params: { steps: [5, 9, 14, 20, 27, 34, 40, 48, 56, 66, 79, 93] } },
-    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.20, accent: 1.2 } },
+    { transform: 'chroma-curve', params: { curve: 'flat', neutral: 1.5, accent: 0.8 } },
     { transform: 'semantic-hues', params: { success: 175, warning: 85 } },
     { transform: 'semantic-map' },
     { transform: 'gamut-clamp' },
