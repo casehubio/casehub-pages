@@ -27,8 +27,7 @@ import type {DeepLink, Site, ViewState} from "@casehubio/pages-ui/dist/model/pag
 import {parsePage} from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import {load as yamlLoad} from "js-yaml";
 import {cellToRaw} from "@casehubio/pages-viz/dist/base/cell-extract.js";
-import type {ThemeConfig} from "@casehubio/pages-ui-tokens";
-import {applyThemeMode, DEFAULT_THEME, injectTheme} from "@casehubio/pages-ui-tokens";
+import {applyTheme} from "@casehubio/pages-ui-tokens";
 import type {PagesFilterDetail} from "@casehubio/pages-viz/dist/base/filter-types.js";
 import {buildPagePathMap} from "./page-paths.js";
 import {buildDataSetScope, resolveDataSetDef} from "./dataset-scope.js";
@@ -126,7 +125,7 @@ export interface SiteOptions {
   readonly layoutKey?: string;
   readonly layoutSaveDelayMs?: number;
   readonly devAuth?: DevAuthConfig;
-  readonly themeConfig?: ThemeConfig;
+  readonly themeName?: string;
 }
 
 export async function loadSite(
@@ -144,7 +143,8 @@ export async function loadSite(
 
   const settings = root.props?.["settings"] as Record<string, unknown> | undefined;
   const isDark = settings?.["mode"] === "dark";
-  applyThemeMode(target, isDark ? "dark" : "light");
+  const themeBaseName = options?.themeName ?? 'default';
+  applyTheme(`${themeBaseName}-${isDark ? 'dark' : 'light'}`, target);
 
   const pagePathMap = buildPagePathMap(root);
   const dataSetScope = buildDataSetScope(root, pagePathMap);
@@ -988,7 +988,6 @@ export async function loadSite(
     lazyPageResolutions,
   }, contextManager);
   renderComponent(target, root, { permissions, onNode });
-  injectTheme(options?.themeConfig ?? DEFAULT_THEME, target);
 
   // Apply saved split ratios to rendered DOM
   applySavedSplitRatios(target);
@@ -1036,7 +1035,8 @@ export async function loadSite(
     state,
 
     setTheme(mode: "light" | "dark"): void {
-      applyThemeMode(target, mode);
+      const currentThemeName = options?.themeName ?? 'default';
+      applyTheme(`${currentThemeName}-${mode}`, target);
       const echartsThemeName = mode === "dark" ? "dark" : "";
       for (const [, entry] of registry) {
         const vizEl = entry.vizElement;
