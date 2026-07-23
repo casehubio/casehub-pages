@@ -438,7 +438,12 @@ function setupEventListeners() {
         }
     });
 
-    // Theme switching is handled by <pages-theme-picker> component
+    // Propagate theme changes to the loaded site
+    document.documentElement.addEventListener('pages-theme-change', (e) => {
+        if (currentSite) {
+            currentSite.setTheme(e.detail.mode);
+        }
+    });
 
     // Density toggle
     const densityToggle = document.getElementById('density-toggle');

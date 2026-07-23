@@ -25,6 +25,11 @@ export function applyTheme(name: string, target: HTMLElement = document.document
 
   target.classList.add(`pages-theme-${name}`);
   appliedThemes.set(target, name);
+
+  target.dispatchEvent(new CustomEvent('pages-theme-change', {
+    bubbles: true,
+    detail: { name, mode: name.endsWith('-dark') ? 'dark' : 'light' },
+  }));
 }
 
 export function getTheme(target: HTMLElement = document.documentElement): string {
