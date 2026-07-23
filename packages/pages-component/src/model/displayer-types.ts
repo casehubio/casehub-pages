@@ -107,6 +107,7 @@ export interface GridTableProps extends DataComponentCommon {
   readonly columnHeaders?: boolean;
   readonly rowHeaders?: boolean;
   readonly cellDisplay?: Readonly<Record<string, CellDisplay>>;
+  readonly compact?: boolean;
 }
 
 export interface MetricProps extends DataComponentCommon {

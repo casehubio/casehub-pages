@@ -13,6 +13,8 @@ export class PagesGridTable extends PagesElement<GridTableProps> {
   static override styles = css`
     :host { display: block; font-family: var(--pages-font-family, system-ui, sans-serif); color: var(--pages-neutral-12, #333); }
     table { width: 100%; border-collapse: collapse; font-size: var(--pages-font-size-base, 14px); }
+    table.compact { width: auto; }
+    table.compact th, table.compact td { padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px); white-space: nowrap; }
     th { text-align: left; padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px); font-weight: var(--pages-font-weight-semibold, 600); color: var(--pages-neutral-11, #666); font-size: var(--pages-font-size-sm, 13px); }
     thead th { border-bottom: 2px solid var(--pages-neutral-4, #ddd); }
     th.corner { border-bottom-color: transparent; }
@@ -36,6 +38,7 @@ export class PagesGridTable extends PagesElement<GridTableProps> {
     const showColHeaders = props.columnHeaders !== false;
     const showRowHeaders = props.rowHeaders === true;
     const cellDisplayMap = props.cellDisplay;
+    const isCompact = props.compact === true;
     const allColumns = dataset.columns;
 
     if (allColumns.length === 0) {
@@ -62,7 +65,7 @@ export class PagesGridTable extends PagesElement<GridTableProps> {
         </tr>`);
 
     return html`
-      <table>
+      <table class="${isCompact ? "compact" : ""}">
         ${headerRow}
         <tbody>${bodyRows}</tbody>
       </table>

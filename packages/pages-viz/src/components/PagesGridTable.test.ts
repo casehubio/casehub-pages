@@ -175,4 +175,22 @@ describe("pages-grid-table", () => {
       expect(el.shadowRoot!.querySelector(".empty-cell")).not.toBeNull();
     });
   });
+
+  describe("compact mode", () => {
+    it("compact: true sets width auto and nowrap on cells", async () => {
+      el.props = { lookup: L, compact: true };
+      el.dataSet = ds([col("a"), col("b")], [["hello", "world"]]);
+      await el.updateComplete;
+      const table = el.shadowRoot!.querySelector("table");
+      expect(table!.classList.contains("compact")).toBe(true);
+    });
+
+    it("compact: false (default) renders full width", async () => {
+      el.props = { lookup: L };
+      el.dataSet = ds([col("a")], [["x"]]);
+      await el.updateComplete;
+      const table = el.shadowRoot!.querySelector("table");
+      expect(table!.classList.contains("compact")).toBe(false);
+    });
+  });
 });

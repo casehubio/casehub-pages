@@ -322,3 +322,42 @@ pages:
             q2: number
             q3: number
             q4: number
+
+      # ── Compact Grids ──────────────────────────────────────────────
+      - type: title
+        properties:
+          text: "Compact Grids — fixed width, tight padding"
+          size: h3
+
+      - type: markdown
+        properties:
+          content: |
+            `compact: true` shrinks the table to fit its content — no
+            stretching to fill the container. Tighter padding and
+            `nowrap` on cells.
+
+      - type: columns
+        properties:
+          distribution: [1, 1]
+        columns:
+          - components:
+              - type: grid-table
+                properties:
+                  lookup:
+                    uuid: kpi
+                  columnHeaders: false
+                  rowHeaders: true
+                  compact: true
+          - components:
+              - type: grid-table
+                properties:
+                  lookup:
+                    uuid: permissions
+                  columnHeaders: true
+                  rowHeaders: true
+                  compact: true
+                  cellDisplay:
+                    read: boolean
+                    write: boolean
+                    approve: boolean
+                    admin: boolean
