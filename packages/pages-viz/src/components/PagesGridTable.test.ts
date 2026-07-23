@@ -238,4 +238,77 @@ describe("pages-grid-table", () => {
       expect(el.shadowRoot!.querySelector("table")!.classList.contains("v-lines")).toBe(false);
     });
   });
+
+  describe("boolean edge cases", () => {
+    it("recognises yes/no/on/off/1/0 as truthy/falsy", async () => {
+      el.props = { lookup: L, columnHeaders: false, cellDisplay: { v: "boolean" } };
+      el.dataSet = ds([col("v")], [["yes"], ["no"], ["on"], ["off"], ["1"], ["0"]]);
+      await el.updateComplete;
+      const cells = el.shadowRoot!.querySelectorAll(".cell-bool");
+      expect(cells.length).toBe(6);
+      expect(cells[0]!.classList.contains("cell-bool-true")).toBe(true);
+      expect(cells[1]!.classList.contains("cell-bool-false")).toBe(true);
+      expect(cells[2]!.classList.contains("cell-bool-true")).toBe(true);
+      expect(cells[3]!.classList.contains("cell-bool-false")).toBe(true);
+      expect(cells[4]!.classList.contains("cell-bool-true")).toBe(true);
+      expect(cells[5]!.classList.contains("cell-bool-false")).toBe(true);
+    });
+
+    it("unrecognised boolean value renders as plain text in cell-bool span", async () => {
+      el.props = { lookup: L, columnHeaders: false, cellDisplay: { v: "boolean" } };
+      el.dataSet = ds([col("v")], [["maybe"]]);
+      await el.updateComplete;
+      const cell = el.shadowRoot!.querySelector(".cell-bool")!;
+      expect(cell.textContent).toBe("maybe");
+      expect(cell.classList.contains("cell-bool-true")).toBe(false);
+      expect(cell.classList.contains("cell-bool-false")).toBe(false);
+    });
+  });
+
+  describe("null cells", () => {
+    it("null cell renders as empty string", async () => {
+      el.props = { lookup: L, columnHeaders: false };
+      el.dataSet = ds([col("a"), col("b")], [["hello", null]]);
+      await el.updateComplete;
+      const tds = el.shadowRoot!.querySelectorAll("td");
+      expect(tds[0]!.textContent).toBe("hello");
+      expect(tds[1]!.textContent).toBe("");
+    });
+  });
+
+  describe("row headers without column headers", () => {
+    it("no corner cell when columnHeaders: false + rowHeaders: true", async () => {
+      el.props = { lookup: L, columnHeaders: false, rowHeaders: true };
+      el.dataSet = ds([col("label"), col("value")], [["CPU", "42%"]]);
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector("thead")).toBeNull();
+      expect(el.shadowRoot!.querySelector(".corner")).toBeNull();
+      expect(el.shadowRoot!.querySelectorAll("th[scope='row']").length).toBe(1);
+      expect(el.shadowRoot!.querySelector("th[scope='row']")!.textContent).toBe("CPU");
+    });
+  });
+
+  describe("mixed cell display types in same grid", () => {
+    it("different columns use different display modes", async () => {
+      el.props = { lookup: L, cellDisplay: { active: "boolean", count: "number", status: "badge" } };
+      el.dataSet = ds([col("active"), col("count"), col("status")], [["true", "42", "OK"]]);
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector(".cell-bool-true")).not.toBeNull();
+      expect(el.shadowRoot!.querySelector(".cell-number")).not.toBeNull();
+      expect(el.shadowRoot!.querySelector(".cell-badge")).not.toBeNull();
+    });
+  });
+
+  describe("combined options", () => {
+    it("compact + stripe + verticalLines all apply together", async () => {
+      el.props = { lookup: L, compact: true, stripe: "both", verticalLines: true };
+      el.dataSet = ds([col("a"), col("b")], [["1", "2"]]);
+      await el.updateComplete;
+      const table = el.shadowRoot!.querySelector("table")!;
+      expect(table.classList.contains("compact")).toBe(true);
+      expect(table.classList.contains("stripe-rows")).toBe(true);
+      expect(table.classList.contains("stripe-cols")).toBe(true);
+      expect(table.classList.contains("v-lines")).toBe(true);
+    });
+  });
 });
