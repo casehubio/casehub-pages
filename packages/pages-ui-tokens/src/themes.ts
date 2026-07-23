@@ -102,10 +102,25 @@ export function generateThemeCSS(config: ThemeConfig): string {
     .map(([key, value]) => `  ${key}: ${value};`)
     .join('\n');
 
+  const baseStyles = ['  background: var(--pages-neutral-1);', '  color: var(--pages-neutral-12);'].join('\n');
+
+
   return [
-    `.pages-theme-light {\n${shared}\n${lightColours}\n${lightElevation}\n}`,
-    `.pages-theme-dark {\n${shared}\n${darkColours}\n${darkElevation}\n}`,
-    `.pages-density-compact {\n${densityOverrides}\n}`,
+    `.pages-theme-light {
+${shared}
+${lightColours}
+${lightElevation}
+${baseStyles}
+}`,
+    `.pages-theme-dark {
+${shared}
+${darkColours}
+${darkElevation}
+${baseStyles}
+}`,
+    `.pages-density-compact {
+${densityOverrides}
+}`,
   ].join('\n\n');
 }
 

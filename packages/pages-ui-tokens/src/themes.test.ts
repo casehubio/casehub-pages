@@ -72,6 +72,18 @@ describe('generateThemeCSS', () => {
     expect(css).toContain('--pages-surface-4:');
   });
 
+  it('light theme sets background and color from neutral tokens', () => {
+    const css = generateThemeCSS(DEFAULT_THEME);
+    expect(css).toMatch(/\.pages-theme-light[^}]*background:\s*var\(--pages-neutral-1\)/s);
+    expect(css).toMatch(/\.pages-theme-light[^}]*color:\s*var\(--pages-neutral-12\)/s);
+  });
+
+  it('dark theme sets background and color from neutral tokens', () => {
+    const css = generateThemeCSS(DEFAULT_THEME);
+    expect(css).toMatch(/\.pages-theme-dark[^}]*background:\s*var\(--pages-neutral-1\)/s);
+    expect(css).toMatch(/\.pages-theme-dark[^}]*color:\s*var\(--pages-neutral-12\)/s);
+  });
+
   it('DEFAULT_THEME produces no NaN or undefined', () => {
     const css = generateThemeCSS(DEFAULT_THEME);
     expect(css).not.toContain('NaN');
