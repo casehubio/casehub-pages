@@ -14,7 +14,7 @@
 body {
     font-family: var(--pages-font-family);
     background: var(--pages-surface-primary);
-    color: var(--pages-text-secondary);
+    color: var(--pages-text-muted);
 }
 
 .container {
@@ -194,7 +194,7 @@ body {
     padding: var(--pages-space-2) var(--pages-space-5) var(--pages-space-2) var(--pages-space-8);
     cursor: pointer;
     font-size: var(--pages-font-size-base);
-    color: var(--pages-text-secondary);
+    color: var(--pages-text-muted);
     transition: all var(--pages-duration-fast) var(--pages-ease-out);
     border-left: 3px solid transparent;
 }
@@ -240,7 +240,7 @@ body {
 .welcome h1 {
     font-size: 32px;
     font-weight: var(--pages-font-weight-semibold);
-    color: var(--pages-text-primary);
+    color: var(--pages-text-secondary);
     margin-bottom: var(--pages-space-4);
 }
 
@@ -323,7 +323,7 @@ body {
 .sample-header h2 {
     font-size: var(--pages-font-size-xl);
     font-weight: var(--pages-font-weight-semibold);
-    color: var(--pages-text-primary);
+    color: var(--pages-text-muted);
 }
 
 .sample-actions {
