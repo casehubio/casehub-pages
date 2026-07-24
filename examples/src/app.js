@@ -283,8 +283,8 @@ async function loadSampleInTarget(samplePath) {
 
         currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, { baseUrl, fetch: galleryFetch });
         const currentTheme = casehubPages.getTheme() || 'default-light';
-        casehubPages.applyTheme(currentTheme, sampleTarget);
         currentSite.setTheme(currentTheme.endsWith('-dark') ? 'dark' : 'light');
+        casehubPages.applyTheme(currentTheme, sampleTarget);
 
         // Execute companion TS/JS script if present
         if (currentSample && currentSample.tsPath) {
@@ -441,14 +441,20 @@ function setupEventListeners() {
     });
 
     // Propagate theme changes to the loaded site and sample target
+    let propagating = false;
     document.documentElement.addEventListener('pages-theme-change', (e) => {
-        if (e.target !== document.documentElement) return;
-        const target = document.getElementById('sample-target');
-        if (target) {
-            casehubPages.applyTheme(e.detail.name, target);
-        }
-        if (currentSite) {
-            currentSite.setTheme(e.detail.mode);
+        if (propagating) return;
+        propagating = true;
+        try {
+            if (currentSite) {
+                currentSite.setTheme(e.detail.mode);
+            }
+            const target = document.getElementById('sample-target');
+            if (target) {
+                casehubPages.applyTheme(e.detail.name, target);
+            }
+        } finally {
+            propagating = false;
         }
     });
 
