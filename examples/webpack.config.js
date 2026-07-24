@@ -55,6 +55,12 @@ module.exports = (env = {}) => {
         "@casehubio/pages-component": path.resolve(__dirname, "../packages/pages-component"),
         "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
         "@casehubio/pages-primitives": path.resolve(__dirname, "../packages/pages-primitives"),
+        "@casehubio/pages-ui-components/input": path.resolve(__dirname, "../packages/pages-ui-components/dist/input"),
+        "@casehubio/pages-ui-components/select": path.resolve(__dirname, "../packages/pages-ui-components/dist/select"),
+        "@casehubio/pages-ui-components/textarea": path.resolve(__dirname, "../packages/pages-ui-components/dist/textarea"),
+        "@casehubio/pages-ui-components/checkbox": path.resolve(__dirname, "../packages/pages-ui-components/dist/checkbox"),
+        "@casehubio/pages-ui-components/button": path.resolve(__dirname, "../packages/pages-ui-components/dist/button"),
+        "@casehubio/pages-ui-components": path.resolve(__dirname, "../packages/pages-ui-components"),
       },
     },
   };

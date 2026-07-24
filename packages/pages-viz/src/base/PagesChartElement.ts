@@ -44,6 +44,7 @@ export abstract class PagesChartElement<
 
     const apply = (option: Record<string, unknown>): void => {
       if (this._renderGen !== gen) return;
+      option['backgroundColor'] = 'transparent';
       chart.setOption(option, true);
       if (this._selectedValue !== undefined && this._selectedDataIndex !== undefined) {
         this.syncHighlight(chart, undefined, this._selectedDataIndex);
