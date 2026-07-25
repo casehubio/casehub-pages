@@ -180,7 +180,9 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     }
 
     return html`
-      <div class="schema-form-fields" role="${isDisplay ? "group" : "form"}">
+      <div class="schema-form-fields" role="${isDisplay ? "group" : "form"}"
+        @pages-field-change=${props.validateOnBlur ? this._handleFieldChange : undefined}
+      >
         ${fields.map((field) => this._children.get(field)!)}
         ${isCreateMode && !isDisplay ? html`
           <div class="submit-bar">
@@ -240,6 +242,25 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     }
     return [...seen].sort();
   }
+
+  private _handleFieldChange = (e: Event): void => {
+    const detail = (e as CustomEvent).detail as { field: string; value: unknown; committed: boolean };
+    if (!detail.committed) return;
+
+    const schema = this._resolvedSchema;
+    if (!schema?.properties) return;
+
+    const fieldSchema = schema.properties[detail.field];
+    if (!fieldSchema) return;
+
+    const child = this._children.get(detail.field);
+    if (!child) return;
+
+    const ct = this._childTypes.get(detail.field) ?? "input";
+    const requiredSet = new Set(schema.required ?? []);
+    const error = validateField(fieldSchema, detail.value, requiredSet.has(detail.field));
+    this.setChildError(child, ct, error ?? undefined);
+  };
 
   submit(): Record<string, unknown> | null {
     if (!this._resolvedSchema?.properties) return null;

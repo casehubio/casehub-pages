@@ -353,6 +353,87 @@ describe("PagesSchemaForm — create mode", () => {
     expect(submitBtn).not.toBeNull();
   });
 
+  it("validateOnBlur sets error on required empty field after blur", async () => {
+    const ds = makeDataSet([["name", "TEXT"]], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      validateOnBlur: true,
+      schema: { properties: { name: { type: "string" } }, required: ["name"] },
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const input = form.shadowRoot!.querySelector("pages-input") as any;
+    expect(input).not.toBeNull();
+    input.value = "";
+
+    input.dispatchEvent(new CustomEvent("pages-field-change", {
+      bubbles: true, composed: true,
+      detail: { field: "name", value: "", committed: true },
+    }));
+    await form.updateComplete;
+
+    expect(input.error).toBeDefined();
+    expect(input.error.toLowerCase()).toContain("required");
+  });
+
+  it("validateOnBlur clears error when field becomes valid", async () => {
+    const ds = makeDataSet([["name", "TEXT"]], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      validateOnBlur: true,
+      schema: { properties: { name: { type: "string" } }, required: ["name"] },
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const input = form.shadowRoot!.querySelector("pages-input") as any;
+    input.value = "";
+    input.dispatchEvent(new CustomEvent("pages-field-change", {
+      bubbles: true, composed: true,
+      detail: { field: "name", value: "", committed: true },
+    }));
+    await form.updateComplete;
+    expect(input.error).toBeDefined();
+
+    input.value = "Alice";
+    input.dispatchEvent(new CustomEvent("pages-field-change", {
+      bubbles: true, composed: true,
+      detail: { field: "name", value: "Alice", committed: true },
+    }));
+    await form.updateComplete;
+    expect(input.error).toBeUndefined();
+  });
+
+  it("validateOnBlur does not validate on non-committed (input) events", async () => {
+    const ds = makeDataSet([["name", "TEXT"]], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      validateOnBlur: true,
+      schema: { properties: { name: { type: "string" } }, required: ["name"] },
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const input = form.shadowRoot!.querySelector("pages-input") as any;
+    input.value = "";
+    input.dispatchEvent(new CustomEvent("pages-field-change", {
+      bubbles: true, composed: true,
+      detail: { field: "name", value: "", committed: false },
+    }));
+    await form.updateComplete;
+    expect(input.error).toBeUndefined();
+  });
+
   it("edit mode with data rows does not show submit button", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
     const form = document.createElement("pages-schema-form") as PagesSchemaForm;
