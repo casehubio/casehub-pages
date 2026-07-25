@@ -55,6 +55,8 @@ module.exports = (env = {}) => {
         "@casehubio/pages-component": path.resolve(__dirname, "../packages/pages-component"),
         "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
         "@casehubio/pages-primitives": path.resolve(__dirname, "../packages/pages-primitives"),
+        "@casehubio/pages-ui-tokens": path.resolve(__dirname, "../packages/pages-ui-tokens"),
+        "@casehubio/pages-table": path.resolve(__dirname, "../packages/pages-table"),
         "@casehubio/pages-ui-components/input": path.resolve(__dirname, "../packages/pages-ui-components/dist/input"),
         "@casehubio/pages-ui-components/select": path.resolve(__dirname, "../packages/pages-ui-components/dist/select"),
         "@casehubio/pages-ui-components/textarea": path.resolve(__dirname, "../packages/pages-ui-components/dist/textarea"),
