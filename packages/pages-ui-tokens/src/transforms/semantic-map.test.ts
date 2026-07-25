@@ -35,6 +35,8 @@ describe('semanticMap transform', () => {
     expect((roles['surface-primary'] as TokenLeaf).$value).toBe('var(--pages-neutral-1)');
     expect((roles['surface-secondary'] as TokenLeaf).$value).toBe('var(--pages-neutral-2)');
     expect((roles['surface-tertiary'] as TokenLeaf).$value).toBe('var(--pages-neutral-3)');
+    expect((roles['surface-hover'] as TokenLeaf).$value).toBe('var(--pages-neutral-4)');
+    expect((roles['surface-selected'] as TokenLeaf).$value).toBe('var(--pages-accent-2)');
   });
 
   it('generates border role tokens', () => {

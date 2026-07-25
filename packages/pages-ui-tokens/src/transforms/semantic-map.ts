@@ -5,7 +5,7 @@ const DEFAULT_ROLE_MAPPINGS: Record<string, string> = {
   'surface-primary': 'neutral.1',
   'surface-secondary': 'neutral.2',
   'surface-tertiary': 'neutral.3',
-  'surface-hover': 'neutral.3',
+  'surface-hover': 'neutral.4',
   'surface-selected': 'accent.2',
 
   'border-subtle': 'neutral.4',
