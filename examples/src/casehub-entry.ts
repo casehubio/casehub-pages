@@ -4,7 +4,7 @@ import "@casehubio/pages-viz";
 import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";
 
-applyTheme('default-light');
+applyTheme('casehub-dark');
 
 export { loadSite, applyTheme, getTheme };
 export type { LiveSite, SiteOptions };

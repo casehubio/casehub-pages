@@ -2,7 +2,7 @@
 let samplesData = null;
 let currentSample = null;
 let currentSite = null;
-let galleryThemeMode = 'light';
+let galleryThemeMode = 'dark';
 
 // Strip TypeScript syntax for companion script execution
 function stripTs(src) {
@@ -282,7 +282,7 @@ async function loadSampleInTarget(samplePath) {
         };
 
         currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, { baseUrl, fetch: galleryFetch });
-        const currentTheme = casehubPages.getTheme() || 'default-light';
+        const currentTheme = casehubPages.getTheme() || 'casehub-dark';
         currentSite.setTheme(currentTheme.endsWith('-dark') ? 'dark' : 'light');
         casehubPages.applyTheme(currentTheme, sampleTarget);
 
