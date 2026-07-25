@@ -58,17 +58,17 @@ pages:
           rowStyle:
             - condition: "#{row.status} == 'Error'"
               style:
-                backgroundColor: "#fce4ec"
-                color: "#b71c1c"
+                backgroundColor: "oklch(0.65 0.12 25 / 0.15)"
+                color: "oklch(0.55 0.15 25)"
             - condition: "#{row.priority} > 7"
               style:
                 fontWeight: bold
             - condition: "#{row.status} == 'Pending'"
               style:
-                backgroundColor: "#fff8e1"
+                backgroundColor: "oklch(0.75 0.10 80 / 0.12)"
             - condition: "#{row.status} == 'Complete'"
               style:
-                color: "#1b5e20"
+                color: "oklch(0.55 0.15 145)"
 
       - type: markdown
         properties:

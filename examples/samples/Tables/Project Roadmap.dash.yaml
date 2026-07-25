@@ -141,7 +141,7 @@ pages:
             Generated 2026-07-16 · All repos scanned · ✅ Done · ✅ Done since v3 · 🔵 Open · 🟠 Blocked
 
       - html: >
-          <div style="background: #f8f8f8; padding: 10px 15px; border-radius: 6px; margin: 10px 0; font-size: 13px;">
+          <div style="background: var(--pages-surface-secondary, oklch(0.50 0.01 220 / 0.1)); padding: 10px 15px; border-radius: 6px; margin: 10px 0; font-size: 13px;">
           <strong>Since v3 (2026-07-14):</strong> 7 devtown issues closed (#104, #124, #127, #134, #135, #136, #150),
           plus blocks-ui#38, parent#361. Trust &amp; CBR layer is now <strong>fully complete</strong> (only UI-blocked #98 remains).
           Merge Queue layer has only UI-blocked items and the cross-repo epic remaining.
@@ -179,14 +179,14 @@ pages:
                       color: "#c62828"
                   layout: linear
 
-              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
+              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
               - html: >
-                  <div style="background:#fff3e0; border:2px solid #f57c00; border-radius:6px; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
+                  <div style="background:oklch(0.70 0.10 55 / 0.15); border:2px solid oklch(0.65 0.15 55); border-radius:6px; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
                   🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
 
               - type: data-table
                 style:
-                  border: "1px solid #ddd"
+                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
                   border-radius: "8px"
                   padding: "15px"
                   margin-bottom: "20px"
@@ -231,27 +231,27 @@ pages:
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
-                        backgroundColor: "#f0faf0"
-                        color: "#2d7d2d"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'newly-done'"
                       style:
-                        backgroundColor: "#e8f5e9"
-                        color: "#2e7d32"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'blocked'"
                       style:
-                        backgroundColor: "#fff8f0"
-                        color: "#b35900"
+                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
+                        color: "oklch(0.55 0.12 55)"
                     - condition: "#{row.status} == 'critical'"
                       style:
-                        backgroundColor: "#fff0f0"
+                        backgroundColor: "oklch(0.65 0.10 25 / 0.12)"
                     - condition: "#{row.status} == 'new'"
                       style:
-                        backgroundColor: "#f0f5ff"
+                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
 
-              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Trust &amp; CBR</h3>'
+              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Trust &amp; CBR</h3>'
               - type: data-table
                 style:
-                  border: "1px solid #ddd"
+                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
                   border-radius: "8px"
                   padding: "15px"
                   margin-bottom: "20px"
@@ -292,24 +292,24 @@ pages:
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
-                        backgroundColor: "#f0faf0"
-                        color: "#2d7d2d"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'newly-done'"
                       style:
-                        backgroundColor: "#e8f5e9"
-                        color: "#2e7d32"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'blocked'"
                       style:
-                        backgroundColor: "#fff8f0"
-                        color: "#b35900"
+                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
+                        color: "oklch(0.55 0.12 55)"
                     - condition: "#{row.status} == 'new'"
                       style:
-                        backgroundColor: "#f0f5ff"
+                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
 
-              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Merge Queue</h3>'
+              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Merge Queue</h3>'
               - type: data-table
                 style:
-                  border: "1px solid #ddd"
+                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
                   border-radius: "8px"
                   padding: "15px"
                   margin-bottom: "20px"
@@ -350,24 +350,24 @@ pages:
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
-                        backgroundColor: "#f0faf0"
-                        color: "#2d7d2d"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'newly-done'"
                       style:
-                        backgroundColor: "#e8f5e9"
-                        color: "#2e7d32"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'blocked'"
                       style:
-                        backgroundColor: "#fff8f0"
-                        color: "#b35900"
+                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
+                        color: "oklch(0.55 0.12 55)"
                     - condition: "#{row.status} == 'new'"
                       style:
-                        backgroundColor: "#f0f5ff"
+                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
 
-              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Summary — v3 → v4 Delta</h3>'
+              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Summary — v3 → v4 Delta</h3>'
               - type: data-table
                 style:
-                  border: "1px solid #ddd"
+                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
                   border-radius: "8px"
                   padding: "15px"
                   overflow: hidden
@@ -405,13 +405,13 @@ pages:
                     - label: pages
                       color: "#e91e63"
                   layout: linear
-              - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
+              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
               - html: >
-                  <div style="background:#fff3e0; border:2px solid #f57c00; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
+                  <div style="background:oklch(0.70 0.10 55 / 0.15); border:2px solid oklch(0.65 0.15 55); padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
                   🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
               - type: data-table
                 style:
-                  border: "1px solid #ddd"
+                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
                 properties:
                   lookup:
                     uuid: ui-pipeline
@@ -452,22 +452,22 @@ pages:
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
-                        backgroundColor: "#f0faf0"
-                        color: "#2d7d2d"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'newly-done'"
                       style:
-                        backgroundColor: "#e8f5e9"
-                        color: "#2e7d32"
+                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
+                        color: "oklch(0.55 0.12 145)"
                     - condition: "#{row.status} == 'blocked'"
                       style:
-                        backgroundColor: "#fff8f0"
-                        color: "#b35900"
+                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
+                        color: "oklch(0.55 0.12 55)"
                     - condition: "#{row.status} == 'critical'"
                       style:
-                        backgroundColor: "#fff0f0"
+                        backgroundColor: "oklch(0.65 0.10 25 / 0.12)"
                     - condition: "#{row.status} == 'new'"
                       style:
-                        backgroundColor: "#f0f5ff"
+                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
 
           Legend Layouts:
             components:
@@ -557,7 +557,7 @@ pages:
               - type: legend
                 style:
                   max-width: "350px"
-                  border: "1px dashed #ccc"
+                  border: "1px dashed var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
                   padding: "8px"
                   border-radius: "4px"
                 properties:
