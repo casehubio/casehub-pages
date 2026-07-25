@@ -135,7 +135,7 @@ describe("PagesChartElement", () => {
       );
       expect(mockChart.setOption).toHaveBeenCalledTimes(1);
       expect(mockChart.setOption).toHaveBeenCalledWith(
-        { series: [{ type: "bar", data: [1, 2, 3] }] },
+        { backgroundColor: "transparent", series: [{ type: "bar", data: [1, 2, 3] }] },
         true,
       );
     });
@@ -594,7 +594,7 @@ describe("PagesChartElement", () => {
 
       expect(mockChart.setOption).toHaveBeenCalledTimes(1);
       expect(mockChart.setOption).toHaveBeenCalledWith(
-        { series: [{ type: "bar", data: [4, 5, 6] }] },
+        { backgroundColor: "transparent", series: [{ type: "bar", data: [4, 5, 6] }] },
         true,
       );
 
