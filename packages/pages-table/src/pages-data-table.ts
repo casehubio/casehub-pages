@@ -2790,8 +2790,12 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   }
 }
 
+@customElement('pages-table')
+export class PagesTable extends PagesDataTable {}
+
 declare global {
   interface HTMLElementTagNameMap {
     'pages-data-table': PagesDataTable;
+    'pages-table': PagesTable;
   }
 }
