@@ -325,6 +325,22 @@ describe("simulated source", () => {
     expect(sink.events).toHaveLength(1);
   });
 
+  it("dispatch returns a Promise", () => {
+    const ctrl = createScenarioController();
+    const source = simulated({
+      initial: makeInitial([[1, "OPEN"]], COLS),
+      controller: ctrl,
+      keyColumn: "id",
+      mutations: [],
+    });
+    const sink = createMockSink();
+    source.connect(sink);
+    expect(sink.events).toHaveLength(1);
+
+    const result = source.dispatch({ type: "create", data: { id: 2, status: "NEW" } });
+    expect(result).toBeInstanceOf(Promise);
+  });
+
   it("when() with transition applies conditional state change", () => {
     const ctrl = createScenarioController();
     const countCols: ExternalColumnDef[] = [

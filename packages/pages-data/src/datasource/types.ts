@@ -27,7 +27,7 @@ export type DataAction =
   | { type: "delete"; key: string };
 
 export interface MutableDataSource extends DataSource {
-  dispatch(action: DataAction): void;
+  dispatch(action: DataAction): Promise<void>;
 }
 
 export interface DataSourceBinding {

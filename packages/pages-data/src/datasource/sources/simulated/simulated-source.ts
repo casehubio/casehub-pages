@@ -190,8 +190,9 @@ export function simulated(config: SimulatedConfig): DataSource & MutableDataSour
       sink = null;
     },
 
-    dispatch(action: DataAction): void {
+    dispatch(action: DataAction): Promise<void> {
       applyAction(action);
+      return Promise.resolve();
     },
   };
 }

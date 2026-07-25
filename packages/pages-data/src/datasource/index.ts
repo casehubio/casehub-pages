@@ -58,6 +58,8 @@ export type {
 export { composite } from "./sources/composite-source.js";
 export { restSource } from "./sources/rest-source.js";
 export type { RestSourceOptions } from "./sources/rest-source.js";
+export { mutableRestSource } from "./sources/mutable-rest-source.js";
+export type { WriteConfig, WriteEndpoint, UrlTemplate, MutableRestSourceOptions } from "./sources/mutable-rest-source.js";
 export { sseSource } from "./sources/sse-source.js";
 export type { SseSourceOptions } from "./sources/sse-source.js";
 export { wsSource } from "./sources/ws-source.js";
