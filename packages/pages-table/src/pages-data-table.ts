@@ -729,7 +729,6 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       background: var(--pages-surface-secondary, #fafafa);
     }
 
-    .filter-go,
     .filter-close {
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       border: 1px solid var(--pages-border-subtle, #e0e0e0);
@@ -741,7 +740,6 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       color: var(--pages-text-muted, #737373);
     }
 
-    .filter-go:hover,
     .filter-close:hover {
       background: var(--pages-surface-hover, #f5f5f5);
       border-color: var(--pages-border-strong, #a3a3a3);
@@ -2206,7 +2204,6 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
             }
           }}"
         />
-        <button class="filter-go" aria-label="Apply filter" @click="${this._applyFilter}">Go</button>
         <button class="filter-close" aria-label="Close filter" @click="${this._toggleFilter}">✕</button>
       </div>
     `;

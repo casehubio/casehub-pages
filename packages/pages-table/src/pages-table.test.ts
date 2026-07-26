@@ -807,7 +807,6 @@ describe('pages-data-table', () => {
       (el.shadowRoot!.querySelector('.filter-toggle') as HTMLElement).click();
       await el.updateComplete;
 
-      expect(el.shadowRoot!.querySelector('.filter-go')).not.toBeNull();
       expect(el.shadowRoot!.querySelector('.filter-close')).not.toBeNull();
     });
 
