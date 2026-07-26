@@ -136,7 +136,7 @@ pages:
                     Pure YAML DSL — each field wired individually. No nesting,
                     no array editing, no display mode, no datetime-local.
 
-              - text-input:
+              - input:
                   field: transactionId
                   label: Transaction ID
                   required: true
@@ -146,7 +146,7 @@ pages:
                   label: Amount
                   min: 0
 
-              - dropdown:
+              - select:
                   field: currency
                   label: Currency
                   options:
@@ -172,10 +172,10 @@ pages:
                   label: Notes
                   rows: 4
 
-              - text-input:
+              - input:
                   field: sender
                   label: Sender
 
-              - text-input:
+              - input:
                   field: receiver
                   label: Receiver
