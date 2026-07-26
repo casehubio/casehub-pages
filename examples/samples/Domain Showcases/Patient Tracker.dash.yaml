@@ -532,7 +532,7 @@ pages:
       onError:
         message: Failed to admit patient
   - html: <div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Edit Patient</div><div class='pf-v5-c-card__body'>
-  - text-input:
+  - input:
       field: name
       label: Patient Name
       readonly: true
@@ -540,7 +540,7 @@ pages:
       field: age
       label: Age
       readonly: true
-  - dropdown:
+  - select:
       field: ward
       label: Ward
       options:
@@ -550,7 +550,7 @@ pages:
         - Pediatrics
         - Maternity
         - Outpatient
-  - dropdown:
+  - select:
       field: status
       label: Status
       options:
@@ -558,7 +558,7 @@ pages:
         - Stable
         - Monitoring
         - Critical
-  - text-input:
+  - input:
       field: doctor
       label: Doctor
   - textarea:

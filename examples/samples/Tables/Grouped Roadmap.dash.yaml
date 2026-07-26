@@ -66,17 +66,17 @@ pages:
         properties:
           entries:
             - label: devtown
-              color: "#1976d2"
+              color: "oklch(0.55 0.15 245)"
             - label: blocks
-              color: "#7cb342"
+              color: "oklch(0.60 0.12 130)"
             - label: blocks-ui
-              color: "#f57c00"
+              color: "oklch(0.65 0.15 55)"
             - label: pages
-              color: "#e91e63"
+              color: "oklch(0.55 0.15 350)"
             - label: parent
-              color: "#607d8b"
+              color: "oklch(0.55 0.03 230)"
             - label: work
-              color: "#5c6bc0"
+              color: "oklch(0.55 0.12 275)"
           layout: linear
 
       - type: grouped-view
@@ -97,25 +97,25 @@ pages:
           rowAccent:
             column: status
             colorMap:
-              newly-done: "#2e7d32"
-              critical: "#d32f2f"
-              blocked: "#e65100"
+              newly-done: "oklch(0.55 0.12 145)"
+              critical: "oklch(0.55 0.15 25)"
+              blocked: "oklch(0.55 0.12 55)"
           rowStyle:
             - condition: "#{row.status} == 'done'"
               style:
-                backgroundColor: "#f0faf0"
-                color: "#2d7d2d"
+                backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
+                color: "oklch(0.55 0.12 145)"
             - condition: "#{row.status} == 'newly-done'"
               style:
-                backgroundColor: "#e8f5e9"
-                color: "#2e7d32"
+                backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
+                color: "oklch(0.55 0.12 145)"
             - condition: "#{row.status} == 'blocked'"
               style:
-                backgroundColor: "#fff8f0"
-                color: "#b35900"
+                backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
+                color: "oklch(0.55 0.12 55)"
             - condition: "#{row.status} == 'critical'"
               style:
-                backgroundColor: "#fff0f0"
+                backgroundColor: "oklch(0.65 0.10 25 / 0.12)"
             - condition: "#{row.status} == 'new'"
               style:
-                backgroundColor: "#f0f5ff"
+                backgroundColor: "oklch(0.65 0.08 245 / 0.10)"

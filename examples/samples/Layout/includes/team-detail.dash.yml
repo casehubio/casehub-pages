@@ -4,7 +4,7 @@ pages:
   - columns:
     - components:
       - html: >-
-          <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+          <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
             ↳ Loaded from <code>team-detail.dash.yml</code>
           </div>
   - columns:

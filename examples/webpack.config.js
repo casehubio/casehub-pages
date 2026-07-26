@@ -32,7 +32,13 @@ module.exports = (env = {}) => {
     ...common,
     module: {
       ...common.module,
-      rules,
+      rules: [
+        ...rules,
+        {
+          test: /pages-ui-components[\/]dist[\/]/,
+          sideEffects: true,
+        },
+      ],
     },
     entry: {
       "casehub-bundle": path.resolve(__dirname, "src/casehub-entry.ts"),

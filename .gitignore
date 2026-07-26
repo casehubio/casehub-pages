@@ -188,3 +188,4 @@ wksp
 *.zip
 .idea/
 .playwright-mcp/
+.claude

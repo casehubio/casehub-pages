@@ -13,7 +13,7 @@ pages:
   - columns:
     - components:
       - properties:
-          background-color: '#e65100'
+          background-color: 'oklch(0.55 0.15 55)'
           color: white
           padding: 16px 24px
           border-radius: 8px
@@ -39,7 +39,7 @@ pages:
                 function: COUNT
     - span: '3'
       properties:
-        color: '#e65100'
+        color: 'oklch(0.55 0.15 55)'
       components:
       - type: title
         properties:
@@ -58,7 +58,7 @@ pages:
             pattern: '#,000'
     - span: '3'
       properties:
-        color: '#2e7d32'
+        color: 'oklch(0.55 0.12 145)'
       components:
       - type: title
         properties:
@@ -77,7 +77,7 @@ pages:
             pattern: '#,000'
     - span: '3'
       properties:
-        color: '#1565c0'
+        color: 'oklch(0.55 0.15 245)'
       components:
       - type: title
         properties:

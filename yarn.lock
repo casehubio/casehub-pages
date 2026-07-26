@@ -1475,64 +1475,64 @@ __metadata:
 
 "@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=faea8c&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
+  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=fa5e44&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
   dependencies:
     "@casehubio/pages-data": "file:../pages-data"
-  checksum: 10c0/d4049077c72f154f2034e51df8125a48f84347028a09a580fb7e2404430ea706f60811ebdbb9515dd6c546974c69706ac4c6544a46544d03c88073f0265f5245
+  checksum: 10c0/b87747e18a4ddfb8360ac951e41348c2edd4ceaac3acaaf9e51b2e2079f9e9e495a7bd51ded4b4608557da37e7d98a1acad98fb0a3df3c02e7fe70449287085a
   languageName: node
   linkType: hard
 
-"@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3D0d9c22%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3Db3f472%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=faea8c&locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3D0d9c22%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=fa5e44&locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3Db3f472%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     "@casehubio/pages-data": "file:../pages-data"
-  checksum: 10c0/d4049077c72f154f2034e51df8125a48f84347028a09a580fb7e2404430ea706f60811ebdbb9515dd6c546974c69706ac4c6544a46544d03c88073f0265f5245
+  checksum: 10c0/b87747e18a4ddfb8360ac951e41348c2edd4ceaac3acaaf9e51b2e2079f9e9e495a7bd51ded4b4608557da37e7d98a1acad98fb0a3df3c02e7fe70449287085a
   languageName: node
   linkType: hard
 
 "@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table":
   version: 0.2.3
-  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=faea8c&locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table"
+  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=fa5e44&locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table"
   dependencies:
     "@casehubio/pages-data": "file:../pages-data"
-  checksum: 10c0/d4049077c72f154f2034e51df8125a48f84347028a09a580fb7e2404430ea706f60811ebdbb9515dd6c546974c69706ac4c6544a46544d03c88073f0265f5245
+  checksum: 10c0/b87747e18a4ddfb8360ac951e41348c2edd4ceaac3acaaf9e51b2e2079f9e9e495a7bd51ded4b4608557da37e7d98a1acad98fb0a3df3c02e7fe70449287085a
   languageName: node
   linkType: hard
 
-"@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3D572592%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3Dee0c37%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=faea8c&locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3D572592%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=fa5e44&locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3Dee0c37%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     "@casehubio/pages-data": "file:../pages-data"
-  checksum: 10c0/d4049077c72f154f2034e51df8125a48f84347028a09a580fb7e2404430ea706f60811ebdbb9515dd6c546974c69706ac4c6544a46544d03c88073f0265f5245
+  checksum: 10c0/b87747e18a4ddfb8360ac951e41348c2edd4ceaac3acaaf9e51b2e2079f9e9e495a7bd51ded4b4608557da37e7d98a1acad98fb0a3df3c02e7fe70449287085a
   languageName: node
   linkType: hard
 
 "@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-ui%40workspace%3Apackages%2Fpages-ui":
   version: 0.2.3
-  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=faea8c&locator=%40casehubio%2Fpages-ui%40workspace%3Apackages%2Fpages-ui"
+  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=fa5e44&locator=%40casehubio%2Fpages-ui%40workspace%3Apackages%2Fpages-ui"
   dependencies:
     "@casehubio/pages-data": "file:../pages-data"
-  checksum: 10c0/d4049077c72f154f2034e51df8125a48f84347028a09a580fb7e2404430ea706f60811ebdbb9515dd6c546974c69706ac4c6544a46544d03c88073f0265f5245
+  checksum: 10c0/b87747e18a4ddfb8360ac951e41348c2edd4ceaac3acaaf9e51b2e2079f9e9e495a7bd51ded4b4608557da37e7d98a1acad98fb0a3df3c02e7fe70449287085a
   languageName: node
   linkType: hard
 
-"@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D06250c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D4068f6%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=faea8c&locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D06250c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=fa5e44&locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D4068f6%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     "@casehubio/pages-data": "file:../pages-data"
-  checksum: 10c0/d4049077c72f154f2034e51df8125a48f84347028a09a580fb7e2404430ea706f60811ebdbb9515dd6c546974c69706ac4c6544a46544d03c88073f0265f5245
+  checksum: 10c0/b87747e18a4ddfb8360ac951e41348c2edd4ceaac3acaaf9e51b2e2079f9e9e495a7bd51ded4b4608557da37e7d98a1acad98fb0a3df3c02e7fe70449287085a
   languageName: node
   linkType: hard
 
 "@casehubio/pages-component@file:../pages-component::locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz":
   version: 0.2.3
-  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=faea8c&locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz"
+  resolution: "@casehubio/pages-component@file:../pages-component#../pages-component::hash=fa5e44&locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz"
   dependencies:
     "@casehubio/pages-data": "file:../pages-data"
-  checksum: 10c0/d4049077c72f154f2034e51df8125a48f84347028a09a580fb7e2404430ea706f60811ebdbb9515dd6c546974c69706ac4c6544a46544d03c88073f0265f5245
+  checksum: 10c0/b87747e18a4ddfb8360ac951e41348c2edd4ceaac3acaaf9e51b2e2079f9e9e495a7bd51ded4b4608557da37e7d98a1acad98fb0a3df3c02e7fe70449287085a
   languageName: node
   linkType: hard
 
@@ -1547,153 +1547,153 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-table%2540file%253A..%252Fpages-table%2523..%252Fpages-table%253A%253Ahash%253D0d9c22%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-table%2540file%253A..%252Fpages-table%2523..%252Fpages-table%253A%253Ahash%253Db3f472%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-table%2540file%253A..%252Fpages-table%2523..%252Fpages-table%253A%253Ahash%253D0d9c22%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-table%2540file%253A..%252Fpages-table%2523..%252Fpages-table%253A%253Ahash%253Db3f472%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-table%2540workspace%253Apackages%252Fpages-table":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-table%2540workspace%253Apackages%252Fpages-table":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-table%2540workspace%253Apackages%252Fpages-table"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-table%2540workspace%253Apackages%252Fpages-table"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-ui%2540file%253A..%252Fpages-ui%2523..%252Fpages-ui%253A%253Ahash%253D572592%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-ui%2540file%253A..%252Fpages-ui%2523..%252Fpages-ui%253A%253Ahash%253Dee0c37%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-ui%2540file%253A..%252Fpages-ui%2523..%252Fpages-ui%253A%253Ahash%253D572592%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-ui%2540file%253A..%252Fpages-ui%2523..%252Fpages-ui%253A%253Ahash%253Dee0c37%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-ui%2540workspace%253Apackages%252Fpages-ui":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-ui%2540workspace%253Apackages%252Fpages-ui":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-ui%2540workspace%253Apackages%252Fpages-ui"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-ui%2540workspace%253Apackages%252Fpages-ui"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-viz%2540file%253A..%252Fpages-viz%2523..%252Fpages-viz%253A%253Ahash%253D06250c%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-viz%2540file%253A..%252Fpages-viz%2523..%252Fpages-viz%253A%253Ahash%253D4068f6%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-viz%2540file%253A..%252Fpages-viz%2523..%252Fpages-viz%253A%253Ahash%253D06250c%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-viz%2540file%253A..%252Fpages-viz%2523..%252Fpages-viz%253A%253Ahash%253D4068f6%2526locator%253D%252540casehubio%25252Fpages-runtime%252540workspace%25253Apackages%25252Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-viz%2540workspace%253Apackages%252Fpages-viz":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-viz%2540workspace%253Apackages%252Fpages-viz":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfaea8c%26locator%3D%2540casehubio%252Fpages-viz%2540workspace%253Apackages%252Fpages-viz"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40file%3A..%2Fpages-component%23..%2Fpages-component%3A%3Ahash%3Dfa5e44%26locator%3D%2540casehubio%252Fpages-viz%2540workspace%253Apackages%252Fpages-viz"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
 "@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-component%40workspace%3Apackages%2Fpages-component":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-component%40workspace%3Apackages%2Fpages-component"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-component%40workspace%3Apackages%2Fpages-component"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
 "@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3D0d9c22%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3Db3f472%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3D0d9c22%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3Db3f472%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
 "@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3D572592%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3Dee0c37%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3D572592%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-ui%40file%3A..%2Fpages-ui%23..%2Fpages-ui%3A%3Ahash%3Dee0c37%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
 "@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-ui%40workspace%3Apackages%2Fpages-ui":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-ui%40workspace%3Apackages%2Fpages-ui"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-ui%40workspace%3Apackages%2Fpages-ui"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
-"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D06250c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D4068f6%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D06250c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D4068f6%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
 "@casehubio/pages-data@file:../pages-data::locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz":
   version: 0.2.3
-  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=cde663&locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz"
+  resolution: "@casehubio/pages-data@file:../pages-data#../pages-data::hash=af4f57&locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz"
   dependencies:
     jsonata: "npm:^2.2.1"
     zod: "npm:^3.23.0"
-  checksum: 10c0/9445ae077c42d9fe9d7f222ebdf3cdff40e164cb1b3a89150eb5893094dac896c97a5f80efeb0f58e1d1a2d86b8ef876595ccd2d9318bf634e794b9293e3c4dd
+  checksum: 10c0/e9dd6730ff8730e66331ca42310cd263a5d1716d785c2379227d0d35309bffc028e55ba6e81c51564b0397d80b8a751ca34ef52c387eea1aefded98b1947c9d1
   languageName: node
   linkType: hard
 
@@ -1738,11 +1738,11 @@ __metadata:
 
 "@casehubio/pages-iframe-api@file:../pages-iframe-api::locator=%40casehubio%2Fpages-iframe-dev%40workspace%3Apackages%2Fpages-iframe-dev":
   version: 0.2.3
-  resolution: "@casehubio/pages-iframe-api@file:../pages-iframe-api#../pages-iframe-api::hash=281f70&locator=%40casehubio%2Fpages-iframe-dev%40workspace%3Apackages%2Fpages-iframe-dev"
+  resolution: "@casehubio/pages-iframe-api@file:../pages-iframe-api#../pages-iframe-api::hash=2ff853&locator=%40casehubio%2Fpages-iframe-dev%40workspace%3Apackages%2Fpages-iframe-dev"
   dependencies:
     react: "npm:^17.0.2"
     react-dom: "npm:^17.0.2"
-  checksum: 10c0/78f70cba5583f4634cc43150ac85c8de656d5c3e08d106bb157991cc4b4bf8a1428a86acbf73d11308a9d19a52a9e7670310717d63e5add45fc430aa23e22032
+  checksum: 10c0/f5a58dce53811de4eac8b817f34c33b051b2de2ad0eeeaecc39df5fa8504233177f9c58df341a3a24b4021d5c7dfb08f392113a796c70c90cd4f15447400c3ab
   languageName: node
   linkType: hard
 
@@ -1797,21 +1797,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-primitives@file:../pages-primitives::locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3D0d9c22%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-primitives@file:../pages-primitives::locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3Db3f472%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-primitives@file:../pages-primitives#../pages-primitives::hash=624e82&locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3D0d9c22%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-primitives@file:../pages-primitives#../pages-primitives::hash=ab386d&locator=%40casehubio%2Fpages-table%40file%3A..%2Fpages-table%23..%2Fpages-table%3A%3Ahash%3Db3f472%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     lit: "npm:^3.3.3"
-  checksum: 10c0/1a8d982467c939c0d06656760704d288ab9381c29dca29dd3f7f331cdbf594f37503af012c22f950711820359de676e417296ea69451dabc795c549ac5717d4b
+  checksum: 10c0/4d1cca39e412a1f00afa35bd6e37669ec8b0c1299f783b6555cf0195cfae0071d503dfac10a497015f1061071451aac1ba5a5ee9aee477a3bad57a6829d4a432
   languageName: node
   linkType: hard
 
 "@casehubio/pages-primitives@file:../pages-primitives::locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table":
   version: 0.2.3
-  resolution: "@casehubio/pages-primitives@file:../pages-primitives#../pages-primitives::hash=624e82&locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table"
+  resolution: "@casehubio/pages-primitives@file:../pages-primitives#../pages-primitives::hash=ab386d&locator=%40casehubio%2Fpages-table%40workspace%3Apackages%2Fpages-table"
   dependencies:
     lit: "npm:^3.3.3"
-  checksum: 10c0/1a8d982467c939c0d06656760704d288ab9381c29dca29dd3f7f331cdbf594f37503af012c22f950711820359de676e417296ea69451dabc795c549ac5717d4b
+  checksum: 10c0/4d1cca39e412a1f00afa35bd6e37669ec8b0c1299f783b6555cf0195cfae0071d503dfac10a497015f1061071451aac1ba5a5ee9aee477a3bad57a6829d4a432
   languageName: node
   linkType: hard
 
@@ -1852,13 +1852,13 @@ __metadata:
 
 "@casehubio/pages-table@file:../pages-table::locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-table@file:../pages-table#../pages-table::hash=0d9c22&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
+  resolution: "@casehubio/pages-table@file:../pages-table#../pages-table::hash=b3f472&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
   dependencies:
     "@casehubio/pages-component": "file:../pages-component"
     "@casehubio/pages-data": "file:../pages-data"
     "@casehubio/pages-primitives": "file:../pages-primitives"
     lit: "npm:^3.0.0"
-  checksum: 10c0/ccde2c7c25ddc560c1011593a9e680afbc1f1ab3b20a913cf365660ff1484b80da8a671a829eef5a44739cd849d7890422b5cec4401a161a7a7ff8c316fa75d8
+  checksum: 10c0/dcd280370c59846068009cfff308a77527cbd0a8effcd7edd46b06f86baead2996e97d7b1692192873e273c8b1d9d7dfe6e978d7eadae8af5bf5644c1fdb568d
   languageName: node
   linkType: hard
 
@@ -1929,28 +1929,28 @@ __metadata:
 
 "@casehubio/pages-ui-components@file:../pages-ui-components::locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-ui-components@file:../pages-ui-components#../pages-ui-components::hash=32f743&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
+  resolution: "@casehubio/pages-ui-components@file:../pages-ui-components#../pages-ui-components::hash=f75e2a&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
   dependencies:
     lit: "npm:^3.3.3"
-  checksum: 10c0/bd68cd829f2f9ed74f3ba54ed3592ef2a4b04037903495d0804388eefc7e5c543a6ab23d665e2002cf8fe05f9ec9daaba0a63a965eb702fcd8930d4dded03035
+  checksum: 10c0/2c218191acc12dc2569785ae54a07b4a809187c0555a4afd1d2820bcd7933f07b2d3b54c937c2c3e02295a50f31a8dc7710faed1166e7f626e43ad8b152e27d3
   languageName: node
   linkType: hard
 
-"@casehubio/pages-ui-components@file:../pages-ui-components::locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D06250c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
+"@casehubio/pages-ui-components@file:../pages-ui-components::locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D4068f6%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-ui-components@file:../pages-ui-components#../pages-ui-components::hash=32f743&locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D06250c%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
+  resolution: "@casehubio/pages-ui-components@file:../pages-ui-components#../pages-ui-components::hash=f75e2a&locator=%40casehubio%2Fpages-viz%40file%3A..%2Fpages-viz%23..%2Fpages-viz%3A%3Ahash%3D4068f6%26locator%3D%2540casehubio%252Fpages-runtime%2540workspace%253Apackages%252Fpages-runtime"
   dependencies:
     lit: "npm:^3.3.3"
-  checksum: 10c0/bd68cd829f2f9ed74f3ba54ed3592ef2a4b04037903495d0804388eefc7e5c543a6ab23d665e2002cf8fe05f9ec9daaba0a63a965eb702fcd8930d4dded03035
+  checksum: 10c0/2c218191acc12dc2569785ae54a07b4a809187c0555a4afd1d2820bcd7933f07b2d3b54c937c2c3e02295a50f31a8dc7710faed1166e7f626e43ad8b152e27d3
   languageName: node
   linkType: hard
 
 "@casehubio/pages-ui-components@file:../pages-ui-components::locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz":
   version: 0.2.3
-  resolution: "@casehubio/pages-ui-components@file:../pages-ui-components#../pages-ui-components::hash=32f743&locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz"
+  resolution: "@casehubio/pages-ui-components@file:../pages-ui-components#../pages-ui-components::hash=f75e2a&locator=%40casehubio%2Fpages-viz%40workspace%3Apackages%2Fpages-viz"
   dependencies:
     lit: "npm:^3.3.3"
-  checksum: 10c0/bd68cd829f2f9ed74f3ba54ed3592ef2a4b04037903495d0804388eefc7e5c543a6ab23d665e2002cf8fe05f9ec9daaba0a63a965eb702fcd8930d4dded03035
+  checksum: 10c0/2c218191acc12dc2569785ae54a07b4a809187c0555a4afd1d2820bcd7933f07b2d3b54c937c2c3e02295a50f31a8dc7710faed1166e7f626e43ad8b152e27d3
   languageName: node
   linkType: hard
 
@@ -1970,23 +1970,23 @@ __metadata:
 
 "@casehubio/pages-ui-tokens@file:../pages-ui-tokens::locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime":
   version: 0.3.0
-  resolution: "@casehubio/pages-ui-tokens@file:../pages-ui-tokens#../pages-ui-tokens::hash=948594&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
+  resolution: "@casehubio/pages-ui-tokens@file:../pages-ui-tokens#../pages-ui-tokens::hash=fea4aa&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
   dependencies:
     lit: "npm:^3.3.3"
   bin:
     pages-tokens: dist/cli.js
-  checksum: 10c0/b084a43fb84fb4b19b40e859a34a2a0590ec433e5caca858f61821df28a3ea7c63507b9cec0f204b0056bb392061fa09932dcedee77a8208bda56dd54fe79bbc
+  checksum: 10c0/c42a636eaf25308b57970956ead6cc79427abb77e884094ba344a55929b7ca5ce4874db8f7e7ddcbf83a551c8ff4cd01c66886fa4ae04a357d53781a6821866b
   languageName: node
   linkType: hard
 
 "@casehubio/pages-ui-tokens@file:../pages-ui-tokens::locator=%40casehubio%2Fpages-ui-components%40workspace%3Apackages%2Fpages-ui-components":
   version: 0.3.0
-  resolution: "@casehubio/pages-ui-tokens@file:../pages-ui-tokens#../pages-ui-tokens::hash=948594&locator=%40casehubio%2Fpages-ui-components%40workspace%3Apackages%2Fpages-ui-components"
+  resolution: "@casehubio/pages-ui-tokens@file:../pages-ui-tokens#../pages-ui-tokens::hash=fea4aa&locator=%40casehubio%2Fpages-ui-components%40workspace%3Apackages%2Fpages-ui-components"
   dependencies:
     lit: "npm:^3.3.3"
   bin:
     pages-tokens: dist/cli.js
-  checksum: 10c0/b084a43fb84fb4b19b40e859a34a2a0590ec433e5caca858f61821df28a3ea7c63507b9cec0f204b0056bb392061fa09932dcedee77a8208bda56dd54fe79bbc
+  checksum: 10c0/c42a636eaf25308b57970956ead6cc79427abb77e884094ba344a55929b7ca5ce4874db8f7e7ddcbf83a551c8ff4cd01c66886fa4ae04a357d53781a6821866b
   languageName: node
   linkType: hard
 
@@ -2007,12 +2007,12 @@ __metadata:
 
 "@casehubio/pages-ui@file:../pages-ui::locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-ui@file:../pages-ui#../pages-ui::hash=572592&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
+  resolution: "@casehubio/pages-ui@file:../pages-ui#../pages-ui::hash=ee0c37&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
   dependencies:
     "@casehubio/pages-component": "file:../pages-component"
     "@casehubio/pages-data": "file:../pages-data"
     zod: "npm:^3.23.0"
-  checksum: 10c0/8a8041fc709628b8cf027a479420aa901bfd8725eafeb0e5e426e2e3cda127cc6e2455fbfe95e4e220a6fa3e7db5e14376126c257be7e99dee51125c0666a286
+  checksum: 10c0/33dd50bb2bf3e5d607879b5b61588623d9390fe93ee6b81760d751723306f49ac98993f0704652fb662aee9885240e19b3691465efb29e45c8c48d9a959738f0
   languageName: node
   linkType: hard
 
@@ -2035,14 +2035,14 @@ __metadata:
 
 "@casehubio/pages-viz@file:../pages-viz::locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime":
   version: 0.2.3
-  resolution: "@casehubio/pages-viz@file:../pages-viz#../pages-viz::hash=06250c&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
+  resolution: "@casehubio/pages-viz@file:../pages-viz#../pages-viz::hash=4068f6&locator=%40casehubio%2Fpages-runtime%40workspace%3Apackages%2Fpages-runtime"
   dependencies:
     "@casehubio/pages-component": "file:../pages-component"
     "@casehubio/pages-data": "file:../pages-data"
     "@casehubio/pages-ui-components": "file:../pages-ui-components"
     echarts: "npm:^5.6.0"
     lit: "npm:^3.3.3"
-  checksum: 10c0/061470d09e7acd0a0ad5fd9cd3cb4aa56860eed5d0ba852450cc282d46519092af8513e72d182f5644bbd484e7ed67e4541bd67778ca9c1d670a806935e30ad8
+  checksum: 10c0/c537802eb693c930e1ba4faf640ea29107a8edcdf311324fa127a110119278f9dde2efdc6ffa40b42dd0b076ebf525f6154aab7b4a1ace215fda184294ff50e4
   languageName: node
   linkType: hard
 

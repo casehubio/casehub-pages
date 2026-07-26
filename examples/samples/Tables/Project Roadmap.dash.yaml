@@ -156,27 +156,27 @@ pages:
                 properties:
                   entries:
                     - label: devtown
-                      color: "#1976d2"
+                      color: "oklch(0.55 0.15 245)"
                     - label: engine
-                      color: "#388e3c"
+                      color: "oklch(0.50 0.12 150)"
                     - label: blocks
-                      color: "#7cb342"
+                      color: "oklch(0.60 0.12 130)"
                     - label: blocks-ui
-                      color: "#f57c00"
+                      color: "oklch(0.65 0.15 55)"
                     - label: pages
-                      color: "#e91e63"
+                      color: "oklch(0.55 0.15 350)"
                     - label: parent
-                      color: "#607d8b"
+                      color: "oklch(0.55 0.03 230)"
                     - label: work
-                      color: "#5c6bc0"
+                      color: "oklch(0.55 0.12 275)"
                     - label: qhorus
-                      color: "#00897b"
+                      color: "oklch(0.55 0.10 175)"
                     - label: claudony
-                      color: "#8e24aa"
+                      color: "oklch(0.50 0.15 310)"
                     - label: platform
-                      color: "#455a64"
+                      color: "oklch(0.45 0.03 230)"
                     - label: ledger
-                      color: "#c62828"
+                      color: "oklch(0.50 0.15 25)"
                   layout: linear
 
               - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
@@ -200,13 +200,13 @@ pages:
                       name: Repo
                       width: "100px"
                       pill:
-                        blocks: "#7cb342"
-                        blocks-ui: "#f57c00"
-                        pages: "#e91e63"
-                        devtown: "#1976d2"
-                        parent: "#607d8b"
-                        work: "#5c6bc0"
-                        platform: "#455a64"
+                        blocks: "oklch(0.60 0.12 130)"
+                        blocks-ui: "oklch(0.65 0.15 55)"
+                        pages: "oklch(0.55 0.15 350)"
+                        devtown: "oklch(0.55 0.15 245)"
+                        parent: "oklch(0.55 0.03 230)"
+                        work: "oklch(0.55 0.12 275)"
+                        platform: "oklch(0.45 0.03 230)"
                     - id: issue
                       name: Issue
                       width: "130px"
@@ -225,9 +225,9 @@ pages:
                     column: status
                     columns: all
                     colorMap:
-                      newly-done: "#2e7d32"
-                      critical: "#d32f2f"
-                      blocked: "#e65100"
+                      newly-done: "oklch(0.55 0.12 145)"
+                      critical: "oklch(0.55 0.15 25)"
+                      blocked: "oklch(0.55 0.12 55)"
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
@@ -265,10 +265,10 @@ pages:
                       name: Repo
                       width: "100px"
                       pill:
-                        devtown: "#1976d2"
-                        parent: "#607d8b"
-                        work: "#5c6bc0"
-                        platform: "#455a64"
+                        devtown: "oklch(0.55 0.15 245)"
+                        parent: "oklch(0.55 0.03 230)"
+                        work: "oklch(0.55 0.12 275)"
+                        platform: "oklch(0.45 0.03 230)"
                     - id: issue
                       name: Issue
                       width: "130px"
@@ -287,8 +287,8 @@ pages:
                     column: status
                     columns: all
                     colorMap:
-                      newly-done: "#2e7d32"
-                      blocked: "#e65100"
+                      newly-done: "oklch(0.55 0.12 145)"
+                      blocked: "oklch(0.55 0.12 55)"
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
@@ -323,10 +323,10 @@ pages:
                       name: Repo
                       width: "100px"
                       pill:
-                        devtown: "#1976d2"
-                        parent: "#607d8b"
-                        work: "#5c6bc0"
-                        platform: "#455a64"
+                        devtown: "oklch(0.55 0.15 245)"
+                        parent: "oklch(0.55 0.03 230)"
+                        work: "oklch(0.55 0.12 275)"
+                        platform: "oklch(0.45 0.03 230)"
                     - id: issue
                       name: Issue
                       width: "130px"
@@ -345,8 +345,8 @@ pages:
                     column: status
                     columns: all
                     colorMap:
-                      newly-done: "#2e7d32"
-                      blocked: "#e65100"
+                      newly-done: "oklch(0.55 0.12 145)"
+                      blocked: "oklch(0.55 0.12 55)"
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
@@ -397,13 +397,13 @@ pages:
                 properties:
                   entries:
                     - label: devtown
-                      color: "#1976d2"
+                      color: "oklch(0.55 0.15 245)"
                     - label: blocks
-                      color: "#7cb342"
+                      color: "oklch(0.60 0.12 130)"
                     - label: blocks-ui
-                      color: "#f57c00"
+                      color: "oklch(0.65 0.15 55)"
                     - label: pages
-                      color: "#e91e63"
+                      color: "oklch(0.55 0.15 350)"
                   layout: linear
               - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
               - html: >
@@ -421,13 +421,13 @@ pages:
                       name: Repo
                       width: "100px"
                       pill:
-                        blocks: "#7cb342"
-                        blocks-ui: "#f57c00"
-                        pages: "#e91e63"
-                        devtown: "#1976d2"
-                        parent: "#607d8b"
-                        work: "#5c6bc0"
-                        platform: "#455a64"
+                        blocks: "oklch(0.60 0.12 130)"
+                        blocks-ui: "oklch(0.65 0.15 55)"
+                        pages: "oklch(0.55 0.15 350)"
+                        devtown: "oklch(0.55 0.15 245)"
+                        parent: "oklch(0.55 0.03 230)"
+                        work: "oklch(0.55 0.12 275)"
+                        platform: "oklch(0.45 0.03 230)"
                     - id: issue
                       name: Issue
                       width: "130px"
@@ -446,9 +446,9 @@ pages:
                     column: status
                     columns: all
                     colorMap:
-                      newly-done: "#2e7d32"
-                      critical: "#d32f2f"
-                      blocked: "#e65100"
+                      newly-done: "oklch(0.55 0.12 145)"
+                      critical: "oklch(0.55 0.15 25)"
+                      blocked: "oklch(0.55 0.12 55)"
                   rowStyle:
                     - condition: "#{row.status} == 'done'"
                       style:
@@ -478,27 +478,27 @@ pages:
                 properties:
                   entries:
                     - label: devtown
-                      color: "#1976d2"
+                      color: "oklch(0.55 0.15 245)"
                     - label: engine
-                      color: "#388e3c"
+                      color: "oklch(0.50 0.12 150)"
                     - label: blocks
-                      color: "#7cb342"
+                      color: "oklch(0.60 0.12 130)"
                     - label: blocks-ui
-                      color: "#f57c00"
+                      color: "oklch(0.65 0.15 55)"
                     - label: pages
-                      color: "#e91e63"
+                      color: "oklch(0.55 0.15 350)"
                     - label: parent
-                      color: "#607d8b"
+                      color: "oklch(0.55 0.03 230)"
                     - label: work
-                      color: "#5c6bc0"
+                      color: "oklch(0.55 0.12 275)"
                     - label: qhorus
-                      color: "#00897b"
+                      color: "oklch(0.55 0.10 175)"
                     - label: claudony
-                      color: "#8e24aa"
+                      color: "oklch(0.50 0.15 310)"
                     - label: platform
-                      color: "#455a64"
+                      color: "oklch(0.45 0.03 230)"
                     - label: ledger
-                      color: "#c62828"
+                      color: "oklch(0.50 0.15 25)"
                   layout: linear
 
               - type: markdown
@@ -508,27 +508,27 @@ pages:
                 properties:
                   entries:
                     - label: devtown
-                      color: "#1976d2"
+                      color: "oklch(0.55 0.15 245)"
                     - label: engine
-                      color: "#388e3c"
+                      color: "oklch(0.50 0.12 150)"
                     - label: blocks
-                      color: "#7cb342"
+                      color: "oklch(0.60 0.12 130)"
                     - label: blocks-ui
-                      color: "#f57c00"
+                      color: "oklch(0.65 0.15 55)"
                     - label: pages
-                      color: "#e91e63"
+                      color: "oklch(0.55 0.15 350)"
                     - label: parent
-                      color: "#607d8b"
+                      color: "oklch(0.55 0.03 230)"
                     - label: work
-                      color: "#5c6bc0"
+                      color: "oklch(0.55 0.12 275)"
                     - label: qhorus
-                      color: "#00897b"
+                      color: "oklch(0.55 0.10 175)"
                     - label: claudony
-                      color: "#8e24aa"
+                      color: "oklch(0.50 0.15 310)"
                     - label: platform
-                      color: "#455a64"
+                      color: "oklch(0.45 0.03 230)"
                     - label: ledger
-                      color: "#c62828"
+                      color: "oklch(0.50 0.15 25)"
                   layout: horizontal
 
               - type: markdown
@@ -538,17 +538,17 @@ pages:
                 properties:
                   entries:
                     - label: devtown
-                      color: "#1976d2"
+                      color: "oklch(0.55 0.15 245)"
                     - label: engine
-                      color: "#388e3c"
+                      color: "oklch(0.50 0.12 150)"
                     - label: blocks
-                      color: "#7cb342"
+                      color: "oklch(0.60 0.12 130)"
                     - label: blocks-ui
-                      color: "#f57c00"
+                      color: "oklch(0.65 0.15 55)"
                     - label: pages
-                      color: "#e91e63"
+                      color: "oklch(0.55 0.15 350)"
                     - label: parent
-                      color: "#607d8b"
+                      color: "oklch(0.55 0.03 230)"
                   layout: vertical
 
               - type: markdown
@@ -563,27 +563,27 @@ pages:
                 properties:
                   entries:
                     - label: devtown
-                      color: "#1976d2"
+                      color: "oklch(0.55 0.15 245)"
                     - label: engine
-                      color: "#388e3c"
+                      color: "oklch(0.50 0.12 150)"
                     - label: blocks
-                      color: "#7cb342"
+                      color: "oklch(0.60 0.12 130)"
                     - label: blocks-ui
-                      color: "#f57c00"
+                      color: "oklch(0.65 0.15 55)"
                     - label: pages
-                      color: "#e91e63"
+                      color: "oklch(0.55 0.15 350)"
                     - label: parent
-                      color: "#607d8b"
+                      color: "oklch(0.55 0.03 230)"
                     - label: work
-                      color: "#5c6bc0"
+                      color: "oklch(0.55 0.12 275)"
                     - label: qhorus
-                      color: "#00897b"
+                      color: "oklch(0.55 0.10 175)"
                     - label: claudony
-                      color: "#8e24aa"
+                      color: "oklch(0.50 0.15 310)"
                     - label: platform
-                      color: "#455a64"
+                      color: "oklch(0.45 0.03 230)"
                     - label: ledger
-                      color: "#c62828"
+                      color: "oklch(0.50 0.15 25)"
                   layout: grid
 
               - type: markdown
@@ -593,14 +593,14 @@ pages:
                 properties:
                   entries:
                     - label: devtown
-                      color: "#1976d2"
+                      color: "oklch(0.55 0.15 245)"
                     - label: engine
-                      color: "#388e3c"
+                      color: "oklch(0.50 0.12 150)"
                     - label: blocks
-                      color: "#7cb342"
+                      color: "oklch(0.60 0.12 130)"
                     - label: blocks-ui
-                      color: "#f57c00"
+                      color: "oklch(0.65 0.15 55)"
                     - label: pages
-                      color: "#e91e63"
+                      color: "oklch(0.55 0.15 350)"
                   layout: linear
                   swatchShape: circle

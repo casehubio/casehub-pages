@@ -2,7 +2,7 @@ pages:
 - name: index
   components:
   - html: >-
-      <div style="padding: 12px 20px; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #e0e0e0; margin-bottom:
+      <div style="padding: 12px 20px; background: linear-gradient(135deg, oklch(0.20 0.03 260), oklch(0.25 0.05 260)); color: var(--pages-text-secondary, oklch(0.80 0 0)); margin-bottom:
       16px; border-radius: 8px">
         <strong style="font-size: 1.3em">Navigation Rebinding</strong>
         <span style="margin-left: 12px; opacity: 0.7">Same three-level content hierarchy, different navigation wrappers —
@@ -175,7 +175,7 @@ pages:
 - name: Profile
   components:
   - html: >-
-      <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+      <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
         ↳ Profile settings
       </div>
   - type: title
@@ -205,7 +205,7 @@ pages:
   - columns:
     - components:
       - html: >-
-          <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+          <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
             ↳ Reports overview
           </div>
   - columns:
@@ -362,16 +362,16 @@ pages:
   - html: >-
       <div style="display:flex;gap:8px;padding:0 0 12px">
         <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'prev'}}))"
-          style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">←
+          style="padding:6px 16px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:6px;background:var(--pages-surface-primary, oklch(0.99 0 0));cursor:pointer;font-size:13px">←
       Previous</button>
         <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'next'}}))"
-          style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">Next
+          style="padding:6px 16px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:6px;background:var(--pages-surface-primary, oklch(0.99 0 0));cursor:pointer;font-size:13px">Next
       →</button>
       </div>
-  - text-input:
+  - input:
       field: Product
       label: Product
-  - text-input:
+  - input:
       field: Region
       label: Region
   - number-input:

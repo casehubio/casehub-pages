@@ -95,12 +95,12 @@ pages:
         text: Edit Developer
         size: h3
 
-    - text-input:
+    - input:
         field: name
         label: Name
         required: true
 
-    - dropdown:
+    - select:
         field: language
         label: Language
         options:

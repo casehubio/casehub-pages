@@ -477,6 +477,7 @@ function wireAccordion(
       panel.style.display = "";
       const header = doc.createElement("button");
       header.dataset.accordionHeader = "";
+      header.setAttribute("data-expanded", "");
       header.textContent = name;
       container.insertBefore(header, panel);
 

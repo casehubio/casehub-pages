@@ -46,14 +46,14 @@ pages:
       settings:
         svg: >-
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200">
-            <rect id="zone_a" x="10" y="10" width="80" height="80" rx="4" fill="#999"/>
-            <rect id="zone_b" x="100" y="10" width="160" height="80" rx="4" fill="#999"/>
-            <rect id="zone_c" x="270" y="10" width="80" height="80" rx="4" fill="#999"/>
-            <rect id="zone_d" x="360" y="10" width="80" height="80" rx="4" fill="#999"/>
-            <rect id="zone_e" x="450" y="10" width="80" height="80" rx="4" fill="#999"/>
-            <rect id="zone_f" x="540" y="10" width="80" height="80" rx="4" fill="#999"/>
-            <rect id="zone_g" x="10" y="100" width="160" height="80" rx="4" fill="#999"/>
-            <rect id="zone_h" x="180" y="100" width="160" height="80" rx="4" fill="#999"/>
+            <rect id="zone_a" x="10" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+            <rect id="zone_b" x="100" y="10" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+            <rect id="zone_c" x="270" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+            <rect id="zone_d" x="360" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+            <rect id="zone_e" x="450" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+            <rect id="zone_f" x="540" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+            <rect id="zone_g" x="10" y="100" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+            <rect id="zone_h" x="180" y="100" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
           </svg>
       lookup:
         uuid: floor-data

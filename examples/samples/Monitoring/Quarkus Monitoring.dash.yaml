@@ -172,7 +172,7 @@ pages:
             expression: value.replace("heap, ", "");
           extraConfiguration: >-
             {
-              "color" : ["#5ec962"]
+              "color" : ["oklch(0.65 0.15 145)"]
             }
     - span: 6
       components:
@@ -209,7 +209,7 @@ pages:
             expression: value.replace("nonheap, ", "");
           extraConfiguration: >-
             {
-              "color" : ["#5ec962"]
+              "color" : ["oklch(0.65 0.15 145)"]
             }
   - properties:
       margin-top: 20px
@@ -244,7 +244,7 @@ pages:
             expression: value;
           extraConfiguration: >-
             {
-              "color" : ["#4695EB"]
+              "color" : ["oklch(0.60 0.15 245)"]
             }
 - name: History
   rows:
