@@ -20,13 +20,13 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehubio/pages-component": "file:../pages-component",
-    "@casehubio/pages-data": "file:../pages-data",
-    "@casehubio/pages-table": "file:../pages-table",
-    "@casehubio/pages-ui": "file:../pages-ui",
-    "@casehubio/pages-ui-components": "file:../pages-ui-components",
-    "@casehubio/pages-ui-tokens": "file:../pages-ui-tokens",
-    "@casehubio/pages-viz": "file:../pages-viz",
+    "@casehubio/pages-component": "0.2.3",
+    "@casehubio/pages-data": "0.2.3",
+    "@casehubio/pages-table": "0.2.3",
+    "@casehubio/pages-ui": "0.2.3",
+    "@casehubio/pages-ui-components": "0.2.3",
+    "@casehubio/pages-ui-tokens": "0.3.0",
+    "@casehubio/pages-viz": "0.2.3",
     "js-yaml": "^4.1.0",
     "marked": "^15.0.0"
   },
