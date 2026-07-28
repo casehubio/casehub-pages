@@ -4,8 +4,8 @@ import { customElement, property, state } from 'lit/decorators.js';
 import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings, GroupBoundary } from '@casehubio/pages-data';
 import { ColumnType, extractGroupBoundaries } from '@casehubio/pages-data';
 import type { SortColumn } from '@casehubio/pages-data';
-import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail, RowAccentConfig } from './types.js';
-import { computeScrollWindow, extendWindowForSpans } from './virtual-scroll-engine.js';
+import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail, RowAccentConfig, ColumnResizeDetail } from './types.js';
+import { computeScrollWindow, extendWindowForSpans, FixedHeightModel, CallbackHeightModel, MeasuredHeightModel, type HeightModel } from './virtual-scroll-engine.js';
 import { computeSpanMap, isSuppressed, isOrigin, type SpanMap } from './span-map.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
@@ -45,6 +45,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   @property({ attribute: false }) getRowAccent?: (row: TypedRow) => string | undefined;
   @property({ type: Array, attribute: false }) hiddenColumns?: readonly string[];
   @property({ attribute: false }) groupBy?: ColumnId;
+  @property({ type: Boolean }) resizable = false;
 
   set activeSort(sort: SortColumn | undefined) {
     if (!sort) {
@@ -61,7 +62,20 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   get activePage(): number | undefined { return this.currentPage; }
 
   @property({ type: String, attribute: 'empty-message' }) emptyMessage = 'No data';
-  @property({ type: Number, attribute: 'row-height' }) rowHeight = 48;
+  @property({
+    attribute: 'row-height',
+    converter: {
+      fromAttribute(value: string | null): number | 'auto' {
+        if (value === 'auto') return 'auto';
+        const n = Number(value);
+        return Number.isNaN(n) || n <= 0 ? 48 : n;
+      },
+      toAttribute(value: number | 'auto' | ((row: TypedRow, index: number) => number)): string | null {
+        if (typeof value === 'function') return null;
+        return String(value);
+      },
+    },
+  }) rowHeight: number | 'auto' | ((row: TypedRow, index: number) => number) = 48;
   @property({ type: Number, attribute: 'buffer-size' }) bufferSize = 5;
   @property({ type: Number, attribute: 'page-size' }) pageSize = 25;
   @property({ type: Array, attribute: false }) pageSizeOptions: readonly number[] = [10, 25, 50, 100];
@@ -102,6 +116,12 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   @state() private _hoverRowSpan = 1;
   private _spanMap: SpanMap = new Map();
   private _spanColumns: Set<string> = new Set();
+  private _effectiveRows: readonly TypedRow[] = [];
+  private _heightModel: HeightModel = new FixedHeightModel(0, 48);
+  private _prevRowHeightType: 'number' | 'auto' | 'function' = 'number';
+  private _isCorrectingScroll = false;
+  private _columnWidths = new Map<string, string>();
+  private _resizing: { columnId: string; startX: number; startWidth: number; minWidth: number } | null = null;
   @state() private _internalSelectedKeys = new Set<string>();
   @state() private _lastClickedKey: string | null = null;
   @state() private _columnPickerOpen = false;
@@ -203,6 +223,14 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
 
     if (p.csvExport === true) {
       this._csvExportEnabled = true;
+    }
+
+    if (p.resizable === true) {
+      this.resizable = true;
+    }
+
+    if (p.rowHeight !== undefined) {
+      this.rowHeight = p.rowHeight as number | 'auto' | ((row: TypedRow, index: number) => number);
     }
 
     if (typeof p.height === 'string' || typeof p.height === 'number') {
@@ -406,6 +434,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       border-bottom: 1px solid var(--pages-border-default, #d4d4d4);
       background: var(--pages-surface-secondary, #fafafa);
       flex-shrink: 0;
+      overflow: hidden;
     }
 
     .header {
@@ -419,6 +448,26 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       color: var(--pages-text-primary, #171717);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+    }
+
+    .header-cell.resizable {
+      position: relative;
+    }
+
+    .resize-handle {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      cursor: col-resize;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .resize-handle:hover,
+    .resize-handle:active {
+      background: var(--pages-primary-5, #93c5fd);
     }
 
     .checkbox-cell {
@@ -1035,12 +1084,18 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   `;
 
   private _onScroll = (e: Event): void => {
+    if (this._isCorrectingScroll) return;
     const target = e.target as HTMLElement;
     this._scrollTop = target.scrollTop;
 
+    const header = this.shadowRoot?.querySelector('.header') as HTMLElement | null;
+    if (header) {
+      header.style.transform = `translateX(-${target.scrollLeft}px)`;
+    }
+
     if (this.mode === 'scroll' && this.hasMore && !this._loadingMore) {
       const { scrollTop, clientHeight, scrollHeight } = target;
-      const bufferHeight = this.bufferSize * this.rowHeight;
+      const bufferHeight = this.bufferSize * this._heightModel.rowHeight(0);
       const nearBottom = scrollTop + clientHeight >= scrollHeight - bufferHeight;
 
       if (nearBottom) {
@@ -1165,7 +1220,56 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
   }
 
+  override updated(_changed: Map<PropertyKey, unknown>): void {
+    if (!(this._heightModel instanceof MeasuredHeightModel) || !this._useVirtualScroll) return;
+
+    const bodyContent = this.shadowRoot?.querySelector('.body-content') as HTMLElement | null;
+    if (!bodyContent) return;
+
+    const resolved = getComputedStyle(bodyContent).gridTemplateRows;
+    if (!resolved) return;
+
+    const trackSizes = resolved.split(' ').map(s => parseFloat(s));
+    const window = this._scrollWindow;
+    if (!window) return;
+
+    const model = this._heightModel as MeasuredHeightModel;
+    let changed = false;
+    for (let i = window.startIndex; i < window.endIndex && i < trackSizes.length; i++) {
+      const measuredHeight = trackSizes[i]!;
+      if (measuredHeight > 0) {
+        const key = this.getRowKey ? this.getRowKey(this._effectiveRows[i]!) : undefined;
+        if (model.recordHeight(i, measuredHeight, key)) changed = true;
+      }
+    }
+
+    if (changed) {
+      let delta = 0;
+      for (let i = 0; i < window.startIndex; i++) {
+        const prev = trackSizes[i];
+        if (prev !== undefined && prev > 0 && prev !== model.rowHeight(i)) {
+          delta += model.rowHeight(i) - prev;
+        }
+      }
+
+      if (delta !== 0) {
+        const body = this.shadowRoot?.querySelector('.body') as HTMLElement | null;
+        if (body) {
+          this._isCorrectingScroll = true;
+          body.scrollTop += delta;
+          this._isCorrectingScroll = false;
+        }
+      }
+
+      this.requestUpdate();
+    }
+  }
+
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
+    if (changed.has('columnConfig')) {
+      this._columnWidths.clear();
+    }
+
     if (changed.has('dataSet') && this.mode === 'scroll') {
       this._loadingMore = false;
     }
@@ -1243,6 +1347,55 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       this._sortableFromProps = true;
     }
 
+    const prevEffective = this._effectiveRows;
+    this._effectiveRows = this._computeEffectiveRows();
+
+    const rowHeightType = typeof this.rowHeight === 'function' ? 'function' : (this.rowHeight === 'auto' ? 'auto' : 'number');
+    const typeChanged = rowHeightType !== this._prevRowHeightType;
+    this._prevRowHeightType = rowHeightType;
+
+    if (typeChanged || this._heightModel.rowCount === 0 && this._effectiveRows.length > 0) {
+      if (rowHeightType === 'number') {
+        this._heightModel = new FixedHeightModel(this._effectiveRows.length, this.rowHeight as number);
+      } else if (rowHeightType === 'function') {
+        const fn = this.rowHeight as (row: TypedRow, index: number) => number;
+        this._heightModel = new CallbackHeightModel(this._effectiveRows.map((r, i) => fn(r, i)));
+      } else {
+        const m = new MeasuredHeightModel(this._effectiveRows.length);
+        this._heightModel = m;
+      }
+    } else if (changed.has('dataSet')) {
+      if (rowHeightType === 'number') {
+        this._heightModel = new FixedHeightModel(this._effectiveRows.length, this.rowHeight as number);
+      } else if (rowHeightType === 'function') {
+        const fn = this.rowHeight as (row: TypedRow, index: number) => number;
+        this._heightModel = new CallbackHeightModel(this._effectiveRows.map((r, i) => fn(r, i)));
+      } else {
+        const m = this._heightModel as MeasuredHeightModel;
+        if (this._loadingMore) {
+          m.extend(this._effectiveRows.length);
+        } else {
+          m.reset(this._effectiveRows.length);
+        }
+      }
+    } else if (prevEffective !== this._effectiveRows && prevEffective.length > 0) {
+      if (rowHeightType === 'function') {
+        const fn = this.rowHeight as (row: TypedRow, index: number) => number;
+        this._heightModel = new CallbackHeightModel(this._effectiveRows.map((r, i) => fn(r, i)));
+      } else if (rowHeightType === 'auto') {
+        const m = this._heightModel as MeasuredHeightModel;
+        if (this.getRowKey) {
+          const keyToNewIndex = new Map<string, number>();
+          this._effectiveRows.forEach((r, i) => keyToNewIndex.set(this.getRowKey!(r), i));
+          m.remap(keyToNewIndex, this._effectiveRows.length);
+        } else {
+          m.reset(this._effectiveRows.length);
+        }
+      } else {
+        this._heightModel = new FixedHeightModel(this._effectiveRows.length, this.rowHeight as number);
+      }
+    }
+
     const hasSpanConfig = this.columnConfig?.some(c => c.cellSpan || c.mergeRows) ?? false;
     if (hasSpanConfig && this.getChildren) {
       throw new Error('Cell spanning and tree rows are mutually exclusive');
@@ -1251,9 +1404,9 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       throw new Error('Cell spanning and groupBy are mutually exclusive — use mergeRows as an alternative');
     }
 
-    if (hasSpanConfig && (changed.has('dataSet') || changed.has('columnConfig') || changed.has('hiddenColumns'))) {
+    if (hasSpanConfig && (changed.has('dataSet') || changed.has('columnConfig') || changed.has('hiddenColumns') || prevEffective !== this._effectiveRows)) {
       const visibleColIds = new Set(this._visibleColumns.map(c => String(c.id)));
-      this._spanMap = computeSpanMap(this._dataRows, this._dataColumns, this.columnConfig ?? [], visibleColIds);
+      this._spanMap = computeSpanMap(this._effectiveRows, this._dataColumns, this.columnConfig ?? [], visibleColIds);
       this._spanColumns = new Set([...(this.columnConfig ?? [])].filter(c => c.cellSpan || c.mergeRows).map(c => String(c.id)));
     } else if (!hasSpanConfig) {
       this._spanMap = new Map();
@@ -1489,7 +1642,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     const currentKey = this.getRowKey(row);
-    const allKeys = this._dataRows.map(r => this.getRowKey!(r));
+    const allKeys = this._effectiveRows.map(r => this.getRowKey!(r));
     const lastIndex = allKeys.indexOf(this._lastClickedKey);
     const currentIndex = allKeys.indexOf(currentKey);
 
@@ -1548,7 +1701,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   private _handleSelectAll = (event: MouseEvent): void => {
     event.stopPropagation();
 
-    const sourceRows = this._usePagination ? this._visibleRows : this._dataRows;
+    const sourceRows = this._usePagination ? this._visibleRows : this._effectiveRows;
     const visibleKeys = sourceRows
       .map(row => this.getRowKey!(row))
       .filter((key): key is string => key !== undefined);
@@ -1703,6 +1856,79 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }));
   };
 
+  private _handleResizeStart = (e: PointerEvent, columnId: string): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    const handle = e.target as HTMLElement;
+    handle.setPointerCapture(e.pointerId);
+
+    const headerCell = handle.parentElement!;
+    const startWidth = headerCell.getBoundingClientRect().width;
+
+    const config = this.columnConfig?.find(c => String(c.id) === columnId);
+    let minWidth = 50;
+    if (config?.minWidth) {
+      const parsed = parseFloat(config.minWidth);
+      if (!Number.isNaN(parsed)) minWidth = parsed;
+    }
+
+    this._resizing = { columnId, startX: e.clientX, startWidth, minWidth };
+  };
+
+  private _handleResizeMove = (e: PointerEvent): void => {
+    if (!this._resizing) return;
+    const delta = e.clientX - this._resizing.startX;
+    const newWidth = Math.max(this._resizing.minWidth, this._resizing.startWidth + delta);
+    this._columnWidths.set(this._resizing.columnId, `${newWidth}px`);
+    this.requestUpdate();
+  };
+
+  private _handleResizeEnd = (e: PointerEvent): void => {
+    if (!this._resizing) return;
+    const handle = e.target as HTMLElement;
+    handle.releasePointerCapture(e.pointerId);
+
+    const columnId = this._resizing.columnId;
+    const widthStr = this._columnWidths.get(columnId);
+    const width = widthStr ? parseFloat(widthStr) : this._resizing.startWidth;
+
+    this._resizing = null;
+
+    const detail: ColumnResizeDetail = { columnId, width };
+    this.dispatchEvent(new CustomEvent('column-resize', {
+      detail,
+      bubbles: true,
+      composed: true,
+    }));
+  };
+
+  private _handleResizeDblClick = (e: MouseEvent, columnId: string): void => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const cells = this.shadowRoot?.querySelectorAll(`.cell[data-col="${columnId}"]`);
+    let maxWidth = 50;
+    if (cells) {
+      for (const cell of cells) {
+        maxWidth = Math.max(maxWidth, (cell as HTMLElement).scrollWidth + 8);
+      }
+    }
+
+    const config = this.columnConfig?.find(c => String(c.id) === columnId);
+    const minWidth = config?.minWidth ? parseFloat(config.minWidth) || 50 : 50;
+    const finalWidth = Math.max(minWidth, maxWidth);
+
+    this._columnWidths.set(columnId, `${finalWidth}px`);
+    this.requestUpdate();
+
+    const detail: ColumnResizeDetail = { columnId, width: finalWidth };
+    this.dispatchEvent(new CustomEvent('column-resize', {
+      detail,
+      bubbles: true,
+      composed: true,
+    }));
+  };
+
   private _handleKeyDown = (event: KeyboardEvent): void => {
     const key = event.key;
     const target = event.target as HTMLElement;
@@ -1737,7 +1963,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
 
     if (currentRowIndex === -1) return;
 
-    const totalRows = this._dataRows.length;
+    const totalRows = this._effectiveRows.length;
     let handled = false;
 
     switch (key) {
@@ -1753,7 +1979,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
           }
           this.rovingIndex = Math.min(this.rovingIndex + downSkip, totalRows - 1);
           if (event.shiftKey && this.selection === 'multi') {
-            const row = this._dataRows[this.rovingIndex];
+            const row = this._effectiveRows[this.rovingIndex];
             if (row) this._toggleRowSelection(row);
           }
           this._scrollToRowIfNeeded(this.rovingIndex);
@@ -1777,7 +2003,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
           }
           this.rovingIndex = upTarget;
           if (event.shiftKey && this.selection === 'multi') {
-            const row = this._dataRows[this.rovingIndex];
+            const row = this._effectiveRows[this.rovingIndex];
             if (row) this._toggleRowSelection(row);
           }
           this._scrollToRowIfNeeded(this.rovingIndex);
@@ -1879,8 +2105,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     const body = this.shadowRoot?.querySelector('.body') as HTMLElement | null;
     if (!body) return;
 
-    const rowTop = rowIndex * this.rowHeight;
-    const rowBottom = rowTop + this.rowHeight;
+    const rowTop = this._heightModel.offsetAtIndex(rowIndex);
+    const rowBottom = rowTop + this._heightModel.rowHeight(rowIndex);
     const viewTop = body.scrollTop;
     const viewBottom = viewTop + body.clientHeight;
 
@@ -1922,6 +2148,9 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   private get _gridTemplateColumns(): string {
     if (this._visibleColumns.length === 0) return '1fr';
     const columns = this._visibleColumns.map(c => {
+      const id = String(c.id);
+      const override = this._columnWidths.get(id);
+      if (override) return override;
       const config = this._configFor(c);
       return config?.width ?? '1fr';
     }).join(' ');
@@ -1932,11 +2161,41 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     return prefix ? `${prefix} ${columns}` : columns;
   }
 
+  private get _gridTemplateRows(): string {
+    const count = this._effectiveRows.length;
+    if (count === 0) return 'auto';
+    if (this._heightModel instanceof FixedHeightModel) {
+      return `repeat(${count}, ${(this.rowHeight as number)}px)`;
+    }
+    if (this._heightModel instanceof CallbackHeightModel) {
+      return this._effectiveRows.map((_r, i) => `${this._heightModel.rowHeight(i)}px`).join(' ');
+    }
+    if (!this._useVirtualScroll) return `repeat(${count}, auto)`;
+    const window = this._scrollWindow;
+    if (!window) return `repeat(${count}, ${this._heightModel.rowHeight(0)}px)`;
+    const parts: string[] = [];
+    const { startIndex, endIndex } = window;
+    if (startIndex > 0) {
+      const beforeHeight = this._heightModel.rowHeight(0);
+      parts.push(startIndex === 1 ? `${beforeHeight}px` : `repeat(${startIndex}, ${beforeHeight}px)`);
+    }
+    const viewportCount = endIndex - startIndex;
+    if (viewportCount > 0) {
+      parts.push(viewportCount === 1 ? 'auto' : `repeat(${viewportCount}, auto)`);
+    }
+    const afterCount = count - endIndex;
+    if (afterCount > 0) {
+      const afterHeight = this._heightModel.rowHeight(0);
+      parts.push(afterCount === 1 ? `${afterHeight}px` : `repeat(${afterCount}, ${afterHeight}px)`);
+    }
+    return parts.join(' ');
+  }
+
   private get _useVirtualScroll(): boolean {
     if (this.groupBy) return false;
     if (this.getRowDetail) return false;
     if (this.mode === 'scroll') return true;
-    return this.mode === 'auto' && this._dataRows.length > AUTO_THRESHOLD;
+    return this.mode === 'auto' && this._effectiveRows.length > AUTO_THRESHOLD;
   }
 
   private get _usePagination(): boolean {
@@ -1949,11 +2208,11 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     if (this._expandableConfig && this._treeRoots.length > 0) {
       return Math.ceil(this._treeRoots.length / this.pageSize);
     }
-    const total = this.totalRows ?? this._dataRows.length;
+    const total = this.totalRows ?? this._effectiveRows.length;
     return Math.ceil(total / this.pageSize);
   }
 
-  private get _visibleRows(): readonly TypedRow[] {
+  private _computeEffectiveRows(): readonly TypedRow[] {
     let rows: readonly TypedRow[] = this._dataRows;
 
     if (this.clientFilter && this.filterText && this.totalRows === undefined) {
@@ -1991,10 +2250,6 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         }
       }
 
-      if (this._usePagination && !matchingIds) {
-        const { pageNodes } = paginateTreeByRoots(this._treeRoots, effectiveExpandState, this.currentPage, this.pageSize);
-        return pageNodes.map(n => n.row);
-      }
       let visibleNodes = collectVisibleNodes(this._treeRoots, effectiveExpandState);
       if (matchingIds) {
         visibleNodes = visibleNodes.filter(n => matchingIds.has(n.id));
@@ -2013,7 +2268,17 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       });
     }
 
+    return rows;
+  }
+
+  private get _visibleRows(): readonly TypedRow[] {
+    const rows = this._effectiveRows;
+
     if (this._usePagination) {
+      if (this._expandableConfig && this._treeRoots.length > 0 && !(this.clientFilter && this.filterText)) {
+        const { pageNodes } = paginateTreeByRoots(this._treeRoots, this._treeExpandState, this.currentPage, this.pageSize);
+        return pageNodes.map(n => n.row);
+      }
       if (this.totalRows !== undefined) {
         return rows;
       }
@@ -2030,8 +2295,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     const baseWindow = computeScrollWindow(
       this._scrollTop,
       containerH,
-      this.rowHeight,
-      rows.length,
+      this._heightModel,
       this.bufferSize,
     );
     const window = this._spanColumns.size > 0
@@ -2050,8 +2314,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     const baseWindow = computeScrollWindow(
       this._scrollTop,
       containerH,
-      this.rowHeight,
-      this._dataRows.length,
+      this._heightModel,
       this.bufferSize,
     );
     return this._spanColumns.size > 0
@@ -2100,15 +2363,28 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     const config = this._configFor(column);
     const isSortable = config?.sortable === true;
     const label = config?.label ?? column.name;
+    const colId = String(column.id);
+
+    const resizeHandle = this.resizable ? html`
+      <div
+        class="resize-handle"
+        @pointerdown="${(e: PointerEvent) => this._handleResizeStart(e, colId)}"
+        @pointermove="${this._handleResizeMove}"
+        @pointerup="${this._handleResizeEnd}"
+        @pointercancel="${this._handleResizeEnd}"
+        @dblclick="${(e: MouseEvent) => this._handleResizeDblClick(e, colId)}"
+      ></div>
+    ` : nothing;
 
     return html`
       <div
-        class="header-cell ${isSortable ? 'sortable-header' : ''}"
+        class="header-cell ${isSortable ? 'sortable-header' : ''}${this.resizable ? ' resizable' : ''}"
         role="columnheader"
         aria-sort="${this._ariaSortValue(column)}"
+        ${this.resizable ? html`` : nothing}
         @click="${isSortable ? (e: MouseEvent) => this._handleHeaderClick(column, e) : nothing}"
       >
-        ${label}${this._renderSortIndicator(column)}
+        ${label}${this._renderSortIndicator(column)}${resizeHandle}
       </div>
     `;
   }
@@ -2334,6 +2610,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         role="gridcell"
         aria-rowspan="${ariaRowSpan ?? nothing}"
         aria-colspan="${ariaColSpan ?? nothing}"
+        data-col="${String(column.id)}"
         style="${extraStyles}"
         @click="${filterClickHandler ?? nothing}"
         @mouseenter="${hoverHandler ?? nothing}"
@@ -2347,7 +2624,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     if (this.selection !== 'multi') return nothing;
 
     if (isHeader) {
-      const sourceRows = this._usePagination ? this._visibleRows : this._dataRows;
+      const sourceRows = this._usePagination ? this._visibleRows : this._effectiveRows;
       const visibleKeys = sourceRows
         .map(r => this.getRowKey!(r))
         .filter((key): key is string => key !== undefined);
@@ -2583,7 +2860,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
           let effectiveCellClasses = cellStateClasses;
           if (spanStyle && spanStyle.rowSpan > 1 && this.selection !== 'none' && this.getRowKey) {
             const allCoveredSelected = Array.from({ length: spanStyle.rowSpan }, (_, j) => {
-              const coveredRow = this._dataRows[actualIndex + j];
+              const coveredRow = this._effectiveRows[actualIndex + j];
               return coveredRow ? this._isRowSelected(coveredRow) : false;
             }).every(Boolean);
             if (!allCoveredSelected && isSelected) {
@@ -2607,7 +2884,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     const isFirstPage = this.currentPage === 0;
     const isLastPage = this.currentPage === totalPages - 1;
 
-    const total = this.totalRows ?? this._dataRows.length;
+    const total = this.totalRows ?? this._effectiveRows.length;
     const start = this.currentPage * this.pageSize + 1;
     const end = Math.min((this.currentPage + 1) * this.pageSize, total);
 
@@ -2763,7 +3040,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
               `
             : this._useVirtualScroll && window
               ? html`
-                  <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}; grid-template-rows: repeat(${this._dataRows.length}, ${this.rowHeight}px)" @mouseleave="${() => { this._hoverRowIndex = -1; this._hoverRowSpan = 1; }}">
+                  <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}; grid-template-rows: ${this._gridTemplateRows}" @mouseleave="${() => { this._hoverRowIndex = -1; this._hoverRowSpan = 1; }}">
                     ${this._visibleRows.map((row, idx) => {
                       const actualIndex = window.startIndex + idx;
                       return this._renderRow(row, actualIndex, idx);

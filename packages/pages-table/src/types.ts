@@ -98,3 +98,8 @@ export interface RowAccentConfig {
   readonly columns?: 'all' | readonly string[];
 }
 
+export interface ColumnResizeDetail {
+  readonly columnId: string;
+  readonly width: number;
+}
+
