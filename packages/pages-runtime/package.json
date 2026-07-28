@@ -20,13 +20,13 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehubio/pages-component": "0.2.3",
-    "@casehubio/pages-data": "0.2.3",
-    "@casehubio/pages-table": "0.2.3",
-    "@casehubio/pages-ui": "0.2.3",
-    "@casehubio/pages-ui-components": "0.2.3",
-    "@casehubio/pages-ui-tokens": "0.3.0",
-    "@casehubio/pages-viz": "0.2.3",
+    "@casehubio/pages-component": "workspace:*",
+    "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-table": "workspace:*",
+    "@casehubio/pages-ui": "workspace:*",
+    "@casehubio/pages-ui-components": "workspace:*",
+    "@casehubio/pages-ui-tokens": "workspace:*",
+    "@casehubio/pages-viz": "workspace:*",
     "js-yaml": "^4.1.0",
     "marked": "^15.0.0"
   },

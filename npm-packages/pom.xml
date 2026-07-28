@@ -17,6 +17,17 @@
     <name>CaseHub Pages NPM Packages</name>
     <description>Packed @casehubio/pages-* npm packages with resolved versions — consumed by CaseHub apps via Maven</description>
 
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>casehubio GitHub Packages</name>
+            <url>https://maven.pkg.github.com/casehubio/*</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <distributionManagement>
         <repository>
             <id>github</id>

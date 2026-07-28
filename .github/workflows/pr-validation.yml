@@ -26,8 +26,11 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
           cache: 'maven'
 
       - name: Setup Node.js
@@ -45,7 +48,7 @@ jobs:
         with:
           filters: |
             java:
-              - 'core/**'
+              - 'backend/**'
 
       - name: Check for JavaScript changes
         id: js-changes
@@ -64,14 +67,14 @@ jobs:
         id: java-build
         if: steps.java-changes.outputs.java == 'true'
         continue-on-error: true
-        working-directory: ./core
+        working-directory: ./backend
         run: mvn clean install -DskipTests
 
       - name: Test Java core
         id: java-test
         if: steps.java-changes.outputs.java == 'true'
         continue-on-error: true
-        working-directory: ./core
+        working-directory: ./backend
         run: mvn test
 
       - name: Publish Java test results
@@ -79,7 +82,7 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Java Tests
-          path: core/**/target/surefire-reports/*.xml
+          path: backend/**/target/surefire-reports/*.xml
           reporter: java-junit
           fail-on-error: false
 
