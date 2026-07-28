@@ -12,5 +12,6 @@
 
 | [casehub/iframe-message-format.md](casehub/iframe-message-format.md) | Iframe messages use ComponentMessage envelope with plain-object properties | Iframe components via postMessage |
 | [casehub/iframe-component-lifecycle.md](casehub/iframe-component-lifecycle.md) | Iframe components follow INIT → DATASET lifecycle with config error signalling | Iframe components via postMessage |
+| [casehub/maven-only-build-scripts.md](casehub/maven-only-build-scripts.md) | Maven-only build outputs must use separate scripts, not default `build` | All package.json scripts producing dist/ outputs |
 
 See [casehub/INDEX.md](casehub/INDEX.md) for the full listing.

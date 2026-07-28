@@ -1638,6 +1638,7 @@ __metadata:
   dependencies:
     "@casehubio/pages-tsconfig": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
+    esbuild: "npm:^0.28.1"
     jsdom: "npm:^26.0.0"
     lit: "npm:^3.3.3"
     rimraf: "npm:^6.1.0"
@@ -6747,7 +6748,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.27.0 || ^0.28.0":
+"esbuild@npm:^0.27.0 || ^0.28.0, esbuild@npm:^0.28.1":
   version: 0.28.1
   resolution: "esbuild@npm:0.28.1"
   dependencies:

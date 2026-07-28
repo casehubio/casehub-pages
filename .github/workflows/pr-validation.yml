@@ -60,6 +60,7 @@ jobs:
               - 'components/**'
               - 'webapp/**'
               - 'examples/**'
+              - 'static-assets/**'
               - 'package.json'
               - 'yarn.lock'
 
@@ -97,6 +98,14 @@ jobs:
         if: steps.js-changes.outputs.js == 'true'
         continue-on-error: true
         run: yarn build:prod
+
+      - name: Build static-assets artifact
+        id: static-assets-build
+        if: steps.js-changes.outputs.js == 'true'
+        continue-on-error: true
+        run: mvn -f static-assets/pom.xml --batch-mode install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test JavaScript packages
         id: js-test
@@ -199,5 +208,6 @@ jobs:
           (steps.java-test.outcome == 'failure') ||
           (steps.js-install.outcome == 'failure') ||
           (steps.js-build.outcome == 'failure') ||
-          (steps.js-test.outcome == 'failure')
+          (steps.js-test.outcome == 'failure') ||
+          (steps.static-assets-build.outcome == 'failure')
         run: exit 1
