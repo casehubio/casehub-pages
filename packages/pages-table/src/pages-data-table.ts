@@ -3023,7 +3023,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         <div class="body" @scroll="${this._onScroll}">
           ${this.groupBy && this._groupBoundaries.length > 0
             ? html`
-                <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}" @mouseleave="${() => { this._hoverRowIndex = -1; this._hoverRowSpan = 1; }}">
+                <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}${typeof this.rowHeight === 'function' ? `; grid-template-rows: ${this._gridTemplateRows}` : ''}" @mouseleave="${() => { this._hoverRowIndex = -1; this._hoverRowSpan = 1; }}">
                   ${this._groupBoundaries.map(boundary => {
                     const rows = this._dataRows.slice(boundary.startRow, boundary.startRow + boundary.rowCount);
                     return html`
@@ -3048,7 +3048,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
                   </div>
                 `
               : html`
-                  <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}" @mouseleave="${() => { this._hoverRowIndex = -1; this._hoverRowSpan = 1; }}">
+                  <div class="body-content" style="display: grid; grid-template-columns: ${this._gridTemplateColumns}${typeof this.rowHeight === 'function' ? `; grid-template-rows: ${this._gridTemplateRows}` : ''}" @mouseleave="${() => { this._hoverRowIndex = -1; this._hoverRowSpan = 1; }}">
                     ${this._visibleRows.map((row, idx) => {
                       const actualIndex = this._usePagination && this.totalRows === undefined
                         ? this.currentPage * this.pageSize + idx
