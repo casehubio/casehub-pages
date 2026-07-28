@@ -102,10 +102,13 @@ jobs:
 
       - name: Install webapp artifact
         run: mvn -f webapp/pom.xml --batch-mode install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install npm-packages artifact
         run: mvn -f npm-packages/pom.xml --batch-mode install
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish frontend artifacts to GitHub Packages
