@@ -30,19 +30,16 @@ pages:
     components:
       - type: title
         properties:
-          text: Variable Row Heights
+          text: Variable Row Heights + Column Resizing
           size: h2
 
       - type: markdown
         properties:
           content: |
-            Demonstrates **variable row heights** — rows sized by content or
-            by a data-determined callback, instead of a fixed pixel height.
-
-            Unlike fixed-height tables that truncate content with ellipsis,
-            variable heights let each row display its full content. Three
-            modes: fixed (default 48px), callback (data-determined per row),
-            and auto (content-measured).
+            Five capabilities built on the single-grid CSS Grid model.
+            Each tab demonstrates a different mode — auto-height rows,
+            data-determined callback heights, column drag-resize,
+            both combined, and auto-height with cell spanning.
 
       - type: tabs
         properties:
@@ -85,8 +82,7 @@ pages:
                     by data, not content. Every 3rd row is a "section header"
                     at 64px, others are 40px. The callback tells the scroll
                     engine each height without rendering — virtual scroll
-                    works via prefix sums. Toggle the **source code** panel
-                    to see the TypeScript.
+                    works via prefix sums.
               - type: data-table
                 properties:
                   lookup:
@@ -106,6 +102,73 @@ pages:
                       name: Status
                       width: "80px"
 
+          Column Resize:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    `resizable: true` — drag column borders in the header to
+                    resize. Double-click to auto-fit. Resized columns convert
+                    to fixed pixel widths; untouched columns keep their
+                    original `fr` units. The CSS Grid engine redistributes
+                    remaining space naturally.
+              - type: data-table
+                properties:
+                  lookup:
+                    uuid: case-reviews
+                  sortable: true
+                  resizable: true
+                  columns:
+                    - id: department
+                      name: Dept
+                      width: "120px"
+                      minWidth: "80px"
+                    - id: case_id
+                      name: Case
+                      width: "100px"
+                      minWidth: "60px"
+                    - id: description
+                      name: Description
+                      width: "1fr"
+                      minWidth: "150px"
+                    - id: status
+                      name: Status
+                      width: "80px"
+                      minWidth: "50px"
+
+          Auto + Resize:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Both features together. Narrowing a column causes text to
+                    wrap more, which increases row height. The measurement
+                    cycle detects the height change and updates the grid
+                    template. Widen it back — heights shrink.
+              - type: data-table
+                properties:
+                  lookup:
+                    uuid: case-reviews
+                  sortable: true
+                  resizable: true
+                  columns:
+                    - id: department
+                      name: Dept
+                      width: "120px"
+                      minWidth: "80px"
+                    - id: case_id
+                      name: Case
+                      width: "100px"
+                      minWidth: "60px"
+                    - id: description
+                      name: Description
+                      width: "1fr"
+                      minWidth: "150px"
+                    - id: status
+                      name: Status
+                      width: "80px"
+                      minWidth: "50px"
+
           Auto + Spanning:
             components:
               - type: markdown
@@ -114,8 +177,7 @@ pages:
                     Auto height combined with `mergeRows`. The department
                     column merges adjacent equal values. Each merged cell's
                     height is the sum of its covered rows' auto-determined
-                    heights. CSS Grid handles this natively — `grid-row: span N`
-                    spans N auto tracks.
+                    heights. CSS Grid handles this natively.
               - type: data-table
                 properties:
                   lookup:

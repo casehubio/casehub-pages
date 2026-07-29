@@ -40,6 +40,8 @@ function configureTable() {
 
     if (activeTab.indexOf('Callback') >= 0) {
       applyCallbackHeight(t);
+    } else if (activeTab.indexOf('Column Resize') >= 0) {
+      // pure YAML — resizable: true handled by pipeline, no JS needed
     } else {
       applyAutoHeight(t);
     }
