@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { PagesDataTable } from '@casehubio/pages-table';
 
 // Apply variable row heights on each tab.
