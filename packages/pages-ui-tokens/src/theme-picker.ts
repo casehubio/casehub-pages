@@ -103,7 +103,7 @@ export class PagesThemePickerElement extends LitElement {
   override render() {
     if (this.compact) return this._renderCompact();
     return html`
-      <select @change=${this._onFamilyChange}>
+      <select @change=${(e: Event) => this._onFamilyChange(e)}>
         ${this._families.map(f => html`
           <option value=${f.name} ?selected=${f.name === this._family}>${f.displayName}</option>
         `)}
