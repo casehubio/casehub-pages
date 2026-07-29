@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" class="pages-theme-light">
+<head>
+  <meta charset="utf-8" />
+  <title>pages-table variable heights + column resize test fixture</title>
+  <script src="/casehub-bundle.js"></script>
+  <style>
+    body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; background: #fff; }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    p.desc { font-size: 13px; color: #666; margin: 0 0 12px; }
+    #test-target { width: 800px; height: 500px; }
+    .scenario-nav {
+      margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .scenario-nav a {
+      padding: 4px 10px; border-radius: 4px; font-size: 12px;
+      text-decoration: none; color: #333; background: #eee; border: 1px solid #ccc;
+    }
+    .scenario-nav a.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="scenario-nav" id="nav"></div>
+  <h1 id="title"></h1>
+  <p class="desc" id="desc"></p>
+  <div id="test-target"></div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const scenario = params.get('scenario') || 'auto-height';
+
+    const SCENARIOS = {
+      'auto-height': {
+        title: 'Auto-height rows (rowHeight: "auto")',
+        desc: 'Rows size to content naturally. Compare the paragraph rows — each is a different height based on text length. No fixed rowHeight, no truncation.',
+      },
+      'callback-heights': {
+        title: 'Callback heights (rowHeight: function)',
+        desc: 'Heights determined by data, not content. Section header rows are 64px, regular rows are 40px. The callback tells the scroll engine each row\'s height without rendering it — virtual scroll works via prefix sums.',
+      },
+      'resizable': {
+        title: 'Column resizing (resizable: true)',
+        desc: 'Drag column borders in the header to resize. Double-click to auto-fit. Resized columns convert to px; untouched columns keep their original fr units. The grid engine redistributes space naturally.',
+      },
+      'auto-height-resizable': {
+        title: 'Auto-height + resizable combined',
+        desc: 'Both features together. Narrowing a column causes text to wrap more, which increases row height. The measurement cycle detects the height change and updates the grid template. Widen it back — heights shrink.',
+      },
+      'auto-height-spanning': {
+        title: 'Auto-height + cell spanning',
+        desc: 'Variable heights with mergeRows. The department column merges adjacent equal values. Each merged cell\'s height is the sum of its covered rows\' auto-determined heights. CSS Grid handles this natively.',
+      },
+    };
+
+    const nav = document.getElementById('nav');
+    for (const [key, meta] of Object.entries(SCENARIOS)) {
+      const a = document.createElement('a');
+      a.href = '?scenario=' + key;
+      a.textContent = meta.title.split('(')[0].trim();
+      if (key === scenario) a.classList.add('active');
+      nav.appendChild(a);
+    }
+
+    const meta = SCENARIOS[scenario] || SCENARIOS['auto-height'];
+    document.getElementById('title').textContent = meta.title;
+    document.getElementById('desc').textContent = meta.desc;
+
+    const PARAGRAPHS = [
+      "Short row.",
+      "This patient requires urgent review due to multiple comorbidities including diabetes, hypertension, and chronic kidney disease. Prior authorization was denied on initial submission.",
+      "Medium length text that wraps to about two lines in a normal column width.",
+      "Compliance review pending — the submitted evidence does not meet the threshold for regulatory requirement 4.2.1(a). Additional documentation has been requested from the submitting institution.",
+      "OK",
+      "The investigation revealed a pattern of structured deposits across three branch locations over a six-week period. Each deposit was calibrated to fall below the $10,000 reporting threshold. Currency Transaction Reports were not filed. The case has been escalated to the BSA officer for Suspicious Activity Report consideration.",
+      "Routine check — no issues found.",
+      "Device telemetry shows intermittent temperature excursions in cold storage unit CS-22. Three readings exceeded the 8°C threshold within a 48-hour window. Root cause analysis suggests a failing compressor relay. Maintenance ticket MT-4419 has been created.",
+    ];
+
+    const DEPTS = ['Engineering', 'Design', 'Product', 'Operations'];
+
+    function makeData(count) {
+      const rows = [];
+      for (let i = 0; i < count; i++) {
+        const dept = DEPTS[Math.floor(i / 3) % DEPTS.length];
+        const para = PARAGRAPHS[i % PARAGRAPHS.length];
+        rows.push([dept, 'Case-' + (1000 + i), para, ['Open', 'Review', 'Closed'][i % 3]]);
+      }
+      return JSON.stringify(rows);
+    }
+
+    function makeYaml(data, extraProps) {
+      const props = extraProps || '';
+      return `
+datasets:
+  - uuid: test-data
+    content: >-
+      ${data}
+    columns:
+      - id: department
+        type: LABEL
+      - id: case_id
+        type: TEXT
+      - id: description
+        type: TEXT
+      - id: status
+        type: LABEL
+
+pages:
+  - name: Test
+    components:
+      - type: table
+        properties:
+          lookup:
+            uuid: test-data
+          sortable: true
+${props}
+`;
+    }
+
+    async function setup() {
+      const target = document.getElementById('test-target');
+      let yaml, postConfig;
+
+      switch (scenario) {
+        case 'auto-height': {
+          yaml = makeYaml(makeData(20));
+          postConfig = (table) => {
+            table.rowHeight = 'auto';
+          };
+          break;
+        }
+
+        case 'callback-heights': {
+          yaml = makeYaml(makeData(30));
+          postConfig = (table) => {
+            table.rowHeight = (_row, index) => index % 4 === 0 ? 64 : 40;
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, width: '150px' };
+              if (ci === 1) return { ...c, width: '100px' };
+              if (ci === 2) return { ...c, width: '1fr' };
+              if (ci === 3) return { ...c, width: '100px' };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'resizable': {
+          yaml = makeYaml(makeData(15));
+          postConfig = (table) => {
+            table.resizable = true;
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, width: '150px', minWidth: '80px' };
+              if (ci === 1) return { ...c, width: '100px', minWidth: '60px' };
+              if (ci === 2) return { ...c, width: '1fr', minWidth: '150px' };
+              if (ci === 3) return { ...c, width: '100px', minWidth: '60px' };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'auto-height-resizable': {
+          yaml = makeYaml(makeData(15));
+          postConfig = (table) => {
+            table.rowHeight = 'auto';
+            table.resizable = true;
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, width: '150px', minWidth: '80px' };
+              if (ci === 1) return { ...c, width: '100px', minWidth: '60px' };
+              if (ci === 2) return { ...c, width: '1fr', minWidth: '150px' };
+              if (ci === 3) return { ...c, width: '100px', minWidth: '60px' };
+              return c;
+            });
+          };
+          break;
+        }
+
+        case 'auto-height-spanning': {
+          yaml = makeYaml(makeData(20));
+          postConfig = (table) => {
+            table.rowHeight = 'auto';
+            const currentConfig = table.columnConfig || [];
+            table.columnConfig = currentConfig.map((c, ci) => {
+              if (ci === 0) return { ...c, mergeRows: true, width: '150px' };
+              if (ci === 2) return { ...c, width: '1fr' };
+              return c;
+            });
+          };
+          break;
+        }
+
+        default: {
+          yaml = makeYaml(makeData(15));
+          postConfig = null;
+          break;
+        }
+      }
+
+      casehubPages.applyTheme('default-light');
+      await casehubPages.loadSite(target, yaml);
+      await new Promise(r => setTimeout(r, 100));
+
+      const table = target.querySelector('pages-data-table') || target.querySelector('pages-table');
+      if (table) {
+        await table.updateComplete;
+
+        const needsWrap = ['auto-height', 'auto-height-resizable', 'auto-height-spanning'].includes(scenario);
+        if (needsWrap && table.shadowRoot && !table.shadowRoot.querySelector('.wrap-override')) {
+          const style = document.createElement('style');
+          style.className = 'wrap-override';
+          style.textContent = '.cell { white-space: normal !important; overflow: visible !important; overflow-wrap: break-word !important; }';
+          table.shadowRoot.appendChild(style);
+        }
+
+        if (postConfig) {
+          postConfig(table);
+          await table.updateComplete;
+
+          if (postConfig) {
+            const savedConfig = [...table.columnConfig];
+            const origDesc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(table), 'columnConfig')
+              || { set: (v) => {}, get: () => savedConfig };
+            const origSet = origDesc.set;
+            Object.defineProperty(table, 'columnConfig', {
+              get() { return savedConfig; },
+              set(newConfig) {
+                const merged = (newConfig || []).map((c, i) => {
+                  const override = savedConfig.find(sc => sc.id === c.id);
+                  return override ? { ...c, ...override } : c;
+                });
+                origSet.call(this, merged);
+                savedConfig.length = 0;
+                savedConfig.push(...merged);
+              },
+              configurable: true,
+            });
+          }
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 300));
+      document.body.dataset.ready = 'true';
+    }
+
+    setup().catch(err => {
+      console.error('Fixture setup failed:', err);
+      document.body.dataset.ready = 'error';
+      document.body.dataset.error = err.message;
+    });
+  </script>
+</body>
+</html>

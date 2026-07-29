@@ -1,0 +1,137 @@
+datasets:
+  - uuid: case-reviews
+    content: >-
+      [
+        ["Engineering", "Case-1000", "Short row.", "Open"],
+        ["Engineering", "Case-1001", "This patient requires urgent review due to multiple comorbidities including diabetes, hypertension, and chronic kidney disease. Prior authorization was denied on initial submission.", "Review"],
+        ["Engineering", "Case-1002", "Medium length text that wraps to about two lines in a normal column width.", "Closed"],
+        ["Design", "Case-1003", "Compliance review pending — the submitted evidence does not meet the threshold for regulatory requirement 4.2.1(a). Additional documentation has been requested from the submitting institution.", "Open"],
+        ["Design", "Case-1004", "OK", "Review"],
+        ["Design", "Case-1005", "The investigation revealed a pattern of structured deposits across three branch locations over a six-week period. Each deposit was calibrated to fall below the $10,000 reporting threshold.", "Closed"],
+        ["Product", "Case-1006", "Routine check — no issues found.", "Open"],
+        ["Product", "Case-1007", "Device telemetry shows intermittent temperature excursions in cold storage unit CS-22. Three readings exceeded the 8C threshold within a 48-hour window. Root cause analysis suggests a failing compressor relay.", "Review"],
+        ["Product", "Case-1008", "Short row.", "Closed"],
+        ["Operations", "Case-1009", "This patient requires urgent review due to multiple comorbidities including diabetes, hypertension, and chronic kidney disease.", "Open"],
+        ["Operations", "Case-1010", "Medium length text.", "Review"],
+        ["Operations", "Case-1011", "Compliance review pending — additional documentation requested.", "Closed"]
+      ]
+    columns:
+      - id: department
+        type: LABEL
+      - id: case_id
+        type: TEXT
+      - id: description
+        type: TEXT
+      - id: status
+        type: LABEL
+
+pages:
+  - name: Variable Heights
+    components:
+      - type: title
+        properties:
+          text: Variable Row Heights
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Demonstrates **variable row heights** — rows sized by content or
+            by a data-determined callback, instead of a fixed pixel height.
+
+            Unlike fixed-height tables that truncate content with ellipsis,
+            variable heights let each row display its full content. Three
+            modes: fixed (default 48px), callback (data-determined per row),
+            and auto (content-measured).
+
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Auto Height:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    `rowHeight: 'auto'` — rows size to their content. Each
+                    description renders in full without truncation. Shorter
+                    descriptions produce shorter rows. The grid uses CSS
+                    `auto` tracks — the browser handles sizing natively.
+              - type: data-table
+                properties:
+                  lookup:
+                    uuid: case-reviews
+                  sortable: true
+                  columns:
+                    - id: department
+                      name: Dept
+                      width: "120px"
+                    - id: case_id
+                      name: Case
+                      width: "100px"
+                    - id: description
+                      name: Description
+                      width: "1fr"
+                    - id: status
+                      name: Status
+                      width: "80px"
+
+          Callback Heights:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    `rowHeight: (row, index) => number` — heights determined
+                    by data, not content. Every 3rd row is a "section header"
+                    at 64px, others are 40px. The callback tells the scroll
+                    engine each height without rendering — virtual scroll
+                    works via prefix sums. Toggle the **source code** panel
+                    to see the TypeScript.
+              - type: data-table
+                properties:
+                  lookup:
+                    uuid: case-reviews
+                  sortable: true
+                  columns:
+                    - id: department
+                      name: Dept
+                      width: "120px"
+                    - id: case_id
+                      name: Case
+                      width: "100px"
+                    - id: description
+                      name: Description
+                      width: "1fr"
+                    - id: status
+                      name: Status
+                      width: "80px"
+
+          Auto + Spanning:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Auto height combined with `mergeRows`. The department
+                    column merges adjacent equal values. Each merged cell's
+                    height is the sum of its covered rows' auto-determined
+                    heights. CSS Grid handles this natively — `grid-row: span N`
+                    spans N auto tracks.
+              - type: data-table
+                properties:
+                  lookup:
+                    uuid: case-reviews
+                  sortable: true
+                  columns:
+                    - id: department
+                      name: Dept
+                      width: "120px"
+                      mergeRows: true
+                    - id: case_id
+                      name: Case
+                      width: "100px"
+                    - id: description
+                      name: Description
+                      width: "1fr"
+                    - id: status
+                      name: Status
+                      width: "80px"

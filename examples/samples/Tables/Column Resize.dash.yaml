@@ -1,0 +1,83 @@
+datasets:
+  - uuid: team-data
+    content: >-
+      [
+        ["Engineering", "Platform", "Alice Chen", "API Gateway", "In Progress", "Q3"],
+        ["Engineering", "Platform", "Bob Kim", "Service Mesh", "In Progress", "Q3"],
+        ["Engineering", "Data", "Carlos Ruiz", "CI Pipeline", "Done", "Q2"],
+        ["Engineering", "Data", "Diana Park", "ETL Rewrite", "In Progress", "Q3"],
+        ["Design", "UX", "Eve Johnson", "Design System", "In Progress", "Q3"],
+        ["Design", "UX", "Frank Lee", "Component Library", "In Progress", "Q3"],
+        ["Design", "Research", "Grace Wu", "Accessibility Audit", "Planned", "Q4"],
+        ["Product", "Growth", "Henry Zhang", "Onboarding Flow", "Done", "Q2"],
+        ["Product", "Growth", "Iris Patel", "Retention Dashboard", "In Progress", "Q3"],
+        ["Product", "Enterprise", "Jack Brown", "SSO Integration", "In Progress", "Q3"],
+        ["Product", "Enterprise", "Kate Liu", "Audit Logging", "Planned", "Q4"],
+        ["Operations", "SRE", "Leo Garcia", "Incident Response", "In Progress", "Q3"]
+      ]
+    columns:
+      - id: department
+        type: LABEL
+      - id: team
+        type: LABEL
+      - id: name
+        type: TEXT
+      - id: project
+        type: TEXT
+      - id: status
+        type: LABEL
+      - id: quarter
+        type: LABEL
+
+pages:
+  - name: Column Resize
+    components:
+      - type: title
+        properties:
+          text: Column Resizing
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Demonstrates **column resizing** — drag the border between column
+            headers to resize. Double-click a border to auto-fit the column
+            to its widest visible content.
+
+            Resized columns convert to fixed pixel widths. Untouched columns
+            keep their original units (`fr`, `minmax`) — the CSS Grid engine
+            redistributes remaining space naturally. Column widths are not
+            persisted by the component; the consumer receives a `column-resize`
+            event and stores widths as needed.
+
+      - type: data-table
+        properties:
+          lookup:
+            uuid: team-data
+          sortable: true
+          resizable: true
+          columns:
+            - id: department
+              name: Dept
+              width: "120px"
+              minWidth: "80px"
+            - id: team
+              name: Team
+              width: "100px"
+              minWidth: "60px"
+            - id: name
+              name: Person
+              width: "1fr"
+              minWidth: "100px"
+            - id: project
+              name: Project
+              width: "1fr"
+              minWidth: "100px"
+            - id: status
+              name: Status
+              width: "100px"
+              minWidth: "60px"
+            - id: quarter
+              name: Quarter
+              width: "80px"
+              minWidth: "50px"
