@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 65,
+  "totalSamples": 66,
   "categories": [
     {
       "category": "Charts",
@@ -138,6 +138,13 @@
           "path": "Tables/Tree Table.dash.yaml",
           "category": "Tables",
           "file": "Tree Table.dash.yaml"
+        },
+        {
+          "name": "Variable Heights",
+          "path": "Tables/Variable Heights.dash.yaml",
+          "category": "Tables",
+          "file": "Variable Heights.dash.yaml",
+          "tsPath": "Tables/Variable Heights.ts"
         }
       ]
     },
