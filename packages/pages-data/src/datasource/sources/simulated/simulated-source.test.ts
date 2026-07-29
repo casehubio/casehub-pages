@@ -94,7 +94,7 @@ describe("simulated source", () => {
     source.connect(sink);
     expect(sink.events).toHaveLength(1); // snapshot
 
-    source.dispatch({ type: "update", key: "1", changes: { status: "ASSIGNED" } });
+    void source.dispatch({ type: "update", key: "1", changes: { status: "ASSIGNED" } });
     expect(sink.events).toHaveLength(2);
     const replaceEvent = sink.events[1] as ReplaceEvent;
     expect(replaceEvent.type).toBe("replace");
@@ -118,7 +118,7 @@ describe("simulated source", () => {
     const sink = createMockSink();
     source.connect(sink);
 
-    source.dispatch({ type: "create", data: { id: 2, status: "NEW" } });
+    void source.dispatch({ type: "create", data: { id: 2, status: "NEW" } });
     expect(sink.events).toHaveLength(2);
     expect(sink.events[1]!.type).toBe("append");
   });
@@ -134,7 +134,7 @@ describe("simulated source", () => {
     const sink = createMockSink();
     source.connect(sink);
 
-    source.dispatch({ type: "delete", key: "1" });
+    void source.dispatch({ type: "delete", key: "1" });
     expect(sink.events).toHaveLength(2);
     const removeEvent = sink.events[1] as RemoveEvent;
     expect(removeEvent.type).toBe("remove");
@@ -305,7 +305,7 @@ describe("simulated source", () => {
     source.connect(sink);
     expect(sink.events).toHaveLength(1);
 
-    source.dispatch({ type: "update", key: "999", changes: { status: "GONE" } });
+    void source.dispatch({ type: "update", key: "999", changes: { status: "GONE" } });
     expect(sink.events).toHaveLength(1);
   });
 
@@ -321,7 +321,7 @@ describe("simulated source", () => {
     source.connect(sink);
     expect(sink.events).toHaveLength(1);
 
-    source.dispatch({ type: "delete", key: "999" });
+    void source.dispatch({ type: "delete", key: "999" });
     expect(sink.events).toHaveLength(1);
   });
 

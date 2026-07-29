@@ -2,7 +2,7 @@ import { html, css, nothing, type TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import { createTypedRow, ColumnType, columnId } from "@casehubio/pages-data";
 import type { TypedDataSet, TypedRow, Column, CellValue } from "@casehubio/pages-data";
-import type { GridTableProps, CellDisplay, GridStripe } from "@casehubio/pages-component";
+import type { GridTableProps, CellDisplay } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
 

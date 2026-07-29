@@ -1,7 +1,7 @@
-import type { DataSource, DataSink, MutableDataSource, DataAction, SourceError } from "../types.js";
+import type { DataSink, MutableDataSource, DataAction, SourceError } from "../types.js";
 import type { DataSetEvent } from "../../dataset/events.js";
 import type { ReplaceEvent, RemoveEvent } from "../../dataset/events.js";
-import type { Column, ColumnId } from "../../dataset/types.js";
+import type { Column, ColumnId, DataSetId } from "../../dataset/types.js";
 import type { ExternalColumnDef } from "../../dataset/external/types.js";
 import { restSource } from "./rest-source.js";
 import { createTypedRow } from "../../dataset/conversion.js";
@@ -53,7 +53,7 @@ export function mutableRestSource(
   if (options?.columns) readOpts.columns = options.columns;
   if (options?.dataPath) readOpts.dataPath = options.dataPath;
 
-  const inner = restSource(readUrl, "" as any, readOpts);
+  const inner = restSource(readUrl, "" as DataSetId, readOpts);
 
   const wrapperSink: DataSink = {
     apply(event: DataSetEvent): void {
@@ -85,7 +85,7 @@ export function mutableRestSource(
           reject(new Error(err.message));
         },
       };
-      const refreshSource = restSource(readUrl, "" as any, readOpts);
+      const refreshSource = restSource(readUrl, "" as DataSetId, readOpts);
       refreshSource.connect(refreshSink);
     });
   }

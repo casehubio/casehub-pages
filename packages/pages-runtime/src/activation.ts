@@ -682,7 +682,7 @@ function createFormFieldProxy(
         setFormComponentValue(component, value);
       }
     },
-    get error() { return (component as any).error ?? ""; },
+    get error() { return ((component as any).error ?? "") as string; },
     set error(msg: string) {
       _dataSet = undefined;
       (component as any).error = msg || undefined;

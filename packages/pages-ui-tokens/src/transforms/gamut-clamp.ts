@@ -14,7 +14,7 @@ function oklchInGamut(L: number, C: number, H: number): boolean {
   const mr = m_ * m_ * m_;
   const sr = s_ * s_ * s_;
 
-  const r = +4.0767416621 * lr - 3.3077115913 * mr + 0.2309699292 * sr;
+  const r = 4.0767416621 * lr - 3.3077115913 * mr + 0.2309699292 * sr;
   const g = -1.2684380046 * lr + 2.6097574011 * mr - 0.3413193965 * sr;
   const bv = -0.0041960863 * lr - 0.7034186147 * mr + 1.7076147010 * sr;
 

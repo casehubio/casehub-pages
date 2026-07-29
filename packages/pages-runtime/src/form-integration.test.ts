@@ -1,12 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "@casehubio/pages-viz";
-import type { PagesElement, PagesFormInput } from "@casehubio/pages-viz";
+import type { PagesElement } from "@casehubio/pages-viz";
 import type { PagesFilterApply } from "@casehubio/pages-viz/dist/base/filter-types.js";
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
 import { columnId } from "@casehubio/pages-data";
-import type { FormInputCommon } from "@casehubio/pages-component";
 import type { VizComponentProps } from "@casehubio/pages-viz/dist/base/types.js";
 
 const CONTACT_MANAGER_YAML = `

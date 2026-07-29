@@ -28,7 +28,7 @@ export function buildInitialTokenMap(): TokenMap {
 
   const fontWeight: Record<string, { $value: string; $type: string }> = {};
   for (const [key, value] of Object.entries(TYPOGRAPHY.weights)) {
-    fontWeight[key] = { $value: String(value), $type: 'fontWeight' };
+    fontWeight[key] = { $value: value, $type: 'fontWeight' };
   }
   tokens['font-weight'] = fontWeight;
 

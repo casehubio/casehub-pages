@@ -208,8 +208,8 @@ pages:
     const target = document.createElement("div");
     document.body.appendChild(target);
     const site = await loadSite(target, yaml);
-    expect(target.classList.contains("pages-theme-dark")).toBe(true);
-    expect(target.classList.contains("pages-theme-light")).toBe(false);
+    expect(target.classList.contains("pages-theme-default-dark")).toBe(true);
+    expect(target.classList.contains("pages-theme-default-light")).toBe(false);
     site.dispose();
     document.body.removeChild(target);
   });
@@ -231,12 +231,12 @@ pages:
     document.body.appendChild(target);
 
     const darkSite = await loadSite(target, darkYaml);
-    expect(target.classList.contains("pages-theme-dark")).toBe(true);
+    expect(target.classList.contains("pages-theme-default-dark")).toBe(true);
     darkSite.dispose();
 
     const lightSite = await loadSite(target, lightYaml);
-    expect(target.classList.contains("pages-theme-light")).toBe(true);
-    expect(target.classList.contains("pages-theme-dark")).toBe(false);
+    expect(target.classList.contains("pages-theme-default-light")).toBe(true);
+    expect(target.classList.contains("pages-theme-default-dark")).toBe(false);
     lightSite.dispose();
     document.body.removeChild(target);
   });

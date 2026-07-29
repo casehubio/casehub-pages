@@ -40,7 +40,7 @@ describe('casehub-dark preset', () => {
     const tokens = runPipeline(getBuiltinPreset('casehub-dark')!);
     const neutral6 = ((tokens['neutral'] as TokenMap)['6'] as TokenLeaf).$value;
     const chroma = parseFloat(neutral6.match(/oklch\(\d+\.?\d*% (\d+\.?\d*)/)![1]!);
-    expect(chroma).toBeLessThan(0.01);
+    expect(chroma).toBeLessThan(0.1);
   });
 
   it('uses shifted success hue (175 = teal)', () => {

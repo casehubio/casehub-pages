@@ -242,7 +242,7 @@ describe("form input activation", () => {
       await new Promise((r) => setTimeout(r, 10));
     }
     expect(formEl.value).toBeTruthy();
-    const initialValue = formEl.value;
+    const _initialValue = formEl.value;
 
     // Select "Sales" (row index 0 in the grouped output)
     const selectorViz = target.querySelector("pages-selector")!;
