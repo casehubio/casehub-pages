@@ -43,3 +43,7 @@ export function listThemes(): string[] {
 export function _resetAppliedThemes(): void {
   appliedThemes = new WeakMap<Element, string>();
 }
+
+export function _resetThemeRegistry(): void {
+  themeRegistry.clear();
+}
