@@ -1,0 +1,108 @@
+pages:
+  - name: Theme Picker
+    components:
+      - type: title
+        properties:
+          text: Theme Picker
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            The **pages-theme-picker** component lets users switch between
+            registered theme families and light/dark modes. It supports a
+            **full** mode (dropdown + toggle) and a **compact** mode (icon
+            button with flyout popover).
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+              <button id="mode-toggle" style="
+                background: var(--pages-surface-secondary, #222);
+                color: var(--pages-text-secondary, #ccc);
+                border: 1px solid var(--pages-border-default, #444);
+                border-radius: var(--pages-radius-sm, 4px);
+                padding: 6px 14px;
+                cursor: pointer;
+                font: inherit;
+                font-size: 13px;
+              ">Switch to Compact</button>
+              <pages-theme-picker id="demo-picker"></pages-theme-picker>
+            </div>
+
+      - type: title
+        properties:
+          text: Preview
+          size: h3
+
+      - type: html
+        properties:
+          content: |
+            <div style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 16px;
+              margin-bottom: 24px;
+            ">
+              <div style="
+                padding: 20px;
+                border: 1px solid var(--pages-border-default, #444);
+                border-radius: var(--pages-radius-md, 8px);
+                background: var(--pages-surface-primary, #111);
+              ">
+                <h4 style="margin: 0 0 8px 0; color: var(--pages-text-primary, #eee);">Surface Primary</h4>
+                <p style="margin: 0; color: var(--pages-text-secondary, #ccc); font-size: 13px;">
+                  Text on primary surface with
+                  <span style="
+                    display: inline-block;
+                    padding: 1px 8px;
+                    border-radius: 10px;
+                    font-size: 11px;
+                    background: var(--pages-accent-3, #1a3a5c);
+                    color: var(--pages-accent-11, #8ec8ff);
+                  ">accent badge</span>
+                </p>
+              </div>
+              <div style="
+                padding: 20px;
+                border: 1px solid var(--pages-border-default, #444);
+                border-radius: var(--pages-radius-md, 8px);
+                background: var(--pages-surface-secondary, #222);
+              ">
+                <h4 style="margin: 0 0 8px 0; color: var(--pages-text-primary, #eee);">Surface Secondary</h4>
+                <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
+                  Muted text on secondary surface with
+                  <span style="
+                    display: inline-block;
+                    padding: 1px 8px;
+                    border-radius: 10px;
+                    font-size: 11px;
+                    background: var(--pages-success-3, #1a3a2a);
+                    color: var(--pages-success-11, #8ef0b8);
+                  ">success badge</span>
+                </p>
+              </div>
+            </div>
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-bottom: 4px;">
+              <div style="background: var(--pages-accent-1); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-2); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-3); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-4); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-5); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-6); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-7); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-8); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-9); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-10); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-11); height: 32px; border-radius: 4px;"></div>
+              <div style="background: var(--pages-accent-12); height: 32px; border-radius: 4px;"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; font-size: 10px; color: var(--pages-neutral-11, #666); text-align: center;">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span>
+              <span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+            </div>
