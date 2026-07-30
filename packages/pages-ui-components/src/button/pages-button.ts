@@ -18,6 +18,7 @@ export class PagesButton extends LitElement {
                   border-color var(--pages-duration-fast, 150ms) var(--pages-ease-out, ease-out);
     }
     button:disabled { cursor: not-allowed; opacity: 0.6; }
+    button.xs { padding: var(--pages-space-0-5, 2px) var(--pages-space-1-5, 6px); font-size: 11px; }
     button.sm { padding: var(--pages-space-0-5, 2px) var(--pages-space-2, 8px); font-size: var(--pages-font-size-sm, 12px); }
     button.lg { padding: var(--pages-space-2, 8px) var(--pages-space-4, 16px); font-size: var(--pages-font-size-lg, 16px); }
     button.primary {
@@ -47,7 +48,7 @@ export class PagesButton extends LitElement {
   @property() variant: 'primary' | 'secondary' | 'ghost' | 'danger' = 'secondary';
   @property({ type: Boolean }) disabled = false;
   @property({ type: Boolean }) loading = false;
-  @property() size: 'sm' | 'md' | 'lg' = 'md';
+  @property() size: 'xs' | 'sm' | 'md' | 'lg' = 'md';
 
   override render() {
     const classes = {

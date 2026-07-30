@@ -37,6 +37,14 @@
       "types": "./dist/button/index.d.ts",
       "default": "./dist/button/index.js"
     },
+    "./badge": {
+      "types": "./dist/badge/index.d.ts",
+      "default": "./dist/badge/index.js"
+    },
+    "./status-dot": {
+      "types": "./dist/status-dot/index.d.ts",
+      "default": "./dist/status-dot/index.js"
+    },
     "./types": {
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
@@ -54,7 +62,11 @@
     "./src/select/index.ts",
     "./src/textarea/index.ts",
     "./src/checkbox/index.ts",
-    "./src/button/index.ts"
+    "./src/button/index.ts",
+    "./dist/badge/index.js",
+    "./dist/status-dot/index.js",
+    "./src/badge/index.ts",
+    "./src/status-dot/index.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
