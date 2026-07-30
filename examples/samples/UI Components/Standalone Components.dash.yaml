@@ -12,6 +12,8 @@ pages:
             Standalone Lit web components from `@casehubio/pages-ui-components`.
             No data pipeline required — use directly in any HTML page or Lit template.
 
+            Form components (input, select, textarea, checkbox) are shown in the **Forms** category.
+
       - type: title
         properties:
           text: Buttons
@@ -103,61 +105,4 @@ pages:
             <div style="display: flex; gap: 16px; align-items: center; padding: 16px; font-family: var(--pages-font-family, system-ui); font-size: 12px; color: var(--pages-neutral-12);">
               <span style="display: flex; align-items: center; gap: 4px;"><pages-status-dot variant="success" size="sm"></pages-status-dot> Worker A</span>
               <span style="display: flex; align-items: center; gap: 4px;"><pages-status-dot variant="neutral" size="sm"></pages-status-dot> Worker B</span>
-            </div>
-
-      - type: title
-        properties:
-          text: Form Inputs
-          size: h2
-
-      - type: html
-        properties:
-          content: |
-            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 400px; padding: 16px;">
-              <pages-input label="Username" placeholder="Enter your name" type="text"></pages-input>
-              <pages-input label="Email" placeholder="you@example.com" type="email"></pages-input>
-              <pages-input label="With error" value="bad" error="Invalid format"></pages-input>
-              <pages-input label="Read only" value="locked value" readonly></pages-input>
-            </div>
-
-      - type: title
-        properties:
-          text: Select
-          size: h2
-
-      - type: markdown
-        properties:
-          content: |
-            `<pages-select>` takes options as a JS property — set `.options` in code:
-            ```js
-            el.options = [
-              { value: 'a', label: 'Option A' },
-              { value: 'b', label: 'Option B' },
-            ];
-            ```
-
-      - type: title
-        properties:
-          text: Textarea
-          size: h2
-
-      - type: html
-        properties:
-          content: |
-            <div style="max-width: 400px; padding: 16px;">
-              <pages-textarea label="Message" placeholder="Type your message..." rows="3"></pages-textarea>
-            </div>
-
-      - type: title
-        properties:
-          text: Checkbox
-          size: h2
-
-      - type: html
-        properties:
-          content: |
-            <div style="display: flex; flex-direction: column; gap: 8px; padding: 16px;">
-              <pages-checkbox label="Accept terms and conditions"></pages-checkbox>
-              <pages-checkbox label="Already checked" checked></pages-checkbox>
-              <pages-checkbox label="Disabled" disabled></pages-checkbox>
             </div>
