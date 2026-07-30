@@ -105,6 +105,82 @@ pages:
           - components:
               - type: title
                 properties:
+                  text: Standalone Badges
+                  size: h2
+
+              - type: markdown
+                properties:
+                  content: >
+                    **Standalone badges** from `@casehubio/pages-ui-components` — no data pipeline required.
+                    Use directly in any HTML page or Lit template with semantic variants.
+
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 16px 0;">
+                      <pages-badge label="Success" variant="success"></pages-badge>
+                      <pages-badge label="Warning" variant="warning"></pages-badge>
+                      <pages-badge label="Danger" variant="danger"></pages-badge>
+                      <pages-badge label="Neutral" variant="neutral"></pages-badge>
+                      <pages-badge label="Info" variant="info"></pages-badge>
+                      <pages-badge label="Accent" variant="accent"></pages-badge>
+                    </div>
+
+              - type: markdown
+                properties:
+                  content: >
+                    **Small badges** for compact lists and status indicators:
+
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: flex; gap: 8px; align-items: center; padding: 16px 0;">
+                      <pages-badge label="Active" variant="success" size="sm"></pages-badge>
+                      <pages-badge label="Idle" variant="neutral" size="sm"></pages-badge>
+                      <pages-badge label="Waiting" variant="warning" size="sm"></pages-badge>
+                      <pages-badge label="Faulted" variant="danger" size="sm"></pages-badge>
+                    </div>
+
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: Status Dots
+                  size: h2
+
+              - type: markdown
+                properties:
+                  content: >
+                    **Status dots** — 8px coloured indicators for use alongside names in lists.
+
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: flex; gap: 16px; align-items: center; padding: 16px 0; font-family: var(--pages-font-family, system-ui); font-size: 14px; color: var(--pages-neutral-12);">
+                      <span style="display: flex; align-items: center; gap: 6px;"><pages-status-dot variant="success"></pages-status-dot> Online</span>
+                      <span style="display: flex; align-items: center; gap: 6px;"><pages-status-dot variant="warning"></pages-status-dot> Away</span>
+                      <span style="display: flex; align-items: center; gap: 6px;"><pages-status-dot variant="danger"></pages-status-dot> Error</span>
+                      <span style="display: flex; align-items: center; gap: 6px;"><pages-status-dot variant="neutral"></pages-status-dot> Offline</span>
+                      <span style="display: flex; align-items: center; gap: 6px;"><pages-status-dot variant="info"></pages-status-dot> Info</span>
+                    </div>
+
+              - type: markdown
+                properties:
+                  content: >
+                    **Small dots** (6px) for compact lists:
+
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: flex; gap: 16px; align-items: center; padding: 16px 0; font-family: var(--pages-font-family, system-ui); font-size: 12px; color: var(--pages-neutral-12);">
+                      <span style="display: flex; align-items: center; gap: 4px;"><pages-status-dot variant="success" size="sm"></pages-status-dot> Worker A</span>
+                      <span style="display: flex; align-items: center; gap: 4px;"><pages-status-dot variant="neutral" size="sm"></pages-status-dot> Worker B</span>
+                    </div>
+
+      - columns:
+          - components:
+              - type: title
+                properties:
                   text: Countdown Timer
                   size: h2
 

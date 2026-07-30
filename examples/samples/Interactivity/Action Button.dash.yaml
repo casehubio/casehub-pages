@@ -103,3 +103,41 @@ pages:
               - type: markdown
                 properties:
                   content: "Custom **error message** replaces the default."
+
+      - type: title
+        properties:
+          text: Standalone Button Variants
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **Standalone buttons** from `@casehubio/pages-ui-components` — use directly
+            in any HTML page or Lit template without the action-button DSL.
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 16px 0;">
+              <pages-button label="Primary" variant="primary"></pages-button>
+              <pages-button label="Secondary" variant="secondary"></pages-button>
+              <pages-button label="Ghost" variant="ghost"></pages-button>
+              <pages-button label="Danger" variant="danger"></pages-button>
+              <pages-button label="Loading" variant="primary" loading></pages-button>
+              <pages-button label="Disabled" variant="primary" disabled></pages-button>
+            </div>
+
+      - type: markdown
+        properties:
+          content: >
+            **Sizes:** xs, sm, md (default), lg
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; gap: 12px; align-items: center; padding: 16px 0;">
+              <pages-button label="Extra Small" variant="ghost" size="xs"></pages-button>
+              <pages-button label="Small" variant="ghost" size="sm"></pages-button>
+              <pages-button label="Medium" variant="ghost"></pages-button>
+              <pages-button label="Large" variant="ghost" size="lg"></pages-button>
+            </div>
