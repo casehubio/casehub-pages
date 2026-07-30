@@ -194,18 +194,26 @@ export class PagesThemePickerElement extends LitElement {
         ${multiFam ? html`
           <fieldset class="family-fieldset">
             <legend class="family-legend">Theme</legend>
-            ${this._families.map(f => html`
-              <label class="family-option">
-                <input
-                  type="radio"
-                  name="theme-family"
-                  .value=${f.name}
-                  .checked=${f.name === this._family}
-                  @change=${() => { this._family = f.name; this._apply(); }}
-                />
-                ${f.displayName}
-              </label>
-            `)}
+            ${this._families.length > 5 ? html`
+              <select @change=${(e: Event) => { this._family = (e.target as HTMLSelectElement).value; this._apply(); }}>
+                ${this._families.map(f => html`
+                  <option value=${f.name} ?selected=${f.name === this._family}>${f.displayName}</option>
+                `)}
+              </select>
+            ` : html`
+              ${this._families.map(f => html`
+                <label class="family-option">
+                  <input
+                    type="radio"
+                    name="theme-family"
+                    .value=${f.name}
+                    .checked=${f.name === this._family}
+                    @change=${() => { this._family = f.name; this._apply(); }}
+                  />
+                  ${f.displayName}
+                </label>
+              `)}
+            `}
           </fieldset>
         ` : nothing}
         <div class="mode-toggle">

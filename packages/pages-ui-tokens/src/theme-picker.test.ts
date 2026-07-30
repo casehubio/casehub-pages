@@ -165,4 +165,46 @@ describe('compact mode', () => {
     await (picker as any).updateComplete;
     expect(getTheme()).toBe('default-light');
   });
+
+  it('uses a select dropdown when more than 5 families registered', async () => {
+    _resetThemeRegistry();
+    _resetAppliedThemes();
+    document.body.innerHTML = '';
+    for (const name of ['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot']) {
+      registerTheme(`${name}-light`, `.pages-theme-${name}-light {}`);
+      registerTheme(`${name}-dark`, `.pages-theme-${name}-dark {}`);
+    }
+    applyTheme('alpha-dark');
+    const manyPicker = document.createElement('pages-theme-picker');
+    (manyPicker as any).compact = true;
+    document.body.appendChild(manyPicker);
+    await (manyPicker as any).updateComplete;
+
+    expect(manyPicker.shadowRoot?.querySelectorAll('input[type="radio"]').length).toBe(0);
+    const select = manyPicker.shadowRoot?.querySelector('.theme-popover select');
+    expect(select).not.toBeNull();
+    const options = select?.querySelectorAll('option');
+    expect(options?.length).toBe(6);
+  });
+
+  it('selecting from dropdown applies the theme', async () => {
+    _resetThemeRegistry();
+    _resetAppliedThemes();
+    document.body.innerHTML = '';
+    for (const name of ['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot']) {
+      registerTheme(`${name}-light`, `.pages-theme-${name}-light {}`);
+      registerTheme(`${name}-dark`, `.pages-theme-${name}-dark {}`);
+    }
+    applyTheme('alpha-dark');
+    const manyPicker = document.createElement('pages-theme-picker');
+    (manyPicker as any).compact = true;
+    document.body.appendChild(manyPicker);
+    await (manyPicker as any).updateComplete;
+
+    const select = manyPicker.shadowRoot?.querySelector('.theme-popover select') as HTMLSelectElement;
+    select.value = 'charlie';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await (manyPicker as any).updateComplete;
+    expect(getTheme()).toBe('charlie-dark');
+  });
 });
