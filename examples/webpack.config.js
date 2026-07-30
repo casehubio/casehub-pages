@@ -68,6 +68,8 @@ module.exports = (env = {}) => {
         "@casehubio/pages-ui-components/textarea": path.resolve(__dirname, "../packages/pages-ui-components/dist/textarea"),
         "@casehubio/pages-ui-components/checkbox": path.resolve(__dirname, "../packages/pages-ui-components/dist/checkbox"),
         "@casehubio/pages-ui-components/button": path.resolve(__dirname, "../packages/pages-ui-components/dist/button"),
+        "@casehubio/pages-ui-components/badge": path.resolve(__dirname, "../packages/pages-ui-components/dist/badge"),
+        "@casehubio/pages-ui-components/status-dot": path.resolve(__dirname, "../packages/pages-ui-components/dist/status-dot"),
         "@casehubio/pages-ui-components": path.resolve(__dirname, "../packages/pages-ui-components"),
       },
     },

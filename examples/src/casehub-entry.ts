@@ -1,10 +1,13 @@
 import { loadSite } from "@casehubio/pages-runtime";
 import "@casehubio/pages-primitives";
-import "@casehubio/pages-viz";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
 import "@casehubio/pages-ui-components/checkbox";
+import "@casehubio/pages-ui-components/button";
+import "@casehubio/pages-ui-components/badge";
+import "@casehubio/pages-ui-components/status-dot";
+import "@casehubio/pages-viz";
 import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";
 
