@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 66,
+  "totalSamples": 67,
   "categories": [
     {
       "category": "Charts",
@@ -323,6 +323,13 @@
           "path": "Theming/DarkMode.dash.yaml",
           "category": "Theming",
           "file": "DarkMode.dash.yaml"
+        },
+        {
+          "name": "Theme Picker",
+          "path": "Theming/Theme Picker.dash.yaml",
+          "category": "Theming",
+          "file": "Theme Picker.dash.yaml",
+          "tsPath": "Theming/Theme Picker.ts"
         },
         {
           "name": "Token Showcase",
