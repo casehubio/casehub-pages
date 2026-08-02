@@ -190,3 +190,4 @@ wksp
 .playwright-mcp/
 .claude
 proj
+.mvn/maven.config
