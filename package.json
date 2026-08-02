@@ -8,6 +8,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
+    "test/cross-parser",
     "components/*",
     "webapp/",
     "examples/"

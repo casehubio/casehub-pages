@@ -1,0 +1,50 @@
+name: document-processing
+description: |
+  Multi-line description with special characters: $, {, }, |
+  This tests block scalar round-trip fidelity.
+
+planningStrategy: incremental
+
+bindings:
+  - name: on-document-upload
+    on:
+      contextChange:
+        keys: ["document"]
+    when: "${ .document.contentType == 'application/pdf' }"
+    capability: review
+    conflictResolverStrategy: lastWriter
+
+  - name: on-review-complete
+    on:
+      contextChange:
+        keys: ["reviewResult"]
+    subCase:
+      namespace: review
+      name: detailed-review
+      version: "1.0"
+      inputMapping:
+        document: "${ .document }"
+      outputMapping:
+        result: "${ .reviewResult }"
+
+workers:
+  - name: review-agent
+    description: 'Agent that reviews documents using AI'
+    capabilities:
+      - review
+      - summarize
+    executionPolicy:
+      maxConcurrent: 3
+
+milestones:
+  - name: review-complete
+    condition: "${ .reviewResult != null }"
+    slaDuration: PT2H
+
+goals:
+  - name: case-resolved
+    kind: success
+    condition: "${ .status == 'resolved' }"
+  - name: case-failed
+    kind: failure
+    condition: "${ .errorCount > 5 }"

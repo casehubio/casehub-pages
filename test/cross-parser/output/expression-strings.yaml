@@ -1,0 +1,13 @@
+expressions:
+  simple: "${ .document.contentType }"
+  nested: "${ .items[0].name }"
+  comparison: "${ .score >= 0.8 }"
+  boolean: "${ .isApproved == true }"
+  string_concat: "${ .firstName & ' ' & .lastName }"
+  null_check: "${ .result != null }"
+  array_filter: "${ .items[status = 'active'] }"
+  unquoted_safe: simple_value
+  single_quoted: 'value with "double quotes" inside'
+  double_quoted: "value with 'single quotes' inside"
+  colon_value: "key: value pair in string"
+  hash_value: "# not a comment"

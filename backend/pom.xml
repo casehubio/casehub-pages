@@ -24,6 +24,7 @@
         <module>data-sql</module>
         <module>push</module>
         <module>push-runtime</module>
+        <module>cross-parser-test</module>
     </modules>
 
     <properties>
