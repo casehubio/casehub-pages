@@ -9,6 +9,7 @@
   },
   "include": ["src"],
   "references": [
+    { "path": "../pages-data" },
     { "path": "../pages-ui-tokens" }
   ]
 }

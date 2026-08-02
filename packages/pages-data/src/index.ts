@@ -1,3 +1,6 @@
+export { emitPagesEvent, onPagesEvent } from './events.js';
+export type { PagesEventDetail } from './events.js';
+
 export type {
   ColumnId,
   DataSetId,

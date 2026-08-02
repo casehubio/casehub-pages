@@ -7,7 +7,7 @@ import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
 import { ReactFlowApp } from './ReactFlowApp.js';
 import { getNodeTypes } from '../registry/node-registry.js';
 import { injectIsolationStyles, DIAGRAM_ROOT_CLASS } from './css-isolation.js';
-import { emitPagesEvent } from '../events.js';
+import { emitPagesEvent } from '@casehubio/pages-data';
 
 @customElement('pages-graph-canvas')
 export class GraphCanvas extends LitElement {
