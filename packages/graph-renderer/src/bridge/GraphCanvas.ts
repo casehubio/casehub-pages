@@ -95,7 +95,7 @@ export class GraphCanvas extends LitElement {
       const { nodes, edges } = toReactFlowGraph(model);
       this._nodes = nodes;
       this._edges = edges;
-      emitPagesEvent(this, 'graph:layout-error', {
+      emitPagesEvent(this, 'graph:layout:error', {
         error: err instanceof Error ? err.message : String(err),
       });
     }
@@ -109,13 +109,26 @@ export class GraphCanvas extends LitElement {
         nodes: this._nodes,
         edges: this._edges,
         nodeTypes: getNodeTypes(),
-        onNodeClick: (nodeId: string) => {
-          emitPagesEvent(this, 'graph:node-click', { nodeId });
-        },
-        onSelectionChange: (nodes: Node[]) => {
-          emitPagesEvent(this, 'graph:selection-change', {
-            nodeIds: nodes.map(n => n.id),
+        onNodeClick: (nodeId: string, node: Node) => {
+          emitPagesEvent(this, 'graph:node:click', {
+            nodeId,
+            nodeType: node.type ?? '',
           });
+        },
+        onEdgeClick: (edgeId: string, edge: Edge) => {
+          emitPagesEvent(this, 'graph:edge:click', {
+            edgeId,
+            edgeType: edge.type ?? '',
+          });
+        },
+        onSelectionChange: (nodes: Node[], edges: Edge[]) => {
+          emitPagesEvent(this, 'graph:selection:change', {
+            nodeIds: nodes.map(n => n.id),
+            edgeIds: edges.map(e => e.id),
+          });
+        },
+        onViewportChange: (viewport: { x: number; y: number; zoom: number }) => {
+          emitPagesEvent(this, 'graph:viewport:change', viewport);
         },
       }),
     );

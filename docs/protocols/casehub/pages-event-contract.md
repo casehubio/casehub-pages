@@ -7,7 +7,7 @@ applies_to: "user/application-level inter-component event communication in caseh
 cross_repo_consumers: []
 severity: important
 refs: []
-violation_hint: "Component dispatches a CustomEvent with a name other than pages-event for application-level communication, or constructs pages-event without bubbles:true and composed:true, or uses a reserved framework event name for application purposes"
+violation_hint: "Component dispatches a CustomEvent with a name other than pages-event for application-level communication, or constructs pages-event without bubbles:true and composed:true, or uses a reserved framework event name for application purposes, or uses dash-separated topic segments instead of colon-separated (e.g. graph:node-click instead of graph:node:click)"
 created: 2026-07-05
 ---
 
@@ -41,7 +41,13 @@ Both construct identical `CustomEvent` structures. New code should prefer
 
 ## Topic naming
 
-Colon-separated hierarchical segments (`filter:status`, `debate:created`).
+Colon-separated hierarchical segments where each segment is a single word or
+identifier (`graph:node:click`, `filter:status`, `debate:created`). Never use
+dashes within a segment to join what should be separate hierarchical levels —
+`graph:node-click` defeats wildcard matching because `node-click` is one opaque
+segment, not two. The correct form is `graph:node:click` (three segments),
+enabling `graph:node:*`, `graph:*:click`, and `graph:**`.
+
 Wildcards (`*` single segment, `**` multi-segment) are listener-side only —
 dispatchers never emit wildcard topics.
 

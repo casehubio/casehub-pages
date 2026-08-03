@@ -4,11 +4,14 @@ import {
   MiniMap,
   Controls,
   Background,
+  SelectionMode,
   type Node,
   type Edge,
   type NodeMouseHandler,
+  type EdgeMouseHandler,
   type NodeTypes,
   type OnSelectionChangeFunc,
+  type OnMoveEnd,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -17,7 +20,9 @@ export interface ReactFlowAppProps {
   edges: Edge[];
   nodeTypes: NodeTypes;
   onNodeClick?: (nodeId: string, node: Node) => void;
-  onSelectionChange?: (nodes: Node[]) => void;
+  onEdgeClick?: (edgeId: string, edge: Edge) => void;
+  onSelectionChange?: (nodes: Node[], edges: Edge[]) => void;
+  onViewportChange?: (viewport: { x: number; y: number; zoom: number }) => void;
 }
 
 export function ReactFlowApp({
@@ -25,16 +30,30 @@ export function ReactFlowApp({
   edges,
   nodeTypes,
   onNodeClick,
+  onEdgeClick,
   onSelectionChange,
+  onViewportChange,
 }: ReactFlowAppProps): React.JSX.Element {
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_event, node) => { onNodeClick?.(node.id, node); },
     [onNodeClick],
   );
 
+  const handleEdgeClick: EdgeMouseHandler = useCallback(
+    (_event, edge) => { onEdgeClick?.(edge.id, edge); },
+    [onEdgeClick],
+  );
+
   const handleSelectionChange: OnSelectionChangeFunc = useCallback(
-    ({ nodes: selectedNodes }) => { onSelectionChange?.(selectedNodes); },
+    ({ nodes: selectedNodes, edges: selectedEdges }) => {
+      onSelectionChange?.(selectedNodes, selectedEdges);
+    },
     [onSelectionChange],
+  );
+
+  const handleMoveEnd: OnMoveEnd = useCallback(
+    (_event, viewport) => { onViewportChange?.(viewport); },
+    [onViewportChange],
   );
 
   return (
@@ -43,7 +62,11 @@ export function ReactFlowApp({
       edges={edges}
       nodeTypes={nodeTypes}
       onNodeClick={handleNodeClick}
+      onEdgeClick={handleEdgeClick}
       onSelectionChange={handleSelectionChange}
+      onMoveEnd={handleMoveEnd}
+      selectionOnDrag
+      selectionMode={SelectionMode.Partial}
       fitView
     >
       <MiniMap />
