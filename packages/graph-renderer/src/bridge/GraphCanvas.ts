@@ -6,7 +6,7 @@ import type { Node, Edge } from '@xyflow/react';
 import type { GraphModel } from '@casehubio/graph-core';
 import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
 import { ReactFlowApp } from './ReactFlowApp.js';
-import { getNodeTypes } from '../registry/node-registry.js';
+import { getNodeTypes } from '../registry/stencil-registry.js';
 import { injectIsolationStyles, releaseIsolationStyles, DIAGRAM_ROOT_CLASS } from './css-isolation.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { toReactFlowGraph } from '../mapping.js';

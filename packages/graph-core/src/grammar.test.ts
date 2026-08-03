@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   registerGrammar,
+  deregisterGrammar,
   getGrammar,
   getAllGrammars,
   clearGrammarRegistry,
@@ -67,6 +68,19 @@ describe('grammar registry', () => {
     clearGrammarRegistry();
     expect(getAllGrammars()).toEqual([]);
     expect(getGrammar('binding')).toBeUndefined();
+  });
+
+  it('deregisters a grammar by type', () => {
+    registerGrammar(grammar('temp'));
+    expect(getGrammar('temp')).toBeDefined();
+    const removed = deregisterGrammar('temp');
+    expect(removed).toBe(true);
+    expect(getGrammar('temp')).toBeUndefined();
+  });
+
+  it('returns false when deregistering unknown type', () => {
+    const removed = deregisterGrammar('nonexistent');
+    expect(removed).toBe(false);
   });
 
   it('supports connection rules with specific allowedFrom/allowedTo', () => {

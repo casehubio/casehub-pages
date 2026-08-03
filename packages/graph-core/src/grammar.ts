@@ -30,6 +30,10 @@ export function registerGrammar(grammar: StencilGrammar): void {
   registry.set(grammar.type, grammar);
 }
 
+export function deregisterGrammar(type: string): boolean {
+  return registry.delete(type);
+}
+
 export function getGrammar(type: string): StencilGrammar | undefined {
   return registry.get(type);
 }

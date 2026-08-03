@@ -5,7 +5,8 @@ import {
   releaseIsolationStyles,
   DIAGRAM_ROOT_CLASS,
 } from './css-isolation.js';
-import { clearRegistry, registerNodeType } from '../registry/node-registry.js';
+import { html } from 'lit-html';
+import { clearRegistry, registerStencil } from '../registry/stencil-registry.js';
 
 describe('css-isolation', () => {
   beforeEach(() => {
@@ -30,9 +31,18 @@ describe('css-isolation', () => {
   });
 
   it('includes plugin styles in isolation CSS', () => {
-    registerNodeType({
+    registerStencil({
       type: 'custom',
-      component: () => null,
+      label: 'Custom',
+      icon: 'icon',
+      grammar: {
+        type: 'custom',
+        connections: {
+          inbound: { min: 0, max: 5, allowedFrom: [] },
+          outbound: { min: 0, max: 5, allowedTo: [] },
+        },
+      },
+      render: () => html`<div>custom</div>`,
       defaultStyle: '.custom-node { background: red; }',
     });
     const css = getIsolationCSS();

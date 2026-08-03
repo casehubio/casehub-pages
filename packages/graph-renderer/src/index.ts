@@ -1,10 +1,16 @@
 export {
-  registerNodeType,
+  registerStencil,
+  deregisterStencil,
+  getStencil,
+  getAllStencils,
+  registerEdgeType,
+  deregisterEdgeType,
+  getEdgeDescriptor,
   getNodeTypes,
   getRegisteredStyles,
   clearRegistry,
-} from './registry/node-registry.js';
-export type { NodeTypeDescriptor } from './registry/node-registry.js';
+} from './registry/stencil-registry.js';
+export type { StencilDescriptor, EdgeDescriptor } from './registry/stencil-registry.js';
 export { emitPagesEvent } from '@casehubio/pages-data';
 export type { PagesEventDetail } from '@casehubio/pages-data';
 export { GraphCanvas } from './bridge/GraphCanvas.js';

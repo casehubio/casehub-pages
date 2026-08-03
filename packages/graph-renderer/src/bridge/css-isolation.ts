@@ -1,4 +1,4 @@
-import { getRegisteredStyles } from '../registry/node-registry.js';
+import { getRegisteredStyles } from '../registry/stencil-registry.js';
 
 export const DIAGRAM_ROOT_CLASS = 'diagram-root';
 

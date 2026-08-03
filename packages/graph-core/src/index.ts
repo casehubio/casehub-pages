@@ -20,6 +20,7 @@ export {
 } from './query.js';
 export {
   registerGrammar,
+  deregisterGrammar,
   getGrammar,
   getAllGrammars,
   clearGrammarRegistry,
