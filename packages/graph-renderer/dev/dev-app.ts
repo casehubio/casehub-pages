@@ -1,10 +1,11 @@
 import { createGraph } from '@casehubio/graph-core';
 import { registerNodeType } from '../src/registry/node-registry.js';
-import { SampleDefaultNode, SampleGroupNode } from './sample-nodes.js';
+import { createStencilNodeComponent } from '../src/stencil-wrapper.js';
+import { sampleDefaultRender, sampleGroupRender } from './sample-nodes.js';
 import '../src/bridge/GraphCanvas.js';
 
-registerNodeType({ type: 'sample-default', component: SampleDefaultNode });
-registerNodeType({ type: 'sample-group', component: SampleGroupNode });
+registerNodeType({ type: 'sample-default', component: createStencilNodeComponent(sampleDefaultRender) });
+registerNodeType({ type: 'sample-group', component: createStencilNodeComponent(sampleGroupRender) });
 
 const model = createGraph(
   [
