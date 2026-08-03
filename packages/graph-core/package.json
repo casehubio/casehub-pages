@@ -1,0 +1,22 @@
+{
+  "name": "@casehubio/graph-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "Apache-2.0"
+}
