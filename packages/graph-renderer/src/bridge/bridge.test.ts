@@ -1,10 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { GraphModel } from '@casehubio/graph-core';
 
 vi.mock('@casehubio/pages-ui-tokens', () => ({
   applyTheme: vi.fn(),
   getTheme: vi.fn(() => ''),
   listThemes: vi.fn(() => ['default-light', 'default-dark']),
   registerTheme: vi.fn(),
+}));
+
+vi.mock('../layout/elk-layout.js', () => ({
+  computeElkLayout: vi.fn(async (nodes: unknown[]) => nodes),
 }));
 
 import './GraphCanvas.js';
@@ -48,5 +53,20 @@ describe('GraphCanvas', () => {
 
   it('uses createRenderRoot to skip Shadow DOM', () => {
     expect(element.shadowRoot).toBeNull();
+  });
+
+  it('accepts model property', () => {
+    const model: GraphModel = {
+      nodes: [{ id: 'n1', type: 'test', properties: {} }],
+      edges: [],
+    };
+    (element as any).model = model;
+    expect((element as any).model).toBe(model);
+  });
+
+  it('accepts layoutOptions property', () => {
+    const opts = { direction: 'RIGHT' as const, spacing: 30 };
+    (element as any).layoutOptions = opts;
+    expect((element as any).layoutOptions).toBe(opts);
   });
 });

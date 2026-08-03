@@ -1,22 +1,29 @@
 import { LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { Node, Edge } from '@xyflow/react';
+import type { GraphModel } from '@casehubio/graph-core';
 import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
 import { ReactFlowApp } from './ReactFlowApp.js';
 import { getNodeTypes } from '../registry/node-registry.js';
 import { injectIsolationStyles, releaseIsolationStyles, DIAGRAM_ROOT_CLASS } from './css-isolation.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
+import { toReactFlowGraph } from '../mapping.js';
+import { computeElkLayout, type ElkLayoutOptions } from '../layout/elk-layout.js';
 
 @customElement('pages-graph-canvas')
 export class GraphCanvas extends LitElement {
-  @property({ attribute: false }) nodes: Node[] = [];
-  @property({ attribute: false }) edges: Edge[] = [];
+  @property({ attribute: false }) model: GraphModel | undefined;
+  @property({ attribute: false }) layoutOptions: ElkLayoutOptions | undefined;
+
+  @state() private _nodes: Node[] = [];
+  @state() private _edges: Edge[] = [];
 
   private _root: Root | undefined;
   private _container: HTMLDivElement | undefined;
   private _themeListener: ((e: Event) => void) | undefined;
+  private _layoutGeneration = 0;
 
   override createRenderRoot(): HTMLElement {
     return this;
@@ -60,8 +67,37 @@ export class GraphCanvas extends LitElement {
     super.disconnectedCallback();
   }
 
-  override updated(): void {
+  override updated(changed: Map<string, unknown>): void {
+    if (changed.has('model') || changed.has('layoutOptions')) {
+      void this._runLayout();
+    }
     this._renderReact();
+  }
+
+  private async _runLayout(): Promise<void> {
+    const model = this.model;
+    if (!model) {
+      this._nodes = [];
+      this._edges = [];
+      return;
+    }
+
+    const generation = ++this._layoutGeneration;
+    const { nodes, edges } = toReactFlowGraph(model);
+
+    try {
+      const positioned = await computeElkLayout(nodes, edges, this.layoutOptions);
+      if (generation !== this._layoutGeneration) return;
+      this._nodes = positioned;
+      this._edges = edges;
+    } catch (err) {
+      if (generation !== this._layoutGeneration) return;
+      this._nodes = nodes;
+      this._edges = edges;
+      emitPagesEvent(this, 'graph:layout-error', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   private _renderReact(): void {
@@ -69,8 +105,8 @@ export class GraphCanvas extends LitElement {
 
     this._root.render(
       createElement(ReactFlowApp, {
-        nodes: this.nodes,
-        edges: this.edges,
+        nodes: this._nodes,
+        edges: this._edges,
         nodeTypes: getNodeTypes(),
         onNodeClick: (nodeId: string) => {
           emitPagesEvent(this, 'graph:node-click', { nodeId });

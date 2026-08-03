@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
+    "@casehubio/graph-core": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-ui-tokens": "workspace:*",
     "@xyflow/react": "^12.4.0",
