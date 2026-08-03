@@ -23,7 +23,11 @@ ${pluginStyles}
 `.trim();
 }
 
+let refCount = 0;
+
 export function injectIsolationStyles(): HTMLStyleElement {
+  refCount++;
+
   const existing = document.head.querySelector('style[data-graph-isolation]');
   if (existing instanceof HTMLStyleElement) {
     existing.textContent = getIsolationCSS();
@@ -35,4 +39,12 @@ export function injectIsolationStyles(): HTMLStyleElement {
   style.textContent = getIsolationCSS();
   document.head.appendChild(style);
   return style;
+}
+
+export function releaseIsolationStyles(): void {
+  if (refCount <= 0) return;
+  refCount--;
+  if (refCount === 0) {
+    document.head.querySelector('style[data-graph-isolation]')?.remove();
+  }
 }
