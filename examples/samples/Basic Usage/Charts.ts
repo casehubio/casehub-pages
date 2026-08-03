@@ -1,7 +1,8 @@
-// @ts-nocheck
 import {
   page, bind, inlineSource, barChart, lineChart, areaChart, pieChart, bubbleChart, timeseries,
   tabs, rows, columns, html, lookup, groupBy, col} from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 // Datasets
 const productsData = [
@@ -14,10 +15,10 @@ const productsData = [
 
 const productsDs = bind("products", inlineSource(productsData, {
   columns: [
-    { id: "Section", type: "LABEL" },
-    { id: "Product", type: "LABEL" },
-    { id: "Quantity", type: "NUMBER" },
-    { id: "Quantity2", type: "NUMBER" }
+    { id: "Section" as ColumnId, type: ColumnType.LABEL },
+    { id: "Product" as ColumnId, type: ColumnType.LABEL },
+    { id: "Quantity" as ColumnId, type: ColumnType.NUMBER },
+    { id: "Quantity2" as ColumnId, type: ColumnType.NUMBER }
   ]
 }));
 
@@ -38,9 +39,9 @@ const timeseriesData = [
 
 const timeseriesDs = bind("timeseries", inlineSource(timeseriesData, {
   columns: [
-    { id: "Date", type: "DATE" },
-    { id: "Series A", type: "NUMBER" },
-    { id: "Series B", type: "NUMBER" }
+    { id: "Date" as ColumnId, type: ColumnType.DATE },
+    { id: "Series A" as ColumnId, type: ColumnType.NUMBER },
+    { id: "Series B" as ColumnId, type: ColumnType.NUMBER }
   ]
 }));
 
@@ -57,7 +58,7 @@ function pieLookup() {
 function barChartPage() {
   return rows(
     columns(
-      [6],
+      [6, 6],
       [
         barChart({
           title: "subtype COLUMN (default)",
@@ -65,7 +66,6 @@ function barChartPage() {
           lookup: productLookup()
         })
       ],
-      [6],
       [
         barChart({
           subtype: "bar",
@@ -77,19 +77,18 @@ function barChartPage() {
       ]
     ),
     columns(
-      [6],
+      [6, 6],
       [
         barChart({
-          subtype: "column_stacked",
+          subtype: "column-stacked",
           title: "subtype COLUMN_STACKED",
           resizable: true,
           lookup: productLookup()
         })
       ],
-      [6],
       [
         barChart({
-          subtype: "bar_stacked",
+          subtype: "bar-stacked",
           title: "subtype BAR_STACKED",
           margin: { left: 80 },
           resizable: true,
@@ -103,7 +102,7 @@ function barChartPage() {
 function lineChartPage() {
   return rows(
     columns(
-      [6],
+      [6, 6],
       [
         lineChart({
           title: "subtype LINE (default)",
@@ -111,7 +110,6 @@ function lineChartPage() {
           lookup: productLookup()
         })
       ],
-      [6],
       [
         lineChart({
           subtype: "smooth",
@@ -127,7 +125,7 @@ function lineChartPage() {
 function areaChartPage() {
   return rows(
     columns(
-      [6],
+      [6, 6],
       [
         areaChart({
           title: "subtype AREA (default)",
@@ -135,10 +133,9 @@ function areaChartPage() {
           lookup: productLookup()
         })
       ],
-      [6],
       [
         areaChart({
-          subtype: "area_stacked",
+          subtype: "area-stacked",
           title: "subtype AREA_STACKED",
           resizable: true,
           lookup: productLookup()
@@ -151,7 +148,7 @@ function areaChartPage() {
 function pieChartPage() {
   return rows(
     columns(
-      [6],
+      [6, 6],
       [
         pieChart({
           title: "subtype PIE (default)",
@@ -159,7 +156,6 @@ function pieChartPage() {
           lookup: pieLookup()
         })
       ],
-      [6],
       [
         pieChart({
           subtype: "donut",

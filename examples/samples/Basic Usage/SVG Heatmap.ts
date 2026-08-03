@@ -1,21 +1,21 @@
-// @ts-nocheck
-import { page, bind, inlineSource, iframePlugin, lookup} from "@casehubio/pages-ui";
+import { page, bind, inlineSource, iframePlugin, lookup } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
-// Dataset
 const svgData = [
   ["svg_1", 1],
   ["svg_2", 2],
   ["svg_3", 3],
   ["svg_4", 4],
   ["svg_5", 5],
-  ["svg_6", 6]
+  ["svg_6", 6],
 ];
 
 const svgDataDs = bind("svg-data", inlineSource(svgData, {
   columns: [
-    { id: "id", type: "LABEL" },
-    { id: "v", type: "NUMBER" }
-  ]
+    { id: "id" as ColumnId, type: ColumnType.LABEL },
+    { id: "v" as ColumnId, type: ColumnType.NUMBER },
+  ],
 }));
 
 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg">
@@ -32,9 +32,10 @@ export default page(
   iframePlugin({
     componentId: "svg-heatmap",
     width: "100%",
-    properties: {
-      "svg-heatmap.svg": svgContent
+    settings: {
+      "svg-heatmap.svg": svgContent,
     },
-    lookup: lookup("svg-data", )
+    lookup: lookup("svg-data"),
   }),
-  { datasets: [svgDataDs] });
+  { datasets: [svgDataDs] },
+);

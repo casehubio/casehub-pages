@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   page, bind, inlineSource,
   grid,
@@ -8,7 +7,7 @@ import {
   pieChart,
   barChart,
   scatterChart,
-  table,
+  dataTable,
   lookup,
   groupBy,
   sortBy,
@@ -16,6 +15,8 @@ import {
   avg,
   count,
 } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 const employeeDataset = bind("employees", inlineSource([
     [1, "Emma Wilson", "Engineering", "Senior", 5.2, 125000, 4, "London", "F", "2021-03-15"],
@@ -60,16 +61,16 @@ const employeeDataset = bind("employees", inlineSource([
     [40, "Elena Popov", "Finance", "Junior", 1.1, 56000, 2, "London", "F", "2025-05-01"],
   ], {
     columns: [
-      { id: "id", type: "NUMBER" },
-      { id: "name", type: "TEXT" },
-      { id: "department", type: "LABEL" },
-      { id: "level", type: "LABEL" },
-      { id: "tenure", type: "NUMBER" },
-      { id: "salary", type: "NUMBER" },
-      { id: "rating", type: "NUMBER" },
-      { id: "location", type: "LABEL" },
-      { id: "gender", type: "LABEL" },
-      { id: "startDate", type: "DATE" },
+      { id: "id" as ColumnId, type: ColumnType.NUMBER },
+      { id: "name" as ColumnId, type: ColumnType.TEXT },
+      { id: "department" as ColumnId, type: ColumnType.LABEL },
+      { id: "level" as ColumnId, type: ColumnType.LABEL },
+      { id: "tenure" as ColumnId, type: ColumnType.NUMBER },
+      { id: "salary" as ColumnId, type: ColumnType.NUMBER },
+      { id: "rating" as ColumnId, type: ColumnType.NUMBER },
+      { id: "location" as ColumnId, type: ColumnType.LABEL },
+      { id: "gender" as ColumnId, type: ColumnType.LABEL },
+      { id: "startDate" as ColumnId, type: ColumnType.DATE },
     ],
   }));
 
@@ -132,13 +133,13 @@ export default page("Workforce Analytics",
           subtype: "bar",
           resizable: true,
           filter: { listening: true },
-          chart: { margin: { left: 80 } },
+          margin: { left: 80 },
           lookup: lookup(
             "employees", sortBy("Salary", "ASCENDING"),
             groupBy("level", col("level"), {
               kind: "aggregate" as const,
-              sourceId: "salary",
-              columnId: "Salary",
+              sourceId: "salary" as ColumnId,
+              columnId: "Salary" as ColumnId,
               fn: Object.freeze({ fn: "AVERAGE" as const }),
             })),
         })
@@ -182,11 +183,12 @@ export default page("Workforce Analytics",
       3,
       3,
       1,
-      table({
-        table: { pageSize: 15, sortable: true },
+      dataTable({
+        pageSize: 15,
+        sortable: true,
         filter: { listening: true },
         csvExport: true,
-        columns: [{ id: "salary", pattern: "$#,###" }],
+        columns: [{ id: "salary" as ColumnId, pattern: "$#,###" }],
         lookup: lookup("employees"),
       })
     )

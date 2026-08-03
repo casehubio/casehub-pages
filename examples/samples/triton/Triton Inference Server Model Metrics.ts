@@ -1,11 +1,12 @@
-// @ts-nocheck
-import { page, bind, restSource, html, metric, barChart, selector, columns, withStyle, lookup } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType, dataSetId } from "@casehubio/pages-data";
+import { page, bind, restSource, html, metric, barChart, selector, columns, withStyle, lookup, filterBy, groupBy, sum, count, col, sortBy } from "@casehubio/pages-ui";
 
-const metricsDs = bind("metrics", restSource("${metricsUrl}", {
+const metricsDs = bind("metrics", restSource("${metricsUrl}", dataSetId("metrics"), {
   columns: [
-    { id: "metric", type: "LABEL" },
-    { id: "labels", type: "LABEL" },
-    { id: "value", type: "NUMBER" },
+    { id: "metric" as ColumnId, type: ColumnType.LABEL },
+    { id: "labels" as ColumnId, type: ColumnType.LABEL },
+    { id: "value" as ColumnId, type: ColumnType.NUMBER },
   ],
 }));
 
@@ -14,37 +15,44 @@ export default page("Triton Inference Server Model Metrics",
   html("Triton Inference Server <hr />"),
 
   // Metrics row
-  columns({}, ["3", "3", "3", "3"],
+  columns([3, 3, 3, 3],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_count"] },
-          { type: "group", functions: [{ source: "labels", function: "COUNT" }] }),
-        general: { title: "Running Models" },
-        columns: [{ id: "labels", pattern: "#" }],
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_count"),
+          groupBy(null, count("labels"))),
+        title: "Running Models",
+        columns: [{ id: "labels" as ColumnId, pattern: "#" }],
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_count"] },
-          { type: "group", functions: [{ source: "value", function: "SUM" }] }),
-        general: { title: "Inference Count", visible: "true" },
-        columns: [{ id: "value", pattern: "#" }],
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_count"),
+          groupBy(null, sum("value"))),
+        title: "Inference Count",
+        visible: true,
+        columns: [{ id: "value" as ColumnId, pattern: "#" }],
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_request_success"] },
-          { type: "group", functions: [{ source: "value", function: "SUM" }] }),
-        general: { title: "Inference Requests Success", visible: "true" },
-        columns: [{ id: "value", pattern: "#" }],
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_request_success"),
+          groupBy(null, sum("value"))),
+        title: "Inference Requests Success",
+        visible: true,
+        columns: [{ id: "value" as ColumnId, pattern: "#" }],
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_request_failure"] },
-          { type: "group", functions: [{ source: "value", function: "SUM" }] }),
-        general: { title: "Inference Requests Failure", visible: "true" },
-        columns: [{ id: "value", pattern: "#" }],
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_request_failure"),
+          groupBy(null, sum("value"))),
+        title: "Inference Requests Failure",
+        visible: true,
+        columns: [{ id: "value" as ColumnId, pattern: "#" }],
       })
     ]
   ),
@@ -52,167 +60,128 @@ export default page("Triton Inference Server Model Metrics",
   // Filter
   withStyle({ width: "220px", "margin-top": "20px" }, html("<strong>Filter by Model</strong>")),
   selector({
-    lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_count"] },
-      {
-        type: "group",
-        groupingKey: { sourceId: "labels" },
-        functions: [{ source: "labels", column: "model" }],
-      }),
-    filter: { notification: "true" },
+    lookup: lookup("metrics",
+      filterBy("metric", "EQUALS_TO", "nv_inference_count"),
+      groupBy("labels", col("labels"))),
+    filter: { notification: true },
     columns: [{
-      id: "model",
-      expression: `value.replaceAll("\\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
+      id: "model" as ColumnId,
+      expression: `value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
     }],
   }),
 
   // Charts row 1
-  columns({ "margin-top": "20px" }, ["4", "4", "4"],
+  withStyle({ "margin-top": "20px" }, columns([4, 4, 4],
     [
       barChart({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_count"] },
-          { type: "filter", column: "value", function: "GREATER_THAN", args: [0] },
-          { type: "sort", column: "value", sortOrder: "DESCENDING" },
-          {
-            type: "group",
-            groupingKey: { sourceId: "labels" },
-            functions: [
-              { source: "labels" },
-              { source: "value", function: "SUM" },
-            ],
-          }),
-        filter: { listening: "true" },
-        general: { title: "Inference Count" },
-        chart: { resizable: true },
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_count"),
+          filterBy("value", "GREATER_THAN", 0),
+          sortBy("value", "DESCENDING"),
+          groupBy("labels", col("labels"), sum("value"))),
+        filter: { listening: true },
+        title: "Inference Count",
+        resizable: true,
         columns: [
           {
-            id: "labels",
-            expression: `value.replaceAll("\\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
+            id: "labels" as ColumnId,
+            expression: `value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
           },
-          { id: "value", pattern: "#" },
+          { id: "value" as ColumnId, pattern: "#" },
         ],
       })
     ],
     [
       barChart({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_request_success"] },
-          { type: "filter", column: "value", function: "GREATER_THAN", args: [0] },
-          { type: "sort", column: "value", sortOrder: "DESCENDING" },
-          {
-            type: "group",
-            groupingKey: { sourceId: "labels" },
-            functions: [
-              { source: "labels" },
-              { source: "value", function: "SUM" },
-            ],
-          }),
-        filter: { listening: "true" },
-        general: { title: "Sucessful Inferences" },
-        chart: { resizable: true },
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_request_success"),
+          filterBy("value", "GREATER_THAN", 0),
+          sortBy("value", "DESCENDING"),
+          groupBy("labels", col("labels"), sum("value"))),
+        filter: { listening: true },
+        title: "Sucessful Inferences",
+        resizable: true,
         columns: [
           {
-            id: "labels",
-            expression: `value.replaceAll("\\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
+            id: "labels" as ColumnId,
+            expression: `value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
           },
-          { id: "value", pattern: "#" },
+          { id: "value" as ColumnId, pattern: "#" },
         ],
       })
     ],
     [
       barChart({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_request_failure"] },
-          { type: "filter", column: "value", function: "GREATER_THAN", args: [0] },
-          { type: "sort", column: "value", sortOrder: "DESCENDING" },
-          {
-            type: "group",
-            groupingKey: { sourceId: "labels" },
-            functions: [
-              { source: "labels" },
-              { source: "value", function: "SUM" },
-            ],
-          }),
-        filter: { listening: "true" },
-        general: { title: "Failed Inferences" },
-        chart: { resizable: true },
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_request_failure"),
+          filterBy("value", "GREATER_THAN", 0),
+          sortBy("value", "DESCENDING"),
+          groupBy("labels", col("labels"), sum("value"))),
+        filter: { listening: true },
+        title: "Failed Inferences",
+        resizable: true,
         columns: [
           {
-            id: "labels",
-            expression: `value.replaceAll("\\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
+            id: "labels" as ColumnId,
+            expression: `value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
           },
-          { id: "value", pattern: "#" },
+          { id: "value" as ColumnId, pattern: "#" },
         ],
       })
     ]
-  ),
+  )),
 
   // Charts row 2 - Duration metrics
-  columns({ "margin-top": "20px" }, ["4", "4", "4"],
+  withStyle({ "margin-top": "20px" }, columns([4, 4, 4],
     [
       barChart({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_request_duration_us"] },
-          { type: "sort", column: "value", sortOrder: "DESCENDING" },
-          {
-            type: "group",
-            groupingKey: { sourceId: "labels" },
-            functions: [
-              { source: "labels" },
-              { source: "value", column: "Duration" },
-            ],
-          }),
-        filter: { listening: "true" },
-        general: { title: "Inference Request Duration" },
-        chart: { resizable: true },
-        axis: { x: { labels_angle: 15 } },
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_request_duration_us"),
+          sortBy("value", "DESCENDING"),
+          groupBy("labels", col("labels"), col("value"))),
+        filter: { listening: true },
+        title: "Inference Request Duration",
+        resizable: true,
+        xAxis: { labelAngle: 15 },
         columns: [{
-          id: "labels",
-          expression: `value.replaceAll("\\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
+          id: "labels" as ColumnId,
+          expression: `value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
         }],
       })
     ],
     [
       barChart({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_compute_infer_duration_us"] },
-          { type: "filter", column: "value", function: "GREATER_THAN", args: [0] },
-          { type: "sort", column: "value", sortOrder: "DESCENDING" },
-          {
-            type: "group",
-            groupingKey: { sourceId: "labels" },
-            functions: [
-              { source: "labels" },
-              { source: "value", column: "Duration" },
-            ],
-          }),
-        filter: { listening: "true" },
-        general: { title: "Inference Total Duration" },
-        chart: { resizable: true },
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_compute_infer_duration_us"),
+          filterBy("value", "GREATER_THAN", 0),
+          sortBy("value", "DESCENDING"),
+          groupBy("labels", col("labels"), col("value"))),
+        filter: { listening: true },
+        title: "Inference Total Duration",
+        resizable: true,
         columns: [{
-          id: "labels",
-          expression: `value.replaceAll("\\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
+          id: "labels" as ColumnId,
+          expression: `value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
         }],
       })
     ],
     [
       barChart({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["nv_inference_queue_duration_us"] },
-          { type: "filter", column: "value", function: "GREATER_THAN", args: [0] },
-          { type: "sort", column: "value", sortOrder: "DESCENDING" },
-          {
-            type: "group",
-            groupingKey: { sourceId: "labels" },
-            functions: [
-              { source: "labels" },
-              { source: "value", column: "Duration" },
-            ],
-          }),
-        filter: { listening: "true" },
-        general: { title: "Queue Wait" },
-        chart: { resizable: true },
+        lookup: lookup("metrics",
+          filterBy("metric", "EQUALS_TO", "nv_inference_queue_duration_us"),
+          filterBy("value", "GREATER_THAN", 0),
+          sortBy("value", "DESCENDING"),
+          groupBy("labels", col("labels"), col("value"))),
+        filter: { listening: true },
+        title: "Queue Wait",
+        resizable: true,
         columns: [{
-          id: "labels",
-          expression: `value.replaceAll("\\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
+          id: "labels" as ColumnId,
+          expression: `value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")`,
         }],
       })
     ]
-  ),
+  )),
   {
     properties: { metricsUrl: "data/triton/metrics" },
     datasets: [metricsDs],

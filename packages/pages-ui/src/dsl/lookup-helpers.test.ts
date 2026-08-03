@@ -236,6 +236,80 @@ describe("result column helpers", () => {
       expect(c.fn).toEqual({ fn: "DISTINCTJOIN", separator: "; " });
     }
   });
+
+  describe("alias parameter", () => {
+    it("col() with alias sets different columnId", () => {
+      const c = col("date", "Month");
+      expect(c.sourceId).toBe("date");
+      expect(c.columnId).toBe("Month");
+    });
+
+    it("sum() with alias sets different columnId", () => {
+      const c = sum("amount", "Revenue");
+      expect(c.sourceId).toBe("amount");
+      expect(c.columnId).toBe("Revenue");
+    });
+
+    it("avg() with alias sets different columnId", () => {
+      const c = avg("price", "AvgPrice");
+      expect(c.sourceId).toBe("price");
+      expect(c.columnId).toBe("AvgPrice");
+    });
+
+    it("count() with alias sets different columnId", () => {
+      const c = count("id", "Total");
+      expect(c.sourceId).toBe("id");
+      expect(c.columnId).toBe("Total");
+    });
+
+    it("min() with alias sets different columnId", () => {
+      const c = min("price", "Lowest");
+      expect(c.sourceId).toBe("price");
+      expect(c.columnId).toBe("Lowest");
+    });
+
+    it("max() with alias sets different columnId", () => {
+      const c = max("price", "Highest");
+      expect(c.sourceId).toBe("price");
+      expect(c.columnId).toBe("Highest");
+    });
+
+    it("distinct() with alias sets different columnId", () => {
+      const c = distinct("category", "UniqueCategories");
+      expect(c.sourceId).toBe("category");
+      expect(c.columnId).toBe("UniqueCategories");
+    });
+
+    it("join() with alias as third parameter", () => {
+      const c = join("names", " | ", "AllNames");
+      expect(c.sourceId).toBe("names");
+      expect(c.columnId).toBe("AllNames");
+      if (c.kind === "aggregate") {
+        expect(c.fn).toEqual({ fn: "JOIN", separator: " | " });
+      }
+    });
+
+    it("distinctJoin() with alias as third parameter", () => {
+      const c = distinctJoin("names", "; ", "UniqueNames");
+      expect(c.sourceId).toBe("names");
+      expect(c.columnId).toBe("UniqueNames");
+      if (c.kind === "aggregate") {
+        expect(c.fn).toEqual({ fn: "DISTINCTJOIN", separator: "; " });
+      }
+    });
+
+    it("without alias, columnId defaults to source (unchanged behaviour)", () => {
+      expect(col("x").columnId).toBe("x");
+      expect(sum("x").columnId).toBe("x");
+      expect(avg("x").columnId).toBe("x");
+      expect(count("x").columnId).toBe("x");
+      expect(min("x").columnId).toBe("x");
+      expect(max("x").columnId).toBe("x");
+      expect(distinct("x").columnId).toBe("x");
+      expect(join("x").columnId).toBe("x");
+      expect(distinctJoin("x").columnId).toBe("x");
+    });
+  });
 });
 
 describe("integration examples", () => {

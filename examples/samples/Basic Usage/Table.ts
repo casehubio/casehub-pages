@@ -1,5 +1,6 @@
-// @ts-nocheck
-import { page, bind, inlineSource, html, table, lookup} from "@casehubio/pages-ui";
+import { page, bind, inlineSource, dataTable, lookup } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 const employeesData = [
   ["Alice Johnson", "Engineering", "Senior Developer", 2018, 92000],
@@ -21,24 +22,25 @@ const employeesData = [
   ["Quinn Harris", "Marketing", "Social Media Manager", 2023, 48000],
   ["Rachel Clark", "Sales", "Sales Representative", 2021, 58000],
   ["Sam Walker", "Engineering", "Security Engineer", 2018, 98000],
-  ["Tina Hall", "Marketing", "Marketing Director", 2015, 125000]
+  ["Tina Hall", "Marketing", "Marketing Director", 2015, 125000],
 ];
 
 const employeesDs = bind("employees", inlineSource(employeesData, {
   columns: [
-    { id: "Name", type: "LABEL" },
-    { id: "Department", type: "LABEL" },
-    { id: "Role", type: "LABEL" },
-    { id: "Joined", type: "NUMBER" },
-    { id: "Salary", type: "NUMBER" }
-  ]
+    { id: "Name" as ColumnId, type: ColumnType.LABEL },
+    { id: "Department" as ColumnId, type: ColumnType.LABEL },
+    { id: "Role" as ColumnId, type: ColumnType.LABEL },
+    { id: "Joined" as ColumnId, type: ColumnType.NUMBER },
+    { id: "Salary" as ColumnId, type: ColumnType.NUMBER },
+  ],
 }));
 
 export default page(
   "Table",
-  table({
-    height: 600,
+  dataTable({
+    height: "600",
     resizable: true,
-    lookup: lookup("employees", )
+    lookup: lookup("employees"),
   }),
-  { datasets: [employeesDs] });
+  { datasets: [employeesDs] },
+);

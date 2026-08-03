@@ -1,15 +1,13 @@
-// @ts-nocheck
 import {
   page, bind, inlineSource,
   tabs,
-  columns,
   metric,
   barChart,
   pieChart,
   areaChart,
   lineChart,
   selector,
-  table,
+  dataTable,
   panel,
   markdown,
   textInput,
@@ -18,6 +16,8 @@ import {
   textarea,
   checkbox,
   datePicker,
+  rows,
+  columns,
   lookup,
   groupBy,
   filterBy,
@@ -26,6 +26,8 @@ import {
   avg,
   count,
 } from "@casehubio/pages-ui";
+import type { ColumnId, DataSetId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 const patientsDataset = bind("patients", inlineSource([
     [1, "Emily Rodriguez", 34, "F", "ICU", "Pneumonia", "2026-06-20", "Critical", "Dr. Sarah Mitchell", "Patient requires close monitoring, high fever persists", "true"],
@@ -55,17 +57,17 @@ const patientsDataset = bind("patients", inlineSource([
     [25, "Nina Petrova", 29, "F", "Outpatient", "Sprained Ankle", "2026-06-26", "Stable", "Dr. Michael Chang", "RICE protocol advised, follow-up in 2 weeks", "false"],
   ], {
     columns: [
-      { id: "id", type: "NUMBER" },
-      { id: "name", type: "TEXT" },
-      { id: "age", type: "NUMBER" },
-      { id: "gender", type: "LABEL" },
-      { id: "ward", type: "LABEL" },
-      { id: "diagnosis", type: "LABEL" },
-      { id: "admitDate", type: "DATE" },
-      { id: "status", type: "LABEL" },
-      { id: "doctor", type: "TEXT" },
-      { id: "notes", type: "TEXT" },
-      { id: "flagged", type: "LABEL" },
+      { id: "id" as ColumnId, type: ColumnType.NUMBER },
+      { id: "name" as ColumnId, type: ColumnType.TEXT },
+      { id: "age" as ColumnId, type: ColumnType.NUMBER },
+      { id: "gender" as ColumnId, type: ColumnType.LABEL },
+      { id: "ward" as ColumnId, type: ColumnType.LABEL },
+      { id: "diagnosis" as ColumnId, type: ColumnType.LABEL },
+      { id: "admitDate" as ColumnId, type: ColumnType.DATE },
+      { id: "status" as ColumnId, type: ColumnType.LABEL },
+      { id: "doctor" as ColumnId, type: ColumnType.TEXT },
+      { id: "notes" as ColumnId, type: ColumnType.TEXT },
+      { id: "flagged" as ColumnId, type: ColumnType.LABEL },
     ],
   }));
 
@@ -132,79 +134,71 @@ const vitalsDataset = bind("vitals", inlineSource([
     [25, "2026-06-25T08:00", 74, 122, 80, 36.8, 99],
   ], {
     columns: [
-      { id: "patientId", type: "NUMBER" },
-      { id: "timestamp", type: "DATE" },
-      { id: "heartRate", type: "NUMBER" },
-      { id: "systolic", type: "NUMBER" },
-      { id: "diastolic", type: "NUMBER" },
-      { id: "temperature", type: "NUMBER" },
-      { id: "o2Saturation", type: "NUMBER" },
+      { id: "patientId" as ColumnId, type: ColumnType.NUMBER },
+      { id: "timestamp" as ColumnId, type: ColumnType.DATE },
+      { id: "heartRate" as ColumnId, type: ColumnType.NUMBER },
+      { id: "systolic" as ColumnId, type: ColumnType.NUMBER },
+      { id: "diastolic" as ColumnId, type: ColumnType.NUMBER },
+      { id: "temperature" as ColumnId, type: ColumnType.NUMBER },
+      { id: "o2Saturation" as ColumnId, type: ColumnType.NUMBER },
     ],
   }));
 
 export default page("Patient Tracker",
   // Tabs navigation
-  tabs({ navGroupId: "ClinicalNav", width: "100%" }),
+  tabs(),
 
   // === Page 1: Ward Overview ===
   page(
     "Ward Overview",
-    columns(
-      { span: 3 },
+    columns([3, 3, 3, 3], [
       metric({
         title: "Total Patients",
-        lookup: lookup("patients", groupBy([], [count("id", "id", "#")])),
+        lookup: lookup("patients" as DataSetId, groupBy(null, count("id", "id"))),
       }),
-      { span: 3 },
       metric({
         title: "Critical Count",
         lookup: lookup(
-          "patients", filterBy("status", "EQUALS_TO", "Critical"),
-          groupBy([], [count("id", "id", "#")])),
+          "patients" as DataSetId, filterBy("status", "EQUALS_TO", "Critical"),
+          groupBy(null, count("id", "id"))),
       }),
-      { span: 3 },
       metric({
         title: "Avg Age",
-        lookup: lookup("patients", groupBy([], [avg("age", "age", "#.#")])),
+        lookup: lookup("patients" as DataSetId, groupBy(null, avg("age", "age"))),
       }),
-      { span: 3 },
       metric({
         title: "Flagged",
         lookup: lookup(
-          "patients", filterBy("flagged", "EQUALS_TO", "true"),
-          groupBy([], [count("id", "id", "#")])),
-      })
-    ),
+          "patients" as DataSetId, filterBy("flagged", "EQUALS_TO", "true"),
+          groupBy(null, count("id", "id"))),
+      }),
+    ]),
     selector({
       subtype: "dropdown",
-      selfApply: true,
-      notification: true,
-      lookup: lookup("patients", groupBy(["ward"], [col("ward")])),
+      filter: { selfApply: true, notification: true },
+      lookup: lookup("patients" as DataSetId, groupBy("ward", col("ward"))),
     }),
-    columns(
-      { span: 4 },
+    columns([4, 4, 4], [
       pieChart({
         title: "Patients by Diagnosis",
         resizable: true,
-        listening: true,
-        lookup: lookup("patients", groupBy(["diagnosis"], [col("diagnosis"), count("id")])),
+        filter: { listening: true },
+        lookup: lookup("patients" as DataSetId, groupBy("diagnosis", col("diagnosis"), count("id"))),
       }),
-      { span: 4 },
       barChart({
         title: "Patients by Ward",
         resizable: true,
-        listening: true,
-        lookup: lookup("patients", groupBy(["ward"], [col("ward"), count("id")])),
+        filter: { listening: true },
+        lookup: lookup("patients" as DataSetId, groupBy("ward", col("ward"), count("id"))),
       }),
-      { span: 4 },
       pieChart({
         subtype: "donut",
         title: "Patients by Status",
         resizable: true,
-        listening: true,
-        lookup: lookup("patients", groupBy(["status"], [col("status"), count("id")])),
-      })
-    ),
+        filter: { listening: true },
+        lookup: lookup("patients" as DataSetId, groupBy("status", col("status"), count("id"))),
+      }),
+    ]),
     markdown(`## Ward Protocol Notes
 
 **ICU Protocols:**
@@ -234,41 +228,39 @@ export default page("Patient Tracker",
     areaChart({
       title: "Heart Rate by Patient",
       resizable: true,
-      listening: true,
+      filter: { listening: true },
       lookup: lookup(
-        "vitals",
-        groupBy(["patientId"], [col("patientId"), avg("heartRate")])),
+        "vitals" as DataSetId,
+        groupBy("patientId", col("patientId"), avg("heartRate"))),
     }),
-    columns(
-      { span: 6 },
+    columns([6, 6], [
       lineChart({
         title: "Blood Pressure",
         resizable: true,
-        listening: true,
+        filter: { listening: true },
         lookup: lookup(
-          "vitals",
-          groupBy(["timestamp"], [col("timestamp"), avg("systolic"), avg("diastolic")])),
+          "vitals" as DataSetId,
+          groupBy("timestamp", col("timestamp"), avg("systolic"), avg("diastolic"))),
       }),
-      { span: 6 },
       lineChart({
         title: "Oxygen Saturation",
         resizable: true,
-        listening: true,
+        filter: { listening: true },
         lookup: lookup(
-          "vitals",
-          groupBy(["timestamp"], [col("timestamp"), avg("o2Saturation")])),
-      })
-    ),
-    table({
+          "vitals" as DataSetId,
+          groupBy("timestamp", col("timestamp"), avg("o2Saturation"))),
+      }),
+    ]),
+    dataTable({
       pageSize: 10,
       sortable: true,
       columns: [
         {
-          id: "temperature",
+          id: "temperature" as ColumnId,
           expression: 'value > 38.5 ? "⚠️ " + value : value',
         },
       ],
-      lookup: lookup("vitals"),
+      lookup: lookup("vitals" as DataSetId),
     })
   ),
 
@@ -277,11 +269,10 @@ export default page("Patient Tracker",
     "Patient Detail",
     panel(
       "Patient Records",
-      table({
+      dataTable({
         sortable: true,
-        listening: true,
-        notification: true,
-        lookup: lookup("patients"),
+        filter: { listening: true, notification: true },
+        lookup: lookup("patients" as DataSetId),
       })
     ),
     panel(
@@ -304,7 +295,7 @@ export default page("Patient Tracker",
       checkbox({ field: "flagged", label: "Flagged for Review" })
     ),
     {
-      dataScope: { dataset: "patients", idColumn: "id" },
+      dataScope: { dataset: "patients" as DataSetId, idColumn: "id" as ColumnId },
       save: { trigger: "auto", delay: 2000, adapter: "local" },
     }
   ),

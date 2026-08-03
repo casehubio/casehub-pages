@@ -1,6 +1,7 @@
-// @ts-nocheck
 import {
-  page, bind, inlineSource, html, selector, barChart, table, tabs, lookup, groupBy, col} from "@casehubio/pages-ui";
+  page, bind, inlineSource, html, selector, barChart, dataTable, tabs, rows, lookup, groupBy, col} from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 // Dataset
 const productsData = [
@@ -13,10 +14,10 @@ const productsData = [
 
 const productsDs = bind("products", inlineSource(productsData, {
   columns: [
-    { id: "Section", type: "LABEL" },
-    { id: "Product", type: "LABEL" },
-    { id: "Quantity", type: "NUMBER" },
-    { id: "Quantity2", type: "NUMBER" }
+    { id: "Section" as ColumnId, type: ColumnType.LABEL },
+    { id: "Product" as ColumnId, type: ColumnType.LABEL },
+    { id: "Quantity" as ColumnId, type: ColumnType.NUMBER },
+    { id: "Quantity2" as ColumnId, type: ColumnType.NUMBER }
   ]
 }));
 
@@ -25,7 +26,7 @@ function sectionLookup() {
 }
 
 function selectorsPage() {
-  return [
+  return rows(
     html(`<p>Melviz Displayers can filter each other. For filtering only we have selectors components. You can enable filter using the filter section, the component that filter others:<br /> <pre> filter:
     notification: true</pre>
 </p><p>
@@ -35,7 +36,7 @@ filter:
 </p>`),
     html("<strong> Default Selector </strong>"),
     selector({
-      filter: { enabled: true, notification: true, listening: false, selfapply: false },
+      filter: { enabled: true, notification: true, listening: false, selfApply: false },
       lookup: sectionLookup()
     }),
     html("<br /><strong>subtype SELECTOR_LABELS (used only with LABEL column types)</strong>"),
@@ -49,11 +50,11 @@ filter:
       resizable: true,
       lookup: lookup("products", groupBy("Product", col("Product"), col("Quantity"), col("Quantity2")))
     })
-  ];
+  );
 }
 
 function filterWithChartPage() {
-  return [
+  return rows(
     selector({
       filter: { enabled: true, notification: true },
       lookup: sectionLookup()
@@ -63,21 +64,21 @@ function filterWithChartPage() {
       resizable: true,
       lookup: lookup("products", groupBy("Product", col("Product")))
     })
-  ];
+  );
 }
 
 function filterWithTablePage() {
-  return [
+  return rows(
     selector({
       subtype: "labels",
       filter: { notification: true },
       lookup: sectionLookup()
     }),
-    table({
+    dataTable({
       filter: { listening: true },
       lookup: lookup("products", )
     })
-  ];
+  );
 }
 
 export default page(

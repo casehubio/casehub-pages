@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { page, bind, inlineSource, barChart, table, lookup} from "@casehubio/pages-ui";
+import { page, bind, inlineSource, barChart, dataTable, lookup } from "@casehubio/pages-ui";
 
 const histogramExpression = `
 (
@@ -15,27 +14,28 @@ const histogramExpression = `
 `;
 
 const rawData = [
-  5, 6, 7, 10, 3, 5, 11, 20, 6, 10, 5, 17,
-  13, 22, 13, 50, 2, 4, 6, 10, 12, 5, 8, 10
+  [5], [6], [7], [10], [3], [5], [11], [20], [6], [10], [5], [17],
+  [13], [22], [13], [50], [2], [4], [6], [10], [12], [5], [8], [10],
 ];
 
 const histogramDs = bind("histogram", inlineSource(rawData, {
-  expression: histogramExpression
+  expression: histogramExpression,
 }));
 
 const extraConfig = {
   series: {
-    barCategoryGap: "1%"
-  }
+    barCategoryGap: "1%",
+  },
 };
 
 export default page(
   "Histogram",
   barChart({
-    extraConfiguration: JSON.stringify(extraConfig),
-    lookup: lookup("histogram", )
+    extra: extraConfig,
+    lookup: lookup("histogram"),
   }),
-  table({
-    lookup: lookup("histogram", )
+  dataTable({
+    lookup: lookup("histogram"),
   }),
-  { datasets: [histogramDs] });
+  { datasets: [histogramDs] },
+);

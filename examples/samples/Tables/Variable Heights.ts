@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { PagesDataTable } from '@casehubio/pages-table';
 
 // Apply variable row heights on each tab.
@@ -6,7 +5,7 @@ import type { PagesDataTable } from '@casehubio/pages-table';
 // Callback Heights: rowHeight = function returning 64px every 3rd row.
 // Written to survive stripTs() — no lowercase type annotations.
 
-function applyAutoHeight(table) {
+function applyAutoHeight(table: PagesDataTable) {
   table.rowHeight = 'auto';
   var shadow = table.shadowRoot;
   if (shadow && !shadow.querySelector('.vh-wrap')) {
@@ -17,8 +16,8 @@ function applyAutoHeight(table) {
   }
 }
 
-function applyCallbackHeight(table) {
-  table.rowHeight = function(_row, index) {
+function applyCallbackHeight(table: PagesDataTable) {
+  table.rowHeight = function(_row: any, index: number) {
     return index % 3 === 0 ? 64 : 40;
   };
 }
@@ -27,9 +26,9 @@ function configureTable() {
   var tables = document.querySelectorAll('pages-data-table');
   if (tables.length === 0) return;
 
-  tables.forEach(function(t) {
-    if (t.__vhDone) return;
-    t.__vhDone = true;
+  tables.forEach(function(t: any) {
+    if ((t as any).__vhDone) return;
+    (t as any).__vhDone = true;
 
     var tabButtons = document.querySelectorAll('[role="tab"]');
     var activeTab = '';
@@ -51,8 +50,8 @@ function configureTable() {
 
 var vhObserver = new MutationObserver(function() {
   var tables = document.querySelectorAll('pages-data-table');
-  tables.forEach(function(t) {
-    if (!t.__vhDone) {
+  tables.forEach(function(t: any) {
+    if (!(t as any).__vhDone) {
       setTimeout(configureTable, 200);
     }
   });

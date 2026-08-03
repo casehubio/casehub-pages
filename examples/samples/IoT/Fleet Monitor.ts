@@ -1,4 +1,5 @@
-// @ts-nocheck
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 import {
   page, bind, inlineSource,
   sidebar,
@@ -10,7 +11,7 @@ import {
   areaChart,
   timeseries,
   selector,
-  table,
+  dataTable,
   meter,
   lookup,
   groupBy,
@@ -69,14 +70,14 @@ const sensorDataset = bind("sensor_readings", inlineSource([
     ["2026-06-25T08:00", "DEV-005", "Loading Dock", 26.3, 60, 1011, 8, "Online"],
   ], {
     columns: [
-      { id: "timestamp", type: "DATE" },
-      { id: "deviceId", type: "LABEL" },
-      { id: "location", type: "LABEL" },
-      { id: "temperature", type: "NUMBER" },
-      { id: "humidity", type: "NUMBER" },
-      { id: "pressure", type: "NUMBER" },
-      { id: "battery", type: "NUMBER" },
-      { id: "status", type: "LABEL" },
+      { id: "timestamp" as ColumnId, type: ColumnType.DATE },
+      { id: "deviceId" as ColumnId, type: ColumnType.LABEL },
+      { id: "location" as ColumnId, type: ColumnType.LABEL },
+      { id: "temperature" as ColumnId, type: ColumnType.NUMBER },
+      { id: "humidity" as ColumnId, type: ColumnType.NUMBER },
+      { id: "pressure" as ColumnId, type: ColumnType.NUMBER },
+      { id: "battery" as ColumnId, type: ColumnType.NUMBER },
+      { id: "status" as ColumnId, type: ColumnType.LABEL },
     ],
   }));
 
@@ -89,31 +90,31 @@ const devicesDataset = bind("devices", inlineSource([
     ["DEV-006", "Server Room Monitor S1", 51.5070, -0.1265, "Industrial", "2024-11-01", "Offline"],
   ], {
     columns: [
-      { id: "deviceId", type: "LABEL" },
-      { id: "name", type: "TEXT" },
-      { id: "lat", type: "NUMBER" },
-      { id: "lon", type: "NUMBER" },
-      { id: "type", type: "LABEL" },
-      { id: "installDate", type: "DATE" },
-      { id: "status", type: "LABEL" },
+      { id: "deviceId" as ColumnId, type: ColumnType.LABEL },
+      { id: "name" as ColumnId, type: ColumnType.TEXT },
+      { id: "lat" as ColumnId, type: ColumnType.NUMBER },
+      { id: "lon" as ColumnId, type: ColumnType.NUMBER },
+      { id: "type" as ColumnId, type: ColumnType.LABEL },
+      { id: "installDate" as ColumnId, type: ColumnType.DATE },
+      { id: "status" as ColumnId, type: ColumnType.LABEL },
     ],
   }));
 
 export default page("Fleet Monitor",
   // Sidebar navigation
-  sidebar({ navGroupId: "IoTNav" }),
+  sidebar(),
 
   // === Page 1: Fleet Status ===
   page(
     "Fleet Status",
     // Row 1: Four metrics
-    columns({}, ["3", "3", "3", "3"], [
+    columns([3, 3, 3, 3], [
       metric({
         lookup: lookup(
-          "devices", filterBy("status", "NOT_IN", ["Offline"]),
+          "devices", filterBy("status", "NOT_IN", "Offline"),
           groupBy(null, count("deviceId"))),
         title: "Devices Online",
-        columns: [{ id: "deviceId", pattern: "#" }],
+        columns: [{ id: "deviceId" as ColumnId, pattern: "#" }],
       }),
     ], [
       metric({
@@ -131,13 +132,13 @@ export default page("Fleet Monitor",
           "sensor_readings", filterBy("battery", "LOWER_THAN", "20"),
           groupBy(null, count("battery"))),
         title: "Low Battery",
-        columns: [{ id: "battery", pattern: "#" }],
+        columns: [{ id: "battery" as ColumnId, pattern: "#" }],
       }),
     ]),
 
     // Row 2: Device registry table and three meters
-    columns({}, ["8", "4"], [
-      table({
+    columns([8, 4], [
+      dataTable({
         lookup: lookup("devices"),
         title: "Device Registry",
         sortable: true,
@@ -188,24 +189,30 @@ export default page("Fleet Monitor",
         "sensor_readings", groupBy("deviceId", col("deviceId"), avg("temperature"))),
       title: "Temperature by Device",
       zoom: true,
-      chart: { resizable: true, height: 300, grid: { x: false, y: false } },
+      resizable: true,
+      height: "300",
+      grid: { x: false, y: false },
     }),
 
     // Row 2: Humidity (smooth line) and Pressure (area)
-    columns({}, ["6", "6"], [
+    columns([6, 6], [
       lineChart({
         subtype: "smooth",
         lookup: lookup(
           "sensor_readings", groupBy("deviceId", col("deviceId"), avg("humidity"))),
         title: "Humidity by Device",
-        chart: { resizable: true, height: 300, grid: { x: false, y: false } },
+        resizable: true,
+        height: "300",
+        grid: { x: false, y: false },
       }),
     ], [
       areaChart({
         lookup: lookup(
           "sensor_readings", groupBy("deviceId", col("deviceId"), avg("pressure"))),
         title: "Pressure by Device",
-        chart: { resizable: true, height: 300, grid: { x: false, y: false } },
+        resizable: true,
+        height: "300",
+        grid: { x: false, y: false },
       }),
     ]),
 
@@ -214,7 +221,9 @@ export default page("Fleet Monitor",
       lookup: lookup(
         "sensor_readings", groupBy("timestamp", col("timestamp"), avg("battery"))),
       title: "Battery Level",
-      chart: { resizable: true, height: 300, grid: { x: false, y: false } },
+      resizable: true,
+      height: "300",
+      grid: { x: false, y: false },
     })
   ),
 
@@ -222,7 +231,7 @@ export default page("Fleet Monitor",
   page(
     "Device Detail",
     // Row 1: Devices table
-    table({
+    dataTable({
       lookup: lookup("devices"),
       title: "Devices",
       sortable: true,
@@ -230,13 +239,15 @@ export default page("Fleet Monitor",
     }),
 
     // Row 2: Readings by device and devices by type
-    columns({}, ["6", "6"], [
+    columns([6, 6], [
       barChart({
         lookup: lookup(
           "sensor_readings", groupBy("deviceId", col("deviceId"), avg("temperature"), avg("humidity"))),
         title: "Readings by Device",
         filter: { listening: true },
-        chart: { resizable: true, height: 300, grid: { x: false, y: false } },
+        resizable: true,
+        height: "300",
+        grid: { x: false, y: false },
       }),
     ], [
       pieChart({
@@ -245,19 +256,21 @@ export default page("Fleet Monitor",
           "devices", groupBy("type", col("type"), count("type"))),
         title: "Devices by Type",
         filter: { listening: true },
-        chart: { resizable: true, height: 300, grid: { x: false, y: false } },
+        resizable: true,
+        height: "300",
+        grid: { x: false, y: false },
       }),
     ]),
 
     // Row 3: Sensor readings table
-    table({
+    dataTable({
       lookup: lookup("sensor_readings"),
       title: "Sensor Readings",
       pageSize: 10,
       sortable: true,
       filter: { listening: true },
-      columns: [{ id: "battery", pattern: "##%" }],
+      columns: [{ id: "battery" as ColumnId, pattern: "##%" }],
     })
   ),
 
-  { mode: "dark", datasets: [sensorDataset, devicesDataset] });
+  { datasets: [sensorDataset, devicesDataset] });

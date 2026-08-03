@@ -1,10 +1,12 @@
-// @ts-nocheck
-import { page, barChart } from "@casehubio/pages-ui";
+import { page, bind, inlineSource, barChart, lookup } from "@casehubio/pages-ui";
+
+const ds = bind("data", inlineSource([["Hello World", 42]]));
 
 export default page(
   "InlineDataset",
   barChart({
     title: "Hello World",
-    dataSet: '["Hello World", 42]'
-  })
+    lookup: lookup("data"),
+  }),
+  { datasets: [ds] },
 );

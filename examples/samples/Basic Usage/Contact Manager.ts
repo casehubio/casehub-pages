@@ -1,7 +1,9 @@
-// @ts-nocheck
 import {
-  page, bind, inlineSource, title, table, textInput, numberInput,
-  dropdown, checkbox, datePicker, textarea, lookup} from "@casehubio/pages-ui";
+  page, bind, inlineSource, title, dataTable, textInput, numberInput,
+  dropdown, checkbox, datePicker, textarea, lookup,
+} from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 import type { DataSetId } from "@casehubio/pages-data";
 
@@ -13,25 +15,25 @@ const dataset = bind("contacts", inlineSource([
     [3, "Carol Davis", "carol@example.com", "+1-555-0103", "Work", "false", "2025-01-08", "On leave until March", 3],
   ], {
     columns: [
-      { id: "id", type: "NUMBER" },
-      { id: "name", type: "TEXT" },
-      { id: "email", type: "TEXT" },
-      { id: "phone", type: "TEXT" },
-      { id: "category", type: "LABEL" },
-      { id: "active", type: "LABEL" },
-      { id: "startDate", type: "DATE" },
-      { id: "notes", type: "TEXT" },
-      { id: "priority", type: "NUMBER" },
+      { id: "id" as ColumnId, type: ColumnType.NUMBER },
+      { id: "name" as ColumnId, type: ColumnType.TEXT },
+      { id: "email" as ColumnId, type: ColumnType.TEXT },
+      { id: "phone" as ColumnId, type: ColumnType.TEXT },
+      { id: "category" as ColumnId, type: ColumnType.LABEL },
+      { id: "active" as ColumnId, type: ColumnType.LABEL },
+      { id: "startDate" as ColumnId, type: ColumnType.DATE },
+      { id: "notes" as ColumnId, type: ColumnType.TEXT },
+      { id: "priority" as ColumnId, type: ColumnType.NUMBER },
     ],
   }));
 
 export default page("Contact List",
   title("Contact Manager"),
-  table({
+  dataTable({
     pageSize: 10,
     sortable: true,
     filter: { enabled: true, notification: true },
-    lookup: lookup(contacts, ),
+    lookup: lookup(contacts),
   }),
   page("Contact Form",
     textInput({ field: "name", label: "Full Name", required: true }),

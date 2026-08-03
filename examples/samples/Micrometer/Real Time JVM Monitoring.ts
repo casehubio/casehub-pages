@@ -1,107 +1,76 @@
-// @ts-nocheck
-import { page, bind, restSource, timeseries, columns, table, lookup } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType, dataSetId } from "@casehubio/pages-data";
+import { page, bind, restSource, timeseries, columns, dataTable, lookup, filterBy, groupBy, col, sum, withStyle } from "@casehubio/pages-ui";
 
-const historyDs = bind("history", restSource("${historyUrl}", {}));
-const metricsDs = bind("metrics", restSource("${metricsUrl}", {
+const historyDs = bind("history", restSource("${historyUrl}", dataSetId("history"), {}));
+const metricsDs = bind("metrics", restSource("${metricsUrl}", dataSetId("metrics"), {
   accumulate: true,
-  cacheMaxRows: 30000,
   refreshTime: "2second",
   expression: `$map($, function($v){ [$v[0], $v[1], $v[2] = 'NaN' ? -1 : $v[2], $now() ~> $toMillis()] })`,
   columns: [
-    { id: "metric", type: "label" },
-    { id: "labels", type: "label" },
-    { id: "value", type: "number" },
-    { id: "register", type: "number" },
+    { id: "metric" as ColumnId, type: ColumnType.LABEL },
+    { id: "labels" as ColumnId, type: ColumnType.LABEL },
+    { id: "value" as ColumnId, type: ColumnType.NUMBER },
+    { id: "register" as ColumnId, type: ColumnType.NUMBER },
   ],
 }));
 
 export default page("Real Time JVM Monitoring",
-  columns({ "margin-left": "10px" }, ["6"],
+  columns([6],
     [
-      table({
-        lookup: lookup("metrics", {
-          type: "group",
-          groupingKey: { sourceId: "register" },
-          functions: [
-            { source: "metric" },
-            { source: "register" },
-            { source: "value", function: "SUM" },
-          ],
-        }),
+      dataTable({
+        lookup: lookup("metrics",
+          groupBy("register", col("metric"), col("register"), sum("value"))),
       }),
     ]
   ),
 
-  columns({}, ["6", "6"],
+  columns([6, 6],
     [
       timeseries({
         lookup: lookup("history",
-          { type: "filter", column: "metric", function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
-          { type: "filter", column: "labels", function: "LIKE_TO", args: ['%heap%'] },
-          {
-            type: "group",
-            functions: [
-              { source: "labels" },
-              { source: "timestamp" },
-              { source: "value" },
-            ],
-          }),
-        general: { title: "Heap Memory Usage" },
-        chart: { height: 300, resizable: true },
+          filterBy("metric", "EQUALS_TO", "jvm_memory_used_bytes"),
+          filterBy("labels", "LIKE_TO", '%heap%'),
+          groupBy(null, col("labels"), col("timestamp"), col("value"))),
+        title: "Heap Memory Usage",
+        height: "300",
+        resizable: true,
       }),
     ],
     [
       timeseries({
         lookup: lookup("history",
-          { type: "filter", column: "metric", function: "EQUALS_TO", args: ["jvm_threads_live_threads"] },
-          {
-            type: "group",
-            functions: [
-              { source: "metric" },
-              { source: "timestamp" },
-              { source: "value" },
-            ],
-          }),
-        general: { title: "Live Threads" },
-        chart: { height: 300, resizable: true },
+          filterBy("metric", "EQUALS_TO", "jvm_threads_live_threads"),
+          groupBy(null, col("metric"), col("timestamp"), col("value"))),
+        title: "Live Threads",
+        height: "300",
+        resizable: true,
       }),
     ]
   ),
 
-  columns({ "margin-top": "20px" }, ["6", "6"],
+  withStyle({ "margin-top": "20px" }, columns([6, 6],
     [
       timeseries({
         lookup: lookup("history",
-          { type: "filter", column: "metric", function: "EQUALS_TO", args: ["jvm_classes_loaded_classes"] },
-          {
-            type: "group",
-            functions: [
-              { source: "metric" },
-              { source: "timestamp" },
-              { source: "value" },
-            ],
-          }),
-        general: { title: "Loaded Classes" },
-        chart: { height: 300, resizable: true },
+          filterBy("metric", "EQUALS_TO", "jvm_classes_loaded_classes"),
+          groupBy(null, col("metric"), col("timestamp"), col("value"))),
+        title: "Loaded Classes",
+        height: "300",
+        resizable: true,
       }),
     ],
     [
       timeseries({
         lookup: lookup("history",
-          { type: "filter", column: "metric", function: "EQUALS_TO", args: ["system_cpu_usage"] },
-          {
-            type: "group",
-            functions: [
-              { source: "metric" },
-              { source: "timestamp" },
-              { source: "value" },
-            ],
-          }),
-        general: { title: "CPU Usage" },
-        chart: { height: 300, resizable: true },
+          filterBy("metric", "EQUALS_TO", "system_cpu_usage"),
+          groupBy(null, col("metric"), col("timestamp"), col("value"))),
+        title: "CPU Usage",
+        height: "300",
+        resizable: true,
       }),
     ]
-  ),
+  )),
   {
     properties: { metricsUrl: "data/quarkus/metrics", historyUrl: "data/quarkus/history.json" },
     datasets: [historyDs, metricsDs],

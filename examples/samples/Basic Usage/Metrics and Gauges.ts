@@ -1,6 +1,7 @@
-// @ts-nocheck
 import {
-  page, bind, inlineSource, html, metric, meter, tabs, withStyle, lookup, groupBy, col} from "@casehubio/pages-ui";
+  page, bind, inlineSource, html, metric, meter, tabs, rows, withStyle, lookup, groupBy, col, sum} from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 // Datasets
 const productsData = [
@@ -13,10 +14,10 @@ const productsData = [
 
 const productsDs = bind("products", inlineSource(productsData, {
   columns: [
-    { id: "Section", type: "LABEL" },
-    { id: "Product", type: "LABEL" },
-    { id: "Quantity", type: "NUMBER" },
-    { id: "Quantity2", type: "NUMBER" }
+    { id: "Section" as ColumnId, type: ColumnType.LABEL },
+    { id: "Product" as ColumnId, type: ColumnType.LABEL },
+    { id: "Quantity" as ColumnId, type: ColumnType.NUMBER },
+    { id: "Quantity2" as ColumnId, type: ColumnType.NUMBER }
   ]
 }));
 
@@ -29,22 +30,20 @@ const memoryData = [
 
 const memoryUsageDs = bind("memory_usage", inlineSource(memoryData, {
   columns: [
-    { id: "Server", type: "LABEL" },
-    { id: "Usage", type: "NUMBER" }
+    { id: "Server" as ColumnId, type: ColumnType.LABEL },
+    { id: "Usage" as ColumnId, type: ColumnType.NUMBER }
   ]
 }));
 
 function metricPage() {
-  return [
+  return rows(
     html("Metric components render an HTML template based on data. Users can customize the HTML and Javascript based on data."),
     html("<h4><strong>Default Metric</strong></h4><br />"),
     metric({
       title: "Total Products",
-      height: 100,
-      width: 150,
-      lookup: lookup("products", groupBy(null, [
-          { source: "Quantity", function: "SUM" }
-        ]))
+      height: "100",
+      width: "150",
+      lookup: lookup("products", groupBy(null, sum("Quantity")))
     }),
     withStyle(
       { marginTop: "20px", marginBottom: "20px" },
@@ -54,21 +53,21 @@ function metricPage() {
       { border: "solid 1px" },
       metric({
         title: "Total Products",
-        html: '<h2><strong>&#10026; Total Products:</strong>&nbsp;<span id="${this}">${value}</span></h2>',
-        javascript: `
+        html: {
+          template: '<h2><strong>&#10026; Total Products:</strong>&nbsp;<span id="${this}">${value}</span></h2>',
+          javascript: `
           \${this}.onmouseover = function() {
             \${this}.style.color = "red";
           };
           \${this}.onmouseout = function() {
             \${this}.style.color = "black";
           };
-        `,
-        lookup: lookup("products", groupBy(null, [
-            { source: "Quantity", function: "SUM" }
-          ]))
+        `
+        },
+        lookup: lookup("products", groupBy(null, sum("Quantity")))
       })
     )
-  ];
+  );
 }
 
 function meterPage() {

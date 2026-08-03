@@ -1,24 +1,27 @@
-// @ts-nocheck
 import {
   page, bind, inlineSource,
-  site,
   pills,
   tree,
   tabs,
   menu,
   sidebar,
-  tiles,
   carousel,
   accordion,
-  appGrid,
+  grid,
+  at,
   html,
   metric,
   barChart,
   lineChart,
   pieChart,
-  table, lookup} from "@casehubio/pages-ui";
+  dataTable,
+  lookup,
+  groupBy,
+  sum
+} from "@casehubio/pages-ui";
 
-import type { DataSetId } from "@casehubio/pages-data";
+import type { DataSetId, ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 // TypeScript companion to "Navigation Rebinding.dash.yml"
 // Same three-level content hierarchy, different navigation wrappers — switch pills to compare
@@ -41,10 +44,10 @@ const salesDataset = bind("sales", inlineSource([
     ["West", "Q2", 45000, 52],
   ], {
     columns: [
-      { id: "Region", type: "LABEL" },
-      { id: "Quarter", type: "LABEL" },
-      { id: "Revenue", type: "NUMBER" },
-      { id: "Orders", type: "NUMBER" },
+      { id: "Region" as ColumnId, type: ColumnType.LABEL },
+      { id: "Quarter" as ColumnId, type: ColumnType.LABEL },
+      { id: "Revenue" as ColumnId, type: ColumnType.NUMBER },
+      { id: "Orders" as ColumnId, type: ColumnType.NUMBER },
     ],
   }));
 
@@ -56,10 +59,10 @@ const inventoryDataset = bind("inventory", inlineSource([
     ["Headsets", 210, 300, 70],
   ], {
     columns: [
-      { id: "Item", type: "LABEL" },
-      { id: "Stock", type: "NUMBER" },
-      { id: "Capacity", type: "NUMBER" },
-      { id: "Utilization", type: "NUMBER" },
+      { id: "Item" as ColumnId, type: ColumnType.LABEL },
+      { id: "Stock" as ColumnId, type: ColumnType.NUMBER },
+      { id: "Capacity" as ColumnId, type: ColumnType.NUMBER },
+      { id: "Utilization" as ColumnId, type: ColumnType.NUMBER },
     ],
   }));
 
@@ -71,8 +74,8 @@ const errorsDataset = bind("errors", inlineSource([
     ["Profile", 3],
   ], {
     columns: [
-      { id: "Metric", type: "LABEL" },
-      { id: "Count", type: "NUMBER" },
+      { id: "Metric" as ColumnId, type: ColumnType.LABEL },
+      { id: "Count" as ColumnId, type: ColumnType.NUMBER },
     ],
   }));
 
@@ -84,8 +87,8 @@ const latencyDataset = bind("latency", inlineSource([
     ["CDN", 15],
   ], {
     columns: [
-      { id: "Component", type: "LABEL" },
-      { id: "Latency", type: "NUMBER" },
+      { id: "Component" as ColumnId, type: ColumnType.LABEL },
+      { id: "Latency" as ColumnId, type: ColumnType.NUMBER },
     ],
   }));
 
@@ -100,10 +103,10 @@ const reportRunsDataset = bind("report-runs", inlineSource([
     ["SLA Compliance", "2026-06-17 23:00", "Completed", 6780],
   ], {
     columns: [
-      { id: "Report", type: "LABEL" },
-      { id: "RunTime", type: "LABEL" },
-      { id: "Status", type: "LABEL" },
-      { id: "Duration", type: "NUMBER" },
+      { id: "Report" as ColumnId, type: ColumnType.LABEL },
+      { id: "RunTime" as ColumnId, type: ColumnType.LABEL },
+      { id: "Status" as ColumnId, type: ColumnType.LABEL },
+      { id: "Duration" as ColumnId, type: ColumnType.NUMBER },
     ],
   }));
 
@@ -111,43 +114,46 @@ const reportRunsDataset = bind("report-runs", inlineSource([
 const dashboardPage = page("Dashboard",
   metric({
     title: "Total Revenue",
-    pattern: "$#,##0",
-    lookup: lookup(sales, { type: "GROUP", functions: [{ source: "Revenue", function: "SUM" }] },),
+    columns: [{ id: "Total" as ColumnId, pattern: "$#,##0" }],
+    lookup: lookup(sales, groupBy(null, sum("Revenue"))),
   }),
   metric({
     title: "Total Orders",
-    pattern: "#,##0",
-    lookup: lookup(sales, { type: "GROUP", functions: [{ source: "Orders", function: "SUM" }] },),
+    columns: [{ id: "Total" as ColumnId, pattern: "#,##0" }],
+    lookup: lookup(sales, groupBy(null, sum("Orders"))),
   }),
   barChart({
     title: "Revenue by Region",
-    lookup: lookup(sales, ),
-    chart: { resizable: true, height: 300 },
+    lookup: lookup(sales),
+    resizable: true,
+    height: "300",
   }),
 );
 
 const inventoryPage = page("Inventory",
-  table({
-    lookup: lookup(inventory, ),
+  dataTable({
+    lookup: lookup(inventory),
   }),
 );
 
 const reportsPage = page("Reports",
-  table({
-    lookup: lookup(reportRuns, ),
+  dataTable({
+    lookup: lookup(reportRuns),
   }),
   page("Errors",
     pieChart({
       title: "Error Distribution",
-      lookup: lookup(errors, ),
-      chart: { resizable: true, height: 300 },
+      lookup: lookup(errors),
+      resizable: true,
+      height: "300",
     }),
   ),
   page("Performance",
     lineChart({
       title: "Latency by Component",
-      lookup: lookup(latency, ),
-      chart: { resizable: true, height: 300 },
+      lookup: lookup(latency),
+      resizable: true,
+      height: "300",
     }),
   ),
 );
@@ -185,11 +191,11 @@ const sidebarView = page("Sidebar View",
   ),
 );
 
-const tilesView = page("Tiles View",
-  tiles(
-    ["Dashboard", dashboardPage],
-    ["Inventory", inventoryPage],
-    ["Reports", reportsPage],
+const gridView = page("Grid View",
+  grid(3,
+    at(0, 0, 1, 1, dashboardPage),
+    at(1, 0, 1, 1, inventoryPage),
+    at(2, 0, 1, 1, reportsPage),
   ),
 );
 
@@ -209,38 +215,24 @@ const accordionView = page("Accordion View",
   ),
 );
 
-const appGridView = page("App Grid View",
-  appGrid(
-    ["Dashboard", dashboardPage],
-    ["Inventory", inventoryPage],
-    ["Reports", reportsPage],
-  ),
-);
-
 // Top-level selector
-export default site(
-  page("index",
-    html(
-      `<div style="padding: 12px 20px; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #e0e0e0; margin-bottom: 16px; border-radius: 8px">
-        <strong style="font-size: 1.3em">Navigation Rebinding</strong>
-        <span style="margin-left: 12px; opacity: 0.7">Same three-level content hierarchy, different navigation wrappers — switch pills to compare</span>
-      </div>`
-    ),
-    pills(
-      ["Tree View", treeView],
-      ["Tabs View", tabsView],
-      ["Menu View", menuView],
-      ["Sidebar View", sidebarView],
-      ["Tiles View", tilesView],
-      ["Carousel View", carouselView],
-      ["Accordion View", accordionView],
-      ["App Grid View", appGridView],
-    ),
+export default page("Navigation Rebinding",
+  html(
+    `<div style="padding: 12px 20px; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #e0e0e0; margin-bottom: 16px; border-radius: 8px">
+      <strong style="font-size: 1.3em">Navigation Rebinding</strong>
+      <span style="margin-left: 12px; opacity: 0.7">Same three-level content hierarchy, different navigation wrappers — switch pills to compare</span>
+    </div>`
+  ),
+  pills(
+    ["Tree View", treeView],
+    ["Tabs View", tabsView],
+    ["Menu View", menuView],
+    ["Sidebar View", sidebarView],
+    ["Grid View", gridView],
+    ["Carousel View", carouselView],
+    ["Accordion View", accordionView],
   ),
   {
     datasets: [salesDataset, inventoryDataset, errorsDataset, latencyDataset, reportRunsDataset],
-    displayer: {
-      chart: { resizable: true, height: 300 },
-    },
   },
 );

@@ -1,7 +1,7 @@
-// @ts-nocheck
-import { page, bind, inlineSource, html, mapChart, rows, columns, lookup, groupBy, col} from "@casehubio/pages-ui";
+import { page, bind, inlineSource, html, mapChart, rows, columns, lookup, groupBy, col } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
-// Dataset
 const countriesData = [
   ["Brazil", 6],
   ["USA", 3],
@@ -11,14 +11,14 @@ const countriesData = [
   ["Canada", 6],
   ["Australia", 9],
   ["Mali", 4],
-  ["South Africa", 11]
+  ["South Africa", 11],
 ];
 
 const countriesDs = bind("countries", inlineSource(countriesData, {
   columns: [
-    { id: "Country", type: "LABEL" },
-    { id: "Value", type: "NUMBER" }
-  ]
+    { id: "Country" as ColumnId, type: ColumnType.LABEL },
+    { id: "Value" as ColumnId, type: ColumnType.NUMBER },
+  ],
 }));
 
 function countryLookup() {
@@ -28,24 +28,23 @@ function countryLookup() {
 export default page(
   "Maps",
   rows(
-    columns(
-      [6],
+    columns([6, 6],
       [
         html("<h4><strong>subtype MAP_REGIONS (default)</strong></h4><br />"),
         mapChart({
           resizable: true,
-          lookup: countryLookup()
-        })
+          lookup: countryLookup(),
+        }),
       ],
-      [6],
       [
         html("<h4><strong>subtype MAP_MARKERS</strong></h4><br />"),
         mapChart({
           subtype: "markers",
           resizable: true,
-          lookup: countryLookup()
-        })
-      ]
-    )
+          lookup: countryLookup(),
+        }),
+      ],
+    ),
   ),
-  { datasets: [countriesDs] });
+  { datasets: [countriesDs] },
+);

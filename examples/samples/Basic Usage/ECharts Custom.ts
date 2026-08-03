@@ -1,22 +1,22 @@
-// @ts-nocheck
-import { page, bind, inlineSource, iframePlugin, lookup, groupBy, col} from "@casehubio/pages-ui";
+import { page, bind, inlineSource, iframePlugin, lookup, groupBy, col } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
-// Dataset
 const productsData = [
   ["Computers", "Scanner", 5, 3],
   ["Computers", "Printer", 7, 4],
   ["Computers", "Laptop", 3, 2],
   ["Electronics", "Camera", 10, 7],
-  ["Electronics", "Headphones", 5, 9]
+  ["Electronics", "Headphones", 5, 9],
 ];
 
 const productsDs = bind("products", inlineSource(productsData, {
   columns: [
-    { id: "Section", type: "LABEL" },
-    { id: "Product", type: "LABEL" },
-    { id: "Quantity", type: "NUMBER" },
-    { id: "Quantity2", type: "NUMBER" }
-  ]
+    { id: "Section" as ColumnId, type: ColumnType.LABEL },
+    { id: "Product" as ColumnId, type: ColumnType.LABEL },
+    { id: "Quantity" as ColumnId, type: ColumnType.NUMBER },
+    { id: "Quantity2" as ColumnId, type: ColumnType.NUMBER },
+  ],
 }));
 
 const echartsOption = {
@@ -24,25 +24,15 @@ const echartsOption = {
     feature: {
       dataZoom: {},
       magicType: {
-        type: ["line", "bar", "stack"]
+        type: ["line", "bar", "stack"],
       },
-      saveAsImage: {}
-    }
+      saveAsImage: {},
+    },
   },
   series: [
-    {
-      type: "bar",
-      markLine: {
-        data: [{ type: "max" }]
-      }
-    },
-    {
-      type: "bar",
-      markLine: {
-        data: [{ type: "max" }]
-      }
-    }
-  ]
+    { type: "bar", markLine: { data: [{ type: "max" }] } },
+    { type: "bar", markLine: { data: [{ type: "max" }] } },
+  ],
 };
 
 export default page(
@@ -51,10 +41,11 @@ export default page(
     componentId: "echarts",
     width: "100%",
     height: "400px",
-    properties: {
+    settings: {
       "echarts.title": JSON.stringify({ text: "Products", left: "center" }),
-      "echarts.option": JSON.stringify(echartsOption)
+      "echarts.option": JSON.stringify(echartsOption),
     },
-    lookup: lookup("products", groupBy("product", col("product"), col("quantity"), col("quantity2")))
+    lookup: lookup("products", groupBy("product", col("product"), col("quantity"), col("quantity2"))),
   }),
-  { datasets: [productsDs] });
+  { datasets: [productsDs] },
+);

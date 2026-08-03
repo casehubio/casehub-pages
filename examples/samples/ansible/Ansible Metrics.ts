@@ -1,13 +1,14 @@
-// @ts-nocheck
-import { page, bind, restSource, html, metric, columns, lookup } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType, dataSetId } from "@casehubio/pages-data";
+import { page, bind, restSource, html, metric, columns, lookup, withStyle, filterBy, groupBy, col } from "@casehubio/pages-ui";
 
-const metricsDs = bind("metrics", restSource("data/metrics", {
+const metricsDs = bind("metrics", restSource("data/metrics", dataSetId("metrics"), {
   cacheEnabled: true,
   refreshTime: "1minute",
   columns: [
-    { id: "metric", type: "LABEL" },
-    { id: "labels", type: "LABEL" },
-    { id: "Value", type: "Number" },
+    { id: "metric" as ColumnId, type: ColumnType.LABEL },
+    { id: "labels" as ColumnId, type: ColumnType.LABEL },
+    { id: "Value" as ColumnId, type: ColumnType.NUMBER },
   ],
   headers: {
     Authorization: "${authorizationHeader}",
@@ -23,34 +24,34 @@ export default page("Ansible Metrics",
   // Access section
   html(`<p style="\${subTitlesStyle}">Access</p>`),
 
-  columns({}, ["3", "3", "3", "3"],
+  columns([3, 3, 3, 3],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_sessions_total"] },
-          { type: "filter", column: "labels", function: "EQUALS_TO", args: ['type="all"'] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Active Sessions" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_sessions_total"),
+          filterBy("labels", "EQUALS_TO", 'type="all"'),
+          groupBy(null, col("value"))),
+        title: "Active Sessions",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_users_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Users" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_users_total"),
+          groupBy(null, col("value"))),
+        title: "Users",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_teams_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Teams" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_teams_total"),
+          groupBy(null, col("value"))),
+        title: "Teams",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_organizations_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Organizations" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_organizations_total"),
+          groupBy(null, col("value"))),
+        title: "Organizations",
       })
     ]
   ),
@@ -58,33 +59,33 @@ export default page("Ansible Metrics",
   // Resources section
   html(`<p style="\${subTitlesStyle}">Resources</p>`),
 
-  columns({}, ["3", "3", "3", "3"],
+  columns([3, 3, 3, 3],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_inventories_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Inventories" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_inventories_total"),
+          groupBy(null, col("value"))),
+        title: "Inventories",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_projects_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Projects" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_projects_total"),
+          groupBy(null, col("value"))),
+        title: "Projects",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_job_templates_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Job Templates" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_job_templates_total"),
+          groupBy(null, col("value"))),
+        title: "Job Templates",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_inventory_scripts_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Inventory Scripts" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_inventory_scripts_total"),
+          groupBy(null, col("value"))),
+        title: "Inventory Scripts",
       })
     ]
   ),
@@ -92,69 +93,69 @@ export default page("Ansible Metrics",
   // Misc section
   html(`<p style="\${subTitlesStyle}">Misc</p>`),
 
-  columns({}, ["3", "3", "3", "3"],
+  columns([3, 3, 3, 3],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_running_jobs_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Running Jobs" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_running_jobs_total"),
+          groupBy(null, col("value"))),
+        title: "Running Jobs",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_pending_jobs_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Pending Jobs" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_pending_jobs_total"),
+          groupBy(null, col("value"))),
+        title: "Pending Jobs",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_hosts_total"] },
-          { type: "filter", column: "labels", function: "EQUALS_TO", args: ['type="all"'] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "All Hosts" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_hosts_total"),
+          filterBy("labels", "EQUALS_TO", 'type="all"'),
+          groupBy(null, col("value"))),
+        title: "All Hosts",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_hosts_total"] },
-          { type: "filter", column: "labels", function: "EQUALS_TO", args: ['type="active"'] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Active Hosts" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_hosts_total"),
+          filterBy("labels", "EQUALS_TO", 'type="active"'),
+          groupBy(null, col("value"))),
+        title: "Active Hosts",
       })
     ]
   ),
 
-  columns({ "margin-top": "20px" }, ["3", "3", "3", "3"],
+  withStyle({ "margin-top": "20px" }, columns([3, 3, 3, 3],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_schedules_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Schedules" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_schedules_total"),
+          groupBy(null, col("value"))),
+        title: "Schedules",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_custom_virtualenvs_total"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Virtual Envs" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_custom_virtualenvs_total"),
+          groupBy(null, col("value"))),
+        title: "Virtual Envs",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_instance_capacity"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Instance Capacity" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_instance_capacity"),
+          groupBy(null, col("value"))),
+        title: "Instance Capacity",
       })
     ],
     [
       metric({
-        lookup: lookup("metrics", { type: "filter", column: "metric", function: "EQUALS_TO", args: ["awx_instance_remaining_capacity"] },
-          { type: "group", functions: [{ source: "value" }] }),
-        general: { title: "Remaining Capacity" },
+        lookup: lookup("metrics", filterBy("metric", "EQUALS_TO", "awx_instance_remaining_capacity"),
+          groupBy(null, col("value"))),
+        title: "Remaining Capacity",
       })
     ]
-  ),
+  )),
   {
     properties: {
       token: "your token here",

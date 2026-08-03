@@ -1,8 +1,7 @@
-// @ts-nocheck
 import {
   page, bind, inlineSource,
   html,
-  table,
+  dataTable,
   metric,
   withAccess,
   rows,
@@ -13,6 +12,9 @@ import {
   join,
   count,
 } from "@casehubio/pages-ui";
+
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType } from "@casehubio/pages-data";
 
 const teamData = [
   ["Platform", "Alice Johnson", "Tech Lead", "alice@example.com", "Engineering"],
@@ -31,11 +33,11 @@ const teamData = [
 
 const teamMembersDs = bind("team_members", inlineSource(teamData, {
   columns: [
-    { id: "Team", type: "LABEL" },
-    { id: "Member", type: "LABEL" },
-    { id: "Role", type: "LABEL" },
-    { id: "Email", type: "LABEL" },
-    { id: "Department", type: "LABEL" },
+    { id: "Team" as ColumnId, type: ColumnType.LABEL },
+    { id: "Member" as ColumnId, type: ColumnType.LABEL },
+    { id: "Role" as ColumnId, type: ColumnType.LABEL },
+    { id: "Email" as ColumnId, type: ColumnType.LABEL },
+    { id: "Department" as ColumnId, type: ColumnType.LABEL },
   ],
 }));
 
@@ -50,7 +52,7 @@ const overviewPage = page(
 </div>`),
     ]),
     columns([12], [
-      table({
+      dataTable({
         title: "Teams Overview",
         pageSize: 10,
         sortable: true,
@@ -71,7 +73,7 @@ const teamDetailPage = page(
 </div>`),
     ]),
     columns([12], [
-      table({
+      dataTable({
         title: "All Team Members",
         pageSize: 15,
         sortable: true,
@@ -90,28 +92,20 @@ const adminSettingsPage = page(
   ↳ Admin Settings (inline TypeScript equivalent) — Admin access required
 </div>`),
     ]),
-    columns(
-      [4],
-      [
+    columns([4, 4, 4], [
         metric({
           title: "Total Teams",
-          pattern: "#,##0",
+          columns: [{ id: "Count" as ColumnId, pattern: "#,##0" }],
           lookup: lookup("team_members", groupBy(null, count("Team"))),
         }),
-      ],
-      [4],
-      [
         metric({
           title: "Total Members",
-          pattern: "#,##0",
+          columns: [{ id: "Count" as ColumnId, pattern: "#,##0" }],
           lookup: lookup("team_members", groupBy(null, count("Member"))),
         }),
-      ],
-      [4],
-      [
         metric({
           title: "Departments",
-          pattern: "#,##0",
+          columns: [{ id: "Count" as ColumnId, pattern: "#,##0" }],
           lookup: lookup("team_members", groupBy(null, count("Department"))),
         }),
       ],
@@ -124,4 +118,5 @@ export default page(
   overviewPage,
   teamDetailPage,
   withAccess({ roles: ["admin"] }, adminSettingsPage),
+  { datasets: [teamMembersDs] }
 );

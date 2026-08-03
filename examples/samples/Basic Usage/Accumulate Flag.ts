@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { page, bind, inlineSource, timeseries, lookup} from "@casehubio/pages-ui";
+import { page, bind, inlineSource, timeseries, lookup } from "@casehubio/pages-ui";
 
 const productsData = [
   ["test", 1718460000000, 23],
@@ -21,20 +20,18 @@ const productsData = [
   ["test", 1718517600000, 37],
   ["test", 1718521200000, 63],
   ["test", 1718524800000, 32],
-  ["test", 1718528400000, 51]
+  ["test", 1718528400000, 51],
 ];
 
 const productsDs = bind("products", inlineSource(productsData, {
-  accumulate: true,
-  cacheMaxRows: 20,
-  refreshTime: "1second",
-  expression: '[["test", $now() ~> $toMillis(), ($random() * 100)]]'
+  expression: '[["test", $now() ~> $toMillis(), ($random() * 100)]]',
 }));
 
 export default page(
   "Accumulate Flag",
   timeseries({
     resizable: true,
-    lookup: lookup("products", )
+    lookup: lookup("products"),
   }),
-  { datasets: [productsDs] });
+  { datasets: [productsDs] },
+);

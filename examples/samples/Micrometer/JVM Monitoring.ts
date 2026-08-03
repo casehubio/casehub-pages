@@ -1,63 +1,54 @@
-// @ts-nocheck
-import { page, bind, restSource, metric, barChart, table, title, lookup } from "@casehubio/pages-ui";
+import type { ColumnId } from "@casehubio/pages-data";
+import { ColumnType, dataSetId } from "@casehubio/pages-data";
+import { page, bind, restSource, metric, barChart, dataTable, title, lookup, filterBy, groupBy, max, sortBy, col } from "@casehubio/pages-ui";
 
-const popDs = bind("pop", restSource("${metricsUrl}", {
+const popDs = bind("pop", restSource("${metricsUrl}", dataSetId("pop"), {
   columns: [
-    { id: "Metric", type: "LABEL" },
-    { id: "Labels", type: "LABEL" },
-    { id: "Value", type: "NUMBER" },
+    { id: "Metric" as ColumnId, type: ColumnType.LABEL },
+    { id: "Labels" as ColumnId, type: ColumnType.LABEL },
+    { id: "Value" as ColumnId, type: ColumnType.NUMBER },
   ],
 }));
 
 export default page("JVM Monitoring",
   metric({
     lookup: lookup("pop",
-      { type: "filter", column: "Metric", function: "EQUALS_TO", args: ["system_cpu_usage"] },
-      { type: "sort", column: "Total", order: "DESCENDING" },
-      { type: "group", functions: [{ source: "Value", function: "MAX", column: "Total" }] }),
-    general: { title: "System CPU Usage" },
-    chart: { height: 200, resizable: true, margin: { left: 10, bottom: "60" } },
-    columns: [{ id: "Total", expression: "value * 100" }],
+      filterBy("Metric", "EQUALS_TO", "system_cpu_usage"),
+      sortBy("Total", "DESCENDING"),
+      groupBy(null, max("Value"))),
+    title: "System CPU Usage",
+    height: "200",
+    columns: [{ id: "Total" as ColumnId, expression: "value * 100" }],
   }),
 
   title("Threads"),
 
   barChart({
     lookup: lookup("pop",
-      { type: "filter", column: "Metric", function: "EQUALS_TO", args: ["jvm_threads_states_threads"] },
-      { type: "sort", column: "Total", order: "DESCENDING" },
-      {
-        type: "group",
-        groupingKey: { sourceId: "Labels" },
-        functions: [
-          { source: "Labels" },
-          { source: "Value", function: "MAX", column: "Total" },
-        ],
-      }),
-    chart: { resizable: true, height: 300, margin: { left: 90 } },
-    columns: [{ id: "Labels", expression: `value.replaceAll('state="', '').replaceAll('",', '')` }],
+      filterBy("Metric", "EQUALS_TO", "jvm_threads_states_threads"),
+      sortBy("Total", "DESCENDING"),
+      groupBy("Labels", col("Labels"), max("Value", "Total"))),
+    resizable: true,
+    height: "300",
+    margin: { left: 90 },
+    columns: [{ id: "Labels" as ColumnId, expression: `value.replaceAll('state="', '').replaceAll('",', '')` }],
   }),
 
   title("JVM Memory Used Bytes"),
 
   barChart({
     lookup: lookup("pop",
-      { type: "filter", column: "Metric", function: "EQUALS_TO", args: ["jvm_memory_used_bytes"] },
-      { type: "sort", column: "Total", order: "DESCENDING" },
-      {
-        type: "group",
-        groupingKey: { sourceId: "Labels" },
-        functions: [
-          { source: "Labels" },
-          { source: "Value", function: "MAX", column: "Total" },
-        ],
-      }),
-    axis: { x: { labels_angle: 10 } },
-    chart: { resizable: true, height: 300, margin: { left: 90 } },
+      filterBy("Metric", "EQUALS_TO", "jvm_memory_used_bytes"),
+      sortBy("Total", "DESCENDING"),
+      groupBy("Labels", col("Labels"), max("Value", "Total"))),
+    xAxis: { labelAngle: 10 },
+    resizable: true,
+    height: "300",
+    margin: { left: 90 },
     columns: [
-      { id: "Total", pattern: "#" },
+      { id: "Total" as ColumnId, pattern: "#" },
       {
-        id: "Labels",
+        id: "Labels" as ColumnId,
         expression: `value.replaceAll('id="', ' ').replaceAll('area="heap",', "").replaceAll('area="nonheap",', "").replaceAll('",', "").trim()`,
       },
     ],
@@ -65,9 +56,10 @@ export default page("JVM Monitoring",
 
   title("All Metrics"),
 
-  table({
+  dataTable({
     lookup: lookup("pop"),
-    chart: { height: 400, resizable: true },
+    height: "400",
+    resizable: true,
   }),
   {
     properties: { refreshInterval: "5", metricsUrl: "data/quarkus/metrics" },

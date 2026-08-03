@@ -166,90 +166,90 @@ export function sortBy(column: string, order: SortOrder = "ASCENDING"): SortOp {
 }
 
 // Result column helpers
-export function col(source: string): ResultColumn {
+export function col(source: string, alias?: string): ResultColumn {
   return Object.freeze({
-    kind: "select" as const, // Default to select; groupBy() will change to "key" if needed
+    kind: "select" as const, // groupBy() promotes to "key" if sourceId matches the group source
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
   });
 }
 
-export function sum(source: string): ResultColumn {
+export function sum(source: string, alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "SUM" as const });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
 
-export function avg(source: string): ResultColumn {
+export function avg(source: string, alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "AVERAGE" as const });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
 
-export function count(source: string): ResultColumn {
+export function count(source: string, alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "COUNT" as const });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
 
-export function min(source: string): ResultColumn {
+export function min(source: string, alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "MIN" as const });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
 
-export function max(source: string): ResultColumn {
+export function max(source: string, alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "MAX" as const });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
 
-export function distinct(source: string): ResultColumn {
+export function distinct(source: string, alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "DISTINCT" as const });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
 
-export function join(source: string, separator: string = ", "): ResultColumn {
+export function join(source: string, separator: string = ", ", alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "JOIN" as const, separator });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
 
-export function distinctJoin(source: string, separator: string = ", "): ResultColumn {
+export function distinctJoin(source: string, separator: string = ", ", alias?: string): ResultColumn {
   const fn: Aggregation = Object.freeze({ fn: "DISTINCTJOIN" as const, separator });
   return Object.freeze({
     kind: "aggregate" as const,
     sourceId: source as ColumnId,
-    columnId: source as ColumnId,
+    columnId: (alias ?? source) as ColumnId,
     fn,
   });
 }
