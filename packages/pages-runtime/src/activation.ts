@@ -33,6 +33,10 @@ import "@casehubio/pages-ui-components/textarea";
 import "@casehubio/pages-ui-components/checkbox";
 
 const STANDALONE_FORM_TYPES = new Set(["input", "select", "textarea", "checkbox"]);
+
+const TAG_NAME_OVERRIDES: ReadonlyMap<string, string> = new Map([
+  ["badge", "pages-data-badge"],
+]);
 const LEGACY_FORM_TYPES = new Set(["number-input", "date-picker"]);
 const FORM_INPUT_TYPES = new Set([...STANDALONE_FORM_TYPES, ...LEGACY_FORM_TYPES]);
 
@@ -195,7 +199,7 @@ export function createActivationCallback(
     }
 
     if (DATA_COMPONENT_TYPES.has(component.type)) {
-      const tagName = `pages-${component.type}`;
+      const tagName = TAG_NAME_OVERRIDES.get(component.type) ?? `pages-${component.type}`;
       const vizEl = document.createElement(tagName) as PagesElement<VizComponentProps>;
 
       const isFormInput = FORM_INPUT_TYPES.has(component.type);

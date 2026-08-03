@@ -26,7 +26,7 @@ describe("PagesBadge", () => {
   let element: PagesBadge;
 
   beforeEach(() => {
-    element = document.createElement("pages-badge");
+    element = document.createElement("pages-data-badge") as unknown as PagesBadge;
     document.body.appendChild(element);
   });
 

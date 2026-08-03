@@ -18,7 +18,7 @@ const DEFAULT_PALETTE = [
   "var(--pages-danger-11)",
 ];
 
-@customElement("pages-badge")
+@customElement("pages-data-badge")
 export class PagesBadge extends PagesElement<BadgeProps> {
   private _colorCache = new Map<string, string>();
 
