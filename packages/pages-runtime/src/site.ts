@@ -60,6 +60,7 @@ import {ActionExecutor} from "./action.js";
 import type {PagesActionRequestDetail} from "@casehubio/pages-component";
 import type {DevAuthConfig} from "./dev-auth.js";
 import {createDevAuthTokenFn} from "./dev-auth.js";
+import {DetachController, DetachRegistry, copyStyles} from "./detach/index.js";
 
 // --- Event detail interfaces for typed CustomEvent access ---
 
@@ -906,6 +907,32 @@ export async function loadSite(
     scheduleLayoutSave();
   }), { signal: abortController.signal });
 
+  // --- Panel detach ---
+
+  const detachRegistry = new DetachRegistry();
+
+  target.addEventListener("pages-panel-detach", ((e: Event) => {
+    const { componentId } = (e as CustomEvent<{ componentId: string }>).detail;
+    const existing = detachRegistry.get(componentId);
+    if (existing?.isDetached) {
+      existing.childWindow?.focus();
+      return;
+    }
+    if (existing) detachRegistry.remove(componentId);
+
+    const container = target.querySelector<HTMLElement>(
+      `[data-component-id="${componentId}"]`
+    );
+    if (!container) return;
+
+    const titleEl = container.querySelector("[data-panel-title]");
+    const panelTitle = titleEl?.textContent ?? "Panel";
+
+    const ctrl = new DetachController(componentId, container, panelTitle);
+    detachRegistry.register(componentId, ctrl);
+    ctrl.detach();
+  }), { signal: abortController.signal });
+
   // --- Layout helpers ---
 
   function applySavedSplitRatios(scope: HTMLElement): void {
@@ -1044,6 +1071,11 @@ export async function loadSite(
           (vizEl as unknown as { theme: string }).theme = echartsThemeName;
         }
       }
+      detachRegistry.forEach((ctrl) => {
+        if (ctrl.isDetached && ctrl.childWindow) {
+          copyStyles(document, ctrl.childWindow.document);
+        }
+      });
     },
 
     navigate(path: string): void {
@@ -1056,6 +1088,7 @@ export async function loadSite(
     },
 
     dispose(): void {
+      detachRegistry.reattachAll();
       abortController.abort();
       if (typeof window !== "undefined") {
         window.removeEventListener("beforeunload", onBeforeUnload);

@@ -113,6 +113,28 @@ export function createActivationCallback(
       el.hidden = true;
     }
 
+    if (component.type === "panel" || component.type === "host-panel") {
+      const titleBar = el.querySelector("[data-panel-title]") as HTMLElement | null;
+      if (titleBar) {
+        titleBar.style.position = "relative";
+        const detachBtn = document.createElement("button");
+        detachBtn.dataset.detach = "";
+        detachBtn.textContent = "↗";
+        detachBtn.title = "Detach panel";
+        detachBtn.style.cssText = "position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;font-size:14px;opacity:0.5;padding:2px 4px;border-radius:var(--pages-radius-sm,4px);";
+        detachBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          el.dispatchEvent(new CustomEvent("pages-panel-detach", {
+            bubbles: true, composed: true,
+            detail: { componentId },
+          }));
+        });
+        detachBtn.addEventListener("mouseenter", () => { detachBtn.style.opacity = "1"; });
+        detachBtn.addEventListener("mouseleave", () => { detachBtn.style.opacity = "0.5"; });
+        titleBar.appendChild(detachBtn);
+      }
+    }
+
     // Register DataScope and SaveConfig for page components
     if (component.type === "page" && options) {
       const pageProps = component.props as PageProps | undefined;

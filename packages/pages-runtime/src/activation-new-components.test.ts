@@ -28,7 +28,8 @@ describe("activation - new component types", () => {
         const { el } = setup(component);
         const child = el.firstElementChild;
         expect(child).toBeTruthy();
-        expect(child!.localName).toBe(`pages-${type}`);
+        const expectedTag = type === "badge" ? "pages-data-badge" : `pages-${type}`;
+        expect(child!.localName).toBe(expectedTag);
       });
 
       it(`registers ${type} in ComponentRegistry with lookup`, () => {
