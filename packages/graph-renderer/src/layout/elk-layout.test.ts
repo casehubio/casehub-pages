@@ -1,54 +1,163 @@
 import { describe, it, expect } from 'vitest';
-import type { Node, Edge } from '@xyflow/react';
+import { createGraph, type GraphModel } from '@casehubio/graph-core';
 import { computeElkLayout } from './elk-layout.js';
 
+const DEFAULT_NODE_WIDTH = 172;
+const DEFAULT_NODE_HEIGHT = 36;
+
 describe('computeElkLayout', () => {
-  const nodes: Node[] = [
-    { id: '1', position: { x: 0, y: 0 }, data: { label: 'Node 1' } },
-    { id: '2', position: { x: 0, y: 0 }, data: { label: 'Node 2' } },
-    { id: '3', position: { x: 0, y: 0 }, data: { label: 'Node 3' } },
-  ];
-
-  const edges: Edge[] = [
-    { id: 'e1-2', source: '1', target: '2' },
-    { id: 'e1-3', source: '1', target: '3' },
-  ];
-
-  it('assigns non-zero positions to nodes', async () => {
-    const result = await computeElkLayout(nodes, edges);
-    const nonZeroPositions = result.filter(
-      n => n.position.x !== 0 || n.position.y !== 0,
+  it('assigns positions to flat graph nodes', async () => {
+    const model = createGraph(
+      [
+        { id: '1', type: 'a', properties: { label: 'Node 1' } },
+        { id: '2', type: 'a', properties: { label: 'Node 2' } },
+        { id: '3', type: 'a', properties: { label: 'Node 3' } },
+      ],
+      [
+        { id: 'e1-2', type: '', source: '1', target: '2' },
+        { id: 'e1-3', type: '', source: '1', target: '3' },
+      ],
     );
-    expect(nonZeroPositions.length).toBeGreaterThan(0);
+    const result = await computeElkLayout(model);
+    expect(result.nodeLayouts.size).toBe(3);
+    const nonZero = [...result.nodeLayouts.values()].filter(
+      l => l.x !== 0 || l.y !== 0,
+    );
+    expect(nonZero.length).toBeGreaterThan(0);
   });
 
-  it('does not overlap nodes', async () => {
-    const result = await computeElkLayout(nodes, edges);
-    for (let i = 0; i < result.length; i++) {
-      for (let j = i + 1; j < result.length; j++) {
-        const a = result[i]!;
-        const b = result[j]!;
+  it('does not overlap flat nodes', async () => {
+    const model = createGraph(
+      [
+        { id: '1', type: 'a', properties: {} },
+        { id: '2', type: 'a', properties: {} },
+        { id: '3', type: 'a', properties: {} },
+      ],
+      [
+        { id: 'e1-2', type: '', source: '1', target: '2' },
+        { id: 'e1-3', type: '', source: '1', target: '3' },
+      ],
+    );
+    const result = await computeElkLayout(model);
+    const layouts = [...result.nodeLayouts.values()];
+    for (let i = 0; i < layouts.length; i++) {
+      for (let j = i + 1; j < layouts.length; j++) {
+        const a = layouts[i]!;
+        const b = layouts[j]!;
         const overlaps =
-          Math.abs(a.position.x - b.position.x) < 10 &&
-          Math.abs(a.position.y - b.position.y) < 10;
-        expect(overlaps, `nodes ${a.id} and ${b.id} overlap`).toBe(false);
+          Math.abs(a.x - b.x) < 10 && Math.abs(a.y - b.y) < 10;
+        expect(overlaps, `nodes overlap at (${a.x},${a.y}) and (${b.x},${b.y})`).toBe(false);
       }
     }
   });
 
-  it('handles containment groups', async () => {
-    const groupNodes: Node[] = [
-      { id: 'parent', position: { x: 0, y: 0 }, data: { label: 'Parent' }, style: { width: 200, height: 200 } },
-      { id: 'child1', position: { x: 0, y: 0 }, data: { label: 'Child 1' }, parentId: 'parent' },
-      { id: 'child2', position: { x: 0, y: 0 }, data: { label: 'Child 2' }, parentId: 'parent' },
-    ];
-    const groupEdges: Edge[] = [
-      { id: 'ec1-c2', source: 'child1', target: 'child2' },
-    ];
+  it('returns empty map for empty model', async () => {
+    const model = createGraph([], []);
+    const result = await computeElkLayout(model);
+    expect(result.nodeLayouts.size).toBe(0);
+  });
 
-    const result = await computeElkLayout(groupNodes, groupEdges);
-    expect(result).toHaveLength(3);
-    const parent = result.find(n => n.id === 'parent');
-    expect(parent).toBeDefined();
+  it('lays out nested graph with parent containing children', async () => {
+    const model = createGraph(
+      [
+        { id: 'parent', type: 'group', properties: {} },
+        { id: 'child1', type: 'a', parentId: 'parent', properties: {} },
+        { id: 'child2', type: 'a', parentId: 'parent', properties: {} },
+      ],
+      [{ id: 'ec', type: '', source: 'child1', target: 'child2' }],
+    );
+    const result = await computeElkLayout(model);
+    expect(result.nodeLayouts.size).toBe(3);
+    const parent = result.nodeLayouts.get('parent')!;
+    expect(parent.width).toBeGreaterThan(DEFAULT_NODE_WIDTH);
+    expect(parent.height).toBeGreaterThan(DEFAULT_NODE_HEIGHT);
+  });
+
+  it('handles deep nesting (grandparent → parent → child)', async () => {
+    const model = createGraph(
+      [
+        { id: 'gp', type: 'group', properties: {} },
+        { id: 'p', type: 'group', parentId: 'gp', properties: {} },
+        { id: 'c', type: 'a', parentId: 'p', properties: {} },
+      ],
+      [],
+    );
+    const result = await computeElkLayout(model);
+    expect(result.nodeLayouts.size).toBe(3);
+    const gp = result.nodeLayouts.get('gp')!;
+    const p = result.nodeLayouts.get('p')!;
+    expect(gp.width).toBeGreaterThan(p.width);
+  });
+
+  it('applies containerPadding option', async () => {
+    const model = createGraph(
+      [
+        { id: 'p', type: 'group', properties: {} },
+        { id: 'c', type: 'a', parentId: 'p', properties: {} },
+      ],
+      [],
+    );
+    const narrow = await computeElkLayout(model, { containerPadding: 5 });
+    const wide = await computeElkLayout(model, { containerPadding: 50 });
+    const narrowP = narrow.nodeLayouts.get('p')!;
+    const wideP = wide.nodeLayouts.get('p')!;
+    expect(wideP.width).toBeGreaterThan(narrowP.width);
+  });
+
+  it('applies direction option', async () => {
+    const model = createGraph(
+      [
+        { id: '1', type: 'a', properties: {} },
+        { id: '2', type: 'a', properties: {} },
+      ],
+      [{ id: 'e1', type: '', source: '1', target: '2' }],
+    );
+    const down = await computeElkLayout(model, { direction: 'DOWN' });
+    const right = await computeElkLayout(model, { direction: 'RIGHT' });
+    const downLayouts = [...down.nodeLayouts.values()];
+    const rightLayouts = [...right.nodeLayouts.values()];
+    const downYSpread = Math.abs(downLayouts[0]!.y - downLayouts[1]!.y);
+    const rightXSpread = Math.abs(rightLayouts[0]!.x - rightLayouts[1]!.x);
+    expect(downYSpread).toBeGreaterThan(0);
+    expect(rightXSpread).toBeGreaterThan(0);
+  });
+
+  it('handles cross-hierarchy edges', async () => {
+    const model = createGraph(
+      [
+        { id: 'p', type: 'group', properties: {} },
+        { id: 'c', type: 'a', parentId: 'p', properties: {} },
+        { id: 'ext', type: 'a', properties: {} },
+      ],
+      [{ id: 'e1', type: '', source: 'c', target: 'ext' }],
+    );
+    const result = await computeElkLayout(model);
+    expect(result.nodeLayouts.size).toBe(3);
+  });
+
+  it('throws on containment cycle instead of stack overflow', async () => {
+    const model: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'x', parentId: 'b', properties: {} },
+        { id: 'b', type: 'x', parentId: 'a', properties: {} },
+      ],
+      edges: [],
+    };
+    await expect(computeElkLayout(model)).rejects.toThrow('Containment cycle');
+  });
+
+  it('includes width and height in every NodeLayout', async () => {
+    const model = createGraph(
+      [
+        { id: '1', type: 'a', properties: {} },
+        { id: '2', type: 'a', properties: {} },
+      ],
+      [{ id: 'e1', type: '', source: '1', target: '2' }],
+    );
+    const result = await computeElkLayout(model);
+    for (const layout of result.nodeLayouts.values()) {
+      expect(layout.width).toBeGreaterThan(0);
+      expect(layout.height).toBeGreaterThan(0);
+    }
   });
 });

@@ -1,9 +1,22 @@
 import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
-import type { Node, Edge } from '@xyflow/react';
+import type { GraphModel, GraphNode } from '@casehubio/graph-core';
+import { rootNodes, childrenOf } from '@casehubio/graph-core';
 
 export interface ElkLayoutOptions {
   direction?: 'DOWN' | 'RIGHT' | 'LEFT' | 'UP';
   spacing?: number;
+  containerPadding?: number;
+}
+
+export interface NodeLayout {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface ElkLayoutResult {
+  readonly nodeLayouts: ReadonlyMap<string, NodeLayout>;
 }
 
 const DEFAULT_NODE_WIDTH = 172;
@@ -11,42 +24,65 @@ const DEFAULT_NODE_HEIGHT = 36;
 
 const elk = new ELK();
 
+function buildElkNode(
+  model: GraphModel,
+  node: GraphNode,
+  visited: Set<string>,
+  padding: number,
+): ElkNode {
+  if (visited.has(node.id)) {
+    throw new Error(`Containment cycle at node '${node.id}'`);
+  }
+  visited.add(node.id);
+
+  const children = childrenOf(model, node.id);
+  const elkNode: ElkNode = {
+    id: node.id,
+    width: DEFAULT_NODE_WIDTH,
+    height: DEFAULT_NODE_HEIGHT,
+  };
+  if (children.length > 0) {
+    elkNode.children = children.map(c => buildElkNode(model, c, visited, padding));
+    elkNode.layoutOptions = {
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+      'elk.padding': `[top=${padding},left=${padding},bottom=${padding},right=${padding}]`,
+    };
+  }
+  return elkNode;
+}
+
+function extractNodeLayouts(elkNodes: ElkNode[] | undefined, map: Map<string, NodeLayout>): void {
+  if (!elkNodes) return;
+  for (const n of elkNodes) {
+    map.set(n.id, {
+      x: n.x ?? 0,
+      y: n.y ?? 0,
+      width: n.width ?? DEFAULT_NODE_WIDTH,
+      height: n.height ?? DEFAULT_NODE_HEIGHT,
+    });
+    extractNodeLayouts(n.children, map);
+  }
+}
+
 export async function computeElkLayout(
-  nodes: Node[],
-  edges: Edge[],
+  model: GraphModel,
   options: ElkLayoutOptions = {},
-): Promise<Node[]> {
+): Promise<ElkLayoutResult> {
   const direction = options.direction ?? 'DOWN';
   const spacing = options.spacing ?? 50;
+  const padding = options.containerPadding ?? 20;
 
-  const rootChildren: ElkNode[] = [];
-  const childrenMap = new Map<string, ElkNode[]>();
-
-  for (const node of nodes) {
-    const elkNode: ElkNode = {
-      id: node.id,
-      width: (node.measured?.width as number | undefined) ?? (node.style?.width as number | undefined) ?? DEFAULT_NODE_WIDTH,
-      height: (node.measured?.height as number | undefined) ?? (node.style?.height as number | undefined) ?? DEFAULT_NODE_HEIGHT,
-    };
-
-    if (node.parentId) {
-      const siblings = childrenMap.get(node.parentId) ?? [];
-      siblings.push(elkNode);
-      childrenMap.set(node.parentId, siblings);
-    } else {
-      rootChildren.push(elkNode);
+  const roots = rootNodes(model);
+  if (roots.length === 0) {
+    if (model.nodes.length > 0) {
+      throw new Error('Containment cycle: no root nodes found — every node has a parent');
     }
+    return { nodeLayouts: new Map() };
   }
 
-  for (const elkNode of [...rootChildren, ...Array.from(childrenMap.values()).flat()]) {
-    const children = childrenMap.get(elkNode.id);
-    if (children) {
-      elkNode.children = children;
-      elkNode.layoutOptions = { 'elk.hierarchyHandling': 'INCLUDE_CHILDREN' };
-    }
-  }
+  const rootChildren = roots.map(n => buildElkNode(model, n, new Set(), padding));
 
-  const elkEdges: ElkExtendedEdge[] = edges.map(e => ({
+  const elkEdges: ElkExtendedEdge[] = model.edges.map(e => ({
     id: e.id,
     sources: [e.source],
     targets: [e.target],
@@ -66,18 +102,8 @@ export async function computeElkLayout(
 
   const layouted = await elk.layout(graph);
 
-  const positionMap = new Map<string, { x: number; y: number }>();
-  function extractPositions(elkNodes: ElkNode[] | undefined): void {
-    if (!elkNodes) return;
-    for (const n of elkNodes) {
-      positionMap.set(n.id, { x: n.x ?? 0, y: n.y ?? 0 });
-      extractPositions(n.children);
-    }
-  }
-  extractPositions(layouted.children);
+  const nodeLayouts = new Map<string, NodeLayout>();
+  extractNodeLayouts(layouted.children, nodeLayouts);
 
-  return nodes.map(node => ({
-    ...node,
-    position: positionMap.get(node.id) ?? node.position,
-  }));
+  return { nodeLayouts };
 }

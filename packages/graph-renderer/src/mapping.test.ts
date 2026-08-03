@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { toReactFlowNode, toReactFlowEdge, toReactFlowGraph } from './mapping.js';
 import type { GraphNode, GraphEdge, GraphModel } from '@casehubio/graph-core';
+import type { NodeLayout, ElkLayoutResult } from './layout/elk-layout.js';
 
 describe('toReactFlowNode', () => {
   const parentIds = new Set<string>();
@@ -123,5 +124,78 @@ describe('toReactFlowGraph', () => {
     const result = toReactFlowGraph(model);
     expect(result.nodes).toEqual([]);
     expect(result.edges).toEqual([]);
+  });
+});
+
+describe('toReactFlowNode with layout', () => {
+  it('applies position from NodeLayout', () => {
+    const node: GraphNode = { id: 'n1', type: 'a', properties: {} };
+    const layout: NodeLayout = { x: 100, y: 200, width: 172, height: 36 };
+    const result = toReactFlowNode(node, new Set(), layout);
+    expect(result.position).toEqual({ x: 100, y: 200 });
+  });
+
+  it('applies width/height to parent nodes from NodeLayout', () => {
+    const node: GraphNode = { id: 'p1', type: 'group', properties: {} };
+    const layout: NodeLayout = { x: 50, y: 60, width: 400, height: 300 };
+    const result = toReactFlowNode(node, new Set(['p1']), layout);
+    expect(result.style).toEqual(expect.objectContaining({ width: 400, height: 300 }));
+  });
+
+  it('does not apply width/height to non-parent nodes', () => {
+    const node: GraphNode = { id: 'n1', type: 'a', properties: {} };
+    const layout: NodeLayout = { x: 10, y: 20, width: 172, height: 36 };
+    const result = toReactFlowNode(node, new Set(), layout);
+    expect(result.style).toBeUndefined();
+  });
+});
+
+describe('toReactFlowGraph with layout', () => {
+  it('applies layout positions and container sizes', () => {
+    const model: GraphModel = {
+      nodes: [
+        { id: 'w1', type: 'group', properties: {} },
+        { id: 'b1', type: 'a', parentId: 'w1', properties: {} },
+      ],
+      edges: [],
+    };
+    const layout: ElkLayoutResult = {
+      nodeLayouts: new Map([
+        ['w1', { x: 0, y: 0, width: 400, height: 300 }],
+        ['b1', { x: 20, y: 20, width: 172, height: 36 }],
+      ]),
+    };
+    const result = toReactFlowGraph(model, layout);
+    const w1 = result.nodes.find(n => n.id === 'w1')!;
+    const b1 = result.nodes.find(n => n.id === 'b1')!;
+    expect(w1.position).toEqual({ x: 0, y: 0 });
+    expect(w1.style).toEqual(expect.objectContaining({ width: 400, height: 300 }));
+    expect(b1.position).toEqual({ x: 20, y: 20 });
+    expect(b1.style).toBeUndefined();
+  });
+
+  it('falls back to defaults when layout is absent', () => {
+    const model: GraphModel = {
+      nodes: [
+        { id: 'w1', type: 'group', properties: {} },
+        { id: 'b1', type: 'a', parentId: 'w1', properties: {} },
+      ],
+      edges: [],
+    };
+    const result = toReactFlowGraph(model);
+    const w1 = result.nodes.find(n => n.id === 'w1')!;
+    const b1 = result.nodes.find(n => n.id === 'b1')!;
+    expect(b1.position).toEqual({ x: 0, y: 0 });
+    expect(w1.style).toEqual(expect.objectContaining({ width: 280, height: 180 }));
+  });
+
+  it('falls back to {0,0} for nodes missing from layout map', () => {
+    const model: GraphModel = {
+      nodes: [{ id: 'n1', type: 'a', properties: {} }],
+      edges: [],
+    };
+    const layout: ElkLayoutResult = { nodeLayouts: new Map() };
+    const result = toReactFlowGraph(model, layout);
+    expect(result.nodes[0]!.position).toEqual({ x: 0, y: 0 });
   });
 });
