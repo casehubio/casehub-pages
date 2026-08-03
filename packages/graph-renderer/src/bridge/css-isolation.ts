@@ -20,6 +20,21 @@ export function getIsolationCSS(): string {
 }
 
 ${pluginStyles}
+
+.react-flow__controls {
+  background: var(--pages-neutral-1, #fafafa);
+  border: 1px solid var(--pages-neutral-4, #ccc);
+  border-radius: var(--pages-radius-md, 8px);
+}
+.react-flow__controls-button {
+  background: var(--pages-neutral-1, #fafafa);
+  border-bottom: 1px solid var(--pages-neutral-3, #ddd);
+  color: var(--pages-text-primary, #111);
+  fill: var(--pages-text-primary, #111);
+}
+.react-flow__controls-button:hover {
+  background: var(--pages-neutral-2, #f0f0f0);
+}
 `.trim();
 }
 

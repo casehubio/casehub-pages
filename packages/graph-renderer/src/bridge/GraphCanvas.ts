@@ -130,6 +130,10 @@ export class GraphCanvas extends LitElement {
         onViewportChange: (viewport: { x: number; y: number; zoom: number }) => {
           emitPagesEvent(this, 'graph:viewport:change', viewport);
         },
+        onRelayout: () => {
+          emitPagesEvent(this, 'graph:layout:relayout', {});
+          void this._runLayout();
+        },
       }),
     );
   }

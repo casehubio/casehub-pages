@@ -1396,7 +1396,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/graph-core@workspace:packages/graph-core":
+"@casehubio/graph-core@workspace:*, @casehubio/graph-core@workspace:packages/graph-core":
   version: 0.0.0-use.local
   resolution: "@casehubio/graph-core@workspace:packages/graph-core"
   dependencies:
@@ -1411,6 +1411,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/graph-renderer@workspace:packages/graph-renderer"
   dependencies:
+    "@casehubio/graph-core": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
