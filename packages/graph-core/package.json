@@ -12,6 +12,9 @@
     "test:watch": "vitest",
     "clean": "rimraf dist"
   },
+  "dependencies": {
+    "@types/json-schema": "^7.0.15"
+  },
   "devDependencies": {
     "@casehubio/pages-tsconfig": "workspace:*",
     "rimraf": "^6.1.0",

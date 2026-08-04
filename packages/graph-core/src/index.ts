@@ -1,4 +1,4 @@
-export type { GraphNode, GraphEdge, GraphModel } from './model.js';
+export type { GraphNode, GraphEdge, GraphModel, NodeDecoration, PropertySchema } from './model.js';
 export {
   createGraph,
   validateGraph,

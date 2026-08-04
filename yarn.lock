@@ -1401,6 +1401,7 @@ __metadata:
   resolution: "@casehubio/graph-core@workspace:packages/graph-core"
   dependencies:
     "@casehubio/pages-tsconfig": "workspace:*"
+    "@types/json-schema": "npm:^7.0.15"
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
     vitest: "npm:^3.0.0"

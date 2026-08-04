@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, Component, type ErrorInfo, type ReactNode } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { render, nothing, type TemplateResult, type SVGTemplateResult } from 'lit-html';
-import type { GraphNode } from '@casehubio/graph-core';
+import type { GraphNode, NodeDecoration } from '@casehubio/graph-core';
 import { getGrammar } from '@casehubio/graph-core';
 
 export type StencilTemplate = TemplateResult | SVGTemplateResult;
 
-export type StencilRenderFn = (node: GraphNode) => StencilTemplate;
+export type StencilRenderFn = (node: GraphNode, decoration?: NodeDecoration) => StencilTemplate;
 
 interface ErrorBoundaryProps {
   nodeType: string;
@@ -47,22 +47,86 @@ class StencilErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
+function DecorationBadge({ badge }: { badge: NonNullable<NodeDecoration['badge']> }): React.JSX.Element {
+  return (
+    <div
+      className="stencil-decoration-badge"
+      style={{
+        position: 'absolute',
+        top: -6,
+        right: -6,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '2px',
+        background: badge.color,
+        color: '#fff',
+        borderRadius: '10px',
+        padding: '2px 6px',
+        fontSize: '10px',
+        fontWeight: 600,
+        lineHeight: 1,
+        zIndex: 10,
+        animation: badge.pulse ? 'stencil-badge-pulse 1.5s ease-in-out infinite' : undefined,
+      }}
+    >
+      <span className="stencil-badge-icon">{badge.icon}</span>
+      {badge.count != null && <span className="stencil-badge-count">{badge.count}</span>}
+    </div>
+  );
+}
+
+function DecorationOverlay({ overlay }: { overlay: NonNullable<NodeDecoration['overlay']> }): React.JSX.Element {
+  const bg = overlay.type === 'heatmap'
+    ? `rgba(255, 69, 0, ${overlay.intensity * 0.4})`
+    : `rgba(59, 130, 246, ${overlay.intensity * 0.3})`;
+  return (
+    <div
+      className="stencil-decoration-overlay"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: bg,
+        borderRadius: 'inherit',
+        pointerEvents: 'none',
+        zIndex: 5,
+      }}
+    />
+  );
+}
+
+const PULSE_STYLE_ID = 'stencil-decoration-pulse';
+
+function ensurePulseStyle(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(PULSE_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = PULSE_STYLE_ID;
+  style.textContent = `@keyframes stencil-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}`;
+  document.head.appendChild(style);
+}
+
 export function createStencilNodeComponent(
   renderFn: StencilRenderFn,
 ): React.ComponentType<NodeProps> {
   function StencilNode({ id, type, data, parentId }: NodeProps): React.JSX.Element {
     const containerRef = useRef<HTMLDivElement>(null);
     const grammar = type ? getGrammar(type) : undefined;
+    const rawData = (data ?? {}) as Record<string, unknown>;
+    const decoration = rawData._decoration as NodeDecoration | undefined;
 
     useEffect(() => {
       if (!containerRef.current) return;
+      const { _decoration: _, ...properties } = rawData;
       const graphNode: GraphNode = {
         id,
         type: type ?? '',
         ...(parentId ? { parentId } : {}),
-        properties: (data ?? {}) as Readonly<Record<string, unknown>>,
+        properties: properties as Readonly<Record<string, unknown>>,
       };
-      render(renderFn(graphNode), containerRef.current);
+      render(renderFn(graphNode, decoration), containerRef.current);
     }, [id, type, data, parentId]);
 
     useEffect(() => {
@@ -73,12 +137,28 @@ export function createStencilNodeComponent(
       };
     }, []);
 
+    useEffect(() => {
+      if (decoration?.badge?.pulse) ensurePulseStyle();
+    }, [decoration?.badge?.pulse]);
+
+    const borderStyle = decoration?.border
+      ? { border: `2px ${decoration.border.style} ${decoration.border.color}` }
+      : undefined;
+
     return (
       <>
         {grammar?.connections.inbound.max !== 0 && (
           <Handle type="target" position={Position.Top} />
         )}
-        <div ref={containerRef} />
+        <div
+          className="stencil-decoration-wrapper"
+          style={{ position: 'relative', ...borderStyle }}
+          title={decoration?.tooltip}
+        >
+          {decoration?.badge && <DecorationBadge badge={decoration.badge} />}
+          {decoration?.overlay && <DecorationOverlay overlay={decoration.overlay} />}
+          <div ref={containerRef} />
+        </div>
         {grammar?.connections.outbound.max !== 0 && (
           <Handle type="source" position={Position.Bottom} />
         )}

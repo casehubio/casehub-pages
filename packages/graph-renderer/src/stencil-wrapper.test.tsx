@@ -3,7 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react';
 import { html } from 'lit-html';
-import type { GraphNode } from '@casehubio/graph-core';
+import type { GraphNode, NodeDecoration } from '@casehubio/graph-core';
 import { registerGrammar, clearGrammarRegistry } from '@casehubio/graph-core';
 
 vi.mock('@xyflow/react', () => ({
@@ -177,5 +177,136 @@ describe('createStencilNodeComponent', () => {
     expect(container.textContent).toContain('Stencil broke');
     unmount();
     consoleSpy.mockRestore();
+  });
+});
+
+describe('decoration rendering', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+  });
+
+  afterEach(() => {
+    clearGrammarRegistry();
+  });
+
+  it('passes decoration as second argument to render function', () => {
+    const received: Array<{ node: GraphNode; decoration: NodeDecoration | undefined }> = [];
+    const renderFn: StencilRenderFn = (node, decoration) => {
+      received.push({ node, decoration });
+      return html`<div>ok</div>`;
+    };
+    const decoration: NodeDecoration = { badge: { icon: 'play', color: 'green' } };
+    const Component = createStencilNodeComponent(renderFn);
+    const { unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { label: 'test', _decoration: decoration },
+    });
+    expect(received).toHaveLength(1);
+    expect(received[0]!.decoration).toEqual(decoration);
+    expect(received[0]!.node.properties).toEqual({ label: 'test' });
+    expect('_decoration' in received[0]!.node.properties).toBe(false);
+    unmount();
+  });
+
+  it('passes undefined decoration when none provided', () => {
+    const received: Array<{ decoration: NodeDecoration | undefined }> = [];
+    const renderFn: StencilRenderFn = (_node, decoration) => {
+      received.push({ decoration });
+      return html`<div>ok</div>`;
+    };
+    const Component = createStencilNodeComponent(renderFn);
+    const { unmount } = mountWithProps(Component, defaultNodeProps);
+    expect(received[0]!.decoration).toBeUndefined();
+    unmount();
+  });
+
+  it('renders badge element when decoration has badge', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = { badge: { icon: '▶', color: '#0f0', count: 3 } };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    const badge = container.querySelector('.stencil-decoration-badge');
+    expect(badge).not.toBeNull();
+    expect(badge?.querySelector('.stencil-badge-icon')?.textContent).toBe('▶');
+    expect(badge?.querySelector('.stencil-badge-count')?.textContent).toBe('3');
+    unmount();
+  });
+
+  it('omits badge count when not provided', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = { badge: { icon: '✓', color: 'blue' } };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    const countEl = container.querySelector('.stencil-badge-count');
+    expect(countEl).toBeNull();
+    unmount();
+  });
+
+  it('renders overlay element when decoration has overlay', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = { overlay: { type: 'heatmap', intensity: 0.5 } };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    const overlay = container.querySelector('.stencil-decoration-overlay');
+    expect(overlay).not.toBeNull();
+    unmount();
+  });
+
+  it('applies border style from decoration', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = { border: { style: 'dashed', color: 'red' } };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.style.border).toBe('2px dashed red');
+    unmount();
+  });
+
+  it('sets tooltip from decoration', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = { tooltip: 'Running: 3 of 5' };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+    expect(wrapper.title).toBe('Running: 3 of 5');
+    unmount();
+  });
+
+  it('renders no decoration elements when decoration is absent', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const { container, unmount } = mountWithProps(Component, defaultNodeProps);
+    expect(container.querySelector('.stencil-decoration-badge')).toBeNull();
+    expect(container.querySelector('.stencil-decoration-overlay')).toBeNull();
+    const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+    expect(wrapper.title).toBe('');
+    unmount();
+  });
+
+  it('existing stencils without second param still work', () => {
+    const renderFn = (node: GraphNode) => html`<span class="legacy">${String(node.properties['label'] ?? '')}</span>`;
+    const Component = createStencilNodeComponent(renderFn as StencilRenderFn);
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { label: 'Legacy', _decoration: { badge: { icon: 'x', color: 'red' } } },
+    });
+    expect(container.querySelector('.legacy')?.textContent).toBe('Legacy');
+    unmount();
   });
 });

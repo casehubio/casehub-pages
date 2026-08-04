@@ -1,4 +1,4 @@
-import type { GraphNode, GraphEdge, GraphModel } from '@casehubio/graph-core';
+import type { GraphNode, GraphEdge, GraphModel, NodeDecoration } from '@casehubio/graph-core';
 import type { Node, Edge } from '@xyflow/react';
 import type { NodeLayout, ElkLayoutResult } from './layout/elk-layout.js';
 
@@ -9,6 +9,7 @@ export function toReactFlowNode(
   node: GraphNode,
   parentIds: ReadonlySet<string>,
   nodeLayout?: NodeLayout,
+  decoration?: NodeDecoration,
 ): Node {
   const rfNode: Node = {
     id: node.id,
@@ -16,7 +17,10 @@ export function toReactFlowNode(
     position: nodeLayout
       ? { x: nodeLayout.x, y: nodeLayout.y }
       : { x: 0, y: 0 },
-    data: { ...node.properties },
+    data: {
+      ...node.properties,
+      ...(decoration ? { _decoration: decoration } : {}),
+    },
   };
 
   if (node.parentId) {
@@ -50,6 +54,7 @@ export function toReactFlowEdge(edge: GraphEdge): Edge {
 export function toReactFlowGraph(
   model: GraphModel,
   layout?: ElkLayoutResult,
+  decorations?: ReadonlyMap<string, NodeDecoration>,
 ): { nodes: Node[]; edges: Edge[] } {
   const parentIds = new Set<string>();
   for (const node of model.nodes) {
@@ -60,7 +65,7 @@ export function toReactFlowGraph(
 
   return {
     nodes: model.nodes.map(n =>
-      toReactFlowNode(n, parentIds, layout?.nodeLayouts.get(n.id)),
+      toReactFlowNode(n, parentIds, layout?.nodeLayouts.get(n.id), decorations?.get(n.id)),
     ),
     edges: model.edges.map(e => toReactFlowEdge(e)),
   };

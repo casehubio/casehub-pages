@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { toReactFlowNode, toReactFlowEdge, toReactFlowGraph } from './mapping.js';
-import type { GraphNode, GraphEdge, GraphModel } from '@casehubio/graph-core';
+import type { GraphNode, GraphEdge, GraphModel, NodeDecoration } from '@casehubio/graph-core';
 import type { NodeLayout, ElkLayoutResult } from './layout/elk-layout.js';
 
 describe('toReactFlowNode', () => {
@@ -197,5 +197,67 @@ describe('toReactFlowGraph with layout', () => {
     const layout: ElkLayoutResult = { nodeLayouts: new Map() };
     const result = toReactFlowGraph(model, layout);
     expect(result.nodes[0]!.position).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('toReactFlowNode with decoration', () => {
+  const parentIds = new Set<string>();
+
+  it('merges decoration into data under _decoration key', () => {
+    const node: GraphNode = { id: 'n1', type: 'binding', properties: { label: 'test' } };
+    const decoration: NodeDecoration = { badge: { icon: 'play', color: 'green', pulse: true } };
+    const result = toReactFlowNode(node, parentIds, undefined, decoration);
+    expect(result.data).toEqual({ label: 'test', _decoration: decoration });
+  });
+
+  it('omits _decoration key when no decoration provided', () => {
+    const node: GraphNode = { id: 'n1', type: 'binding', properties: { label: 'test' } };
+    const result = toReactFlowNode(node, parentIds);
+    expect(result.data).toEqual({ label: 'test' });
+    expect('_decoration' in (result.data as Record<string, unknown>)).toBe(false);
+  });
+
+  it('omits _decoration key when decoration is undefined', () => {
+    const node: GraphNode = { id: 'n1', type: 'binding', properties: {} };
+    const result = toReactFlowNode(node, parentIds, undefined, undefined);
+    expect('_decoration' in (result.data as Record<string, unknown>)).toBe(false);
+  });
+});
+
+describe('toReactFlowGraph with decorations', () => {
+  it('applies decorations to matching nodes', () => {
+    const model: GraphModel = {
+      nodes: [
+        { id: 'n1', type: 'a', properties: {} },
+        { id: 'n2', type: 'b', properties: {} },
+      ],
+      edges: [],
+    };
+    const decorations = new Map<string, NodeDecoration>([
+      ['n1', { badge: { icon: 'check', color: 'green' } }],
+    ]);
+    const result = toReactFlowGraph(model, undefined, decorations);
+    const n1 = result.nodes.find(n => n.id === 'n1')!;
+    const n2 = result.nodes.find(n => n.id === 'n2')!;
+    expect((n1.data as Record<string, unknown>)._decoration).toEqual({ badge: { icon: 'check', color: 'green' } });
+    expect('_decoration' in (n2.data as Record<string, unknown>)).toBe(false);
+  });
+
+  it('works with no decorations map', () => {
+    const model: GraphModel = {
+      nodes: [{ id: 'n1', type: 'a', properties: {} }],
+      edges: [],
+    };
+    const result = toReactFlowGraph(model);
+    expect('_decoration' in (result.nodes[0]!.data as Record<string, unknown>)).toBe(false);
+  });
+
+  it('works with empty decorations map', () => {
+    const model: GraphModel = {
+      nodes: [{ id: 'n1', type: 'a', properties: {} }],
+      edges: [],
+    };
+    const result = toReactFlowGraph(model, undefined, new Map());
+    expect('_decoration' in (result.nodes[0]!.data as Record<string, unknown>)).toBe(false);
   });
 });

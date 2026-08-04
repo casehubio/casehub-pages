@@ -18,3 +18,23 @@ export interface GraphModel {
   readonly edges: readonly GraphEdge[];
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
+
+export interface NodeDecoration {
+  readonly badge?: {
+    readonly icon: string;
+    readonly color: string;
+    readonly pulse?: boolean;
+    readonly count?: number;
+  };
+  readonly border?: {
+    readonly style: string;
+    readonly color: string;
+  };
+  readonly overlay?: {
+    readonly type: 'heatmap' | 'highlight';
+    readonly intensity: number;
+  };
+  readonly tooltip?: string;
+}
+
+export type { JSONSchema7 as PropertySchema } from 'json-schema';
