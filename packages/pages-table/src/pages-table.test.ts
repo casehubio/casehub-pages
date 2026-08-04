@@ -679,9 +679,9 @@ describe('pages-data-table', () => {
       const cssText = Array.isArray(styles)
         ? styles.map((s: any) => s.cssText ?? String(s)).join(' ')
         : styles.cssText ?? String(styles);
-      const hostMatch = cssText.match(/:host\s*\{[^}]*\}/);
-      expect(hostMatch).not.toBeNull();
-      expect(hostMatch![0]).toContain('height');
+      const scrollHostMatch = cssText.match(/:host\(\[mode="scroll"\]\)\s*\{[^}]*\}/);
+      expect(scrollHostMatch).not.toBeNull();
+      expect(scrollHostMatch![0]).toContain('height');
     });
   });
 
@@ -1811,6 +1811,35 @@ describe('pages-data-table', () => {
       const spanCell2 = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')]
         .find(c => (c.getAttribute('style') ?? '').includes('span 3')) as HTMLElement;
       expect(spanCell2.classList.contains('selected')).toBe(true);
+    });
+  });
+
+  describe('host sizing by mode (#288)', () => {
+    it('paginated mode does not set height: 100% on host', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+      const hostHeight = getComputedStyle(el).height;
+      expect(hostHeight).not.toBe('0px');
+      expect(el.style.height).not.toBe('100%');
+    });
+
+    it('scroll mode applies height: 100% via CSS', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.mode = 'scroll';
+      await el.updateComplete;
+      expect(el.getAttribute('mode')).toBe('scroll');
+    });
+
+    it('auto mode with few rows does not set height: 100%', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.mode = 'auto';
+      await el.updateComplete;
+      expect(el.style.height).toBe('');
     });
   });
 });

@@ -242,6 +242,10 @@ export function carousel(...entries: [string, ...Component[]][]): Component {
   return navComponent("carousel", entries);
 }
 
+export function tiles(...entries: [string, ...Component[]][]): Component {
+  return navComponent("tiles", entries);
+}
+
 export function panel(title: string, ...children: Component[]): TypedComponent<"panel"> {
   const props: PanelProps = { title };
 

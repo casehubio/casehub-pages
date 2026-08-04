@@ -642,6 +642,7 @@ function resolveStrategy(ds: TypedDataSet, key: GroupingKey): GroupingKey {
   }
 
   const sourceCol = findColumnInDataset(ds, key.sourceId);
+  if (!sourceCol) return { ...key, strategy: { mode: "distinct" } };
   let resolved: GroupingKey;
 
   switch (sourceCol.type) {
@@ -665,6 +666,7 @@ function resolveStrategy(ds: TypedDataSet, key: GroupingKey): GroupingKey {
 
 function validateStrategyColumnTypeCompat(ds: TypedDataSet, key: GroupingKey): void {
   const sourceCol = findColumnInDataset(ds, key.sourceId);
+  if (!sourceCol) return;
 
   if (key.strategy.mode === "fixedCalendar" && sourceCol.type !== ColumnType.DATE) {
     throw new DataSetError(
@@ -686,7 +688,7 @@ function validateAggregationColumnType(ds: TypedDataSet, col: ResultColumn & { k
   const fn = col.fn.fn;
   if (fn === "SUM" || fn === "AVERAGE" || fn === "MEDIAN") {
     const sourceCol = findColumnInDataset(ds, col.sourceId);
-    if (sourceCol.type !== ColumnType.NUMBER) {
+    if (sourceCol && sourceCol.type !== ColumnType.NUMBER) {
       throw new DataSetError(
         "TYPE_MISMATCH",
         `${fn} requires a NUMBER column, got ${sourceCol.type} for column "${col.sourceId}"`,
@@ -707,6 +709,7 @@ function computeBuckets(ds: TypedDataSet, key: GroupingKey): Interval[] {
     }
     case "dynamicRange": {
       const sourceCol = findColumnInDataset(ds, key.sourceId);
+      if (!sourceCol) return [];
       if (sourceCol.type === ColumnType.DATE) {
         const dateOpts: { preferredUnit?: DateIntervalType; firstMonthOfYear?: Month } = {};
         if (key.strategy.preferredUnit !== undefined) dateOpts.preferredUnit = key.strategy.preferredUnit;
@@ -796,11 +799,13 @@ function buildOutputColumns(
         break;
       case "select": {
         const sourceCol = findColumnInDataset(ds, rc.sourceId);
-        columns.push({
-          id: rc.columnId,
-          name: sourceCol.name,
-          type: sourceCol.type,
-        });
+        if (sourceCol) {
+          columns.push({
+            id: rc.columnId,
+            name: sourceCol.name,
+            type: sourceCol.type,
+          });
+        }
         break;
       }
     }
@@ -823,7 +828,7 @@ function inferAggregateColumnType(
       return ColumnType.NUMBER;
     case "MIN":
     case "MAX":
-      return findColumnInDataset(ds, rc.sourceId).type;
+      return findColumnInDataset(ds, rc.sourceId)?.type ?? ColumnType.TEXT;
     case "JOIN":
     case "DISTINCTJOIN":
       return ColumnType.TEXT;
@@ -887,15 +892,11 @@ function sortBuckets(intervals: readonly Interval[], ascending: boolean): Interv
   return sorted;
 }
 
-function findColumnInDataset(ds: TypedDataSet, columnId: ColumnId): Column {
-  const col = ds.columns.find((c) => c.id === columnId)
+function findColumnInDataset(ds: TypedDataSet, columnId: ColumnId): Column | undefined {
+  return ds.columns.find((c) => c.id === columnId)
     ?? (typeof columnId === "string"
       ? ds.columns.find((c) => typeof c.id === "string" && c.id.toLowerCase() === columnId.toLowerCase())
       : undefined);
-  if (col === undefined) {
-    throw new DataSetError("UNKNOWN_COLUMN", `Column "${String(columnId)}" not found`);
-  }
-  return col;
 }
 
 // ────────────────────────────────────────────────────────────────────────────

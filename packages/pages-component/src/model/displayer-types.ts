@@ -117,6 +117,7 @@ export interface GridTableProps extends DataComponentCommon {
 
 export interface MetricProps extends DataComponentCommon {
   readonly subtype?: "card" | "card2" | "plain-text" | "quota";
+  readonly pattern?: string;
   readonly html?: {
     readonly template?: string;
     readonly javascript?: string;

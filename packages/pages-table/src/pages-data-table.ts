@@ -27,7 +27,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   @property({ attribute: false }) dataSet?: TypedDataSet;
   @property({ attribute: false }) columnRenderers?: ReadonlyMap<ColumnId, ColumnRenderer>;
   @property({ attribute: false }) columnConfig?: readonly TableColumnConfig[];
-  @property({ type: String }) mode: DisplayMode = 'auto';
+  @property({ type: String, reflect: true }) mode: DisplayMode = 'auto';
   @property({ type: String }) selection: SelectionMode = 'none';
   @property({ type: Array, attribute: 'selected-keys' }) selectedKeys?: readonly string[];
   @property({ attribute: false }) getRowKey?: (row: TypedRow) => string;
@@ -417,8 +417,11 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   static override styles = css`
     :host {
       display: block;
-      height: 100%;
       font-family: var(--pages-font-family, system-ui);
+    }
+
+    :host([mode="scroll"]) {
+      height: 100%;
     }
 
     .data-table {
@@ -1266,6 +1269,10 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   }
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
+    if (this.mode === 'auto') {
+      this.style.height = this._useVirtualScroll ? '100%' : '';
+    }
+
     if (changed.has('columnConfig')) {
       this._columnWidths.clear();
     }

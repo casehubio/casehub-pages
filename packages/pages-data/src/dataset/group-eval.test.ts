@@ -1239,7 +1239,7 @@ describe("applyGroup", () => {
     expect(result.rows[0]!.number(columnId("total"))).toBe(500);
   });
 
-  it("non-string sourceId in groupingKey throws clear error (clinical#107)", () => {
+  it("non-string sourceId in groupingKey degrades gracefully (#287)", () => {
     const ds = makeTestDs();
     const op: GroupOp = {
       type: "group",
@@ -1256,7 +1256,8 @@ describe("applyGroup", () => {
       ],
     };
 
-    expect(() => applyGroup(ds, op)).toThrow(DataSetError);
+    const result = applyGroup(ds, op);
+    expect(result).toBeDefined();
   });
 
   it("null groupingKey — kind:key is INVALID_OPERATION error", () => {
@@ -1574,6 +1575,29 @@ describe("applyGroup", () => {
     expect(result.rows[0]!.text(columnId("dept_key"))).toBe("Marketing");
     expect(result.rows[1]!.text(columnId("dept_key"))).toBe("Engineering");
     expect(result.rows[2]!.text(columnId("dept_key"))).toBe("Sales");
+  });
+
+  it("degrades gracefully when groupBy references a missing column (#287)", () => {
+    const ds = makeTestDs();
+
+    const op: GroupOp = {
+      type: "group",
+      groupingKey: {
+        sourceId: columnId("nonexistent"),
+        columnId: columnId("nonexistent_key"),
+        strategy: { mode: "distinct" },
+        maxIntervals: 15,
+        emptyIntervals: false,
+        ascendingOrder: true,
+      },
+      columns: [
+        { kind: "aggregate", sourceId: columnId("revenue"), columnId: columnId("total"), fn: { fn: "COUNT" } },
+      ],
+    };
+
+    const result = applyGroup(ds, op);
+    expect(result).toBeDefined();
+    expect(result.rows).toBeDefined();
   });
 });
 

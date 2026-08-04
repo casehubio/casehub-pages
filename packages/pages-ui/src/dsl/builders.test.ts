@@ -19,6 +19,7 @@ import {
   menu,
   accordion,
   carousel,
+  tiles,
   panel,
   html,
   markdown,
@@ -260,6 +261,7 @@ describe("builders", () => {
       { name: "menu", builder: menu, expectedType: "menu" },
       { name: "accordion", builder: accordion, expectedType: "accordion" },
       { name: "carousel", builder: carousel, expectedType: "carousel" },
+      { name: "tiles", builder: tiles, expectedType: "tiles" },
     ];
 
     testCases.forEach(({ name, builder, expectedType }) => {

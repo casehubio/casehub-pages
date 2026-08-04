@@ -18,6 +18,7 @@ export {
   menu,
   accordion,
   carousel,
+  tiles,
   // Wrapper builders
   panel,
   // Content builders

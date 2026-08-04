@@ -11,6 +11,7 @@ const mockTerminal = {
   onData: vi.fn(() => ({ dispose: vi.fn() })),
   onResize: vi.fn(() => ({ dispose: vi.fn() })),
   paste: vi.fn(),
+  focus: vi.fn(),
   rows: 24,
   cols: 80,
 };
@@ -515,6 +516,29 @@ describe("PagesTerminal", () => {
 
       const terminal = (el as unknown as { terminal: unknown }).terminal;
       expect(terminal).toBeUndefined();
+    });
+  });
+
+  describe("focus management (#286)", () => {
+    it("container has tabindex for keyboard accessibility", () => {
+      const el = createElement({ wsUrl: "ws://localhost:8080/terminal?cols={cols}&rows={rows}" });
+      container.appendChild(el);
+
+      const termContainer = el.querySelector("div");
+      expect(termContainer).not.toBeNull();
+      expect(termContainer!.tabIndex).toBe(0);
+    });
+
+    it("mousedown on container focuses the terminal", () => {
+      const el = createElement({ wsUrl: "ws://localhost:8080/terminal?cols={cols}&rows={rows}" });
+      container.appendChild(el);
+
+      const termContainer = el.querySelector("div");
+      expect(termContainer).not.toBeNull();
+
+      mockTerminal.focus.mockClear();
+      termContainer!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      expect(mockTerminal.focus).toHaveBeenCalledTimes(1);
     });
   });
 });

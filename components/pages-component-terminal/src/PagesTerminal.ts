@@ -66,6 +66,10 @@ export class PagesTerminal extends HTMLElement implements ConfigurablePanel<Term
     const container = document.createElement("div");
     container.style.width = "100%";
     container.style.height = "100%";
+    container.tabIndex = 0;
+    container.addEventListener("mousedown", () => {
+      this._terminal?.focus();
+    });
     this.appendChild(container);
 
     const terminal = new Terminal({

@@ -6,6 +6,7 @@ import { toTypedDataSet } from "../../dataset/conversion.js";
 
 export type InlineData =
   | readonly unknown[][]
+  | readonly number[]
   | string
   | Record<string, unknown>[];
 
