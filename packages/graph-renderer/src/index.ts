@@ -25,4 +25,5 @@ export type {
   StencilRenderFn,
 } from './stencil-wrapper.js';
 
+export { createWorkStencilRenderFn, toWorkStencilDescriptor } from './work-stencil-renderer.js';
 export type { GraphModel, GraphNode, GraphEdge, NodeDecoration } from '@casehubio/graph-core';
