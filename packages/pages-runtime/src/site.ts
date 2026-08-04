@@ -839,48 +839,63 @@ export async function loadSite(
     const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
     if (!panelEl) return;
 
-    const slotContainer = panelEl.closest<HTMLElement>("[data-slot]");
-    if (!slotContainer) return;
-
     if (visible) {
-      slotContainer.style.display = slotContainer.dataset.pagesDisplay ?? "";
-      delete slotContainer.dataset.pagesDisplay;
-      // Show adjacent drag handle
-      const adjacentHandle = slotContainer.nextElementSibling as HTMLElement | null;
-      if (adjacentHandle?.dataset.splitHandle !== undefined) {
-        adjacentHandle.style.display = "";
-      }
-      const prevHandle = slotContainer.previousElementSibling as HTMLElement | null;
-      if (prevHandle?.dataset.splitHandle !== undefined) {
-        prevHandle.style.display = "";
-      }
-      // Restore parent split if it was collapsed
-      const parentSplit = slotContainer.closest<HTMLElement>('[data-component-type="split"]');
-      if (parentSplit && parentSplit.style.display === "none") {
-        parentSplit.style.display = parentSplit.dataset.pagesDisplay ?? "";
-        delete parentSplit.dataset.pagesDisplay;
-      }
-    } else {
-      slotContainer.dataset.pagesDisplay = slotContainer.style.display;
-      slotContainer.style.display = "none";
-      // Hide adjacent drag handle
-      const adjacentHandle = slotContainer.nextElementSibling as HTMLElement | null;
-      if (adjacentHandle?.dataset.splitHandle !== undefined) {
-        adjacentHandle.style.display = "none";
-      }
-      const prevHandle = slotContainer.previousElementSibling as HTMLElement | null;
-      if (prevHandle?.dataset.splitHandle !== undefined && prevHandle.nextElementSibling === slotContainer) {
-        prevHandle.style.display = "none";
-      }
-      // Collapse parent split if all children hidden
-      const parentSplit = slotContainer.closest<HTMLElement>('[data-component-type="split"]');
-      if (parentSplit) {
-        const slotChildren = parentSplit.querySelectorAll<HTMLElement>(":scope > [data-slot]");
-        const allHidden = Array.from(slotChildren).every(s => s.style.display === "none");
-        if (allHidden) {
-          parentSplit.dataset.pagesDisplay = parentSplit.style.display;
-          parentSplit.style.display = "none";
+      // Cascade expand: ensure all ancestor slots and containers are visible (bottom-up)
+      let ancestor: HTMLElement | null = panelEl.parentElement;
+      while (ancestor && ancestor !== target) {
+        if (ancestor.style.display === "none") {
+          ancestor.style.display = ancestor.dataset.pagesDisplay ?? "";
+          delete ancestor.dataset.pagesDisplay;
+          if (ancestor.dataset.slot !== undefined) {
+            const next = ancestor.nextElementSibling as HTMLElement | null;
+            if (next?.dataset.splitHandle !== undefined) next.style.display = "";
+            const prev = ancestor.previousElementSibling as HTMLElement | null;
+            if (prev?.dataset.splitHandle !== undefined) prev.style.display = "";
+          }
         }
+        ancestor = ancestor.parentElement;
+      }
+
+      if (panelEl.dataset.deferred === "pending") {
+        panelEl.dispatchEvent(new Event("pages-deferred-render"));
+      }
+
+      panelEl.style.display = panelEl.dataset.pagesDisplay ?? "";
+      delete panelEl.dataset.pagesDisplay;
+    } else {
+      panelEl.dataset.pagesDisplay = panelEl.style.display;
+      panelEl.style.display = "none";
+
+      // Cascade collapse: walk up through slots and containers
+      let current: HTMLElement = panelEl;
+      while (current !== target) {
+        const slot = current.closest<HTMLElement>("[data-slot]");
+        if (!slot || !target.contains(slot)) break;
+
+        const siblings = slot.querySelectorAll<HTMLElement>(":scope > [data-component-id]");
+        const allHidden = siblings.length > 0 && Array.from(siblings).every(s => s.style.display === "none");
+        if (!allHidden) break;
+
+        slot.dataset.pagesDisplay = slot.style.display;
+        slot.style.display = "none";
+
+        const next = slot.nextElementSibling as HTMLElement | null;
+        if (next?.dataset.splitHandle !== undefined) next.style.display = "none";
+        const prev = slot.previousElementSibling as HTMLElement | null;
+        if (prev?.dataset.splitHandle !== undefined && prev.nextElementSibling === slot) {
+          prev.style.display = "none";
+        }
+
+        const parentContainer = slot.parentElement;
+        if (!parentContainer || parentContainer === target) break;
+
+        const parentSlots = parentContainer.querySelectorAll<HTMLElement>(":scope > [data-slot]");
+        const allParentSlotsHidden = parentSlots.length > 0 && Array.from(parentSlots).every(s => s.style.display === "none");
+        if (!allParentSlotsHidden) break;
+
+        parentContainer.dataset.pagesDisplay = parentContainer.style.display;
+        parentContainer.style.display = "none";
+        current = parentContainer;
       }
     }
 
@@ -1018,6 +1033,46 @@ export async function loadSite(
 
   // Apply saved split ratios to rendered DOM
   applySavedSplitRatios(target);
+
+  // Initialize dock panel visibility from saved state or defaultOpen
+  const dockBars = target.querySelectorAll<HTMLElement>('[data-component-type="dock-bar"]');
+  for (const bar of dockBars) {
+    const buttons = bar.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+    let activePanel: string | undefined;
+
+    for (const btn of buttons) {
+      const panelId = btn.dataset.dockPanelId!;
+      if (dockState.get(panelId) === true) {
+        if (activePanel === undefined) activePanel = panelId;
+      }
+    }
+
+    if (activePanel === undefined) {
+      for (const btn of buttons) {
+        if (btn.dataset.active !== undefined) {
+          activePanel = btn.dataset.dockPanelId!;
+          break;
+        }
+      }
+    }
+
+    if (activePanel) {
+      target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+        bubbles: true, composed: true,
+        detail: { panelId: activePanel, visible: true },
+      }));
+    }
+
+    for (const btn of buttons) {
+      const panelId = btn.dataset.dockPanelId!;
+      if (panelId === activePanel) {
+        btn.dataset.active = "";
+      } else {
+        delete btn.dataset.active;
+        dockState.set(panelId, false);
+      }
+    }
+  }
 
   // popstate — back/forward browser navigation
   if (typeof window !== "undefined") {

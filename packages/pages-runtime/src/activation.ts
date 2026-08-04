@@ -1,4 +1,5 @@
 import type {Component, PermissionContext} from "@casehubio/pages-component";
+import {ALLOW_ALL} from "@casehubio/pages-component";
 import type {DataSetLookup} from "@casehubio/pages-data";
 import type {ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data";
 import {ColumnType} from "@casehubio/pages-data";
@@ -448,8 +449,9 @@ export function createActivationCallback(
     }
 
     if (component.type === "dock-bar" && component.props) {
-      const { orientation, items } = component.props as {
+      const { orientation, items, exclusive } = component.props as {
         orientation?: string;
+        exclusive?: boolean;
         items?: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean }>;
       };
       if (!items) return;
@@ -477,20 +479,60 @@ export function createActivationCallback(
 
         button.addEventListener("click", () => {
           const isActive = button.dataset.active !== undefined;
-          if (isActive) {
-            delete button.dataset.active;
+
+          if (exclusive) {
+            if (isActive) {
+              delete button.dataset.active;
+              el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+                bubbles: true, composed: true,
+                detail: { panelId: item.panelId, visible: false },
+              }));
+            } else {
+              for (const sibling of el.querySelectorAll<HTMLElement>("button[data-dock-panel-id]")) {
+                if (sibling.dataset.active !== undefined) {
+                  delete sibling.dataset.active;
+                  el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+                    bubbles: true, composed: true,
+                    detail: { panelId: sibling.dataset.dockPanelId!, visible: false },
+                  }));
+                }
+              }
+              button.dataset.active = "";
+              el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+                bubbles: true, composed: true,
+                detail: { panelId: item.panelId, visible: true },
+              }));
+            }
           } else {
-            button.dataset.active = "";
+            if (isActive) {
+              delete button.dataset.active;
+            } else {
+              button.dataset.active = "";
+            }
+            el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+              bubbles: true, composed: true,
+              detail: { panelId: item.panelId, visible: !isActive },
+            }));
           }
-          el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-            bubbles: true,
-            composed: true,
-            detail: { panelId: item.panelId, visible: !isActive },
-          }));
         });
 
         el.appendChild(button);
       }
+      return;
+    }
+
+    if (component.type === "deferred") {
+      const children = component.slots?.default ?? [];
+      el.dataset.deferred = "pending";
+      el.addEventListener("pages-deferred-render", () => {
+        for (const child of children) {
+          renderComponent(el, child, {
+            permissions: options?.permissions ?? ALLOW_ALL,
+            onNode: callback,
+          });
+        }
+        delete el.dataset.deferred;
+      }, { once: true });
       return;
     }
 

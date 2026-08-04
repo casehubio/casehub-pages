@@ -1,6 +1,7 @@
 import { loadSite } from "./site.js";
 import { registerPanel, clearPanelRegistry } from "./panel-registry.js";
 import type { Component } from "@casehubio/pages-component";
+import { dockWorkbench, html } from "@casehubio/pages-ui/dist/dsl/builders.js";
 
 describe("workbench integration", () => {
   afterEach(() => {
@@ -96,6 +97,193 @@ describe("workbench integration", () => {
       detail: { panelId: "toggled", visible: true },
     }));
     expect(toggledSlot.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
+describe("dock-workbench integration", () => {
+  it("zone switch: exclusive dock bar switches panels with deferred render", async () => {
+    const workbench = dockWorkbench({
+      centre: html("Centre"),
+      left: [
+        { key: "panel-a", label: "A", icon: "a", defaultOpen: true,
+          content: { type: "html", props: { content: "Panel A" } } },
+        { key: "panel-b", label: "B", icon: "b",
+          content: { type: "html", props: { content: "Panel B" } } },
+      ],
+    });
+
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const site = await loadSite(target, workbench);
+
+    const panelA = target.querySelector('[data-component-id="panel-a"]') as HTMLElement;
+    expect(panelA.style.display).not.toBe("none");
+
+    const panelB = target.querySelector('[data-component-id="panel-b"]') as HTMLElement;
+    expect(panelB.style.display).toBe("none");
+    expect(panelB.dataset.deferred).toBe("pending");
+
+    const buttons = target.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+    const btnB = Array.from(buttons).find(b => b.dataset.dockPanelId === "panel-b")!;
+    btnB.click();
+
+    expect(panelA.style.display).toBe("none");
+    expect(panelB.style.display).not.toBe("none");
+    expect(panelB.dataset.deferred).toBeUndefined();
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("zone close and reopen: collapse and expand cascade", async () => {
+    const workbench = dockWorkbench({
+      centre: html("Centre"),
+      left: [
+        { key: "only-panel", label: "Only", icon: "o", defaultOpen: true,
+          content: { type: "html", props: { content: "Only" } } },
+      ],
+    });
+
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const site = await loadSite(target, workbench);
+
+    const panel = target.querySelector('[data-component-id="only-panel"]') as HTMLElement;
+    expect(panel.style.display).not.toBe("none");
+
+    const btn = target.querySelector<HTMLElement>("button[data-dock-panel-id='only-panel']")!;
+    btn.click();
+
+    expect(panel.style.display).toBe("none");
+
+    btn.click();
+    expect(panel.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
+describe("applyDockState integration", () => {
+  it("shows defaultOpen panels and hides others after render", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "split",
+            props: { direction: "horizontal", ratio: [30, 70] },
+            slots: {
+              "0": [{
+                type: "rows",
+                slots: {
+                  default: [
+                    { type: "deferred", id: "inbox",
+                      style: { display: "none" },
+                      slots: { default: [{ type: "host-panel", props: { typeName: "wb-test" } }] } },
+                    { type: "deferred", id: "cases",
+                      style: { display: "none" },
+                      slots: { default: [{ type: "host-panel", props: { typeName: "wb-test" } }] } },
+                  ],
+                },
+              }],
+              "1": [{ type: "html", props: { content: "Centre" } }],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              items: [
+                { icon: "📥", label: "Inbox", panelId: "inbox", defaultOpen: true },
+                { icon: "📋", label: "Cases", panelId: "cases" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    const inboxEl = target.querySelector('[data-component-id="inbox"]') as HTMLElement;
+    expect(inboxEl.style.display).not.toBe("none");
+    expect(inboxEl.dataset.deferred).toBeUndefined();
+
+    const casesEl = target.querySelector('[data-component-id="cases"]') as HTMLElement;
+    expect(casesEl.style.display).toBe("none");
+    expect(casesEl.dataset.deferred).toBe("pending");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
+describe("dock-workbench integration", () => {
+  it("zone switch: exclusive dock bar switches panels with deferred render", async () => {
+    const workbench = dockWorkbench({
+      centre: html("Centre"),
+      left: [
+        { key: "panel-a", label: "A", icon: "a", defaultOpen: true,
+          content: { type: "html", props: { content: "Panel A" } } },
+        { key: "panel-b", label: "B", icon: "b",
+          content: { type: "html", props: { content: "Panel B" } } },
+      ],
+    });
+
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const site = await loadSite(target, workbench);
+
+    const panelA = target.querySelector('[data-component-id="panel-a"]') as HTMLElement;
+    expect(panelA.style.display).not.toBe("none");
+
+    const panelB = target.querySelector('[data-component-id="panel-b"]') as HTMLElement;
+    expect(panelB.style.display).toBe("none");
+    expect(panelB.dataset.deferred).toBe("pending");
+
+    const buttons = target.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+    const btnB = Array.from(buttons).find(b => b.dataset.dockPanelId === "panel-b")!;
+    btnB.click();
+
+    expect(panelA.style.display).toBe("none");
+    expect(panelB.style.display).not.toBe("none");
+    expect(panelB.dataset.deferred).toBeUndefined();
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("zone close and reopen: collapse and expand cascade", async () => {
+    const workbench = dockWorkbench({
+      centre: html("Centre"),
+      left: [
+        { key: "only-panel", label: "Only", icon: "o", defaultOpen: true,
+          content: { type: "html", props: { content: "Only" } } },
+      ],
+    });
+
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const site = await loadSite(target, workbench);
+
+    const panel = target.querySelector('[data-component-id="only-panel"]') as HTMLElement;
+    expect(panel.style.display).not.toBe("none");
+
+    const btn = target.querySelector<HTMLElement>("button[data-dock-panel-id='only-panel']")!;
+    btn.click();
+
+    expect(panel.style.display).toBe("none");
+
+    btn.click();
+    expect(panel.style.display).not.toBe("none");
 
     site.dispose();
     document.body.removeChild(target);

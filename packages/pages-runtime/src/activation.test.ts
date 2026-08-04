@@ -343,3 +343,110 @@ describe("lazy-page activation", () => {
     document.body.removeChild(el);
   });
 });
+
+describe("deferred activation", () => {
+  it("sets data-deferred=pending and renders children on pages-deferred-render", () => {
+    const el = document.createElement("div");
+    el.dataset.componentId = "lazy-1";
+    document.body.appendChild(el);
+
+    const child: Component = { type: "html", props: { content: "deferred content" } };
+    const component: Component = {
+      type: "deferred",
+      slots: { default: [child] },
+    };
+
+    const registry: ComponentRegistry = new Map();
+    const pagePathMap: PagePathMap = new Map();
+    const callback = createActivationCallback(registry, pagePathMap);
+    callback(el, component);
+
+    expect(el.dataset.deferred).toBe("pending");
+    expect(el.querySelector('[data-component-type="html"]')).toBeNull();
+
+    el.dispatchEvent(new Event("pages-deferred-render"));
+
+    expect(el.querySelector('[data-component-type="html"]')).toBeTruthy();
+    expect(el.dataset.deferred).toBeUndefined();
+
+    el.innerHTML = "";
+    el.dispatchEvent(new Event("pages-deferred-render"));
+    expect(el.querySelector('[data-component-type="html"]')).toBeNull();
+
+    document.body.removeChild(el);
+  });
+});
+
+describe("exclusive dock-bar", () => {
+  it("dispatches hide-previous then show-new on switch", () => {
+    const el = document.createElement("div");
+    el.dataset.componentId = "bar-1";
+    document.body.appendChild(el);
+
+    const component: Component = {
+      type: "dock-bar",
+      props: {
+        orientation: "vertical",
+        exclusive: true,
+        items: [
+          { icon: "📥", label: "Inbox", panelId: "inbox", defaultOpen: true },
+          { icon: "📋", label: "Cases", panelId: "cases" },
+        ],
+      },
+    };
+
+    const registry: ComponentRegistry = new Map();
+    const pagePathMap: PagePathMap = new Map();
+    const callback = createActivationCallback(registry, pagePathMap);
+    callback(el, component);
+
+    const events: Array<{ panelId: string; visible: boolean }> = [];
+    el.addEventListener("pages-dock-toggle", ((e: Event) => {
+      events.push((e as CustomEvent).detail);
+    }) as EventListener);
+
+    const casesBtn = el.querySelectorAll("button")[1]!;
+    casesBtn.click();
+
+    expect(events).toHaveLength(2);
+    expect(events[0]).toEqual({ panelId: "inbox", visible: false });
+    expect(events[1]).toEqual({ panelId: "cases", visible: true });
+
+    document.body.removeChild(el);
+  });
+
+  it("dispatches hide on clicking active button", () => {
+    const el = document.createElement("div");
+    el.dataset.componentId = "bar-2";
+    document.body.appendChild(el);
+
+    const component: Component = {
+      type: "dock-bar",
+      props: {
+        orientation: "vertical",
+        exclusive: true,
+        items: [
+          { icon: "📥", label: "Inbox", panelId: "inbox", defaultOpen: true },
+        ],
+      },
+    };
+
+    const registry: ComponentRegistry = new Map();
+    const pagePathMap: PagePathMap = new Map();
+    const callback = createActivationCallback(registry, pagePathMap);
+    callback(el, component);
+
+    const events: Array<{ panelId: string; visible: boolean }> = [];
+    el.addEventListener("pages-dock-toggle", ((e: Event) => {
+      events.push((e as CustomEvent).detail);
+    }) as EventListener);
+
+    const inboxBtn = el.querySelector("button")!;
+    inboxBtn.click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toEqual({ panelId: "inbox", visible: false });
+
+    document.body.removeChild(el);
+  });
+});

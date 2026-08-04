@@ -35,6 +35,7 @@ export interface DockItem {
 export interface DockBarProps {
   readonly orientation: "vertical" | "horizontal";
   readonly items: readonly DockItem[];
+  readonly exclusive?: boolean;
 }
 
 export interface HostPanelProps {

@@ -1,5 +1,7 @@
 import type { Component } from "../model/types.js";
 import { desugarDisplayer } from "./displayer-desugar.js";
+import { dockWorkbench } from "../dsl/builders.js";
+import type { DockPanelConfig } from "../dsl/builders.js";
 
 /**
  * Maps navigation component types to lowercase strings.
@@ -113,6 +115,39 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       ...(style ? { style } : {}),
       ...(visibleWhen ? { visibleWhen } : {}),
     };
+  }
+
+  // Dock workbench (high-level compositor — delegates to builder)
+  if ("type" in raw && raw.type === "dock-workbench") {
+    function desugarPanels(panels: unknown[]): DockPanelConfig[] {
+      return panels.map((p: unknown) => {
+        const panel = p as Record<string, unknown>;
+        return {
+          key: panel.key as string,
+          label: panel.label as string,
+          icon: panel.icon as string,
+          ...(panel.defaultOpen ? { defaultOpen: true } : {}),
+          ...(panel.minSize !== undefined ? { minSize: panel.minSize as number } : {}),
+          content: desugarComponent(panel.content as Record<string, unknown>, displayerDefaults),
+        };
+      });
+    }
+
+    const centreRaw = raw.centre as unknown[];
+    const centre = Array.isArray(centreRaw)
+      ? centreRaw.map((c: unknown) => desugarComponent(c as Record<string, unknown>, displayerDefaults))
+      : [];
+    const left = raw.left ? desugarPanels(raw.left as unknown[]) : undefined;
+    const right = raw.right ? desugarPanels(raw.right as unknown[]) : undefined;
+    const bottom = raw.bottom ? desugarPanels(raw.bottom as unknown[]) : undefined;
+
+    return dockWorkbench({
+      ...(raw.storageKey ? { storageKey: raw.storageKey as string } : {}),
+      centre,
+      ...(left ? { left } : {}),
+      ...(right ? { right } : {}),
+      ...(bottom ? { bottom } : {}),
+    });
   }
 
   // Workbench primitives

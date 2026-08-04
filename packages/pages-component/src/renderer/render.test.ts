@@ -503,3 +503,20 @@ describe("renderComponent — page padding", () => {
     expect(el.style.padding).toBe("0px");
   });
 });
+
+describe("deferred component type", () => {
+  it("creates container but does not render children", () => {
+    const child: Component = { type: "html", props: { content: "hello" } };
+    const root: Component = {
+      type: "deferred",
+      slots: { default: [child] },
+    };
+    const target = document.createElement("div");
+    renderComponent(target, root);
+
+    const deferredEl = target.querySelector('[data-component-type="deferred"]');
+    expect(deferredEl).toBeTruthy();
+    const childEl = target.querySelector('[data-component-type="html"]');
+    expect(childEl).toBeNull();
+  });
+});

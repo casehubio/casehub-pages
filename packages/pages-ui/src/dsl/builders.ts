@@ -475,8 +475,13 @@ export function split(
 export function dockBar(
   orientation: "vertical" | "horizontal",
   items: DockItem[],
+  options?: { exclusive?: boolean },
 ): TypedComponent<"dock-bar"> {
-  const props: DockBarProps = { orientation, items };
+  const props: DockBarProps = {
+    orientation,
+    items,
+    ...(options?.exclusive ? { exclusive: true } : {}),
+  };
   return freeze({ type: "dock-bar" as const, props });
 }
 
@@ -489,4 +494,105 @@ export function hostPanel(
     ...(panelProps ? { panelProps } : {}),
   };
   return freeze({ type: "host-panel" as const, props });
+}
+
+export function deferred(child: Component): Component {
+  return freeze({ type: "deferred" as const, slots: freeze({ default: [child] }) });
+}
+
+export interface DockPanelConfig {
+  readonly key: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly defaultOpen?: boolean;
+  readonly content: Component;
+  readonly minSize?: number;
+}
+
+export interface DockWorkbenchConfig {
+  readonly storageKey?: string;
+  readonly centre: Component | Component[];
+  readonly left?: readonly DockPanelConfig[];
+  readonly right?: readonly DockPanelConfig[];
+  readonly bottom?: readonly DockPanelConfig[];
+}
+
+export function dockWorkbench(config: DockWorkbenchConfig): Component {
+  const centreContent = Array.isArray(config.centre)
+    ? rows(...config.centre)
+    : config.centre;
+
+  const hasLeft = (config.left?.length ?? 0) > 0;
+  const hasRight = (config.right?.length ?? 0) > 0;
+  const hasBottom = (config.bottom?.length ?? 0) > 0;
+
+  if (!hasLeft && !hasRight && !hasBottom) return centreContent;
+
+  function wrapPanel(panel: DockPanelConfig): Component {
+    return withStyle({ display: "none" }, withId(panel.key, deferred(panel.content)));
+  }
+
+  function zoneContainer(panels: readonly DockPanelConfig[]): Component {
+    return rows(...panels.map(wrapPanel));
+  }
+
+  function zoneDockBar(
+    orientation: "vertical" | "horizontal",
+    panels: readonly DockPanelConfig[],
+  ): Component {
+    const items: DockItem[] = panels.map(p => ({
+      icon: p.icon,
+      label: p.label,
+      panelId: p.key,
+      ...(p.defaultOpen ? { defaultOpen: true } : {}),
+    }));
+    return dockBar(orientation, items, { exclusive: true });
+  }
+
+  const centreArea = hasBottom
+    ? split("vertical", [centreContent, zoneContainer(config.bottom!)],
+        { minSizes: [100, config.bottom![0]?.minSize ?? 50] })
+    : centreContent;
+
+  const splitChildren: Component[] = [];
+  const splitMinSizes: number[] = [];
+
+  if (hasLeft) {
+    splitChildren.push(zoneContainer(config.left!));
+    splitMinSizes.push(config.left![0]?.minSize ?? 50);
+  }
+
+  splitChildren.push(centreArea);
+  splitMinSizes.push(100);
+
+  if (hasRight) {
+    splitChildren.push(zoneContainer(config.right!));
+    splitMinSizes.push(config.right![0]?.minSize ?? 50);
+  }
+
+  const mainSplit = splitChildren.length > 1
+    ? split("horizontal", splitChildren, { minSizes: splitMinSizes })
+    : splitChildren[0]!;
+
+  const middleChildren: Component[] = [];
+  const middleDist: number[] = [];
+  if (hasLeft) {
+    middleChildren.push(zoneDockBar("vertical", config.left!));
+    middleDist.push(0);
+  }
+  middleChildren.push(mainSplit);
+  middleDist.push(1);
+  if (hasRight) {
+    middleChildren.push(zoneDockBar("vertical", config.right!));
+    middleDist.push(0);
+  }
+
+  const middleRow = middleChildren.length > 1
+    ? columns(middleDist, ...middleChildren.map(c => [c]))
+    : middleChildren[0]!;
+
+  if (hasBottom) {
+    return rows(middleRow, zoneDockBar("horizontal", config.bottom!));
+  }
+  return middleRow;
 }

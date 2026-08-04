@@ -36,6 +36,8 @@ import {
   split,
   dockBar,
   hostPanel,
+  deferred,
+  dockWorkbench,
   type PageOptions,
 } from "./builders.js";
 
@@ -720,5 +722,100 @@ describe("builders", () => {
       const module = await import("./index.js");
       expect("inlineDataset" in module).toBe(false);
     });
+  });
+});
+
+describe("deferred builder", () => {
+  it("wraps child in deferred type with default slot", () => {
+    const child = html("content");
+    const result = deferred(child);
+    expect(result.type).toBe("deferred");
+    expect(result.slots?.default).toHaveLength(1);
+    expect(result.slots?.default?.[0]).toEqual(child);
+  });
+});
+
+describe("dockWorkbench builder", () => {
+  it("generates correct tree for left + centre + bottom config", () => {
+    const result = dockWorkbench({
+      storageKey: "test-wb",
+      centre: html("centre"),
+      left: [
+        { key: "inbox", label: "Inbox", icon: "📥", defaultOpen: true, content: hostPanel("inbox-panel") },
+        { key: "cases", label: "Cases", icon: "📋", content: hostPanel("cases-panel") },
+      ],
+      bottom: [
+        { key: "chat", label: "Chat", icon: "💬", content: hostPanel("chat-panel") },
+      ],
+    });
+
+    expect(result.type).toBe("rows");
+
+    function findById(c: Component, id: string): Component | undefined {
+      if (c.id === id) return c;
+      for (const children of Object.values(c.slots ?? {})) {
+        for (const child of children) {
+          const found = findById(child, id);
+          if (found) return found;
+        }
+      }
+      if (c.items) {
+        for (const item of c.items) {
+          const found = findById(item.component, id);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    }
+
+    const inbox = findById(result, "inbox");
+    expect(inbox).toBeTruthy();
+    expect(inbox!.style?.display).toBe("none");
+    expect(inbox!.type).toBe("deferred");
+
+    const cases = findById(result, "cases");
+    expect(cases).toBeTruthy();
+    expect(cases!.style?.display).toBe("none");
+
+    function collectTypes(c: Component): string[] {
+      const types = [c.type];
+      for (const children of Object.values(c.slots ?? {})) {
+        for (const child of children) types.push(...collectTypes(child));
+      }
+      if (c.items) {
+        for (const item of c.items) types.push(...collectTypes(item.component));
+      }
+      return types;
+    }
+
+    const types = collectTypes(result);
+    expect(types.filter(t => t === "dock-bar").length).toBe(2);
+    expect(types.filter(t => t === "split").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("generates simple tree for centre-only config", () => {
+    const result = dockWorkbench({
+      centre: html("just centre"),
+    });
+    expect(result.type).toBe("html");
+  });
+
+  it("omits right dock bar when no right panels", () => {
+    const result = dockWorkbench({
+      centre: html("c"),
+      left: [{ key: "a", label: "A", icon: "a", content: html("a") }],
+    });
+    function collectTypes(c: Component): string[] {
+      const types = [c.type];
+      for (const children of Object.values(c.slots ?? {})) {
+        for (const child of children) types.push(...collectTypes(child));
+      }
+      if (c.items) {
+        for (const item of c.items) types.push(...collectTypes(item.component));
+      }
+      return types;
+    }
+    const barCount = collectTypes(result).filter(t => t === "dock-bar").length;
+    expect(barCount).toBe(1);
   });
 });

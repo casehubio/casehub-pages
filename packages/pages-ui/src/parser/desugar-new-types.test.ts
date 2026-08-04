@@ -311,4 +311,34 @@ describe("desugar-new-types", () => {
       });
     });
   });
+
+  describe("dock-workbench", () => {
+    it("desugars dock-workbench YAML to Component tree via builder", () => {
+      const result = desugarComponent({
+        type: "dock-workbench",
+        storageKey: "test",
+        centre: [{ html: "centre content" }],
+        left: [
+          { key: "inbox", label: "Inbox", icon: "📥", defaultOpen: true,
+            content: { type: "host-panel", properties: { typeName: "inbox-panel" } } },
+        ],
+      });
+      expect(result.type).not.toBe("unknown");
+      expect(result.type).not.toBe("dock-workbench");
+
+      function collectTypes(c: Record<string, unknown>): string[] {
+        const types = [c.type as string];
+        const slots = c.slots as Record<string, Array<Record<string, unknown>>> | undefined;
+        if (slots) {
+          for (const children of Object.values(slots)) {
+            for (const child of children) types.push(...collectTypes(child));
+          }
+        }
+        return types;
+      }
+      const types = collectTypes(result as unknown as Record<string, unknown>);
+      expect(types).toContain("dock-bar");
+      expect(types).toContain("deferred");
+    });
+  });
 });

@@ -804,3 +804,79 @@ describe("pages-event inter-panel communication", () => {
   });
 });
 
+describe("component-level dock-toggle", () => {
+  it("hides individual component in shared slot without hiding siblings", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const tree: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          { type: "html", id: "panel-a", props: { content: "A" } },
+          { type: "html", id: "panel-b", props: { content: "B" } },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, tree);
+
+    const panelA = target.querySelector('[data-component-id="panel-a"]') as HTMLElement;
+    const panelB = target.querySelector('[data-component-id="panel-b"]') as HTMLElement;
+    expect(panelA).toBeTruthy();
+    expect(panelB).toBeTruthy();
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "panel-a", visible: false },
+    }));
+
+    expect(panelA.style.display).toBe("none");
+    expect(panelB.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("cascades collapse when all components in shared slot are hidden", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const tree: Component = {
+      type: "split",
+      props: { direction: "horizontal", ratio: [50, 50] },
+      slots: {
+        "0": [{
+          type: "rows",
+          slots: {
+            default: [
+              { type: "html", id: "zone-panel", props: { content: "Z" } },
+            ],
+          },
+        }],
+        "1": [{ type: "html", props: { content: "Centre" } }],
+      },
+    };
+
+    const site = await loadSite(target, tree);
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "zone-panel", visible: false },
+    }));
+
+    const splitSlot0 = target.querySelector('[data-component-type="split"] > [data-slot="0"]') as HTMLElement;
+    expect(splitSlot0.style.display).toBe("none");
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "zone-panel", visible: true },
+    }));
+
+    expect(splitSlot0.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
