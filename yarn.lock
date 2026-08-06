@@ -1413,6 +1413,7 @@ __metadata:
   resolution: "@casehubio/graph-renderer@workspace:packages/graph-renderer"
   dependencies:
     "@casehubio/graph-core": "workspace:*"
+    "@casehubio/graph-work-registry": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
@@ -1430,7 +1431,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/graph-work-registry@workspace:packages/graph-work-registry":
+"@casehubio/graph-work-registry@workspace:*, @casehubio/graph-work-registry@workspace:packages/graph-work-registry":
   version: 0.0.0-use.local
   resolution: "@casehubio/graph-work-registry@workspace:packages/graph-work-registry"
   dependencies:
