@@ -94,4 +94,4 @@ export {
 export { inlineSource } from "@casehubio/pages-data";
 export type { InlineSourceOptions } from "@casehubio/pages-data";
 export { restSource } from "@casehubio/pages-data";
-export type { RestSourceOptions } from "@casehubio/pages-data";
+export type { RestSourceOptions, WsTriggerEvent } from "@casehubio/pages-data";
