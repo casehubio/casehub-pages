@@ -1,7 +1,7 @@
-import {describe, expect, it} from "vitest";
+import {describe, expect, it, vi} from "vitest";
 import type {Column, ColumnId, DataSetId} from "@casehubio/pages-data";
 import {ColumnType, dataSetId} from "@casehubio/pages-data";
-import type {ExternalDataSetDef} from "@casehubio/pages-data";
+import type {ExternalDataSetDef, ServerPaginationConfig} from "@casehubio/pages-data";
 import {LOCAL_CAPABILITIES} from "@casehubio/pages-data";
 import {toTypedDataSet} from "@casehubio/pages-data";
 import {createDataSetManager} from "@casehubio/pages-data";
@@ -16,6 +16,7 @@ import {createFilterState, getActiveFilterOps} from "./cross-filter.js";
 import {createDataScopeRegistry} from "./data-scope-registry.js";
 import type {ResolverContext} from "@casehubio/pages-data";
 import {createComponentViewState, updatePage, updateSort, updateTextFilter} from "./component-view-state.js";
+import {ContextManager} from "./context-wiring.js";
 import type {SortColumn} from "@casehubio/pages-data";
 import {createDataProviderFactory} from "@casehubio/pages-data";
 
@@ -1869,5 +1870,432 @@ describe("manager-level eviction (#181)", () => {
 
     pipeline.dispose();
     document.body.removeChild(domTarget);
+  });
+});
+
+// --- Server pagination helpers ---
+
+const SERVER_PAGINATION_CONFIG: ServerPaginationConfig = {
+  offsetParam: "offset",
+  limitParam: "limit",
+  sortParam: "sort",
+  orderParam: "order",
+  defaultPageSize: 2,
+  maxCachedPages: 3,
+  totalPath: "meta.total",
+};
+
+function mockFetchResponse(rows: unknown[], total: number) {
+  const body = { items: rows, meta: { total } };
+  return {
+    ok: true,
+    headers: new Map([["content-type", "application/json"]]) as unknown as Headers,
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
+  } as unknown as Response;
+}
+
+function makeServerPaginatedDef(id: string, config?: Partial<ServerPaginationConfig>): ExternalDataSetDef {
+  return {
+    uuid: dataSetId(id),
+    url: `https://api.example.com/${id}?offset={offset}&limit={limit}&sort={sort}&order={order}`,
+    dataPath: "items",
+    serverPagination: { ...SERVER_PAGINATION_CONFIG, ...config },
+  };
+}
+
+function serverPaginatedPipeline(opts: {
+  def: ExternalDataSetDef;
+  fetchFn: ReturnType<typeof vi.fn>;
+  pageSize?: number;
+  componentId?: string;
+}) {
+  const { def, fetchFn, pageSize = 2, componentId = "t1" } = opts;
+  const manager = createDataSetManager({
+    onChanged: (id) => { pipeline.deliverDataSet(id); },
+  });
+  const registry: ComponentRegistry = new Map();
+  const target = makeTarget();
+
+  registry.set(componentId, {
+    element: document.createElement("div"),
+    vizElement: target,
+    originalLookup: { dataSetId: def.uuid, operations: [] },
+    component: { type: "data-table", props: { pageSize } },
+    pagePath: "",
+    hasExplicitId: true,
+  });
+
+  const scope: DataSetScope = new Map([
+    ["", new Map([[def.uuid, def as DataSetEntry]])],
+  ]);
+
+  const cvs = createComponentViewState();
+
+  const pipeline = createDataPipeline(
+    manager, scope, registry,
+    createFilterState(), createDataScopeRegistry(), cvs,
+    undefined, undefined, fetchFn as unknown as typeof globalThis.fetch,
+  );
+
+  const resolverCtx: ResolverContext = {
+    manager,
+    providerFactory: createDataProviderFactory(),
+    providerConfig: {},
+    presetRegistry: { get: () => undefined, has: () => false },
+    capabilities: LOCAL_CAPABILITIES,
+  };
+  pipeline.setResolverCtx(resolverCtx);
+
+  return { manager, registry, target, pipeline, cvs, componentId };
+}
+
+describe("pipeline — server pagination (§3a: detection and setup)", () => {
+  it("fetches page 0 on first request for server-paginated dataset", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      mockFetchResponse([{ name: "Alice" }, { name: "Bob" }], 100),
+    );
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline } = serverPaginatedPipeline({ def, fetchFn });
+
+    pipeline.handleDataRequest(
+      target,
+      { dataSetId: def.uuid, operations: [] },
+      "t1",
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const calledUrl = fetchFn.mock.calls[0]![0] as string;
+    expect(calledUrl).toContain("offset=0");
+    expect(calledUrl).toContain("limit=2");
+    expect(target.dataSet).toBeDefined();
+    expect(target.totalRows).toBe(100);
+    expect(target.activePage).toBe(0);
+
+    pipeline.dispose();
+  });
+
+  it("does not create a SourceConnector for server-paginated datasets", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      mockFetchResponse([{ name: "A" }], 10),
+    );
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline, manager } = serverPaginatedPipeline({ def, fetchFn });
+
+    pipeline.handleDataRequest(
+      target,
+      { dataSetId: def.uuid, operations: [] },
+      "t1",
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Data should be in the manager (via snapshot), but no connector created
+    expect(manager.has(def.uuid)).toBe(true);
+    expect(target.dataSet).toBeDefined();
+
+    pipeline.dispose();
+  });
+});
+
+describe("pipeline — server pagination (§3b: page navigation)", () => {
+  it("delivers cached page without re-fetching", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      mockFetchResponse([{ name: "Alice" }, { name: "Bob" }], 100),
+    );
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline, cvs } = serverPaginatedPipeline({ def, fetchFn });
+
+    // Initial request — page 0
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+
+    // Same page again — should use cache, no second fetch
+    fetchFn.mockClear();
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(target.dataSet).toBeDefined();
+
+    pipeline.dispose();
+  });
+
+  it("fetches next page on page change", async () => {
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "A" }, { name: "B" }], 100))
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "C" }, { name: "D" }], 100));
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline, cvs } = serverPaginatedPipeline({ def, fetchFn });
+
+    // Page 0
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+
+    // Page 1
+    updatePage(cvs, "t1", 1);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    const url = fetchFn.mock.calls[1]![0] as string;
+    expect(url).toContain("offset=2");
+    expect(url).toContain("limit=2");
+    expect(target.activePage).toBe(1);
+
+    pipeline.dispose();
+  });
+
+  it("page back after page forward hits cache", async () => {
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "A" }, { name: "B" }], 100))
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "C" }, { name: "D" }], 100));
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline, cvs } = serverPaginatedPipeline({ def, fetchFn });
+
+    // Page 0
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Page 1
+    updatePage(cvs, "t1", 1);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+
+    // Back to page 0 — should be cached
+    fetchFn.mockClear();
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(target.activePage).toBe(0);
+
+    pipeline.dispose();
+  });
+});
+
+describe("pipeline — server pagination (§3c: sort/filter invalidation)", () => {
+  it("clears cache and re-fetches page 0 on sort change", async () => {
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "A" }, { name: "B" }], 100))
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "Z" }, { name: "Y" }], 100));
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline, cvs } = serverPaginatedPipeline({ def, fetchFn });
+
+    // Page 0, no sort
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+
+    // Apply sort — should clear cache, reset to page 0, re-fetch with sort params
+    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "DESCENDING" });
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    const url = fetchFn.mock.calls[1]![0] as string;
+    expect(url).toContain("sort=name");
+    expect(url).toContain("order=DESCENDING");
+    expect(url).toContain("offset=0");
+
+    pipeline.dispose();
+  });
+
+  it("clears cache and re-fetches page 0 on text filter change", async () => {
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "A" }, { name: "B" }], 100))
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "A" }], 1));
+    const def = makeServerPaginatedDef("orders", { filterParam: "q" });
+    const { target, pipeline, cvs } = serverPaginatedPipeline({ def, fetchFn });
+
+    // Page 0, no filter
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+
+    // Apply text filter — should clear cache, re-fetch page 0
+    updateTextFilter(cvs, "t1", "Alice");
+    updatePage(cvs, "t1", 0);
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+
+    pipeline.dispose();
+  });
+});
+
+describe("pipeline — server pagination (§3d: corrupted view protection)", () => {
+  it("strips client-side sort ops and logs warning for server-paginated datasets", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetchFn = vi.fn().mockResolvedValue(
+      mockFetchResponse([{ name: "A" }], 10),
+    );
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline } = serverPaginatedPipeline({ def, fetchFn });
+
+    // Request with client-side sort operations in lookup
+    const sortOp = { type: "sort" as const, columns: [{ columnId: "name" as ColumnId, order: "ASCENDING" as const }] };
+    pipeline.handleDataRequest(
+      target,
+      { dataSetId: def.uuid, operations: [sortOp] },
+      "t1",
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Sort ops should be stripped — the server handles sorting
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("server pagination"),
+    );
+
+    warnSpy.mockRestore();
+    pipeline.dispose();
+  });
+});
+
+describe("pipeline — server pagination (§4: mixed context + pagination variables)", () => {
+  it("defers fetch until context variables resolve", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      mockFetchResponse([{ name: "A" }], 50),
+    );
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("orders"),
+      url: "https://api.example.com/#{filter.region}/orders?offset={offset}&limit={limit}",
+      dataPath: "items",
+      serverPagination: { ...SERVER_PAGINATION_CONFIG },
+    };
+
+    const contextMgr = new ContextManager();
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+
+    registry.set("t1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: def.uuid, operations: [] },
+      component: { type: "data-table", props: { pageSize: 2 } },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const scope: DataSetScope = new Map([
+      ["", new Map([[def.uuid, def as DataSetEntry]])],
+    ]);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+      contextMgr, undefined, fetchFn as unknown as typeof globalThis.fetch,
+    );
+    pipeline.setResolverCtx({
+      manager,
+      providerFactory: createDataProviderFactory(),
+      providerConfig: {},
+      presetRegistry: { get: () => undefined, has: () => false },
+      capabilities: LOCAL_CAPABILITIES,
+    });
+
+    // No filter set → context var unresolved → no fetch
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).not.toHaveBeenCalled();
+
+    // Set filter → context var resolves → fetch fires
+    contextMgr.updateFilter({ region: ["US"] });
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const calledUrl = fetchFn.mock.calls[0]![0] as string;
+    expect(calledUrl).toContain("/US/orders");
+    expect(calledUrl).toContain("offset=0");
+    expect(calledUrl).toContain("limit=2");
+
+    pipeline.dispose();
+  });
+
+  it("re-fetches when context variable changes", async () => {
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "A" }], 50))
+      .mockResolvedValueOnce(mockFetchResponse([{ name: "B" }], 30));
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("orders"),
+      url: "https://api.example.com/#{filter.region}/orders?offset={offset}&limit={limit}",
+      dataPath: "items",
+      serverPagination: { ...SERVER_PAGINATION_CONFIG },
+    };
+
+    const contextMgr = new ContextManager();
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+
+    registry.set("t1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: def.uuid, operations: [] },
+      component: { type: "data-table", props: { pageSize: 2 } },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const scope: DataSetScope = new Map([
+      ["", new Map([[def.uuid, def as DataSetEntry]])],
+    ]);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+      contextMgr, undefined, fetchFn as unknown as typeof globalThis.fetch,
+    );
+    pipeline.setResolverCtx({
+      manager,
+      providerFactory: createDataProviderFactory(),
+      providerConfig: {},
+      presetRegistry: { get: () => undefined, has: () => false },
+      capabilities: LOCAL_CAPABILITIES,
+    });
+
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+
+    // First context → first fetch
+    contextMgr.updateFilter({ region: ["US"] });
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect((fetchFn.mock.calls[0]![0] as string)).toContain("/US/orders");
+
+    // Context changes → cache cleared, re-fetch with new region
+    contextMgr.updateFilter({ region: ["EU"] });
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect((fetchFn.mock.calls[1]![0] as string)).toContain("/EU/orders");
+
+    pipeline.dispose();
+  });
+});
+
+describe("pipeline — server pagination (cleanup)", () => {
+  it("cleans up server pagination state on dispose", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      mockFetchResponse([{ name: "A" }], 10),
+    );
+    const def = makeServerPaginatedDef("orders");
+    const { target, pipeline } = serverPaginatedPipeline({ def, fetchFn });
+
+    pipeline.handleDataRequest(target, { dataSetId: def.uuid, operations: [] }, "t1");
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(() => pipeline.dispose()).not.toThrow();
   });
 });

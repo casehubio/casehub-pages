@@ -370,6 +370,8 @@ export function dataTable(props: DataTableProps): TypedComponent<"data-table"> {
   });
 }
 
+export const table = dataTable;
+
 export function gridTable(props: GridTableProps): TypedComponent<"grid-table"> {
   return freeze({
     type: "grid-table" as const,
@@ -599,4 +601,28 @@ export function dockWorkbench(config: DockWorkbenchConfig): Component {
     return rows(middleRow, zoneDockBar("horizontal", config.bottom!));
   }
   return middleRow;
+}
+
+export interface ServerPaginationOptions {
+  readonly offsetParam?: string;
+  readonly limitParam?: string;
+  readonly sortParam?: string;
+  readonly orderParam?: string;
+  readonly filterParam?: string;
+  readonly defaultPageSize?: number;
+  readonly maxCachedPages?: number;
+  readonly totalPath?: string;
+}
+
+export function serverPaginated(options?: ServerPaginationOptions): import("@casehubio/pages-data").ServerPaginationConfig {
+  return {
+    offsetParam: options?.offsetParam ?? "offset",
+    limitParam: options?.limitParam ?? "limit",
+    sortParam: options?.sortParam,
+    orderParam: options?.orderParam,
+    filterParam: options?.filterParam,
+    defaultPageSize: options?.defaultPageSize ?? 25,
+    maxCachedPages: options?.maxCachedPages ?? 5,
+    totalPath: options?.totalPath,
+  };
 }

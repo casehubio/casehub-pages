@@ -1,6 +1,6 @@
 import type { DataSetEvent } from "../dataset/events.js";
 import type { DataSetId } from "../dataset/types.js";
-import type { ExternalColumnDef } from "../dataset/external/types.js";
+import type { ExternalColumnDef, ServerPaginationConfig } from "../dataset/external/types.js";
 
 export interface Disposable {
   dispose(): void;
@@ -36,6 +36,7 @@ export interface DataSourceBinding {
   readonly keyColumn?: string;
   readonly refreshTime?: string;
   readonly cacheTtl?: string;
+  readonly serverPagination?: ServerPaginationConfig;
 }
 
 export interface SourceFactoryOptions {

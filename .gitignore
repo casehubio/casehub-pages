@@ -187,6 +187,7 @@ wksp
 *.ear
 *.zip
 .idea/
+*.iml
 .playwright-mcp/
 .claude
 proj

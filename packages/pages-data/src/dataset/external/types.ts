@@ -24,12 +24,24 @@ export interface ExtractionDef {
 }
 
 
+export interface ServerPaginationConfig {
+  readonly offsetParam: string;
+  readonly limitParam: string;
+  readonly sortParam?: string | undefined;
+  readonly orderParam?: string | undefined;
+  readonly filterParam?: string | undefined;
+  readonly defaultPageSize: number;
+  readonly maxCachedPages?: number | undefined;
+  readonly totalPath?: string | undefined;
+}
+
 export interface ExternalDataSetDef extends ExtractionDef {
   readonly uuid: DataSetId;
   readonly name?: string;
 
   readonly join?: readonly DataSetId[];
   readonly serverQuery?: boolean;
+  readonly serverPagination?: ServerPaginationConfig;
 
   readonly method?: HttpMethod;
   readonly headers?: Readonly<Record<string, string>>;

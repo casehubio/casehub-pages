@@ -2,6 +2,7 @@
 export type {
   ExternalDataSetDef,
   ExternalColumnDef,
+  ServerPaginationConfig,
   DataRequest,
   FetchResult,
   DataProvider,

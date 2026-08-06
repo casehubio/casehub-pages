@@ -41,6 +41,7 @@ export {
   bubbleChart,
   timeseries,
   dataTable,
+  table,
   gridTable,
   metric,
   meter,
@@ -58,6 +59,9 @@ export {
   split,
   dockBar,
   hostPanel,
+  // Server pagination
+  serverPaginated,
+  type ServerPaginationOptions,
 } from "./builders.js";
 
 // Re-export all lookup helpers

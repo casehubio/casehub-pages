@@ -16,6 +16,7 @@ import {
 import type {DataSetEvent} from "@casehubio/pages-data";
 import type {DataSourceBinding, SourceConnector} from "@casehubio/pages-data";
 import {createSourceConnector} from "@casehubio/pages-data";
+import {ServerPaginationManager} from "./server-pagination.js";
 import type {ComponentRegistry} from "./registry.js";
 import type {DataSetScope} from "./dataset-scope.js";
 import {isBinding, resolveDataSetDef, resolveDataSetEntry} from "./dataset-scope.js";
@@ -70,6 +71,7 @@ export function createDataPipeline(
   componentViewState: ComponentViewState,
   contextManager?: ContextManager,
   target?: HTMLElement,
+  fetchFn?: typeof globalThis.fetch,
 ): DataPipeline {
   // --- Legacy resolution state (ExternalDataSetDef path) ---
   const pendingResolutions = new Map<DataSetId, Promise<ResolveResult>>();
@@ -85,6 +87,11 @@ export function createDataPipeline(
 
   // --- DataSource path state ---
   const connectors = new Map<DataSetId, SourceConnector>();
+
+  // --- Server pagination state ---
+  const serverPaginationMgr = new ServerPaginationManager(fetchFn);
+  const serverPaginationConfigs = new Map<DataSetId, import("@casehubio/pages-data").ServerPaginationConfig>();
+  const serverPaginationSortState = new Map<DataSetId, { sort?: string | undefined; order?: string | undefined; filter?: string | undefined }>();
 
   // --- Refresh state ---
   const reFetchCallbacks = new Map<DataSetId, () => void>();
@@ -178,6 +185,9 @@ export function createDataPipeline(
     serverQueryDatasets.delete(dsId);
     serverQueryLookups.delete(dsId);
     parameterisedConsumers.delete(dsId);
+    serverPaginationMgr.clearCache(dsId);
+    serverPaginationConfigs.delete(dsId);
+    serverPaginationSortState.delete(dsId);
   }
 
   // --- DataSource connect/disconnect ---
@@ -279,6 +289,52 @@ export function createDataPipeline(
     options?: LookupOptions,
   ): void {
     try {
+      // §3b/§3c/§3d: Server pagination — bypass client-side ops, fetch from server
+      if (serverPaginationMgr.has(lookup.dataSetId)) {
+        // §3d: warn and strip client-side sort/filter ops
+        for (const op of lookup.operations) {
+          if (op.type === "sort" || op.type === "filter") {
+            console.warn(`[DataPipeline] Dataset "${String(lookup.dataSetId)}" uses server pagination — client-side ${op.type} ignored`);
+          }
+        }
+
+        const entry = registry.get(componentId);
+        const compState = getComponentState(componentViewState, componentId);
+        const spConfig = serverPaginationConfigs.get(lookup.dataSetId);
+        const pageSize = (entry?.component.props as { pageSize?: number } | undefined)?.pageSize
+          ?? spConfig?.defaultPageSize
+          ?? 25;
+        const page = compState?.page ?? 0;
+        const offset = page * pageSize;
+
+        const currentSort = compState?.sort?.columnId ? String(compState.sort.columnId) : undefined;
+        const currentOrder = compState?.sort?.order;
+        const currentFilter = compState?.textFilter;
+
+        // §3c: detect sort/filter change → invalidate cache
+        const lastState = serverPaginationSortState.get(lookup.dataSetId);
+        if (lastState && (lastState.sort !== currentSort || lastState.order !== currentOrder || lastState.filter !== currentFilter)) {
+          serverPaginationMgr.clearCache(lookup.dataSetId);
+        }
+        serverPaginationSortState.set(lookup.dataSetId, { sort: currentSort, order: currentOrder, filter: currentFilter });
+
+        const fetchOpts: import("./server-pagination.js").FetchPageOptions = {};
+        if (currentSort) fetchOpts.sort = currentSort;
+        if (currentOrder) fetchOpts.order = currentOrder;
+        if (currentFilter) fetchOpts.filter = currentFilter;
+
+        void serverPaginationMgr.fetchPage(lookup.dataSetId, offset, pageSize, fetchOpts).then(cachedPage => {
+          if (!cachedPage) return;
+          target.dataSet = cachedPage.dataset;
+          target.totalRows = cachedPage.totalRows;
+          target.activePage = page;
+          target.activeSort = compState?.sort;
+        }).catch((err: unknown) => {
+          target.error = err instanceof Error ? err.message : String(err);
+        });
+        return;
+      }
+
       // Pipeline bypass: when component has expandable config, deliver all rows.
       // The component handles pagination and text filtering internally.
       {
@@ -467,6 +523,74 @@ export function createDataPipeline(
   ): void {
     if (!resolverCtx) {
       target.error = `No resolver context available`;
+      return;
+    }
+
+    // §3a: Server pagination — register and fetch page 0
+    if (def.serverPagination) {
+      // §3d: warn about client-side operations in initial lookup
+      for (const op of lookup.operations) {
+        if (op.type === "sort" || op.type === "filter") {
+          console.warn(`[DataPipeline] Dataset "${String(lookup.dataSetId)}" uses server pagination — client-side ${op.type} ignored`);
+        }
+      }
+
+      const config = def.serverPagination;
+      serverPaginationConfigs.set(lookup.dataSetId, config);
+      const pageSize = (_entry.component.props?.pageSize as number | undefined) ?? config.defaultPageSize;
+
+      const registerAndFetchPage0 = (urlTemplate: string) => {
+        serverPaginationMgr.register(lookup.dataSetId, config, urlTemplate, config.totalPath, def.dataPath);
+        serverPaginationMgr.clearCache(lookup.dataSetId);
+        serverPaginationSortState.delete(lookup.dataSetId);
+        serverPaginationMgr.fetchPage(lookup.dataSetId, 0, pageSize)
+          .then(page => {
+            if (!page) return;
+            manager.apply(lookup.dataSetId, { type: "snapshot", dataset: page.dataset });
+            target.dataSet = page.dataset;
+            target.totalRows = page.totalRows;
+            target.activePage = 0;
+          })
+          .catch((err: unknown) => {
+            target.error = err instanceof Error ? err.message : String(err);
+          });
+      };
+
+      // §4: Mixed context + pagination variables
+      if (def.url && contextManager && hasTemplateVars(def.url)) {
+        const urlTemplate = def.url;
+        let lastResolvedUrl = "";
+
+        const sentinel = document.createElement("span");
+        sentinel.dataset.paramDataset = String(lookup.dataSetId);
+        document.body.appendChild(sentinel);
+
+        const consumer: import("./context-wiring.js").ContextConsumer = {
+          element: sentinel,
+          templates: new Map([["url", {
+            template: urlTemplate,
+            escapeMode: "url" as const,
+            lastResolved: "",
+            apply: (resolvedUrl: string) => {
+              if (!allTemplateVarsResolved(urlTemplate, contextManager.getContext())) return;
+              if (resolvedUrl === lastResolvedUrl) return;
+              lastResolvedUrl = resolvedUrl;
+              registerAndFetchPage0(resolvedUrl);
+            },
+          }]]),
+          suspended: false,
+        };
+
+        contextManager.registerConsumer(consumer);
+
+        if (allTemplateVarsResolved(urlTemplate, contextManager.getContext())) {
+          const resolvedUrl = resolveTemplate(urlTemplate, contextManager.getContext(), "url");
+          consumer.templates.get("url")!.lastResolved = resolvedUrl;
+          consumer.templates.get("url")!.apply(resolvedUrl);
+        }
+      } else {
+        registerAndFetchPage0(def.url!);
+      }
       return;
     }
 
@@ -686,6 +810,11 @@ export function createDataPipeline(
         connector.dispose();
       }
       connectors.clear();
+
+      // Dispose server pagination state
+      serverPaginationMgr.dispose();
+      serverPaginationConfigs.clear();
+      serverPaginationSortState.clear();
     },
 
     handleDataRequest(
@@ -717,30 +846,33 @@ export function createDataPipeline(
       if (manager.has(lookup.dataSetId)) {
         pushData(target, lookup, entry.pagePath, filterGroup?.group, componentId);
 
-        // Schedule refresh for datasets already in the manager (from a prior request)
-        const def = resolveDataSetDef(lookup.dataSetId, entry.pagePath, scope);
-        if (def) {
-          if (pushSubscriptions.has(lookup.dataSetId)) {
-            // Existing push subscription — just track this component
-            let subscribers = pushSubscribers.get(lookup.dataSetId);
-            if (!subscribers) {
-              subscribers = new Set();
-              pushSubscribers.set(lookup.dataSetId, subscribers);
+        // Server-paginated datasets manage their own caching — skip refresh
+        if (!serverPaginationMgr.has(lookup.dataSetId)) {
+          // Schedule refresh for datasets already in the manager (from a prior request)
+          const def = resolveDataSetDef(lookup.dataSetId, entry.pagePath, scope);
+          if (def) {
+            if (pushSubscriptions.has(lookup.dataSetId)) {
+              // Existing push subscription — just track this component
+              let subscribers = pushSubscribers.get(lookup.dataSetId);
+              if (!subscribers) {
+                subscribers = new Set();
+                pushSubscribers.set(lookup.dataSetId, subscribers);
+              }
+              subscribers.add(componentId);
+            } else if (acquirePushSource(def)) {
+              // Push dataset whose subscription was cleaned up by MutationObserver — re-subscribe
+              subscribePushSource(lookup, def, componentId);
             }
-            subscribers.add(componentId);
-          } else if (acquirePushSource(def)) {
-            // Push dataset whose subscription was cleaned up by MutationObserver — re-subscribe
-            subscribePushSource(lookup, def, componentId);
+            scheduleRefresh(def, lookup.dataSetId);
           }
-          scheduleRefresh(def, lookup.dataSetId);
-        }
 
-        if (!pendingRefreshes.has(lookup.dataSetId) && !pushSubscriptions.has(lookup.dataSetId)) {
-          const age = manager.age(lookup.dataSetId);
-          const ttl = def?.cacheTtl ? parseRefreshTime(def.cacheTtl) : def?.refreshTime ? parseRefreshTime(def.refreshTime) : DEFAULT_TTL_MS;
-          if (age !== undefined && age > ttl) {
-            pendingRefreshes.add(lookup.dataSetId);
-            this.refreshDataSet(lookup.dataSetId);
+          if (!pendingRefreshes.has(lookup.dataSetId) && !pushSubscriptions.has(lookup.dataSetId)) {
+            const age = manager.age(lookup.dataSetId);
+            const ttl = def?.cacheTtl ? parseRefreshTime(def.cacheTtl) : def?.refreshTime ? parseRefreshTime(def.refreshTime) : DEFAULT_TTL_MS;
+            if (age !== undefined && age > ttl) {
+              pendingRefreshes.add(lookup.dataSetId);
+              this.refreshDataSet(lookup.dataSetId);
+            }
           }
         }
 

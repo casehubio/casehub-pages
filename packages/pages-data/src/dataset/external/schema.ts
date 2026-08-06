@@ -8,6 +8,17 @@ const externalColumnDefSchema = z.object({
   type: z.nativeEnum(ColumnType),
 });
 
+const serverPaginationConfigSchema = z.object({
+  offsetParam: z.string().min(1),
+  limitParam: z.string().min(1),
+  sortParam: z.string().optional(),
+  orderParam: z.string().optional(),
+  filterParam: z.string().optional(),
+  defaultPageSize: z.number().int().positive(),
+  maxCachedPages: z.number().int().positive().optional(),
+  totalPath: z.string().optional(),
+});
+
 const externalDataSetDefSchema = z.object({
   uuid: z.string().min(1),
   name: z.string().optional(),
@@ -16,6 +27,7 @@ const externalDataSetDefSchema = z.object({
   content: z.string().optional(),
   join: z.array(z.string().min(1)).min(1).optional(),
   serverQuery: z.boolean().optional(),
+  serverPagination: serverPaginationConfigSchema.optional(),
 
   method: z.nativeEnum(HttpMethod).optional(),
   headers: z.record(z.string()).optional(),
@@ -64,6 +76,12 @@ const externalDataSetDefSchema = z.object({
     || d.serverQuery === true
   ),
   { message: "refreshTime requires a non-push-source url, content + expression + accumulate, or serverQuery" },
+).refine(
+  d => !d.serverPagination || d.url !== undefined,
+  { message: "serverPagination requires url" },
+).refine(
+  d => !d.serverPagination || !d.serverQuery,
+  { message: "serverPagination and serverQuery are mutually exclusive" },
 );
 
 export type ParsedExternalDataSetDef = z.output<typeof externalDataSetDefSchema>;

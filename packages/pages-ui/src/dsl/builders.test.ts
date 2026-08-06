@@ -39,6 +39,7 @@ import {
   hostPanel,
   deferred,
   dockWorkbench,
+  serverPaginated,
   type PageOptions,
 } from "./builders.js";
 
@@ -819,5 +820,35 @@ describe("dockWorkbench builder", () => {
     }
     const barCount = collectTypes(result).filter(t => t === "dock-bar").length;
     expect(barCount).toBe(1);
+  });
+
+  describe("serverPaginated()", () => {
+    it("returns config with defaults", () => {
+      const config = serverPaginated();
+      expect(config.offsetParam).toBe("offset");
+      expect(config.limitParam).toBe("limit");
+      expect(config.defaultPageSize).toBe(25);
+      expect(config.maxCachedPages).toBe(5);
+      expect(config.sortParam).toBeUndefined();
+      expect(config.orderParam).toBeUndefined();
+      expect(config.filterParam).toBeUndefined();
+    });
+
+    it("accepts custom param names", () => {
+      const config = serverPaginated({
+        offsetParam: "skip",
+        limitParam: "take",
+        sortParam: "sortBy",
+        orderParam: "dir",
+        defaultPageSize: 50,
+        maxCachedPages: 10,
+      });
+      expect(config.offsetParam).toBe("skip");
+      expect(config.limitParam).toBe("take");
+      expect(config.sortParam).toBe("sortBy");
+      expect(config.orderParam).toBe("dir");
+      expect(config.defaultPageSize).toBe(50);
+      expect(config.maxCachedPages).toBe(10);
+    });
   });
 });

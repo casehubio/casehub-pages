@@ -36,9 +36,13 @@ export { fromRows, toTypedDataSet, createTypedRow, toWireDataSet } from "./datas
 export type { DataSetManager, LookupOptions } from "./dataset/manager.js";
 export { createDataSetManager } from "./dataset/manager.js";
 
+export { PageCache } from "./dataset/page-cache.js";
+export type { PageCacheKey, CachedPage } from "./dataset/page-cache.js";
+
 export {
   type ExternalDataSetDef,
   type ExternalColumnDef,
+  type ServerPaginationConfig,
   type DataRequest,
   type FetchResult,
   type DataProvider,

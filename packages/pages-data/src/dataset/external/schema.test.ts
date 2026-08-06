@@ -202,6 +202,86 @@ describe("ExternalDataSetDef schema", () => {
   });
 });
 
+describe("serverPagination schema", () => {
+  it("accepts serverPagination on url-based dataset", () => {
+    const result = parseExternalDataSetDef({
+      uuid: "orders",
+      url: "https://api.example.com/orders?offset={offset}&limit={limit}",
+      dataPath: "items",
+      serverPagination: {
+        offsetParam: "offset",
+        limitParam: "limit",
+        defaultPageSize: 25,
+      },
+    });
+    expect(result.serverPagination).toBeDefined();
+    expect(result.serverPagination!.offsetParam).toBe("offset");
+    expect(result.serverPagination!.limitParam).toBe("limit");
+    expect(result.serverPagination!.defaultPageSize).toBe(25);
+  });
+
+  it("accepts optional sort, order, filter, totalPath, maxCachedPages", () => {
+    const result = parseExternalDataSetDef({
+      uuid: "orders",
+      url: "https://api.example.com/orders?offset={offset}&limit={limit}&sort={sort}",
+      serverPagination: {
+        offsetParam: "offset",
+        limitParam: "limit",
+        sortParam: "sort",
+        orderParam: "order",
+        filterParam: "filter",
+        defaultPageSize: 25,
+        maxCachedPages: 10,
+        totalPath: "meta.total",
+      },
+    });
+    expect(result.serverPagination!.sortParam).toBe("sort");
+    expect(result.serverPagination!.orderParam).toBe("order");
+    expect(result.serverPagination!.filterParam).toBe("filter");
+    expect(result.serverPagination!.maxCachedPages).toBe(10);
+    expect(result.serverPagination!.totalPath).toBe("meta.total");
+  });
+
+  it("rejects serverPagination without url", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "x",
+      content: "[]",
+      serverPagination: { offsetParam: "o", limitParam: "l", defaultPageSize: 10 },
+    })).toThrow();
+  });
+
+  it("rejects serverPagination with serverQuery", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "x",
+      serverQuery: true,
+      serverPagination: { offsetParam: "o", limitParam: "l", defaultPageSize: 10 },
+    })).toThrow();
+  });
+
+  it("rejects serverPagination missing required fields", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "x",
+      url: "https://api.example.com/data",
+      serverPagination: { offsetParam: "o" },
+    })).toThrow();
+  });
+
+  it("passes through to ExternalDataSetDef without modification", () => {
+    const result = parseExternalDataSetDef({
+      uuid: "orders",
+      url: "https://api.example.com/orders",
+      serverPagination: {
+        offsetParam: "skip",
+        limitParam: "take",
+        defaultPageSize: 50,
+      },
+    });
+    expect(result.serverPagination!.offsetParam).toBe("skip");
+    expect(result.serverPagination!.limitParam).toBe("take");
+    expect(result.serverPagination!.defaultPageSize).toBe(50);
+  });
+});
+
 describe("parseRefreshTime", () => {
   it("converts seconds", () => {
     expect(parseRefreshTime("2second")).toBe(2000);
