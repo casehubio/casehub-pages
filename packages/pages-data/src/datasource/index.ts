@@ -73,4 +73,5 @@ export { createSourceFactory } from "./sources/source-factory.js";
 export type { SourceFactoryDeps } from "./sources/source-factory.js";
 export { defToBinding } from "./sources/def-to-binding.js";
 export type { DefToBindingDeps } from "./sources/def-to-binding.js";
-export { defaultSsePushPool, defaultWsPushPool } from "./sources/default-pools.js";
+export { defaultSsePushPool, defaultWsPushPool, defaultWsTriggerPool } from "./sources/default-pools.js";
+export { WsTriggerPool, type WsTriggerEvent, type WsTriggerHandler } from "./sources/ws-trigger-pool.js";
