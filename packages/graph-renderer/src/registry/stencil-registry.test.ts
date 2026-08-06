@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { html } from 'lit-html';
-import { getGrammar, clearGrammarRegistry } from '@casehubio/graph-core';
+import { getGrammar } from '@casehubio/graph-core';
 import type { StencilGrammar } from '@casehubio/graph-core';
 
 vi.mock('@xyflow/react', () => ({

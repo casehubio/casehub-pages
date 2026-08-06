@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { addNode, removeNode, replaceNode } from './edit.js';
 import { createGraph } from './graph.js';
 import { registerGrammar, clearGrammarRegistry } from './grammar.js';
-import type { GraphModel, GraphNode, GraphEdge } from './model.js';
+import type { GraphNode, GraphEdge } from './model.js';
 
 function node(id: string, type: string, parentId?: string): GraphNode {
   const base = { id, type, properties: {} };

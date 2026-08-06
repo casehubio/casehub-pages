@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import type { JSONSchema7 } from 'json-schema';
 import type { WorkStencil } from '@casehubio/graph-work-registry';
 import type { GraphNode } from '@casehubio/graph-core';
-import { clearGrammarRegistry, getGrammar } from '@casehubio/graph-core';
+import { getGrammar } from '@casehubio/graph-core';
 
 vi.mock('@xyflow/react', () => ({
   Handle: () => null,

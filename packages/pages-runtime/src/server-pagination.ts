@@ -30,7 +30,7 @@ export class ServerPaginationManager {
     config: ServerPaginationConfig,
     urlTemplate: string,
     totalPath: string | undefined,
-    dataPath?: string | undefined,
+    dataPath?: string,
   ): void {
     this._datasets.set(id, {
       config,

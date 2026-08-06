@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { InMemoryBackend } from './persistence.js';
-import type { PersistenceBackend, ReadResult, WriteResult } from './persistence.js';
+import type { PersistenceBackend } from './persistence.js';
 
 describe('InMemoryBackend', () => {
   it('implements PersistenceBackend', () => {

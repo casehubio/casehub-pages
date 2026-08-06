@@ -4,7 +4,7 @@ import type { ConstraintViolation } from './validator.js';
 import { registerGrammar, clearGrammarRegistry } from './grammar.js';
 import type { StencilGrammar } from './grammar.js';
 import { createGraph } from './graph.js';
-import type { GraphModel, GraphNode, GraphEdge } from './model.js';
+import type { GraphNode, GraphEdge } from './model.js';
 
 function node(id: string, type: string, parentId?: string): GraphNode {
   const base = { id, type, properties: {} };
