@@ -146,6 +146,41 @@ describe('computeElkLayout', () => {
     await expect(computeElkLayout(model)).rejects.toThrow('Containment cycle');
   });
 
+  it('applies nodeSizes override to leaf node dimensions', async () => {
+    const model = createGraph(
+      [
+        { id: '1', type: 'a', properties: {} },
+        { id: '2', type: 'a', properties: {} },
+      ],
+      [{ id: 'e1', type: '', source: '1', target: '2' }],
+    );
+    const nodeSizes = new Map([['1', { width: 300, height: 200 }]]);
+    const result = await computeElkLayout(model, { nodeSizes });
+    const layout1 = result.nodeLayouts.get('1')!;
+    expect(layout1.width).toBe(300);
+    expect(layout1.height).toBe(200);
+    const layout2 = result.nodeLayouts.get('2')!;
+    expect(layout2.width).toBe(DEFAULT_NODE_WIDTH);
+    expect(layout2.height).toBe(DEFAULT_NODE_HEIGHT);
+  });
+
+  it('ignores nodeSizes entries for node IDs not in the model', async () => {
+    const model = createGraph(
+      [
+        { id: '1', type: 'a', properties: {} },
+        { id: '2', type: 'a', properties: {} },
+      ],
+      [{ id: 'e1', type: '', source: '1', target: '2' }],
+    );
+    const nodeSizes = new Map([['nonexistent', { width: 500, height: 400 }]]);
+    const result = await computeElkLayout(model, { nodeSizes });
+    expect(result.nodeLayouts.size).toBe(2);
+    for (const layout of result.nodeLayouts.values()) {
+      expect(layout.width).toBe(DEFAULT_NODE_WIDTH);
+      expect(layout.height).toBe(DEFAULT_NODE_HEIGHT);
+    }
+  });
+
   it('includes width and height in every NodeLayout', async () => {
     const model = createGraph(
       [

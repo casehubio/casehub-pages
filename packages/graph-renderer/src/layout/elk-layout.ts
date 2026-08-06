@@ -6,6 +6,7 @@ export interface ElkLayoutOptions {
   direction?: 'DOWN' | 'RIGHT' | 'LEFT' | 'UP';
   spacing?: number;
   containerPadding?: number;
+  nodeSizes?: ReadonlyMap<string, { width: number; height: number }>;
 }
 
 export interface NodeLayout {
@@ -29,6 +30,7 @@ function buildElkNode(
   node: GraphNode,
   visited: Set<string>,
   padding: number,
+  nodeSizes?: ReadonlyMap<string, { width: number; height: number }>,
 ): ElkNode {
   if (visited.has(node.id)) {
     throw new Error(`Containment cycle at node '${node.id}'`);
@@ -36,13 +38,14 @@ function buildElkNode(
   visited.add(node.id);
 
   const children = childrenOf(model, node.id);
+  const size = nodeSizes?.get(node.id);
   const elkNode: ElkNode = {
     id: node.id,
-    width: DEFAULT_NODE_WIDTH,
-    height: DEFAULT_NODE_HEIGHT,
+    width: size?.width ?? DEFAULT_NODE_WIDTH,
+    height: size?.height ?? DEFAULT_NODE_HEIGHT,
   };
   if (children.length > 0) {
-    elkNode.children = children.map(c => buildElkNode(model, c, visited, padding));
+    elkNode.children = children.map(c => buildElkNode(model, c, visited, padding, nodeSizes));
     elkNode.layoutOptions = {
       'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
       'elk.padding': `[top=${padding},left=${padding},bottom=${padding},right=${padding}]`,
@@ -80,7 +83,8 @@ export async function computeElkLayout(
     return { nodeLayouts: new Map() };
   }
 
-  const rootChildren = roots.map(n => buildElkNode(model, n, new Set(), padding));
+  const nodeSizes = options.nodeSizes;
+  const rootChildren = roots.map(n => buildElkNode(model, n, new Set(), padding, nodeSizes));
 
   const elkEdges: ElkExtendedEdge[] = model.edges.map(e => ({
     id: e.id,
