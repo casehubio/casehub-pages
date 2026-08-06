@@ -5,6 +5,8 @@ import type { PresetRegistry } from "../../dataset/external/types.js";
 import { HttpMethod, parseRefreshTime } from "../../dataset/external/types.js";
 import { extractDataSet } from "../../dataset/external/extraction.js";
 import { createPresetRegistry } from "../../dataset/external/presets/registry.js";
+import type { WsTriggerPool, WsTriggerEvent, WsTriggerHandler } from "./ws-trigger-pool.js";
+import { defaultWsTriggerPool } from "./default-pools.js";
 
 export interface RestSourceOptions {
   readonly method?: HttpMethod;
@@ -23,6 +25,10 @@ export interface RestSourceOptions {
   readonly cacheEnabled?: boolean;
   readonly fetchFn?: typeof globalThis.fetch;
   readonly presets?: PresetRegistry;
+
+  readonly triggerUrl?: string;
+  readonly triggerFilter?: (event: WsTriggerEvent) => boolean;
+  readonly triggerPool?: WsTriggerPool;
 }
 
 export function restSource(
@@ -32,6 +38,10 @@ export function restSource(
 ): DataSource {
   let refreshTimer: ReturnType<typeof setInterval> | null = null;
   let connected = false;
+  let fetchGeneration = 0;
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let wsHandler: WsTriggerHandler | null = null;
+  const DEBOUNCE_MS = 100;
   const presets = options?.presets ?? createPresetRegistry();
 
   function buildUrl(): string {
@@ -83,10 +93,11 @@ export function restSource(
   }
 
   async function doFetch(sink: DataSink): Promise<void> {
+    const gen = ++fetchGeneration;
     const fetchFn = options?.fetchFn ?? globalThis.fetch.bind(globalThis);
     try {
       const response = await fetchFn(buildUrl(), buildInit());
-      if (!connected) return;
+      if (!connected || gen !== fetchGeneration) return;
 
       const contentType = response.headers?.get("content-type") ?? undefined;
       let data: unknown;
@@ -127,13 +138,41 @@ export function restSource(
           void doFetch(sink);
         }, intervalMs);
       }
+
+      if (options?.triggerUrl) {
+        const pool = options.triggerPool ?? defaultWsTriggerPool;
+        wsHandler = (event: WsTriggerEvent) => {
+          if (event.topic === "__reconnect__") {
+            void doFetch(sink);
+            return;
+          }
+          if (!options.triggerFilter || options.triggerFilter(event)) {
+            if (debounceTimer !== null) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+              debounceTimer = null;
+              void doFetch(sink);
+            }, DEBOUNCE_MS);
+          }
+        };
+        pool.subscribe(options.triggerUrl, wsHandler);
+      }
     },
 
     disconnect(): void {
       connected = false;
+      fetchGeneration++;
       if (refreshTimer !== null) {
         clearInterval(refreshTimer);
         refreshTimer = null;
+      }
+      if (debounceTimer !== null) {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
+      }
+      if (wsHandler !== null && options?.triggerUrl) {
+        const pool = options?.triggerPool ?? defaultWsTriggerPool;
+        pool.unsubscribe(options.triggerUrl, wsHandler);
+        wsHandler = null;
       }
     },
   };

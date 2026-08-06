@@ -324,3 +324,182 @@ describe("restSource (standalone)", () => {
     });
   });
 });
+
+import { WsTriggerPool } from "./ws-trigger-pool.js";
+import type { WsTriggerEvent, WsTriggerHandler } from "./ws-trigger-pool.js";
+
+class MockWsTriggerPool {
+  handlers = new Map<string, Set<WsTriggerHandler>>();
+
+  subscribe(url: string, handler: WsTriggerHandler): void {
+    if (!this.handlers.has(url)) this.handlers.set(url, new Set());
+    this.handlers.get(url)!.add(handler);
+  }
+
+  unsubscribe(url: string, handler: WsTriggerHandler): void {
+    this.handlers.get(url)?.delete(handler);
+  }
+
+  disconnectAll(): void { this.handlers.clear(); }
+
+  simulateEvent(url: string, event: WsTriggerEvent): void {
+    for (const h of this.handlers.get(url) ?? []) h(event);
+  }
+}
+
+describe("restSource with triggerUrl", () => {
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("triggers re-fetch on matching WebSocket event", async () => {
+    vi.useFakeTimers();
+    let fetchCount = 0;
+    const fetchFn: typeof globalThis.fetch = vi.fn().mockImplementation(() => {
+      fetchCount++;
+      return Promise.resolve(jsonResponse([{ id: fetchCount }]));
+    });
+    const pool = new MockWsTriggerPool();
+
+    const source = restSource("https://api.test/items", TEST_ID, {
+      fetchFn,
+      triggerUrl: "ws://test/events",
+      triggerFilter: (e: WsTriggerEvent) => e.topic === "planitem.state",
+      triggerPool: pool as unknown as WsTriggerPool,
+    });
+
+    const { sink } = collectSink();
+    source.connect(sink);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fetchCount).toBe(1);
+
+    pool.simulateEvent("ws://test/events", {
+      op: "event", topic: "planitem.state", payload: { caseId: "c1" },
+    });
+    await vi.advanceTimersByTimeAsync(150);
+    expect(fetchCount).toBe(2);
+
+    source.disconnect();
+  });
+
+  it("ignores non-matching WebSocket events", async () => {
+    vi.useFakeTimers();
+    const fetchFn = mockFetch([{ id: 1 }]);
+    const pool = new MockWsTriggerPool();
+
+    const source = restSource("https://api.test/items", TEST_ID, {
+      fetchFn,
+      triggerUrl: "ws://test/events",
+      triggerFilter: (e: WsTriggerEvent) => e.topic === "planitem.state",
+      triggerPool: pool as unknown as WsTriggerPool,
+    });
+
+    const { sink } = collectSink();
+    source.connect(sink);
+    await vi.advanceTimersByTimeAsync(0);
+
+    pool.simulateEvent("ws://test/events", {
+      op: "event", topic: "trust.update", payload: {},
+    });
+    await vi.advanceTimersByTimeAsync(150);
+
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    source.disconnect();
+  });
+
+  it("debounces rapid trigger events", async () => {
+    vi.useFakeTimers();
+    const fetchFn = mockFetch([{ id: 1 }]);
+    const pool = new MockWsTriggerPool();
+
+    const source = restSource("https://api.test/items", TEST_ID, {
+      fetchFn,
+      triggerUrl: "ws://test/events",
+      triggerPool: pool as unknown as WsTriggerPool,
+    });
+
+    const { sink } = collectSink();
+    source.connect(sink);
+    await vi.advanceTimersByTimeAsync(0);
+
+    for (let i = 0; i < 5; i++) {
+      pool.simulateEvent("ws://test/events", {
+        op: "event", topic: "x", payload: {},
+      });
+    }
+    await vi.advanceTimersByTimeAsync(150);
+
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    source.disconnect();
+  });
+
+  it("fetches immediately on __reconnect__ event", async () => {
+    vi.useFakeTimers();
+    const fetchFn = mockFetch([{ id: 1 }]);
+    const pool = new MockWsTriggerPool();
+
+    const source = restSource("https://api.test/items", TEST_ID, {
+      fetchFn,
+      triggerUrl: "ws://test/events",
+      triggerFilter: (e: WsTriggerEvent) => e.topic === "planitem.state",
+      triggerPool: pool as unknown as WsTriggerPool,
+    });
+
+    const { sink } = collectSink();
+    source.connect(sink);
+    await vi.advanceTimersByTimeAsync(0);
+
+    pool.simulateEvent("ws://test/events", {
+      op: "reconnect", topic: "__reconnect__", payload: {},
+    });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    source.disconnect();
+  });
+
+  it("unsubscribes from pool on disconnect", async () => {
+    vi.useFakeTimers();
+    const pool = new MockWsTriggerPool();
+
+    const source = restSource("https://api.test/items", TEST_ID, {
+      fetchFn: mockFetch([]),
+      triggerUrl: "ws://test/events",
+      triggerPool: pool as unknown as WsTriggerPool,
+    });
+
+    const { sink } = collectSink();
+    source.connect(sink);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(pool.handlers.get("ws://test/events")?.size).toBe(1);
+
+    source.disconnect();
+    expect(pool.handlers.get("ws://test/events")?.size).toBe(0);
+  });
+
+  it("coexists with refreshTime polling", async () => {
+    vi.useFakeTimers();
+    const fetchFn = mockFetch([{ id: 1 }]);
+    const pool = new MockWsTriggerPool();
+
+    const source = restSource("https://api.test/items", TEST_ID, {
+      fetchFn,
+      refreshTime: "5second",
+      triggerUrl: "ws://test/events",
+      triggerPool: pool as unknown as WsTriggerPool,
+    });
+
+    const { sink } = collectSink();
+    source.connect(sink);
+    await vi.advanceTimersByTimeAsync(0);
+
+    pool.simulateEvent("ws://test/events", {
+      op: "event", topic: "x", payload: {},
+    });
+    await vi.advanceTimersByTimeAsync(150);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(fetchFn).toHaveBeenCalledTimes(3);
+
+    source.disconnect();
+  });
+});
