@@ -24,6 +24,8 @@
         <module>data-sql</module>
         <module>push</module>
         <module>push-runtime</module>
+        <module>push-store-jdbc</module>
+        <module>push-store-redis</module>
         <module>cross-parser-test</module>
     </modules>
 
@@ -75,6 +77,16 @@
             <dependency>
                 <groupId>io.casehub</groupId>
                 <artifactId>casehub-pages-push-runtime</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.casehub</groupId>
+                <artifactId>casehub-pages-push-store-jdbc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.casehub</groupId>
+                <artifactId>casehub-pages-push-store-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

@@ -8,9 +8,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for InMemoryEventStore — bounded ring buffer with per-topic sequences.
@@ -55,7 +58,7 @@ class InMemoryEventStoreTest {
         store.append("topic-a", "{\"data\":3}");
         store.append("topic-a", "{\"data\":4}");
 
-        List<StoredEvent> events = store.replay("topic-a", 2);
+        List<StoredEvent> events = store.replay("topic-a", 2, Integer.MAX_VALUE);
 
         assertEquals(2, events.size(), "Should return events with seq > 2");
         assertEquals(3, events.get(0).seq());
@@ -68,7 +71,7 @@ class InMemoryEventStoreTest {
     void replay_empty_topic() {
         var store = new InMemoryEventStore(10);
 
-        List<StoredEvent> events = store.replay("nonexistent", 0);
+        List<StoredEvent> events = store.replay("nonexistent", 0, Integer.MAX_VALUE);
 
         assertTrue(events.isEmpty(), "Replay on nonexistent topic should return empty list");
     }
@@ -80,7 +83,7 @@ class InMemoryEventStoreTest {
         store.append("topic-a", "{\"data\":1}");
         store.append("topic-a", "{\"data\":2}");
 
-        List<StoredEvent> events = store.replay("topic-a", 0);
+        List<StoredEvent> events = store.replay("topic-a", 0, Integer.MAX_VALUE);
 
         assertEquals(2, events.size(), "sinceSeq=0 should return all events");
     }
@@ -94,7 +97,7 @@ class InMemoryEventStoreTest {
         store.append("topic-a", "{\"data\":3}");
         store.append("topic-a", "{\"data\":4}"); // Evicts seq=1
 
-        List<StoredEvent> events = store.replay("topic-a", 0);
+        List<StoredEvent> events = store.replay("topic-a", 0, Integer.MAX_VALUE);
 
         assertEquals(3, events.size(), "Should retain only max entries");
         assertEquals(2, events.get(0).seq(), "Oldest event should be seq 2 (seq 1 evicted)");
@@ -154,7 +157,7 @@ class InMemoryEventStoreTest {
                         // Append and replay concurrently to stress thread safety
                         store.append("shared-topic", "{\"data\":" + j + "}");
                         // Replay with random sinceSeq to exercise concurrent read/write
-                        store.replay("shared-topic", j % 10);
+                        store.replay("shared-topic", j % 10, Integer.MAX_VALUE);
                     }
                 } finally {
                     latch.countDown();
@@ -166,7 +169,7 @@ class InMemoryEventStoreTest {
         executor.shutdown();
 
         // Verify final state consistency
-        List<StoredEvent> allEvents = store.replay("shared-topic", 0);
+        List<StoredEvent> allEvents = store.replay("shared-topic", 0, Integer.MAX_VALUE);
         assertEquals(threadCount * appendsPerThread, allEvents.size(),
             "All appends should be present");
 
@@ -185,12 +188,59 @@ class InMemoryEventStoreTest {
         store.append("topic-a", "{\"data\":2}");
         store.append("topic-a", "{\"data\":3}");
 
-        List<StoredEvent> events = store.replay("topic-a", 0);
+        List<StoredEvent> events = store.replay("topic-a", 0, Integer.MAX_VALUE);
 
         assertEquals(1, events.get(0).seq());
         assertEquals(2, events.get(1).seq());
         assertEquals(3, events.get(2).seq());
         assertTrue(events.get(0).seq() < events.get(1).seq());
         assertTrue(events.get(1).seq() < events.get(2).seq());
+    }
+
+    @Test
+    void replay_respects_limit() {
+        var store = new InMemoryEventStore(100);
+        for (int i = 0; i < 10; i++) {
+            store.append("topic-a", "{\"i\":" + i + "}");
+        }
+
+        List<StoredEvent> events = store.replay("topic-a", 0, 3);
+
+        assertEquals(3, events.size(), "Should return at most 3 events");
+        assertEquals(1, events.get(0).seq());
+        assertEquals(3, events.get(2).seq());
+    }
+
+    @Test
+    void replay_limit_greater_than_available() {
+        var store = new InMemoryEventStore(10);
+        store.append("topic-a", "{\"i\":1}");
+        store.append("topic-a", "{\"i\":2}");
+
+        List<StoredEvent> events = store.replay("topic-a", 0, 100);
+
+        assertEquals(2, events.size(), "Should return all available when limit exceeds count");
+    }
+
+    @Test
+    void replay_rejects_non_positive_limit() {
+        var store = new InMemoryEventStore(10);
+        assertThrows(IllegalArgumentException.class, () -> store.replay("t", 0, 0));
+        assertThrows(IllegalArgumentException.class, () -> store.replay("t", 0, -1));
+    }
+
+    @Test
+    void stored_event_has_created_at() {
+        var               store  = new InMemoryEventStore(10);
+        java.time.Instant before = java.time.Instant.now();
+        store.append("topic-a", "{\"data\":1}");
+        java.time.Instant after = java.time.Instant.now();
+
+        List<StoredEvent> events  = store.replay("topic-a", 0, Integer.MAX_VALUE);
+        java.time.Instant created = events.get(0).createdAt();
+
+        assertNotNull(created);
+        assertFalse(created.isBefore(before), "createdAt should be >= test start");
+        assertFalse(created.isAfter(after), "createdAt should be <= test end");
     }
 }

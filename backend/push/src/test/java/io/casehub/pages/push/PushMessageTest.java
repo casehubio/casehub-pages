@@ -10,7 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PushMessageTest {
 
@@ -268,4 +272,21 @@ class PushMessageTest {
         assertEquals("event", msg.get("op"));
         assertNull(msg.get("seq"));
     }
+
+    @Test
+    void batch_wraps_messages_in_json_array() throws Exception {
+        var    cols = List.of(new PushColumn("id", "ID", "LABEL"));
+        String a    = PushMessage.snapshot("ds-a", cols, List.of(List.of("1")), 1L);
+        String b    = PushMessage.append("ds-b", cols, List.of(List.of("2")), 2L);
+
+        String result = PushMessage.batch(a, b);
+
+        assertTrue(result.startsWith("["), "batch should start with [");
+        assertTrue(result.endsWith("]"), "batch should end with ]");
+        assertTrue(result.contains("\"ds-a\""), "batch should contain ds-a");
+        assertTrue(result.contains("\"ds-b\""), "batch should contain ds-b");
+        assertTrue(result.contains("\"snapshot\""), "batch should contain snapshot op");
+        assertTrue(result.contains("\"append\""), "batch should contain append op");
+    }
+
 }

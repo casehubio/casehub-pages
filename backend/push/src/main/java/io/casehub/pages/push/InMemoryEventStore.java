@@ -1,6 +1,9 @@
 package io.casehub.pages.push;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -43,14 +46,17 @@ public final class InMemoryEventStore implements EventStore {
     }
 
     @Override
-    public List<StoredEvent> replay(String topic, long sinceSeq) {
+    public List<StoredEvent> replay(String topic, long sinceSeq, int limit) {
         Objects.requireNonNull(topic, "topic");
+        if (limit <= 0) {
+            throw new IllegalArgumentException("limit must be positive");
+        }
 
         TopicBuffer buffer = buffers.get(topic);
         if (buffer == null) {
             return List.of();
         }
-        return buffer.replay(sinceSeq);
+        return buffer.replay(sinceSeq, limit);
     }
 
     @Override
@@ -74,8 +80,8 @@ public final class InMemoryEventStore implements EventStore {
 
         long append(String payloadJson) {
             synchronized (lock) {
-                long seq = ++seqCounter;
-                StoredEvent event = new StoredEvent(topic, payloadJson, seq);
+                long        seq   = ++seqCounter;
+                StoredEvent event = new StoredEvent(topic, payloadJson, seq, java.time.Instant.now());
                 events.addLast(event);
                 if (events.size() > maxEventsPerTopic) {
                     events.removeFirst();
@@ -84,11 +90,12 @@ public final class InMemoryEventStore implements EventStore {
             }
         }
 
-        List<StoredEvent> replay(long sinceSeq) {
+        List<StoredEvent> replay(long sinceSeq, int limit) {
             synchronized (lock) {
                 return events.stream()
-                    .filter(e -> e.seq() > sinceSeq)
-                    .toList();
+                             .filter(e -> e.seq() > sinceSeq)
+                             .limit(limit)
+                             .toList();
             }
         }
     }

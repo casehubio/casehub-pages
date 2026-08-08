@@ -32,6 +32,6 @@ class PushProducersTest {
         for (int i = 0; i < 1001; i++) {
             eventStore.append("capacity-test", "{\"i\":" + i + "}");
         }
-        assertThat(eventStore.replay("capacity-test", 0)).hasSize(1000);
+        assertThat(eventStore.replay("capacity-test", 0, Integer.MAX_VALUE)).hasSize(1000);
     }
 }

@@ -25,11 +25,13 @@ public interface EventStore {
     /**
      * Replay events with sequence numbers greater than {@code sinceSeq}.
      *
-     * @param topic topic name (not null)
-     * @param sinceSeq last known sequence; returns events with seq &gt; sinceSeq
+     * @param topic    topic name (not null)
+     * @param sinceSeq last known sequence; returns events with seq > sinceSeq
+     * @param limit    maximum number of events to return (must be > 0)
      * @return stored events ordered by seq ascending (empty if no events match)
+     * @throws IllegalArgumentException if limit is not positive
      */
-    List<StoredEvent> replay(String topic, long sinceSeq);
+    List<StoredEvent> replay(String topic, long sinceSeq, int limit);
 
     /**
      * Return all topic names that have at least one stored event.

@@ -138,6 +138,17 @@ public final class PushMessage {
         });
     }
 
+
+    public static String batch(String... messages) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < messages.length; i++) {
+            if (i > 0) {sb.append(',');}
+            sb.append(messages[i]);
+        }
+        sb.append(']');
+        return sb.toString();
+    }
+
     private static String datasetOp(String op, String dataset, List<PushColumn> columns,
                                      List<List<String>> rows, Long seq) {
         Objects.requireNonNull(dataset, "dataset");

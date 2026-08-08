@@ -29,6 +29,6 @@ class CustomCapacityTest {
         for (int i = 0; i < 60; i++) {
             eventStore.append("cap-test", "{\"i\":" + i + "}");
         }
-        assertThat(eventStore.replay("cap-test", 0)).hasSize(50);
+        assertThat(eventStore.replay("cap-test", 0, Integer.MAX_VALUE)).hasSize(50);
     }
 }

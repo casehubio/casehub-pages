@@ -44,7 +44,7 @@ class EventStoreOverrideTest {
         }
 
         @Override
-        public List<StoredEvent> replay(String topic, long sinceSeq) {
+        public List<StoredEvent> replay(String topic, long sinceSeq, int limit) {
             return List.of();
         }
 

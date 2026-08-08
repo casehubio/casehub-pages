@@ -48,7 +48,7 @@ class BroadcastIntegrationTest {
 
         assertThat(seq).isEqualTo(1);
         assertThat(testConfig.sent()).isEmpty();
-        assertThat(eventStore.replay("nobody:listens", 0)).hasSize(1);
+        assertThat(eventStore.replay("nobody:listens", 0, Integer.MAX_VALUE)).hasSize(1);
     }
 
     @Test
@@ -67,7 +67,7 @@ class BroadcastIntegrationTest {
         broadcaster.broadcast("t", "{\"v\":1}");
         broadcaster.broadcast("t", "{\"v\":2}");
 
-        List<StoredEvent> replayed = eventStore.replay("t", 0);
+        List<StoredEvent> replayed = eventStore.replay("t", 0, Integer.MAX_VALUE);
         assertThat(replayed).hasSize(2);
         assertThat(replayed.get(0).seq()).isEqualTo(1);
         assertThat(replayed.get(1).seq()).isEqualTo(2);

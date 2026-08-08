@@ -99,7 +99,7 @@ class EventBroadcasterTest {
 
         b.broadcast("t", "{\"v\":42}");
 
-        List<StoredEvent> replayed = store.replay("t", 0);
+        List<StoredEvent> replayed = store.replay("t", 0, Integer.MAX_VALUE);
         assertThat(replayed).hasSize(1);
         assertThat(replayed.get(0).payloadJson()).isEqualTo("{\"v\":42}");
         assertThat(replayed.get(0).seq()).isEqualTo(1);
@@ -126,7 +126,7 @@ class EventBroadcasterTest {
     record Metric(double value) {}
     b.broadcast("metrics:cpu", new Metric(0.85));
 
-    List<StoredEvent> replayed = store.replay("metrics:cpu", 0);
+    List<StoredEvent> replayed = store.replay("metrics:cpu", 0, Integer.MAX_VALUE);
     assertThat(replayed).hasSize(1);
     assertThat(replayed.get(0).payloadJson()).isEqualTo("{\"value\":0.85}");
   }
