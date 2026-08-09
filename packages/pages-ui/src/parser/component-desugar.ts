@@ -1,7 +1,8 @@
 import type { Component } from "../model/types.js";
 import { desugarDisplayer } from "./displayer-desugar.js";
 import { dockWorkbench } from "../dsl/builders.js";
-import type { DockPanelConfig } from "../dsl/builders.js";
+import type { DockPanelConfig, DockSideConfig } from "../dsl/builders.js";
+import type { DockZone } from "@casehubio/pages-component";
 
 /**
  * Maps navigation component types to lowercase strings.
@@ -128,18 +129,34 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
           icon: panel.icon as string,
           ...(panel.defaultOpen ? { defaultOpen: true } : {}),
           ...(panel.minSize !== undefined ? { minSize: panel.minSize as number } : {}),
+          ...(panel.zone ? { zone: panel.zone as "top" | "bottom" | "left" | "right" } : {}),
+          ...(panel.allowedZones ? { allowedZones: panel.allowedZones as DockZone[] } : {}),
+          ...(panel.fixed ? { fixed: true } : {}),
           content: desugarComponent(panel.content as Record<string, unknown>, displayerDefaults),
         };
       });
+    }
+
+    function desugarSide(sideRaw: unknown): readonly DockPanelConfig[] | DockSideConfig {
+      if (Array.isArray(sideRaw)) return desugarPanels(sideRaw);
+      const obj = sideRaw as Record<string, unknown>;
+      return {
+        ...(obj.zones !== undefined ? { zones: obj.zones as 1 | 2 } : {}),
+        ...(obj.buttonPosition ? { buttonPosition: obj.buttonPosition as "start" | "end" } : {}),
+        panels: desugarPanels(obj.panels as unknown[]),
+      };
     }
 
     const centreRaw = raw.centre as unknown[];
     const centre = Array.isArray(centreRaw)
       ? centreRaw.map((c: unknown) => desugarComponent(c as Record<string, unknown>, displayerDefaults))
       : [];
-    const left = raw.left ? desugarPanels(raw.left as unknown[]) : undefined;
-    const right = raw.right ? desugarPanels(raw.right as unknown[]) : undefined;
-    const bottom = raw.bottom ? desugarPanels(raw.bottom as unknown[]) : undefined;
+    const left = raw.left ? desugarSide(raw.left) : undefined;
+    const right = raw.right ? desugarSide(raw.right) : undefined;
+    const bottom = raw.bottom ? desugarSide(raw.bottom) : undefined;
+    const statusBar = raw.statusBar
+      ? desugarComponent(raw.statusBar as Record<string, unknown>, displayerDefaults)
+      : undefined;
 
     return dockWorkbench({
       ...(raw.storageKey ? { storageKey: raw.storageKey as string } : {}),
@@ -147,6 +164,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       ...(left ? { left } : {}),
       ...(right ? { right } : {}),
       ...(bottom ? { bottom } : {}),
+      ...(statusBar ? { statusBar } : {}),
     });
   }
 

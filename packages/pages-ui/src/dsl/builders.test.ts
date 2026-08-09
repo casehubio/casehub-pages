@@ -739,7 +739,35 @@ describe("deferred builder", () => {
 });
 
 describe("dockWorkbench builder", () => {
-  it("generates correct tree for left + centre + bottom config", () => {
+  function findById(c: Component, id: string): Component | undefined {
+    if (c.id === id) return c;
+    for (const children of Object.values(c.slots ?? {})) {
+      for (const child of children) {
+        const found = findById(child, id);
+        if (found) return found;
+      }
+    }
+    if (c.items) {
+      for (const item of c.items) {
+        const found = findById(item.component, id);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  }
+
+  function collectTypes(c: Component): string[] {
+    const types = [c.type];
+    for (const children of Object.values(c.slots ?? {})) {
+      for (const child of children) types.push(...collectTypes(child));
+    }
+    if (c.items) {
+      for (const item of c.items) types.push(...collectTypes(item.component));
+    }
+    return types;
+  }
+
+  it("generates zone-aware tree for left + centre + bottom config", () => {
     const result = dockWorkbench({
       storageKey: "test-wb",
       centre: html("centre"),
@@ -752,25 +780,6 @@ describe("dockWorkbench builder", () => {
       ],
     });
 
-    expect(result.type).toBe("rows");
-
-    function findById(c: Component, id: string): Component | undefined {
-      if (c.id === id) return c;
-      for (const children of Object.values(c.slots ?? {})) {
-        for (const child of children) {
-          const found = findById(child, id);
-          if (found) return found;
-        }
-      }
-      if (c.items) {
-        for (const item of c.items) {
-          const found = findById(item.component, id);
-          if (found) return found;
-        }
-      }
-      return undefined;
-    }
-
     const inbox = findById(result, "inbox");
     expect(inbox).toBeTruthy();
     expect(inbox!.style?.display).toBe("none");
@@ -780,26 +789,24 @@ describe("dockWorkbench builder", () => {
     expect(cases).toBeTruthy();
     expect(cases!.style?.display).toBe("none");
 
-    function collectTypes(c: Component): string[] {
-      const types = [c.type];
-      for (const children of Object.values(c.slots ?? {})) {
-        for (const child of children) types.push(...collectTypes(child));
-      }
-      if (c.items) {
-        for (const item of c.items) types.push(...collectTypes(item.component));
-      }
-      return types;
-    }
+    // Zone containers have __zone: IDs
+    expect(findById(result, "__zone:left-top")).toBeTruthy();
+    expect(findById(result, "__zone:bottom-left")).toBeTruthy();
 
     const types = collectTypes(result);
-    expect(types.filter(t => t === "dock-bar").length).toBe(2);
+    // Side stripe dock-bar for left (includes bottom-zone buttons)
+    expect(types.filter(t => t === "dock-bar").length).toBe(1);
     expect(types.filter(t => t === "split").length).toBeGreaterThanOrEqual(1);
+
+    // Config is attached for auto-detection in loadSite
+    expect((result.props as Record<string, unknown>).__dockConfig).toBeTruthy();
   });
 
   it("generates simple tree for centre-only config", () => {
     const result = dockWorkbench({
       centre: html("just centre"),
     });
+    // Centre-only wraps with flex styling but keeps the html type
     expect(result.type).toBe("html");
   });
 
@@ -808,16 +815,6 @@ describe("dockWorkbench builder", () => {
       centre: html("c"),
       left: [{ key: "a", label: "A", icon: "a", content: html("a") }],
     });
-    function collectTypes(c: Component): string[] {
-      const types = [c.type];
-      for (const children of Object.values(c.slots ?? {})) {
-        for (const child of children) types.push(...collectTypes(child));
-      }
-      if (c.items) {
-        for (const item of c.items) types.push(...collectTypes(item.component));
-      }
-      return types;
-    }
     const barCount = collectTypes(result).filter(t => t === "dock-bar").length;
     expect(barCount).toBe(1);
   });

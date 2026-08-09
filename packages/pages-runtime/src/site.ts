@@ -7,6 +7,10 @@ import type {
 import {ALLOW_ALL} from "@casehubio/pages-component";
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {LayoutStore} from "./layout-store.js";
+import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
+import {createZoneLayoutEngine} from "./zone-layout-engine.js";
+import type {DockZone} from "@casehubio/pages-component";
+import type {DockWorkbenchConfig} from "@casehubio/pages-ui/dist/dsl/builders.js";
 import {renderComponent} from "@casehubio/pages-component";
 import type {CellValue, Column, ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data";
 import type {
@@ -127,6 +131,7 @@ export interface SiteOptions {
   readonly layoutSaveDelayMs?: number;
   readonly devAuth?: DevAuthConfig;
   readonly themeName?: string;
+  readonly zoneEngine?: ZoneLayoutEngine;
 }
 
 export async function loadSite(
@@ -144,8 +149,19 @@ export async function loadSite(
 
   const settings = root.props?.["settings"] as Record<string, unknown> | undefined;
   const isDark = settings?.["mode"] === "dark";
-  const themeBaseName = options?.themeName ?? 'default';
-  applyTheme(`${themeBaseName}-${isDark ? 'dark' : 'light'}`, target);
+  let themeBaseName = options?.themeName ?? 'default';
+  let themeMode = isDark ? 'dark' : 'light';
+  if (!options?.themeName) {
+    let el: HTMLElement | null = target;
+    while (el) {
+      const match = el.className.match?.(/pages-theme-(.+)-(dark|light)/);
+      if (match) { themeBaseName = match[1]!; themeMode = match[2]!; break; }
+      el = el.parentElement;
+    }
+  }
+  applyTheme(`${themeBaseName}-${themeMode}`, target);
+  target.style.background = 'var(--pages-neutral-1)';
+  target.style.color = 'var(--pages-neutral-12)';
 
   const pagePathMap = buildPagePathMap(root);
   const dataSetScope = buildDataSetScope(root, pagePathMap);
@@ -170,6 +186,7 @@ export async function loadSite(
   const componentViewState = createComponentViewState();
   const dockState = new Map<string, boolean>();
   const splitRatios = new Map<string, readonly number[]>();
+  let zoneEngine: ZoneLayoutEngine | undefined = options?.zoneEngine;
   let layoutSaveTimer: ReturnType<typeof setTimeout> | undefined;
   const actionExecutor = new ActionExecutor(
     options?.fetch ?? globalThis.fetch.bind(globalThis),
@@ -316,12 +333,6 @@ export async function loadSite(
     if (link.dock) {
       for (const [id, state] of Object.entries(link.dock)) {
         dockState.set(id, state === "open");
-        if (state === "closed") {
-          const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(id) : id;
-          const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
-          const slotContainer = panelEl?.closest<HTMLElement>("[data-slot]");
-          if (slotContainer) slotContainer.style.display = "none";
-        }
       }
     }
     return link;
@@ -863,6 +874,7 @@ export async function loadSite(
       panelEl.style.display = panelEl.dataset.pagesDisplay ?? "";
       delete panelEl.dataset.pagesDisplay;
     } else {
+    
       panelEl.dataset.pagesDisplay = panelEl.style.display;
       panelEl.style.display = "none";
 
@@ -901,6 +913,7 @@ export async function loadSite(
 
     syncUrl("replaceState");
     scheduleLayoutSave();
+    
   }), { signal: abortController.signal });
 
   target.addEventListener("pages-event", ((e: Event) => {
@@ -919,6 +932,81 @@ export async function loadSite(
       return r;
     });
     splitRatios.set(componentId, corrected);
+    scheduleLayoutSave();
+  }), { signal: abortController.signal });
+
+  // --- Zone rearrangement ---
+
+  target.addEventListener("pages-dock-rearrange", ((e: Event) => {
+    const { panelKey, toZone, insertIndex } = (e as CustomEvent<{ panelKey: string; fromZone: string; toZone: string; insertIndex?: number }>).detail;
+    if (!zoneEngine) return;
+
+    const newTree = zoneEngine.movePanel(panelKey, toZone as DockZone, insertIndex);
+    dockState.set(panelKey, true);
+
+    if (layoutSaveTimer !== undefined) {
+      clearTimeout(layoutSaveTimer);
+      layoutSaveTimer = undefined;
+    }
+    detachRegistry.reattachAll();
+    registry.clear();
+    target.innerHTML = "";
+
+    renderComponent(target, newTree, { permissions, onNode });
+    applySavedSplitRatios(target);
+
+    // Restore dock state per zone group — at most one active panel per zone
+    const dockBars = target.querySelectorAll<HTMLElement>('[data-component-type="dock-bar"]');
+    for (const bar of dockBars) {
+      const zoneGroups = bar.querySelectorAll<HTMLElement>(":scope > [data-dock-zone]");
+      if (zoneGroups.length > 0) {
+        for (const group of zoneGroups) {
+          const buttons = group.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+          let zoneActive: string | undefined;
+          for (const btn of buttons) {
+            const pid = btn.dataset.dockPanelId!;
+            if (dockState.get(pid) === true && zoneActive === undefined) {
+              zoneActive = pid;
+            }
+          }
+          for (const btn of buttons) {
+            const pid = btn.dataset.dockPanelId!;
+            if (pid === zoneActive) {
+              target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+                bubbles: true, composed: true,
+                detail: { panelId: pid, visible: true },
+              }));
+              btn.dataset.active = "";
+            } else {
+              delete btn.dataset.active;
+              dockState.set(pid, false);
+            }
+          }
+        }
+      } else {
+        const buttons = bar.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+        let barActive: string | undefined;
+        for (const btn of buttons) {
+          const pid = btn.dataset.dockPanelId!;
+          if (dockState.get(pid) === true && barActive === undefined) barActive = pid;
+        }
+        for (const btn of buttons) {
+          const pid = btn.dataset.dockPanelId!;
+          if (pid === barActive) {
+            target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+              bubbles: true, composed: true,
+              detail: { panelId: pid, visible: true },
+            }));
+            btn.dataset.active = "";
+          } else {
+            delete btn.dataset.active;
+            dockState.set(pid, false);
+          }
+        }
+      }
+    }
+
+    collapseEmptyZones(target);
     scheduleLayoutSave();
   }), { signal: abortController.signal });
 
@@ -991,6 +1079,7 @@ export async function loadSite(
       splits: Object.freeze(Object.fromEntries(splitRatios)),
       docks: Object.freeze(Object.fromEntries(dockState)),
       panels: captureHostPanels(),
+      ...(zoneEngine ? { zones: Object.freeze(Object.fromEntries(zoneEngine.zoneMap)) } : {}),
     });
   }
 
@@ -1016,6 +1105,40 @@ export async function loadSite(
     }
   }
 
+  // --- Auto-detect dock-workbench and create zone engine ---
+
+  function findDockConfig(node: Component): DockWorkbenchConfig | undefined {
+    const cfg = node.props?.["__dockConfig"] as DockWorkbenchConfig | undefined;
+    if (cfg) return cfg;
+    if (node.slots) {
+      for (const children of Object.values(node.slots)) {
+        for (const child of children) {
+          const found = findDockConfig(child);
+          if (found) return found;
+        }
+      }
+    }
+    if (node.items) {
+      for (const item of node.items) {
+        const found = findDockConfig(item.component);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  }
+
+  if (!zoneEngine) {
+    const dockConfig = findDockConfig(root);
+    if (dockConfig) {
+      zoneEngine = createZoneLayoutEngine(dockConfig, seedLayout?.zones);
+      root = zoneEngine.buildTree();
+      target.style.overflow = "hidden";
+      target.style.padding = "0";
+      target.style.background = "var(--pages-neutral-3)";
+      target.style.color = "var(--pages-neutral-12)";
+    }
+  }
+
   // --- Render (AFTER event listeners and layout seed) ---
 
   const onNode = createActivationCallback(registry, pagePathMap, {
@@ -1028,25 +1151,40 @@ export async function loadSite(
     dataScopeRegistry,
     saveConfigRegistry,
     lazyPageResolutions,
+    zoneEngine,
+    siteTarget: target,
   }, contextManager);
   renderComponent(target, root, { permissions, onNode });
+
+  if (zoneEngine && !target.querySelector('style[data-pages-dock]')) {
+    target.style.background = "var(--pages-neutral-3)";
+    const dockStyle = document.createElement('style');
+    dockStyle.setAttribute('data-pages-dock', '');
+    dockStyle.textContent = [
+      '[data-component-id^="__zone:"] [data-component-type="deferred"],',
+      '[data-component-id="__dock-centre"] {',
+      '  background: var(--pages-neutral-1);',
+      '  border-radius: var(--pages-radius-sm, 4px);',
+      '  overflow: hidden;',
+      '}',
+    ].join('\n');
+    target.prepend(dockStyle);
+  }
 
   // Apply saved split ratios to rendered DOM
   applySavedSplitRatios(target);
 
-  // Initialize dock panel visibility from saved state or defaultOpen
-  const dockBars = target.querySelectorAll<HTMLElement>('[data-component-type="dock-bar"]');
-  for (const bar of dockBars) {
-    const buttons = bar.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+  // Initialize dock panel visibility — one active panel per zone group
+  function initDockZoneGroup(
+    buttons: NodeListOf<HTMLElement> | HTMLElement[],
+  ): void {
     let activePanel: string | undefined;
-
     for (const btn of buttons) {
       const panelId = btn.dataset.dockPanelId!;
       if (dockState.get(panelId) === true) {
         if (activePanel === undefined) activePanel = panelId;
       }
     }
-
     if (activePanel === undefined) {
       for (const btn of buttons) {
         if (btn.dataset.active !== undefined) {
@@ -1055,14 +1193,12 @@ export async function loadSite(
         }
       }
     }
-
     if (activePanel) {
       target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
         bubbles: true, composed: true,
         detail: { panelId: activePanel, visible: true },
       }));
     }
-
     for (const btn of buttons) {
       const panelId = btn.dataset.dockPanelId!;
       if (panelId === activePanel) {
@@ -1070,6 +1206,60 @@ export async function loadSite(
       } else {
         delete btn.dataset.active;
         dockState.set(panelId, false);
+      }
+    }
+  }
+
+  const initDockBars = target.querySelectorAll<HTMLElement>('[data-component-type="dock-bar"]');
+  for (const bar of initDockBars) {
+    const zoneGroups = bar.querySelectorAll<HTMLElement>(":scope > [data-dock-zone]");
+    if (zoneGroups.length > 0) {
+      for (const group of zoneGroups) {
+        initDockZoneGroup(group.querySelectorAll<HTMLElement>("button[data-dock-panel-id]"));
+      }
+    } else {
+      initDockZoneGroup(bar.querySelectorAll<HTMLElement>("button[data-dock-panel-id]"));
+    }
+  }
+
+  // Post-init: ensure visible panels' ancestor slots aren't collapsed
+  for (const [panelId, visible] of dockState) {
+    if (!visible) continue;
+    const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(panelId) : panelId;
+    const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
+    if (!panelEl) continue;
+    let ancestor: HTMLElement | null = panelEl.parentElement;
+    while (ancestor && ancestor !== target) {
+      if (ancestor.style.display === "none") {
+        ancestor.style.display = ancestor.dataset.pagesDisplay ?? "";
+        delete ancestor.dataset.pagesDisplay;
+      }
+      ancestor = ancestor.parentElement;
+    }
+  }
+
+  // Collapse empty zones and hide their split handles
+  collapseEmptyZones(target);
+
+  function collapseEmptyZones(scope: HTMLElement): void {
+    for (const zone of scope.querySelectorAll<HTMLElement>('[data-component-id^="__zone:"]')) {
+      const panels = zone.querySelectorAll<HTMLElement>("[data-component-id]:not([data-component-id^='__zone:'])");
+      if (panels.length === 0) continue;
+      const allHidden = Array.from(panels).every(p => p.style.display === "none");
+      if (!allHidden) continue;
+
+      zone.dataset.pagesDisplay = zone.style.display;
+      zone.style.display = "none";
+
+      const slot = zone.closest<HTMLElement>("[data-slot]");
+      if (slot) {
+        slot.dataset.pagesDisplay = slot.style.display;
+        slot.style.display = "none";
+
+        const next = slot.nextElementSibling as HTMLElement | null;
+        if (next?.dataset.splitHandle !== undefined) next.style.display = "none";
+        const prev = slot.previousElementSibling as HTMLElement | null;
+        if (prev?.dataset.splitHandle !== undefined) prev.style.display = "none";
       }
     }
   }

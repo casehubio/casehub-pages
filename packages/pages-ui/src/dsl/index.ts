@@ -59,6 +59,17 @@ export {
   split,
   dockBar,
   hostPanel,
+  deferred,
+  dockWorkbench,
+  type DockPanelConfig,
+  type DockSideConfig,
+  type DockWorkbenchConfig,
+  // Zone-aware tree generation (used by ZoneLayoutEngine in pages-runtime)
+  normalizeConfig,
+  buildInitialZoneMap,
+  buildTreeFromZones,
+  type NormalizedSide,
+  type NormalizedConfig,
   // Server pagination
   serverPaginated,
   type ServerPaginationOptions,

@@ -843,11 +843,11 @@ function wireSplit(
     handle.style.flexShrink = "0";
     handle.style.cursor = direction === "horizontal" ? "col-resize" : "row-resize";
     if (direction === "horizontal") {
-      handle.style.width = "6px";
+      handle.style.width = "3px";
     } else {
-      handle.style.height = "6px";
+      handle.style.height = "3px";
     }
-    handle.style.background = "var(--pages-neutral-6, #e0e0e0)";
+    handle.style.background = "transparent";
     handle.style.userSelect = "none";
 
     currentPanel.insertAdjacentElement("afterend", handle);

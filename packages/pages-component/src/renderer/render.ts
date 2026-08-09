@@ -56,9 +56,13 @@ function renderNode(
     applyLayoutCSS(el, component);
   }
 
-  // 3b. Page-level padding
+  // 3b. Page-level padding, height propagation, and flex layout
   if (component.type === "page") {
     el.style.padding = "var(--pages-space-4, 16px)";
+    el.style.height = "100%";
+    el.style.boxSizing = "border-box";
+    el.style.display = "flex";
+    el.style.flexDirection = "column";
   }
 
   // 4. Apply Component.style — runs AFTER layout CSS so author overrides win
@@ -92,7 +96,7 @@ function renderNode(
   if (component.items && component.items.length > 0) {
     el.style.display = "grid";
     el.style.gridTemplateColumns = "repeat(12, 1fr)";
-    el.style.gridAutoRows = "min-content";
+    el.style.gridAutoRows = "minmax(min-content, 1fr)";
     el.style.gap = "var(--pages-space-3, 12px)";
     for (const item of component.items) {
       renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);
@@ -106,9 +110,16 @@ function renderNode(
     const panels = new Map<string, HTMLElement>();
     const isLazy = LAZY_TYPES.has(component.type);
 
+    const isFlexColumn = el.style.flexDirection === "column";
     for (const slotName of slotNames) {
       const slotContainer = doc.createElement("div");
       slotContainer.dataset.slot = slotName;
+      if (isFlexColumn) {
+        slotContainer.style.flex = "1";
+        slotContainer.style.minHeight = "0";
+        slotContainer.style.display = "flex";
+        slotContainer.style.flexDirection = "column";
+      }
       el.appendChild(slotContainer);
       panels.set(slotName, slotContainer);
 

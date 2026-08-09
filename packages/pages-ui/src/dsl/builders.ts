@@ -17,6 +17,8 @@ import type {
   DockBarProps,
   DockItem,
   HostPanelProps,
+  DockZone,
+  DockSide,
 } from "@casehubio/pages-component";
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data";
@@ -481,12 +483,13 @@ export function split(
 export function dockBar(
   orientation: "vertical" | "horizontal",
   items: DockItem[],
-  options?: { exclusive?: boolean },
+  options?: { exclusive?: boolean; side?: DockSide },
 ): TypedComponent<"dock-bar"> {
   const props: DockBarProps = {
     orientation,
     items,
     ...(options?.exclusive ? { exclusive: true } : {}),
+    ...(options?.side ? { side: options.side } : {}),
   };
   return freeze({ type: "dock-bar" as const, props });
 }
@@ -513,94 +516,294 @@ export interface DockPanelConfig {
   readonly defaultOpen?: boolean;
   readonly content: Component;
   readonly minSize?: number;
+  readonly zone?: "top" | "bottom" | "left" | "right";
+  readonly allowedZones?: readonly DockZone[];
+  readonly fixed?: boolean;
+}
+
+export interface DockSideConfig {
+  readonly zones?: 1 | 2;
+  readonly buttonPosition?: "start" | "end";
+  readonly panels: readonly DockPanelConfig[];
 }
 
 export interface DockWorkbenchConfig {
   readonly storageKey?: string;
   readonly centre: Component | Component[];
-  readonly left?: readonly DockPanelConfig[];
-  readonly right?: readonly DockPanelConfig[];
-  readonly bottom?: readonly DockPanelConfig[];
+  readonly left?: readonly DockPanelConfig[] | DockSideConfig;
+  readonly right?: readonly DockPanelConfig[] | DockSideConfig;
+  readonly bottom?: readonly DockPanelConfig[] | DockSideConfig;
+  readonly statusBar?: Component;
 }
 
-export function dockWorkbench(config: DockWorkbenchConfig): Component {
-  const centreContent = Array.isArray(config.centre)
-    ? rows(...config.centre)
-    : config.centre;
+// --- Zone-aware tree generation (used by dockWorkbench and ZoneLayoutEngine) ---
 
-  const hasLeft = (config.left?.length ?? 0) > 0;
-  const hasRight = (config.right?.length ?? 0) > 0;
-  const hasBottom = (config.bottom?.length ?? 0) > 0;
+export interface NormalizedSide {
+  readonly zones: 1 | 2;
+  readonly buttonPosition: "start" | "end";
+  readonly panels: readonly DockPanelConfig[];
+  readonly side: DockSide;
+}
+
+export interface NormalizedConfig {
+  readonly centre: Component | Component[];
+  readonly storageKey?: string | undefined;
+  readonly left?: NormalizedSide | undefined;
+  readonly right?: NormalizedSide | undefined;
+  readonly bottom?: NormalizedSide | undefined;
+  readonly statusBar?: Component | undefined;
+}
+
+function normalizeSide(
+  input: readonly DockPanelConfig[] | DockSideConfig,
+  side: DockSide,
+): NormalizedSide {
+  if ("panels" in input) {
+    return {
+      zones: input.zones ?? 1,
+      buttonPosition: input.buttonPosition ?? "end",
+      panels: input.panels,
+      side,
+    };
+  }
+  return { zones: 1, buttonPosition: "end", panels: input, side };
+}
+
+function defaultZone(side: DockSide, position?: string): DockZone {
+  if (side === "bottom") {
+    return position === "right" ? "bottom-right" : "bottom-left";
+  }
+  return position === "bottom" ? `${side}-bottom` as DockZone : `${side}-top` as DockZone;
+}
+
+export function normalizeConfig(config: DockWorkbenchConfig): NormalizedConfig {
+  return {
+    centre: config.centre,
+    storageKey: config.storageKey,
+    left: config.left ? normalizeSide(config.left, "left") : undefined,
+    right: config.right ? normalizeSide(config.right, "right") : undefined,
+    bottom: config.bottom ? normalizeSide(config.bottom, "bottom") : undefined,
+    statusBar: config.statusBar,
+  };
+}
+
+export function buildInitialZoneMap(
+  normalized: NormalizedConfig,
+  savedZones?: Readonly<Record<string, DockZone>>,
+): Map<string, DockZone> {
+  const map = new Map<string, DockZone>();
+  const allPanels = new Map<string, DockPanelConfig>();
+
+  for (const sideKey of ["left", "right", "bottom"] as const) {
+    const sideConfig = normalized[sideKey];
+    if (!sideConfig) continue;
+    for (const panel of sideConfig.panels) {
+      allPanels.set(panel.key, panel);
+      map.set(panel.key, defaultZone(sideConfig.side, panel.zone));
+    }
+  }
+
+  if (savedZones) {
+    for (const [key, zone] of Object.entries(savedZones)) {
+      const panel = allPanels.get(key);
+      if (!panel) continue;
+      if (panel.allowedZones && !panel.allowedZones.includes(zone)) continue;
+      map.set(key, zone);
+    }
+  }
+
+  return map;
+}
+
+function wrapPanel(panel: DockPanelConfig): Component {
+  return withStyle({ display: "none", flex: "1", minHeight: "0" }, withId(panel.key, deferred(panel.content)));
+}
+
+function buildZoneContainer(zoneId: string, panels: readonly DockPanelConfig[]): Component {
+  return withStyle(
+    { flex: "1", height: "100%", overflow: "hidden", gap: "0" },
+    withId(zoneId, rows(...panels.map(wrapPanel))),
+  );
+}
+
+function firstZoneId(side: DockSide): DockZone {
+  return side === "bottom" ? "bottom-left" : `${side}-top` as DockZone;
+}
+
+function secondZoneId(side: DockSide): DockZone {
+  return side === "bottom" ? "bottom-right" : `${side}-bottom` as DockZone;
+}
+
+function orderPanels(panels: readonly DockPanelConfig[], zone: DockZone, order: ReadonlyMap<DockZone, string[]>): readonly DockPanelConfig[] {
+  const zoneList = order.get(zone);
+  if (!zoneList) return panels;
+  const sorted = [...panels];
+  sorted.sort((a, b) => {
+    const ai = zoneList.indexOf(a.key);
+    const bi = zoneList.indexOf(b.key);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  return sorted;
+}
+
+function buildSideContent(
+  side: NormalizedSide,
+  allPanels: readonly DockPanelConfig[],
+  zoneMap: ReadonlyMap<string, DockZone>,
+  order?: ReadonlyMap<DockZone, string[]>,
+): Component | null {
+  const first = firstZoneId(side.side);
+  const second = secondZoneId(side.side);
+
+  const firstPanels = orderPanels(allPanels.filter(p => zoneMap.get(p.key) === first), first, order ?? new Map());
+  const secondPanels = orderPanels(allPanels.filter(p => zoneMap.get(p.key) === second), second, order ?? new Map());
+
+  if (firstPanels.length === 0 && secondPanels.length === 0) return null;
+
+  if (firstPanels.length > 0 && secondPanels.length > 0) {
+    const dir = side.side === "bottom" ? "horizontal" as const : "vertical" as const;
+    return withStyle({ height: "100%" }, split(dir, [
+      buildZoneContainer(`__zone:${first}`, firstPanels),
+      buildZoneContainer(`__zone:${second}`, secondPanels),
+    ]));
+  }
+
+  if (firstPanels.length > 0) {
+    return buildZoneContainer(`__zone:${first}`, firstPanels);
+  }
+  return buildZoneContainer(`__zone:${second}`, secondPanels);
+}
+
+function buildSideStripe(
+  side: DockSide,
+  allPanels: readonly DockPanelConfig[],
+  zoneMap: ReadonlyMap<string, DockZone>,
+  bottomSide: DockSide | undefined,
+  order?: ReadonlyMap<DockZone, string[]>,
+): Component {
+  const sideFirst = firstZoneId(side);
+  const sideSecond = secondZoneId(side);
+  const bottomZone: DockZone | undefined = bottomSide
+    ? (side === "left" ? "bottom-left" : "bottom-right")
+    : undefined;
+
+  const items: DockItem[] = [];
+
+  const firstPanels = orderPanels(allPanels.filter(p => zoneMap.get(p.key) === sideFirst), sideFirst, order ?? new Map());
+  const secondPanels = orderPanels(allPanels.filter(p => zoneMap.get(p.key) === sideSecond), sideSecond, order ?? new Map());
+
+  for (const p of firstPanels) {
+    items.push({
+      icon: p.icon, label: p.label, panelId: p.key,
+      ...(p.defaultOpen ? { defaultOpen: true } : {}),
+      zone: "top",
+      ...(p.allowedZones ? { allowedZones: p.allowedZones } : {}),
+      ...(p.fixed ? { fixed: true } : {}),
+    });
+  }
+  for (const p of secondPanels) {
+    items.push({
+      icon: p.icon, label: p.label, panelId: p.key,
+      ...(p.defaultOpen ? { defaultOpen: true } : {}),
+      zone: "top-second",
+      ...(p.allowedZones ? { allowedZones: p.allowedZones } : {}),
+      ...(p.fixed ? { fixed: true } : {}),
+    });
+  }
+
+  if (bottomZone) {
+    const bottomPanels = orderPanels(allPanels.filter(p => zoneMap.get(p.key) === bottomZone), bottomZone, order ?? new Map());
+    for (const p of bottomPanels) {
+      items.push({
+        icon: p.icon,
+        label: p.label,
+        panelId: p.key,
+        ...(p.defaultOpen ? { defaultOpen: true } : {}),
+        zone: "bottom",
+        ...(p.allowedZones ? { allowedZones: p.allowedZones } : {}),
+        ...(p.fixed ? { fixed: true } : {}),
+      });
+    }
+  }
+
+  return withStyle({ height: "100%" }, dockBar("vertical", items, { exclusive: true, side }));
+}
+
+export function buildTreeFromZones(
+  normalized: NormalizedConfig,
+  zoneMap: ReadonlyMap<string, DockZone>,
+  order?: ReadonlyMap<DockZone, string[]>,
+): Component {
+  const rawCentre = Array.isArray(normalized.centre)
+    ? rows(...normalized.centre)
+    : normalized.centre;
+  const centreContent = withId("__dock-centre", withStyle({ flex: "1", height: "100%", "min-height": "0", overflow: "hidden" }, rawCentre));
+
+  const hasLeft = normalized.left !== undefined;
+  const hasRight = normalized.right !== undefined;
+  const hasBottom = normalized.bottom !== undefined;
 
   if (!hasLeft && !hasRight && !hasBottom) return centreContent;
 
-  function wrapPanel(panel: DockPanelConfig): Component {
-    return withStyle({ display: "none" }, withId(panel.key, deferred(panel.content)));
+  const everyPanel: DockPanelConfig[] = [];
+  for (const sideKey of ["left", "right", "bottom"] as const) {
+    const s = normalized[sideKey];
+    if (s) everyPanel.push(...s.panels);
   }
-
-  function zoneContainer(panels: readonly DockPanelConfig[]): Component {
-    return rows(...panels.map(wrapPanel));
-  }
-
-  function zoneDockBar(
-    orientation: "vertical" | "horizontal",
-    panels: readonly DockPanelConfig[],
-  ): Component {
-    const items: DockItem[] = panels.map(p => ({
-      icon: p.icon,
-      label: p.label,
-      panelId: p.key,
-      ...(p.defaultOpen ? { defaultOpen: true } : {}),
-    }));
-    return dockBar(orientation, items, { exclusive: true });
-  }
-
-  const centreArea = hasBottom
-    ? split("vertical", [centreContent, zoneContainer(config.bottom!)],
-        { minSizes: [100, config.bottom![0]?.minSize ?? 50] })
-    : centreContent;
 
   const splitChildren: Component[] = [];
-  const splitMinSizes: number[] = [];
+  const leftContent = hasLeft ? buildSideContent(normalized.left!, everyPanel, zoneMap, order) : null;
+  if (leftContent) splitChildren.push(leftContent);
+  splitChildren.push(centreContent);
+  const rightContent = hasRight ? buildSideContent(normalized.right!, everyPanel, zoneMap, order) : null;
+  if (rightContent) splitChildren.push(rightContent);
 
-  if (hasLeft) {
-    splitChildren.push(zoneContainer(config.left!));
-    splitMinSizes.push(config.left![0]?.minSize ?? 50);
-  }
-
-  splitChildren.push(centreArea);
-  splitMinSizes.push(100);
-
-  if (hasRight) {
-    splitChildren.push(zoneContainer(config.right!));
-    splitMinSizes.push(config.right![0]?.minSize ?? 50);
-  }
-
-  const mainSplit = splitChildren.length > 1
-    ? split("horizontal", splitChildren, { minSizes: splitMinSizes })
+  const panelSplit = splitChildren.length > 1
+    ? withStyle({ flex: "1", overflow: "hidden", height: "100%" }, split("horizontal", splitChildren))
     : splitChildren[0]!;
 
-  const middleChildren: Component[] = [];
-  const middleDist: number[] = [];
-  if (hasLeft) {
-    middleChildren.push(zoneDockBar("vertical", config.left!));
-    middleDist.push(0);
-  }
-  middleChildren.push(mainSplit);
-  middleDist.push(1);
-  if (hasRight) {
-    middleChildren.push(zoneDockBar("vertical", config.right!));
-    middleDist.push(0);
-  }
-
-  const middleRow = middleChildren.length > 1
-    ? columns(middleDist, ...middleChildren.map(c => [c]))
-    : middleChildren[0]!;
-
+  let middleContent: Component = panelSplit;
   if (hasBottom) {
-    return rows(middleRow, zoneDockBar("horizontal", config.bottom!));
+    const bottomContent = buildSideContent(normalized.bottom!, everyPanel, zoneMap, order);
+    if (bottomContent) {
+      middleContent = withStyle({ flex: "1", "min-height": "0", height: "100%" }, split("vertical", [panelSplit, bottomContent], { ratio: [70, 30] }));
+    }
   }
-  return middleRow;
+
+  const outerChildren: Component[] = [];
+  const outerDist: number[] = [];
+
+  if (hasLeft) {
+    outerChildren.push(buildSideStripe("left", everyPanel, zoneMap, hasBottom ? "bottom" : undefined, order));
+    outerDist.push(0);
+  }
+  outerChildren.push(middleContent);
+  outerDist.push(1);
+  if (hasRight) {
+    outerChildren.push(buildSideStripe("right", everyPanel, zoneMap, hasBottom ? "bottom" : undefined, order));
+    outerDist.push(0);
+  }
+
+  const mainArea = outerChildren.length > 1
+    ? withStyle({ flex: "1", "min-height": "0", height: "100%", "grid-template-rows": "1fr", gap: "1px" }, columns(outerDist, ...outerChildren.map(c => [c])))
+    : outerChildren[0]!;
+
+  if (normalized.statusBar) {
+    return withStyle({ height: "100%", display: "flex", "flex-direction": "column", gap: "0" },
+      rows(mainArea, withStyle({ "flex-shrink": "0" }, normalized.statusBar)),
+    );
+  }
+  return withStyle({ height: "100%" }, mainArea);
+}
+
+export function dockWorkbench(config: DockWorkbenchConfig): Component {
+  const normalized = normalizeConfig(config);
+  const zoneMap = buildInitialZoneMap(normalized);
+  const tree = buildTreeFromZones(normalized, zoneMap);
+  return freeze({
+    ...tree,
+    props: freeze({ ...(tree.props ?? {}), __dockConfig: config }),
+  });
 }
 
 export interface ServerPaginationOptions {

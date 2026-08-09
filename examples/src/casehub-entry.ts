@@ -15,3 +15,7 @@ applyTheme('casehub-dark');
 
 export { loadSite, applyTheme, getTheme };
 export type { LiveSite, SiteOptions };
+
+export { createZoneLayoutEngine } from "@casehubio/pages-runtime";
+export { dockWorkbench, html, rows, split, columns, withId, dockBar, deferred, withStyle, hostPanel } from "@casehubio/pages-ui/dist/dsl/builders.js";
+export type { DockWorkbenchConfig, DockPanelConfig, DockSideConfig } from "@casehubio/pages-ui/dist/dsl/builders.js";

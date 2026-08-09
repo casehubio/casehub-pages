@@ -6,6 +6,8 @@ export type {
   PermissionContext,
   LayoutState,
   PanelEntry,
+  DockZone,
+  DockSide,
 } from "./types.js";
 export { ALLOW_ALL } from "./types.js";
 

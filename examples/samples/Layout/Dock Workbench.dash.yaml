@@ -1,0 +1,86 @@
+pages:
+  - name: Dock Workbench
+    components:
+      - type: dock-workbench
+        centre:
+          - type: markdown
+            properties:
+              content: >
+                ## Centre Content
+
+                This is the main workspace area. Tool panels dock around this
+                centre pane — left, right, and bottom.
+
+                **Drag** a tool button in the side stripes to rearrange panels
+                between zones. The insertion point preview shows exactly where
+                the button will land.
+        left:
+          zones: 2
+          panels:
+            - key: navigator
+              label: Navigator
+              icon: "\U0001F4C1"
+              zone: top
+              defaultOpen: true
+              fixed: true
+              content:
+                type: html
+                properties:
+                  content: "<div style='padding:12px'><h3>Navigator</h3><p>Fixed panel — cannot be dragged.</p></div>"
+            - key: files
+              label: Files
+              icon: "\U0001F4C4"
+              zone: top
+              content:
+                type: html
+                properties:
+                  content: "<div style='padding:12px'><h3>Files</h3><p>Drag this button to reposition.</p></div>"
+            - key: bookmarks
+              label: Bookmarks
+              icon: "\U0001F516"
+              zone: bottom
+              content:
+                type: html
+                properties:
+                  content: "<div style='padding:12px'><h3>Bookmarks</h3><p>Left-bottom zone panel.</p></div>"
+        right:
+          zones: 1
+          panels:
+            - key: agent
+              label: Agent
+              icon: "\U0001F916"
+              defaultOpen: true
+              allowedZones: [right-top, right-bottom, bottom-left, bottom-right]
+              content:
+                type: html
+                properties:
+                  content: "<div style='padding:12px'><h3>Agent</h3><p>Constrained — right and bottom zones only.</p></div>"
+            - key: inspector
+              label: Inspector
+              icon: "\U0001F50D"
+              content:
+                type: html
+                properties:
+                  content: "<div style='padding:12px'><h3>Inspector</h3><p>Drag anywhere.</p></div>"
+        bottom:
+          zones: 1
+          panels:
+            - key: console
+              label: Console
+              icon: "⌨️"
+              defaultOpen: true
+              content:
+                type: html
+                properties:
+                  content: "<div style='padding:12px'><h3>Console</h3><p>Bottom zone — spans full width between side bars.</p></div>"
+            - key: output
+              label: Output
+              icon: "\U0001F4CB"
+              content:
+                type: html
+                properties:
+                  content: "<div style='padding:12px'><h3>Output</h3><p>Another bottom panel.</p></div>"
+        statusBar:
+          type: html
+          properties:
+            content: "<div style='padding: 2px 8px; font-size: 12px; color: var(--pages-neutral-8, #888);'>Status: Ready</div>"

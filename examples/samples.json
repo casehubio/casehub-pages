@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 67,
+  "totalSamples": 68,
   "categories": [
     {
       "category": "Charts",
@@ -226,6 +226,12 @@
           "path": "Layout/Column with Rows.dash.yaml",
           "category": "Layout",
           "file": "Column with Rows.dash.yaml"
+        },
+        {
+          "name": "Dock Workbench",
+          "path": "Layout/Dock Workbench.dash.yaml",
+          "category": "Layout",
+          "file": "Dock Workbench.dash.yaml"
         },
         {
           "name": "Layout Patterns",

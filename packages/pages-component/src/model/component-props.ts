@@ -1,4 +1,5 @@
 import type { DataSetLookup } from "@casehubio/pages-data";
+import type { DockZone, DockSide } from "./types.js";
 
 export interface GridProps {
   readonly columns: number;
@@ -30,12 +31,16 @@ export interface DockItem {
   readonly label: string;
   readonly panelId: string;
   readonly defaultOpen?: boolean;
+  readonly zone?: string;
+  readonly allowedZones?: readonly DockZone[];
+  readonly fixed?: boolean;
 }
 
 export interface DockBarProps {
   readonly orientation: "vertical" | "horizontal";
   readonly items: readonly DockItem[];
   readonly exclusive?: boolean;
+  readonly side?: DockSide;
 }
 
 export interface HostPanelProps {

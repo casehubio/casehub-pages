@@ -27,3 +27,5 @@ export { createDevAuthTokenFn } from "./dev-auth.js";
 export type { DevAuthConfig } from "./dev-auth.js";
 export type { LayoutState, PanelEntry } from "@casehubio/pages-component";
 export { DetachController, DetachRegistry } from "./detach/index.js";
+export { createZoneLayoutEngine } from "./zone-layout-engine.js";
+export type { ZoneLayoutEngine } from "./zone-layout-engine.js";

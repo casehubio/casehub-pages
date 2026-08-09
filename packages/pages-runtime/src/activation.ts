@@ -28,6 +28,8 @@ import {lookupPanel} from "./panel-registry.js";
 import type {ConfigurablePanel, DataReceiver, VizTarget} from "@casehubio/pages-component";
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {SortColumn} from "@casehubio/pages-data";
+import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
+import {attachDockDrag} from "./dock-drag.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -75,6 +77,8 @@ export interface LazyPageOptions {
   readonly dataScopeRegistry: DataScopeRegistry;
   readonly saveConfigRegistry: SaveConfigRegistry;
   readonly lazyPageResolutions: Map<Component, Component>;
+  readonly zoneEngine?: ZoneLayoutEngine | undefined;
+  readonly siteTarget?: HTMLElement | undefined;
 }
 
 function createHostPanelProxy(panel: DataReceiver): VizTarget {
@@ -92,6 +96,77 @@ function createHostPanelProxy(panel: DataReceiver): VizTarget {
     set activePage(_: number | undefined) {},
     get activePage() { return undefined; },
   };
+}
+
+function renderDockButtons(
+  container: HTMLElement,
+  items: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean; zone?: string }>,
+  eventTarget: HTMLElement,
+  exclusive: boolean,
+  zoneName: string | undefined,
+): void {
+  for (const item of items) {
+    const button = document.createElement("button");
+    button.dataset.dockPanelId = item.panelId;
+    if (zoneName) button.dataset.dockZone = zoneName;
+    button.title = item.label;
+    button.textContent = item.icon;
+    button.style.border = "none";
+    button.style.background = "transparent";
+    button.style.cursor = "pointer";
+    button.style.padding = "6px";
+    button.style.borderRadius = "var(--pages-radius-sm, 4px)";
+    button.style.fontSize = "16px";
+
+    if (item.defaultOpen) {
+      button.dataset.active = "";
+    }
+
+    button.addEventListener("click", () => {
+      const isActive = button.dataset.active !== undefined;
+
+      if (exclusive) {
+        if (isActive) {
+          delete button.dataset.active;
+          eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+            bubbles: true, composed: true,
+            detail: { panelId: item.panelId, visible: false },
+          }));
+        } else {
+          const myZone = button.dataset.dockZone;
+          const scope = myZone
+            ? eventTarget.querySelectorAll<HTMLElement>(`button[data-dock-zone="${myZone}"]`)
+            : eventTarget.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+          for (const sibling of scope) {
+            if (sibling.dataset.active !== undefined) {
+              delete sibling.dataset.active;
+              eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+                bubbles: true, composed: true,
+                detail: { panelId: sibling.dataset.dockPanelId!, visible: false },
+              }));
+            }
+          }
+          button.dataset.active = "";
+          eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+            bubbles: true, composed: true,
+            detail: { panelId: item.panelId, visible: true },
+          }));
+        }
+      } else {
+        if (isActive) {
+          delete button.dataset.active;
+        } else {
+          button.dataset.active = "";
+        }
+        eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+          bubbles: true, composed: true,
+          detail: { panelId: item.panelId, visible: !isActive },
+        }));
+      }
+    });
+
+    container.appendChild(button);
+  }
 }
 
 export function createActivationCallback(
@@ -449,74 +524,69 @@ export function createActivationCallback(
     }
 
     if (component.type === "dock-bar" && component.props) {
-      const { orientation, items, exclusive } = component.props as {
+      const { orientation, items, exclusive, side } = component.props as {
         orientation?: string;
         exclusive?: boolean;
-        items?: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean }>;
+        side?: string;
+        items?: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean; zone?: string }>;
       };
       if (!items) return;
 
       el.style.display = "flex";
       el.style.flexDirection = orientation === "horizontal" ? "row" : "column";
-      el.style.gap = "2px";
+      el.style.gap = "0";
       el.style.padding = "4px";
 
-      for (const item of items) {
-        const button = document.createElement("button");
-        button.dataset.dockPanelId = item.panelId;
-        button.title = item.label;
-        button.textContent = item.icon;
-        button.style.border = "none";
-        button.style.background = "transparent";
-        button.style.cursor = "pointer";
-        button.style.padding = "6px";
-        button.style.borderRadius = "var(--pages-radius-sm, 4px)";
-        button.style.fontSize = "16px";
+      const hasZones = items.some(i => i.zone !== undefined);
 
-        if (item.defaultOpen) {
-          button.dataset.active = "";
+      if (hasZones) {
+        const topItems = items.filter(i => i.zone === "top");
+        const middleItems = items.filter(i => i.zone === "top-second");
+        const bottomItems = items.filter(i => i.zone === "bottom");
+        const flexDir = orientation === "horizontal" ? "row" : "column";
+
+        function makeGroup(zoneName: string, groupItems: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean; zone?: string }>): HTMLElement {
+          const group = document.createElement("div");
+          group.dataset.dockZone = zoneName;
+          group.style.display = "flex";
+          group.style.flexDirection = flexDir;
+          group.style.gap = "2px";
+          group.style.minWidth = "24px";
+          group.style.minHeight = "24px";
+          renderDockButtons(group, groupItems, el, exclusive ?? false, zoneName);
+          return group;
         }
 
-        button.addEventListener("click", () => {
-          const isActive = button.dataset.active !== undefined;
+        // Top: side-top panels
+        el.appendChild(makeGroup("top", topItems));
 
-          if (exclusive) {
-            if (isActive) {
-              delete button.dataset.active;
-              el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-                bubbles: true, composed: true,
-                detail: { panelId: item.panelId, visible: false },
-              }));
-            } else {
-              for (const sibling of el.querySelectorAll<HTMLElement>("button[data-dock-panel-id]")) {
-                if (sibling.dataset.active !== undefined) {
-                  delete sibling.dataset.active;
-                  el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-                    bubbles: true, composed: true,
-                    detail: { panelId: sibling.dataset.dockPanelId!, visible: false },
-                  }));
-                }
-              }
-              button.dataset.active = "";
-              el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-                bubbles: true, composed: true,
-                detail: { panelId: item.panelId, visible: true },
-              }));
-            }
-          } else {
-            if (isActive) {
-              delete button.dataset.active;
-            } else {
-              button.dataset.active = "";
-            }
-            el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-              bubbles: true, composed: true,
-              detail: { panelId: item.panelId, visible: !isActive },
-            }));
-          }
-        });
+        // Separator between the side's two zones
+        const sep = document.createElement("div");
+        sep.style[orientation === "horizontal" ? "borderLeft" : "borderTop"] = "1px solid var(--pages-neutral-5, #555)";
+        sep.style.margin = orientation === "horizontal" ? "0 4px" : "4px 0";
+        sep.style.alignSelf = "stretch";
+        el.appendChild(sep);
 
-        el.appendChild(button);
+        // Middle: side-bottom panels (drop zone, even if empty)
+        el.appendChild(makeGroup("middle", middleItems));
+
+        // Spacer (no visible line) pushes bottom-zone buttons to bottom
+        const spacer = document.createElement("div");
+        spacer.dataset.dockSpacer = "";
+        spacer.style.flex = "1";
+        el.appendChild(spacer);
+
+        // Bottom: bottom-zone panels (anchored to bottom of stripe)
+        el.appendChild(makeGroup("bottom", bottomItems));
+      } else {
+        renderDockButtons(el, items, el, exclusive ?? false, undefined);
+      }
+
+      if (options?.zoneEngine && options?.siteTarget) {
+        const buttons = el.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+        for (const btn of buttons) {
+          attachDockDrag(btn, options.zoneEngine, options.siteTarget);
+        }
       }
       return;
     }
@@ -524,6 +594,11 @@ export function createActivationCallback(
     if (component.type === "deferred") {
       const children = component.slots?.default ?? [];
       el.dataset.deferred = "pending";
+      if (component.style?.flex) {
+        el.dataset.pagesDisplay = "flex";
+        el.style.flexDirection = "column";
+      }
+      const isDockPanel = !!component.style?.flex;
       el.addEventListener("pages-deferred-render", () => {
         for (const child of children) {
           renderComponent(el, child, {
@@ -532,6 +607,12 @@ export function createActivationCallback(
           });
         }
         delete el.dataset.deferred;
+        if (isDockPanel) {
+          for (const ch of el.querySelectorAll<HTMLElement>(":scope > *")) {
+            ch.style.flex = "1";
+            ch.style.minHeight = "0";
+          }
+        }
       }, { once: true });
       return;
     }
