@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 68,
+  "totalSamples": 69,
   "categories": [
     {
       "category": "Charts",
@@ -232,6 +232,12 @@
           "path": "Layout/Dock Workbench.dash.yaml",
           "category": "Layout",
           "file": "Dock Workbench.dash.yaml"
+        },
+        {
+          "name": "Floating Workspace",
+          "path": "Layout/Floating Workspace.dash.yaml",
+          "category": "Layout",
+          "file": "Floating Workspace.dash.yaml"
         },
         {
           "name": "Layout Patterns",

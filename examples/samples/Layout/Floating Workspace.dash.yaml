@@ -1,0 +1,109 @@
+pages:
+  - name: Floating Workspace
+    components:
+      - type: dock-workbench
+        centre:
+          - type: floating-workspace
+            centre:
+              - type: markdown
+                properties:
+                  content: >
+                    ## Editor Area
+
+                    This is the main workspace centre. Floating frames hover
+                    above this area — drag them to reposition, resize edges
+                    to reshape.
+
+                    **Pin** a frame to keep it on top. **Close** with the red dot.
+            frames:
+              - key: preview
+                tabs:
+                  - key: preview-tab
+                    label: Preview
+                    content:
+                      type: html
+                      properties:
+                        content: >
+                          <div style="padding:12px">
+                            <h3>Preview</h3>
+                            <p>Live preview panel. Drag the titlebar to reposition.
+                            Resize from any edge.</p>
+                          </div>
+                  - key: diff-tab
+                    label: Diff
+                    content:
+                      type: html
+                      properties:
+                        content: >
+                          <div style="padding:12px">
+                            <h3>Diff View</h3>
+                            <p>Switch between tabs within the frame. Drag a tab
+                            outside the frame to create a new floating frame.</p>
+                          </div>
+                position: { x: 50, y: 50 }
+                size: { width: 400, height: 280 }
+              - key: outline
+                tabs:
+                  - key: outline-tab
+                    label: Outline
+                    content:
+                      type: html
+                      properties:
+                        content: >
+                          <div style="padding:12px">
+                            <h3>Outline</h3>
+                            <p>Document structure. Pin this frame to keep it
+                            visible when clicking on other frames.</p>
+                          </div>
+                position: { x: 500, y: 80 }
+                size: { width: 320, height: 240 }
+        left:
+          zones: 1
+          panels:
+            - key: explorer
+              label: Explorer
+              icon: "\U0001F4C1"
+              defaultOpen: true
+              content:
+                type: html
+                properties:
+                  content: >
+                    <div style="padding:12px">
+                      <h3>Explorer</h3>
+                      <p>Docked tool window — operates independently of
+                      floating frames in the centre.</p>
+                    </div>
+        right:
+          zones: 1
+          panels:
+            - key: properties
+              label: Properties
+              icon: "\U0001F50D"
+              content:
+                type: html
+                properties:
+                  content: >
+                    <div style="padding:12px">
+                      <h3>Properties</h3>
+                      <p>Right-side tool window.</p>
+                    </div>
+        bottom:
+          zones: 1
+          panels:
+            - key: terminal
+              label: Terminal
+              icon: "⌨️"
+              defaultOpen: true
+              content:
+                type: html
+                properties:
+                  content: >
+                    <div style="padding:12px">
+                      <h3>Terminal</h3>
+                      <p>Bottom panel — dock workbench and floating workspace
+                      compose independently.</p>
+                    </div>
+        statusBar:
+          type: html
+          properties:
+            content: "<div style='padding: 2px 8px; font-size: 12px; color: var(--pages-neutral-8, #888);'>Floating Workspace Demo</div>"
