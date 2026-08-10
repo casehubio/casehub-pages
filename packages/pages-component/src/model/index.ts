@@ -8,6 +8,12 @@ export type {
   PanelEntry,
   DockZone,
   DockSide,
+  FrameTabConfig,
+  FrameConfig,
+  FloatingWorkspaceConfig,
+  FrameLayout,
+  ContentFactoryResult,
+  ContentFactory,
 } from "./types.js";
 export { ALLOW_ALL } from "./types.js";
 
@@ -35,6 +41,7 @@ export type {
   FilterSettings,
   DrillDown,
   RefreshSettings,
+  FloatingWorkspaceProps,
 } from "./component-props.js";
 
 // Hosting contracts
@@ -136,6 +143,7 @@ export {
   isSplit,
   isDockBar,
   isHostPanel,
+  isFloatingWorkspace,
   isPanel,
   isHtml,
   isMarkdown,

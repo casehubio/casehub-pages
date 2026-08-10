@@ -56,4 +56,45 @@ export interface LayoutState {
   readonly docks: Readonly<Record<string, boolean>>;
   readonly panels: Readonly<Record<string, PanelEntry>>;
   readonly zones?: Readonly<Record<string, DockZone>>;
+  readonly frames?: readonly FrameLayout[];
 }
+
+export interface FrameTabConfig {
+  readonly key: string;
+  readonly label: string;
+  readonly icon?: string;
+  readonly content: Component;
+}
+
+export interface FrameConfig {
+  readonly key: string;
+  readonly tabs: readonly FrameTabConfig[];
+  readonly position?: { x: number; y: number };
+  readonly size?: { width: number; height: number };
+  readonly pinned?: boolean;
+}
+
+export interface FloatingWorkspaceConfig {
+  readonly centre: Component | Component[];
+  readonly frames?: readonly FrameConfig[];
+  readonly organisers?: boolean;
+}
+
+export interface FrameLayout {
+  readonly key: string;
+  readonly order: number;
+  readonly position: { x: number; y: number };
+  readonly size: { width: number; height: number };
+  readonly zIndex: number;
+  readonly pinned: boolean;
+  readonly hidden: boolean;
+  readonly tabs: readonly FrameTabConfig[];
+  readonly activeTabKey: string;
+}
+
+export interface ContentFactoryResult {
+  readonly element: HTMLElement;
+  readonly dispose?: () => void;
+}
+
+export type ContentFactory = (tab: FrameTabConfig) => ContentFactoryResult;

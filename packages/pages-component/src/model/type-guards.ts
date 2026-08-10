@@ -19,6 +19,7 @@ import type {
   MarkdownProps,
   TitleProps,
   LazyPageProps,
+  FloatingWorkspaceProps,
 } from "./component-props.js";
 import type {
   BarChartProps,
@@ -64,6 +65,7 @@ export interface ComponentTypeRegistry {
   split: SplitProps;
   "dock-bar": DockBarProps;
   "host-panel": HostPanelProps;
+  "floating-workspace": FloatingWorkspaceProps;
   // Wrapper components
   panel: PanelProps;
   // Content components
@@ -177,6 +179,10 @@ export function isDockBar(c: Component): c is TypedComponent<"dock-bar"> {
 
 export function isHostPanel(c: Component): c is TypedComponent<"host-panel"> {
   return c.type === "host-panel";
+}
+
+export function isFloatingWorkspace(c: Component): c is TypedComponent<"floating-workspace"> {
+  return c.type === "floating-workspace";
 }
 
 // Wrapper components
