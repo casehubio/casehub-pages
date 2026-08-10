@@ -85,11 +85,17 @@ by the runtime event delegation layer:
 | `pages-refresh-request` | Panel requests data re-fetch from source | Host panels, any component needing fresh data |
 | `pages-deferred-render` | Trigger deferred child rendering | Dock-toggle handler, deferred activation |
 | `pages-dock-rearrange` | Panel dragged to new zone | Dock drag system |
+| `pages-frame-close` | Floating frame removed | Frame close dot |
+| `pages-frame-pin` | Frame pin state toggled | Frame pin button |
+| `pages-frame-move` | Frame drag completed | Dockview backend (drag end) |
+| `pages-frame-resize` | Frame resize completed | Dockview backend (resize end) |
+| `pages-tab-drag-out` | Tab dragged out to new frame | Dockview backend (tab drag) |
+| `pages-tab-reorder` | Tab order changed within frame | Dockview backend (tab reorder) |
 
 Do not use these names as `pages-event` topics or as custom event names in
 application code — they will collide with the framework's event delegation.
 
-This table is a snapshot as of 2026-07-05. The authoritative source for
+This table is a snapshot as of 2026-08-10. The authoritative source for
 reserved event names is `packages/pages-runtime/src/site.ts` (search for
 `addEventListener`). When adding a new framework event to the runtime, update
 this protocol's reserved names table in the same commit.
