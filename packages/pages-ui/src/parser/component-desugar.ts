@@ -1,6 +1,6 @@
 import type { Component } from "../model/types.js";
 import { desugarDisplayer } from "./displayer-desugar.js";
-import { dockWorkbench } from "../dsl/builders.js";
+import { dockWorkbench, floatingWorkspace } from "../dsl/builders.js";
 import type { DockPanelConfig, DockSideConfig } from "../dsl/builders.js";
 import type { DockZone } from "@casehubio/pages-component";
 
@@ -165,6 +165,41 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       ...(right ? { right } : {}),
       ...(bottom ? { bottom } : {}),
       ...(statusBar ? { statusBar } : {}),
+    });
+  }
+
+  // Floating workspace (high-level compositor — delegates to builder)
+  if ("type" in raw && raw.type === "floating-workspace") {
+    const centreRaw = raw.centre;
+    const centre = Array.isArray(centreRaw)
+      ? centreRaw.map((c: unknown) => desugarComponent(c as Record<string, unknown>, displayerDefaults))
+      : centreRaw ? desugarComponent(centreRaw as Record<string, unknown>, displayerDefaults) : [];
+
+    const framesRaw = (raw as Record<string, unknown>).frames as unknown[] | undefined;
+    const frames = framesRaw?.map((f: unknown) => {
+      const frame = f as Record<string, unknown>;
+      return {
+        key: frame.key as string,
+        tabs: (frame.tabs as unknown[]).map((t: unknown) => {
+          const tab = t as Record<string, unknown>;
+          return {
+            key: tab.key as string,
+            label: tab.label as string,
+            ...(tab.icon ? { icon: tab.icon as string } : {}),
+            content: desugarComponent(tab.content as Record<string, unknown>, displayerDefaults),
+          };
+        }),
+        ...(frame.position ? { position: frame.position as { x: number; y: number } } : {}),
+        ...(frame.size ? { size: frame.size as { width: number; height: number } } : {}),
+        ...(frame.pinned !== undefined ? { pinned: frame.pinned as boolean } : {}),
+      };
+    });
+
+    const organisers = (raw as Record<string, unknown>).organisers;
+    return floatingWorkspace({
+      centre,
+      ...(frames ? { frames } : {}),
+      ...(organisers !== undefined ? { organisers: organisers as boolean } : {}),
     });
   }
 

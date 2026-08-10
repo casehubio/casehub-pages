@@ -61,6 +61,7 @@ export {
   hostPanel,
   deferred,
   dockWorkbench,
+  floatingWorkspace,
   type DockPanelConfig,
   type DockSideConfig,
   type DockWorkbenchConfig,

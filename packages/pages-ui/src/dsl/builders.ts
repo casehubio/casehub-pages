@@ -19,6 +19,8 @@ import type {
   HostPanelProps,
   DockZone,
   DockSide,
+  FloatingWorkspaceConfig,
+  FloatingWorkspaceProps,
 } from "@casehubio/pages-component";
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data";
@@ -828,4 +830,13 @@ export function serverPaginated(options?: ServerPaginationOptions): import("@cas
     maxCachedPages: options?.maxCachedPages ?? 5,
     totalPath: options?.totalPath,
   };
+}
+
+export function floatingWorkspace(config: FloatingWorkspaceConfig): TypedComponent<"floating-workspace"> {
+  const props: FloatingWorkspaceProps = {
+    centre: config.centre,
+    ...(config.frames ? { frames: config.frames } : {}),
+    organisers: config.organisers ?? true,
+  };
+  return Object.freeze({ type: "floating-workspace" as const, props }) as TypedComponent<"floating-workspace">;
 }

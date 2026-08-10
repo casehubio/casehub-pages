@@ -341,4 +341,53 @@ describe("desugar-new-types", () => {
       expect(types).toContain("deferred");
     });
   });
+
+  describe("floating-workspace desugaring", () => {
+    it("desugars floating-workspace with centre and frames", () => {
+      const raw = {
+        type: "floating-workspace",
+        centre: [{ type: "html", properties: { content: "<div>main</div>" } }],
+        frames: [{
+          key: "f1",
+          tabs: [{ key: "t1", label: "Tab 1", content: { type: "html", properties: { content: "x" } } }],
+          position: { x: 50, y: 50 },
+          size: { width: 400, height: 300 },
+        }],
+      };
+      const result = desugarComponent(raw, {});
+      expect(result.type).toBe("floating-workspace");
+      expect(result.props).toBeDefined();
+      const props = result.props as Record<string, unknown>;
+      expect(Array.isArray(props.centre) ? (props.centre as unknown[]).length : 0).toBeGreaterThan(0);
+      const frames = props.frames as Array<Record<string, unknown>>;
+      expect(frames).toHaveLength(1);
+      expect(frames[0]!.key).toBe("f1");
+      const tabs = frames[0]!.tabs as Array<Record<string, unknown>>;
+      expect(tabs[0]!.content).toBeDefined();
+      expect((tabs[0]!.content as Record<string, unknown>).type).toBe("html");
+    });
+
+    it("desugars floating-workspace without frames", () => {
+      const raw = {
+        type: "floating-workspace",
+        centre: [{ type: "markdown", properties: { content: "hello" } }],
+      };
+      const result = desugarComponent(raw, {});
+      expect(result.type).toBe("floating-workspace");
+      const props = result.props as Record<string, unknown>;
+      expect(props.frames).toBeUndefined();
+      expect(props.organisers).toBe(true);
+    });
+
+    it("passes organisers: false through", () => {
+      const raw = {
+        type: "floating-workspace",
+        centre: [{ type: "html", properties: { content: "" } }],
+        organisers: false,
+      };
+      const result = desugarComponent(raw, {});
+      const props = result.props as Record<string, unknown>;
+      expect(props.organisers).toBe(false);
+    });
+  });
 });

@@ -39,6 +39,7 @@ import {
   hostPanel,
   deferred,
   dockWorkbench,
+  floatingWorkspace,
   serverPaginated,
   type PageOptions,
 } from "./builders.js";
@@ -846,6 +847,34 @@ describe("dockWorkbench builder", () => {
       expect(config.orderParam).toBe("dir");
       expect(config.defaultPageSize).toBe(50);
       expect(config.maxCachedPages).toBe(10);
+    });
+  });
+
+  describe("floatingWorkspace", () => {
+    it("creates floating-workspace component with centre", () => {
+      const result = floatingWorkspace({
+        centre: { type: "html" as const, props: { content: "<div>main</div>" } },
+      });
+      expect(result.type).toBe("floating-workspace");
+      expect(result.props?.centre).toBeDefined();
+      expect(result.props?.organisers).toBe(true);
+    });
+
+    it("includes frames in props", () => {
+      const result = floatingWorkspace({
+        centre: { type: "html" as const, props: { content: "" } },
+        frames: [{ key: "f1", tabs: [{ key: "t1", label: "Tab", content: { type: "html" as const, props: { content: "x" } } }] }],
+      });
+      expect(result.props?.frames).toHaveLength(1);
+      expect(result.props?.frames[0].key).toBe("f1");
+    });
+
+    it("respects organisers: false", () => {
+      const result = floatingWorkspace({
+        centre: { type: "html" as const, props: { content: "" } },
+        organisers: false,
+      });
+      expect(result.props?.organisers).toBe(false);
     });
   });
 });
