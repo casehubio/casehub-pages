@@ -65,6 +65,8 @@ import type {PagesActionRequestDetail} from "@casehubio/pages-component";
 import type {DevAuthConfig} from "./dev-auth.js";
 import {createDevAuthTokenFn} from "./dev-auth.js";
 import {DetachController, DetachRegistry, copyStyles} from "./detach/index.js";
+import type {FloatingFrameEngine} from "./floating-frame-engine.js";
+import type {FrameLayout} from "@casehubio/pages-component";
 
 // --- Event detail interfaces for typed CustomEvent access ---
 
@@ -188,6 +190,8 @@ export async function loadSite(
   const splitRatios = new Map<string, readonly number[]>();
   let zoneEngine: ZoneLayoutEngine | undefined = options?.zoneEngine;
   let layoutSaveTimer: ReturnType<typeof setTimeout> | undefined;
+  let frameLayoutStash: readonly FrameLayout[] | undefined;
+  const floatingWorkspaceRef: { engine: FloatingFrameEngine | undefined; stash: readonly FrameLayout[] | undefined } = { engine: undefined, stash: undefined };
   const actionExecutor = new ActionExecutor(
     options?.fetch ?? globalThis.fetch.bind(globalThis),
     options?.baseUrl ?? ""
@@ -935,6 +939,45 @@ export async function loadSite(
     scheduleLayoutSave();
   }), { signal: abortController.signal });
 
+  // --- Floating workspace frame events ---
+
+  target.addEventListener("pages-frame-close", ((e: Event) => {
+    const { frameKey } = (e as CustomEvent<{ frameKey: string }>).detail;
+    if (floatingWorkspaceRef.engine) {
+      floatingWorkspaceRef.engine.removeFrame(frameKey);
+      scheduleLayoutSave();
+    }
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-frame-pin", ((e: Event) => {
+    const { frameKey } = (e as CustomEvent<{ frameKey: string }>).detail;
+    if (floatingWorkspaceRef.engine) {
+      floatingWorkspaceRef.engine.togglePin(frameKey);
+      scheduleLayoutSave();
+    }
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-frame-move", (() => {
+    scheduleLayoutSave();
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-frame-resize", (() => {
+    scheduleLayoutSave();
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-tab-drag-out", ((e: Event) => {
+    const { tabKey, fromFrame, position } = (e as CustomEvent<{ tabKey: string; fromFrame: string; position: { x: number; y: number } }>).detail;
+    if (floatingWorkspaceRef.engine) {
+      const newKey = `frame-${String(Date.now())}-${Math.random().toString(36).slice(2, 6)}`;
+      floatingWorkspaceRef.engine.createFrame({ key: newKey, tabs: [], position, size: { width: 400, height: 300 } });
+      floatingWorkspaceRef.engine.moveTab(fromFrame, tabKey, newKey);
+      if (floatingWorkspaceRef.engine.frames.get(fromFrame)?.tabs.length === 0) {
+        floatingWorkspaceRef.engine.removeFrame(fromFrame);
+      }
+      scheduleLayoutSave();
+    }
+  }), { signal: abortController.signal });
+
   // --- Zone rearrangement ---
 
   target.addEventListener("pages-dock-rearrange", ((e: Event) => {
@@ -943,6 +986,13 @@ export async function loadSite(
 
     const newTree = zoneEngine.movePanel(panelKey, toZone as DockZone, insertIndex);
     dockState.set(panelKey, true);
+
+    if (floatingWorkspaceRef.engine) {
+      frameLayoutStash = floatingWorkspaceRef.engine.captureLayout();
+      floatingWorkspaceRef.stash = frameLayoutStash;
+      floatingWorkspaceRef.engine.dispose();
+      floatingWorkspaceRef.engine = undefined;
+    }
 
     if (layoutSaveTimer !== undefined) {
       clearTimeout(layoutSaveTimer);
@@ -1075,11 +1125,15 @@ export async function loadSite(
   }
 
   function captureLayout(): LayoutState {
+    const capturedFrames = floatingWorkspaceRef.engine
+      ? floatingWorkspaceRef.engine.captureLayout()
+      : frameLayoutStash;
     return Object.freeze({
       splits: Object.freeze(Object.fromEntries(splitRatios)),
       docks: Object.freeze(Object.fromEntries(dockState)),
       panels: captureHostPanels(),
       ...(zoneEngine ? { zones: Object.freeze(Object.fromEntries(zoneEngine.zoneMap)) } : {}),
+      ...(capturedFrames ? { frames: capturedFrames } : {}),
     });
   }
 
@@ -1102,6 +1156,10 @@ export async function loadSite(
     }
     for (const [id, visible] of Object.entries(seedLayout.docks)) {
       dockState.set(id, visible);
+    }
+    if (seedLayout.frames) {
+      frameLayoutStash = seedLayout.frames;
+      floatingWorkspaceRef.stash = seedLayout.frames;
     }
   }
 
@@ -1153,6 +1211,7 @@ export async function loadSite(
     lazyPageResolutions,
     zoneEngine,
     siteTarget: target,
+    floatingWorkspaceRef,
   }, contextManager);
   renderComponent(target, root, { permissions, onNode });
 
@@ -1333,6 +1392,10 @@ export async function loadSite(
     },
 
     dispose(): void {
+      if (floatingWorkspaceRef.engine) {
+        floatingWorkspaceRef.engine.dispose();
+        floatingWorkspaceRef.engine = undefined;
+      }
       detachRegistry.reattachAll();
       abortController.abort();
       if (typeof window !== "undefined") {

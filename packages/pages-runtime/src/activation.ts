@@ -30,6 +30,10 @@ import type {HostPanelProps} from "@casehubio/pages-component";
 import type {SortColumn} from "@casehubio/pages-data";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
 import {attachDockDrag} from "./dock-drag.js";
+import type {FloatingWorkspaceProps, ContentFactory, FrameLayout, FrameConfig} from "@casehubio/pages-component";
+import type {FloatingFrameEngine} from "./floating-frame-engine.js";
+import {createFloatingFrameEngine} from "./floating-frame-engine.js";
+import {createDockviewBackend} from "./dockview-backend.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -79,6 +83,10 @@ export interface LazyPageOptions {
   readonly lazyPageResolutions: Map<Component, Component>;
   readonly zoneEngine?: ZoneLayoutEngine | undefined;
   readonly siteTarget?: HTMLElement | undefined;
+  readonly floatingWorkspaceRef?: {
+    engine: FloatingFrameEngine | undefined;
+    stash: readonly FrameLayout[] | undefined;
+  };
 }
 
 function createHostPanelProxy(panel: DataReceiver): VizTarget {
@@ -651,6 +659,89 @@ export function createActivationCallback(
             el.textContent = `Failed to load lazy page: ${err instanceof Error ? err.message : String(err)}`;
           });
       }
+      return;
+    }
+
+    if (component.type === "floating-workspace") {
+      const props = component.props as unknown as FloatingWorkspaceProps;
+      const centreComponents = Array.isArray(props.centre) ? props.centre : [props.centre];
+
+      el.style.position = "relative";
+      el.style.height = "100%";
+      el.style.display = "flex";
+      el.style.flexDirection = "column";
+      el.style.minHeight = "0";
+
+      const centreContainer = document.createElement("div");
+      centreContainer.style.cssText = "position:relative;width:100%;flex:1;min-height:0;overflow:auto;background:var(--pages-neutral-1);border-radius:var(--pages-radius-sm, 4px);";
+      centreContainer.dataset.floatingWorkspaceCentre = "";
+      el.appendChild(centreContainer);
+      const centreRoot: Component = centreComponents.length === 1
+        ? centreComponents[0]!
+        : { type: "rows", slots: { default: [...centreComponents] } };
+      renderComponent(centreContainer, centreRoot, {
+        permissions: options?.permissions ?? ALLOW_ALL,
+        onNode: callback,
+      });
+
+      const wsRef = options?.floatingWorkspaceRef;
+
+      createDockviewBackend().then((backend) => {
+        const overlayContainer = document.createElement("div");
+        overlayContainer.style.cssText = "position:absolute;inset:0;pointer-events:none;";
+        overlayContainer.dataset.floatingWorkspaceOverlay = "";
+        el.appendChild(overlayContainer);
+
+        const defaultFactory: ContentFactory = (tab) => {
+          const container = document.createElement("div");
+          renderComponent(container, tab.content, {
+            permissions: options?.permissions ?? ALLOW_ALL,
+            onNode: callback,
+          });
+          return { element: container };
+        };
+
+        backend.attach(overlayContainer, defaultFactory);
+        const engine = createFloatingFrameEngine(backend, wsRef?.stash ?? undefined);
+
+        if (wsRef) {
+          wsRef.engine = engine;
+          wsRef.stash = undefined;
+        }
+
+        if (props.frames && !wsRef?.stash) {
+          for (const frameConfig of props.frames) {
+            engine.createFrame(frameConfig);
+          }
+        }
+
+        backend.onFrameMove((key, pos) => {
+          el.dispatchEvent(new CustomEvent("pages-frame-move", {
+            bubbles: true, composed: true,
+            detail: { frameKey: key, position: pos },
+          }));
+        });
+        backend.onFrameResize((key, size) => {
+          el.dispatchEvent(new CustomEvent("pages-frame-resize", {
+            bubbles: true, composed: true,
+            detail: { frameKey: key, size },
+          }));
+        });
+        backend.onTabDragOut((fromFrame, tabKey, position) => {
+          el.dispatchEvent(new CustomEvent("pages-tab-drag-out", {
+            bubbles: true, composed: true,
+            detail: { tabKey, fromFrame, position },
+          }));
+        });
+        backend.onTabReorder((frameKey, tabKeys) => {
+          el.dispatchEvent(new CustomEvent("pages-tab-reorder", {
+            bubbles: true, composed: true,
+            detail: { frameKey, tabKeys },
+          }));
+        });
+      }).catch((err: unknown) => {
+        console.error("Failed to initialize floating workspace backend:", err);
+      });
       return;
     }
 

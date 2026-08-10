@@ -127,6 +127,8 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
         theme: { ...themeDark, tabAnimation: "smooth" },
         dndEdges: false,
       });
+      const grid = el.querySelector<HTMLElement>(".dv-grid-view.dv-dockview");
+      if (grid) grid.style.background = "transparent";
     },
 
     detach() {

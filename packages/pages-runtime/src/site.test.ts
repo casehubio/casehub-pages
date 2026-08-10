@@ -804,6 +804,137 @@ describe("pages-event inter-panel communication", () => {
   });
 });
 
+// ── Floating Workspace Integration ─────────────────────────────────
+
+describe("floating-workspace integration", () => {
+  it("renders centre content synchronously", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const tree: Component = {
+      type: "page",
+      props: { name: "App" },
+      slots: {
+        default: [{
+          type: "floating-workspace",
+          props: {
+            centre: { type: "html", props: { content: "<p>Centre</p>" } },
+            organisers: true,
+          },
+        }],
+      },
+    };
+    const site = await loadSite(target, tree);
+    const centreEl = target.querySelector("[data-floating-workspace-centre]");
+    expect(centreEl).toBeTruthy();
+    expect(centreEl!.innerHTML).toContain("Centre");
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("renders multiple centre components", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const tree: Component = {
+      type: "page",
+      props: { name: "App" },
+      slots: {
+        default: [{
+          type: "floating-workspace",
+          props: {
+            centre: [
+              { type: "html", props: { content: "<p>First</p>" } },
+              { type: "html", props: { content: "<p>Second</p>" } },
+            ],
+            organisers: true,
+          },
+        }],
+      },
+    };
+    const site = await loadSite(target, tree);
+    const centreEl = target.querySelector("[data-floating-workspace-centre]");
+    expect(centreEl).toBeTruthy();
+    expect(centreEl!.innerHTML).toContain("First");
+    expect(centreEl!.innerHTML).toContain("Second");
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("captureLayout includes frames from seed layout", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const tree: Component = {
+      type: "page",
+      props: { name: "App" },
+      slots: {
+        default: [{
+          type: "floating-workspace",
+          props: {
+            centre: { type: "html", props: { content: "main" } },
+          },
+        }],
+      },
+    };
+    const seedFrames = [{
+      key: "f1", order: 0,
+      position: { x: 50, y: 50 }, size: { width: 400, height: 300 },
+      zIndex: 1, pinned: false, hidden: false,
+      tabs: [{ key: "t1", label: "Tab 1", content: { type: "html" as const, props: { content: "x" } } }],
+      activeTabKey: "t1",
+    }];
+    const site = await loadSite(target, tree, {
+      layout: {
+        splits: {}, docks: {}, panels: {},
+        frames: seedFrames,
+      },
+    });
+    const layout = site.layout;
+    expect(layout.frames).toBeTruthy();
+    expect(layout.frames).toHaveLength(1);
+    expect(layout.frames![0]!.key).toBe("f1");
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("frame event handlers do not crash", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const tree: Component = {
+      type: "page",
+      props: { name: "App" },
+      slots: {
+        default: [{
+          type: "floating-workspace",
+          props: {
+            centre: { type: "html", props: { content: "main" } },
+          },
+        }],
+      },
+    };
+    const site = await loadSite(target, tree);
+
+    target.dispatchEvent(new CustomEvent("pages-frame-close", {
+      bubbles: true, composed: true,
+      detail: { frameKey: "nonexistent" },
+    }));
+    target.dispatchEvent(new CustomEvent("pages-frame-pin", {
+      bubbles: true, composed: true,
+      detail: { frameKey: "nonexistent" },
+    }));
+    target.dispatchEvent(new CustomEvent("pages-frame-move", {
+      bubbles: true, composed: true,
+      detail: { frameKey: "nonexistent", position: { x: 100, y: 100 } },
+    }));
+    target.dispatchEvent(new CustomEvent("pages-frame-resize", {
+      bubbles: true, composed: true,
+      detail: { frameKey: "nonexistent", size: { width: 500, height: 400 } },
+    }));
+
+    expect(site.root).toBeTruthy();
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
 describe("component-level dock-toggle", () => {
   it("hides individual component in shared slot without hiding siblings", async () => {
     const target = document.createElement("div");
