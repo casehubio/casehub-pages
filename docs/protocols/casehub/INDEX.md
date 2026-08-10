@@ -10,3 +10,5 @@
 | [iframe-message-format.md](iframe-message-format.md) | Iframe messages use ComponentMessage envelope with plain-object properties over postMessage | Iframe components via postMessage |
 | [iframe-component-lifecycle.md](iframe-component-lifecycle.md) | Iframe components follow INIT → DATASET lifecycle with configuration error signalling | Iframe components via postMessage |
 | [maven-only-build-scripts.md](maven-only-build-scripts.md) | Maven-only build outputs must use separate scripts, not the default `build` | All package.json scripts producing dist/ outputs |
+| [workbench-integration-pattern.md](workbench-integration-pattern.md) | Complex interactive components extend pages-ui/pages-component/pages-runtime — no new packages | New workbench-level components |
+| [content-agnostic-workbench.md](content-agnostic-workbench.md) | Workbench components manage layout, not content — pluggable via factories | dock-workbench, floating-workspace |
