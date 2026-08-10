@@ -27,6 +27,7 @@
     "@casehubio/pages-ui-components": "workspace:*",
     "@casehubio/pages-ui-tokens": "workspace:*",
     "@casehubio/pages-viz": "workspace:*",
+    "dockview-core": "^7.0.0",
     "js-yaml": "^4.1.0",
     "marked": "^15.0.0"
   },

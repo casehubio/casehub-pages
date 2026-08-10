@@ -22,12 +22,12 @@ export function applyPreset(
 
 function sideBySide(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {
   const w = Math.floor((c.width - GAP * (frames.length - 1)) / frames.length);
-  return frames.map((f, i) => ({ ...f, position: { x: i * (w + GAP), y: 0 }, size: { width: w, height: c.height } }));
+  return frames.map((f, i) => withLayout(f, { x: i * (w + GAP), y: 0 }, { width: w, height: c.height }));
 }
 
 function stacked(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {
   const h = Math.floor((c.height - GAP * (frames.length - 1)) / frames.length);
-  return frames.map((f, i) => ({ ...f, position: { x: 0, y: i * (h + GAP) }, size: { width: c.width, height: h } }));
+  return frames.map((f, i) => withLayout(f, { x: 0, y: i * (h + GAP) }, { width: c.width, height: h }));
 }
 
 function grid(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {
@@ -38,37 +38,35 @@ function grid(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {
   return frames.map((f, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    return { ...f, position: { x: col * (cellW + GAP), y: row * (cellH + GAP) }, size: { width: cellW, height: cellH } };
+    return withLayout(f, { x: col * (cellW + GAP), y: row * (cellH + GAP) }, { width: cellW, height: cellH });
   });
 }
 
 function mainSidebar(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {
-  if (frames.length === 1) return [{ ...frames[0], position: { x: 0, y: 0 }, size: { width: c.width, height: c.height } }];
+  if (frames.length === 1) return [withLayout(frames[0]!, { x: 0, y: 0 }, { width: c.width, height: c.height })];
   const mainW = Math.floor(c.width * 0.65);
   const sideW = c.width - mainW - GAP;
   const sideH = Math.floor((c.height - GAP * (frames.length - 2)) / (frames.length - 1));
   return [
-    { ...frames[0], position: { x: 0, y: 0 }, size: { width: mainW, height: c.height } },
-    ...frames.slice(1).map((f, i) => ({ ...f, position: { x: mainW + GAP, y: i * (sideH + GAP) }, size: { width: sideW, height: sideH } })),
+    withLayout(frames[0]!, { x: 0, y: 0 }, { width: mainW, height: c.height }),
+    ...frames.slice(1).map((f, i) => withLayout(f, { x: mainW + GAP, y: i * (sideH + GAP) }, { width: sideW, height: sideH })),
   ];
+}
+
+function withLayout(f: FrameLayout, pos: { x: number; y: number }, sz: { width: number; height: number }): FrameLayout {
+  return { key: f.key, order: f.order, zIndex: f.zIndex, pinned: f.pinned, hidden: f.hidden, tabs: f.tabs, activeTabKey: f.activeTabKey, position: pos, size: sz };
 }
 
 function focus(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {
   const mainW = Math.floor(c.width * 0.85);
   const mainH = Math.floor(c.height * 0.85);
-  const result: FrameLayout[] = [{
-    ...frames[0],
-    position: { x: Math.floor((c.width - mainW) / 2), y: Math.floor((c.height - mainH) / 2) },
-    size: { width: mainW, height: mainH },
-  }];
+  const result: FrameLayout[] = [
+    withLayout(frames[0]!, { x: Math.floor((c.width - mainW) / 2), y: Math.floor((c.height - mainH) / 2) }, { width: mainW, height: mainH }),
+  ];
   const thumbW = 200;
   const thumbH = 150;
   for (let i = 1; i < frames.length; i++) {
-    result.push({
-      ...frames[i],
-      position: { x: c.width - thumbW - GAP, y: GAP + (i - 1) * (thumbH + GAP) },
-      size: { width: thumbW, height: thumbH },
-    });
+    result.push(withLayout(frames[i]!, { x: c.width - thumbW - GAP, y: GAP + (i - 1) * (thumbH + GAP) }, { width: thumbW, height: thumbH }));
   }
   return result;
 }

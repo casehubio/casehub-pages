@@ -21,8 +21,8 @@ export function nextFramePosition(
   }
 
   let candidate = {
-    x: existing[existing.length - 1].x + displacement,
-    y: existing[existing.length - 1].y + displacement,
+    x: existing[existing.length - 1]!.x + displacement,
+    y: existing[existing.length - 1]!.y + displacement,
   };
 
   for (let attempt = 0; attempt < 20; attempt++) {
