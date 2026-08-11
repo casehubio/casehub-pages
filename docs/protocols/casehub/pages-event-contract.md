@@ -97,9 +97,15 @@ by the runtime event delegation layer:
 | `pages-frame-unsnap` | Frame unsnapped from zone | Snap preview module |
 | `pages-frame-organise` | Layout preset applied | Organiser toolbar |
 | `selection-change` | Master row selection for parameterised detail datasets | `PagesDataTable` component |
+| `pages-selection-changed` | Selection context forwarded to host-panel (outbound: runtime → component) | Runtime selection bridge (`site.ts`) |
 
 Do not use these names as `pages-event` topics or as custom event names in
 application code — they will collide with the framework's event delegation.
+
+Note: `pages-selection-changed` is the first **outbound** framework event —
+dispatched by the runtime onto component elements, rather than bubbling up
+from components. All other events in this table are inbound (component →
+runtime).
 
 This table is a snapshot as of 2026-08-11. The authoritative source for
 reserved event names is `packages/pages-runtime/src/site.ts` (search for

@@ -47,6 +47,7 @@ export interface HostPanelProps {
   readonly typeName: string;
   readonly panelProps?: Readonly<Record<string, unknown>>;
   readonly lookup?: DataSetLookup;
+  readonly selectionSource?: string;
 }
 
 export interface PanelProps {

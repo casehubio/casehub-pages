@@ -35,6 +35,7 @@ import {applyTheme} from "@casehubio/pages-ui-tokens";
 import type {PagesFilterDetail} from "@casehubio/pages-viz/dist/base/filter-types.js";
 import type {SelectionChangeDetail} from "@casehubio/pages-table";
 import {typedRowToRecord} from "./selection-bridge.js";
+import {dispatchSelectionToHostPanels, dispatchSelectionClearAll} from "./selection-forwarding.js";
 import {buildPagePathMap} from "./page-paths.js";
 import {buildDataSetScope, resolveDataSetDef} from "./dataset-scope.js";
 import type {ActiveSlots} from "./navigation.js";
@@ -181,6 +182,7 @@ export async function loadSite(
     onChanged: (id, dataset) => {
       contextManager.updateDataset(id, dataset);
       contextManager.updateSelection(id as string, null);
+      dispatchSelectionToHostPanels(registry, id as string, null);
       pipeline.deliverDataSet(id);
     },
   });
@@ -351,6 +353,7 @@ export async function loadSite(
     currentPage = walkNavigate(root, segments, target, lazyPageResolutions);
     contextManager.updatePage(currentPage, currentPage);
     contextManager.clearAllSelections();
+    dispatchSelectionClearAll(registry);
     _navigating = false;
   }
 
@@ -683,9 +686,12 @@ export async function loadSite(
       const row = detail.selectedRows[0]!;
       const ds = entry.vizElement?.dataSet as TypedDataSet | undefined;
       if (!ds) return;
-      contextManager.updateSelection(datasetId, typedRowToRecord(row, ds.columns));
+      const rowData = typedRowToRecord(row, ds.columns);
+      contextManager.updateSelection(datasetId, rowData);
+      dispatchSelectionToHostPanels(registry, datasetId, rowData);
     } else {
       contextManager.updateSelection(datasetId, null);
+      dispatchSelectionToHostPanels(registry, datasetId, null);
     }
   }), { signal: abortController.signal });
 
