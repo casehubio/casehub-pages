@@ -12,7 +12,9 @@ function mockBackend(): FloatingFrameBackend {
     addTab: vi.fn(), removeTab: vi.fn(), setActiveTab: vi.fn(),
     onFrameMove: vi.fn(), onFrameResize: vi.fn(), onTabDragOut: vi.fn(), onTabReorder: vi.fn(),
     onFrameClose: vi.fn(), onFramePin: vi.fn(),
+    onFrameDragMove: vi.fn(), onTitlebarDoubleClick: vi.fn(),
     updatePinState: vi.fn(),
+    getFrameElement: vi.fn(() => null),
     dispose: vi.fn(), unwrap: vi.fn(() => null),
   };
 }
@@ -274,6 +276,83 @@ describe("FloatingFrameEngine", () => {
       engine.dispose();
       engine.dispose();
       expect(backend.dispose).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("setDetached", () => {
+    it("marks frame as detached", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.setDetached("f1", true);
+      expect(engine.frames.get("f1")!.detached).toBe(true);
+    });
+
+    it("clears detached flag", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.setDetached("f1", true);
+      engine.setDetached("f1", false);
+      expect(engine.frames.get("f1")!.detached).toBe(false);
+    });
+
+    it("is no-op for unknown key", () => {
+      engine.setDetached("unknown", true);
+      expect(engine.frames.size).toBe(0);
+    });
+  });
+
+  describe("snapFrame / unsnapFrame", () => {
+    it("sets snappedZone and updates position/size", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.snapFrame("f1", "left", { width: 1000, height: 800 });
+      const f = engine.frames.get("f1")!;
+      expect(f.snappedZone).toBe("left");
+      expect(f.position).toEqual({ x: 0, y: 0 });
+      expect(f.size.width).toBe(496);
+      expect(backend.updatePosition).toHaveBeenCalledWith("f1", { x: 0, y: 0 });
+      expect(backend.updateSize).toHaveBeenCalledWith("f1", expect.objectContaining({ width: 496 }));
+    });
+
+    it("captures pre-snap state and restores on unsnap", () => {
+      engine.createFrame({ ...makeFrameConfig("f1"), position: { x: 100, y: 200 }, size: { width: 300, height: 250 } });
+      engine.snapFrame("f1", "right", { width: 1000, height: 800 });
+      engine.unsnapFrame("f1");
+      const f = engine.frames.get("f1")!;
+      expect(f.snappedZone).toBeUndefined();
+      expect(f.position).toEqual({ x: 100, y: 200 });
+      expect(f.size).toEqual({ width: 300, height: 250 });
+    });
+
+    it("unsnapFrame is no-op when not snapped", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      const before = engine.frames.get("f1")!;
+      engine.unsnapFrame("f1");
+      expect(engine.frames.get("f1")!.position).toEqual(before.position);
+    });
+
+    it("snap to different zone without unsnap updates zone", () => {
+      engine.createFrame({ ...makeFrameConfig("f1"), position: { x: 100, y: 200 }, size: { width: 300, height: 250 } });
+      engine.snapFrame("f1", "left", { width: 1000, height: 800 });
+      engine.snapFrame("f1", "right", { width: 1000, height: 800 });
+      const f = engine.frames.get("f1")!;
+      expect(f.snappedZone).toBe("right");
+      engine.unsnapFrame("f1");
+      expect(engine.frames.get("f1")!.position).toEqual({ x: 100, y: 200 });
+    });
+  });
+
+  describe("recomputeSnappedFrames", () => {
+    it("recomputes position/size for snapped frames on resize", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.snapFrame("f1", "left", { width: 1000, height: 800 });
+      engine.recomputeSnappedFrames({ width: 1200, height: 900 });
+      const f = engine.frames.get("f1")!;
+      expect(f.size.width).toBe(596);
+      expect(f.size.height).toBe(900);
+    });
+
+    it("does not touch unsnapped frames", () => {
+      engine.createFrame({ ...makeFrameConfig("f1"), position: { x: 100, y: 100 } });
+      engine.recomputeSnappedFrames({ width: 1200, height: 900 });
+      expect(engine.frames.get("f1")!.position).toEqual({ x: 100, y: 100 });
     });
   });
 });

@@ -967,6 +967,8 @@ export async function loadSite(
   for (const eventName of [
     "pages-frame-close", "pages-frame-pin", "pages-frame-move",
     "pages-frame-resize", "pages-tab-drag-out", "pages-tab-reorder",
+    "pages-frame-detach", "pages-frame-reattach",
+    "pages-frame-snap", "pages-frame-unsnap",
   ] as const) {
     target.addEventListener(eventName, () => {
       scheduleLayoutSave();

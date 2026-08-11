@@ -54,7 +54,6 @@ export interface ExternalDataSetDef extends ExtractionDef {
   readonly refreshTime?: string;
   readonly cacheTtl?: string;
   readonly keyColumn?: string;
-  readonly selectionSource?: string;
 }
 
 export interface DataRequest {

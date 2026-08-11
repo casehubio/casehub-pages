@@ -12,6 +12,7 @@ export type {
   FrameConfig,
   FloatingWorkspaceConfig,
   FrameLayout,
+  SnapZone,
   ContentFactoryResult,
   ContentFactory,
 } from "./types.js";

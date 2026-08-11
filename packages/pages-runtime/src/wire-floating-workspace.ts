@@ -1,10 +1,22 @@
-import type { FrameLayout } from "@casehubio/pages-component";
-import type { FloatingFrameBackend } from "./floating-frame-backend.js";
+import type { ContentFactory, FrameLayout } from "@casehubio/pages-component";
+import type { FloatingFrameBackend, FrameButtonConfig } from "./floating-frame-backend.js";
 import { createFloatingFrameEngine } from "./floating-frame-engine.js";
 import type { FloatingFrameEngine } from "./floating-frame-engine.js";
+import { createFrameDetachHandler, type FrameDetachHandler } from "./frame-detach-handler.js";
+import { createFrameZonePicker } from "./frame-zone-picker.js";
+import { injectAnimationStyles } from "./frame-animations.js";
+
+export interface WireOptions {
+  readonly detachEnabled?: boolean | undefined;
+  readonly contentFactory?: ContentFactory | undefined;
+  readonly signal?: AbortSignal | undefined;
+}
 
 export interface WireHandle {
   readonly engine: FloatingFrameEngine;
+  readonly detachHandler?: FrameDetachHandler | undefined;
+  readonly detachButton?: FrameButtonConfig | undefined;
+  readonly zonePickerButton?: FrameButtonConfig | undefined;
   dispose(): void;
 }
 
@@ -12,6 +24,7 @@ export function wireFloatingWorkspace(
   backend: FloatingFrameBackend,
   container: HTMLElement,
   savedLayout?: readonly FrameLayout[],
+  options?: WireOptions,
 ): WireHandle {
   const engine = createFloatingFrameEngine(backend, savedLayout);
 
@@ -71,9 +84,33 @@ export function wireFloatingWorkspace(
     }));
   });
 
+  injectAnimationStyles();
+
+  let detachHandler: FrameDetachHandler | undefined;
+  let detachButton: FrameButtonConfig | undefined;
+
+  if (options?.detachEnabled !== false && options?.contentFactory && options?.signal) {
+    detachHandler = createFrameDetachHandler(engine, container, options.contentFactory, options.signal);
+    detachButton = {
+      icon: "\u{1F5D7}",
+      title: "Pop out to new window",
+      className: "frame-detach-btn",
+      onClick: (frameKey: string) => detachHandler!.detach(frameKey),
+    };
+  }
+
+  let zonePickerButton: FrameButtonConfig | undefined;
+  if (options?.signal) {
+    zonePickerButton = createFrameZonePicker(engine, backend, container, options.signal);
+  }
+
   return {
     engine,
+    detachHandler,
+    detachButton,
+    zonePickerButton,
     dispose() {
+      detachHandler?.dispose();
       engine.dispose();
     },
   };

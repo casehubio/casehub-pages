@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 72,
+  "totalSamples": 73,
   "categories": [
     {
       "category": "Charts",
@@ -124,6 +124,13 @@
           "path": "Tables/Lookup Operations.dash.yaml",
           "category": "Tables",
           "file": "Lookup Operations.dash.yaml"
+        },
+        {
+          "name": "Master Detail",
+          "path": "Tables/Master Detail.dash.yaml",
+          "category": "Tables",
+          "file": "Master Detail.dash.yaml",
+          "tsPath": "Tables/Master Detail.ts"
         },
         {
           "name": "Project Roadmap",

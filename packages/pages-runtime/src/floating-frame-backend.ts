@@ -31,8 +31,11 @@ export interface FloatingFrameBackend {
   onTabReorder(cb: (frameKey: string, tabKeys: string[]) => void): void;
   onFrameClose(cb: (key: string) => void): void;
   onFramePin(cb: (key: string) => void): void;
+  onFrameDragMove(cb: (key: string, pos: { x: number; y: number }) => void): void;
+  onTitlebarDoubleClick(cb: (key: string) => void): void;
 
   updatePinState(key: string, pinned: boolean): void;
+  getFrameElement(key: string): HTMLElement | null;
 
   dispose(): void;
   unwrap(): unknown | null;

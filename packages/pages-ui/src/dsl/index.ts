@@ -31,7 +31,6 @@ export {
   withStyle,
   // Dataset helpers
   bind,
-  detailDataset,
   resetGridCounter,
   // Data component builders
   barChart,
@@ -107,4 +106,4 @@ export {
 export { inlineSource } from "@casehubio/pages-data";
 export type { InlineSourceOptions } from "@casehubio/pages-data";
 export { restSource } from "@casehubio/pages-data";
-export type { RestSourceOptions, WsTriggerEvent, ExternalDataSetDef } from "@casehubio/pages-data";
+export type { RestSourceOptions, WsTriggerEvent } from "@casehubio/pages-data";

@@ -25,7 +25,6 @@ import type {
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data";
 import type { DataSetId } from "@casehubio/pages-data";
-import { dataSetId } from "@casehubio/pages-data";
 import type { DataSourceBinding, DataSource } from "@casehubio/pages-data";
 import type {
   BarChartProps,
@@ -462,37 +461,6 @@ export function bind(
   });
 }
 
-/**
- * Create a selection-driven detail dataset that auto-fetches when a master
- * table row is selected. The URL must contain `#{selection.<selectionSource>.<field>}`
- * templates that resolve against RuntimeContext.selection.
- *
- * @example
- * const gradeHistory = detailDataset(
- *   "grade-history",
- *   "adverse-events",
- *   "/api/ae/#{selection.adverse-events.id}/history",
- * );
- */
-export function detailDataset(
-  id: string,
-  selectionSource: string,
-  url: string,
-  options?: Omit<ExternalDataSetDef, "uuid" | "url" | "selectionSource">,
-): ExternalDataSetDef {
-  if (!url.includes(`#{selection.${selectionSource}.`)) {
-    throw new Error(
-      `detailDataset "${id}": URL must contain #{selection.${selectionSource}.<field>} template`,
-    );
-  }
-  return Object.freeze({
-    ...options,
-    uuid: dataSetId(id),
-    url,
-    selectionSource,
-  });
-}
-
 // Workbench primitive builders
 
 export function split(
@@ -786,14 +754,15 @@ export function buildTreeFromZones(
   }
 
   const splitChildren: Component[] = [];
+  const splitRatio: number[] = [];
   const leftContent = hasLeft ? buildSideContent(normalized.left!, everyPanel, zoneMap, order) : null;
-  if (leftContent) splitChildren.push(leftContent);
-  splitChildren.push(centreContent);
+  if (leftContent) { splitChildren.push(leftContent); splitRatio.push(1); }
+  splitChildren.push(centreContent); splitRatio.push(4);
   const rightContent = hasRight ? buildSideContent(normalized.right!, everyPanel, zoneMap, order) : null;
-  if (rightContent) splitChildren.push(rightContent);
+  if (rightContent) { splitChildren.push(rightContent); splitRatio.push(1); }
 
   const panelSplit = splitChildren.length > 1
-    ? withStyle({ flex: "1", overflow: "hidden", height: "100%" }, split("horizontal", splitChildren))
+    ? withStyle({ flex: "1", overflow: "hidden", height: "100%" }, split("horizontal", splitChildren, { ratio: splitRatio }))
     : splitChildren[0]!;
 
   let middleContent: Component = panelSplit;

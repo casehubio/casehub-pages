@@ -34,6 +34,9 @@ import type {FloatingWorkspaceProps, ContentFactory, FrameLayout, FrameConfig} f
 import type {FloatingFrameEngine} from "./floating-frame-engine.js";
 import {createDockviewBackend} from "./dockview-backend.js";
 import {wireFloatingWorkspace} from "./wire-floating-workspace.js";
+import type {FrameButtonConfig} from "./floating-frame-backend.js";
+import {createFrameKeyboardHandler} from "./frame-keyboard.js";
+import {createOrganiserToolbar} from "./organiser-toolbar.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -704,8 +707,25 @@ export function createActivationCallback(
           return { element: container };
         };
 
-        backend.attach(overlayContainer, defaultFactory);
-        const handle = wireFloatingWorkspace(backend, overlayContainer, wsRef?.stash ?? undefined);
+        const handle = wireFloatingWorkspace(backend, overlayContainer, undefined, {
+          detachEnabled: true,
+          contentFactory: defaultFactory,
+          signal: options?.abortSignal,
+        });
+
+        const extraButtons: FrameButtonConfig[] = [];
+        if (handle.zonePickerButton) extraButtons.push(handle.zonePickerButton);
+        if (handle.detachButton) extraButtons.push(handle.detachButton);
+        backend.attach(overlayContainer, defaultFactory, extraButtons.length > 0 ? { extraButtons } : undefined);
+
+        if (props.organisers !== false && options?.abortSignal) {
+          const toolbar = createOrganiserToolbar(handle.engine, overlayContainer, el, options.abortSignal);
+          el.insertBefore(toolbar, overlayContainer);
+        }
+
+        if (options?.abortSignal) {
+          createFrameKeyboardHandler(handle.engine, overlayContainer, options.abortSignal);
+        }
 
         if (wsRef) {
           wsRef.engine = handle.engine;
@@ -716,6 +736,11 @@ export function createActivationCallback(
           for (const frameConfig of props.frames) {
             handle.engine.createFrame(frameConfig);
           }
+        }
+
+        if (wsRef?.stash) {
+          handle.engine.restoreLayout(wsRef.stash);
+          wsRef.stash = undefined;
         }
       }).catch((err: unknown) => {
         console.error("Failed to initialize floating workspace backend:", err);

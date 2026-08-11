@@ -80,6 +80,10 @@ export interface FloatingWorkspaceConfig {
   readonly organisers?: boolean;
 }
 
+export type SnapZone = "left" | "right" | "top" | "bottom"
+  | "top-left" | "top-right" | "bottom-left" | "bottom-right"
+  | "full";
+
 export interface FrameLayout {
   readonly key: string;
   readonly order: number;
@@ -90,6 +94,8 @@ export interface FrameLayout {
   readonly hidden: boolean;
   readonly tabs: readonly FrameTabConfig[];
   readonly activeTabKey: string;
+  readonly detached?: boolean | undefined;
+  readonly snappedZone?: SnapZone | undefined;
 }
 
 export interface ContentFactoryResult {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { clampPosition, nextFramePosition } from "./frame-boundaries.js";
+import { clampPosition, nextFramePosition, snapToZone, zoneToRect } from "./frame-boundaries.js";
 
 describe("clampPosition", () => {
   it("clamps negative to zero", () => {
@@ -48,5 +48,101 @@ describe("nextFramePosition", () => {
     const pos = nextFramePosition({ width: 1200, height: 800 }, { width: 400, height: 300 }, existing);
     expect(pos.x).toBeLessThanOrEqual(800);
     expect(pos.y).toBeLessThanOrEqual(500);
+  });
+});
+
+describe("snapToZone", () => {
+  const container = { width: 1000, height: 800 };
+
+  it("returns null when far from edges", () => {
+    expect(snapToZone({ x: 500, y: 400 }, container)).toBeNull();
+  });
+
+  it("detects left edge", () => {
+    expect(snapToZone({ x: 10, y: 400 }, container)).toBe("left");
+  });
+
+  it("detects right edge", () => {
+    expect(snapToZone({ x: 990, y: 400 }, container)).toBe("right");
+  });
+
+  it("detects top edge", () => {
+    expect(snapToZone({ x: 500, y: 10 }, container)).toBe("top");
+  });
+
+  it("detects bottom edge", () => {
+    expect(snapToZone({ x: 500, y: 790 }, container)).toBe("bottom");
+  });
+
+  it("detects top-left corner (corner priority over edge)", () => {
+    expect(snapToZone({ x: 10, y: 10 }, container)).toBe("top-left");
+  });
+
+  it("detects top-right corner", () => {
+    expect(snapToZone({ x: 990, y: 10 }, container)).toBe("top-right");
+  });
+
+  it("detects bottom-left corner", () => {
+    expect(snapToZone({ x: 10, y: 790 }, container)).toBe("bottom-left");
+  });
+
+  it("detects bottom-right corner", () => {
+    expect(snapToZone({ x: 990, y: 790 }, container)).toBe("bottom-right");
+  });
+
+  it("respects custom threshold", () => {
+    expect(snapToZone({ x: 50, y: 400 }, container, 20)).toBeNull();
+    expect(snapToZone({ x: 10, y: 400 }, container, 20)).toBe("left");
+  });
+});
+
+describe("zoneToRect", () => {
+  const container = { width: 1000, height: 800 };
+
+  it("computes left half", () => {
+    const r = zoneToRect("left", container);
+    expect(r.position).toEqual({ x: 0, y: 0 });
+    expect(r.size).toEqual({ width: 496, height: 800 });
+  });
+
+  it("computes right half", () => {
+    const r = zoneToRect("right", container);
+    expect(r.position).toEqual({ x: 504, y: 0 });
+    expect(r.size).toEqual({ width: 496, height: 800 });
+  });
+
+  it("computes top half", () => {
+    const r = zoneToRect("top", container);
+    expect(r.position).toEqual({ x: 0, y: 0 });
+    expect(r.size).toEqual({ width: 1000, height: 396 });
+  });
+
+  it("computes bottom half", () => {
+    const r = zoneToRect("bottom", container);
+    expect(r.position).toEqual({ x: 0, y: 404 });
+    expect(r.size).toEqual({ width: 1000, height: 396 });
+  });
+
+  it("computes full", () => {
+    const r = zoneToRect("full", container);
+    expect(r.position).toEqual({ x: 0, y: 0 });
+    expect(r.size).toEqual({ width: 1000, height: 800 });
+  });
+
+  it("computes top-left quarter", () => {
+    const r = zoneToRect("top-left", container);
+    expect(r.position).toEqual({ x: 0, y: 0 });
+    expect(r.size).toEqual({ width: 496, height: 396 });
+  });
+
+  it("computes bottom-right quarter", () => {
+    const r = zoneToRect("bottom-right", container);
+    expect(r.position).toEqual({ x: 504, y: 404 });
+    expect(r.size).toEqual({ width: 496, height: 396 });
+  });
+
+  it("respects custom gap", () => {
+    const r = zoneToRect("left", container, 16);
+    expect(r.size).toEqual({ width: 492, height: 800 });
   });
 });

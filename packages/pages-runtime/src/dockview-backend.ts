@@ -40,6 +40,8 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
   const tabReorderCallbacks: Array<(frameKey: string, tabKeys: string[]) => void> = [];
   const frameCloseCallbacks: Array<(key: string) => void> = [];
   const framePinCallbacks: Array<(key: string) => void> = [];
+  const frameDragMoveCallbacks: Array<(key: string, pos: { x: number; y: number }) => void> = [];
+  const titlebarDoubleClickCallbacks: Array<(key: string) => void> = [];
   let storedExtraButtons: readonly FrameButtonConfig[] = [];
   const frameGroups = new Map<string, any>();
   const contentResults = new Map<string, ContentFactoryResult>();
@@ -55,6 +57,16 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
   function subscribeOverlayEvents(frameKey: string): void {
     const fg = findFloatingOverlay(frameKey);
     if (!fg?.overlay?.onDidChangeEnd) return;
+    if (fg.overlay.onDidChange) {
+      fg.overlay.onDidChange(() => {
+        const el = fg.overlay._element ?? fg.overlay.element;
+        if (!el || !container) return;
+        const rect = el.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const pos = { x: rect.left - containerRect.left, y: rect.top - containerRect.top };
+        for (const cb of frameDragMoveCallbacks) cb(frameKey, pos);
+      });
+    }
     fg.overlay.onDidChangeEnd(() => {
       const el = fg.overlay._element ?? fg.overlay.element;
       if (!el || !container) return;
@@ -68,9 +80,10 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
   }
 
   function injectFrameChrome(group: any, frameKey: string): void {
-    const el = group.element ?? group.header?.element?.closest?.(".dv-groupview");
-    if (!el) return;
-    const titlebar = el.querySelector(".dv-floating-titlebar");
+    const groupEl = group.element ?? group.header?.element?.closest?.(".dv-groupview");
+    if (!groupEl) return;
+    const resizeContainer = groupEl.closest(".dv-resize-container") ?? groupEl;
+    const titlebar = resizeContainer.querySelector(".dv-floating-titlebar") ?? groupEl.querySelector(".dv-floating-titlebar");
     if (!titlebar) return;
 
     const closeDot = document.createElement("span");
@@ -93,6 +106,11 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
 
     titlebar.prepend(pinBtn);
     titlebar.prepend(closeDot);
+
+    titlebar.addEventListener("dblclick", (e: Event) => {
+      if ((e.target as HTMLElement).closest(".frame-close-dot, .frame-pin-btn, .frame-extra-btn")) return;
+      for (const cb of titlebarDoubleClickCallbacks) cb(frameKey);
+    });
 
     for (const btnConfig of storedExtraButtons) {
       const btn = document.createElement("span");
@@ -197,19 +215,17 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
     },
 
     updatePosition(key: string, pos: { x: number; y: number }) {
-      const fg = findFloatingOverlay(key);
-      if (fg?.overlay) {
-        const bounds = fg.overlay.getBounds();
-        fg.overlay.setBounds({ ...bounds, left: pos.x, top: pos.y });
-      }
+      const el = this.getFrameElement(key);
+      if (!el) return;
+      el.style.left = `${pos.x}px`;
+      el.style.top = `${pos.y}px`;
     },
 
     updateSize(key: string, size: { width: number; height: number }) {
-      const fg = findFloatingOverlay(key);
-      if (fg?.overlay) {
-        const bounds = fg.overlay.getBounds();
-        fg.overlay.setBounds({ ...bounds, width: size.width, height: size.height });
-      }
+      const el = this.getFrameElement(key);
+      if (!el) return;
+      el.style.width = `${size.width}px`;
+      el.style.height = `${size.height}px`;
     },
 
     bringToFront(key: string) {
@@ -247,6 +263,16 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
     onTabReorder(cb) { tabReorderCallbacks.push(cb); },
     onFrameClose(cb) { frameCloseCallbacks.push(cb); },
     onFramePin(cb) { framePinCallbacks.push(cb); },
+    onFrameDragMove(cb) { frameDragMoveCallbacks.push(cb); },
+    onTitlebarDoubleClick(cb) { titlebarDoubleClickCallbacks.push(cb); },
+
+    getFrameElement(key: string): HTMLElement | null {
+      const group = frameGroups.get(key);
+      if (!group) return null;
+      const groupEl = group.element ?? group.header?.element?.closest?.(".dv-groupview");
+      if (!groupEl) return null;
+      return (groupEl.closest(".dv-resize-container") ?? groupEl) as HTMLElement;
+    },
 
     updatePinState(key: string, pinned: boolean) {
       const group = frameGroups.get(key);
@@ -256,10 +282,11 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
         group.locked = pinned;
       }
 
-      const el = group.element ?? group.header?.element?.closest?.(".dv-groupview");
-      if (!el) return;
+      const groupEl = group.element ?? group.header?.element?.closest?.(".dv-groupview");
+      if (!groupEl) return;
+      const resizeContainer = groupEl.closest(".dv-resize-container") ?? groupEl;
 
-      const titlebar = el.querySelector(".dv-floating-titlebar") as HTMLElement | null;
+      const titlebar = resizeContainer.querySelector(".dv-floating-titlebar") as HTMLElement | null;
       if (titlebar) {
         const existingHandler = (titlebar as any).__pinDragLock as ((e: PointerEvent) => void) | undefined;
         if (pinned && !existingHandler) {
@@ -276,7 +303,7 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
         }
       }
 
-      const pinBtn = el.querySelector(".frame-pin-btn") as HTMLElement | null;
+      const pinBtn = resizeContainer.querySelector(".frame-pin-btn") as HTMLElement | null;
       if (pinBtn) {
         pinBtn.style.opacity = pinned ? "1" : "0.5";
         pinBtn.setAttribute("aria-pressed", String(pinned));
@@ -294,6 +321,8 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
       tabReorderCallbacks.length = 0;
       frameCloseCallbacks.length = 0;
       framePinCallbacks.length = 0;
+      frameDragMoveCallbacks.length = 0;
+      titlebarDoubleClickCallbacks.length = 0;
     },
 
     unwrap() { return dockview ?? null; },
@@ -316,7 +345,9 @@ function createErrorBackend(): FloatingFrameBackend {
     addTab() {}, removeTab() {}, setActiveTab() {},
     onFrameMove() {}, onFrameResize() {}, onTabDragOut() {}, onTabReorder() {},
     onFrameClose() {}, onFramePin() {},
+    onFrameDragMove() {}, onTitlebarDoubleClick() {},
     updatePinState() {},
+    getFrameElement() { return null; },
     dispose() {},
     unwrap() { return null; },
   };

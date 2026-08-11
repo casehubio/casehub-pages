@@ -1,4 +1,5 @@
-import type { FrameConfig, FrameLayout, FrameTabConfig } from "@casehubio/pages-component";
+import type { FrameConfig, FrameLayout, FrameTabConfig, SnapZone } from "@casehubio/pages-component";
+import { zoneToRect } from "./frame-boundaries.js";
 import type { FloatingFrameBackend } from "./floating-frame-backend.js";
 import { bringToFront as zBringToFront, normalizeForSave } from "./frame-zorder.js";
 import { findSpatialTarget } from "./frame-spatial-nav.js";
@@ -21,6 +22,10 @@ export interface FloatingFrameEngine {
   togglePin(key: string): void;
   updatePosition(key: string, pos: { x: number; y: number }): void;
   updateSize(key: string, size: { width: number; height: number }): void;
+  setDetached(key: string, detached: boolean): void;
+  snapFrame(key: string, zone: SnapZone, canvasSize: { width: number; height: number }): void;
+  unsnapFrame(key: string): void;
+  recomputeSnappedFrames(canvasSize: { width: number; height: number }): void;
   focusDirection(direction: "up" | "down" | "left" | "right"): string | null;
   applyOrganiser(preset: Preset, canvasSize?: { width: number; height: number }): void;
   captureLayout(): readonly FrameLayout[];
@@ -35,6 +40,7 @@ export function createFloatingFrameEngine(
   let frames = new Map<string, FrameLayout>();
   let disposed = false;
   let nextOrder = 0;
+  const preSnapState = new Map<string, { position: { x: number; y: number }; size: { width: number; height: number } }>();
 
   function assertAlive(): void {
     if (disposed) throw new Error("Engine is disposed");
@@ -89,7 +95,7 @@ export function createFloatingFrameEngine(
       assertAlive();
       const frame = frames.get(key);
       if (!frame || !frame.hidden) return;
-      const shown: FrameLayout = { key: frame.key, order: frame.order, position: frame.position, size: frame.size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: false, tabs: frame.tabs, activeTabKey: frame.activeTabKey };
+      const shown: FrameLayout = { ...frame, hidden: false };
       frames.set(key, shown);
       frames = zBringToFront(frames, key);
       backend.renderFrame(frames.get(key)!);
@@ -99,7 +105,7 @@ export function createFloatingFrameEngine(
       assertAlive();
       const frame = frames.get(frameKey);
       if (!frame) return;
-      const updated: FrameLayout = { key: frame.key, order: frame.order, position: frame.position, size: frame.size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: frame.hidden, tabs: [...frame.tabs, tab], activeTabKey: frame.activeTabKey };
+      const updated: FrameLayout = { ...frame, tabs: [...frame.tabs, tab] };
       frames.set(frameKey, updated);
       backend.addTab(frameKey, tab);
     },
@@ -110,7 +116,7 @@ export function createFloatingFrameEngine(
       if (!frame) return;
       const newTabs = frame.tabs.filter(t => t.key !== tabKey);
       const activeTabKey = frame.activeTabKey === tabKey ? (newTabs[0]?.key ?? "") : frame.activeTabKey;
-      const updated: FrameLayout = { key: frame.key, order: frame.order, position: frame.position, size: frame.size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: frame.hidden, tabs: newTabs, activeTabKey };
+      const updated: FrameLayout = { ...frame, tabs: newTabs, activeTabKey };
       frames.set(frameKey, updated);
       backend.removeTab(frameKey, tabKey);
     },
@@ -130,7 +136,7 @@ export function createFloatingFrameEngine(
       assertAlive();
       const frame = frames.get(frameKey);
       if (!frame) return;
-      const updated: FrameLayout = { key: frame.key, order: frame.order, position: frame.position, size: frame.size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: frame.hidden, tabs: frame.tabs, activeTabKey: tabKey };
+      const updated: FrameLayout = { ...frame, activeTabKey: tabKey };
       frames.set(frameKey, updated);
       backend.setActiveTab(frameKey, tabKey);
     },
@@ -145,7 +151,7 @@ export function createFloatingFrameEngine(
       assertAlive();
       const frame = frames.get(key);
       if (!frame) return;
-      const updated: FrameLayout = { key: frame.key, order: frame.order, position: frame.position, size: frame.size, zIndex: frame.zIndex, pinned: !frame.pinned, hidden: frame.hidden, tabs: frame.tabs, activeTabKey: frame.activeTabKey };
+      const updated: FrameLayout = { ...frame, pinned: !frame.pinned };
       frames.set(key, updated);
       frames = zBringToFront(frames, key);
       backend.bringToFront(key);
@@ -155,14 +161,60 @@ export function createFloatingFrameEngine(
       assertAlive();
       const frame = frames.get(key);
       if (!frame) return;
-      frames.set(key, { key: frame.key, order: frame.order, position: pos, size: frame.size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: frame.hidden, tabs: frame.tabs, activeTabKey: frame.activeTabKey });
+      frames.set(key, { ...frame, position: pos });
     },
 
     updateSize(key: string, size: { width: number; height: number }) {
       assertAlive();
       const frame = frames.get(key);
       if (!frame) return;
-      frames.set(key, { key: frame.key, order: frame.order, position: frame.position, size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: frame.hidden, tabs: frame.tabs, activeTabKey: frame.activeTabKey });
+      frames.set(key, { ...frame, size });
+    },
+
+    setDetached(key: string, detached: boolean) {
+      assertAlive();
+      const frame = frames.get(key);
+      if (!frame) return;
+      frames.set(key, { ...frame, detached });
+    },
+
+    snapFrame(key: string, zone: SnapZone, canvasSize: { width: number; height: number }) {
+      assertAlive();
+      const frame = frames.get(key);
+      if (!frame) return;
+      if (!frame.snappedZone) {
+        preSnapState.set(key, { position: frame.position, size: frame.size });
+      }
+      const rect = zoneToRect(zone, canvasSize);
+      frames.set(key, { ...frame, snappedZone: zone, position: rect.position, size: rect.size });
+      backend.updatePosition(key, rect.position);
+      backend.updateSize(key, rect.size);
+    },
+
+    unsnapFrame(key: string) {
+      assertAlive();
+      const frame = frames.get(key);
+      if (!frame || !frame.snappedZone) return;
+      const saved = preSnapState.get(key);
+      preSnapState.delete(key);
+      if (saved) {
+        frames.set(key, { ...frame, snappedZone: undefined, position: saved.position, size: saved.size });
+        backend.updatePosition(key, saved.position);
+        backend.updateSize(key, saved.size);
+      } else {
+        frames.set(key, { ...frame, snappedZone: undefined });
+      }
+    },
+
+    recomputeSnappedFrames(canvasSize: { width: number; height: number }) {
+      assertAlive();
+      for (const [key, frame] of frames) {
+        if (!frame.snappedZone) continue;
+        const rect = zoneToRect(frame.snappedZone, canvasSize);
+        frames.set(key, { ...frame, position: rect.position, size: rect.size });
+        backend.updatePosition(key, rect.position);
+        backend.updateSize(key, rect.size);
+      }
     },
 
     focusDirection(direction) {

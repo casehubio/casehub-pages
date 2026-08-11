@@ -54,7 +54,7 @@ function mainSidebar(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {
 }
 
 function withLayout(f: FrameLayout, pos: { x: number; y: number }, sz: { width: number; height: number }): FrameLayout {
-  return { key: f.key, order: f.order, zIndex: f.zIndex, pinned: f.pinned, hidden: f.hidden, tabs: f.tabs, activeTabKey: f.activeTabKey, position: pos, size: sz };
+  return { ...f, position: pos, size: sz };
 }
 
 function focus(frames: FrameLayout[], c: CanvasSize): FrameLayout[] {

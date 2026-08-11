@@ -2,8 +2,9 @@ import { test, expect } from "@playwright/test";
 
 async function openFloatingWorkspace(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await page.getByText("Layout").click();
-  await page.getByText("Floating Workspace").click();
+  await page.locator("#sample-count").waitFor();
+  await page.locator('.sample-item:has-text("Floating Workspace")').first().click();
+  await page.locator("#sample-container").waitFor({ state: "visible" });
   await page.waitForSelector("[data-floating-workspace-centre]", { timeout: 10000 });
 }
 

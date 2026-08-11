@@ -41,7 +41,6 @@ import {
   dockWorkbench,
   floatingWorkspace,
   serverPaginated,
-  detailDataset,
   type PageOptions,
 } from "./builders.js";
 
@@ -545,72 +544,6 @@ describe("builders", () => {
     });
   });
 
-  describe("detailDataset()", () => {
-    it("creates an ExternalDataSetDef with uuid, url, and selectionSource", () => {
-      const result = detailDataset(
-        "grade-history",
-        "adverse-events",
-        "/api/ae/#{selection.adverse-events.id}/history",
-      );
-
-      expect(result.uuid).toBe("grade-history");
-      expect(result.url).toBe("/api/ae/#{selection.adverse-events.id}/history");
-      expect(result.selectionSource).toBe("adverse-events");
-    });
-
-    it("forwards optional ExternalDataSetDef fields", () => {
-      const result = detailDataset(
-        "grade-history",
-        "adverse-events",
-        "/api/ae/#{selection.adverse-events.id}/history",
-        { dataPath: "data.items", refreshTime: "30second" },
-      );
-
-      expect(result.uuid).toBe("grade-history");
-      expect(result.selectionSource).toBe("adverse-events");
-      expect(result.dataPath).toBe("data.items");
-      expect(result.refreshTime).toBe("30second");
-    });
-
-    it("explicit params override options bag (spread ordering)", () => {
-      const result = detailDataset(
-        "grade-history",
-        "adverse-events",
-        "/api/ae/#{selection.adverse-events.id}/history",
-        { url: "/should-be-overridden" } as any,
-      );
-
-      expect(result.url).toBe("/api/ae/#{selection.adverse-events.id}/history");
-      expect(result.selectionSource).toBe("adverse-events");
-    });
-
-    it("returns a frozen object", () => {
-      const result = detailDataset(
-        "grade-history",
-        "adverse-events",
-        "/api/ae/#{selection.adverse-events.id}/history",
-      );
-
-      expect(Object.isFrozen(result)).toBe(true);
-    });
-
-    it("throws if URL has no selection template referencing the declared source", () => {
-      expect(() =>
-        detailDataset("detail", "adverse-events", "/api/static-url"),
-      ).toThrow("adverse-events");
-    });
-
-    it("throws on typo in selection template source name", () => {
-      expect(() =>
-        detailDataset(
-          "detail",
-          "adverse-events",
-          "/api/ae/#{selection.advese-events.id}/history",
-        ),
-      ).toThrow("adverse-events");
-    });
-  });
-
   describe("integration scenarios", () => {
     it("builds complex nested structure", () => {
       const dashboard = page(
@@ -876,6 +809,53 @@ describe("dockWorkbench builder", () => {
     });
     // Centre-only wraps with flex styling but keeps the html type
     expect(result.type).toBe("html");
+  });
+
+  function findSplit(c: Component, direction: "horizontal" | "vertical"): Component | undefined {
+    if (c.type === "split" && (c.props as { direction?: string })?.direction === direction) return c;
+    for (const children of Object.values(c.slots ?? {})) {
+      for (const child of children) {
+        const found = findSplit(child, direction);
+        if (found) return found;
+      }
+    }
+    if (c.items) {
+      for (const item of c.items) {
+        const found = findSplit(item.component, direction);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  }
+
+  it("horizontal split gives centre more flex than side panels (left + centre + right)", () => {
+    const result = dockWorkbench({
+      centre: html("centre"),
+      left: [{ key: "explorer", label: "Explorer", icon: "📁", content: html("left") }],
+      right: [{ key: "props", label: "Properties", icon: "⚙", content: html("right") }],
+    });
+
+    const hSplit = findSplit(result, "horizontal");
+    expect(hSplit).toBeTruthy();
+    const ratio = (hSplit!.props as { ratio?: number[] }).ratio;
+    expect(ratio).toBeDefined();
+    expect(ratio).toHaveLength(3);
+    expect(ratio![1]).toBeGreaterThan(ratio![0]!);
+    expect(ratio![1]).toBeGreaterThan(ratio![2]!);
+  });
+
+  it("horizontal split gives centre more flex than side panel (left + centre only)", () => {
+    const result = dockWorkbench({
+      centre: html("centre"),
+      left: [{ key: "explorer", label: "Explorer", icon: "📁", content: html("left") }],
+    });
+
+    const hSplit = findSplit(result, "horizontal");
+    expect(hSplit).toBeTruthy();
+    const ratio = (hSplit!.props as { ratio?: number[] }).ratio;
+    expect(ratio).toBeDefined();
+    expect(ratio).toHaveLength(2);
+    expect(ratio![1]).toBeGreaterThan(ratio![0]!);
   });
 
   it("omits right dock bar when no right panels", () => {

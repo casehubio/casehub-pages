@@ -665,30 +665,4 @@ describe("parsePage", () => {
       expect(panelItem.props?.["title"]).toBe("Charts");
     });
   });
-
-  describe("dataset passthrough", () => {
-    it("preserves selectionSource on dataset definitions", () => {
-      const raw = {
-        datasets: [
-          { uuid: "adverse-events", url: "/api/adverse-events" },
-          {
-            uuid: "grade-history",
-            url: "/api/ae/#{selection.adverse-events.id}/history",
-            selectionSource: "adverse-events",
-          },
-        ],
-        pages: [{ name: "Test", components: [{ html: "hello" }] }],
-      };
-
-      const result = parsePage(raw);
-      const datasets = result.props?.datasets as Record<string, unknown>[];
-
-      expect(datasets).toHaveLength(2);
-      expect(datasets[1]).toMatchObject({
-        uuid: "grade-history",
-        url: "/api/ae/#{selection.adverse-events.id}/history",
-        selectionSource: "adverse-events",
-      });
-    });
-  });
 });
