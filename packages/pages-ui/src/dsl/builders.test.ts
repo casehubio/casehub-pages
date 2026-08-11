@@ -41,6 +41,7 @@ import {
   dockWorkbench,
   floatingWorkspace,
   serverPaginated,
+  detailDataset,
   type PageOptions,
 } from "./builders.js";
 
@@ -541,6 +542,72 @@ describe("builders", () => {
       const datasets = (p.props as Record<string, unknown>).datasets as unknown[];
       expect(datasets).toHaveLength(1);
       expect((datasets[0] as { id: string }).id).toBe("ds1");
+    });
+  });
+
+  describe("detailDataset()", () => {
+    it("creates an ExternalDataSetDef with uuid, url, and selectionSource", () => {
+      const result = detailDataset(
+        "grade-history",
+        "adverse-events",
+        "/api/ae/#{selection.adverse-events.id}/history",
+      );
+
+      expect(result.uuid).toBe("grade-history");
+      expect(result.url).toBe("/api/ae/#{selection.adverse-events.id}/history");
+      expect(result.selectionSource).toBe("adverse-events");
+    });
+
+    it("forwards optional ExternalDataSetDef fields", () => {
+      const result = detailDataset(
+        "grade-history",
+        "adverse-events",
+        "/api/ae/#{selection.adverse-events.id}/history",
+        { dataPath: "data.items", refreshTime: "30second" },
+      );
+
+      expect(result.uuid).toBe("grade-history");
+      expect(result.selectionSource).toBe("adverse-events");
+      expect(result.dataPath).toBe("data.items");
+      expect(result.refreshTime).toBe("30second");
+    });
+
+    it("explicit params override options bag (spread ordering)", () => {
+      const result = detailDataset(
+        "grade-history",
+        "adverse-events",
+        "/api/ae/#{selection.adverse-events.id}/history",
+        { url: "/should-be-overridden" } as any,
+      );
+
+      expect(result.url).toBe("/api/ae/#{selection.adverse-events.id}/history");
+      expect(result.selectionSource).toBe("adverse-events");
+    });
+
+    it("returns a frozen object", () => {
+      const result = detailDataset(
+        "grade-history",
+        "adverse-events",
+        "/api/ae/#{selection.adverse-events.id}/history",
+      );
+
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+
+    it("throws if URL has no selection template referencing the declared source", () => {
+      expect(() =>
+        detailDataset("detail", "adverse-events", "/api/static-url"),
+      ).toThrow("adverse-events");
+    });
+
+    it("throws on typo in selection template source name", () => {
+      expect(() =>
+        detailDataset(
+          "detail",
+          "adverse-events",
+          "/api/ae/#{selection.advese-events.id}/history",
+        ),
+      ).toThrow("adverse-events");
     });
   });
 

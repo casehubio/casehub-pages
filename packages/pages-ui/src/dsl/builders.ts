@@ -25,6 +25,7 @@ import type {
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data";
 import type { DataSetId } from "@casehubio/pages-data";
+import { dataSetId } from "@casehubio/pages-data";
 import type { DataSourceBinding, DataSource } from "@casehubio/pages-data";
 import type {
   BarChartProps,
@@ -458,6 +459,37 @@ export function bind(
     id: id as DataSetId,
     source,
     ...(options?.keyColumn !== undefined && { keyColumn: options.keyColumn }),
+  });
+}
+
+/**
+ * Create a selection-driven detail dataset that auto-fetches when a master
+ * table row is selected. The URL must contain `#{selection.<selectionSource>.<field>}`
+ * templates that resolve against RuntimeContext.selection.
+ *
+ * @example
+ * const gradeHistory = detailDataset(
+ *   "grade-history",
+ *   "adverse-events",
+ *   "/api/ae/#{selection.adverse-events.id}/history",
+ * );
+ */
+export function detailDataset(
+  id: string,
+  selectionSource: string,
+  url: string,
+  options?: Omit<ExternalDataSetDef, "uuid" | "url" | "selectionSource">,
+): ExternalDataSetDef {
+  if (!url.includes(`#{selection.${selectionSource}.`)) {
+    throw new Error(
+      `detailDataset "${id}": URL must contain #{selection.${selectionSource}.<field>} template`,
+    );
+  }
+  return Object.freeze({
+    ...options,
+    uuid: dataSetId(id),
+    url,
+    selectionSource,
   });
 }
 
