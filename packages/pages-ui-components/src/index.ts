@@ -6,3 +6,6 @@ export { PagesCheckbox } from './checkbox/index.js';
 export { PagesButton } from './button/index.js';
 export { PagesBadge } from './badge/index.js';
 export { PagesStatusDot } from './status-dot/index.js';
+export { PagesConfirmDialog } from './confirm-dialog/index.js';
+export { renderSparkline, type SparklineOptions } from './sparkline/index.js';
+export { renderPropertyTree, propertyTreeStyles } from './property-tree/index.js';

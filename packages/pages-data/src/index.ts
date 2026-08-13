@@ -33,6 +33,9 @@ export { compileOrCached } from "./expression/jsonata-bridge.js";
 
 export { fromRows, toTypedDataSet, createTypedRow, toWireDataSet } from "./dataset/conversion.js";
 
+export { EMPTY_DATASET } from "./dataset/empty-dataset.js";
+export { extractTrendPoints, type TrendPoint } from "./dataset/trend-types.js";
+
 export type { DataSetManager, LookupOptions } from "./dataset/manager.js";
 export { createDataSetManager } from "./dataset/manager.js";
 

@@ -75,3 +75,5 @@ export { defToBinding } from "./sources/def-to-binding.js";
 export type { DefToBindingDeps } from "./sources/def-to-binding.js";
 export { defaultSsePushPool, defaultWsPushPool, defaultWsTriggerPool } from "./sources/default-pools.js";
 export { WsTriggerPool, type WsTriggerEvent, type WsTriggerHandler } from "./sources/ws-trigger-pool.js";
+export { fetchSource, type FetchSourceOptions } from "./sources/fetch-source.js";
+export { createTypedFetchSource, type TypedFetchOptions } from "./sources/typed-fetch-source.js";
