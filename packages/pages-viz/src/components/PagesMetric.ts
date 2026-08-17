@@ -1,8 +1,9 @@
-import { html, css, type TemplateResult } from "lit";
+import { html, css, nothing, type TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { MetricProps } from "@casehubio/pages-component";
+import { renderSparkline } from "@casehubio/pages-ui-components";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 
@@ -33,6 +34,11 @@ export class PagesMetric extends PagesElement<MetricProps> {
       .pf-m-2xl { font-size: 1.8em; }
       .pf-m-xl { font-size: 1.4em; }
       .pf-v5-c-card__footer, .pf-c-card__footer { font-size: 0.85em; color: var(--pages-neutral-11, #888); }
+      .trend { display: inline-block; margin-left: 4px; font-size: 0.7em; }
+      .trend-up { color: var(--pages-success-9, #16a34a); }
+      .trend-down { color: var(--pages-danger-9, #dc2626); }
+      .trend-flat { color: var(--pages-neutral-9, #6b7280); }
+      .sparkline-container { margin-top: 4px; display: flex; justify-content: center; }
     `;
 
   protected override renderContent(
@@ -111,39 +117,53 @@ export class PagesMetric extends PagesElement<MetricProps> {
     const subtype = props.subtype ?? "card";
 
     if (subtype === "card") {
-      return this.renderCard(title, value);
+      return this.renderCard(title, value, props);
     } else if (subtype === "card2") {
-      return this.renderCard2(title, value);
+      return this.renderCard2(title, value, props);
     } else if (subtype === "plain-text") {
-      return this.renderPlainText(title, value);
+      return this.renderPlainText(title, value, props);
     } else {
       return this.renderQuota(title, value, dataset);
     }
   }
 
-  private renderCard(title: string, value: string): TemplateResult {
+  private _renderTrend(props: MetricProps) {
+    if (!props.trend) return nothing;
+    const symbol = props.trend === "up" ? "▲" : props.trend === "down" ? "▼" : "—";
+    return html`<span class="trend trend-${props.trend}">${symbol}</span>`;
+  }
+
+  private _renderSparkline(props: MetricProps) {
+    if (!props.sparklineData?.length) return nothing;
+    return html`<div class="sparkline-container">${renderSparkline(props.sparklineData as number[])}</div>`;
+  }
+
+  private renderCard(title: string, value: string, props?: MetricProps): TemplateResult {
     return html`
       <div class="card">
         <div class="title">${title}</div>
-        <div class="value">${value}</div>
+        <div class="value">${value}${props ? this._renderTrend(props) : nothing}</div>
+        ${props ? this._renderSparkline(props) : nothing}
       </div>
     `;
   }
 
-  private renderCard2(title: string, value: string): TemplateResult {
+  private renderCard2(title: string, value: string, props?: MetricProps): TemplateResult {
     return html`
       <div class="card2">
-        <div class="value">${value}</div>
+        <div class="value">${value}${props ? this._renderTrend(props) : nothing}</div>
         <div class="title">${title}</div>
+        ${props ? this._renderSparkline(props) : nothing}
       </div>
     `;
   }
 
-  private renderPlainText(title: string, value: string): TemplateResult {
+  private renderPlainText(title: string, value: string, props?: MetricProps): TemplateResult {
     return html`
       <div class="plain-text">
         <div class="title">${title}</div>
-        <div class="value">${value}</div>
+        <div class="value">${value}${props ? this._renderTrend(props) : nothing}</div>
+        ${props ? this._renderSparkline(props) : nothing}
       </div>
     `;
   }

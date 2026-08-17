@@ -40,6 +40,15 @@ import type {
   MeterProps,
   SelectorProps,
   MapProps,
+  MetricGridProps,
+  HeatmapChartProps,
+  TreemapChartProps,
+  DensityHeatmapProps,
+  BadgeProps,
+  CountdownProps,
+  TimelineProps,
+  GraphProps,
+  EventTimelineProps,
   IframePluginProps,
   TextInputProps,
   NumberInputProps,
@@ -188,10 +197,17 @@ export function rows(...children: Component[]): Component {
   });
 }
 
-export function metricGrid(...children: Component[]): Component {
+export function metricGrid(
+  ...args: [...Component[]] | [MetricGridProps, ...Component[]]
+): TypedComponent<"metric-grid"> {
+  const first = args[0];
+  const hasOptions = first != null && typeof first === 'object' && !('type' in first) && 'direction' in first;
+  const options = hasOptions ? first as MetricGridProps : undefined;
+  const children = (hasOptions ? args.slice(1) : args) as Component[];
   return freeze({
-    type: "metric-grid",
-    slots: { default: children },
+    type: "metric-grid" as const,
+    props: options?.direction ? { direction: options.direction } : {},
+    slots: { default: freeze(children) },
   });
 }
 
@@ -411,6 +427,38 @@ export function mapChart(props: MapProps): TypedComponent<"map"> {
   });
 }
 
+export function heatmapChart(props: HeatmapChartProps): TypedComponent<"heatmap-chart"> {
+  return freeze({ type: "heatmap-chart" as const, props: { ...props } });
+}
+
+export function treemapChart(props: TreemapChartProps): TypedComponent<"treemap-chart"> {
+  return freeze({ type: "treemap-chart" as const, props: { ...props } });
+}
+
+export function densityHeatmap(props: DensityHeatmapProps): TypedComponent<"density-heatmap"> {
+  return freeze({ type: "density-heatmap" as const, props: { ...props } });
+}
+
+export function badge(props: BadgeProps): TypedComponent<"badge"> {
+  return freeze({ type: "badge" as const, props: { ...props } });
+}
+
+export function countdown(props: CountdownProps): TypedComponent<"countdown"> {
+  return freeze({ type: "countdown" as const, props: { ...props } });
+}
+
+export function timeline(props: TimelineProps): TypedComponent<"timeline"> {
+  return freeze({ type: "timeline" as const, props: { ...props } });
+}
+
+export function graph(props: GraphProps): TypedComponent<"graph"> {
+  return freeze({ type: "graph" as const, props: { ...props } });
+}
+
+export function eventTimeline(props: EventTimelineProps): TypedComponent<"event-timeline"> {
+  return freeze({ type: "event-timeline" as const, props: { ...props } });
+}
+
 export function iframePlugin(props: IframePluginProps): TypedComponent<"iframe-plugin"> {
   return freeze({
     type: "iframe-plugin" as const,
@@ -505,6 +553,25 @@ export function hostPanel(
     ...(panelProps ? { panelProps } : {}),
   };
   return freeze({ type: "host-panel" as const, props });
+}
+
+export function masterDetail(config: {
+  master: TypedComponent<"data-table">;
+  detail: TypedComponent<"host-panel">;
+  direction?: "horizontal" | "vertical";
+  ratio?: [number, number];
+}): TypedComponent<"split"> {
+  const { master, detail, direction = "horizontal", ratio = [40, 60] } = config;
+  const wiredMaster = freeze({
+    ...master,
+    props: { ...master.props, selection: "single" as const },
+  });
+  const masterLookup = master.props!.lookup;
+  const wiredDetail = freeze({
+    ...detail,
+    props: { ...detail.props, selectionSource: masterLookup.dataSetId },
+  });
+  return split(direction, [wiredMaster, wiredDetail], { ratio });
 }
 
 export function deferred(child: Component): Component {

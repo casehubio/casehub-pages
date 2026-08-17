@@ -57,11 +57,22 @@ export function applyLayoutCSS(
       break;
     case "panel":
       break;
-    case "metric-grid":
-      element.style.display = "grid";
-      element.style.gridTemplateColumns = "repeat(auto-fill, minmax(140px, 1fr))";
-      element.style.gap = "var(--pages-space-2, 8px)";
+    case "metric-grid": {
+      const mgDirection = (component.props as { direction?: string } | undefined)?.direction;
+      if (mgDirection === "row") {
+        element.style.display = "flex";
+        element.style.gap = "var(--pages-space-2, 8px)";
+        element.style.flexWrap = "nowrap";
+        for (const child of element.children) {
+          (child as HTMLElement).style.flex = "1 1 0";
+        }
+      } else {
+        element.style.display = "grid";
+        element.style.gridTemplateColumns = "repeat(auto-fill, minmax(140px, 1fr))";
+        element.style.gap = "var(--pages-space-2, 8px)";
+      }
       break;
+    }
     case "split": {
       element.style.display = "flex";
       const direction = (component.props as { direction?: string } | undefined)?.direction;

@@ -41,6 +41,16 @@ import {
   dockWorkbench,
   floatingWorkspace,
   serverPaginated,
+  heatmapChart,
+  treemapChart,
+  densityHeatmap,
+  badge,
+  countdown,
+  timeline,
+  graph,
+  eventTimeline,
+  dataTable,
+  masterDetail,
   type PageOptions,
 } from "./builders.js";
 
@@ -237,6 +247,24 @@ describe("builders", () => {
     it("freezes returned component", () => {
       const result = metricGrid();
       expect(Object.isFrozen(result)).toBe(true);
+    });
+
+    it("accepts MetricGridOptions as first argument", () => {
+      const child = html("a");
+      const result = metricGrid({ direction: "row" }, child);
+
+      expect(result.type).toBe("metric-grid");
+      expect(result.props).toEqual({ direction: "row" });
+      expect(result.slots).toEqual({ default: [child] });
+    });
+
+    it("treats first argument without direction as a child component", () => {
+      const child = html("a");
+      const result = metricGrid(child);
+
+      expect(result.type).toBe("metric-grid");
+      expect(result.props).toEqual({});
+      expect(result.slots).toEqual({ default: [child] });
     });
   });
 
@@ -922,6 +950,163 @@ describe("dockWorkbench builder", () => {
         organisers: false,
       });
       expect(result.props?.organisers).toBe(false);
+    });
+  });
+
+  describe("heatmapChart()", () => {
+    it("creates heatmap-chart component with spread props", () => {
+      const props = { lookup: { dataSetId: "test", operations: [] }, minColor: "#313695" };
+      const result = heatmapChart(props as any);
+      expect(result.type).toBe("heatmap-chart");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = heatmapChart({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("treemapChart()", () => {
+    it("creates treemap-chart component with spread props", () => {
+      const props = { lookup: { dataSetId: "test", operations: [] }, parentColumn: "parent" };
+      const result = treemapChart(props as any);
+      expect(result.type).toBe("treemap-chart");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = treemapChart({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("densityHeatmap()", () => {
+    it("creates density-heatmap component with spread props", () => {
+      const props = { lookup: { dataSetId: "test", operations: [] }, radius: 25 };
+      const result = densityHeatmap(props as any);
+      expect(result.type).toBe("density-heatmap");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = densityHeatmap({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("badge()", () => {
+    it("creates badge component with spread props", () => {
+      const props = { lookup: { dataSetId: "test", operations: [] }, column: "status" };
+      const result = badge(props as any);
+      expect(result.type).toBe("badge");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = badge({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("countdown()", () => {
+    it("creates countdown component with spread props", () => {
+      const props = { lookup: { dataSetId: "test", operations: [] }, format: "compact" };
+      const result = countdown(props as any);
+      expect(result.type).toBe("countdown");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = countdown({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("timeline()", () => {
+    it("creates timeline component with spread props", () => {
+      const props = { lookup: { dataSetId: "test", operations: [] }, startColumn: "begin" };
+      const result = timeline(props as any);
+      expect(result.type).toBe("timeline");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = timeline({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("graph()", () => {
+    it("creates graph component with spread props", () => {
+      const props = { lookup: { dataSetId: "test", operations: [] }, layout: "force" };
+      const result = graph(props as any);
+      expect(result.type).toBe("graph");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = graph({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("eventTimeline()", () => {
+    it("creates event-timeline component with spread props", () => {
+      const props = { lookup: { dataSetId: "events", operations: [] }, layout: "vertical" };
+      const result = eventTimeline(props as any);
+      expect(result.type).toBe("event-timeline");
+      expect(result.props).toEqual(props);
+      expect(result.props).not.toBe(props);
+    });
+
+    it("freezes returned component", () => {
+      const result = eventTimeline({ lookup: { dataSetId: "t", operations: [] } } as any);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("masterDetail()", () => {
+    it("creates a split with wired selection and selectionSource", () => {
+      const master = dataTable({ lookup: { dataSetId: "strategies", operations: [] } });
+      const detail = hostPanel("strategy-detail");
+      const result = masterDetail({ master, detail });
+
+      expect(result.type).toBe("split");
+      const masterSlot = result.slots!["0"]![0]!;
+      expect((masterSlot.props as any).selection).toBe("single");
+      const detailSlot = result.slots!["1"]![0]!;
+      expect((detailSlot.props as any).selectionSource).toBe("strategies");
+    });
+
+    it("respects custom direction and ratio", () => {
+      const master = dataTable({ lookup: { dataSetId: "s", operations: [] } });
+      const detail = hostPanel("d");
+      const result = masterDetail({ master, detail, direction: "vertical", ratio: [30, 70] });
+
+      expect(result.props!.direction).toBe("vertical");
+    });
+
+    it("defaults to horizontal direction", () => {
+      const master = dataTable({ lookup: { dataSetId: "s", operations: [] } });
+      const detail = hostPanel("d");
+      const result = masterDetail({ master, detail });
+
+      expect(result.props!.direction).toBe("horizontal");
+    });
+
+    it("freezes returned component", () => {
+      const master = dataTable({ lookup: { dataSetId: "s", operations: [] } });
+      const detail = hostPanel("d");
+      const result = masterDetail({ master, detail });
+      expect(Object.isFrozen(result)).toBe(true);
     });
   });
 });

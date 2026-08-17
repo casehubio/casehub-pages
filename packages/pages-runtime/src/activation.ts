@@ -72,6 +72,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "countdown",
   "timeline",
   "graph",
+  "event-timeline",
   "grouped-view",
   "schema-form",
   ...FORM_INPUT_TYPES,
@@ -362,6 +363,13 @@ export function createActivationCallback(
         vizEl.props = component.props;
       }
       el.appendChild(vizEl);
+
+      if (component.type === "data-table") {
+        const selection = (component.props as Record<string, unknown> | undefined)?.selection as string | undefined;
+        if (selection) {
+          (vizEl as unknown as Record<string, unknown>).selection = selection;
+        }
+      }
 
       // Handle inline dataSet on displayer (legacy DashBuilder shorthand)
       const inlineData = (component.props as Record<string, unknown> | undefined)?.inlineDataSet;

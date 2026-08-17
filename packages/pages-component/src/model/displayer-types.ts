@@ -99,6 +99,7 @@ export interface DataTableProps extends DataComponentCommon {
   readonly resizable?: boolean;
   readonly rowStyle?: readonly RowStyleRule[];
   readonly expandable?: ExpandableConfig;
+  readonly selection?: SelectionMode;
 }
 
 export type CellDisplay = "text" | "boolean" | "color" | "badge" | "number";
@@ -115,6 +116,10 @@ export interface GridTableProps extends DataComponentCommon {
   readonly transpose?: boolean;
 }
 
+export interface MetricGridProps {
+  readonly direction?: "row" | "grid";
+}
+
 export interface MetricProps extends DataComponentCommon {
   readonly subtype?: "card" | "card2" | "plain-text" | "quota";
   readonly pattern?: string;
@@ -122,6 +127,8 @@ export interface MetricProps extends DataComponentCommon {
     readonly template?: string;
     readonly javascript?: string;
   };
+  readonly sparklineData?: readonly number[];
+  readonly trend?: "up" | "down" | "flat";
 }
 
 export interface MeterProps extends DataComponentCommon, ChartSettings {
@@ -214,3 +221,11 @@ export type {
   GroupNode,
   RowAccentConfig,
 } from "./grouped-view-types.js";
+
+export type EventTimelineLayout = "vertical" | "horizontal" | "compact";
+
+export interface EventTimelineProps extends DataComponentCommon {
+  readonly layout?: EventTimelineLayout;
+  readonly pageSize?: number;
+  readonly strategyKey?: string;
+}

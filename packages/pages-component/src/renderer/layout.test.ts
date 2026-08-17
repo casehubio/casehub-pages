@@ -121,6 +121,30 @@ describe("metric-grid layout", () => {
     expect(el.style.gridTemplateColumns).toBe("repeat(auto-fill, minmax(140px, 1fr))");
     expect(el.style.gap).toBe("var(--pages-space-2, 8px)");
   });
+
+  it("applies flex layout when direction is row", () => {
+    const el = document.createElement("div");
+    const component: Component = { type: "metric-grid", props: { direction: "row" } };
+    applyLayoutCSS(el, component);
+    expect(el.style.display).toBe("flex");
+    expect(el.style.flexWrap).toBe("nowrap");
+    expect(el.style.gap).toBe("var(--pages-space-2, 8px)");
+  });
+
+  it("applies grid layout when direction is grid", () => {
+    const el = document.createElement("div");
+    const component: Component = { type: "metric-grid", props: { direction: "grid" } };
+    applyLayoutCSS(el, component);
+    expect(el.style.display).toBe("grid");
+    expect(el.style.gridTemplateColumns).toBe("repeat(auto-fill, minmax(140px, 1fr))");
+  });
+
+  it("defaults to grid layout when direction is undefined", () => {
+    const el = document.createElement("div");
+    const component: Component = { type: "metric-grid" };
+    applyLayoutCSS(el, component);
+    expect(el.style.display).toBe("grid");
+  });
 });
 
 describe("split layout", () => {

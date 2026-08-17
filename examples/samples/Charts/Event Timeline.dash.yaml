@@ -1,0 +1,38 @@
+datasets:
+  - uuid: events
+    content: >-
+      [
+        ["1", "Case Started", "completed", "2026-01-15T09:00:00Z", "System", "lifecycle"],
+        ["2", "Task Created", "completed", "2026-01-15T09:05:00Z", "Alice", "task"],
+        ["3", "Agent Dispatched", "completed", "2026-01-15T09:10:00Z", "System", "task"],
+        ["4", "Processing", "active", "2026-01-15T09:30:00Z", "Bob", "task"],
+        ["5", "Review Pending", "pending", "", "", "gate"],
+        ["6", "Approval Gate", "pending", "", "", "gate"],
+        ["7", "Archive", "skipped", "", "", "lifecycle"]
+      ]
+    columns:
+      - id: key
+        type: LABEL
+      - id: label
+        type: LABEL
+      - id: status
+        type: LABEL
+      - id: timestamp
+        type: TEXT
+      - id: actor
+        type: LABEL
+      - id: category
+        type: LABEL
+
+pages:
+  - components:
+      - type: title
+        properties:
+          text: Event Timeline
+          size: h3
+      - type: event-timeline
+        properties:
+          title: Case Activity
+          layout: vertical
+          lookup:
+            uuid: events

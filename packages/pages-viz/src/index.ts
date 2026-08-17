@@ -54,6 +54,8 @@ export { PagesBadge } from "./components/PagesBadge.js";
 export { PagesCountdown } from "./components/PagesCountdown.js";
 export { PagesGroupedView } from "./components/grouped-view/PagesGroupedView.js";
 export { PagesLegend } from "./components/PagesLegend.js";
+export { PagesEventTimeline } from "./components/PagesEventTimeline.js";
+export type { EventTimelineNode, EventTimelineStrategy, EventNodeStatus } from "./components/event-timeline-types.js";
 
 // Shared pipeline
 export { datasetToSource, applyChartSettings } from "./charts/option-pipeline.js";

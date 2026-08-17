@@ -38,6 +38,12 @@ import type {
   HeatmapChartProps,
   TreemapChartProps,
   DensityHeatmapProps,
+  BadgeProps,
+  CountdownProps,
+  TimelineProps,
+  GraphProps,
+  EventTimelineProps,
+  MetricGridProps,
   IframePluginProps,
   GroupedViewProps,
 } from "./displayer-types.js";
@@ -89,6 +95,7 @@ export interface ComponentTypeRegistry {
   "heatmap-chart": HeatmapChartProps;
   "treemap-chart": TreemapChartProps;
   "density-heatmap": DensityHeatmapProps;
+  "metric-grid": MetricGridProps;
   // Data components
   "data-table": DataTableProps;
   "grid-table": GridTableProps;
@@ -96,6 +103,11 @@ export interface ComponentTypeRegistry {
   meter: MeterProps;
   selector: SelectorProps;
   map: MapProps;
+  badge: BadgeProps;
+  countdown: CountdownProps;
+  timeline: TimelineProps;
+  graph: GraphProps;
+  "event-timeline": EventTimelineProps;
   // Grouped data components
   "grouped-view": GroupedViewProps;
   // Plugin component
@@ -172,6 +184,10 @@ export function isAccordion(c: Component): c is TypedComponent<"accordion"> {
 
 export function isCarousel(c: Component): c is TypedComponent<"carousel"> {
   return c.type === "carousel";
+}
+
+export function isMetricGrid(c: Component): c is TypedComponent<"metric-grid"> {
+  return c.type === "metric-grid";
 }
 
 // Workbench components
@@ -278,6 +294,26 @@ export function isSelector(c: Component): c is TypedComponent<"selector"> {
 
 export function isMap(c: Component): c is TypedComponent<"map"> {
   return c.type === "map";
+}
+
+export function isBadge(c: Component): c is TypedComponent<"badge"> {
+  return c.type === "badge";
+}
+
+export function isCountdown(c: Component): c is TypedComponent<"countdown"> {
+  return c.type === "countdown";
+}
+
+export function isTimeline(c: Component): c is TypedComponent<"timeline"> {
+  return c.type === "timeline";
+}
+
+export function isGraph(c: Component): c is TypedComponent<"graph"> {
+  return c.type === "graph";
+}
+
+export function isEventTimeline(c: Component): c is TypedComponent<"event-timeline"> {
+  return c.type === "event-timeline";
 }
 
 // Grouped data components

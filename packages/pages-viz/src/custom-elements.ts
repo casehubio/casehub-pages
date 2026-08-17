@@ -23,6 +23,7 @@ import type { PagesActionButton } from "./components/PagesActionButton.js";
 import type { PagesAlert } from "./components/PagesAlert.js";
 import type { PagesBadge } from "./components/PagesBadge.js";
 import type { PagesCountdown } from "./components/PagesCountdown.js";
+import type { PagesEventTimeline } from "./components/PagesEventTimeline.js";
 import "./components/PagesLegend.js";
 
 export {};
@@ -54,6 +55,7 @@ declare global {
     "pages-alert": PagesAlert;
     "pages-badge": PagesBadge;
     "pages-countdown": PagesCountdown;
+    "pages-event-timeline": PagesEventTimeline;
     "pages-legend": import("./components/PagesLegend.js").PagesLegend;
   }
 }

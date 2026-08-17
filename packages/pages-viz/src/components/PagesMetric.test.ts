@@ -411,4 +411,84 @@ describe("PagesMetric", () => {
       expect(title?.textContent).toBe("");
     });
   });
+
+  describe("trend indicator", () => {
+    it("renders up trend arrow with success class", async () => {
+      const ds = makeDataSet([["v", "NUMBER"]], [[100]]);
+      el.props = { lookup: mockLookup("test"), title: "P&L", trend: "up" };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = ds;
+      await el.updateComplete;
+
+      const trend = el.shadowRoot!.querySelector(".trend");
+      expect(trend).not.toBeNull();
+      expect(trend!.textContent!.trim()).toBe("▲");
+      expect(trend!.classList.contains("trend-up")).toBe(true);
+    });
+
+    it("renders down trend arrow with danger class", async () => {
+      const ds = makeDataSet([["v", "NUMBER"]], [[50]]);
+      el.props = { lookup: mockLookup("test"), title: "Cost", trend: "down" };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = ds;
+      await el.updateComplete;
+
+      const trend = el.shadowRoot!.querySelector(".trend");
+      expect(trend!.textContent!.trim()).toBe("▼");
+      expect(trend!.classList.contains("trend-down")).toBe(true);
+    });
+
+    it("renders flat trend indicator", async () => {
+      const ds = makeDataSet([["v", "NUMBER"]], [[75]]);
+      el.props = { lookup: mockLookup("test"), title: "Rate", trend: "flat" };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = ds;
+      await el.updateComplete;
+
+      const trend = el.shadowRoot!.querySelector(".trend");
+      expect(trend!.textContent!.trim()).toBe("—");
+      expect(trend!.classList.contains("trend-flat")).toBe(true);
+    });
+
+    it("does not render trend when prop is absent", async () => {
+      const ds = makeDataSet([["v", "NUMBER"]], [[42]]);
+      el.props = { lookup: mockLookup("test"), title: "Val" };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = ds;
+      await el.updateComplete;
+
+      expect(el.shadowRoot!.querySelector(".trend")).toBeNull();
+    });
+  });
+
+  describe("sparkline", () => {
+    it("renders sparkline SVG when sparklineData is provided", async () => {
+      const ds = makeDataSet([["v", "NUMBER"]], [[42]]);
+      el.props = { lookup: mockLookup("test"), title: "P&L", sparklineData: [1.0, 1.5, 1.3, 1.8] };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = ds;
+      await el.updateComplete;
+
+      const container = el.shadowRoot!.querySelector(".sparkline-container");
+      expect(container).not.toBeNull();
+      const svg = container!.querySelector("svg");
+      expect(svg).not.toBeNull();
+    });
+
+    it("does not render sparkline when sparklineData is absent", async () => {
+      const ds = makeDataSet([["v", "NUMBER"]], [[42]]);
+      el.props = { lookup: mockLookup("test"), title: "Val" };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = ds;
+      await el.updateComplete;
+
+      expect(el.shadowRoot!.querySelector(".sparkline-container")).toBeNull();
+    });
+  });
 });
