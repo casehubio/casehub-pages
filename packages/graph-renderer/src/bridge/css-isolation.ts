@@ -16,10 +16,6 @@ export function getIsolationCSS(): string {
   box-sizing: border-box;
 }
 
-.${DIAGRAM_ROOT_CLASS} * {
-  all: revert;
-}
-
 ${reactFlowCSS}
 
 ${pluginStyles}

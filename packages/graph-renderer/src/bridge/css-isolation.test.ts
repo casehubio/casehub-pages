@@ -36,19 +36,9 @@ describe('css-isolation', () => {
     expect(css).toContain('.react-flow__edge');
   });
 
-  it('generates scoped revert for children', () => {
+  it('does not use all:revert on children — shadow DOM provides isolation', () => {
     const css = getIsolationCSS();
-    expect(css).toContain(`.${DIAGRAM_ROOT_CLASS} *`);
-    expect(css).toContain('all: revert');
-  });
-
-  it('places React Flow CSS after the revert rule so RF styles take precedence', () => {
-    const css = getIsolationCSS();
-    const revertIndex = css.indexOf('all: revert');
-    const rfNodeIndex = css.indexOf('.react-flow__node');
-    expect(revertIndex).toBeGreaterThan(-1);
-    expect(rfNodeIndex).toBeGreaterThan(-1);
-    expect(rfNodeIndex).toBeGreaterThan(revertIndex);
+    expect(css).not.toContain('all: revert');
   });
 
   it('includes plugin styles in isolation CSS', () => {
