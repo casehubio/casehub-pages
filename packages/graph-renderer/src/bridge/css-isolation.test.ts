@@ -42,6 +42,15 @@ describe('css-isolation', () => {
     expect(css).toContain('all: revert');
   });
 
+  it('places React Flow CSS after the revert rule so RF styles take precedence', () => {
+    const css = getIsolationCSS();
+    const revertIndex = css.indexOf('all: revert');
+    const rfNodeIndex = css.indexOf('.react-flow__node');
+    expect(revertIndex).toBeGreaterThan(-1);
+    expect(rfNodeIndex).toBeGreaterThan(-1);
+    expect(rfNodeIndex).toBeGreaterThan(revertIndex);
+  });
+
   it('includes plugin styles in isolation CSS', () => {
     registerStencil({
       type: 'custom',

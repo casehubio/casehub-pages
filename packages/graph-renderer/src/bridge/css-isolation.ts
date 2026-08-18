@@ -7,8 +7,6 @@ export function getIsolationCSS(): string {
   const pluginStyles = getRegisteredStyles();
 
   return `
-${reactFlowCSS}
-
 .${DIAGRAM_ROOT_CLASS} {
   all: initial;
   display: block;
@@ -21,6 +19,8 @@ ${reactFlowCSS}
 .${DIAGRAM_ROOT_CLASS} * {
   all: revert;
 }
+
+${reactFlowCSS}
 
 ${pluginStyles}
 
