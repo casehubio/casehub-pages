@@ -200,6 +200,24 @@ describe("PagesDensityHeatmap", () => {
       expect(mockHeatmap.setData).toHaveBeenCalled();
     });
 
+    it("handles resize by recreating via async path", async () => {
+      const ds = makeDataSet(
+        [["x", "NUMBER"], ["y", "NUMBER"], ["value", "NUMBER"]],
+        [[10, 20, 5], [50, 60, 8]],
+      );
+      await renderChart(el, { lookup: mockLookup("test") }, ds);
+
+      vi.mocked(createHeatmap).mockClear();
+      mockHeatmap.destroy.mockClear();
+
+      el.onResize();
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
+
+      expect(mockHeatmap.destroy).toHaveBeenCalled();
+      expect(createHeatmap).toHaveBeenCalled();
+    });
+
     it("destroys heatmap on disconnect", async () => {
       const ds = makeDataSet(
         [["x", "NUMBER"], ["y", "NUMBER"], ["value", "NUMBER"]],

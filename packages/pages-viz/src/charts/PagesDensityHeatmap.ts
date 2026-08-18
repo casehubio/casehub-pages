@@ -1,11 +1,20 @@
 import { html, css, type TemplateResult } from "lit";
 import { createRef, ref } from "lit/directives/ref.js";
 import { customElement } from "lit/decorators.js";
-import { createHeatmap, withTooltip, withLegend } from "@drdreo/heatmap";
 import type { DensityHeatmapProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
+
+type HeatmapModule = typeof import("@drdreo/heatmap");
+let heatmapModule: HeatmapModule | undefined;
+
+async function loadHeatmapModule(): Promise<HeatmapModule> {
+  if (!heatmapModule) {
+    heatmapModule = await import("@drdreo/heatmap");
+  }
+  return heatmapModule;
+}
 
 interface HeatmapPoint {
   x: number;
@@ -41,13 +50,17 @@ export class PagesDensityHeatmap extends PagesElement<DensityHeatmapProps> {
     const container = this._containerRef.value;
     if (!container || !this.props || !this.dataSet) return;
     if (container.offsetWidth === 0 || container.offsetHeight === 0) return;
+    void this._updateHeatmap(container);
+  }
 
+  private async _updateHeatmap(container: HTMLDivElement): Promise<void> {
+    const mod = await loadHeatmapModule();
+    if (!this.props || !this.dataSet) return;
     const points = this.extractAndNormalize(this.dataSet, this.props, container);
-
     if (this._heatmap) {
       this._heatmap.setData(points);
     } else {
-      this._heatmap = this.createInstance(container, points, this.props);
+      this._heatmap = this.createInstance(mod, container, points, this.props);
     }
   }
 
@@ -74,6 +87,7 @@ export class PagesDensityHeatmap extends PagesElement<DensityHeatmapProps> {
   }
 
   private createInstance(
+    mod: HeatmapModule,
     container: HTMLDivElement,
     data: HeatmapPoint[],
     props: DensityHeatmapProps,
@@ -89,13 +103,13 @@ export class PagesDensityHeatmap extends PagesElement<DensityHeatmapProps> {
 
     const features: unknown[] = [];
     if (props.showTooltip) {
-      features.push(withTooltip());
+      features.push(mod.withTooltip());
     }
     if (props.showLegend) {
-      features.push(withLegend());
+      features.push(mod.withLegend());
     }
 
-    return createHeatmap(config as never, ...features as never[]) as unknown as HeatmapInstance;
+    return mod.createHeatmap(config as never, ...features as never[]) as unknown as HeatmapInstance;
   }
 
   private extractAndNormalize(
@@ -150,8 +164,7 @@ export class PagesDensityHeatmap extends PagesElement<DensityHeatmapProps> {
     if (!this._heatmap || !this._containerRef.value || !this.props || !this.dataSet) return;
     this._heatmap.destroy();
     this._heatmap = undefined;
-    const points = this.extractAndNormalize(this.dataSet, this.props, this._containerRef.value);
-    this._heatmap = this.createInstance(this._containerRef.value, points, this.props);
+    void this._updateHeatmap(this._containerRef.value);
   }
 
   override disconnectedCallback(): void {
