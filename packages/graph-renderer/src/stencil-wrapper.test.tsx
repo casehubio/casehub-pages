@@ -309,6 +309,33 @@ describe('decoration rendering', () => {
     expect(container.querySelector('.legacy')?.textContent).toBe('Legacy');
     unmount();
   });
+
+  it('does not apply constraints when width/height are zero', () => {
+    registerGrammar({
+      type: 'zero-sized',
+      connections: {
+        inbound: { min: 0, max: 5, allowedFrom: [] },
+        outbound: { min: 0, max: 5, allowedTo: [] },
+      },
+    });
+    const renderFn: StencilRenderFn = () => html`<div class="content">leaf</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      type: 'zero-sized',
+      width: 0,
+      height: 0,
+    });
+
+    const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.style.maxWidth).toBe('');
+    expect(wrapper.style.maxHeight).toBe('');
+    expect(wrapper.style.overflow).toBe('');
+
+    unmount();
+  });
 });
 
 describe('dimension constraints', () => {
@@ -367,6 +394,33 @@ describe('dimension constraints', () => {
     expect(wrapper).not.toBeNull();
     expect(wrapper.style.maxWidth).toBe('');
     expect(wrapper.style.maxHeight).toBe('');
+
+    unmount();
+  });
+
+  it('does not apply constraints when width/height are zero', () => {
+    registerGrammar({
+      type: 'zero-sized',
+      connections: {
+        inbound: { min: 0, max: 5, allowedFrom: [] },
+        outbound: { min: 0, max: 5, allowedTo: [] },
+      },
+    });
+    const renderFn: StencilRenderFn = () => html`<div class="content">leaf</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      type: 'zero-sized',
+      width: 0,
+      height: 0,
+    });
+
+    const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.style.maxWidth).toBe('');
+    expect(wrapper.style.maxHeight).toBe('');
+    expect(wrapper.style.overflow).toBe('');
 
     unmount();
   });
