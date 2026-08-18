@@ -69,4 +69,31 @@ describe('GraphCanvas', () => {
     (element as any).layoutOptions = opts;
     expect((element as any).layoutOptions).toBe(opts);
   });
+
+  describe('direct nodes/edges properties', () => {
+    it('accepts nodes property as reactive', async () => {
+      document.body.appendChild(element);
+      const testNodes = [{
+        id: 'n1',
+        type: 'default',
+        position: { x: 100, y: 200 },
+        data: { label: 'Test' },
+      }];
+      (element as any).nodes = testNodes;
+      await (element as any).updateComplete;
+      expect((element as any).nodes).toEqual(testNodes);
+    });
+
+    it('accepts edges property as reactive', async () => {
+      document.body.appendChild(element);
+      const testEdges = [{
+        id: 'e1',
+        source: 'n1',
+        target: 'n2',
+      }];
+      (element as any).edges = testEdges;
+      await (element as any).updateComplete;
+      expect((element as any).edges).toEqual(testEdges);
+    });
+  });
 });

@@ -1,4 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+vi.mock('@xyflow/react/dist/style.css?raw', () => ({
+  default: '.react-flow { display: flex; } .react-flow__renderer { position: absolute; } .react-flow__node { position: absolute; pointer-events: all; } .react-flow__edge { position: absolute; pointer-events: visibleStroke; }',
+}));
 import {
   getIsolationCSS,
   injectIsolationStyles,
@@ -24,6 +28,12 @@ describe('css-isolation', () => {
     const css = getIsolationCSS();
     expect(css).toContain(`.${DIAGRAM_ROOT_CLASS}`);
     expect(css).toContain('all: initial');
+  });
+
+  it('includes React Flow base styles in isolation CSS', () => {
+    const css = getIsolationCSS();
+    expect(css).toContain('.react-flow__node');
+    expect(css).toContain('.react-flow__edge');
   });
 
   it('generates scoped revert for children', () => {

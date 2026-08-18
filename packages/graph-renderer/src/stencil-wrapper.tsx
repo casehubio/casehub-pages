@@ -111,7 +111,7 @@ function ensurePulseStyle(): void {
 export function createStencilNodeComponent(
   renderFn: StencilRenderFn,
 ): React.ComponentType<NodeProps> {
-  function StencilNode({ id, type, data, parentId }: NodeProps): React.JSX.Element {
+  function StencilNode({ id, type, data, parentId, width, height }: NodeProps): React.JSX.Element {
     const containerRef = useRef<HTMLDivElement>(null);
     const grammar = type ? getGrammar(type) : undefined;
     const rawData = (data ?? {}) as Record<string, unknown>;
@@ -145,6 +145,19 @@ export function createStencilNodeComponent(
       ? { border: `2px ${decoration.border.style} ${decoration.border.color}` }
       : undefined;
 
+    const sizeStyle: React.CSSProperties = {};
+    if (width != null) {
+      sizeStyle.maxWidth = width;
+      sizeStyle.width = width;
+    }
+    if (height != null) {
+      sizeStyle.maxHeight = height;
+      sizeStyle.height = height;
+    }
+    if (width != null || height != null) {
+      sizeStyle.overflow = 'hidden';
+    }
+
     return (
       <>
         {grammar?.connections.inbound.max !== 0 && (
@@ -152,7 +165,7 @@ export function createStencilNodeComponent(
         )}
         <div
           className="stencil-decoration-wrapper"
-          style={{ position: 'relative', ...borderStyle }}
+          style={{ position: 'relative', ...borderStyle, ...sizeStyle }}
           title={decoration?.tooltip}
         >
           {decoration?.badge && <DecorationBadge badge={decoration.badge} />}

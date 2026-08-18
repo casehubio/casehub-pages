@@ -14,7 +14,6 @@ import {
   type OnSelectionChangeFunc,
   type OnMoveEnd,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
 
 export interface ReactFlowAppProps {
   nodes: Node[];

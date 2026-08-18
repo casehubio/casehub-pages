@@ -310,3 +310,64 @@ describe('decoration rendering', () => {
     unmount();
   });
 });
+
+describe('dimension constraints', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+  });
+
+  afterEach(() => {
+    clearGrammarRegistry();
+  });
+
+  it('applies width/height constraints from NodeProps', () => {
+    registerGrammar({
+      type: 'sized',
+      connections: {
+        inbound: { min: 0, max: 5, allowedFrom: [] },
+        outbound: { min: 0, max: 5, allowedTo: [] },
+      },
+    });
+    const renderFn: StencilRenderFn = () => html`<div class="content">sized</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      type: 'sized',
+      width: 200,
+      height: 100,
+    });
+
+    const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.style.maxWidth).toBe('200px');
+    expect(wrapper.style.maxHeight).toBe('100px');
+    expect(wrapper.style.overflow).toBe('hidden');
+
+    unmount();
+  });
+
+  it('does not apply constraints when width/height are absent', () => {
+    registerGrammar({
+      type: 'unsized',
+      connections: {
+        inbound: { min: 0, max: 5, allowedFrom: [] },
+        outbound: { min: 0, max: 5, allowedTo: [] },
+      },
+    });
+    const renderFn: StencilRenderFn = () => html`<div class="content">unsized</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      type: 'unsized',
+    });
+
+    const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.style.maxWidth).toBe('');
+    expect(wrapper.style.maxHeight).toBe('');
+
+    unmount();
+  });
+});

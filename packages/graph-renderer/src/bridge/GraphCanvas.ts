@@ -16,6 +16,8 @@ import { computeElkLayout, type ElkLayoutOptions } from '../layout/elk-layout.js
 export class GraphCanvas extends LitElement {
   @property({ attribute: false }) model: GraphModel | undefined;
   @property({ attribute: false }) layoutOptions: ElkLayoutOptions | undefined;
+  @property({ attribute: false }) nodes: Node[] | undefined;
+  @property({ attribute: false }) edges: Edge[] | undefined;
 
   @state() private _nodes: Node[] = [];
   @state() private _edges: Edge[] = [];
@@ -106,8 +108,8 @@ export class GraphCanvas extends LitElement {
 
     this._root.render(
       createElement(ReactFlowApp, {
-        nodes: this._nodes,
-        edges: this._edges,
+        nodes: this.nodes ?? this._nodes,
+        edges: this.edges ?? this._edges,
         nodeTypes: getNodeTypes(),
         onNodeClick: (nodeId: string, node: Node) => {
           emitPagesEvent(this, 'graph:node:click', {

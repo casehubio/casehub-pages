@@ -1,4 +1,5 @@
 import { getRegisteredStyles } from '../registry/stencil-registry.js';
+import reactFlowCSS from '@xyflow/react/dist/style.css?raw';
 
 export const DIAGRAM_ROOT_CLASS = 'diagram-root';
 
@@ -6,6 +7,8 @@ export function getIsolationCSS(): string {
   const pluginStyles = getRegisteredStyles();
 
   return `
+${reactFlowCSS}
+
 .${DIAGRAM_ROOT_CLASS} {
   all: initial;
   display: block;
