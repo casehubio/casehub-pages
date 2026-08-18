@@ -32,7 +32,7 @@ export class PagesBadge extends LitElement {
 
   override render() {
     const classes = { badge: true, [this.variant]: true, [this.size]: this.size !== 'md' };
-    return html`<span class=${classMap(classes)} role="status">${this.label}</span>`;
+    return html`<span class=${classMap(classes)} role="status" aria-label=${this.label}>${this.label}</span>`;
   }
 }
 

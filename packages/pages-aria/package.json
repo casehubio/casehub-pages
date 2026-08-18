@@ -1,0 +1,23 @@
+{
+  "name": "@casehubio/pages-aria",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./walker": "./src/walker/index.ts",
+    "./executor": "./src/executor/index.ts",
+    "./server": "./src/server/index.ts",
+    "./scenario": "./src/scenario/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-primitives": "workspace:*",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,29 @@
+scenario: helpdesk-intake
+steps:
+  - navigate: /helpdesk/intake
+  - fill:
+      role: textbox
+      name: "Customer Name"
+      value: "Alice Chen"
+  - fill:
+      role: textbox
+      name: "Description"
+      value: "Cannot access dashboard"
+  - select:
+      role: combobox
+      name: "Priority"
+      value: "High"
+  - click:
+      role: button
+      name: "Submit"
+  - assert:
+      role: alert
+      name: "Submission confirmation"
+      state:
+        aria-hidden: false
+  - wait:
+      role: button
+      name: "Submit"
+      state:
+        aria-busy: false
+      timeout: 5000

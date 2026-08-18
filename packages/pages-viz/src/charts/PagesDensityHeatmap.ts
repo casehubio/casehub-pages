@@ -37,6 +37,11 @@ export class PagesDensityHeatmap extends PagesElement<DensityHeatmapProps> {
   private _containerRef = createRef<HTMLDivElement>();
   private _heatmap: HeatmapInstance | undefined;
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.setAttribute('aria-label', this.props?.title ?? 'Density heatmap');
+  }
+
   override render(): TemplateResult {
     if (this.props) this.applySizing(this.props);
     return super.render();

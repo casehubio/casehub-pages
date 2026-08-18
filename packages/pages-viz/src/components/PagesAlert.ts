@@ -26,6 +26,7 @@ export class PagesAlert extends PagesContentElement<AlertProps> {
     return html`
       <div class="pages-alert pages-alert-${props.severity}"
            role=${role}
+           aria-live=${role === 'alert' ? 'assertive' : 'polite'}
            ?hidden=${isDismissed}>
         <div class="pages-alert-content">${props.content}</div>
         ${props.dismissible ? html`

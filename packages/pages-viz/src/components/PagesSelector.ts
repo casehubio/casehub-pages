@@ -124,7 +124,8 @@ export class PagesSelector extends PagesElement<SelectorProps> {
     values: Array<{ value: string | number | Date | null; rowIndex: number }>,
   ): TemplateResult {
     return html`
-      <select @change=${(e: Event) => this._handleDropdownChange(e, columnId, props)}>
+      <select aria-label=${props.title ?? 'Select value'}
+              @change=${(e: Event) => this._handleDropdownChange(e, columnId, props)}>
         <option value="-1">All</option>
         ${values.map(({ value, rowIndex }) => {
           const text = value === null ? "" : String(value);
@@ -198,6 +199,7 @@ export class PagesSelector extends PagesElement<SelectorProps> {
 
     return html`
       <input type="range"
+             aria-label=${props.title ?? 'Select value'}
              min="${String(min)}"
              max="${String(max)}"
              value="${String(min)}"
@@ -259,7 +261,7 @@ export class PagesSelector extends PagesElement<SelectorProps> {
     values: Array<{ value: string | number | Date | null; rowIndex: number }>,
   ): TemplateResult {
     return html`
-      <div class="labels">
+      <div class="labels" role="listbox" aria-label=${props.title ?? 'Select value'}>
         ${values.map(entry => {
           if (!entry) return html``;
           const { value, rowIndex } = entry;
@@ -268,6 +270,8 @@ export class PagesSelector extends PagesElement<SelectorProps> {
           return html`
             <button class="label-chip ${isSelected ? "selected" : ""}"
                     type="button"
+                    role="option"
+                    aria-selected=${isSelected ? 'true' : 'false'}
                     @click=${() => this._handleChipClick(chipText, rowIndex, columnId, props)}>
               ${chipText}
             </button>

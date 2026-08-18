@@ -133,6 +133,19 @@ describe('PagesInput', () => {
     expect((el as any).value).toBe('');
   });
 
+  it('sets aria-label on inner input when label is provided', async () => {
+    (el as any).label = 'Email Address';
+    await (el as any).updateComplete;
+    const input = el.shadowRoot!.querySelector('input')!;
+    expect(input.getAttribute('aria-label')).toBe('Email Address');
+  });
+
+  it('does not set aria-label when label is undefined', async () => {
+    await (el as any).updateComplete;
+    const input = el.shadowRoot!.querySelector('input')!;
+    expect(input.hasAttribute('aria-label')).toBe(false);
+  });
+
   it('defaults to text type', async () => {
     expect((el as any).type).toBe('text');
   });

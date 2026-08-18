@@ -941,7 +941,7 @@ describe("dockWorkbench builder", () => {
         frames: [{ key: "f1", tabs: [{ key: "t1", label: "Tab", content: { type: "html" as const, props: { content: "x" } } }] }],
       });
       expect(result.props?.frames).toHaveLength(1);
-      expect(result.props?.frames[0].key).toBe("f1");
+      expect(result.props?.frames?.[0]?.key).toBe("f1");
     });
 
     it("respects organisers: false", () => {

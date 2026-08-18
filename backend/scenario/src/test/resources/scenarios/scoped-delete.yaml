@@ -1,0 +1,8 @@
+scenario: scoped-delete
+steps:
+  - click:
+      role: button
+      name: "Delete"
+      within:
+        role: row
+        name: "Case #42"

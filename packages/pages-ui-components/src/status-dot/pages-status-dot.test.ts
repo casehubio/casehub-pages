@@ -61,4 +61,22 @@ describe('PagesStatusDot', () => {
     const nonStyleChildren = Array.from(el.shadowRoot!.children).filter(c => c.tagName !== 'STYLE');
     expect(nonStyleChildren.length).toBe(0);
   });
+
+  describe('ARIA', () => {
+    it('has role="status"', async () => {
+      await (el as any).updateComplete;
+      expect(el.getAttribute('role')).toBe('status');
+    });
+
+    it('sets aria-label to variant by default', async () => {
+      await (el as any).updateComplete;
+      expect(el.getAttribute('aria-label')).toBe('neutral');
+    });
+
+    it('updates aria-label when variant changes', async () => {
+      (el as any).variant = 'success';
+      await (el as any).updateComplete;
+      expect(el.getAttribute('aria-label')).toBe('success');
+    });
+  });
 });

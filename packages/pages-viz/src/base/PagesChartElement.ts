@@ -34,6 +34,13 @@ export abstract class PagesChartElement<
 
   override updated(changed: PropertyValues): void {
     super.updated(changed);
+
+    if (!this.hasAttribute('role')) {
+      this.setAttribute('role', 'img');
+    }
+    const title = (this.props as { title?: string } | undefined)?.title;
+    this.setAttribute('aria-label', title || 'Chart');
+
     const container = this._chartRef.value;
     if (!container || !this.props || !this.dataSet) return;
 
@@ -45,6 +52,7 @@ export abstract class PagesChartElement<
     const apply = (option: Record<string, unknown>): void => {
       if (this._renderGen !== gen) return;
       option['backgroundColor'] = 'transparent';
+      option['aria'] = { enabled: true, decal: { show: false } };
       chart.setOption(option, true);
       if (this._selectedValue !== undefined && this._selectedDataIndex !== undefined) {
         this.syncHighlight(chart, undefined, this._selectedDataIndex);

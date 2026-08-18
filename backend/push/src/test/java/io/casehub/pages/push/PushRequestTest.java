@@ -144,6 +144,32 @@ class PushRequestTest {
     }
 
     @Test
+    void parse_command_result_ok() {
+        PushRequest req = PushRequest.parse("{\"op\":\"command-result\",\"id\":\"cmd-1\",\"ok\":true}");
+        assertInstanceOf(PushRequest.CommandResult.class, req);
+        PushRequest.CommandResult result = (PushRequest.CommandResult) req;
+        assertEquals("cmd-1", result.id());
+        assertTrue(result.ok());
+        assertNull(result.error());
+    }
+
+    @Test
+    void parse_command_result_with_error() {
+        PushRequest req = PushRequest.parse("{\"op\":\"command-result\",\"id\":\"cmd-2\",\"ok\":false,\"error\":\"Element not found\"}");
+        assertInstanceOf(PushRequest.CommandResult.class, req);
+        PushRequest.CommandResult result = (PushRequest.CommandResult) req;
+        assertEquals("cmd-2", result.id());
+        assertFalse(result.ok());
+        assertEquals("Element not found", result.error());
+    }
+
+    @Test
+    void command_result_op_returns_correct_value() {
+        PushRequest req = PushRequest.parse("{\"op\":\"command-result\",\"id\":\"cmd-3\",\"ok\":true}");
+        assertEquals("command-result", req.op());
+    }
+
+    @Test
     void parse_with_since_before_op_field_order_independence() {
         PushRequest req = PushRequest.parse("{\"since\":{\"debate:abc\":50},\"op\":\"listen\",\"id\":\"r8\",\"topics\":[\"debate:abc\"]}");
         assertInstanceOf(PushRequest.Listen.class, req);

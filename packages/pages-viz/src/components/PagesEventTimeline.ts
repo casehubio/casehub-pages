@@ -43,6 +43,12 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
 
   private _lastData: unknown = undefined;
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.setAttribute('role', 'region');
+    this.setAttribute('aria-label', 'Event timeline');
+  }
+
   static override styles = css`
     :host { display: block; font-family: var(--pages-font-family, system-ui); color: var(--pages-neutral-12, #111); }
     .timeline-container { padding: 16px; }

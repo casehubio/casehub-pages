@@ -96,8 +96,10 @@ export class PagesGridTable extends PagesElement<GridTableProps> {
       stripe === "columns" || stripe === "both" ? "stripe-cols" : "",
     ].filter(Boolean).join(" ");
 
+    const tableLabel = props.title ?? '';
+
     return html`
-      <table class="${classes}">
+      <table class="${classes}" aria-label=${tableLabel || nothing}>
         ${headerRow}
         <tbody>${bodyRows}</tbody>
       </table>

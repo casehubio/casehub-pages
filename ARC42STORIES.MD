@@ -239,7 +239,7 @@ Interactive gallery with sample pages, dev server, and Playwright smoke tests.
 
 | Issue | Title | Status |
 |---|---|---|
-| #12 | Lazy on-demand pagination for datasets | 🔲 open |
+| #12 | Lazy on-demand pagination for datasets | ✅ done |
 | #14 | Domain-specific examples for the gallery | ✅ shipped |
 | #15 | Accessibility: ARIA attributes, keyboard navigation, screen reader support | 🔲 open |
 | #16 | CSP compliance: replace new Function() in column expressions | ✅ shipped |

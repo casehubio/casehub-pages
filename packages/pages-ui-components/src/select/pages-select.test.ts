@@ -106,6 +106,19 @@ describe('PagesSelect', () => {
     expect(el.shadowRoot!.querySelector('select')!.required).toBe(true);
   });
 
+  it('sets aria-label on inner select when label is provided', async () => {
+    (el as any).label = 'Country';
+    await (el as any).updateComplete;
+    const select = el.shadowRoot!.querySelector('select')!;
+    expect(select.getAttribute('aria-label')).toBe('Country');
+  });
+
+  it('does not set aria-label when label is undefined', async () => {
+    await (el as any).updateComplete;
+    const select = el.shadowRoot!.querySelector('select')!;
+    expect(select.hasAttribute('aria-label')).toBe(false);
+  });
+
   it('defaults to empty value', () => {
     expect((el as any).value).toBe('');
   });

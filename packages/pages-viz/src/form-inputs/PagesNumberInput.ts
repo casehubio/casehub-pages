@@ -75,6 +75,7 @@ export class PagesNumberInput extends PagesFormInput<NumberInputProps> {
           step=${ifDefined(props.step !== undefined ? String(props.step) : undefined)}
           ?required=${!!props.required || this.required}
           ?readonly=${isReadonly}
+          aria-label=${ifDefined(props.label)}
           aria-required=${ifDefined(this.required ? "true" : undefined)}
           aria-invalid=${ifDefined(this.errorMessage ? "true" : undefined)}
           aria-describedby=${ifDefined(this.describedBy)}

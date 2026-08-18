@@ -131,4 +131,46 @@ describe('PagesButton', () => {
   it('defaults to md size', () => {
     expect((el as any).size).toBe('md');
   });
+
+  describe('ARIA', () => {
+    it('sets aria-label on inner button when label is provided', async () => {
+      (el as any).label = 'Submit';
+      await (el as any).updateComplete;
+      const button = el.shadowRoot!.querySelector('button')!;
+      expect(button.getAttribute('aria-label')).toBe('Submit');
+    });
+
+    it('sets aria-disabled when disabled', async () => {
+      (el as any).disabled = true;
+      await (el as any).updateComplete;
+      const button = el.shadowRoot!.querySelector('button')!;
+      expect(button.getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('sets aria-disabled to false when not disabled', async () => {
+      await (el as any).updateComplete;
+      const button = el.shadowRoot!.querySelector('button')!;
+      expect(button.getAttribute('aria-disabled')).toBe('false');
+    });
+
+    it('sets aria-busy when loading', async () => {
+      (el as any).loading = true;
+      await (el as any).updateComplete;
+      const button = el.shadowRoot!.querySelector('button')!;
+      expect(button.getAttribute('aria-busy')).toBe('true');
+    });
+
+    it('sets aria-busy to false when not loading', async () => {
+      await (el as any).updateComplete;
+      const button = el.shadowRoot!.querySelector('button')!;
+      expect(button.getAttribute('aria-busy')).toBe('false');
+    });
+
+    it('hides spinner from screen readers', async () => {
+      (el as any).loading = true;
+      await (el as any).updateComplete;
+      const spinner = el.shadowRoot!.querySelector('.spinner')!;
+      expect(spinner.getAttribute('aria-hidden')).toBe('true');
+    });
+  });
 });

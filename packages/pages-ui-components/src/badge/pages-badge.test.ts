@@ -85,4 +85,19 @@ describe('PagesBadge', () => {
   it('defaults to md size', () => {
     expect((el as any).size).toBe('md');
   });
+
+  describe('ARIA', () => {
+    it('has role="status" on inner span', async () => {
+      await (el as any).updateComplete;
+      const span = el.shadowRoot!.querySelector('[role="status"]');
+      expect(span).not.toBeNull();
+    });
+
+    it('sets aria-label matching label text', async () => {
+      (el as any).label = 'ACTIVE';
+      await (el as any).updateComplete;
+      const span = el.shadowRoot!.querySelector('[role="status"]')!;
+      expect(span.getAttribute('aria-label')).toBe('ACTIVE');
+    });
+  });
 });

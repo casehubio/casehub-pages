@@ -135,7 +135,7 @@ describe("PagesChartElement", () => {
       );
       expect(mockChart.setOption).toHaveBeenCalledTimes(1);
       expect(mockChart.setOption).toHaveBeenCalledWith(
-        { backgroundColor: "transparent", series: [{ type: "bar", data: [1, 2, 3] }] },
+        { backgroundColor: "transparent", aria: { enabled: true, decal: { show: false } }, series: [{ type: "bar", data: [1, 2, 3] }] },
         true,
       );
     });
@@ -500,6 +500,49 @@ describe("PagesChartElement", () => {
     });
   });
 
+  describe("ARIA", () => {
+    it("injects aria.enabled into chart option", async () => {
+      el.props = { lookup: mockLookup("sales") };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = mockDataSet();
+      await el.updateComplete;
+
+      const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
+      expect(option.aria).toEqual({ enabled: true, decal: { show: false } });
+    });
+
+    it("sets aria-label on host from props.title", async () => {
+      el.props = { lookup: mockLookup("sales"), title: "Revenue by Region" } as TestChartProps;
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = mockDataSet();
+      await el.updateComplete;
+
+      expect(el.getAttribute("aria-label")).toBe("Revenue by Region");
+    });
+
+    it("sets role=img on host", async () => {
+      el.props = { lookup: mockLookup("sales") };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = mockDataSet();
+      await el.updateComplete;
+
+      expect(el.getAttribute("role")).toBe("img");
+    });
+
+    it("falls back to generic aria-label when no title", async () => {
+      el.props = { lookup: mockLookup("sales") };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.dataSet = mockDataSet();
+      await el.updateComplete;
+
+      expect(el.getAttribute("aria-label")).toBe("Chart");
+    });
+  });
+
   describe("ECharts use()", () => {
     it("use() was called at module load to register renderers", () => {
       // use() is called at module evaluation time (top-level side effect).
@@ -594,7 +637,7 @@ describe("PagesChartElement", () => {
 
       expect(mockChart.setOption).toHaveBeenCalledTimes(1);
       expect(mockChart.setOption).toHaveBeenCalledWith(
-        { backgroundColor: "transparent", series: [{ type: "bar", data: [4, 5, 6] }] },
+        { backgroundColor: "transparent", aria: { enabled: true, decal: { show: false } }, series: [{ type: "bar", data: [4, 5, 6] }] },
         true,
       );
 

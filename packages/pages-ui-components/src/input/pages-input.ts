@@ -53,6 +53,7 @@ export class PagesInput extends LitElement {
           ?required=${this.required}
           ?readonly=${this.readonly}
           ?disabled=${this.disabled}
+          aria-label=${ifDefined(this.label)}
           aria-required=${ifDefined(this.required ? 'true' : undefined)}
           aria-invalid=${ifDefined(this.error ? 'true' : undefined)}
           @input=${(e: Event) => {

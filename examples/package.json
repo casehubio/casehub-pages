@@ -26,6 +26,7 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@casehubio/pages-webpack-base": "workspace:*",
     "@playwright/test": "^1.50.0",
     "browser-sync": "^2.29.3",

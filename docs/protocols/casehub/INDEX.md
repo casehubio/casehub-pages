@@ -12,3 +12,4 @@
 | [maven-only-build-scripts.md](maven-only-build-scripts.md) | Maven-only build outputs must use separate scripts, not the default `build` | All package.json scripts producing dist/ outputs |
 | [workbench-integration-pattern.md](workbench-integration-pattern.md) | Complex interactive components extend pages-ui/pages-component/pages-runtime — no new packages | New workbench-level components |
 | [content-agnostic-workbench.md](content-agnostic-workbench.md) | Workbench components manage layout, not content — pluggable via factories | dock-workbench, floating-workspace |
+| [aria-interaction-contract.md](aria-interaction-contract.md) | Interactive components declare ARIA role + accessible name — no parallel automation attributes | All interactive Web Components in pages and blocks-ui |

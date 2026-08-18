@@ -33,6 +33,8 @@ export class GraphCanvas extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
+    this.setAttribute('role', 'img');
+    this.setAttribute('aria-label', 'Graph canvas');
 
     this._container = document.createElement('div');
     this._container.classList.add(DIAGRAM_ROOT_CLASS);

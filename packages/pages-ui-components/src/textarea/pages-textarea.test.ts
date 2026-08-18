@@ -112,6 +112,19 @@ describe('PagesTextarea', () => {
     expect(textarea.getAttribute('aria-required')).toBe('true');
   });
 
+  it('sets aria-label on inner textarea when label is provided', async () => {
+    (el as any).label = 'Description';
+    await (el as any).updateComplete;
+    const textarea = el.shadowRoot!.querySelector('textarea')!;
+    expect(textarea.getAttribute('aria-label')).toBe('Description');
+  });
+
+  it('does not set aria-label when label is undefined', async () => {
+    await (el as any).updateComplete;
+    const textarea = el.shadowRoot!.querySelector('textarea')!;
+    expect(textarea.hasAttribute('aria-label')).toBe(false);
+  });
+
   it('defaults to empty value', () => {
     expect((el as any).value).toBe('');
   });

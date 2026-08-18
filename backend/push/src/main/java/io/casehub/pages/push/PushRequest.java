@@ -49,6 +49,13 @@ public sealed interface PushRequest {
         public String op() { return "unlisten"; }
     }
 
+    record CommandResult(String id, boolean ok, String error) implements PushRequest {
+        public CommandResult {
+            Objects.requireNonNull(id, "id");
+        }
+        public String op() { return "command-result"; }
+    }
+
     static PushRequest parse(String json) {
         JsonFactory factory = new JsonFactory();
         try (JsonParser p = factory.createParser(json)) {
@@ -61,6 +68,8 @@ public sealed interface PushRequest {
             String stringSince = null;
             Map<String, Long> mapSince = null;
             List<String> topics = null;
+            Boolean ok = null;
+            String error = null;
 
             while (p.nextToken() != JsonToken.END_OBJECT) {
                 String field = p.currentName();
@@ -92,6 +101,8 @@ public sealed interface PushRequest {
                             topics.add(p.getText());
                         }
                     }
+                    case "ok" -> ok = p.getBooleanValue();
+                    case "error" -> error = p.getText();
                     default -> p.skipChildren();
                 }
             }
@@ -108,6 +119,7 @@ public sealed interface PushRequest {
                 case "unsubscribe" -> new Unsubscribe(id, dataset);
                 case "listen" -> new Listen(id, topics != null ? List.copyOf(topics) : List.of(), mapSince);
                 case "unlisten" -> new Unlisten(id, topics != null ? List.copyOf(topics) : List.of());
+                case "command-result" -> new CommandResult(id, ok != null && ok, error);
                 default -> throw new IllegalArgumentException("Unknown op: " + op);
             };
         } catch (IOException e) {

@@ -45,6 +45,7 @@ export class PagesSelect extends LitElement {
         <select
           ?required=${this.required}
           ?disabled=${this.disabled}
+          aria-label=${ifDefined(this.label)}
           aria-required=${ifDefined(this.required ? 'true' : undefined)}
           aria-invalid=${ifDefined(this.error ? 'true' : undefined)}
           @change=${(e: Event) => {

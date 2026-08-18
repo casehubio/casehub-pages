@@ -19,6 +19,22 @@ export class PagesStatusDot extends LitElement {
 
   @property({ reflect: true }) variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' = 'neutral';
   @property({ reflect: true }) size: 'sm' | 'md' = 'md';
+  @property({ reflect: true }) override role = 'status';
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this._syncAriaLabel();
+  }
+
+  protected override updated(changed: Map<string, unknown>) {
+    if (changed.has('variant')) {
+      this._syncAriaLabel();
+    }
+  }
+
+  private _syncAriaLabel() {
+    this.setAttribute('aria-label', this.variant);
+  }
 }
 
 if (!customElements.get('pages-status-dot')) {

@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 
@@ -55,13 +55,17 @@ export class PagesButton extends LitElement {
       [this.variant]: true,
       [this.size]: this.size !== 'md',
     };
+    const isDisabled = this.disabled || this.loading;
 
     return html`
       <button
         class=${classMap(classes)}
-        ?disabled=${this.disabled || this.loading}
+        ?disabled=${isDisabled}
+        aria-label=${this.label || nothing}
+        aria-disabled=${isDisabled ? 'true' : 'false'}
+        aria-busy=${this.loading ? 'true' : 'false'}
       >
-        ${this.loading ? html`<span class="spinner"></span>` : ''}
+        ${this.loading ? html`<span class="spinner" aria-hidden="true"></span>` : ''}
         ${this.label || html`<slot></slot>`}
       </button>
     `;

@@ -140,9 +140,9 @@ export class PagesMetric extends PagesElement<MetricProps> {
 
   private renderCard(title: string, value: string, props?: MetricProps): TemplateResult {
     return html`
-      <div class="card">
+      <div class="card" role="status" aria-label="${title}: ${value}">
         <div class="title">${title}</div>
-        <div class="value">${value}${props ? this._renderTrend(props) : nothing}</div>
+        <div class="value" aria-hidden="true">${value}${props ? this._renderTrend(props) : nothing}</div>
         ${props ? this._renderSparkline(props) : nothing}
       </div>
     `;
@@ -150,8 +150,8 @@ export class PagesMetric extends PagesElement<MetricProps> {
 
   private renderCard2(title: string, value: string, props?: MetricProps): TemplateResult {
     return html`
-      <div class="card2">
-        <div class="value">${value}${props ? this._renderTrend(props) : nothing}</div>
+      <div class="card2" role="status" aria-label="${title}: ${value}">
+        <div class="value" aria-hidden="true">${value}${props ? this._renderTrend(props) : nothing}</div>
         <div class="title">${title}</div>
         ${props ? this._renderSparkline(props) : nothing}
       </div>
@@ -160,9 +160,9 @@ export class PagesMetric extends PagesElement<MetricProps> {
 
   private renderPlainText(title: string, value: string, props?: MetricProps): TemplateResult {
     return html`
-      <div class="plain-text">
+      <div class="plain-text" role="status" aria-label="${title}: ${value}">
         <div class="title">${title}</div>
-        <div class="value">${value}${props ? this._renderTrend(props) : nothing}</div>
+        <div class="value" aria-hidden="true">${value}${props ? this._renderTrend(props) : nothing}</div>
         ${props ? this._renderSparkline(props) : nothing}
       </div>
     `;
@@ -189,9 +189,9 @@ export class PagesMetric extends PagesElement<MetricProps> {
     percentage = Math.max(0, Math.min(100, percentage));
 
     return html`
-      <div class="quota">
-        <div class="value">${value}</div>
-        <div class="bar">
+      <div class="quota" role="status" aria-label="${title}: ${value}">
+        <div class="value" aria-hidden="true">${value}</div>
+        <div class="bar" role="progressbar" aria-valuenow=${String(percentage)} aria-valuemin="0" aria-valuemax="100">
           <div class="bar-fill" style="width:${String(percentage)}%"></div>
         </div>
       </div>
