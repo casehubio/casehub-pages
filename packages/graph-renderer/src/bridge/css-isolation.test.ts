@@ -3,6 +3,7 @@ import {
   getIsolationCSS,
   injectIsolationStyles,
   releaseIsolationStyles,
+  resetIsolationState,
   DIAGRAM_ROOT_CLASS,
 } from './css-isolation.js';
 import { html } from 'lit-html';
@@ -14,6 +15,7 @@ describe('css-isolation', () => {
   });
 
   afterEach(() => {
+    resetIsolationState();
     document.head.querySelectorAll('style[data-graph-isolation]')
       .forEach(el => el.remove());
   });
@@ -102,6 +104,87 @@ describe('css-isolation', () => {
     it('release with no prior inject is a no-op', () => {
       expect(() => releaseIsolationStyles()).not.toThrow();
       expect(document.head.querySelector('style[data-graph-isolation]')).toBeNull();
+    });
+  });
+
+  describe('shadow root injection', () => {
+    let hostEl: HTMLElement;
+    let shadowRoot: ShadowRoot;
+
+    beforeEach(() => {
+      hostEl = document.createElement('div');
+      document.body.appendChild(hostEl);
+      shadowRoot = hostEl.attachShadow({ mode: 'open' });
+    });
+
+    afterEach(() => {
+      hostEl.remove();
+    });
+
+    it('injects into shadow root when host is inside one', () => {
+      const child = document.createElement('div');
+      shadowRoot.appendChild(child);
+      const style = injectIsolationStyles(child);
+      expect(style.parentNode).toBe(shadowRoot);
+      expect(document.head.querySelector('style[data-graph-isolation]')).toBeNull();
+      releaseIsolationStyles(child);
+    });
+
+    it('injects into document.head when no host is provided', () => {
+      const style = injectIsolationStyles();
+      expect(style.parentElement).toBe(document.head);
+      releaseIsolationStyles();
+    });
+
+    it('injects into document.head when host is in light DOM', () => {
+      const lightChild = document.createElement('div');
+      document.body.appendChild(lightChild);
+      const style = injectIsolationStyles(lightChild);
+      expect(style.parentElement).toBe(document.head);
+      releaseIsolationStyles(lightChild);
+      lightChild.remove();
+    });
+
+    it('maintains independent ref-counts per root', () => {
+      const child1 = document.createElement('div');
+      shadowRoot.appendChild(child1);
+
+      const host2 = document.createElement('div');
+      document.body.appendChild(host2);
+      const shadow2 = host2.attachShadow({ mode: 'open' });
+      const child2 = document.createElement('div');
+      shadow2.appendChild(child2);
+
+      injectIsolationStyles(child1);
+      injectIsolationStyles(child2);
+      injectIsolationStyles(child1);
+
+      releaseIsolationStyles(child1);
+      expect(shadowRoot.querySelector('style[data-graph-isolation]')).not.toBeNull();
+
+      releaseIsolationStyles(child1);
+      expect(shadowRoot.querySelector('style[data-graph-isolation]')).toBeNull();
+
+      expect(shadow2.querySelector('style[data-graph-isolation]')).not.toBeNull();
+      releaseIsolationStyles(child2);
+      expect(shadow2.querySelector('style[data-graph-isolation]')).toBeNull();
+
+      host2.remove();
+    });
+
+    it('two instances in same shadow root share one style element', () => {
+      const child1 = document.createElement('div');
+      const child2 = document.createElement('div');
+      shadowRoot.appendChild(child1);
+      shadowRoot.appendChild(child2);
+
+      const style1 = injectIsolationStyles(child1);
+      const style2 = injectIsolationStyles(child2);
+      expect(style2).toBe(style1);
+      expect(shadowRoot.querySelectorAll('style[data-graph-isolation]').length).toBe(1);
+
+      releaseIsolationStyles(child1);
+      releaseIsolationStyles(child2);
     });
   });
 });

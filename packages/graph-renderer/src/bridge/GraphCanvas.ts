@@ -35,7 +35,7 @@ export class GraphCanvas extends LitElement {
     this._container = document.createElement('div');
     this._container.classList.add(DIAGRAM_ROOT_CLASS);
 
-    injectIsolationStyles();
+    injectIsolationStyles(this);
 
     const currentTheme = getTheme(document.documentElement) || 'default-light';
     applyTheme(currentTheme, this._container);
@@ -63,7 +63,7 @@ export class GraphCanvas extends LitElement {
     this._root = undefined;
     this._container?.remove();
     this._container = undefined;
-    releaseIsolationStyles();
+    releaseIsolationStyles(this);
     super.disconnectedCallback();
   }
 
