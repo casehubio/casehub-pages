@@ -1,6 +1,7 @@
 import {createActivationCallback} from "./activation.js";
 import {clearPanelRegistry, registerPanel} from "./panel-registry.js";
 import type {Component} from "@casehubio/pages-component";
+import {ContextManager} from "./context-wiring.js";
 
 describe("host-panel activation", () => {
   afterEach(() => { clearPanelRegistry(); });
@@ -194,5 +195,191 @@ describe("host-panel activation", () => {
     expect(panel!.dataSet).toBeUndefined();
 
     document.body.removeChild(container);
+  });
+
+  describe("template resolution in panelProps", () => {
+    let tagCounter = 0;
+
+    function defineConfigurablePanel(): { tag: string; configured: Record<string, unknown>[] } {
+      tagCounter++;
+      const tag = `test-tpl-${tagCounter}`;
+      const configured: Record<string, unknown>[] = [];
+      customElements.define(tag, class extends HTMLElement {
+        configure(props: Record<string, unknown>) {
+          configured.push(structuredClone(props));
+        }
+      });
+      return { tag, configured };
+    }
+
+    function activateWithContext(
+      component: Component,
+      contextManager: ContextManager,
+    ): { el: HTMLElement; registry: Map<string, unknown> } {
+      const el = document.createElement("div");
+      el.dataset.componentId = `tpl-test-${tagCounter}`;
+      el.dataset.componentType = "host-panel";
+      document.body.appendChild(el);
+      const registry = new Map();
+      const pagePathMap = new Map();
+      const callback = createActivationCallback(registry, pagePathMap, undefined, contextManager);
+      callback(el, component);
+      return { el, registry };
+    }
+
+    it("resolves template vars when context is available", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-resolve", tag);
+
+      const cm = new ContextManager();
+      cm.updateParams({ caseId: "abc-123" });
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: { typeName: "tpl-resolve", panelProps: { id: "#{params.caseId}" } },
+      }, cm);
+
+      expect(configured).toHaveLength(1);
+      expect(configured[0]).toEqual({ id: "abc-123" });
+      el.remove();
+    });
+
+    it("defers configure() when template vars are unresolved", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-defer", tag);
+
+      const cm = new ContextManager();
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: { typeName: "tpl-defer", panelProps: { id: "#{params.caseId}" } },
+      }, cm);
+
+      expect(configured).toHaveLength(0);
+
+      cm.updateParams({ caseId: "xyz-789" });
+
+      expect(configured).toHaveLength(1);
+      expect(configured[0]).toEqual({ id: "xyz-789" });
+      el.remove();
+    });
+
+    it("re-calls configure() on context change", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-reconfig", tag);
+
+      const cm = new ContextManager();
+      cm.updateParams({ caseId: "first" });
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: { typeName: "tpl-reconfig", panelProps: { id: "#{params.caseId}" } },
+      }, cm);
+
+      expect(configured).toHaveLength(1);
+      expect(configured[0]).toEqual({ id: "first" });
+
+      cm.updateParams({ caseId: "second" });
+
+      expect(configured).toHaveLength(2);
+      expect(configured[1]).toEqual({ id: "second" });
+      el.remove();
+    });
+
+    it("does not re-call configure() on unrelated context change", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-unrelated", tag);
+
+      const cm = new ContextManager();
+      cm.updateParams({ caseId: "stable" });
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: { typeName: "tpl-unrelated", panelProps: { id: "#{params.caseId}" } },
+      }, cm);
+
+      expect(configured).toHaveLength(1);
+
+      cm.updateFilter({ ward: ["ICU"] as const });
+
+      expect(configured).toHaveLength(1);
+      el.remove();
+    });
+
+    it("resolves templates in nested objects", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-nested", tag);
+
+      const cm = new ContextManager();
+      cm.updateParams({ baseUrl: "https://example.com" });
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: {
+          typeName: "tpl-nested",
+          panelProps: { config: { url: "#{params.baseUrl}/api" } },
+        },
+      }, cm);
+
+      expect(configured).toHaveLength(1);
+      expect(configured[0]).toEqual({ config: { url: "https://example.com/api" } });
+      el.remove();
+    });
+
+    it("resolves templates in array elements", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-array", tag);
+
+      const cm = new ContextManager();
+      cm.updateParams({ url1: "https://a.com", url2: "https://b.com" });
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: {
+          typeName: "tpl-array",
+          panelProps: { endpoints: ["#{params.url1}", "#{params.url2}"] },
+        },
+      }, cm);
+
+      expect(configured).toHaveLength(1);
+      expect(configured[0]).toEqual({ endpoints: ["https://a.com", "https://b.com"] });
+      el.remove();
+    });
+
+    it("passes panelProps directly when no template vars present", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-nontpl", tag);
+
+      const cm = new ContextManager();
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: { typeName: "tpl-nontpl", panelProps: { endpoint: "/api", mode: "live" } },
+      }, cm);
+
+      expect(configured).toHaveLength(1);
+      expect(configured[0]).toEqual({ endpoint: "/api", mode: "live" });
+      el.remove();
+    });
+
+    it("preserves non-string values in mixed props", () => {
+      const { tag, configured } = defineConfigurablePanel();
+      registerPanel("tpl-mixed", tag);
+
+      const cm = new ContextManager();
+      cm.updateParams({ name: "test" });
+
+      const { el } = activateWithContext({
+        type: "host-panel",
+        props: {
+          typeName: "tpl-mixed",
+          panelProps: { label: "#{params.name}", count: 42, active: true, nothing: null },
+        },
+      }, cm);
+
+      expect(configured).toHaveLength(1);
+      expect(configured[0]).toEqual({ label: "test", count: 42, active: true, nothing: null });
+      el.remove();
+    });
   });
 });

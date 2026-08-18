@@ -20,9 +20,10 @@ import {extendPageIndex} from "./navigation.js";
 import type {DataScopeRegistry} from "./data-scope-registry.js";
 import type {SaveConfigRegistry} from "./save-config-registry.js";
 import {renderHtml, renderMarkdown, renderTitle} from "./content.js";
-import type {ContextManager} from "./context-wiring.js";
+import type {ContextManager, ContextConsumer} from "./context-wiring.js";
 import type {EscapeMode} from "@casehubio/pages-component";
-import {evaluateExpression, hasTemplateVars, resolveTemplate} from "@casehubio/pages-component";
+import {evaluateExpression, hasTemplateVars, resolveTemplate, allTemplateVarsResolved} from "@casehubio/pages-component";
+import type {RuntimeContext} from "@casehubio/pages-component";
 import type {PagesContentElement} from "@casehubio/pages-viz/dist/base/PagesContentElement.js";
 import {lookupPanel} from "./panel-registry.js";
 import type {ConfigurablePanel, DataReceiver, VizTarget} from "@casehubio/pages-component";
@@ -496,49 +497,76 @@ export function createActivationCallback(
       }
 
       const panel = document.createElement(tagName);
-
       const configurable = panel as unknown as ConfigurablePanel;
-      if (typeof configurable.configure === "function") {
-        configurable.configure(panelProps ?? {});
-      }
+      const hasTemplates = panelProps && contextManager && propsHaveTemplateVars(panelProps);
 
-      if (lookup) {
-        const panelAsReceiver = panel as unknown as Partial<DataReceiver>;
-        if (!("dataSet" in panel)) {
-          console.warn(`hostPanel "${typeName}": lookup specified but panel lacks DataReceiver properties`);
+      if (hasTemplates) {
+        const templateEntries = extractTemplateStrings(panelProps, "");
+        let dataRequestDispatched = false;
+
+        const templates = new Map(
+          templateEntries.map(({ key, template }) => [
+            key,
+            {
+              template,
+              escapeMode: "none" as EscapeMode,
+              lastResolved: "",
+              apply: (_resolved: string) => { /* change detection only */ },
+            },
+          ]),
+        );
+
+        const consumer: ContextConsumer = {
+          element: el,
+          templates,
+          suspended: false,
+          postEvaluate: (changed: boolean) => {
+            if (!changed) return;
+
+            const allResolved = templateEntries.every(({ template }) =>
+              allTemplateVarsResolved(template, contextManager.getContext()),
+            );
+            if (!allResolved) return;
+
+            const resolvedProps = resolvePropsTemplates(panelProps, contextManager.getContext());
+            if (typeof configurable.configure === "function") {
+              configurable.configure(resolvedProps);
+            }
+
+            if (lookup && !dataRequestDispatched) {
+              dataRequestDispatched = true;
+              dispatchHostPanelDataRequest(panel, el, lookup, registry, componentId, component, pagePath);
+            }
+          },
+        };
+
+        contextManager.registerConsumer(consumer);
+
+        if (!lookup) {
           registry.set(componentId, {
             element: el,
             component,
             pagePath,
             hasExplicitId: component.id !== undefined,
           });
-          el.appendChild(panel);
-          return;
-        } else {
-          const proxy = createHostPanelProxy(panelAsReceiver as DataReceiver);
-          registry.set(componentId, {
-            element: el,
-            vizElement: proxy,
-            component,
-            pagePath,
-            originalLookup: lookup,
-            hasExplicitId: component.id !== undefined,
-          });
-          el.appendChild(panel);
-          panel.dispatchEvent(new CustomEvent("pages-data-request", {
-            bubbles: true,
-            composed: true,
-            detail: { element: proxy, lookup },
-          }));
-          return;
         }
       } else {
-        registry.set(componentId, {
-          element: el,
-          component,
-          pagePath,
-          hasExplicitId: component.id !== undefined,
-        });
+        if (typeof configurable.configure === "function") {
+          configurable.configure(panelProps ?? {});
+        }
+
+        if (lookup) {
+          el.appendChild(panel);
+          dispatchHostPanelDataRequest(panel, el, lookup, registry, componentId, component, pagePath);
+          return;
+        } else {
+          registry.set(componentId, {
+            element: el,
+            component,
+            pagePath,
+            hasExplicitId: component.id !== undefined,
+          });
+        }
       }
 
       el.appendChild(panel);
@@ -912,6 +940,112 @@ function registerVisibleWhenConsumer(
 
   // Set initial hidden state
   el.hidden = !initialResult;
+}
+
+function propsHaveTemplateVars(props: Record<string, unknown>): boolean {
+  for (const value of Object.values(props)) {
+    if (typeof value === "string" && hasTemplateVars(value)) return true;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === "string" && hasTemplateVars(item)) return true;
+        if (item !== null && typeof item === "object" &&
+            propsHaveTemplateVars(item as Record<string, unknown>)) return true;
+      }
+    }
+    if (value !== null && typeof value === "object" && !Array.isArray(value) &&
+        propsHaveTemplateVars(value as Record<string, unknown>)) return true;
+  }
+  return false;
+}
+
+function extractTemplateStrings(
+  props: Record<string, unknown>,
+  prefix: string,
+): Array<{ key: string; template: string }> {
+  const result: Array<{ key: string; template: string }> = [];
+  for (const [k, value] of Object.entries(props)) {
+    const path = prefix ? `${prefix}.${k}` : k;
+    if (typeof value === "string" && hasTemplateVars(value)) {
+      result.push({ key: path, template: value });
+    } else if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        const item = value[i];
+        if (typeof item === "string" && hasTemplateVars(item)) {
+          result.push({ key: `${path}[${i}]`, template: item });
+        } else if (item !== null && typeof item === "object") {
+          result.push(
+            ...extractTemplateStrings(item as Record<string, unknown>, `${path}[${i}]`),
+          );
+        }
+      }
+    } else if (value !== null && typeof value === "object") {
+      result.push(
+        ...extractTemplateStrings(value as Record<string, unknown>, path),
+      );
+    }
+  }
+  return result;
+}
+
+function resolvePropsTemplates(
+  props: Record<string, unknown>,
+  context: RuntimeContext,
+): Record<string, unknown> {
+  const resolved: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (typeof value === "string") {
+      resolved[key] = resolveTemplate(value, context, "none");
+    } else if (Array.isArray(value)) {
+      resolved[key] = value.map(item =>
+        typeof item === "string"
+          ? resolveTemplate(item, context, "none")
+          : item !== null && typeof item === "object"
+            ? resolvePropsTemplates(item as Record<string, unknown>, context)
+            : item
+      );
+    } else if (value !== null && typeof value === "object") {
+      resolved[key] = resolvePropsTemplates(value as Record<string, unknown>, context);
+    } else {
+      resolved[key] = value;
+    }
+  }
+  return resolved;
+}
+
+function dispatchHostPanelDataRequest(
+  panel: HTMLElement,
+  el: HTMLElement,
+  lookup: DataSetLookup,
+  registry: ComponentRegistry,
+  componentId: string,
+  component: Component,
+  pagePath: string,
+): void {
+  const panelAsReceiver = panel as unknown as Partial<DataReceiver>;
+  if (!("dataSet" in panel)) {
+    console.warn(`hostPanel "${panel.tagName.toLowerCase()}": lookup specified but panel lacks DataReceiver properties`);
+    registry.set(componentId, {
+      element: el,
+      component,
+      pagePath,
+      hasExplicitId: component.id !== undefined,
+    });
+    return;
+  }
+  const proxy = createHostPanelProxy(panelAsReceiver as DataReceiver);
+  registry.set(componentId, {
+    element: el,
+    vizElement: proxy,
+    component,
+    pagePath,
+    originalLookup: lookup,
+    hasExplicitId: component.id !== undefined,
+  });
+  panel.dispatchEvent(new CustomEvent("pages-data-request", {
+    bubbles: true,
+    composed: true,
+    detail: { element: proxy, lookup },
+  }));
 }
 
 function createFormFieldProxy(

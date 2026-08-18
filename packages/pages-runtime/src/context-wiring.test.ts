@@ -677,6 +677,123 @@ describe("ContextManager", () => {
     });
   });
 
+  describe("postEvaluate", () => {
+    it("calls postEvaluate with changed=true when a template value changes", () => {
+      const postEvaluate = vi.fn();
+      const apply = vi.fn();
+      const element = document.createElement("div");
+      document.body.appendChild(element);
+
+      const consumer: ContextConsumer = {
+        element,
+        templates: new Map([
+          ["test", {
+            template: "#{params.name}",
+            escapeMode: "none" as const,
+            lastResolved: "",
+            apply,
+          }],
+        ]),
+        suspended: false,
+        postEvaluate,
+      };
+
+      manager.registerConsumer(consumer);
+      postEvaluate.mockClear();
+
+      manager.updateParams({ name: "Alice" });
+
+      expect(postEvaluate).toHaveBeenCalledTimes(1);
+      expect(postEvaluate).toHaveBeenCalledWith(true);
+      expect(apply).toHaveBeenCalledWith("Alice");
+      element.remove();
+    });
+
+    it("calls postEvaluate with changed=false when no template value changes", () => {
+      const postEvaluate = vi.fn();
+      const element = document.createElement("div");
+      document.body.appendChild(element);
+
+      const consumer: ContextConsumer = {
+        element,
+        templates: new Map([
+          ["test", {
+            template: "#{params.name}",
+            escapeMode: "none" as const,
+            lastResolved: "",
+            apply: vi.fn(),
+          }],
+        ]),
+        suspended: false,
+        postEvaluate,
+      };
+
+      manager.registerConsumer(consumer);
+      postEvaluate.mockClear();
+
+      manager.updateFilter({ ward: ["ICU"] as const });
+
+      expect(postEvaluate).toHaveBeenCalledTimes(1);
+      expect(postEvaluate).toHaveBeenCalledWith(false);
+      element.remove();
+    });
+
+    it("does not call postEvaluate when consumer is suspended", () => {
+      const postEvaluate = vi.fn();
+      const element = document.createElement("div");
+      document.body.appendChild(element);
+
+      const consumer: ContextConsumer = {
+        element,
+        templates: new Map([
+          ["test", {
+            template: "#{params.name}",
+            escapeMode: "none" as const,
+            lastResolved: "",
+            apply: vi.fn(),
+          }],
+        ]),
+        suspended: true,
+        postEvaluate,
+      };
+
+      manager.registerConsumer(consumer);
+      postEvaluate.mockClear();
+
+      manager.updateParams({ name: "Bob" });
+
+      expect(postEvaluate).not.toHaveBeenCalled();
+      element.remove();
+    });
+
+    it("works normally for consumers without postEvaluate", () => {
+      const apply = vi.fn();
+      const element = document.createElement("div");
+      document.body.appendChild(element);
+
+      const consumer: ContextConsumer = {
+        element,
+        templates: new Map([
+          ["test", {
+            template: "#{params.name}",
+            escapeMode: "none" as const,
+            lastResolved: "",
+            apply,
+          }],
+        ]),
+        suspended: false,
+      };
+
+      manager.registerConsumer(consumer);
+      apply.mockClear();
+
+      manager.updateParams({ name: "Charlie" });
+
+      expect(apply).toHaveBeenCalledWith("Charlie");
+      element.remove();
+    });
+  });
+
   describe("updateSelection", () => {
     it("sets selection for a dataset", () => {
       const row = { id: 42, name: "Event A" };

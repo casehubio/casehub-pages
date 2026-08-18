@@ -31,6 +31,7 @@ export interface ContextConsumer {
     onResume: () => void;
   };
   suspended: boolean;
+  postEvaluate?: (changed: boolean) => void;
 }
 
 const MAX_CASCADE_DEPTH = 10;
@@ -158,7 +159,8 @@ export class ContextManager {
       return;
     }
 
-    // Evaluate all templates
+    // Evaluate all templates — track whether any changed
+    let changed = false;
     for (const [, entry] of consumer.templates) {
       const resolved = resolveTemplate(
         entry.template,
@@ -169,7 +171,12 @@ export class ContextManager {
       if (resolved !== entry.lastResolved) {
         entry.lastResolved = resolved;
         entry.apply(resolved);
+        changed = true;
       }
+    }
+
+    if (consumer.postEvaluate) {
+      consumer.postEvaluate(changed);
     }
   }
 }
