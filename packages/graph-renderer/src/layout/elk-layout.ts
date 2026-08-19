@@ -42,6 +42,7 @@ function buildElkNode(
   visited: Set<string>,
   padding: number,
   nodeSizes?: ReadonlyMap<string, { width: number; height: number }>,
+  wrapping?: boolean,
 ): ElkNode {
   if (visited.has(node.id)) {
     throw new Error(`Containment cycle at node '${node.id}'`);
@@ -57,11 +58,17 @@ function buildElkNode(
     height: size?.height ?? DEFAULT_NODE_HEIGHT,
   };
   if (children.length > 0) {
-    elkNode.children = children.map(c => buildElkNode(model, c, visited, padding, nodeSizes));
-    elkNode.layoutOptions = {
+    elkNode.children = children.map(c => buildElkNode(model, c, visited, padding, nodeSizes, wrapping));
+    const containerOpts: Record<string, string> = {
       'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
       'elk.padding': `[top=${Math.max(padding, DEFAULT_HEADER_HEIGHT)},left=${padding},bottom=${padding},right=${padding}]`,
     };
+    if (wrapping) {
+      containerOpts['elk.layered.wrapping.strategy'] = 'SINGLE_EDGE';
+      containerOpts['elk.layered.wrapping.cutting.strategy'] = 'ARD';
+      containerOpts['elk.aspectRatio'] = '1.6';
+    }
+    elkNode.layoutOptions = containerOpts;
   }
   return elkNode;
 }
@@ -96,7 +103,7 @@ export async function computeElkLayout(
   }
 
   const nodeSizes = options.nodeSizes;
-  const rootChildren = roots.map(n => buildElkNode(model, n, new Set(), padding, nodeSizes));
+  const rootChildren = roots.map(n => buildElkNode(model, n, new Set(), padding, nodeSizes, options.wrapping));
 
   const elkEdges: ElkExtendedEdge[] = model.edges.map(e => ({
     id: e.id,
