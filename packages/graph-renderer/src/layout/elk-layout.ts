@@ -23,6 +23,15 @@ export interface ElkLayoutResult {
 const DEFAULT_NODE_WIDTH = 280;
 const DEFAULT_NODE_HEIGHT = 50;
 
+const CHAR_WIDTH = 7.5;
+const LABEL_PADDING = 40;
+
+function estimateNodeWidth(node: GraphNode): number {
+  const label = (node.properties['label'] ?? node.properties['taskDescription'] ?? '') as string;
+  if (!label) return DEFAULT_NODE_WIDTH;
+  return Math.max(DEFAULT_NODE_WIDTH, Math.ceil(label.length * CHAR_WIDTH + LABEL_PADDING));
+}
+
 const elk = new ELK();
 
 function buildElkNode(
@@ -39,9 +48,10 @@ function buildElkNode(
 
   const children = childrenOf(model, node.id);
   const size = nodeSizes?.get(node.id);
+  const estimatedWidth = estimateNodeWidth(node);
   const elkNode: ElkNode = {
     id: node.id,
-    width: size?.width ?? DEFAULT_NODE_WIDTH,
+    width: size?.width ?? estimatedWidth,
     height: size?.height ?? DEFAULT_NODE_HEIGHT,
   };
   if (children.length > 0) {

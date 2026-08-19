@@ -232,17 +232,32 @@ function assertNoSiblingOverlaps(
 }
 
 describe('no sibling overlaps', () => {
-  it('switch with 3 branches merging to a single target', async () => {
+  it('auto-estimates node width from label text', async () => {
     const model = createGraph(
       [
-        { id: 'start', type: 'start', properties: {} },
-        { id: 'validate', type: 'call', properties: {} },
-        { id: 'switch', type: 'switch', properties: {} },
-        { id: 'branchA', type: 'call', properties: {} },
-        { id: 'branchB', type: 'call', properties: {} },
-        { id: 'branchC', type: 'set', properties: {} },
-        { id: 'merge', type: 'call', properties: {} },
-        { id: 'end', type: 'end', properties: {} },
+        { id: '1', type: 'a', properties: { label: 'Short' } },
+        { id: '2', type: 'a', properties: { label: 'Screen claimant against sanctions and PEP lists' } },
+      ],
+      [{ id: 'e1', type: '', source: '1', target: '2' }],
+    );
+    const result = await computeElkLayout(model);
+    const layout1 = result.nodeLayouts.get('1')!;
+    const layout2 = result.nodeLayouts.get('2')!;
+    expect(layout1.width).toBe(DEFAULT_NODE_WIDTH);
+    expect(layout2.width).toBeGreaterThan(DEFAULT_NODE_WIDTH);
+  });
+
+  it('switch with 3 branches merging to a single target (with labels)', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: { label: 'Start' } },
+        { id: 'validate', type: 'call', properties: { label: 'Validate incoming claim data' } },
+        { id: 'switch', type: 'switch', properties: { label: 'Route by claim type' } },
+        { id: 'branchA', type: 'call', properties: { label: 'Process standard auto claim' } },
+        { id: 'branchB', type: 'call', properties: { label: 'Escalate high-value property claim' } },
+        { id: 'branchC', type: 'set', properties: { label: 'Flag for manual liability review' } },
+        { id: 'merge', type: 'call', properties: { label: 'Consolidate claim decision' } },
+        { id: 'end', type: 'end', properties: { label: 'End' } },
       ],
       [
         { id: 'e1', type: 'flow', source: 'start', target: 'validate' },
@@ -260,24 +275,24 @@ describe('no sibling overlaps', () => {
     assertNoSiblingOverlaps(model, result);
   });
 
-  it('SWF claim-review topology: sequence + switch + try/catch nesting', async () => {
+  it('SWF claim-review topology with labels: sequence + switch + try/catch', async () => {
     const model = createGraph(
       [
-        { id: 'root', type: 'generic', properties: {} },
-        { id: 'entry', type: 'start', parentId: 'root', properties: {} },
-        { id: 'exit', type: 'end', parentId: 'root', properties: {} },
-        { id: 'fetch', type: 'call', parentId: 'root', properties: {} },
-        { id: 'validate', type: 'call', parentId: 'root', properties: {} },
-        { id: 'route', type: 'switch', parentId: 'root', properties: {} },
-        { id: 'approve', type: 'set', parentId: 'root', properties: {} },
-        { id: 'review', type: 'call', parentId: 'root', properties: {} },
-        { id: 'siu', type: 'call', parentId: 'root', properties: {} },
-        { id: 'tryNotify', type: 'try-catch', parentId: 'root', properties: {} },
-        { id: 'tryBlock', type: 'try', parentId: 'tryNotify', properties: {} },
-        { id: 'send', type: 'call', parentId: 'tryBlock', properties: {} },
-        { id: 'catchBlock', type: 'catch', parentId: 'tryNotify', properties: {} },
-        { id: 'logFail', type: 'set', parentId: 'catchBlock', properties: {} },
-        { id: 'record', type: 'call', parentId: 'root', properties: {} },
+        { id: 'root', type: 'generic', properties: { label: 'Claim Review Workflow' } },
+        { id: 'entry', type: 'start', parentId: 'root', properties: { label: 'Start' } },
+        { id: 'exit', type: 'end', parentId: 'root', properties: { label: 'End' } },
+        { id: 'fetch', type: 'call', parentId: 'root', properties: { label: 'Fetch claim from case management system' } },
+        { id: 'validate', type: 'call', parentId: 'root', properties: { label: 'Validate claim data and attachments' } },
+        { id: 'route', type: 'switch', parentId: 'root', properties: { label: 'Route by risk assessment score' } },
+        { id: 'approve', type: 'set', parentId: 'root', properties: { label: 'Auto-approve low-risk claim' } },
+        { id: 'review', type: 'call', parentId: 'root', properties: { label: 'Assign to senior adjuster for manual review' } },
+        { id: 'siu', type: 'call', parentId: 'root', properties: { label: 'Refer to special investigation unit' } },
+        { id: 'tryNotify', type: 'try-catch', parentId: 'root', properties: { label: 'Notification Block' } },
+        { id: 'tryBlock', type: 'try', parentId: 'tryNotify', properties: { label: 'Try' } },
+        { id: 'send', type: 'call', parentId: 'tryBlock', properties: { label: 'Send decision notification to claimant' } },
+        { id: 'catchBlock', type: 'catch', parentId: 'tryNotify', properties: { label: 'Catch' } },
+        { id: 'logFail', type: 'set', parentId: 'catchBlock', properties: { label: 'Log notification delivery failure' } },
+        { id: 'record', type: 'call', parentId: 'root', properties: { label: 'Record final decision in audit trail' } },
       ],
       [
         { id: 'e1', type: 'flow', source: 'entry', target: 'fetch' },
@@ -298,17 +313,17 @@ describe('no sibling overlaps', () => {
     assertNoSiblingOverlaps(model, result);
   });
 
-  it('DAG with fan-out and fan-in (diamond pattern)', async () => {
+  it('DAG with fan-out and fan-in with labels (diamond pattern)', async () => {
     const model = createGraph(
       [
-        { id: 'validate', type: 'dag-node', properties: {} },
-        { id: 'enrich-policy', type: 'dag-node', properties: {} },
-        { id: 'enrich-claimant', type: 'dag-node', properties: {} },
-        { id: 'sanctions', type: 'dag-node', properties: {} },
-        { id: 'fraud', type: 'dag-node', properties: {} },
-        { id: 'medical', type: 'dag-node', properties: {} },
-        { id: 'aggregate', type: 'dag-node', properties: {} },
-        { id: 'route', type: 'dag-node', properties: {} },
+        { id: 'validate', type: 'dag-node', properties: { label: 'Validate incoming claim data' } },
+        { id: 'enrich-policy', type: 'dag-node', properties: { label: 'Enrich with policy details from underwriting' } },
+        { id: 'enrich-claimant', type: 'dag-node', properties: { label: 'Enrich with claimant history and prior claims' } },
+        { id: 'sanctions', type: 'dag-node', properties: { label: 'Screen claimant against sanctions and PEP lists' } },
+        { id: 'fraud', type: 'dag-node', properties: { label: 'Run ML fraud detection model on enriched data' } },
+        { id: 'medical', type: 'dag-node', properties: { label: 'Extract and validate medical evidence from attachments' } },
+        { id: 'aggregate', type: 'dag-node', properties: { label: 'Aggregate all enrichment and scoring results' } },
+        { id: 'route', type: 'dag-node', properties: { label: 'Route claim to appropriate handler based on score' } },
       ],
       [
         { id: 'e1', type: 'dep', source: 'validate', target: 'enrich-policy' },
