@@ -71,7 +71,7 @@ export function ReactFlowApp({
       selectionMode={SelectionMode.Partial}
       fitView
     >
-      <MiniMap />
+      <MiniMap nodeColor="#64748b" maskColor="rgba(0, 0, 0, 0.1)" />
       <Controls>
         {onRelayout && (
           <ControlButton onClick={onRelayout} title="Re-layout">
