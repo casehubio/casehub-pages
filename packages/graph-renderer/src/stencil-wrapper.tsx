@@ -147,15 +147,7 @@ export function createStencilNodeComponent(
 
     const sizeStyle: React.CSSProperties = {};
     if (width != null && width > 0) {
-      sizeStyle.maxWidth = width;
       sizeStyle.width = width;
-    }
-    if (height != null && height > 0) {
-      sizeStyle.maxHeight = height;
-      sizeStyle.height = height;
-    }
-    if ((width != null && width > 0) || (height != null && height > 0)) {
-      sizeStyle.overflow = 'hidden';
     }
 
     const hideHandles = rawData._hideHandles === true;
