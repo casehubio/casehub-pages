@@ -23,6 +23,11 @@ export function toReactFlowNode(
     },
   };
 
+  if (nodeLayout) {
+    rfNode.width = nodeLayout.width;
+    rfNode.height = nodeLayout.height;
+  }
+
   if (node.parentId) {
     rfNode.parentId = node.parentId;
   }
