@@ -7,6 +7,7 @@ export interface ElkLayoutOptions {
   spacing?: number;
   containerPadding?: number;
   nodeSizes?: ReadonlyMap<string, { width: number; height: number }>;
+  wrapping?: boolean;
 }
 
 export interface NodeLayout {
@@ -103,14 +104,23 @@ export async function computeElkLayout(
     targets: [e.target],
   }));
 
+  const layoutOpts: Record<string, string> = {
+    'elk.algorithm': 'layered',
+    'elk.direction': direction,
+    'elk.spacing.nodeNode': String(spacing),
+    'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+  };
+
+  if (options.wrapping) {
+    layoutOpts['elk.layered.wrapping.strategy'] = 'SINGLE_EDGE';
+    layoutOpts['elk.layered.wrapping.additionalEdgeSpacing'] = '30';
+    layoutOpts['elk.aspectRatio'] = '1.6';
+    layoutOpts['elk.layered.wrapping.cutting.strategy'] = 'ARD';
+  }
+
   const graph: ElkNode = {
     id: 'root',
-    layoutOptions: {
-      'elk.algorithm': 'layered',
-      'elk.direction': direction,
-      'elk.spacing.nodeNode': String(spacing),
-      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-    },
+    layoutOptions: layoutOpts,
     children: rootChildren,
     edges: elkEdges,
   };
