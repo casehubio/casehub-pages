@@ -84,7 +84,7 @@ export function ReactFlowApp({
           if (t.includes('end') || t.includes('exit')) return '#64748b';
           return '#2563eb';
         }}
-        style={{ background: 'var(--pages-neutral-2, #1e1e1e)' }}
+        style={{ background: 'var(--pages-neutral-3, #e5e5e5)' }}
         maskColor="rgba(0, 0, 0, 0.3)"
       />
       <Controls>
