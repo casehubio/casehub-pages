@@ -196,3 +196,134 @@ describe('computeElkLayout', () => {
     }
   });
 });
+
+function boxesOverlap(
+  a: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number },
+): boolean {
+  return a.x < b.x + b.width && a.x + a.width > b.x &&
+         a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+function assertNoSiblingOverlaps(
+  model: GraphModel,
+  result: { nodeLayouts: ReadonlyMap<string, { x: number; y: number; width: number; height: number }> },
+): void {
+  const byParent = new Map<string, string[]>();
+  for (const node of model.nodes) {
+    const parent = node.parentId ?? '__root__';
+    if (!byParent.has(parent)) byParent.set(parent, []);
+    byParent.get(parent)!.push(node.id);
+  }
+
+  for (const [parent, siblings] of byParent) {
+    for (let i = 0; i < siblings.length; i++) {
+      for (let j = i + 1; j < siblings.length; j++) {
+        const a = result.nodeLayouts.get(siblings[i]!)!;
+        const b = result.nodeLayouts.get(siblings[j]!)!;
+        expect(
+          boxesOverlap(a, b),
+          `siblings '${siblings[i]}' and '${siblings[j]}' (parent: ${parent}) overlap: ` +
+          `(${a.x},${a.y},${a.width},${a.height}) vs (${b.x},${b.y},${b.width},${b.height})`,
+        ).toBe(false);
+      }
+    }
+  }
+}
+
+describe('no sibling overlaps', () => {
+  it('switch with 3 branches merging to a single target', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: {} },
+        { id: 'validate', type: 'call', properties: {} },
+        { id: 'switch', type: 'switch', properties: {} },
+        { id: 'branchA', type: 'call', properties: {} },
+        { id: 'branchB', type: 'call', properties: {} },
+        { id: 'branchC', type: 'set', properties: {} },
+        { id: 'merge', type: 'call', properties: {} },
+        { id: 'end', type: 'end', properties: {} },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'validate' },
+        { id: 'e2', type: 'flow', source: 'validate', target: 'switch' },
+        { id: 'e3', type: 'switch-case', source: 'switch', target: 'branchA' },
+        { id: 'e4', type: 'switch-case', source: 'switch', target: 'branchB' },
+        { id: 'e5', type: 'switch-case', source: 'switch', target: 'branchC' },
+        { id: 'e6', type: 'flow', source: 'branchA', target: 'merge' },
+        { id: 'e7', type: 'flow', source: 'branchB', target: 'merge' },
+        { id: 'e8', type: 'flow', source: 'branchC', target: 'merge' },
+        { id: 'e9', type: 'flow', source: 'merge', target: 'end' },
+      ],
+    );
+    const result = await computeElkLayout(model);
+    assertNoSiblingOverlaps(model, result);
+  });
+
+  it('SWF claim-review topology: sequence + switch + try/catch nesting', async () => {
+    const model = createGraph(
+      [
+        { id: 'root', type: 'generic', properties: {} },
+        { id: 'entry', type: 'start', parentId: 'root', properties: {} },
+        { id: 'exit', type: 'end', parentId: 'root', properties: {} },
+        { id: 'fetch', type: 'call', parentId: 'root', properties: {} },
+        { id: 'validate', type: 'call', parentId: 'root', properties: {} },
+        { id: 'route', type: 'switch', parentId: 'root', properties: {} },
+        { id: 'approve', type: 'set', parentId: 'root', properties: {} },
+        { id: 'review', type: 'call', parentId: 'root', properties: {} },
+        { id: 'siu', type: 'call', parentId: 'root', properties: {} },
+        { id: 'tryNotify', type: 'try-catch', parentId: 'root', properties: {} },
+        { id: 'tryBlock', type: 'try', parentId: 'tryNotify', properties: {} },
+        { id: 'send', type: 'call', parentId: 'tryBlock', properties: {} },
+        { id: 'catchBlock', type: 'catch', parentId: 'tryNotify', properties: {} },
+        { id: 'logFail', type: 'set', parentId: 'catchBlock', properties: {} },
+        { id: 'record', type: 'call', parentId: 'root', properties: {} },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'entry', target: 'fetch' },
+        { id: 'e2', type: 'flow', source: 'fetch', target: 'validate' },
+        { id: 'e3', type: 'flow', source: 'validate', target: 'route' },
+        { id: 'e4', type: 'switch-case', source: 'route', target: 'approve' },
+        { id: 'e5', type: 'switch-case', source: 'route', target: 'review' },
+        { id: 'e6', type: 'switch-case', source: 'route', target: 'siu' },
+        { id: 'e7', type: 'flow', source: 'approve', target: 'tryNotify' },
+        { id: 'e8', type: 'flow', source: 'review', target: 'tryNotify' },
+        { id: 'e9', type: 'flow', source: 'siu', target: 'tryNotify' },
+        { id: 'e10', type: 'flow', source: 'tryNotify', target: 'record' },
+        { id: 'e11', type: 'flow', source: 'record', target: 'exit' },
+        { id: 'e12', type: 'flow', source: 'tryBlock', target: 'catchBlock' },
+      ],
+    );
+    const result = await computeElkLayout(model);
+    assertNoSiblingOverlaps(model, result);
+  });
+
+  it('DAG with fan-out and fan-in (diamond pattern)', async () => {
+    const model = createGraph(
+      [
+        { id: 'validate', type: 'dag-node', properties: {} },
+        { id: 'enrich-policy', type: 'dag-node', properties: {} },
+        { id: 'enrich-claimant', type: 'dag-node', properties: {} },
+        { id: 'sanctions', type: 'dag-node', properties: {} },
+        { id: 'fraud', type: 'dag-node', properties: {} },
+        { id: 'medical', type: 'dag-node', properties: {} },
+        { id: 'aggregate', type: 'dag-node', properties: {} },
+        { id: 'route', type: 'dag-node', properties: {} },
+      ],
+      [
+        { id: 'e1', type: 'dep', source: 'validate', target: 'enrich-policy' },
+        { id: 'e2', type: 'dep', source: 'validate', target: 'enrich-claimant' },
+        { id: 'e3', type: 'dep', source: 'enrich-claimant', target: 'sanctions' },
+        { id: 'e4', type: 'dep', source: 'enrich-policy', target: 'fraud' },
+        { id: 'e5', type: 'dep', source: 'enrich-claimant', target: 'fraud' },
+        { id: 'e6', type: 'dep', source: 'enrich-policy', target: 'medical' },
+        { id: 'e7', type: 'dep', source: 'fraud', target: 'aggregate' },
+        { id: 'e8', type: 'dep', source: 'sanctions', target: 'aggregate' },
+        { id: 'e9', type: 'dep', source: 'medical', target: 'aggregate' },
+        { id: 'e10', type: 'dep', source: 'aggregate', target: 'route' },
+      ],
+    );
+    const result = await computeElkLayout(model);
+    assertNoSiblingOverlaps(model, result);
+  });
+});
