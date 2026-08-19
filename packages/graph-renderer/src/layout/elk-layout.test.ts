@@ -341,4 +341,31 @@ describe('no sibling overlaps', () => {
     const result = await computeElkLayout(model);
     assertNoSiblingOverlaps(model, result);
   });
+
+  it('compound children are below the container header zone', async () => {
+    const HEADER_HEIGHT = 30;
+
+    const model = createGraph(
+      [
+        { id: 'container', type: 'try-catch', properties: { label: 'tryNotify' } },
+        { id: 'tryBlock', type: 'try', parentId: 'container', properties: { label: 'tryNotify (try)' } },
+        { id: 'innerCall', type: 'call', parentId: 'tryBlock', properties: { label: 'sendNotification' } },
+        { id: 'catchBlock', type: 'catch', parentId: 'container', properties: { label: 'tryNotify (catch)' } },
+        { id: 'catchCall', type: 'set', parentId: 'catchBlock', properties: { label: 'logNotifyFailure' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'tryBlock', target: 'catchBlock' },
+      ],
+    );
+    const result = await computeElkLayout(model);
+
+    for (const node of model.nodes) {
+      if (!node.parentId) continue;
+      const child = result.nodeLayouts.get(node.id)!;
+      expect(
+        child.y,
+        `'${node.id}' top (${child.y}px) is inside parent '${node.parentId}' header zone (need >= ${HEADER_HEIGHT}px)`,
+      ).toBeGreaterThanOrEqual(HEADER_HEIGHT);
+    }
+  });
 });

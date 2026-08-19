@@ -22,6 +22,7 @@ export interface ElkLayoutResult {
 
 const DEFAULT_NODE_WIDTH = 280;
 const DEFAULT_NODE_HEIGHT = 50;
+const DEFAULT_HEADER_HEIGHT = 35;
 
 const CHAR_WIDTH = 7.5;
 const LABEL_PADDING = 40;
@@ -58,7 +59,7 @@ function buildElkNode(
     elkNode.children = children.map(c => buildElkNode(model, c, visited, padding, nodeSizes));
     elkNode.layoutOptions = {
       'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-      'elk.padding': `[top=${padding},left=${padding},bottom=${padding},right=${padding}]`,
+      'elk.padding': `[top=${Math.max(padding, DEFAULT_HEADER_HEIGHT)},left=${padding},bottom=${padding},right=${padding}]`,
     };
   }
   return elkNode;
