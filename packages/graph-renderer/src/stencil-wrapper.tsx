@@ -151,11 +151,14 @@ export function createStencilNodeComponent(
     }
 
     const hideHandles = rawData._hideHandles === true;
+    const horizontal = rawData._handleDirection === 'horizontal';
+    const targetPos = horizontal ? Position.Left : Position.Top;
+    const sourcePos = horizontal ? Position.Right : Position.Bottom;
 
     return (
       <>
         {!hideHandles && grammar?.connections.inbound.max !== 0 && (
-          <Handle type="target" position={Position.Top} />
+          <Handle type="target" position={targetPos} />
         )}
         <div
           className="stencil-decoration-wrapper"
@@ -167,7 +170,7 @@ export function createStencilNodeComponent(
           <div ref={containerRef} />
         </div>
         {!hideHandles && grammar?.connections.outbound.max !== 0 && (
-          <Handle type="source" position={Position.Bottom} />
+          <Handle type="source" position={sourcePos} />
         )}
       </>
     );
