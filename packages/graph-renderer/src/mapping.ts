@@ -56,6 +56,36 @@ export function toReactFlowEdge(edge: GraphEdge): Edge {
   return rfEdge;
 }
 
+function autoDetectHandleDirections(nodes: Node[], edges: Edge[]): void {
+  if (!nodes.length || !edges.length) return;
+  const posMap = new Map(nodes.map(n => [n.id, n.position]));
+
+  for (const node of nodes) {
+    const pos = posMap.get(node.id);
+    if (!pos) continue;
+
+    let hScore = 0;
+    let vScore = 0;
+    for (const e of edges) {
+      const peerId = e.source === node.id ? e.target : e.target === node.id ? e.source : null;
+      if (!peerId) continue;
+      const peerPos = posMap.get(peerId);
+      if (!peerPos) continue;
+      const dx = Math.abs(peerPos.x - pos.x);
+      const dy = Math.abs(peerPos.y - pos.y);
+      if (dx > dy) hScore++;
+      else vScore++;
+    }
+
+    if (hScore > 0 || vScore > 0) {
+      node.data = {
+        ...node.data,
+        _handleDirection: hScore > vScore ? 'horizontal' : undefined,
+      };
+    }
+  }
+}
+
 export function toReactFlowGraph(
   model: GraphModel,
   layout?: ElkLayoutResult,
@@ -68,10 +98,14 @@ export function toReactFlowGraph(
     }
   }
 
-  return {
-    nodes: model.nodes.map(n =>
-      toReactFlowNode(n, parentIds, layout?.nodeLayouts.get(n.id), decorations?.get(n.id)),
-    ),
-    edges: model.edges.map(e => toReactFlowEdge(e)),
-  };
+  const nodes = model.nodes.map(n =>
+    toReactFlowNode(n, parentIds, layout?.nodeLayouts.get(n.id), decorations?.get(n.id)),
+  );
+  const edges = model.edges.map(e => toReactFlowEdge(e));
+
+  if (layout) {
+    autoDetectHandleDirections(nodes, edges);
+  }
+
+  return { nodes, edges };
 }
