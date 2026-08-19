@@ -158,9 +158,11 @@ export function createStencilNodeComponent(
       sizeStyle.overflow = 'hidden';
     }
 
+    const hideHandles = rawData._hideHandles === true;
+
     return (
       <>
-        {grammar?.connections.inbound.max !== 0 && (
+        {!hideHandles && grammar?.connections.inbound.max !== 0 && (
           <Handle type="target" position={Position.Top} />
         )}
         <div
@@ -172,7 +174,7 @@ export function createStencilNodeComponent(
           {decoration?.overlay && <DecorationOverlay overlay={decoration.overlay} />}
           <div ref={containerRef} />
         </div>
-        {grammar?.connections.outbound.max !== 0 && (
+        {!hideHandles && grammar?.connections.outbound.max !== 0 && (
           <Handle type="source" position={Position.Bottom} />
         )}
       </>
