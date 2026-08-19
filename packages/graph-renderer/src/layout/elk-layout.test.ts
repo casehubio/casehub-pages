@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { createGraph, type GraphModel } from '@casehubio/graph-core';
 import { computeElkLayout } from './elk-layout.js';
 
-const DEFAULT_NODE_WIDTH = 172;
-const DEFAULT_NODE_HEIGHT = 36;
+const DEFAULT_NODE_WIDTH = 280;
+const DEFAULT_NODE_HEIGHT = 50;
 
 describe('computeElkLayout', () => {
   it('assigns positions to flat graph nodes', async () => {

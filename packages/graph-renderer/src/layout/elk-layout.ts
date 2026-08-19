@@ -20,8 +20,8 @@ export interface ElkLayoutResult {
   readonly nodeLayouts: ReadonlyMap<string, NodeLayout>;
 }
 
-const DEFAULT_NODE_WIDTH = 172;
-const DEFAULT_NODE_HEIGHT = 36;
+const DEFAULT_NODE_WIDTH = 280;
+const DEFAULT_NODE_HEIGHT = 50;
 
 const elk = new ELK();
 
