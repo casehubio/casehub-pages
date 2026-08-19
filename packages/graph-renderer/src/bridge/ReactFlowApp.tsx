@@ -72,6 +72,8 @@ export function ReactFlowApp({
       fitView
     >
       <MiniMap
+        pannable
+        zoomable
         nodeColor={(node) => {
           const t = node.type ?? '';
           if (t.includes('try-catch')) return '#c2410c';
