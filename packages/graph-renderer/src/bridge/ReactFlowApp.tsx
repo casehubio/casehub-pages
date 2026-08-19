@@ -71,7 +71,20 @@ export function ReactFlowApp({
       selectionMode={SelectionMode.Partial}
       fitView
     >
-      <MiniMap nodeColor="#64748b" maskColor="rgba(0, 0, 0, 0.1)" />
+      <MiniMap
+        nodeColor={(node) => {
+          const t = node.type ?? '';
+          if (t.includes('try-catch')) return '#c2410c';
+          if (t.includes('switch')) return '#ca8a04';
+          if (t.includes('raise')) return '#dc2626';
+          if (t.includes('set')) return '#7c3aed';
+          if (t.includes('start') || t.includes('entry')) return '#16a34a';
+          if (t.includes('end') || t.includes('exit')) return '#64748b';
+          return '#2563eb';
+        }}
+        style={{ background: 'var(--pages-neutral-2, #1e1e1e)' }}
+        maskColor="rgba(0, 0, 0, 0.3)"
+      />
       <Controls>
         {onRelayout && (
           <ControlButton onClick={onRelayout} title="Re-layout">
