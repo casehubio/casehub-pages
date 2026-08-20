@@ -112,6 +112,52 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     edge.targetHandle = `target-${bestTgt}`;
   }
 
+  // Post-process: resolve per-node conflicts where incoming and outgoing share a side
+  const outSides = new Map<string, Set<string>>();
+  const inEdges = new Map<string, Edge[]>();
+  for (const edge of edges) {
+    const sp = edge.sourceHandle?.replace('source-', '') ?? 'bottom';
+    outSides.set(edge.source, (outSides.get(edge.source) ?? new Set()).add(sp));
+    const ie = inEdges.get(edge.target) ?? [];
+    ie.push(edge);
+    inEdges.set(edge.target, ie);
+  }
+  for (const [nodeId, incoming] of inEdges) {
+    const outs = outSides.get(nodeId);
+    if (!outs) continue;
+    for (const edge of incoming) {
+      const tp = edge.targetHandle?.replace('target-', '') ?? 'top';
+      if (!outs.has(tp)) continue;
+      const tgtNode = nodeMap.get(edge.target);
+      const srcNode = nodeMap.get(edge.source);
+      if (!tgtNode || !srcNode) continue;
+      const srcBounds = nodeBounds(srcNode);
+      const tgtBounds = nodeBounds(tgtNode);
+      const sp = edge.sourceHandle?.replace('source-', '') ?? 'bottom';
+      let bestTp = tp;
+      let bestDist = Infinity;
+      for (const candidate of POSITIONS) {
+        if (candidate === sp || candidate === tp) continue;
+        if (outs.has(candidate)) continue;
+        const s = handlePosPoint(srcBounds, sp);
+        const t = handlePosPoint(tgtBounds, candidate);
+        let crosses = false;
+        for (const node of nodes) {
+          if (node.id === edge.source || node.id === edge.target) continue;
+          if (node.parentId || parentIds.has(node.id)) continue;
+          const r = nodeBounds(node);
+          if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) { crosses = true; break; }
+        }
+        if (crosses) continue;
+        const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
+        if (d < bestDist) { bestDist = d; bestTp = candidate; }
+      }
+      if (bestTp !== tp) {
+        edge.targetHandle = `target-${bestTp}`;
+      }
+    }
+  }
+
   // Set per-node default positions (most common direction across edges) for handle visibility
   const srcCounts = new Map<string, Record<string, number>>();
   const tgtCounts = new Map<string, Record<string, number>>();

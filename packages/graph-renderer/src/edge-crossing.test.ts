@@ -105,7 +105,8 @@ function dist(a: { x: number; y: number }, b: { x: number; y: number }): number 
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 
-// Rule 1: per-edge source and target handles must not be on the same side
+// Rule 1a: per-edge source and target handles must not be on the same side
+// Rule 1b: per-node incoming and outgoing handles must not share a side
 function assertNoSameHandleInOut(nodes: Node[], edges: Edge[]): void {
   for (const edge of edges) {
     const srcPos = posFromHandleId(edge.sourceHandle);
@@ -116,6 +117,25 @@ function assertNoSameHandleInOut(nodes: Node[], edges: Edge[]): void {
       srcPos === tgtPos,
       `Edge ${edge.source}→${edge.target} has source and target on same handle '${srcPos}'`,
     ).toBe(false);
+  }
+
+  const outSides = new Map<string, Set<string>>();
+  const inSides = new Map<string, Set<string>>();
+  for (const edge of edges) {
+    const sp = posFromHandleId(edge.sourceHandle);
+    const tp = posFromHandleId(edge.targetHandle);
+    if (sp) { const s = outSides.get(edge.source) ?? new Set(); s.add(sp); outSides.set(edge.source, s); }
+    if (tp) { const s = inSides.get(edge.target) ?? new Set(); s.add(tp); inSides.set(edge.target, s); }
+  }
+  for (const [nodeId, outs] of outSides) {
+    const ins = inSides.get(nodeId);
+    if (!ins) continue;
+    for (const side of outs) {
+      expect(
+        ins.has(side),
+        `Node '${nodeId}' has both incoming and outgoing edges on '${side}' side`,
+      ).toBe(false);
+    }
   }
 }
 
@@ -199,11 +219,20 @@ function assertNoEdgeEdgeCrossings(nodes: Node[], edges: Edge[]): void {
   }
 }
 
-// Rule 3: handle positions should produce shortest crossing-free edge length
+// Rule 3: handle positions should produce shortest crossing-free, conflict-free edge length
 function assertShortestEdges(nodes: Node[], edges: Edge[]): void {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
   const positions = ['top', 'bottom', 'left', 'right'] as const;
+
+  const outSidesPerNode = new Map<string, Set<string>>();
+  const inSidesPerNode = new Map<string, Set<string>>();
+  for (const e of edges) {
+    const sp = posFromHandleId(e.sourceHandle);
+    const tp = posFromHandleId(e.targetHandle);
+    if (sp) { const s = outSidesPerNode.get(e.source) ?? new Set(); s.add(sp); outSidesPerNode.set(e.source, s); }
+    if (tp) { const s = inSidesPerNode.get(e.target) ?? new Set(); s.add(tp); inSidesPerNode.set(e.target, s); }
+  }
 
   for (const edge of edges) {
     const sourceNode = nodeMap.get(edge.source);
@@ -223,6 +252,10 @@ function assertShortestEdges(nodes: Node[], edges: Edge[]): void {
     for (const sp of positions) {
       for (const tp of positions) {
         if (sp === tp) continue;
+        const srcIns = inSidesPerNode.get(edge.source);
+        if (srcIns && srcIns.has(sp)) continue;
+        const tgtOuts = outSidesPerNode.get(edge.target);
+        if (tgtOuts && tgtOuts.has(tp)) continue;
         const srcPt = handleCenterForPos(srcRect, sp);
         const tgtPt = handleCenterForPos(tgtRect, tp);
         let crosses = false;
