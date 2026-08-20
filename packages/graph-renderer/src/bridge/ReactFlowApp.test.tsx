@@ -5,6 +5,12 @@ import { act } from 'react';
 
 let capturedMiniMapProps: Record<string, unknown> = {};
 
+vi.mock('@tisoap/react-flow-smart-edge', () => ({
+  SmartBezierEdge: () => React.createElement('div'),
+  SmartEdgeProvider: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement('div', { 'data-testid': 'smart-edge-provider' }, children),
+}));
+
 vi.mock('@xyflow/react', () => ({
   ReactFlow: ({ children }: { children: React.ReactNode }) =>
     React.createElement('div', { 'data-testid': 'react-flow' }, children),

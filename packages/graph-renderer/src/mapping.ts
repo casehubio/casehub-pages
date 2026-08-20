@@ -89,65 +89,137 @@ function absoluteBounds(node: Node, nodeMap: Map<string, Node>): { x: number; y:
 
 function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: string): void {
   if (!nodes.length || !edges.length) return;
+
+  // Per-node defaults set the primary handle direction; the per-edge
+  // algorithm below then assigns optimal handles per edge.
+  const dirDefaults: Record<string, { src: string; tgt: string }> = {
+    DOWN: { src: 'bottom', tgt: 'top' },
+    RIGHT: { src: 'right', tgt: 'left' },
+    LEFT: { src: 'left', tgt: 'right' },
+    UP: { src: 'top', tgt: 'bottom' },
+  };
+  const perpendicular: Record<string, { src: string; tgt: string }> = {
+    DOWN: { src: 'right', tgt: 'left' },
+    RIGHT: { src: 'bottom', tgt: 'top' },
+    LEFT: { src: 'bottom', tgt: 'top' },
+    UP: { src: 'right', tgt: 'left' },
+  };
+  const defaults = dirDefaults[_direction ?? 'DOWN'] ?? dirDefaults.DOWN!;
+
+  for (const node of nodes) {
+    const hasOutgoing = edges.some(e => e.source === node.id);
+    const hasIncoming = edges.some(e => e.target === node.id);
+    const updates: Record<string, unknown> = {};
+    if (hasOutgoing) updates._sourceHandlePosition = defaults.src;
+    if (hasIncoming) updates._targetHandlePosition = defaults.tgt;
+    if (Object.keys(updates).length > 0) {
+      node.data = { ...node.data, ...updates };
+    }
+  }
+
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
-
+  function scopeNodes(srcId: string, tgtId: string): Node[] {
+    const srcParent = nodeMap.get(srcId)?.parentId;
+    const tgtParent = nodeMap.get(tgtId)?.parentId;
+    return nodes.filter(node => {
+      if (node.id === srcId || node.id === tgtId) return false;
+      if (node.id === srcParent || node.id === tgtParent) return false;
+      if (!srcParent && !tgtParent) return !node.parentId;
+      if (parentIds.has(node.id)) return node.parentId === srcParent || node.parentId === tgtParent || !node.parentId;
+      return node.parentId === srcParent || node.parentId === tgtParent;
+    });
+  }
   function checkCrossing(s: { x: number; y: number }, t: { x: number; y: number }, srcId: string, tgtId: string): boolean {
-    for (const node of nodes) {
-      if (node.id === srcId || node.id === tgtId) continue;
-      if (parentIds.has(node.id)) continue;
+    for (const node of scopeNodes(srcId, tgtId)) {
       const r = absoluteBounds(node, nodeMap);
       if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) return true;
     }
     return false;
   }
-
-  // Track which sides are used for outgoing/incoming at each node
+  function corridorBlocked(s: { x: number; y: number }, t: { x: number; y: number }, srcId: string, tgtId: string): boolean {
+    const margin = 10;
+    const cx = Math.min(s.x, t.x) - margin;
+    const cy = Math.min(s.y, t.y) - margin;
+    const cw = Math.abs(s.x - t.x) + 2 * margin;
+    const ch = Math.abs(s.y - t.y) + 2 * margin;
+    for (const node of scopeNodes(srcId, tgtId)) {
+      const r = absoluteBounds(node, nodeMap);
+      if (r.x + r.w > cx && r.x < cx + cw && r.y + r.h > cy && r.y < cy + ch) return true;
+    }
+    return false;
+  }
   const usedOut = new Map<string, Set<string>>();
   const usedIn = new Map<string, Set<string>>();
-
   for (const edge of edges) {
     const srcNode = nodeMap.get(edge.source);
     const tgtNode = nodeMap.get(edge.target);
     if (!srcNode || !tgtNode) continue;
-
     const srcBounds = absoluteBounds(srcNode, nodeMap);
     const tgtBounds = absoluteBounds(tgtNode, nodeMap);
     const srcIn = usedIn.get(edge.source);
     const tgtOut = usedOut.get(edge.target);
-
-    let bestSrc = 'bottom';
-    let bestTgt = 'top';
-    let bestDist = Infinity;
-
-    for (const sp of POSITIONS) {
-      if (srcIn && srcIn.has(sp)) continue;
-      for (const tp of POSITIONS) {
-        if (sp === tp) continue;
-        if (tgtOut && tgtOut.has(tp)) continue;
-        const s = handlePosPoint(srcBounds, sp);
-        const t = handlePosPoint(tgtBounds, tp);
-        if (checkCrossing(s, t, edge.source, edge.target)) continue;
-        const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
-        if (d < bestDist) { bestDist = d; bestSrc = sp; bestTgt = tp; }
+    const perp = perpendicular[_direction ?? 'DOWN'] ?? perpendicular.DOWN!;
+    let bestSrc = defaults.src;
+    let bestTgt = defaults.tgt;
+    let resolved = false;
+    function canUse(sp: string, tp: string): boolean {
+      if (sp === tp) return false;
+      if (srcIn && srcIn.has(sp)) return false;
+      if (tgtOut && tgtOut.has(tp)) return false;
+      const s = handlePosPoint(srcBounds, sp);
+      const t = handlePosPoint(tgtBounds, tp);
+      return !checkCrossing(s, t, edge.source, edge.target);
+    }
+    const dir = _direction ?? 'DOWN';
+    const srcCx = srcBounds.x + srcBounds.w / 2;
+    const srcCy = srcBounds.y + srcBounds.h / 2;
+    const tgtCx = tgtBounds.x + tgtBounds.w / 2;
+    const tgtCy = tgtBounds.y + tgtBounds.h / 2;
+    const flowsForward = (dir === 'RIGHT' || dir === 'LEFT')
+      ? (dir === 'RIGHT' ? tgtCx > srcCx : tgtCx < srcCx)
+      : (dir === 'DOWN' ? tgtCy > srcCy : tgtCy < srcCy);
+    const primary = flowsForward ? defaults : perp;
+    const secondary = flowsForward ? perp : defaults;
+    if (canUse(primary.src, primary.tgt)) {
+      bestSrc = primary.src;
+      bestTgt = primary.tgt;
+      resolved = true;
+    }
+    if (!resolved && canUse(secondary.src, secondary.tgt)) {
+      bestSrc = secondary.src;
+      bestTgt = secondary.tgt;
+      resolved = true;
+    }
+    if (!resolved) {
+      let bestDist = Infinity;
+      for (const sp of POSITIONS) {
+        if (srcIn && srcIn.has(sp)) continue;
+        for (const tp of POSITIONS) {
+          if (sp === tp) continue;
+          if (tgtOut && tgtOut.has(tp)) continue;
+          const s = handlePosPoint(srcBounds, sp);
+          const t = handlePosPoint(tgtBounds, tp);
+          if (checkCrossing(s, t, edge.source, edge.target)) continue;
+          if (corridorBlocked(s, t, edge.source, edge.target)) continue;
+          const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
+          if (d < bestDist) { bestDist = d; bestSrc = sp; bestTgt = tp; }
+        }
       }
     }
-
     edge.sourceHandle = `source-${bestSrc}`;
     edge.targetHandle = `target-${bestTgt}`;
-
     if (!usedOut.has(edge.source)) usedOut.set(edge.source, new Set());
     usedOut.get(edge.source)!.add(bestSrc);
     if (!usedIn.has(edge.target)) usedIn.set(edge.target, new Set());
     usedIn.get(edge.target)!.add(bestTgt);
   }
 
-  // Set per-node default positions (most common direction across edges) for handle visibility
   const srcCounts = new Map<string, Record<string, number>>();
   const tgtCounts = new Map<string, Record<string, number>>();
   for (const edge of edges) {
-    const sp = edge.sourceHandle?.replace('source-', '') ?? 'bottom';
-    const tp = edge.targetHandle?.replace('target-', '') ?? 'top';
+    const sp = edge.sourceHandle?.replace(/^source-/, '') ?? defaults.src;
+    const tp = edge.targetHandle?.replace(/^target-/, '') ?? defaults.tgt;
     const sc = srcCounts.get(edge.source) ?? {};
     sc[sp] = (sc[sp] ?? 0) + 1;
     srcCounts.set(edge.source, sc);
@@ -156,15 +228,17 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     tgtCounts.set(edge.target, tc);
   }
 
+  const hasOutgoing = new Set(edges.map(e => e.source));
+  const hasIncoming = new Set(edges.map(e => e.target));
   for (const node of nodes) {
     const sc = srcCounts.get(node.id);
     const tc = tgtCounts.get(node.id);
     const updates: Record<string, unknown> = {};
     if (sc) updates._sourceHandlePosition = Object.entries(sc).sort((a, b) => b[1] - a[1])[0]![0];
+    else if (!hasOutgoing.has(node.id)) updates._sourceHandlePosition = undefined;
     if (tc) updates._targetHandlePosition = Object.entries(tc).sort((a, b) => b[1] - a[1])[0]![0];
-    if (Object.keys(updates).length > 0) {
-      node.data = { ...node.data, ...updates };
-    }
+    else if (!hasIncoming.has(node.id)) updates._targetHandlePosition = undefined;
+    node.data = { ...node.data, ...updates };
   }
 }
 

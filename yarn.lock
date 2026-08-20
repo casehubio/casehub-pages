@@ -1428,6 +1428,7 @@ __metadata:
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
+    "@tisoap/react-flow-smart-edge": "npm:^5.0.0"
     "@types/react": "npm:^18.3.0"
     "@types/react-dom": "npm:^18.3.0"
     "@xyflow/react": "npm:^12.4.0"
@@ -1460,6 +1461,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-aria@workspace:packages/pages-aria"
   dependencies:
+    "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-primitives": "workspace:*"
     jsdom: "npm:^26.1.0"
     vitest: "npm:^3.2.4"
@@ -3855,6 +3857,17 @@ __metadata:
     picocolors: "npm:^1.1.1"
     redent: "npm:^3.0.0"
   checksum: 10c0/4291ebd2f0f38d14cefac142c56c337941775a5807e2a3d6f1a14c2fbd6be76a18e498ed189e95bedc97d9e8cf1738049bc76c85b5bc5e23fae7c9e10f7b3a12
+  languageName: node
+  linkType: hard
+
+"@tisoap/react-flow-smart-edge@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "@tisoap/react-flow-smart-edge@npm:5.0.0"
+  peerDependencies:
+    "@xyflow/react": ">=12"
+    react: ">=18"
+    react-dom: ">=18"
+  checksum: 10c0/aa07cdbbc2c852655d1e08e11ecb048910b30982b4ee72fd0b04ff092c292a3cea5f2cc0960a085cd3d89c8d8b04d757140e36235da44982c58abb9a8c8735c3
   languageName: node
   linkType: hard
 

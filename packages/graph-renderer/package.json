@@ -11,6 +11,7 @@
     "@casehubio/graph-work-registry": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-ui-tokens": "workspace:*",
+    "@tisoap/react-flow-smart-edge": "^5.0.0",
     "@xyflow/react": "^12.4.0",
     "elkjs": "^0.9.3",
     "lit": "^3.3.3",

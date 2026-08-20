@@ -169,10 +169,25 @@ function assertNoEdgeNodeCrossings(nodes: Node[], edges: Edge[]): void {
 
     const p1 = handleCenter(sourceNode, 'source', edge);
     const p2 = handleCenter(targetNode, 'target', edge);
+    const srcHandleDir = posFromHandleId(edge.sourceHandle)
+      ?? (sourceNode.data as Record<string, unknown>)._sourceHandlePosition as string
+      ?? 'bottom';
+    const tgtHandleDir = posFromHandleId(edge.targetHandle)
+      ?? (targetNode.data as Record<string, unknown>)._targetHandlePosition as string
+      ?? 'top';
+
+    const srcParent = sourceNode.parentId;
+    const tgtParent = targetNode.parentId;
+    function inScope(node: Node): boolean {
+      if (node.id === edge.source || node.id === edge.target) return false;
+      if (node.id === srcParent || node.id === tgtParent) return false;
+      if (!srcParent && !tgtParent) return !node.parentId;
+      if (parentIds.has(node.id)) return node.parentId === srcParent || node.parentId === tgtParent || !node.parentId;
+      return node.parentId === srcParent || node.parentId === tgtParent;
+    }
 
     for (const node of nodes) {
-      if (node.id === edge.source || node.id === edge.target) continue;
-      if (node.parentId || parentIds.has(node.id)) continue;
+      if (!inScope(node)) continue;
       // Skip fan siblings — bezier curves route around same-layer spread
       if (fanSiblings.has(node.id) && fanSiblings.has(edge.source)) continue;
       if (fanSiblings.has(node.id) && fanSiblings.has(edge.target)) continue;
@@ -184,6 +199,9 @@ function assertNoEdgeNodeCrossings(nodes: Node[], edges: Edge[]): void {
         `Edge ${edge.source} → ${edge.target} crosses node '${node.id}' at (${rect.x},${rect.y},${rect.w},${rect.h})`,
       ).toBe(false);
     }
+
+    // Corridor is checked in the algorithm (combo selection) and assertShortestEdges,
+    // not as a post-hoc assertion — bezier routing can navigate tight corridors.
   }
 }
 
@@ -220,7 +238,7 @@ function assertNoEdgeEdgeCrossings(nodes: Node[], edges: Edge[]): void {
 }
 
 // Rule 3: handle positions should produce shortest crossing-free, conflict-free edge length
-function assertShortestEdges(nodes: Node[], edges: Edge[]): void {
+function assertShortestEdges(nodes: Node[], edges: Edge[], direction?: string): void {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
   const positions = ['top', 'bottom', 'left', 'right'] as const;
@@ -246,40 +264,61 @@ function assertShortestEdges(nodes: Node[], edges: Edge[]): void {
 
     const srcRect = nodeRect(sourceNode);
     const tgtRect = nodeRect(targetNode);
+    const dirDefaults: Record<string, { src: string; tgt: string }> = {
+      DOWN: { src: 'bottom', tgt: 'top' },
+      RIGHT: { src: 'right', tgt: 'left' },
+      LEFT: { src: 'left', tgt: 'right' },
+      UP: { src: 'top', tgt: 'bottom' },
+    };
+    const perpendicular: Record<string, { src: string; tgt: string }> = {
+      DOWN: { src: 'right', tgt: 'left' },
+      RIGHT: { src: 'bottom', tgt: 'top' },
+      LEFT: { src: 'bottom', tgt: 'top' },
+      UP: { src: 'right', tgt: 'left' },
+    };
+    const defs = dirDefaults[direction ?? 'DOWN'] ?? dirDefaults.DOWN!;
+    const perp = perpendicular[direction ?? 'DOWN'] ?? perpendicular.DOWN!;
 
-    let shortest = currentDist;
-    let shortestCombo = '';
-    for (const sp of positions) {
-      for (const tp of positions) {
-        if (sp === tp) continue;
-        const srcIns = inSidesPerNode.get(edge.source);
-        if (srcIns && srcIns.has(sp)) continue;
-        const tgtOuts = outSidesPerNode.get(edge.target);
-        if (tgtOuts && tgtOuts.has(tp)) continue;
-        const srcPt = handleCenterForPos(srcRect, sp);
-        const tgtPt = handleCenterForPos(tgtRect, tp);
-        let crosses = false;
-        for (const node of nodes) {
-          if (node.id === edge.source || node.id === edge.target) continue;
-          if (node.parentId || parentIds.has(node.id)) continue;
-          const r = nodeRect(node);
-          if (lineIntersectsRect(srcPt, tgtPt, r)) crosses = true;
-          if (crosses) break;
-        }
-        if (crosses) continue;
-        const d = dist(srcPt, tgtPt);
-        if (d < shortest - 1) {
-          shortest = d;
-          shortestCombo = `source:${sp}, target:${tp}`;
-        }
+    const srcParent = sourceNode.parentId;
+    const tgtParent = targetNode.parentId;
+    function comboValid(sp: string, tp: string): boolean {
+      if (sp === tp) return false;
+      const srcIns = inSidesPerNode.get(edge.source);
+      if (srcIns && srcIns.has(sp)) return false;
+      const tgtOuts = outSidesPerNode.get(edge.target);
+      if (tgtOuts && tgtOuts.has(tp)) return false;
+      const srcPt = handleCenterForPos(srcRect, sp);
+      const tgtPt = handleCenterForPos(tgtRect, tp);
+      for (const node of nodes) {
+        if (node.id === edge.source || node.id === edge.target) continue;
+        if (node.id === srcParent || node.id === tgtParent) continue;
+        if (!srcParent && !tgtParent) { if (node.parentId) continue; }
+        else if (parentIds.has(node.id)) { if (node.parentId !== srcParent && node.parentId !== tgtParent && node.parentId) continue; }
+        else { if (node.parentId !== srcParent && node.parentId !== tgtParent) continue; }
+        const r = nodeRect(node);
+        if (lineIntersectsRect(srcPt, tgtPt, r)) return false;
       }
+      return true;
     }
-
-    expect(
-      shortestCombo,
-      `Edge ${edge.source}→${edge.target}: current distance ${Math.round(currentDist)}, ` +
-      `but ${shortestCombo} gives ${Math.round(shortest)}`,
-    ).toBe('');
+    const currentSrc = posFromHandleId(edge.sourceHandle) ?? 'bottom';
+    const currentTgt = posFromHandleId(edge.targetHandle) ?? 'top';
+    const srcCx = srcRect.x + srcRect.w / 2;
+    const srcCy = srcRect.y + srcRect.h / 2;
+    const tgtCx = tgtRect.x + tgtRect.w / 2;
+    const tgtCy = tgtRect.y + tgtRect.h / 2;
+    const dir = direction ?? 'DOWN';
+    const flowsForward = (dir === 'RIGHT' || dir === 'LEFT')
+      ? (dir === 'RIGHT' ? tgtCx > srcCx : tgtCx < srcCx)
+      : (dir === 'DOWN' ? tgtCy > srcCy : tgtCy < srcCy);
+    const primary = flowsForward ? defs : perp;
+    const secondary = flowsForward ? perp : defs;
+    if (comboValid(primary.src, primary.tgt)) {
+      expect(currentSrc, `Edge ${edge.source}→${edge.target}: primary ${primary.src}→${primary.tgt} is valid but got ${currentSrc}→${currentTgt}`).toBe(primary.src);
+      expect(currentTgt, `Edge ${edge.source}→${edge.target}: primary ${primary.src}→${primary.tgt} is valid but got ${currentSrc}→${currentTgt}`).toBe(primary.tgt);
+    } else if (comboValid(secondary.src, secondary.tgt)) {
+      expect(currentSrc, `Edge ${edge.source}→${edge.target}: secondary ${secondary.src}→${secondary.tgt} is valid but got ${currentSrc}→${currentTgt}`).toBe(secondary.src);
+      expect(currentTgt, `Edge ${edge.source}→${edge.target}: secondary ${secondary.src}→${secondary.tgt} is valid but got ${currentSrc}→${currentTgt}`).toBe(secondary.tgt);
+    }
   }
 }
 
@@ -293,11 +332,11 @@ function handleCenterForPos(rect: Rect, pos: string): { x: number; y: number } {
   }
 }
 
-function assertAllEdgeRules(nodes: Node[], edges: Edge[]): void {
+function assertAllEdgeRules(nodes: Node[], edges: Edge[], direction?: string): void {
   assertNoSameHandleInOut(nodes, edges);
   assertNoEdgeNodeCrossings(nodes, edges);
   assertNoEdgeEdgeCrossings(nodes, edges);
-  assertShortestEdges(nodes, edges);
+  assertShortestEdges(nodes, edges, direction);
 }
 
 describe('handle position auto-detection', () => {
@@ -346,7 +385,7 @@ describe('handle position auto-detection', () => {
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
 
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'DOWN');
   });
 
   it('DOWN layout: fan-in merge obeys all edge rules', async () => {
@@ -365,7 +404,244 @@ describe('handle position auto-detection', () => {
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'DOWN');
+  });
+
+  it('fraud-ml-agent SWF — 6-node pipeline (direction RIGHT, wrapping)', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: { label: 'Start' } },
+        { id: 'fetchEnrichment', type: 'call', properties: { label: 'fetchEnrichment' } },
+        { id: 'runModel', type: 'call', properties: { label: 'runModel' } },
+        { id: 'computeScore', type: 'set', properties: { label: 'computeScore' } },
+        { id: 'checkThreshold', type: 'switch', properties: { label: 'checkThreshold' } },
+        { id: 'end', type: 'end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchEnrichment' },
+        { id: 'e2', type: 'flow', source: 'fetchEnrichment', target: 'runModel' },
+        { id: 'e3', type: 'flow', source: 'runModel', target: 'computeScore' },
+        { id: 'e4', type: 'flow', source: 'computeScore', target: 'checkThreshold' },
+        { id: 'e5', type: 'flow', source: 'checkThreshold', target: 'end' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('sanctions-agent SWF — 5-node pipeline (direction RIGHT, wrapping)', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: { label: 'Start' } },
+        { id: 'fetchPEPLists', type: 'call', properties: { label: 'fetchPEPLists' } },
+        { id: 'screenClaimant', type: 'call', properties: { label: 'screenClaimant' } },
+        { id: 'routeResult', type: 'switch', properties: { label: 'routeResult' } },
+        { id: 'end', type: 'end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchPEPLists' },
+        { id: 'e2', type: 'flow', source: 'fetchPEPLists', target: 'screenClaimant' },
+        { id: 'e3', type: 'flow', source: 'screenClaimant', target: 'routeResult' },
+        { id: 'e4', type: 'flow', source: 'routeResult', target: 'end' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('claim-review SWF — branching with try/catch (direction DOWN)', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: { label: 'Start' } },
+        { id: 'fetchClaim', type: 'call', properties: { label: 'fetchClaim' } },
+        { id: 'validateEvidence', type: 'call', properties: { label: 'validateEvidence' } },
+        { id: 'routeByRisk', type: 'switch', properties: { label: 'routeByRisk' } },
+        { id: 'autoApprove', type: 'set', properties: { label: 'autoApprove' } },
+        { id: 'humanReview', type: 'call', properties: { label: 'humanReview' } },
+        { id: 'siuReferral', type: 'call', properties: { label: 'siuReferral' } },
+        { id: 'tryNotify', type: 'try', properties: { label: 'tryNotify' } },
+        { id: 'sendNotification', type: 'call', parentId: 'tryNotify', properties: { label: 'sendNotification' } },
+        { id: 'catch', type: 'catch', parentId: 'tryNotify', properties: { label: 'catch' } },
+        { id: 'logNotifyFailure', type: 'set', parentId: 'catch', properties: { label: 'logNotifyFailure' } },
+        { id: 'recordOutcome', type: 'call', properties: { label: 'recordOutcome' } },
+        { id: 'end', type: 'end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchClaim' },
+        { id: 'e2', type: 'flow', source: 'fetchClaim', target: 'validateEvidence' },
+        { id: 'e3', type: 'flow', source: 'validateEvidence', target: 'routeByRisk' },
+        { id: 'e4', type: 'switch-case', source: 'routeByRisk', target: 'autoApprove' },
+        { id: 'e5', type: 'switch-case', source: 'routeByRisk', target: 'humanReview' },
+        { id: 'e6', type: 'switch-case', source: 'routeByRisk', target: 'siuReferral' },
+        { id: 'e7', type: 'flow', source: 'autoApprove', target: 'tryNotify' },
+        { id: 'e8', type: 'flow', source: 'humanReview', target: 'tryNotify' },
+        { id: 'e9', type: 'flow', source: 'siuReferral', target: 'tryNotify' },
+        { id: 'e10', type: 'flow', source: 'tryNotify', target: 'recordOutcome' },
+        { id: 'e11', type: 'flow', source: 'recordOutcome', target: 'end' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'DOWN' });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+    assertAllEdgeRules(nodes, edges, 'DOWN');
+  });
+
+  it('case diagram — bindings to workers to milestones to goals (direction RIGHT)', async () => {
+    const model = createGraph(
+      [
+        { id: 'b:fraud-detection', type: 'binding', properties: { label: 'fraud-detection' } },
+        { id: 'b:sanctions-screening', type: 'binding', properties: { label: 'sanctions-screening' } },
+        { id: 'b:routing-decision', type: 'binding', properties: { label: 'routing-decision' } },
+        { id: 'b:intake-validation', type: 'binding', properties: { label: 'intake-validation' } },
+        { id: 'w:fraud-ml-agent', type: 'worker', properties: { label: 'fraud-ml-agent' } },
+        { id: 'w:sanctions-agent', type: 'worker', properties: { label: 'sanctions-agent' } },
+        { id: 'w:routing-engine', type: 'worker', properties: { label: 'routing-engine' } },
+        { id: 'w:schema-validator', type: 'worker', properties: { label: 'schema-validator' } },
+        { id: 'm:risk-assessed', type: 'milestone', properties: { label: 'risk-assessed' } },
+        { id: 'm:decision-made', type: 'milestone', properties: { label: 'decision-made' } },
+        { id: 'g:claim-resolved', type: 'goal', properties: { label: 'claim-resolved' } },
+      ],
+      [
+        { id: 'e1', type: 'dispatch', source: 'b:fraud-detection', target: 'w:fraud-ml-agent' },
+        { id: 'e2', type: 'dispatch', source: 'b:sanctions-screening', target: 'w:sanctions-agent' },
+        { id: 'e3', type: 'dispatch', source: 'b:routing-decision', target: 'w:routing-engine' },
+        { id: 'e4', type: 'dispatch', source: 'b:intake-validation', target: 'w:schema-validator' },
+        { id: 'e5', type: 'condition', source: 'b:fraud-detection', target: 'm:risk-assessed' },
+        { id: 'e6', type: 'condition', source: 'b:sanctions-screening', target: 'm:risk-assessed' },
+        { id: 'e7', type: 'condition', source: 'b:routing-decision', target: 'm:decision-made' },
+        { id: 'e8', type: 'condition', source: 'm:decision-made', target: 'g:claim-resolved' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'RIGHT' });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('claim-review SWF — actual rendered positions (direction DOWN)', () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'swf-start', properties: { label: 'Start' } },
+        { id: 'fetchClaim', type: 'swf-call', properties: { label: 'fetchClaim' } },
+        { id: 'validateEvidence', type: 'swf-call', properties: { label: 'validateEvidence' } },
+        { id: 'routeByRisk', type: 'swf-switch', properties: { label: 'routeByRisk' } },
+        { id: 'autoApprove', type: 'swf-set', properties: { label: 'autoApprove' } },
+        { id: 'humanReview', type: 'swf-call', properties: { label: 'humanReview' } },
+        { id: 'siuReferral', type: 'swf-call', properties: { label: 'siuReferral' } },
+        { id: 'tryNotify', type: 'swf-try-catch', properties: { label: 'tryNotify' } },
+        { id: 'recordOutcome', type: 'swf-call', properties: { label: 'recordOutcome' } },
+        { id: 'end', type: 'swf-end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchClaim' },
+        { id: 'e2', type: 'flow', source: 'fetchClaim', target: 'validateEvidence' },
+        { id: 'e3', type: 'flow', source: 'validateEvidence', target: 'routeByRisk' },
+        { id: 'e4', type: 'switch-case', source: 'routeByRisk', target: 'autoApprove' },
+        { id: 'e5', type: 'switch-case', source: 'routeByRisk', target: 'humanReview' },
+        { id: 'e6', type: 'switch-case', source: 'routeByRisk', target: 'siuReferral' },
+        { id: 'e7', type: 'flow', source: 'autoApprove', target: 'tryNotify' },
+        { id: 'e8', type: 'flow', source: 'humanReview', target: 'tryNotify' },
+        { id: 'e9', type: 'flow', source: 'siuReferral', target: 'tryNotify' },
+        { id: 'e10', type: 'flow', source: 'tryNotify', target: 'recordOutcome' },
+        { id: 'e11', type: 'flow', source: 'recordOutcome', target: 'end' },
+      ],
+    );
+    const layout = {
+      nodeLayouts: new Map([
+        ['start', { x: 95, y: 35, width: 280, height: 50 }],
+        ['fetchClaim', { x: 95, y: 105, width: 280, height: 50 }],
+        ['validateEvidence', { x: 95, y: 175, width: 280, height: 50 }],
+        ['routeByRisk', { x: 95, y: 245, width: 280, height: 50 }],
+        ['siuReferral', { x: 25, y: 325, width: 280, height: 50 }],
+        ['humanReview', { x: 325, y: 325, width: 280, height: 50 }],
+        ['autoApprove', { x: 625, y: 325, width: 280, height: 50 }],
+        ['tryNotify', { x: 275, y: 395, width: 380, height: 300 }],
+        ['recordOutcome', { x: 325, y: 715, width: 280, height: 50 }],
+        ['end', { x: 325, y: 785, width: 280, height: 50 }],
+      ]),
+    };
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+    assertAllEdgeRules(nodes, edges, 'DOWN');
+  });
+});
+
+describe('actual rendered diagrams — exact positions from browser', () => {
+  it('fraud-ml-agent SWF drill-down — actual rendered positions (direction RIGHT)', () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'swf-start', properties: { label: 'Start' } },
+        { id: 'fetchEnrichment', type: 'swf-call', properties: { label: 'fetchEnrichment' } },
+        { id: 'runModel', type: 'swf-call', properties: { label: 'runModel' } },
+        { id: 'computeScore', type: 'swf-set', properties: { label: 'computeScore' } },
+        { id: 'checkThreshold', type: 'swf-switch', properties: { label: 'checkThreshold' } },
+        { id: 'end', type: 'swf-end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchEnrichment' },
+        { id: 'e2', type: 'flow', source: 'fetchEnrichment', target: 'runModel' },
+        { id: 'e3', type: 'flow', source: 'runModel', target: 'computeScore' },
+        { id: 'e4', type: 'flow', source: 'computeScore', target: 'checkThreshold' },
+        { id: 'e5', type: 'flow', source: 'checkThreshold', target: 'end' },
+      ],
+    );
+    const layout = {
+      nodeLayouts: new Map([
+        ['start', { x: 35, y: 35, width: 280, height: 50 }],
+        ['fetchEnrichment', { x: 335, y: 35, width: 280, height: 50 }],
+        ['runModel', { x: 35, y: 126, width: 280, height: 50 }],
+        ['computeScore', { x: 35, y: 217, width: 280, height: 50 }],
+        ['checkThreshold', { x: 335, y: 217, width: 280, height: 50 }],
+        ['end', { x: 35, y: 308, width: 280, height: 50 }],
+      ]),
+    };
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('claim-review SWF — actual rendered positions (direction DOWN)', () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'swf-start', properties: { label: 'Start' } },
+        { id: 'fetchClaim', type: 'swf-call', properties: { label: 'fetchClaim' } },
+        { id: 'validateEvidence', type: 'swf-call', properties: { label: 'validateEvidence' } },
+        { id: 'routeByRisk', type: 'swf-switch', properties: { label: 'routeByRisk' } },
+        { id: 'autoApprove', type: 'swf-set', properties: { label: 'autoApprove' } },
+        { id: 'humanReview', type: 'swf-call', properties: { label: 'humanReview' } },
+        { id: 'siuReferral', type: 'swf-call', properties: { label: 'siuReferral' } },
+        { id: 'tryNotify', type: 'swf-try-catch', properties: { label: 'tryNotify' } },
+        { id: 'recordOutcome', type: 'swf-call', properties: { label: 'recordOutcome' } },
+        { id: 'end', type: 'swf-end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchClaim' },
+        { id: 'e2', type: 'flow', source: 'fetchClaim', target: 'validateEvidence' },
+        { id: 'e3', type: 'flow', source: 'validateEvidence', target: 'routeByRisk' },
+        { id: 'e4', type: 'switch-case', source: 'routeByRisk', target: 'autoApprove' },
+        { id: 'e5', type: 'switch-case', source: 'routeByRisk', target: 'humanReview' },
+        { id: 'e6', type: 'switch-case', source: 'routeByRisk', target: 'siuReferral' },
+        { id: 'e7', type: 'flow', source: 'autoApprove', target: 'tryNotify' },
+        { id: 'e8', type: 'flow', source: 'humanReview', target: 'tryNotify' },
+        { id: 'e9', type: 'flow', source: 'siuReferral', target: 'tryNotify' },
+        { id: 'e10', type: 'flow', source: 'tryNotify', target: 'recordOutcome' },
+        { id: 'e11', type: 'flow', source: 'recordOutcome', target: 'end' },
+      ],
+    );
+    const layout = {
+      nodeLayouts: new Map([
+        ['start', { x: 95, y: 35, width: 280, height: 50 }],
+        ['fetchClaim', { x: 95, y: 105, width: 280, height: 50 }],
+        ['validateEvidence', { x: 95, y: 175, width: 280, height: 50 }],
+        ['routeByRisk', { x: 95, y: 245, width: 280, height: 50 }],
+        ['siuReferral', { x: 25, y: 325, width: 280, height: 50 }],
+        ['humanReview', { x: 325, y: 325, width: 280, height: 50 }],
+        ['autoApprove', { x: 625, y: 325, width: 280, height: 50 }],
+        ['tryNotify', { x: 275, y: 395, width: 380, height: 300 }],
+        ['recordOutcome', { x: 325, y: 715, width: 280, height: 50 }],
+        ['end', { x: 325, y: 785, width: 280, height: 50 }],
+      ]),
+    };
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+    assertAllEdgeRules(nodes, edges, 'DOWN');
   });
 });
 
@@ -386,7 +662,7 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'DOWN');
   });
 
   it('branching switch — no crossings (direction DOWN)', async () => {
@@ -415,7 +691,7 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'DOWN');
   });
 
   it('horizontal chain — no crossings (direction RIGHT)', async () => {
@@ -432,7 +708,7 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     );
     const layout = await computeElkLayout(model, { direction: 'RIGHT' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
   });
 
   it('wrapped snake pipeline — no crossings (direction RIGHT, wrapping)', async () => {
@@ -451,7 +727,7 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     const model = createGraph(steps, stepEdges);
     const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
   });
 
   it('fan-out fan-in DAG — no crossings (direction DOWN)', async () => {
@@ -473,7 +749,7 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'DOWN');
   });
 
   it('15-step pipeline with snake wrapping (direction RIGHT)', async () => {
@@ -492,7 +768,7 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     const model = createGraph(steps, stepEdges);
     const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
   });
 
   it('pipeline inside container node — container must not block handle detection', async () => {
@@ -519,6 +795,243 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     const model = createGraph(allNodes, allEdges);
     const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
-    assertAllEdgeRules(nodes, edges);
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('fraud-ml-agent SWF — 6-node pipeline (direction RIGHT, wrapping)', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: { label: 'Start' } },
+        { id: 'fetchEnrichment', type: 'call', properties: { label: 'fetchEnrichment' } },
+        { id: 'runModel', type: 'call', properties: { label: 'runModel' } },
+        { id: 'computeScore', type: 'set', properties: { label: 'computeScore' } },
+        { id: 'checkThreshold', type: 'switch', properties: { label: 'checkThreshold' } },
+        { id: 'end', type: 'end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchEnrichment' },
+        { id: 'e2', type: 'flow', source: 'fetchEnrichment', target: 'runModel' },
+        { id: 'e3', type: 'flow', source: 'runModel', target: 'computeScore' },
+        { id: 'e4', type: 'flow', source: 'computeScore', target: 'checkThreshold' },
+        { id: 'e5', type: 'flow', source: 'checkThreshold', target: 'end' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('sanctions-agent SWF — 5-node pipeline (direction RIGHT, wrapping)', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: { label: 'Start' } },
+        { id: 'fetchPEPLists', type: 'call', properties: { label: 'fetchPEPLists' } },
+        { id: 'screenClaimant', type: 'call', properties: { label: 'screenClaimant' } },
+        { id: 'routeResult', type: 'switch', properties: { label: 'routeResult' } },
+        { id: 'end', type: 'end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchPEPLists' },
+        { id: 'e2', type: 'flow', source: 'fetchPEPLists', target: 'screenClaimant' },
+        { id: 'e3', type: 'flow', source: 'screenClaimant', target: 'routeResult' },
+        { id: 'e4', type: 'flow', source: 'routeResult', target: 'end' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('claim-review SWF — branching with try/catch (direction DOWN)', async () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'start', properties: { label: 'Start' } },
+        { id: 'fetchClaim', type: 'call', properties: { label: 'fetchClaim' } },
+        { id: 'validateEvidence', type: 'call', properties: { label: 'validateEvidence' } },
+        { id: 'routeByRisk', type: 'switch', properties: { label: 'routeByRisk' } },
+        { id: 'autoApprove', type: 'set', properties: { label: 'autoApprove' } },
+        { id: 'humanReview', type: 'call', properties: { label: 'humanReview' } },
+        { id: 'siuReferral', type: 'call', properties: { label: 'siuReferral' } },
+        { id: 'tryNotify', type: 'try', properties: { label: 'tryNotify' } },
+        { id: 'sendNotification', type: 'call', parentId: 'tryNotify', properties: { label: 'sendNotification' } },
+        { id: 'catch', type: 'catch', parentId: 'tryNotify', properties: { label: 'catch' } },
+        { id: 'logNotifyFailure', type: 'set', parentId: 'catch', properties: { label: 'logNotifyFailure' } },
+        { id: 'recordOutcome', type: 'call', properties: { label: 'recordOutcome' } },
+        { id: 'end', type: 'end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchClaim' },
+        { id: 'e2', type: 'flow', source: 'fetchClaim', target: 'validateEvidence' },
+        { id: 'e3', type: 'flow', source: 'validateEvidence', target: 'routeByRisk' },
+        { id: 'e4', type: 'switch-case', source: 'routeByRisk', target: 'autoApprove' },
+        { id: 'e5', type: 'switch-case', source: 'routeByRisk', target: 'humanReview' },
+        { id: 'e6', type: 'switch-case', source: 'routeByRisk', target: 'siuReferral' },
+        { id: 'e7', type: 'flow', source: 'autoApprove', target: 'tryNotify' },
+        { id: 'e8', type: 'flow', source: 'humanReview', target: 'tryNotify' },
+        { id: 'e9', type: 'flow', source: 'siuReferral', target: 'tryNotify' },
+        { id: 'e10', type: 'flow', source: 'tryNotify', target: 'recordOutcome' },
+        { id: 'e11', type: 'flow', source: 'recordOutcome', target: 'end' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'DOWN' });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+    assertAllEdgeRules(nodes, edges, 'DOWN');
+  });
+
+  it('case diagram — bindings to workers to milestones to goals (direction RIGHT)', async () => {
+    const model = createGraph(
+      [
+        { id: 'b:fraud-detection', type: 'binding', properties: { label: 'fraud-detection' } },
+        { id: 'b:sanctions-screening', type: 'binding', properties: { label: 'sanctions-screening' } },
+        { id: 'b:routing-decision', type: 'binding', properties: { label: 'routing-decision' } },
+        { id: 'b:intake-validation', type: 'binding', properties: { label: 'intake-validation' } },
+        { id: 'w:fraud-ml-agent', type: 'worker', properties: { label: 'fraud-ml-agent' } },
+        { id: 'w:sanctions-agent', type: 'worker', properties: { label: 'sanctions-agent' } },
+        { id: 'w:routing-engine', type: 'worker', properties: { label: 'routing-engine' } },
+        { id: 'w:schema-validator', type: 'worker', properties: { label: 'schema-validator' } },
+        { id: 'm:risk-assessed', type: 'milestone', properties: { label: 'risk-assessed' } },
+        { id: 'm:decision-made', type: 'milestone', properties: { label: 'decision-made' } },
+        { id: 'g:claim-resolved', type: 'goal', properties: { label: 'claim-resolved' } },
+      ],
+      [
+        { id: 'e1', type: 'dispatch', source: 'b:fraud-detection', target: 'w:fraud-ml-agent' },
+        { id: 'e2', type: 'dispatch', source: 'b:sanctions-screening', target: 'w:sanctions-agent' },
+        { id: 'e3', type: 'dispatch', source: 'b:routing-decision', target: 'w:routing-engine' },
+        { id: 'e4', type: 'dispatch', source: 'b:intake-validation', target: 'w:schema-validator' },
+        { id: 'e5', type: 'condition', source: 'b:fraud-detection', target: 'm:risk-assessed' },
+        { id: 'e6', type: 'condition', source: 'b:sanctions-screening', target: 'm:risk-assessed' },
+        { id: 'e7', type: 'condition', source: 'b:routing-decision', target: 'm:decision-made' },
+        { id: 'e8', type: 'condition', source: 'm:decision-made', target: 'g:claim-resolved' },
+      ],
+    );
+    const layout = await computeElkLayout(model, { direction: 'RIGHT' });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('claim-review SWF — actual rendered positions (direction DOWN)', () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'swf-start', properties: { label: 'Start' } },
+        { id: 'fetchClaim', type: 'swf-call', properties: { label: 'fetchClaim' } },
+        { id: 'validateEvidence', type: 'swf-call', properties: { label: 'validateEvidence' } },
+        { id: 'routeByRisk', type: 'swf-switch', properties: { label: 'routeByRisk' } },
+        { id: 'autoApprove', type: 'swf-set', properties: { label: 'autoApprove' } },
+        { id: 'humanReview', type: 'swf-call', properties: { label: 'humanReview' } },
+        { id: 'siuReferral', type: 'swf-call', properties: { label: 'siuReferral' } },
+        { id: 'tryNotify', type: 'swf-try-catch', properties: { label: 'tryNotify' } },
+        { id: 'recordOutcome', type: 'swf-call', properties: { label: 'recordOutcome' } },
+        { id: 'end', type: 'swf-end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchClaim' },
+        { id: 'e2', type: 'flow', source: 'fetchClaim', target: 'validateEvidence' },
+        { id: 'e3', type: 'flow', source: 'validateEvidence', target: 'routeByRisk' },
+        { id: 'e4', type: 'switch-case', source: 'routeByRisk', target: 'autoApprove' },
+        { id: 'e5', type: 'switch-case', source: 'routeByRisk', target: 'humanReview' },
+        { id: 'e6', type: 'switch-case', source: 'routeByRisk', target: 'siuReferral' },
+        { id: 'e7', type: 'flow', source: 'autoApprove', target: 'tryNotify' },
+        { id: 'e8', type: 'flow', source: 'humanReview', target: 'tryNotify' },
+        { id: 'e9', type: 'flow', source: 'siuReferral', target: 'tryNotify' },
+        { id: 'e10', type: 'flow', source: 'tryNotify', target: 'recordOutcome' },
+        { id: 'e11', type: 'flow', source: 'recordOutcome', target: 'end' },
+      ],
+    );
+    const layout = {
+      nodeLayouts: new Map([
+        ['start', { x: 95, y: 35, width: 280, height: 50 }],
+        ['fetchClaim', { x: 95, y: 105, width: 280, height: 50 }],
+        ['validateEvidence', { x: 95, y: 175, width: 280, height: 50 }],
+        ['routeByRisk', { x: 95, y: 245, width: 280, height: 50 }],
+        ['siuReferral', { x: 25, y: 325, width: 280, height: 50 }],
+        ['humanReview', { x: 325, y: 325, width: 280, height: 50 }],
+        ['autoApprove', { x: 625, y: 325, width: 280, height: 50 }],
+        ['tryNotify', { x: 275, y: 395, width: 380, height: 300 }],
+        ['recordOutcome', { x: 325, y: 715, width: 280, height: 50 }],
+        ['end', { x: 325, y: 785, width: 280, height: 50 }],
+      ]),
+    };
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+    assertAllEdgeRules(nodes, edges, 'DOWN');
+  });
+});
+
+describe('actual rendered diagrams — exact positions from browser', () => {
+  it('fraud-ml-agent SWF drill-down — actual rendered positions (direction RIGHT)', () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'swf-start', properties: { label: 'Start' } },
+        { id: 'fetchEnrichment', type: 'swf-call', properties: { label: 'fetchEnrichment' } },
+        { id: 'runModel', type: 'swf-call', properties: { label: 'runModel' } },
+        { id: 'computeScore', type: 'swf-set', properties: { label: 'computeScore' } },
+        { id: 'checkThreshold', type: 'swf-switch', properties: { label: 'checkThreshold' } },
+        { id: 'end', type: 'swf-end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchEnrichment' },
+        { id: 'e2', type: 'flow', source: 'fetchEnrichment', target: 'runModel' },
+        { id: 'e3', type: 'flow', source: 'runModel', target: 'computeScore' },
+        { id: 'e4', type: 'flow', source: 'computeScore', target: 'checkThreshold' },
+        { id: 'e5', type: 'flow', source: 'checkThreshold', target: 'end' },
+      ],
+    );
+    const layout = {
+      nodeLayouts: new Map([
+        ['start', { x: 35, y: 35, width: 280, height: 50 }],
+        ['fetchEnrichment', { x: 335, y: 35, width: 280, height: 50 }],
+        ['runModel', { x: 35, y: 126, width: 280, height: 50 }],
+        ['computeScore', { x: 35, y: 217, width: 280, height: 50 }],
+        ['checkThreshold', { x: 335, y: 217, width: 280, height: 50 }],
+        ['end', { x: 35, y: 308, width: 280, height: 50 }],
+      ]),
+    };
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges, 'RIGHT');
+  });
+
+  it('claim-review SWF — actual rendered positions (direction DOWN)', () => {
+    const model = createGraph(
+      [
+        { id: 'start', type: 'swf-start', properties: { label: 'Start' } },
+        { id: 'fetchClaim', type: 'swf-call', properties: { label: 'fetchClaim' } },
+        { id: 'validateEvidence', type: 'swf-call', properties: { label: 'validateEvidence' } },
+        { id: 'routeByRisk', type: 'swf-switch', properties: { label: 'routeByRisk' } },
+        { id: 'autoApprove', type: 'swf-set', properties: { label: 'autoApprove' } },
+        { id: 'humanReview', type: 'swf-call', properties: { label: 'humanReview' } },
+        { id: 'siuReferral', type: 'swf-call', properties: { label: 'siuReferral' } },
+        { id: 'tryNotify', type: 'swf-try-catch', properties: { label: 'tryNotify' } },
+        { id: 'recordOutcome', type: 'swf-call', properties: { label: 'recordOutcome' } },
+        { id: 'end', type: 'swf-end', properties: { label: 'End' } },
+      ],
+      [
+        { id: 'e1', type: 'flow', source: 'start', target: 'fetchClaim' },
+        { id: 'e2', type: 'flow', source: 'fetchClaim', target: 'validateEvidence' },
+        { id: 'e3', type: 'flow', source: 'validateEvidence', target: 'routeByRisk' },
+        { id: 'e4', type: 'switch-case', source: 'routeByRisk', target: 'autoApprove' },
+        { id: 'e5', type: 'switch-case', source: 'routeByRisk', target: 'humanReview' },
+        { id: 'e6', type: 'switch-case', source: 'routeByRisk', target: 'siuReferral' },
+        { id: 'e7', type: 'flow', source: 'autoApprove', target: 'tryNotify' },
+        { id: 'e8', type: 'flow', source: 'humanReview', target: 'tryNotify' },
+        { id: 'e9', type: 'flow', source: 'siuReferral', target: 'tryNotify' },
+        { id: 'e10', type: 'flow', source: 'tryNotify', target: 'recordOutcome' },
+        { id: 'e11', type: 'flow', source: 'recordOutcome', target: 'end' },
+      ],
+    );
+    const layout = {
+      nodeLayouts: new Map([
+        ['start', { x: 95, y: 35, width: 280, height: 50 }],
+        ['fetchClaim', { x: 95, y: 105, width: 280, height: 50 }],
+        ['validateEvidence', { x: 95, y: 175, width: 280, height: 50 }],
+        ['routeByRisk', { x: 95, y: 245, width: 280, height: 50 }],
+        ['siuReferral', { x: 25, y: 325, width: 280, height: 50 }],
+        ['humanReview', { x: 325, y: 325, width: 280, height: 50 }],
+        ['autoApprove', { x: 625, y: 325, width: 280, height: 50 }],
+        ['tryNotify', { x: 275, y: 395, width: 380, height: 300 }],
+        ['recordOutcome', { x: 325, y: 715, width: 280, height: 50 }],
+        ['end', { x: 325, y: 785, width: 280, height: 50 }],
+      ]),
+    };
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+    assertAllEdgeRules(nodes, edges, 'DOWN');
   });
 });

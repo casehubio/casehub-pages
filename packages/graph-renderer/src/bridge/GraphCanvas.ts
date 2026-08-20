@@ -91,12 +91,12 @@ export class GraphCanvas extends LitElement {
     try {
       const layout = await computeElkLayout(model, this.layoutOptions);
       if (generation !== this._layoutGeneration) return;
-      const { nodes, edges } = toReactFlowGraph(model, layout);
+      const { nodes, edges } = toReactFlowGraph(model, layout, undefined, this.layoutOptions?.direction);
       this._nodes = nodes;
       this._edges = edges;
     } catch (err) {
       if (generation !== this._layoutGeneration) return;
-      const { nodes, edges } = toReactFlowGraph(model);
+      const { nodes, edges } = toReactFlowGraph(model, undefined, undefined, this.layoutOptions?.direction);
       this._nodes = nodes;
       this._edges = edges;
       emitPagesEvent(this, 'graph:layout:error', {

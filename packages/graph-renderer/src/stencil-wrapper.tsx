@@ -151,22 +151,26 @@ export function createStencilNodeComponent(
     }
 
     const hideHandles = rawData._hideHandles === true;
-    const allPositions: Array<{ id: string; pos: Position }> = [
-      { id: 'top', pos: Position.Top },
-      { id: 'bottom', pos: Position.Bottom },
-      { id: 'left', pos: Position.Left },
-      { id: 'right', pos: Position.Right },
+    const positionMap: Record<string, Position> = { top: Position.Top, bottom: Position.Bottom, left: Position.Left, right: Position.Right };
+    const hasTarget = rawData._targetHandlePosition !== undefined;
+    const hasSource = rawData._sourceHandlePosition !== undefined;
+    const targetPos = positionMap[rawData._targetHandlePosition as string] ?? Position.Top;
+    const sourcePos = positionMap[rawData._sourceHandlePosition as string] ?? Position.Bottom;
+    const allPositions = [
+      { key: 'top', pos: Position.Top },
+      { key: 'bottom', pos: Position.Bottom },
+      { key: 'left', pos: Position.Left },
+      { key: 'right', pos: Position.Right },
     ];
-    const defaultSrc = (rawData._sourceHandlePosition as string) ?? 'bottom';
-    const defaultTgt = (rawData._targetHandlePosition as string) ?? 'top';
-    const hiddenStyle: React.CSSProperties = { width: 0, height: 0, minWidth: 0, minHeight: 0, opacity: 0, pointerEvents: 'none' };
+    const hiddenHandle: React.CSSProperties = { opacity: 0, width: 1, height: 1 };
 
     return (
       <>
-        {!hideHandles && grammar?.connections.inbound.max !== 0 && allPositions.map(({ id, pos }) => (
-          <Handle key={`target-${id}`} id={`target-${id}`} type="target" position={pos}
-            style={id !== defaultTgt ? hiddenStyle : undefined} />
-        ))}
+        {!hideHandles && hasTarget && grammar?.connections.inbound.max !== 0 &&
+          allPositions.map(({ key, pos }) => (
+            <Handle key={`target-${key}`} id={`target-${key}`} type="target" position={pos}
+              style={pos !== targetPos ? hiddenHandle : undefined} />
+          ))}
         <div
           className="stencil-decoration-wrapper"
           style={{ position: 'relative', ...borderStyle, ...sizeStyle }}
@@ -176,10 +180,11 @@ export function createStencilNodeComponent(
           {decoration?.overlay && <DecorationOverlay overlay={decoration.overlay} />}
           <div ref={containerRef} />
         </div>
-        {!hideHandles && grammar?.connections.outbound.max !== 0 && allPositions.map(({ id, pos }) => (
-          <Handle key={`source-${id}`} id={`source-${id}`} type="source" position={pos}
-            style={id !== defaultSrc ? hiddenStyle : undefined} />
-        ))}
+        {!hideHandles && hasSource && grammar?.connections.outbound.max !== 0 &&
+          allPositions.map(({ key, pos }) => (
+            <Handle key={`source-${key}`} id={`source-${key}`} type="source" position={pos}
+              style={pos !== sourcePos ? hiddenHandle : undefined} />
+          ))}
       </>
     );
   }

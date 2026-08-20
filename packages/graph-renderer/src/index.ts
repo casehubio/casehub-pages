@@ -27,3 +27,5 @@ export type {
 
 export { createWorkStencilRenderFn, toWorkStencilDescriptor } from './work-stencil-renderer.js';
 export type { GraphModel, GraphNode, GraphEdge, NodeDecoration } from '@casehubio/graph-core';
+export { validateEdgeRouting } from './edge-routing-validator.js';
+export type { ValidationResult } from './edge-routing-validator.js';

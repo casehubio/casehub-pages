@@ -8,12 +8,20 @@ import {
   ControlButton,
   type Node,
   type Edge,
+  type EdgeTypes,
   type NodeMouseHandler,
   type EdgeMouseHandler,
   type NodeTypes,
   type OnSelectionChangeFunc,
   type OnMoveEnd,
+  type ReactFlowInstance,
 } from '@xyflow/react';
+import { SmartBezierEdge, SmartEdgeProvider } from '@tisoap/react-flow-smart-edge';
+
+const smartEdgeTypes: EdgeTypes = {
+  default: SmartBezierEdge,
+  smart: SmartBezierEdge,
+};
 
 export interface ReactFlowAppProps {
   nodes: Node[];
@@ -59,10 +67,12 @@ export function ReactFlowApp({
   );
 
   return (
+    <SmartEdgeProvider nodes={nodes}>
     <ReactFlow
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
+      edgeTypes={smartEdgeTypes}
       onNodeClick={handleNodeClick}
       onEdgeClick={handleEdgeClick}
       onSelectionChange={handleSelectionChange}
@@ -70,6 +80,7 @@ export function ReactFlowApp({
       selectionOnDrag
       selectionMode={SelectionMode.Partial}
       fitView
+      fitViewOptions={{ padding: 0.05 }}
     >
       <MiniMap
         pannable
@@ -98,5 +109,6 @@ export function ReactFlowApp({
       </Controls>
       <Background />
     </ReactFlow>
+    </SmartEdgeProvider>
   );
 }

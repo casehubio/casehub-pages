@@ -36,7 +36,7 @@ function mountWithProps(
 const defaultNodeProps = {
   id: 'n1',
   type: 'test',
-  data: { label: 'Test Node' } as Record<string, unknown>,
+  data: { label: 'Test Node', _sourceHandlePosition: 'bottom', _targetHandlePosition: 'top' } as Record<string, unknown>,
   dragging: false,
   zIndex: 0,
   selectable: true,
@@ -122,10 +122,10 @@ describe('createStencilNodeComponent', () => {
     const { container, unmount } = mountWithProps(Component, defaultNodeProps);
     const handles = Array.from(container.querySelectorAll('[data-handletype]'));
     expect(handles).toHaveLength(8);
-    const targetHandles = handles.filter(h => h.getAttribute('data-handletype') === 'target');
-    const sourceHandles = handles.filter(h => h.getAttribute('data-handletype') === 'source');
-    expect(targetHandles).toHaveLength(4);
-    expect(sourceHandles).toHaveLength(4);
+    const targets = handles.filter(h => h.getAttribute('data-handletype') === 'target');
+    const sources = handles.filter(h => h.getAttribute('data-handletype') === 'source');
+    expect(targets).toHaveLength(4);
+    expect(sources).toHaveLength(4);
     unmount();
   });
 
