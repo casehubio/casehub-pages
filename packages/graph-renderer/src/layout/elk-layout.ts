@@ -137,51 +137,5 @@ export async function computeElkLayout(
   const nodeLayouts = new Map<string, NodeLayout>();
   extractNodeLayouts(layouted.children, nodeLayouts);
 
-  if (options.wrapping && (direction === 'RIGHT' || direction === 'LEFT')) {
-    snakeReverseAlternateRows(nodeLayouts, model);
-  }
-
   return { nodeLayouts };
-}
-
-function snakeReverseAlternateRows(layouts: Map<string, NodeLayout>, model: GraphModel): void {
-  const parentGroups = new Map<string, string[]>();
-  for (const node of model.nodes) {
-    const key = node.parentId ?? '__root__';
-    const group = parentGroups.get(key) ?? [];
-    group.push(node.id);
-    parentGroups.set(key, group);
-  }
-
-  for (const ids of parentGroups.values()) {
-    const withLayout = ids.map(id => ({ id, layout: layouts.get(id) })).filter(n => n.layout);
-    if (withLayout.length < 2) continue;
-
-    const rowMap = new Map<number, typeof withLayout>();
-    for (const n of withLayout) {
-      const y = Math.round(n.layout!.y);
-      const row = [...rowMap.keys()].find(k => Math.abs(k - y) < 10) ?? y;
-      const arr = rowMap.get(row) ?? [];
-      arr.push(n);
-      rowMap.set(row, arr);
-    }
-
-    if (rowMap.size < 2) continue;
-    const sortedRows = [...rowMap.entries()].sort((a, b) => a[0] - b[0]);
-
-    let minX = Infinity, maxXRight = -Infinity;
-    for (const n of withLayout) {
-      minX = Math.min(minX, n.layout!.x);
-      maxXRight = Math.max(maxXRight, n.layout!.x + n.layout!.width);
-    }
-
-    for (let i = 1; i < sortedRows.length; i += 2) {
-      const row = sortedRows[i]![1];
-      for (const n of row) {
-        const l = n.layout!;
-        const newX = minX + (maxXRight - (l.x + l.width));
-        layouts.set(n.id, { x: newX, y: l.y, width: l.width, height: l.height });
-      }
-    }
-  }
 }
