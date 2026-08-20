@@ -119,10 +119,11 @@ function assertNoSameHandleInOut(nodes: Node[], edges: Edge[]): void {
   }
 }
 
-// Rule 2a: no edge line crosses any non-endpoint, non-sibling node rectangle
+// Rule 2a: no edge line crosses any non-endpoint, non-sibling, non-container node rectangle
 // Siblings sharing a source or target are expected to have overlapping bezier paths
 function assertNoEdgeNodeCrossings(nodes: Node[], edges: Edge[]): void {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
   const fanSiblings = new Set<string>();
   const sourceGroups = new Map<string, string[]>();
   const targetGroups = new Map<string, string[]>();
@@ -151,7 +152,7 @@ function assertNoEdgeNodeCrossings(nodes: Node[], edges: Edge[]): void {
 
     for (const node of nodes) {
       if (node.id === edge.source || node.id === edge.target) continue;
-      if (node.parentId) continue;
+      if (node.parentId || parentIds.has(node.id)) continue;
       // Skip fan siblings — bezier curves route around same-layer spread
       if (fanSiblings.has(node.id) && fanSiblings.has(edge.source)) continue;
       if (fanSiblings.has(node.id) && fanSiblings.has(edge.target)) continue;
@@ -201,6 +202,7 @@ function assertNoEdgeEdgeCrossings(nodes: Node[], edges: Edge[]): void {
 // Rule 3: handle positions should produce shortest crossing-free edge length
 function assertShortestEdges(nodes: Node[], edges: Edge[]): void {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
   const positions = ['top', 'bottom', 'left', 'right'] as const;
 
   for (const edge of edges) {
@@ -225,7 +227,8 @@ function assertShortestEdges(nodes: Node[], edges: Edge[]): void {
         const tgtPt = handleCenterForPos(tgtRect, tp);
         let crosses = false;
         for (const node of nodes) {
-          if (node.id === edge.source || node.id === edge.target || node.parentId) continue;
+          if (node.id === edge.source || node.id === edge.target) continue;
+          if (node.parentId || parentIds.has(node.id)) continue;
           const r = nodeRect(node);
           if (lineIntersectsRect(srcPt, tgtPt, r)) crosses = true;
           if (crosses) break;
@@ -454,6 +457,33 @@ describe('edge routing rules (no same-handle, no crossings, shortest path)', () 
     }));
 
     const model = createGraph(steps, stepEdges);
+    const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges);
+  });
+
+  it('pipeline inside container node — container must not block handle detection', async () => {
+    const container = { id: 'root', type: 'container', properties: { label: 'workflow' } };
+    const start = { id: 'start', type: 'start', parentId: 'root', properties: { label: 'Start' } };
+    const steps = Array.from({ length: 6 }, (_, i) => ({
+      id: `s${i}`,
+      type: 'call' as const,
+      parentId: 'root',
+      properties: { label: `step${i}LongName` },
+    }));
+    const end = { id: 'end', type: 'end', parentId: 'root', properties: { label: 'End' } };
+    const allNodes = [container, start, ...steps, end];
+    const allEdges = [
+      { id: 'e-start', type: 'flow' as const, source: 'start', target: 's0' },
+      ...steps.slice(0, -1).map((s, i) => ({
+        id: `e${i}`,
+        type: 'flow' as const,
+        source: s.id,
+        target: steps[i + 1]!.id,
+      })),
+      { id: 'e-end', type: 'flow' as const, source: steps[steps.length - 1]!.id, target: 'end' },
+    ];
+    const model = createGraph(allNodes, allEdges);
     const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
     assertAllEdgeRules(nodes, edges);

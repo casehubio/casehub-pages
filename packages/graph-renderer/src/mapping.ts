@@ -76,6 +76,7 @@ function nodeBounds(node: Node): { x: number; y: number; w: number; h: number } 
 function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: string): void {
   if (!nodes.length || !edges.length) return;
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
 
   for (const edge of edges) {
     const srcNode = nodeMap.get(edge.source);
@@ -96,7 +97,8 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
         const t = handlePosPoint(tgtBounds, tp);
         let crosses = false;
         for (const node of nodes) {
-          if (node.id === edge.source || node.id === edge.target || node.parentId) continue;
+          if (node.id === edge.source || node.id === edge.target) continue;
+          if (node.parentId || parentIds.has(node.id)) continue;
           const r = nodeBounds(node);
           if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) { crosses = true; break; }
         }
