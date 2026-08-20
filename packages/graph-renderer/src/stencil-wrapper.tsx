@@ -151,10 +151,9 @@ export function createStencilNodeComponent(
     }
 
     const hideHandles = rawData._hideHandles === true;
-    const targetHorizontal = (rawData._targetHandleDirection ?? rawData._handleDirection) === 'horizontal';
-    const sourceHorizontal = (rawData._sourceHandleDirection ?? rawData._handleDirection) === 'horizontal';
-    const targetPos = targetHorizontal ? Position.Left : Position.Top;
-    const sourcePos = sourceHorizontal ? Position.Right : Position.Bottom;
+    const positionMap: Record<string, Position> = { top: Position.Top, bottom: Position.Bottom, left: Position.Left, right: Position.Right };
+    const targetPos = positionMap[rawData._targetHandlePosition as string] ?? Position.Top;
+    const sourcePos = positionMap[rawData._sourceHandlePosition as string] ?? Position.Bottom;
 
     return (
       <>
