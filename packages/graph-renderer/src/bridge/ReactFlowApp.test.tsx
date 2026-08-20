@@ -38,8 +38,12 @@ describe('ReactFlowApp', () => {
       );
     });
 
-    expect(capturedMiniMapProps['nodeColor']).toBe('#64748b');
-    expect(capturedMiniMapProps['maskColor']).toBe('rgba(0, 0, 0, 0.1)');
+    expect(typeof capturedMiniMapProps['nodeColor']).toBe('function');
+    const colorFn = capturedMiniMapProps['nodeColor'] as (node: { type?: string }) => string;
+    expect(colorFn({ type: 'start' })).toBe('#16a34a');
+    expect(colorFn({ type: 'try-catch' })).toBe('#c2410c');
+    expect(colorFn({ type: 'call' })).toBe('#2563eb');
+    expect(capturedMiniMapProps['maskColor']).toBe('rgba(0, 0, 0, 0.3)');
 
     act(() => root.unmount());
     container.remove();

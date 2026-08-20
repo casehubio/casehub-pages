@@ -349,7 +349,7 @@ describe('dimension constraints', () => {
     clearGrammarRegistry();
   });
 
-  it('applies width/height constraints from NodeProps', () => {
+  it('applies width constraint from NodeProps', () => {
     registerGrammar({
       type: 'sized',
       connections: {
@@ -369,14 +369,12 @@ describe('dimension constraints', () => {
 
     const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
     expect(wrapper).not.toBeNull();
-    expect(wrapper.style.maxWidth).toBe('200px');
-    expect(wrapper.style.maxHeight).toBe('100px');
-    expect(wrapper.style.overflow).toBe('hidden');
+    expect(wrapper.style.width).toBe('200px');
 
     unmount();
   });
 
-  it('does not apply constraints when width/height are absent', () => {
+  it('does not apply width constraint when width is absent', () => {
     registerGrammar({
       type: 'unsized',
       connections: {
@@ -394,13 +392,12 @@ describe('dimension constraints', () => {
 
     const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
     expect(wrapper).not.toBeNull();
-    expect(wrapper.style.maxWidth).toBe('');
-    expect(wrapper.style.maxHeight).toBe('');
+    expect(wrapper.style.width).toBe('');
 
     unmount();
   });
 
-  it('does not apply constraints when width/height are zero', () => {
+  it('does not apply width constraint when width is zero', () => {
     registerGrammar({
       type: 'zero-sized',
       connections: {
@@ -420,9 +417,7 @@ describe('dimension constraints', () => {
 
     const wrapper = container.querySelector('.stencil-decoration-wrapper') as HTMLElement;
     expect(wrapper).not.toBeNull();
-    expect(wrapper.style.maxWidth).toBe('');
-    expect(wrapper.style.maxHeight).toBe('');
-    expect(wrapper.style.overflow).toBe('');
+    expect(wrapper.style.width).toBe('');
 
     unmount();
   });
