@@ -115,6 +115,7 @@ export async function computeElkLayout(
     'elk.algorithm': 'layered',
     'elk.direction': direction,
     'elk.spacing.nodeNode': String(spacing),
+    'elk.layered.spacing.nodeNodeBetweenLayers': String(spacing),
     'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
   };
 
