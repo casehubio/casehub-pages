@@ -4,7 +4,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PushRequestTest {
 
@@ -195,5 +201,65 @@ class PushRequestTest {
         PushRequest.CommandResult cr  = (PushRequest.CommandResult) req;
         assertNull(cr.result());
     }
+
+    @Test
+    void parse_executor_register() {
+        PushRequest req = PushRequest.parse("{\"op\":\"executor-register\",\"id\":\"r1\",\"name\":\"helpdesk\",\"actions\":[\"create-ticket\",\"resolve-ticket\"]}");
+        assertInstanceOf(PushRequest.ExecutorRegister.class, req);
+        PushRequest.ExecutorRegister reg = (PushRequest.ExecutorRegister) req;
+        assertEquals("r1", reg.id());
+        assertEquals("helpdesk", reg.name());
+        assertEquals(List.of("create-ticket", "resolve-ticket"), reg.actions());
+        assertEquals("executor-register", reg.op());
+    }
+
+    @Test
+    void parse_executor_register_without_actions() {
+        PushRequest req = PushRequest.parse("{\"op\":\"executor-register\",\"id\":\"r2\",\"name\":\"browser\"}");
+        assertInstanceOf(PushRequest.ExecutorRegister.class, req);
+        assertEquals(List.of(), ((PushRequest.ExecutorRegister) req).actions());
+    }
+
+    @Test
+    void parse_executor_register_without_name_throws() {
+        assertThrows(NullPointerException.class,
+                     () -> PushRequest.parse("{\"op\":\"executor-register\",\"id\":\"r3\"}"));
+    }
+
+    @Test
+    void parse_step_result_ok() {
+        PushRequest req = PushRequest.parse("{\"op\":\"step-result\",\"id\":\"sr1\",\"sessionId\":\"s-001\",\"stepName\":\"create-ticket\",\"ok\":true,\"result\":{\"ticketId\":\"T-001\"}}");
+        assertInstanceOf(PushRequest.StepResult.class, req);
+        PushRequest.StepResult sr = (PushRequest.StepResult) req;
+        assertEquals("sr1", sr.id());
+        assertEquals("s-001", sr.sessionId());
+        assertEquals("create-ticket", sr.stepName());
+        assertTrue(sr.ok());
+        assertNull(sr.error());
+        assertEquals("T-001", sr.result().get("ticketId"));
+        assertEquals("step-result", sr.op());
+    }
+
+    @Test
+    void parse_step_result_failure() {
+        PushRequest            req = PushRequest.parse("{\"op\":\"step-result\",\"id\":\"sr2\",\"sessionId\":\"s-001\",\"stepName\":\"verify\",\"ok\":false,\"error\":\"await timed out\"}");
+        PushRequest.StepResult sr  = (PushRequest.StepResult) req;
+        assertFalse(sr.ok());
+        assertEquals("await timed out", sr.error());
+        assertNull(sr.result());
+    }
+
+    @Test
+    void parse_step_result_without_session_throws() {
+        assertThrows(NullPointerException.class,
+                     () -> PushRequest.parse("{\"op\":\"step-result\",\"id\":\"sr3\",\"stepName\":\"x\",\"ok\":true}"));
+    }
+
+    @Test
+    void parse_step_result_without_step_name_throws() {
+        assertThrows(NullPointerException.class,
+                     () -> PushRequest.parse("{\"op\":\"step-result\",\"id\":\"sr4\",\"sessionId\":\"s-001\",\"ok\":true}"));
+    }
+
 
 }

@@ -149,6 +149,36 @@ public final class PushMessage {
         return sb.toString();
     }
 
+    public static String dispatchSequence(String sessionId, String executorId,
+                                          String stepsJson, double speed,
+                                          boolean paused) {
+        Objects.requireNonNull(sessionId, "sessionId");
+        Objects.requireNonNull(executorId, "executorId");
+        Objects.requireNonNull(stepsJson, "stepsJson");
+        return generate(g -> {
+            g.writeStringField("op", "dispatch-sequence");
+            g.writeStringField("sessionId", sessionId);
+            g.writeStringField("executorId", executorId);
+            g.writeFieldName("steps");
+            g.writeRawValue(stepsJson);
+            g.writeNumberField("speed", speed);
+            g.writeBooleanField("paused", paused);
+        });
+    }
+
+    public static String executorControl(String sessionId, String command,
+                                         Double speed) {
+        Objects.requireNonNull(sessionId, "sessionId");
+        Objects.requireNonNull(command, "command");
+        return generate(g -> {
+            g.writeStringField("op", "executor-control");
+            g.writeStringField("sessionId", sessionId);
+            g.writeStringField("command", command);
+            if (speed != null) {g.writeNumberField("speed", speed);}
+        });
+    }
+
+
     private static String datasetOp(String op, String dataset, List<PushColumn> columns,
                                      List<List<String>> rows, Long seq) {
         Objects.requireNonNull(dataset, "dataset");

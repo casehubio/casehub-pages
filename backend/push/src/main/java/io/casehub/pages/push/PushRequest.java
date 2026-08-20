@@ -60,21 +60,49 @@ public sealed interface PushRequest {
         public String op() { return "command-result"; }
     }
 
+    record ExecutorRegister(String id, String name,
+                            List<String> actions) implements PushRequest {
+        public ExecutorRegister {
+            Objects.requireNonNull(id, "id");
+            Objects.requireNonNull(name, "name");
+            actions = actions != null ? List.copyOf(actions) : List.of();
+        }
+
+        public String op() {return "executor-register";}
+    }
+
+    record StepResult(String id, String sessionId, String stepName,
+                      boolean ok, String error,
+                      Map<String, Object> result) implements PushRequest {
+        public StepResult {
+            Objects.requireNonNull(id, "id");
+            Objects.requireNonNull(sessionId, "sessionId");
+            Objects.requireNonNull(stepName, "stepName");
+        }
+
+        public String op() {return "step-result";}
+    }
+
+
     static PushRequest parse(String json) {
         JsonFactory factory = new JsonFactory();
         try (JsonParser p = factory.createParser(json)) {
             if (p.nextToken() != JsonToken.START_OBJECT) {
                 throw new IllegalArgumentException("Expected JSON object");
             }
-            String op = null;
-            String id = null;
-            String dataset = null;
-            String stringSince = null;
-            Map<String, Long> mapSince = null;
-            List<String> topics = null;
-            Boolean ok = null;
-            String error = null;
-            Map<String, Object> result = null;
+            String              op          = null;
+            String              id          = null;
+            String              dataset     = null;
+            String              stringSince = null;
+            Map<String, Long>   mapSince    = null;
+            List<String>        topics      = null;
+            Boolean             ok          = null;
+            String              error       = null;
+            Map<String, Object> result      = null;
+            String              name        = null;
+            List<String>        actions     = null;
+            String              sessionId   = null;
+            String              stepName    = null;
 
             while (p.nextToken() != JsonToken.END_OBJECT) {
                 String field = p.currentName();
@@ -120,6 +148,15 @@ public sealed interface PushRequest {
                             p.skipChildren();
                         }
                     }
+                    case "name" -> name = p.getText();
+                    case "actions" -> {
+                        actions = new ArrayList<>();
+                        while (p.nextToken() != JsonToken.END_ARRAY) {
+                            actions.add(p.getText());
+                        }
+                    }
+                    case "sessionId" -> sessionId = p.getText();
+                    case "stepName" -> stepName = p.getText();
                     default -> p.skipChildren();
                 }
             }
@@ -137,10 +174,11 @@ public sealed interface PushRequest {
                 case "listen" -> new Listen(id, topics != null ? List.copyOf(topics) : List.of(), mapSince);
                 case "unlisten" -> new Unlisten(id, topics != null ? List.copyOf(topics) : List.of());
                 case "command-result" -> new CommandResult(id, ok != null && ok, error, result);
+                case "executor-register" -> new ExecutorRegister(id, name, actions);
+                case "step-result" -> new StepResult(id, sessionId, stepName, ok != null && ok, error, result);
                 default -> throw new IllegalArgumentException("Unknown op: " + op);
             };
         } catch (IOException e) {
             throw new IllegalArgumentException("Malformed JSON: " + e.getMessage(), e);
-        }
-    }
+        }}
 }

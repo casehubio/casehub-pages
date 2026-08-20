@@ -289,4 +289,56 @@ class PushMessageTest {
         assertTrue(result.contains("\"append\""), "batch should contain append op");
     }
 
+    @Test
+    void dispatchSequence_produces_valid_json() throws IOException {
+        String stepsJson = "[{\"name\":\"s1\",\"commands\":[{\"action\":\"click\"}]}]";
+        String msg       = PushMessage.dispatchSequence("s-001", "browser", stepsJson, 1.0, false);
+        var    parsed    = parse(msg);
+        assertEquals("dispatch-sequence", parsed.get("op"));
+        assertEquals("s-001", parsed.get("sessionId"));
+        assertEquals("browser", parsed.get("executorId"));
+        assertEquals(1.0, parsed.get("speed"));
+        assertEquals(false, parsed.get("paused"));
+        assertNotNull(parsed.get("steps"));
+    }
+
+    @Test
+    void dispatchSequence_paused() throws IOException {
+        String msg    = PushMessage.dispatchSequence("s-002", "helpdesk", "[]", 0.5, true);
+        var    parsed = parse(msg);
+        assertEquals(true, parsed.get("paused"));
+        assertEquals(0.5, parsed.get("speed"));
+    }
+
+    @Test
+    void dispatchSequence_null_sessionId_throws() {
+        assertThrows(NullPointerException.class,
+                     () -> PushMessage.dispatchSequence(null, "browser", "[]", 1.0, false));
+    }
+
+    @Test
+    void executorControl_pause() throws IOException {
+        String msg    = PushMessage.executorControl("s-001", "pause", null);
+        var    parsed = parse(msg);
+        assertEquals("executor-control", parsed.get("op"));
+        assertEquals("s-001", parsed.get("sessionId"));
+        assertEquals("pause", parsed.get("command"));
+        assertNull(parsed.get("speed"));
+    }
+
+    @Test
+    void executorControl_speed_includes_value() throws IOException {
+        String msg    = PushMessage.executorControl("s-001", "speed", 2.0);
+        var    parsed = parse(msg);
+        assertEquals("speed", parsed.get("command"));
+        assertEquals(2.0, parsed.get("speed"));
+    }
+
+    @Test
+    void executorControl_null_command_throws() {
+        assertThrows(NullPointerException.class,
+                     () -> PushMessage.executorControl("s-001", null, null));
+    }
+
+
 }
