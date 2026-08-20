@@ -64,24 +64,30 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[]): void {
     const pos = posMap.get(node.id);
     if (!pos) continue;
 
-    let hScore = 0;
-    let vScore = 0;
+    let sourceH = 0, sourceV = 0, targetH = 0, targetV = 0;
     for (const e of edges) {
-      const peerId = e.source === node.id ? e.target : e.target === node.id ? e.source : null;
-      if (!peerId) continue;
-      const peerPos = posMap.get(peerId);
-      if (!peerPos) continue;
-      const dx = Math.abs(peerPos.x - pos.x);
-      const dy = Math.abs(peerPos.y - pos.y);
-      if (dx > dy) hScore++;
-      else vScore++;
+      if (e.source === node.id) {
+        const peerPos = posMap.get(e.target);
+        if (!peerPos) continue;
+        if (Math.abs(peerPos.x - pos.x) > Math.abs(peerPos.y - pos.y)) sourceH++;
+        else sourceV++;
+      } else if (e.target === node.id) {
+        const peerPos = posMap.get(e.source);
+        if (!peerPos) continue;
+        if (Math.abs(peerPos.x - pos.x) > Math.abs(peerPos.y - pos.y)) targetH++;
+        else targetV++;
+      }
     }
 
-    if (hScore > 0 || vScore > 0) {
-      node.data = {
-        ...node.data,
-        _handleDirection: hScore > vScore ? 'horizontal' : undefined,
-      };
+    const updates: Record<string, unknown> = {};
+    if (sourceH > 0 || sourceV > 0) {
+      updates._sourceHandleDirection = sourceH > sourceV ? 'horizontal' : undefined;
+    }
+    if (targetH > 0 || targetV > 0) {
+      updates._targetHandleDirection = targetH > targetV ? 'horizontal' : undefined;
+    }
+    if (Object.keys(updates).length > 0) {
+      node.data = { ...node.data, ...updates };
     }
   }
 }
