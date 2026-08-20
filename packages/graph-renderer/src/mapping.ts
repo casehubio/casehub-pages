@@ -73,18 +73,42 @@ function nodeBounds(node: Node): { x: number; y: number; w: number; h: number } 
 }
 
 
+function absoluteBounds(node: Node, nodeMap: Map<string, Node>): { x: number; y: number; w: number; h: number } {
+  let x = node.position.x;
+  let y = node.position.y;
+  let cur = node;
+  while (cur.parentId) {
+    const parent = nodeMap.get(cur.parentId);
+    if (!parent) break;
+    x += parent.position.x;
+    y += parent.position.y;
+    cur = parent;
+  }
+  return { x, y, w: node.width ?? 280, h: node.height ?? 50 };
+}
+
 function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: string): void {
   if (!nodes.length || !edges.length) return;
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
+
+  function checkCrossing(s: { x: number; y: number }, t: { x: number; y: number }, srcId: string, tgtId: string): boolean {
+    for (const node of nodes) {
+      if (node.id === srcId || node.id === tgtId) continue;
+      if (parentIds.has(node.id)) continue;
+      const r = absoluteBounds(node, nodeMap);
+      if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) return true;
+    }
+    return false;
+  }
 
   for (const edge of edges) {
     const srcNode = nodeMap.get(edge.source);
     const tgtNode = nodeMap.get(edge.target);
     if (!srcNode || !tgtNode) continue;
 
-    const srcBounds = nodeBounds(srcNode);
-    const tgtBounds = nodeBounds(tgtNode);
+    const srcBounds = absoluteBounds(srcNode, nodeMap);
+    const tgtBounds = absoluteBounds(tgtNode, nodeMap);
 
     let bestSrc = 'bottom';
     let bestTgt = 'top';
@@ -95,14 +119,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
         if (sp === tp) continue;
         const s = handlePosPoint(srcBounds, sp);
         const t = handlePosPoint(tgtBounds, tp);
-        let crosses = false;
-        for (const node of nodes) {
-          if (node.id === edge.source || node.id === edge.target) continue;
-          if (node.parentId || parentIds.has(node.id)) continue;
-          const r = nodeBounds(node);
-          if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) { crosses = true; break; }
-        }
-        if (crosses) continue;
+        if (checkCrossing(s, t, edge.source, edge.target)) continue;
         const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
         if (d < bestDist) { bestDist = d; bestSrc = sp; bestTgt = tp; }
       }
@@ -131,8 +148,8 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
       const tgtNode = nodeMap.get(edge.target);
       const srcNode = nodeMap.get(edge.source);
       if (!tgtNode || !srcNode) continue;
-      const srcBounds = nodeBounds(srcNode);
-      const tgtBounds = nodeBounds(tgtNode);
+      const srcBounds = absoluteBounds(srcNode, nodeMap);
+      const tgtBounds = absoluteBounds(tgtNode, nodeMap);
       const sp = edge.sourceHandle?.replace('source-', '') ?? 'bottom';
       let bestTp = tp;
       let bestDist = Infinity;
@@ -141,14 +158,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
         if (outs.has(candidate)) continue;
         const s = handlePosPoint(srcBounds, sp);
         const t = handlePosPoint(tgtBounds, candidate);
-        let crosses = false;
-        for (const node of nodes) {
-          if (node.id === edge.source || node.id === edge.target) continue;
-          if (node.parentId || parentIds.has(node.id)) continue;
-          const r = nodeBounds(node);
-          if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) { crosses = true; break; }
-        }
-        if (crosses) continue;
+        if (checkCrossing(s, t, edge.source, edge.target)) continue;
         const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
         if (d < bestDist) { bestDist = d; bestTp = candidate; }
       }
