@@ -2,7 +2,7 @@ import { click, fill, select, expand, collapse, assertState, waitFor } from '../
 import type { AriaTarget, AriaState } from '@casehubio/pages-primitives';
 import type { EventConnection } from '@casehubio/pages-data';
 
-const SCENARIO_TOPIC_PREFIX = 'scenario/';
+const SCENARIO_TOPIC = 'scenario:exec';
 
 interface CommandPayload {
   id: string;
@@ -58,6 +58,8 @@ function executeCommand(cmd: CommandPayload): void | Promise<void> {
       return;
     case 'wait':
       return waitFor(target!, toAriaState(state!), timeout ?? 5000);
+    case 'ready':
+      return;
     default:
       throw new Error(`Unknown action: ${action}`);
   }
@@ -67,11 +69,11 @@ export function createScenarioHandler(
   connection: EventConnection,
   eventTarget: EventTarget,
 ): ScenarioHandler {
-  connection.listen(['scenario/*']);
+  connection.listen(['scenario:exec']);
 
   function onEvent(e: Event): void {
     const detail = (e as CustomEvent).detail as { topic?: string; payload?: unknown };
-    if (!detail?.topic?.startsWith(SCENARIO_TOPIC_PREFIX)) return;
+    if (detail?.topic !== SCENARIO_TOPIC) return;
 
     const cmd = detail.payload as CommandPayload;
     if (!cmd?.id || !cmd?.action) return;
@@ -95,7 +97,7 @@ export function createScenarioHandler(
   return {
     dispose() {
       eventTarget.removeEventListener('pages-event', onEvent);
-      connection.unlisten(['scenario/*']);
+      connection.unlisten(['scenario:exec']);
     },
   };
 }

@@ -1,0 +1,221 @@
+package io.casehub.pages.scenario.runtime;
+
+import io.casehub.pages.push.EventBroadcaster;
+import io.casehub.pages.push.InMemoryEventStore;
+import io.casehub.pages.push.PushRequest;
+import io.casehub.pages.push.TopicRegistry;
+import io.casehub.pages.scenario.AriaTarget;
+import io.casehub.pages.scenario.Scenario;
+import io.casehub.pages.scenario.ScenarioStep;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class ScenarioExecutorTest {
+
+    @Test
+    void executesGraphQLStepsSequentially() {
+        var dispatcher = stubDispatcher(Map.of(
+                "injectChat", Map.of("caseId", "C-001"),
+                "caseContext", Map.of("category", "HARDWARE")));
+
+        var executor = new ScenarioExecutor(dispatcher);
+
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.GraphQLStep("inject", "connectors", "injectChat",
+                        Map.of("sender", "Alice"), null),
+                new ScenarioStep.GraphQLStep("check", "engine", "caseContext",
+                        Map.of("caseId", "${inject.caseId}"), null)));
+
+        List<ExecutionResult> results = executor.execute(scenario, ScenarioConfig.localhost());
+
+        assertThat(results).hasSize(2);
+        assertThat(results.get(0).success()).isTrue();
+        assertThat(results.get(0).result()).containsEntry("caseId", "C-001");
+        assertThat(results.get(1).result()).containsEntry("category", "HARDWARE");
+    }
+
+    @Test
+    void failFastOnError() {
+        var dispatcher = new GraphQLDispatcher(null, null) {
+            @Override
+            public Map<String, Object> dispatch(ScenarioStep.GraphQLStep step,
+                                                 String endpoint, VariableContext ctx) {
+                throw new RuntimeException("Connection refused");
+            }
+        };
+
+        var executor = new ScenarioExecutor(dispatcher);
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.GraphQLStep("s1", "d", "op1", Map.of(), null),
+                new ScenarioStep.GraphQLStep("s2", "d", "op2", Map.of(), null)));
+
+        assertThatThrownBy(() -> executor.execute(scenario, ScenarioConfig.localhost()))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Connection refused");
+    }
+
+    @Test
+    void variableInterpolationAcrossSteps() {
+        var dispatcher = stubDispatcher(Map.of(
+                "createCase", Map.of("caseId", "C-999"),
+                "getCase", Map.of("status", "OPEN")));
+
+        var executor = new ScenarioExecutor(dispatcher);
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.GraphQLStep("create", "engine", "createCase",
+                        Map.of("type", "helpdesk"), null),
+                new ScenarioStep.GraphQLStep("get", "engine", "getCase",
+                        Map.of("caseId", "${create.caseId}"), null)));
+
+        List<ExecutionResult> results = executor.execute(scenario, ScenarioConfig.localhost());
+        assertThat(results).hasSize(2);
+        assertThat(results.get(1).success()).isTrue();
+    }
+
+    @Test
+    void ariaStepsReturnEmptyResult() {
+        var executor = new ScenarioExecutor(new GraphQLDispatcher());
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.AriaStep("click-btn", "click", null, null, null, null)));
+
+        List<ExecutionResult> results = executor.execute(scenario, ScenarioConfig.localhost());
+        assertThat(results).hasSize(1);
+        assertThat(results.getFirst().success()).isTrue();
+    }
+
+    @Test
+    void ariaStepDelegatesToDispatcher() {
+        var dispatched     = new ArrayList<ScenarioStep.AriaStep>();
+        var ariaDispatcher = stubAriaDispatcher(dispatched, Map.of());
+        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.AriaStep("click-btn", "click",
+                                          new AriaTarget("button", "Submit"), null, null, null)));
+
+        List<ExecutionResult> results = executor.execute(scenario, ScenarioConfig.localhost());
+
+        assertThat(results).hasSize(1);
+        assertThat(results.getFirst().success()).isTrue();
+        assertThat(dispatched).hasSize(1);
+        assertThat(dispatched.getFirst().action()).isEqualTo("click");
+    }
+
+    @Test
+    void consecutiveUnnamedNonNavigateStepsBatched() {
+        var batchSizes     = new ArrayList<Integer>();
+        var ariaDispatcher = batchCapturingDispatcher(batchSizes);
+        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.AriaStep(null, "click",
+                                          new AriaTarget("button", "A"), null, null, null),
+                new ScenarioStep.AriaStep(null, "fill",
+                                          new AriaTarget("textbox", "Name"), "Alice", null, null),
+                new ScenarioStep.AriaStep(null, "click",
+                                          new AriaTarget("button", "B"), null, null, null)));
+
+        executor.execute(scenario, ScenarioConfig.localhost());
+
+        assertThat(batchSizes).containsExactly(3);
+    }
+
+    @Test
+    void namedStepBreaksBatch() {
+        var batchSizes     = new ArrayList<Integer>();
+        var ariaDispatcher = batchCapturingDispatcher(batchSizes);
+        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.AriaStep(null, "click",
+                                          new AriaTarget("button", "A"), null, null, null),
+                new ScenarioStep.AriaStep("important", "click",
+                                          new AriaTarget("button", "B"), null, null, null),
+                new ScenarioStep.AriaStep(null, "click",
+                                          new AriaTarget("button", "C"), null, null, null)));
+
+        executor.execute(scenario, ScenarioConfig.localhost());
+
+        assertThat(batchSizes).containsExactly(1, 1);
+    }
+
+    @Test
+    void navigateStepBreaksBatch() {
+        var dispatched     = new ArrayList<ScenarioStep.AriaStep>();
+        var ariaDispatcher = stubAriaDispatcher(dispatched, Map.of());
+        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.AriaStep(null, "click",
+                                          new AriaTarget("button", "A"), null, null, null),
+                new ScenarioStep.AriaStep("nav", "navigate",
+                                          null, "/page2", null, null)));
+
+        executor.execute(scenario, ScenarioConfig.localhost());
+
+        assertThat(dispatched).hasSize(2);
+    }
+
+
+    private static GraphQLDispatcher stubDispatcher(Map<String, Map<String, Object>> responses) {
+        return new GraphQLDispatcher(null, null) {
+            @Override
+            public Map<String, Object> dispatch(ScenarioStep.GraphQLStep step,
+                                                 String endpoint, VariableContext ctx) {
+                Map<String, Object> result = responses.get(step.operation());
+                if (result == null) {
+                    throw new RuntimeException("No stub for " + step.operation());
+                }
+                return result;
+            }
+        };
+    }
+
+    private static AriaDispatcher stubAriaDispatcher(
+            List<ScenarioStep.AriaStep> captured,
+            Map<String, Object> result) {
+        return new AriaDispatcher(
+                new EventBroadcaster(
+                        new InMemoryEventStore(100), new TopicRegistry(),
+                        (c, m) -> {}, o -> "{}"),
+                500) {
+            @Override
+            public PushRequest.CommandResult send(ScenarioStep.AriaStep step) {
+                captured.add(step);
+                return new PushRequest.CommandResult("id", true, null, result);
+            }
+
+            @Override
+            public PushRequest.CommandResult sendBatch(List<ScenarioStep.AriaStep> steps) {
+                captured.addAll(steps);
+                return new PushRequest.CommandResult("id", true, null, result);
+            }
+        };
+    }
+
+    private static AriaDispatcher batchCapturingDispatcher(List<Integer> batchSizes) {
+        return new AriaDispatcher(
+                new EventBroadcaster(
+                        new InMemoryEventStore(100), new TopicRegistry(),
+                        (c, m) -> {}, o -> "{}"),
+                500) {
+            @Override
+            public PushRequest.CommandResult send(ScenarioStep.AriaStep step) {
+                return new PushRequest.CommandResult("id", true, null, Map.of());
+            }
+
+            @Override
+            public PushRequest.CommandResult sendBatch(List<ScenarioStep.AriaStep> steps) {
+                batchSizes.add(steps.size());
+                return new PushRequest.CommandResult("id", true, null, Map.of());
+            }
+        };
+    }
+
+}

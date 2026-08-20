@@ -1,0 +1,11 @@
+scenario: graphql-inject-chat
+steps:
+  - name: inject-chat
+    delivery: graphql
+    domain: connectors
+    operation: injectChat
+    params:
+      platform: "slack"
+      sender: "Alice"
+      channel: "support"
+      text: "My laptop won't boot"

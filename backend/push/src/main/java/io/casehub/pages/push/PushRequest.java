@@ -49,7 +49,11 @@ public sealed interface PushRequest {
         public String op() { return "unlisten"; }
     }
 
-    record CommandResult(String id, boolean ok, String error) implements PushRequest {
+    record CommandResult(String id, boolean ok, String error,
+                         Map<String, Object> result) implements PushRequest {
+        public CommandResult(String id, boolean ok, String error) {
+            this(id, ok, error, null);
+        }
         public CommandResult {
             Objects.requireNonNull(id, "id");
         }
@@ -70,6 +74,7 @@ public sealed interface PushRequest {
             List<String> topics = null;
             Boolean ok = null;
             String error = null;
+            Map<String, Object> result = null;
 
             while (p.nextToken() != JsonToken.END_OBJECT) {
                 String field = p.currentName();
@@ -103,6 +108,18 @@ public sealed interface PushRequest {
                     }
                     case "ok" -> ok = p.getBooleanValue();
                     case "error" -> error = p.getText();
+                    case "result" -> {
+                        if (p.currentToken() == JsonToken.START_OBJECT) {
+                            result = new HashMap<>();
+                            while (p.nextToken() != JsonToken.END_OBJECT) {
+                                String rKey = p.currentName();
+                                p.nextToken();
+                                result.put(rKey, p.currentToken() == JsonToken.VALUE_NULL ? null : p.getText());
+                            }
+                        } else {
+                            p.skipChildren();
+                        }
+                    }
                     default -> p.skipChildren();
                 }
             }
@@ -119,7 +136,7 @@ public sealed interface PushRequest {
                 case "unsubscribe" -> new Unsubscribe(id, dataset);
                 case "listen" -> new Listen(id, topics != null ? List.copyOf(topics) : List.of(), mapSince);
                 case "unlisten" -> new Unlisten(id, topics != null ? List.copyOf(topics) : List.of());
-                case "command-result" -> new CommandResult(id, ok != null && ok, error);
+                case "command-result" -> new CommandResult(id, ok != null && ok, error, result);
                 default -> throw new IllegalArgumentException("Unknown op: " + op);
             };
         } catch (IOException e) {

@@ -3,12 +3,35 @@ package io.casehub.pages.scenario;
 import java.util.Map;
 import java.util.Objects;
 
-public record ScenarioStep(String action, AriaTarget target,
-                           String value, Map<String, Object> state,
-                           Integer timeout) {
+public sealed interface ScenarioStep {
 
-    public ScenarioStep {
-        Objects.requireNonNull(action, "action");
-        state = state != null ? Map.copyOf(state) : null;
+    String name();
+
+    record AriaStep(String name, String action, AriaTarget target,
+                    String value, Map<String, Object> state,
+                    Integer timeout) implements ScenarioStep {
+        public AriaStep {
+            Objects.requireNonNull(action, "action");
+            state = state != null ? Map.copyOf(state) : null;
+        }
+    }
+
+    record GraphQLStep(String name, String domain, String operation,
+                       Map<String, Object> params,
+                       AwaitCondition await) implements ScenarioStep {
+        public GraphQLStep {
+            Objects.requireNonNull(name, "name");
+            Objects.requireNonNull(domain, "domain");
+            Objects.requireNonNull(operation, "operation");
+            params = params != null ? Map.copyOf(params) : Map.of();
+        }
+    }
+
+    record SimulatedStep(String name, String dataset,
+                         Map<String, Object> data) implements ScenarioStep {
+        public SimulatedStep {
+            Objects.requireNonNull(dataset, "dataset");
+            data = data != null ? Map.copyOf(data) : Map.of();
+        }
     }
 }

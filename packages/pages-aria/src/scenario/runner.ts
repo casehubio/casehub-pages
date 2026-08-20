@@ -13,19 +13,18 @@ function toAriaState(state: Record<string, unknown>): Partial<AriaState> {
 }
 
 async function executeStep(step: ScenarioStep): Promise<void> {
-  if ('navigate' in step) {
-    window.location.href = step.navigate;
-    return;
-  }
-  if ('click' in step) { click(step.click); return; }
-  if ('fill' in step) { fill(step.fill, step.fill.value); return; }
-  if ('select' in step) { select(step.select, step.select.value); return; }
-  if ('expand' in step) { expand(step.expand); return; }
-  if ('collapse' in step) { collapse(step.collapse); return; }
-  if ('assert' in step) { assertState(step.assert, toAriaState(step.assert.state)); return; }
-  if ('wait' in step) {
-    await waitFor(step.wait, toAriaState(step.wait.state), step.wait.timeout ?? 5000);
-    return;
+  if (step.delivery !== 'aria') return;
+  const { action, target, value, state, timeout } = step;
+
+  switch (action) {
+    case 'navigate': window.location.href = value!; return;
+    case 'click': click(target!); return;
+    case 'fill': fill(target!, value!); return;
+    case 'select': select(target!, value!); return;
+    case 'expand': expand(target!); return;
+    case 'collapse': collapse(target!); return;
+    case 'assert': assertState(target!, toAriaState(state!)); return;
+    case 'wait': await waitFor(target!, toAriaState(state!), timeout ?? 5000); return;
   }
 }
 

@@ -177,4 +177,23 @@ class PushRequestTest {
         assertEquals("r8", listen.id());
         assertEquals(java.util.Map.of("debate:abc", 50L), listen.since());
     }
+
+    @Test
+    void parse_command_result_with_result_payload() {
+        PushRequest req = PushRequest.parse("{\"op\":\"command-result\",\"id\":\"cmd-4\",\"ok\":true,\"error\":null,\"result\":{\"caseId\":\"C-001\",\"status\":\"OPEN\"}}");
+        assertInstanceOf(PushRequest.CommandResult.class, req);
+        PushRequest.CommandResult cr = (PushRequest.CommandResult) req;
+        assertTrue(cr.ok());
+        assertNotNull(cr.result());
+        assertEquals("C-001", cr.result().get("caseId"));
+        assertEquals("OPEN", cr.result().get("status"));
+    }
+
+    @Test
+    void parse_command_result_without_result_has_null() {
+        PushRequest               req = PushRequest.parse("{\"op\":\"command-result\",\"id\":\"cmd-5\",\"ok\":false,\"error\":\"not found\"}");
+        PushRequest.CommandResult cr  = (PushRequest.CommandResult) req;
+        assertNull(cr.result());
+    }
+
 }

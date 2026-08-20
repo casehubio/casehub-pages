@@ -27,6 +27,7 @@
         <module>push-store-jdbc</module>
         <module>push-store-redis</module>
         <module>scenario</module>
+        <module>scenario-runtime</module>
         <module>mcp</module>
         <module>cross-parser-test</module>
     </modules>

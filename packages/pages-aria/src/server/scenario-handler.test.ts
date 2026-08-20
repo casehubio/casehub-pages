@@ -7,7 +7,7 @@ function mockConnection(): EventConnection & { sent: object[] } {
   return {
     sent,
     send(msg: object) { sent.push(msg); },
-    listen: vi.fn().mockResolvedValue({ topics: ['scenario/*'] }),
+    listen: vi.fn().mockResolvedValue({ topics: ['scenario:exec'] }),
     unlisten: vi.fn().mockResolvedValue(undefined),
     close: vi.fn(),
     get connected() { return true; },
@@ -17,7 +17,7 @@ function mockConnection(): EventConnection & { sent: object[] } {
 
 function fireCommand(target: EventTarget, data: Record<string, unknown>): void {
   target.dispatchEvent(new CustomEvent('pages-event', {
-    detail: { topic: 'scenario/command', payload: data },
+    detail: { topic: 'scenario:exec', payload: data },
   }));
 }
 
@@ -28,10 +28,10 @@ describe('ScenarioHandler', () => {
     eventTarget = new EventTarget();
   });
 
-  it('subscribes to scenario/* on creation', async () => {
+  it('subscribes to scenario:exec on creation', async () => {
     const conn = mockConnection();
     const handler = createScenarioHandler(conn, eventTarget);
-    expect(conn.listen).toHaveBeenCalledWith(['scenario/*']);
+    expect(conn.listen).toHaveBeenCalledWith(['scenario:exec']);
     handler.dispose();
   });
 
@@ -135,12 +135,36 @@ describe('ScenarioHandler', () => {
     handler.dispose();
   });
 
-  it('ignores non-scenario topics', () => {
+  it('executes ready action — no-op that confirms handler is active', () => {
+    const conn = mockConnection();
+    const handler = createScenarioHandler(conn, eventTarget);
+
+    fireCommand(eventTarget, {
+      id: 'cmd-ready',
+      action: 'ready',
+    });
+
+    expect(conn.sent).toHaveLength(1);
+    expect(conn.sent[0]).toEqual({
+      op: 'command-result',
+      id: 'cmd-ready',
+      ok: true,
+      error: null,
+    });
+
+    handler.dispose();
+  });
+
+  it('ignores non-scenario:exec topics', () => {
     const conn = mockConnection();
     const handler = createScenarioHandler(conn, eventTarget);
 
     eventTarget.dispatchEvent(new CustomEvent('pages-event', {
       detail: { topic: 'data/update', payload: { id: 'x' } },
+    }));
+
+    eventTarget.dispatchEvent(new CustomEvent('pages-event', {
+      detail: { topic: 'scenario/old-format', payload: { id: 'y', action: 'click' } },
     }));
 
     expect(conn.sent).toHaveLength(0);
@@ -151,6 +175,6 @@ describe('ScenarioHandler', () => {
     const conn = mockConnection();
     const handler = createScenarioHandler(conn, eventTarget);
     handler.dispose();
-    expect(conn.unlisten).toHaveBeenCalledWith(['scenario/*']);
+    expect(conn.unlisten).toHaveBeenCalledWith(['scenario:exec']);
   });
 });

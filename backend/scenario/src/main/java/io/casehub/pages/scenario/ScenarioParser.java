@@ -70,27 +70,51 @@ public final class ScenarioParser {
         }
 
         p.nextToken();
-        String action = p.currentName();
+        String firstField = p.currentName();
         p.nextToken();
 
-        if (!KNOWN_ACTIONS.contains(action)) {
-            throw new IllegalArgumentException("Unknown action: " + action);
+        if (KNOWN_ACTIONS.contains(firstField)) {
+            return parseAriaShorthand(firstField, p);
         }
 
-        ScenarioStep step;
+        Map<String, Object> fields = new HashMap<>();
+        fields.put(firstField, readValue(p));
+        while (p.nextToken() != JsonToken.END_OBJECT) {
+            String key = p.currentName();
+            p.nextToken();
+            fields.put(key, readValue(p));
+        }
+
+        String delivery = (String) fields.get("delivery");
+        if (delivery == null) {
+            throw new IllegalArgumentException(
+                    "Unknown step format — must be an ARIA shorthand or have a 'delivery' field. Found keys: " + fields.keySet());
+        }
+
+        return switch (delivery) {
+            case "graphql" -> buildGraphQLStep(fields);
+            case "simulated" -> buildSimulatedStep(fields);
+            default -> throw new IllegalArgumentException("Unknown delivery type: " + delivery);
+        };
+    }
+
+    private static ScenarioStep.AriaStep parseAriaShorthand(String action, JsonParser p) throws IOException {
         if ("navigate".equals(action)) {
-            step = new ScenarioStep(action, null, p.getText(), null, null);
-        } else {
-            step = parseTargetedStep(action, p);
+            String path = p.getText();
+            while (p.nextToken() != JsonToken.END_OBJECT) {
+                p.skipChildren();
+            }
+            return new ScenarioStep.AriaStep("navigate-" + path, action, null, path, null, null);
         }
 
+        ScenarioStep.AriaStep step = parseTargetedStep(action, p);
         while (p.nextToken() != JsonToken.END_OBJECT) {
             p.skipChildren();
         }
         return step;
     }
 
-    private static ScenarioStep parseTargetedStep(String action, JsonParser p) throws IOException {
+    private static ScenarioStep.AriaStep parseTargetedStep(String action, JsonParser p) throws IOException {
         if (p.currentToken() != JsonToken.START_OBJECT) {
             throw new IllegalArgumentException(action + " step must have an object body");
         }
@@ -117,7 +141,64 @@ public final class ScenarioParser {
         }
 
         AriaTarget target = (role != null && name != null) ? new AriaTarget(role, name, within) : null;
-        return new ScenarioStep(action, target, value, state, timeout);
+        String autoName = action + "-" + (role != null ? role : "unknown") + "-" + (name != null ? name : "unknown");
+        return new ScenarioStep.AriaStep(autoName, action, target, value, state, timeout);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ScenarioStep.GraphQLStep buildGraphQLStep(Map<String, Object> fields) {
+        String name = (String) fields.get("name");
+        String domain = (String) fields.get("domain");
+        String operation = (String) fields.get("operation");
+        Map<String, Object> params = fields.containsKey("params")
+                ? (Map<String, Object>) fields.get("params") : Map.of();
+        AwaitCondition await = null;
+        if (fields.containsKey("await")) {
+            Map<String, Object> awaitMap = (Map<String, Object>) fields.get("await");
+            Map<String, Object> match = (Map<String, Object>) awaitMap.get("match");
+            Integer timeout = awaitMap.containsKey("timeout") ? ((Number) awaitMap.get("timeout")).intValue() : null;
+            Integer interval = awaitMap.containsKey("interval") ? ((Number) awaitMap.get("interval")).intValue() : null;
+            await = new AwaitCondition(match, timeout, interval);
+        }
+        return new ScenarioStep.GraphQLStep(name, domain, operation, params, await);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ScenarioStep.SimulatedStep buildSimulatedStep(Map<String, Object> fields) {
+        String name = (String) fields.get("name");
+        String dataset = (String) fields.get("dataset");
+        Map<String, Object> data = fields.containsKey("data")
+                ? (Map<String, Object>) fields.get("data") : Map.of();
+        return new ScenarioStep.SimulatedStep(name, dataset, data);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object readValue(JsonParser p) throws IOException {
+        return switch (p.currentToken()) {
+            case VALUE_STRING -> p.getText();
+            case VALUE_NUMBER_INT -> p.getIntValue();
+            case VALUE_NUMBER_FLOAT -> p.getDoubleValue();
+            case VALUE_TRUE -> true;
+            case VALUE_FALSE -> false;
+            case VALUE_NULL -> null;
+            case START_OBJECT -> {
+                Map<String, Object> map = new HashMap<>();
+                while (p.nextToken() != JsonToken.END_OBJECT) {
+                    String key = p.currentName();
+                    p.nextToken();
+                    map.put(key, readValue(p));
+                }
+                yield map;
+            }
+            case START_ARRAY -> {
+                List<Object> list = new ArrayList<>();
+                while (p.nextToken() != JsonToken.END_ARRAY) {
+                    list.add(readValue(p));
+                }
+                yield list;
+            }
+            default -> throw new IllegalArgumentException("Unexpected token: " + p.currentToken());
+        };
     }
 
     private static AriaTarget parseAriaTarget(JsonParser p) throws IOException {

@@ -1,0 +1,30 @@
+scenario: hybrid-helpdesk
+steps:
+  - navigate: /helpdesk/intake
+  - fill:
+      role: textbox
+      name: "Customer Name"
+      value: "Alice Chen"
+  - click:
+      role: button
+      name: "Submit"
+  - name: inject-chat
+    delivery: graphql
+    domain: connectors
+    operation: injectChat
+    params:
+      platform: "slack"
+      sender: "Alice"
+      channel: "support"
+      text: "My laptop won't boot"
+  - name: verify-classified
+    delivery: graphql
+    domain: engine
+    operation: caseContext
+    params:
+      caseId: "${inject-chat.caseId}"
+    await:
+      match:
+        category: "HARDWARE"
+      timeout: 30000
+      interval: 500
