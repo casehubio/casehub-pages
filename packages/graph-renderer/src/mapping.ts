@@ -102,6 +102,10 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     return false;
   }
 
+  // Track which sides are used for outgoing/incoming at each node
+  const usedOut = new Map<string, Set<string>>();
+  const usedIn = new Map<string, Set<string>>();
+
   for (const edge of edges) {
     const srcNode = nodeMap.get(edge.source);
     const tgtNode = nodeMap.get(edge.target);
@@ -109,14 +113,18 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
 
     const srcBounds = absoluteBounds(srcNode, nodeMap);
     const tgtBounds = absoluteBounds(tgtNode, nodeMap);
+    const srcIn = usedIn.get(edge.source);
+    const tgtOut = usedOut.get(edge.target);
 
     let bestSrc = 'bottom';
     let bestTgt = 'top';
     let bestDist = Infinity;
 
     for (const sp of POSITIONS) {
+      if (srcIn && srcIn.has(sp)) continue;
       for (const tp of POSITIONS) {
         if (sp === tp) continue;
+        if (tgtOut && tgtOut.has(tp)) continue;
         const s = handlePosPoint(srcBounds, sp);
         const t = handlePosPoint(tgtBounds, tp);
         if (checkCrossing(s, t, edge.source, edge.target)) continue;
@@ -127,45 +135,11 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
 
     edge.sourceHandle = `source-${bestSrc}`;
     edge.targetHandle = `target-${bestTgt}`;
-  }
 
-  // Post-process: resolve per-node conflicts where incoming and outgoing share a side
-  const outSides = new Map<string, Set<string>>();
-  const inEdges = new Map<string, Edge[]>();
-  for (const edge of edges) {
-    const sp = edge.sourceHandle?.replace('source-', '') ?? 'bottom';
-    outSides.set(edge.source, (outSides.get(edge.source) ?? new Set()).add(sp));
-    const ie = inEdges.get(edge.target) ?? [];
-    ie.push(edge);
-    inEdges.set(edge.target, ie);
-  }
-  for (const [nodeId, incoming] of inEdges) {
-    const outs = outSides.get(nodeId);
-    if (!outs) continue;
-    for (const edge of incoming) {
-      const tp = edge.targetHandle?.replace('target-', '') ?? 'top';
-      if (!outs.has(tp)) continue;
-      const tgtNode = nodeMap.get(edge.target);
-      const srcNode = nodeMap.get(edge.source);
-      if (!tgtNode || !srcNode) continue;
-      const srcBounds = absoluteBounds(srcNode, nodeMap);
-      const tgtBounds = absoluteBounds(tgtNode, nodeMap);
-      const sp = edge.sourceHandle?.replace('source-', '') ?? 'bottom';
-      let bestTp = tp;
-      let bestDist = Infinity;
-      for (const candidate of POSITIONS) {
-        if (candidate === sp || candidate === tp) continue;
-        if (outs.has(candidate)) continue;
-        const s = handlePosPoint(srcBounds, sp);
-        const t = handlePosPoint(tgtBounds, candidate);
-        if (checkCrossing(s, t, edge.source, edge.target)) continue;
-        const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
-        if (d < bestDist) { bestDist = d; bestTp = candidate; }
-      }
-      if (bestTp !== tp) {
-        edge.targetHandle = `target-${bestTp}`;
-      }
-    }
+    if (!usedOut.has(edge.source)) usedOut.set(edge.source, new Set());
+    usedOut.get(edge.source)!.add(bestSrc);
+    if (!usedIn.has(edge.target)) usedIn.set(edge.target, new Set());
+    usedIn.get(edge.target)!.add(bestTgt);
   }
 
   // Set per-node default positions (most common direction across edges) for handle visibility
