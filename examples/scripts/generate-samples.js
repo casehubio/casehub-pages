@@ -18,7 +18,10 @@ const CATEGORY_ORDER = [
   'Theming',
   'Monitoring',
   'Domain Showcases',
+  'Server',
 ];
+
+const SERVER_CATEGORIES = new Set(['Server']);
 
 const DISPLAY_NAMES = {};
 
@@ -75,10 +78,16 @@ const knownKeys = CATEGORY_ORDER.filter(k => categories[k]);
 const unknownKeys = Object.keys(categories).filter(k => !CATEGORY_ORDER.includes(k)).sort();
 const sortedCategories = [...knownKeys, ...unknownKeys];
 
-const categorized = sortedCategories.map(category => ({
-  category: DISPLAY_NAMES[category] || category,
-  samples: categories[category].sort((a, b) => a.name.localeCompare(b.name))
-}));
+const categorized = sortedCategories.map(category => {
+  const entry = {
+    category: DISPLAY_NAMES[category] || category,
+    samples: categories[category].sort((a, b) => a.name.localeCompare(b.name))
+  };
+  if (SERVER_CATEGORIES.has(category)) {
+    entry.requiresServer = true;
+  }
+  return entry;
+});
 
 const output = {
   version: '2.0.0',

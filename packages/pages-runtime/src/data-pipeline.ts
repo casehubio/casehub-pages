@@ -258,6 +258,13 @@ export function createDataPipeline(
       def,
       (event: DataSetEvent) => {
         manager.apply(lookup.dataSetId, event);
+        for (const [compId, compEntry] of registry) {
+          if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
+            const fg = (compEntry.component.props as Record<string, unknown> | undefined)
+              ?.filter as { group?: string } | undefined;
+            pushData(compEntry.vizElement, compEntry.originalLookup, compEntry.pagePath, fg?.group, compId);
+          }
+        }
       },
       (error) => {
         if (!error.permanent) {

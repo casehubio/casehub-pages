@@ -31,6 +31,63 @@ const sidebarToggleBtn = document.getElementById('sidebar-toggle');
 const codeSidebar = document.getElementById('code-sidebar');
 const codeToggleBtn = document.getElementById('code-toggle');
 const sourceCodeElement = document.getElementById('source-code');
+const galleryTabs = document.getElementById('gallery-tabs');
+const serverStatus = document.getElementById('server-status');
+
+// Tab state
+let activeTab = 'client';
+let suppressHashChange = false;
+let loadingPath = null;
+
+// Tab switching
+function setActiveTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.gallery-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    renderCategories();
+    renderStats();
+    updateSampleCount();
+    if (tab === 'server') {
+        checkServerHealth();
+    } else {
+        removeBanner();
+    }
+}
+
+function checkServerHealth() {
+    fetch('/api/demo/health')
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(() => {
+            serverStatus.className = 'server-status connected';
+            removeBanner();
+        })
+        .catch(() => {
+            serverStatus.className = 'server-status disconnected';
+            showBanner();
+        });
+}
+
+function showBanner() {
+    removeBanner();
+    const banner = document.createElement('div');
+    banner.className = 'server-banner';
+    banner.id = 'server-banner';
+    banner.innerHTML = 'Server not running — start with <code>docker compose up</code> in <code>examples/</code>';
+    categoriesNav.parentElement.insertBefore(banner, categoriesNav);
+}
+
+function removeBanner() {
+    document.getElementById('server-banner')?.remove();
+}
+
+function updateSampleCount() {
+    const filtered = samplesData.categories.filter(c =>
+        activeTab === 'server' ? c.requiresServer === true : !c.requiresServer
+    );
+    const count = filtered.reduce((sum, c) => sum + c.samples.length, 0);
+    sampleCount.textContent = `${count} samples`;
+}
 
 // Load samples.json
 async function loadSamples() {
@@ -46,16 +103,29 @@ async function loadSamples() {
 
 // Initialize the application
 function initializeApp() {
-    sampleCount.textContent = `${samplesData.totalSamples} samples`;
     renderCategories();
     renderStats();
+    updateSampleCount();
     setupEventListeners();
 
     // Check if there's a sample in the URL hash
     const hash = window.location.hash.slice(1);
     if (hash) {
-        const [category, samplePath] = hash.split('/');
-        loadSampleFromHash(category, samplePath);
+        if (hash.startsWith('server/')) {
+            setActiveTab('server');
+            const rest = hash.slice(7);
+            const [category, samplePath] = rest.split('/');
+            if (category && samplePath) loadSampleFromHash(category, samplePath);
+        } else if (hash.startsWith('client/')) {
+            setActiveTab('client');
+            const rest = hash.slice(7);
+            const [category, samplePath] = rest.split('/');
+            if (category && samplePath) loadSampleFromHash(category, samplePath);
+        } else {
+            // backward compat — bare hash defaults to client
+            const [category, samplePath] = hash.split('/');
+            loadSampleFromHash(category, samplePath);
+        }
     }
 }
 
@@ -63,7 +133,11 @@ function initializeApp() {
 function renderCategories() {
     categoriesNav.innerHTML = '';
 
-    samplesData.categories.forEach(category => {
+    const filtered = samplesData.categories.filter(c =>
+        activeTab === 'server' ? c.requiresServer === true : !c.requiresServer
+    );
+
+    filtered.forEach(category => {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'category';
 
@@ -104,8 +178,11 @@ function renderCategories() {
 
 // Render statistics
 function renderStats() {
-    const categoryCount = samplesData.categories.length;
-    const totalSamples = samplesData.totalSamples;
+    const filtered = samplesData.categories.filter(c =>
+        activeTab === 'server' ? c.requiresServer === true : !c.requiresServer
+    );
+    const categoryCount = filtered.length;
+    const totalSamples = filtered.reduce((sum, c) => sum + c.samples.length, 0);
 
     statsContainer.innerHTML = `
         <div class="stat-card">
@@ -122,6 +199,7 @@ function renderStats() {
 // Load a sample
 function loadSample(sample) {
     currentSample = sample;
+    loadingPath = sample.path;
     propertyOverrides = {};
 
     // Update active state
@@ -133,8 +211,10 @@ function loadSample(sample) {
         activeItem.classList.add('active');
     }
 
-    // Update URL hash
-    window.location.hash = `${sample.category}/${encodeURIComponent(sample.path)}`;
+    // Update URL hash (suppress hashchange to avoid double-load)
+    suppressHashChange = true;
+    window.location.hash = `${activeTab}/${sample.category}/${encodeURIComponent(sample.path)}`;
+    requestAnimationFrame(() => { suppressHashChange = false; });
 
     // Show sample container
     welcomeScreen.style.display = 'none';
@@ -151,6 +231,7 @@ function loadSample(sample) {
 // Load sample from URL hash
 function loadSampleFromHash(category, samplePath) {
     const decodedPath = decodeURIComponent(samplePath);
+    if (loadingPath === decodedPath) return;
 
     for (const cat of samplesData.categories) {
         for (const sample of cat.samples) {
@@ -393,6 +474,12 @@ function toggleCodeSidebar() {
 
 // Setup event listeners
 function setupEventListeners() {
+    // Tab switching
+    galleryTabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.gallery-tab');
+        if (tab) setActiveTab(tab.dataset.tab);
+    });
+
     // Sidebar toggle
     sidebarToggleBtn.addEventListener('click', toggleSidebar);
 
@@ -428,7 +515,7 @@ function setupEventListeners() {
     // Open in new window
     openNewWindowBtn.addEventListener('click', () => {
         if (currentSample) {
-            const url = `${window.location.origin}${window.location.pathname}#${currentSample.category}/${encodeURIComponent(currentSample.path)}`;
+            const url = `${window.location.origin}${window.location.pathname}#${activeTab}/${currentSample.category}/${encodeURIComponent(currentSample.path)}`;
             window.open(url, '_blank');
         }
     });
@@ -469,10 +556,19 @@ function setupEventListeners() {
 
     // Handle browser back/forward
     window.addEventListener('hashchange', () => {
+        if (suppressHashChange) return;
         const hash = window.location.hash.slice(1);
         if (hash) {
-            const [category, samplePath] = hash.split('/');
-            loadSampleFromHash(category, samplePath);
+            if (hash.startsWith('server/') || hash.startsWith('client/')) {
+                const isServer = hash.startsWith('server/');
+                setActiveTab(isServer ? 'server' : 'client');
+                const rest = hash.slice(isServer ? 7 : 7);
+                const [category, samplePath] = rest.split('/');
+                if (category && samplePath) loadSampleFromHash(category, samplePath);
+            } else {
+                const [category, samplePath] = hash.split('/');
+                loadSampleFromHash(category, samplePath);
+            }
         } else {
             welcomeScreen.style.display = 'flex';
             sampleContainer.style.display = 'none';

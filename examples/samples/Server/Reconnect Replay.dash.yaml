@@ -1,0 +1,39 @@
+properties:
+  pushUrl: ws://localhost:8090/ws/push
+
+datasets:
+  - id: events
+    url: "${pushUrl}"
+
+pages:
+  - name: Reconnect Replay Demo
+    rows:
+      - columns:
+          - components:
+              - type: html
+                properties:
+                  content: |
+                    <div style="padding: 20px; background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; margin-bottom: 16px;">
+                      <h2 style="margin: 0 0 8px; color: var(--pages-text-primary, #eee); font-size: 20px;">Reconnect Replay</h2>
+                      <p style="margin: 0 0 12px; color: var(--pages-text-muted, #999); font-size: 14px;">
+                        Demonstrates EventStore replay on reconnect. Disconnect the WebSocket — events keep arriving on the server.
+                        On reconnect, the <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">listen</code> message includes
+                        <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">since: { "demo:events": lastSeq }</code>,
+                        and the EventStore replays all missed events.
+                      </p>
+                      <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
+                        ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">docker compose up</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
+                      </p>
+                    </div>
+      - columns:
+          - span: 4
+            components:
+              - type: metric
+                lookup: { dataSetId: events }
+                props:
+                  label: "Total Events"
+                  value: "#{datasets.events.rowCount}"
+          - span: 8
+            components:
+              - type: event-timeline
+                lookup: { dataSetId: events }

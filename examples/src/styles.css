@@ -119,6 +119,72 @@ body {
     background: rgba(255, 255, 255, 0.25);
 }
 
+/* --- Gallery Tabs --- */
+
+.gallery-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 var(--pages-space-4) var(--pages-space-2);
+  border-bottom: 1px solid var(--pages-border-subtle);
+  margin-bottom: 0;
+}
+
+.gallery-tab {
+  flex: 1;
+  padding: var(--pages-space-1-5) var(--pages-space-3);
+  border: 1px solid var(--pages-border-default);
+  border-bottom: none;
+  border-radius: var(--pages-radius-md) var(--pages-radius-md) 0 0;
+  background: transparent;
+  color: var(--pages-text-muted);
+  cursor: pointer;
+  font-size: var(--pages-font-size-sm);
+  font-family: var(--pages-font-family);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pages-space-1-5);
+  transition: all var(--pages-duration-fast) var(--pages-ease-out);
+}
+
+.gallery-tab:hover {
+  background: var(--pages-surface-hover);
+}
+
+.gallery-tab.active {
+  background: var(--pages-surface-primary);
+  color: var(--pages-text-primary);
+  border-color: var(--pages-border-default);
+}
+
+.server-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pages-border-default);
+  display: inline-block;
+}
+
+.server-status.connected { background: var(--pages-success, #16a34a); }
+.server-status.disconnected { background: var(--pages-error, #dc2626); }
+
+.server-banner {
+  padding: var(--pages-space-3) var(--pages-space-4);
+  background: var(--pages-surface-tertiary);
+  border: 1px solid var(--pages-border-subtle);
+  border-radius: var(--pages-radius-md);
+  margin: var(--pages-space-2) var(--pages-space-4);
+  font-size: var(--pages-font-size-sm);
+  color: var(--pages-text-muted);
+}
+
+.server-banner code {
+  background: var(--pages-surface-secondary);
+  padding: 2px var(--pages-space-1-5);
+  border-radius: var(--pages-radius-sm);
+  font-size: var(--pages-font-size-xs);
+}
+
 /* --- Search --- */
 
 .search-box {

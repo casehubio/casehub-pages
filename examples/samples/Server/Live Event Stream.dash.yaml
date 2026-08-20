@@ -1,0 +1,27 @@
+datasets:
+- uuid: events
+  url: ws://localhost:8090/ws/push
+
+pages:
+- name: Live Event Stream
+  rows:
+  - columns:
+    - components:
+      - type: html
+        properties:
+          content: |
+            <div style="padding: 20px; background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; margin-bottom: 16px;">
+              <h2 style="margin: 0 0 8px; color: var(--pages-text-primary, #eee); font-size: 20px;">Live Event Stream</h2>
+              <p style="margin: 0 0 12px; color: var(--pages-text-muted, #999); font-size: 14px;">
+                Events arrive every 2 seconds via WebSocket push — claims, alerts, and metrics from the demo generator.
+              </p>
+              <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
+                ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">mvn quarkus:dev</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/server/</code>
+              </p>
+            </div>
+  - columns:
+    - components:
+      - type: data-table
+        properties:
+          lookup:
+            uuid: events

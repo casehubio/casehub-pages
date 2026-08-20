@@ -52,6 +52,18 @@ module.exports = (env = {}) => {
       },
       globalObject: "this",
     },
+    devServer: {
+      port: 8080,
+      proxy: [
+        {
+          context: ["/api/", "/ws/"],
+          target: "http://localhost:8090",
+          ws: true,
+          changeOrigin: true,
+        },
+      ],
+      historyApiFallback: true,
+    },
     resolve: {
       ...common.resolve,
       alias: {
