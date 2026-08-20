@@ -78,9 +78,65 @@ function lineIntersectsRect(
   return tMin <= tMax;
 }
 
-function assertNoEdgeCrossings(nodes: Node[], edges: Edge[]): void {
+function segmentsIntersect(
+  a1: { x: number; y: number }, a2: { x: number; y: number },
+  b1: { x: number; y: number }, b2: { x: number; y: number },
+): boolean {
+  const d1x = a2.x - a1.x, d1y = a2.y - a1.y;
+  const d2x = b2.x - b1.x, d2y = b2.y - b1.y;
+  const cross = d1x * d2y - d1y * d2x;
+  if (Math.abs(cross) < 1e-10) return false;
+  const t = ((b1.x - a1.x) * d2y - (b1.y - a1.y) * d2x) / cross;
+  const u = ((b1.x - a1.x) * d1y - (b1.y - a1.y) * d1x) / cross;
+  return t > 0.01 && t < 0.99 && u > 0.01 && u < 0.99;
+}
+
+function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+}
+
+// Rule 1: source and target handles must not be on the same side
+function assertNoSameHandleInOut(nodes: Node[], edges: Edge[]): void {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const tolerance = 30;
+
+  for (const node of nodes) {
+    const data = node.data as Record<string, unknown>;
+    const srcPos = data._sourceHandlePosition as string | undefined;
+    const tgtPos = data._targetHandlePosition as string | undefined;
+    if (!srcPos || !tgtPos) continue;
+
+    const hasOutgoing = edges.some(e => e.source === node.id);
+    const hasIncoming = edges.some(e => e.target === node.id);
+    if (!hasOutgoing || !hasIncoming) continue;
+
+    expect(
+      srcPos === tgtPos,
+      `Node '${node.id}' has source and target on same handle '${srcPos}'`,
+    ).toBe(false);
+  }
+}
+
+// Rule 2a: no edge line crosses any non-endpoint, non-sibling node rectangle
+// Siblings sharing a source or target are expected to have overlapping bezier paths
+function assertNoEdgeNodeCrossings(nodes: Node[], edges: Edge[]): void {
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const fanSiblings = new Set<string>();
+  const sourceGroups = new Map<string, string[]>();
+  const targetGroups = new Map<string, string[]>();
+  for (const e of edges) {
+    const sg = sourceGroups.get(e.source) ?? [];
+    sg.push(e.target);
+    sourceGroups.set(e.source, sg);
+    const tg = targetGroups.get(e.target) ?? [];
+    tg.push(e.source);
+    targetGroups.set(e.target, tg);
+  }
+  for (const targets of sourceGroups.values()) {
+    if (targets.length > 1) targets.forEach(t => fanSiblings.add(t));
+  }
+  for (const sources of targetGroups.values()) {
+    if (sources.length > 1) sources.forEach(s => fanSiblings.add(s));
+  }
 
   for (const edge of edges) {
     const sourceNode = nodeMap.get(edge.source);
@@ -89,16 +145,13 @@ function assertNoEdgeCrossings(nodes: Node[], edges: Edge[]): void {
 
     const p1 = handleCenter(sourceNode, 'source');
     const p2 = handleCenter(targetNode, 'target');
-    const srcY = sourceNode.position.y;
-    const tgtY = targetNode.position.y;
 
     for (const node of nodes) {
       if (node.id === edge.source || node.id === edge.target) continue;
       if (node.parentId) continue;
-
-      // Skip same-layer siblings — bezier curves route around them
-      const ny = node.position.y;
-      if (Math.abs(ny - srcY) < tolerance || Math.abs(ny - tgtY) < tolerance) continue;
+      // Skip fan siblings — bezier curves route around same-layer spread
+      if (fanSiblings.has(node.id) && fanSiblings.has(edge.source)) continue;
+      if (fanSiblings.has(node.id) && fanSiblings.has(edge.target)) continue;
 
       const rect = nodeRect(node);
       const crosses = lineIntersectsRect(p1, p2, rect);
@@ -108,6 +161,95 @@ function assertNoEdgeCrossings(nodes: Node[], edges: Edge[]): void {
       ).toBe(false);
     }
   }
+}
+
+// Rule 2b: no edge line crosses any other edge line
+function assertNoEdgeEdgeCrossings(nodes: Node[], edges: Edge[]): void {
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const lines: { edge: Edge; p1: { x: number; y: number }; p2: { x: number; y: number } }[] = [];
+
+  for (const edge of edges) {
+    const sourceNode = nodeMap.get(edge.source);
+    const targetNode = nodeMap.get(edge.target);
+    if (!sourceNode || !targetNode) continue;
+    lines.push({
+      edge,
+      p1: handleCenter(sourceNode, 'source'),
+      p2: handleCenter(targetNode, 'target'),
+    });
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = i + 1; j < lines.length; j++) {
+      const a = lines[i]!;
+      const b = lines[j]!;
+      // Skip edges that share an endpoint — they naturally converge
+      if (a.edge.source === b.edge.source || a.edge.target === b.edge.target ||
+          a.edge.source === b.edge.target || a.edge.target === b.edge.source) continue;
+      const crosses = segmentsIntersect(a.p1, a.p2, b.p1, b.p2);
+      expect(
+        crosses,
+        `Edge ${a.edge.source}→${a.edge.target} crosses edge ${b.edge.source}→${b.edge.target}`,
+      ).toBe(false);
+    }
+  }
+}
+
+// Rule 3: handle positions should produce shortest possible edge length
+function assertShortestEdges(nodes: Node[], edges: Edge[]): void {
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const positions = ['top', 'bottom', 'left', 'right'] as const;
+
+  for (const edge of edges) {
+    const sourceNode = nodeMap.get(edge.source);
+    const targetNode = nodeMap.get(edge.target);
+    if (!sourceNode || !targetNode) continue;
+
+    const currentDist = dist(
+      handleCenter(sourceNode, 'source'),
+      handleCenter(targetNode, 'target'),
+    );
+
+    const srcRect = nodeRect(sourceNode);
+    const tgtRect = nodeRect(targetNode);
+
+    let shortest = currentDist;
+    let shortestCombo = '';
+    for (const sp of positions) {
+      for (const tp of positions) {
+        const srcPt = handleCenterForPos(srcRect, sp);
+        const tgtPt = handleCenterForPos(tgtRect, tp);
+        const d = dist(srcPt, tgtPt);
+        if (d < shortest - 1) {
+          shortest = d;
+          shortestCombo = `source:${sp}, target:${tp}`;
+        }
+      }
+    }
+
+    expect(
+      shortestCombo,
+      `Edge ${edge.source}→${edge.target}: current distance ${Math.round(currentDist)}, ` +
+      `but ${shortestCombo} gives ${Math.round(shortest)}`,
+    ).toBe('');
+  }
+}
+
+function handleCenterForPos(rect: Rect, pos: string): { x: number; y: number } {
+  switch (pos) {
+    case 'top': return { x: rect.x + rect.w / 2, y: rect.y };
+    case 'bottom': return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
+    case 'left': return { x: rect.x, y: rect.y + rect.h / 2 };
+    case 'right': return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
+    default: return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
+  }
+}
+
+function assertAllEdgeRules(nodes: Node[], edges: Edge[]): void {
+  assertNoSameHandleInOut(nodes, edges);
+  assertNoEdgeNodeCrossings(nodes, edges);
+  assertNoEdgeEdgeCrossings(nodes, edges);
+  assertShortestEdges(nodes, edges);
 }
 
 describe('handle position auto-detection', () => {
@@ -139,8 +281,7 @@ describe('handle position auto-detection', () => {
     expect((a.data as Record<string, unknown>)._sourceHandlePosition).toBe('right');
   });
 
-  it('DOWN layout: fan-out switch keeps bottom source handle', async () => {
-    // Debug: check actual positions
+  it('DOWN layout: fan-out switch obeys all edge rules', async () => {
     const model = createGraph(
       [
         { id: 'switch', type: 'switch', properties: { label: 'routeByRisk' } },
@@ -155,15 +296,12 @@ describe('handle position auto-detection', () => {
       ],
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
-    const { nodes } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    const sw = nodes.find(n => n.id === 'switch')!;
-    expect(
-      (sw.data as Record<string, unknown>)._sourceHandlePosition,
-      'Fan-out source should use bottom handle in DOWN layout',
-    ).toBe('bottom');
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+
+    assertAllEdgeRules(nodes, edges);
   });
 
-  it('DOWN layout: fan-in merge keeps top target handle', async () => {
+  it('DOWN layout: fan-in merge obeys all edge rules', async () => {
     const model = createGraph(
       [
         { id: 'left', type: 'call', properties: { label: 'siuReferral' } },
@@ -178,17 +316,13 @@ describe('handle position auto-detection', () => {
       ],
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
-    const { nodes } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    const merge = nodes.find(n => n.id === 'merge')!;
-    expect(
-      (merge.data as Record<string, unknown>)._targetHandlePosition,
-      'Fan-in target should use top handle in DOWN layout',
-    ).toBe('top');
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
+    assertAllEdgeRules(nodes, edges);
   });
 });
 
-describe('no edge-node crossings', () => {
-  it('vertical sequence — no crossings', async () => {
+describe('edge routing rules (no same-handle, no crossings, shortest path)', () => {
+  it('vertical sequence', async () => {
     const model = createGraph(
       [
         { id: 'a', type: 'call', properties: { label: 'A' } },
@@ -204,7 +338,7 @@ describe('no edge-node crossings', () => {
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    assertNoEdgeCrossings(nodes, edges);
+    assertAllEdgeRules(nodes, edges);
   });
 
   it('branching switch — no crossings (direction DOWN)', async () => {
@@ -233,7 +367,7 @@ describe('no edge-node crossings', () => {
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    assertNoEdgeCrossings(nodes, edges);
+    assertAllEdgeRules(nodes, edges);
   });
 
   it('horizontal chain — no crossings (direction RIGHT)', async () => {
@@ -250,7 +384,7 @@ describe('no edge-node crossings', () => {
     );
     const layout = await computeElkLayout(model, { direction: 'RIGHT' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
-    assertNoEdgeCrossings(nodes, edges);
+    assertAllEdgeRules(nodes, edges);
   });
 
   it('wrapped snake pipeline — no crossings (direction RIGHT, wrapping)', async () => {
@@ -269,7 +403,7 @@ describe('no edge-node crossings', () => {
     const model = createGraph(steps, stepEdges);
     const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
-    assertNoEdgeCrossings(nodes, edges);
+    assertAllEdgeRules(nodes, edges);
   });
 
   it('fan-out fan-in DAG — no crossings (direction DOWN)', async () => {
@@ -291,6 +425,25 @@ describe('no edge-node crossings', () => {
     );
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'DOWN');
-    assertNoEdgeCrossings(nodes, edges);
+    assertAllEdgeRules(nodes, edges);
+  });
+
+  it('15-step pipeline with snake wrapping (direction RIGHT)', async () => {
+    const steps = Array.from({ length: 15 }, (_, i) => ({
+      id: `s${i}`,
+      type: 'call' as const,
+      properties: { label: `step${i}LongEnoughName` },
+    }));
+    const stepEdges = steps.slice(0, -1).map((s, i) => ({
+      id: `e${i}`,
+      type: 'flow' as const,
+      source: s.id,
+      target: steps[i + 1]!.id,
+    }));
+
+    const model = createGraph(steps, stepEdges);
+    const layout = await computeElkLayout(model, { direction: 'RIGHT', wrapping: true });
+    const { nodes, edges } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
+    assertAllEdgeRules(nodes, edges);
   });
 });

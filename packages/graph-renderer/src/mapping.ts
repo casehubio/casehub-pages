@@ -56,73 +56,165 @@ export function toReactFlowEdge(edge: GraphEdge): Edge {
   return rfEdge;
 }
 
-function detectHandlePosition(
-  pos: { x: number; y: number },
-  peerPos: { x: number; y: number },
-  direction?: string,
-): string {
-  const dx = peerPos.x - pos.x;
-  const dy = peerPos.y - pos.y;
+const POSITIONS = ['top', 'bottom', 'left', 'right'] as const;
 
-  // When peers are in the expected flow direction, prefer that direction
-  // even if horizontal displacement is large (fan-out / fan-in)
-  if (direction === 'DOWN' && dy > 0 && Math.abs(dy) > 20) return 'bottom';
-  if (direction === 'DOWN' && dy < 0 && Math.abs(dy) > 20) return 'top';
-  if (direction === 'RIGHT' && dx > 0 && Math.abs(dx) > 20) return 'right';
-  if (direction === 'RIGHT' && dx < 0 && Math.abs(dx) > 20) return 'left';
-
-  if (Math.abs(dx) > Math.abs(dy)) {
-    return dx > 0 ? 'right' : 'left';
+function handlePosPoint(rect: { x: number; y: number; w: number; h: number }, pos: string): { x: number; y: number } {
+  switch (pos) {
+    case 'top': return { x: rect.x + rect.w / 2, y: rect.y };
+    case 'bottom': return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
+    case 'left': return { x: rect.x, y: rect.y + rect.h / 2 };
+    case 'right': return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
+    default: return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
   }
-  return dy > 0 ? 'bottom' : 'top';
 }
 
-function autoDetectHandleDirections(nodes: Node[], edges: Edge[], direction?: string): void {
+function nodeBounds(node: Node): { x: number; y: number; w: number; h: number } {
+  return { x: node.position.x, y: node.position.y, w: node.width ?? 280, h: node.height ?? 50 };
+}
+
+function bestHandleForEdge(
+  srcBounds: { x: number; y: number; w: number; h: number },
+  tgtBounds: { x: number; y: number; w: number; h: number },
+): { source: string; target: string } {
+  let best = { source: 'bottom', target: 'top' };
+  let shortest = Infinity;
+  for (const sp of POSITIONS) {
+    for (const tp of POSITIONS) {
+      const s = handlePosPoint(srcBounds, sp);
+      const t = handlePosPoint(tgtBounds, tp);
+      const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
+      if (d < shortest) { shortest = d; best = { source: sp, target: tp }; }
+    }
+  }
+  return best;
+}
+
+function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: string): void {
   if (!nodes.length || !edges.length) return;
-  const posMap = new Map(nodes.map(n => [n.id, n.position]));
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
 
+  // Per-edge: compute ideal handle positions based on shortest path
+  const srcVotes = new Map<string, Record<string, number>>();
+  const tgtVotes = new Map<string, Record<string, number>>();
+
+  for (const e of edges) {
+    const srcNode = nodeMap.get(e.source);
+    const tgtNode = nodeMap.get(e.target);
+    if (!srcNode || !tgtNode) continue;
+
+    const ideal = bestHandleForEdge(nodeBounds(srcNode), nodeBounds(tgtNode));
+
+    const sv = srcVotes.get(e.source) ?? {};
+    sv[ideal.source] = (sv[ideal.source] ?? 0) + 1;
+    srcVotes.set(e.source, sv);
+
+    const tv = tgtVotes.get(e.target) ?? {};
+    tv[ideal.target] = (tv[ideal.target] ?? 0) + 1;
+    tgtVotes.set(e.target, tv);
+  }
+
+  const pickBest = (votes: Record<string, number>): string => {
+    let best = 'bottom';
+    let max = 0;
+    for (const [pos, count] of Object.entries(votes)) {
+      if (count > max) { max = count; best = pos; }
+    }
+    return best;
+  };
+
+  const opposite: Record<string, string> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
+
+  // Initial assignment: shortest path per edge
   for (const node of nodes) {
-    const pos = posMap.get(node.id);
-    if (!pos) continue;
+    const sv = srcVotes.get(node.id);
+    const tv = tgtVotes.get(node.id);
 
-    const sourceDirs: Record<string, number> = {};
-    const targetDirs: Record<string, number> = {};
+    let srcPos = sv ? pickBest(sv) : undefined;
+    let tgtPos = tv ? pickBest(tv) : undefined;
 
-    for (const e of edges) {
-      if (e.source === node.id) {
-        const peerPos = posMap.get(e.target);
-        if (!peerPos) continue;
-        const dir = detectHandlePosition(pos, peerPos, direction);
-        sourceDirs[dir] = (sourceDirs[dir] ?? 0) + 1;
-      } else if (e.target === node.id) {
-        const peerPos = posMap.get(e.source);
-        if (!peerPos) continue;
-        const dir = detectHandlePosition(pos, peerPos, direction);
-        targetDirs[dir] = (targetDirs[dir] ?? 0) + 1;
-      }
+    // Rule 1: source and target cannot be on the same handle
+    if (srcPos && tgtPos && srcPos === tgtPos) {
+      tgtPos = opposite[srcPos];
     }
 
-    // For fan-out/fan-in (edges going both left AND right), prefer vertical handles
-    const bestDir = (dirs: Record<string, number>): string | undefined => {
-      if (dirs['left'] && dirs['right']) {
-        return (dirs['bottom'] ?? 0) >= (dirs['top'] ?? 0) ? 'bottom' : 'top';
-      }
-      let best: string | undefined;
-      let max = 0;
-      for (const [d, count] of Object.entries(dirs)) {
-        if (count > max) { max = count; best = d; }
-      }
-      return best;
-    };
-
     const updates: Record<string, unknown> = {};
-    const srcBest = bestDir(sourceDirs);
-    const tgtBest = bestDir(targetDirs);
-    if (srcBest) updates._sourceHandlePosition = srcBest;
-    if (tgtBest) updates._targetHandlePosition = tgtBest;
+    if (srcPos) updates._sourceHandlePosition = srcPos;
+    if (tgtPos) updates._targetHandlePosition = tgtPos;
     if (Object.keys(updates).length > 0) {
       node.data = { ...node.data, ...updates };
     }
+  }
+
+  // Post-process: check for edge-node crossings and fix
+  resolveEdgeNodeCrossings(nodes, edges);
+}
+
+function lineIntersectsRect(
+  p1: { x: number; y: number }, p2: { x: number; y: number },
+  rx: number, ry: number, rw: number, rh: number,
+): boolean {
+  const margin = 5;
+  const x = rx + margin, y = ry + margin, w = rw - 2 * margin, h = rh - 2 * margin;
+  if (w <= 0 || h <= 0) return false;
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  let tMin = 0, tMax = 1;
+  const sides = [{ p: -dx, q: -(x - p1.x) }, { p: dx, q: x + w - p1.x }, { p: -dy, q: -(y - p1.y) }, { p: dy, q: y + h - p1.y }];
+  for (const { p, q } of sides) {
+    if (Math.abs(p) < 1e-10) { if (q < 0) return false; }
+    else { const t = q / p; if (p < 0) { if (t > tMax) return false; if (t > tMin) tMin = t; } else { if (t < tMin) return false; if (t < tMax) tMax = t; } }
+  }
+  return tMin <= tMax;
+}
+
+function resolveEdgeNodeCrossings(nodes: Node[], edges: Edge[]): void {
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+  for (const edge of edges) {
+    const srcNode = nodeMap.get(edge.source);
+    const tgtNode = nodeMap.get(edge.target);
+    if (!srcNode || !tgtNode) continue;
+
+    const srcData = srcNode.data as Record<string, unknown>;
+    const tgtData = tgtNode.data as Record<string, unknown>;
+    const currentSrcPos = (srcData._sourceHandlePosition as string) ?? 'bottom';
+    const currentTgtPos = (tgtData._targetHandlePosition as string) ?? 'top';
+    const srcBounds = nodeBounds(srcNode);
+    const tgtBounds = nodeBounds(tgtNode);
+
+    const p1 = handlePosPoint(srcBounds, currentSrcPos);
+    const p2 = handlePosPoint(tgtBounds, currentTgtPos);
+
+    let hasCrossing = false;
+    for (const node of nodes) {
+      if (node.id === edge.source || node.id === edge.target || node.parentId) continue;
+      const r = nodeBounds(node);
+      if (lineIntersectsRect(p1, p2, r.x, r.y, r.w, r.h)) { hasCrossing = true; break; }
+    }
+
+    if (!hasCrossing) continue;
+
+    // Try all handle combos to find one without crossings, preferring shortest
+    let bestSrc = currentSrcPos, bestTgt = currentTgtPos;
+    let bestDist = Infinity;
+    for (const sp of POSITIONS) {
+      for (const tp of POSITIONS) {
+        if (sp === (tgtData._targetHandlePosition as string | undefined) && sp === tp) continue;
+        const s = handlePosPoint(srcBounds, sp);
+        const t = handlePosPoint(tgtBounds, tp);
+        let crosses = false;
+        for (const node of nodes) {
+          if (node.id === edge.source || node.id === edge.target || node.parentId) continue;
+          const r = nodeBounds(node);
+          if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) { crosses = true; break; }
+        }
+        if (crosses) continue;
+        const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
+        if (d < bestDist) { bestDist = d; bestSrc = sp; bestTgt = tp; }
+      }
+    }
+
+    srcNode.data = { ...srcNode.data, _sourceHandlePosition: bestSrc };
+    tgtNode.data = { ...tgtNode.data, _targetHandlePosition: bestTgt };
   }
 }
 
