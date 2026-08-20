@@ -121,9 +121,11 @@ describe('createStencilNodeComponent', () => {
     const Component = createStencilNodeComponent(renderFn);
     const { container, unmount } = mountWithProps(Component, defaultNodeProps);
     const handles = Array.from(container.querySelectorAll('[data-handletype]'));
-    expect(handles).toHaveLength(2);
-    expect(handles[0]!.getAttribute('data-handletype')).toBe('target');
-    expect(handles[1]!.getAttribute('data-handletype')).toBe('source');
+    expect(handles).toHaveLength(8);
+    const targetHandles = handles.filter(h => h.getAttribute('data-handletype') === 'target');
+    const sourceHandles = handles.filter(h => h.getAttribute('data-handletype') === 'source');
+    expect(targetHandles).toHaveLength(4);
+    expect(sourceHandles).toHaveLength(4);
     unmount();
   });
 
@@ -142,8 +144,8 @@ describe('createStencilNodeComponent', () => {
       type: 'entry',
     });
     const handles = Array.from(container.querySelectorAll('[data-handletype]'));
-    expect(handles).toHaveLength(1);
-    expect(handles[0]!.getAttribute('data-handletype')).toBe('source');
+    expect(handles).toHaveLength(4);
+    expect(handles.every(h => h.getAttribute('data-handletype') === 'source')).toBe(true);
     unmount();
   });
 
@@ -162,8 +164,8 @@ describe('createStencilNodeComponent', () => {
       type: 'goal',
     });
     const handles = Array.from(container.querySelectorAll('[data-handletype]'));
-    expect(handles).toHaveLength(1);
-    expect(handles[0]!.getAttribute('data-handletype')).toBe('target');
+    expect(handles).toHaveLength(4);
+    expect(handles.every(h => h.getAttribute('data-handletype') === 'target')).toBe(true);
     unmount();
   });
 

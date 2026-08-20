@@ -151,15 +151,22 @@ export function createStencilNodeComponent(
     }
 
     const hideHandles = rawData._hideHandles === true;
-    const positionMap: Record<string, Position> = { top: Position.Top, bottom: Position.Bottom, left: Position.Left, right: Position.Right };
-    const targetPos = positionMap[rawData._targetHandlePosition as string] ?? Position.Top;
-    const sourcePos = positionMap[rawData._sourceHandlePosition as string] ?? Position.Bottom;
+    const allPositions: Array<{ id: string; pos: Position }> = [
+      { id: 'top', pos: Position.Top },
+      { id: 'bottom', pos: Position.Bottom },
+      { id: 'left', pos: Position.Left },
+      { id: 'right', pos: Position.Right },
+    ];
+    const defaultSrc = (rawData._sourceHandlePosition as string) ?? 'bottom';
+    const defaultTgt = (rawData._targetHandlePosition as string) ?? 'top';
+    const hiddenStyle: React.CSSProperties = { width: 0, height: 0, minWidth: 0, minHeight: 0, opacity: 0, pointerEvents: 'none' };
 
     return (
       <>
-        {!hideHandles && grammar?.connections.inbound.max !== 0 && (
-          <Handle type="target" position={targetPos} />
-        )}
+        {!hideHandles && grammar?.connections.inbound.max !== 0 && allPositions.map(({ id, pos }) => (
+          <Handle key={`target-${id}`} id={`target-${id}`} type="target" position={pos}
+            style={id !== defaultTgt ? hiddenStyle : undefined} />
+        ))}
         <div
           className="stencil-decoration-wrapper"
           style={{ position: 'relative', ...borderStyle, ...sizeStyle }}
@@ -169,9 +176,10 @@ export function createStencilNodeComponent(
           {decoration?.overlay && <DecorationOverlay overlay={decoration.overlay} />}
           <div ref={containerRef} />
         </div>
-        {!hideHandles && grammar?.connections.outbound.max !== 0 && (
-          <Handle type="source" position={sourcePos} />
-        )}
+        {!hideHandles && grammar?.connections.outbound.max !== 0 && allPositions.map(({ id, pos }) => (
+          <Handle key={`source-${id}`} id={`source-${id}`} type="source" position={pos}
+            style={id !== defaultSrc ? hiddenStyle : undefined} />
+        ))}
       </>
     );
   }
