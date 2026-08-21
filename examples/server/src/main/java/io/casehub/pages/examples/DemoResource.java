@@ -15,6 +15,7 @@ import java.util.Map;
 @Path("/api/demo")
 @Produces(MediaType.APPLICATION_JSON)
 public class DemoResource {
+
     @Inject EventBroadcaster broadcaster;
     @Inject EventStore eventStore;
 

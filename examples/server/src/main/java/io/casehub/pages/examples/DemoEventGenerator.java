@@ -62,4 +62,12 @@ public class DemoEventGenerator {
             }
         }
     }
+
+    public String initialSnapshot(String dataset) {
+        if ("events".equals(dataset)) {
+            return PushMessage.snapshot("events", EVENT_COLUMNS, List.of());
+        }
+        return null;
+    }
+
 }

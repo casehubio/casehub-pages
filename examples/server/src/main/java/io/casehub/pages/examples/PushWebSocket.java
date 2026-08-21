@@ -20,6 +20,8 @@ public class PushWebSocket {
     @Inject EventStore eventStore;
     @Inject ConnectionRegistry connectionRegistry;
     @Inject DatasetRegistry datasetRegistry;
+    @Inject DemoEventGenerator eventGenerator;
+
 
     @OnOpen
     void onOpen(WebSocketConnection connection) {
@@ -72,6 +74,10 @@ public class PushWebSocket {
     private void handleSubscribe(WebSocketConnection conn, PushRequest.Subscribe subscribe) {
         datasetRegistry.subscribe(conn.id(), subscribe.dataset());
         conn.sendTextAndAwait(PushMessage.ack(subscribe.id()));
+        String snapshot = eventGenerator.initialSnapshot(subscribe.dataset());
+        if (snapshot != null) {
+            conn.sendTextAndAwait(snapshot);
+        }
     }
 
     private void handleUnsubscribe(WebSocketConnection conn, PushRequest.Unsubscribe unsubscribe) {
