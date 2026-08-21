@@ -178,6 +178,47 @@ describe('pages-scenario-controller', () => {
     el.remove();
   });
 
+  it('space key toggles play/pause', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    const conn = mockConnection();
+    const target = new EventTarget();
+    el.connection = conn;
+    el.eventTarget = target;
+
+    const idleState = { scenario: null, chapter: null, section: null, step: null, paused: false, speed: 1.0, progress: 0, content: null, slides: null };
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/scenario/outline')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(idleState) });
+    }));
+
+    document.body.appendChild(el);
+    await el.updateComplete;
+    await new Promise(r => setTimeout(r, 20));
+
+    fireStateEvent(target, {
+      scenario: 'test', chapter: null, section: null,
+      step: 'S1', paused: false, speed: 1.0, progress: 0,
+      content: null, slides: null,
+    });
+    await el.updateComplete;
+    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
+
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+
+    await new Promise(r => setTimeout(r, 50));
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/scenario/pause'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+    el.remove();
+  });
+
   it('cleans up on disconnect', async () => {
     const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
     const conn = mockConnection();

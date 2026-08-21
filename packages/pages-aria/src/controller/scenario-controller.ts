@@ -1,9 +1,10 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { EventConnection } from '@casehubio/pages-data';
+import { KeyboardShortcutMixin } from '@casehubio/pages-primitives';
 import { ScenarioConnectionController, type ScenarioState, type OutlineNode } from './scenario-connection-controller.js';
 
-export class PagesScenarioController extends LitElement {
+export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   static override styles = css`
     :host {
       display: block;
@@ -84,6 +85,14 @@ export class PagesScenarioController extends LitElement {
       onState: (s: ScenarioState) => this._onStateChange(s),
     });
     super.connectedCallback();
+    this.registerShortcut(' ', () => {
+      if (!this._conn?.state?.scenario) return;
+      void this._conn.sendCommand(this._conn.state.paused ? '/resume' : '/pause');
+    }, { description: 'Toggle play/pause' });
+    this.registerShortcut('ArrowRight', () => {
+      if (!this._conn?.state?.scenario) return;
+      void this._conn.sendCommand('/step');
+    }, { description: 'Step forward' });
   }
 
   private _onStateChange(s: ScenarioState): void {

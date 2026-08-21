@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
-import { property } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import type { EventConnection } from '@casehubio/pages-data';
 import { ScenarioConnectionController } from './scenario-connection-controller.js';
 
@@ -41,14 +41,73 @@ export class PagesScenarioNarrative extends LitElement {
   @property() baseUrl?: string;
 
   private _conn!: ScenarioConnectionController;
+  private _templateCache = new Map<string, string>();
+  @state() private _templateContent: string | null = null;
+  private _lastTemplatePath: string | null = null;
 
   override connectedCallback(): void {
     this._conn = new ScenarioConnectionController(this, {
       connection: this.connection,
       eventTarget: this.eventTarget,
       baseUrl: this.baseUrl,
+      onState: () => this._onContentChange(),
     });
     super.connectedCallback();
+  }
+
+  private _onContentChange(): void {
+    const content = this._conn?.state?.content;
+    if (content?.type === 'template' && content.path) {
+      const cacheKey = content.path;
+      if (cacheKey !== this._lastTemplatePath) {
+        this._lastTemplatePath = cacheKey;
+        if (this._templateCache.has(cacheKey)) {
+          this._templateContent = this._extractSection(this._templateCache.get(cacheKey)!, content.section);
+        } else {
+          this._templateContent = null;
+          void this._fetchTemplate(content.path, content.section);
+        }
+      }
+    } else {
+      this._lastTemplatePath = null;
+      this._templateContent = null;
+    }
+  }
+
+  private async _fetchTemplate(path: string, section?: string): Promise<void> {
+    try {
+      const resp = await fetch(`${this._conn.restBase}/scenario/content?path=${encodeURIComponent(path)}`);
+      if (resp.ok) {
+        const text = await resp.text();
+        this._templateCache.set(path, text);
+        this._templateContent = this._extractSection(text, section);
+      }
+    } catch {
+      // Ignore — show loading state
+    }
+  }
+
+  private _extractSection(markdown: string, section?: string): string {
+    if (!section) return markdown;
+    const lines = markdown.split('\n');
+    let capturing = false;
+    let level = 0;
+    const result: string[] = [];
+    for (const line of lines) {
+      const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
+      if (headingMatch) {
+        const headingLevel = headingMatch[1].length;
+        const headingText = headingMatch[2].trim();
+        if (capturing && headingLevel <= level) break;
+        if (headingText.toLowerCase() === section.toLowerCase()) {
+          capturing = true;
+          level = headingLevel;
+          continue;
+        }
+      }
+      if (capturing) result.push(line);
+    }
+    return result.join('\n').trim();
   }
 
   override render(): TemplateResult | typeof nothing {
@@ -59,7 +118,10 @@ export class PagesScenarioNarrative extends LitElement {
       case 'inline':
         return this._renderMarkdown(content.markdown ?? '');
       case 'template':
-        return html`<div class="narrative-content"><em>Loading template...</em></div>`;
+        if (this._templateContent !== null) {
+          return this._renderMarkdown(this._templateContent);
+        }
+        return html`<div class="narrative-content"><em>Loading...</em></div>`;
       case 'slide':
         return html`<div class="slide-ref">Slide: ${String(content.ref)}</div>`;
       default:

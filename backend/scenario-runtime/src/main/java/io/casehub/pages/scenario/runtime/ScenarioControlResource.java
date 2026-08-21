@@ -87,4 +87,27 @@ public class ScenarioControlResource {
         return result;
     }
 
+    @GET
+    @Path("/content")
+    @jakarta.ws.rs.Produces("text/markdown")
+    public String content(@jakarta.ws.rs.QueryParam("path") String path) {
+        if (path == null || path.isBlank()) {
+            throw new BadRequestException("path parameter required");
+        }
+        if (path.contains("..")) {
+            throw new BadRequestException("path traversal not allowed");
+        }
+        var resource = Thread.currentThread().getContextClassLoader()
+                             .getResourceAsStream("META-INF/resources/scenario/content/" + path);
+        if (resource == null) {
+            throw new NotFoundException("Content not found: " + path);
+        }
+        try (resource) {
+            return new String(resource.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (java.io.IOException e) {
+            throw new jakarta.ws.rs.InternalServerErrorException("Failed to read content", e);
+        }
+    }
+
+
 }
