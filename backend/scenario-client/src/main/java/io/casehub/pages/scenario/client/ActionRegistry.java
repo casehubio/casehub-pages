@@ -20,11 +20,16 @@ public class ActionRegistry {
     public static ActionRegistry scan(List<Object> beans) {
         var handlers = new HashMap<String, ActionHandler>();
         for (var bean : beans) {
-            for (var method : bean.getClass().getDeclaredMethods()) {
-                var annotation = method.getAnnotation(ScenarioAction.class);
-                if (annotation != null) {
-                    handlers.put(annotation.value(), new ActionHandler(bean, method));
+            Class<?> clazz = bean.getClass();
+            while (clazz != null && clazz != Object.class) {
+                for (var method : clazz.getDeclaredMethods()) {
+                    var annotation = method.getAnnotation(ScenarioAction.class);
+                    if (annotation != null && !handlers.containsKey(annotation.value())) {
+                        method.setAccessible(true);
+                        handlers.put(annotation.value(), new ActionHandler(bean, method));
+                    }
                 }
+                clazz = clazz.getSuperclass();
             }
         }
         return new ActionRegistry(handlers);
