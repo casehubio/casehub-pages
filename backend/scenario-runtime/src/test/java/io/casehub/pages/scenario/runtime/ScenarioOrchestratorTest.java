@@ -1,6 +1,9 @@
 package io.casehub.pages.scenario.runtime;
 
+import io.casehub.pages.push.EventBroadcaster;
+import io.casehub.pages.push.InMemoryEventStore;
 import io.casehub.pages.push.PushRequest;
+import io.casehub.pages.push.TopicRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -17,11 +20,17 @@ class ScenarioOrchestratorTest {
         return new ArrayList<>();
     }
 
+    private static EventBroadcaster noopBroadcaster() {
+        return new EventBroadcaster(
+            new InMemoryEventStore(10), new TopicRegistry(),
+            (id, msg) -> {}, obj -> "{}");
+    }
+
     @Test
     void startDispatchesSequenceToRegisteredExecutor() {
         var sent = createCapture();
         var orchestrator = new ScenarioOrchestrator(
-            (connId, msg) -> sent.add(new SentMessage(connId, msg)));
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "browser",
@@ -44,7 +53,7 @@ class ScenarioOrchestratorTest {
 
     @Test
     void startRequiresRegisteredExecutor() {
-        var orchestrator = new ScenarioOrchestrator((c, m) -> {});
+        var orchestrator = new ScenarioOrchestrator((c, m) -> {}, noopBroadcaster());
 
         var yaml = """
             scenario: test
@@ -61,7 +70,7 @@ class ScenarioOrchestratorTest {
 
     @Test
     void stateReflectsScenarioProgress() {
-        var orchestrator = new ScenarioOrchestrator((c, m) -> {});
+        var orchestrator = new ScenarioOrchestrator((c, m) -> {}, noopBroadcaster());
 
         assertThat(orchestrator.state().scenario()).isNull();
 
@@ -91,7 +100,7 @@ class ScenarioOrchestratorTest {
 
     @Test
     void stepResultAdvancesProgress() {
-        var orchestrator = new ScenarioOrchestrator((c, m) -> {});
+        var orchestrator = new ScenarioOrchestrator((c, m) -> {}, noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "helpdesk",
@@ -129,7 +138,7 @@ class ScenarioOrchestratorTest {
     void pauseSendsControlToAllExecutors() {
         var sent = createCapture();
         var orchestrator = new ScenarioOrchestrator(
-            (connId, msg) -> sent.add(new SentMessage(connId, msg)));
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));
@@ -165,7 +174,7 @@ class ScenarioOrchestratorTest {
     void resumeAfterPause() {
         var sent = createCapture();
         var orchestrator = new ScenarioOrchestrator(
-            (connId, msg) -> sent.add(new SentMessage(connId, msg)));
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));
@@ -193,7 +202,7 @@ class ScenarioOrchestratorTest {
     void speedChangesSendsControl() {
         var sent = createCapture();
         var orchestrator = new ScenarioOrchestrator(
-            (connId, msg) -> sent.add(new SentMessage(connId, msg)));
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));
@@ -219,7 +228,7 @@ class ScenarioOrchestratorTest {
     void multipleExecutorsReceiveCorrectSequences() {
         var sent = createCapture();
         var orchestrator = new ScenarioOrchestrator(
-            (connId, msg) -> sent.add(new SentMessage(connId, msg)));
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-browser",
             new PushRequest.ExecutorRegister("1", "browser",
@@ -261,7 +270,7 @@ class ScenarioOrchestratorTest {
     void stepCommandDispatchesStepControl() {
         var sent = createCapture();
         var orchestrator = new ScenarioOrchestrator(
-            (connId, msg) -> sent.add(new SentMessage(connId, msg)));
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));
@@ -290,7 +299,7 @@ class ScenarioOrchestratorTest {
     void sectionBasedScenarioDispatches() {
         var sent = createCapture();
         var orchestrator = new ScenarioOrchestrator(
-            (connId, msg) -> sent.add(new SentMessage(connId, msg)));
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
 
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));

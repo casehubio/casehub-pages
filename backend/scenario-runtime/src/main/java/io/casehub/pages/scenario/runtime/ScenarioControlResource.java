@@ -27,8 +27,8 @@ public class ScenarioControlResource {
     @POST
     @Path("/stop")
     public ScenarioState stop() {
-        return orchestrator.state();
-    }
+        orchestrator.stop();
+        return orchestrator.state();}
 
     @POST
     @Path("/pause")
@@ -76,4 +76,15 @@ public class ScenarioControlResource {
     public ScenarioState state() {
         return orchestrator.state();
     }
+
+    @GET
+    @Path("/outline")
+    public java.util.List<io.casehub.pages.scenario.OutlineNode> outline() {
+        var result = orchestrator.outline();
+        if (result.isEmpty() && orchestrator.sessionId() == null) {
+            throw new NotFoundException("No active scenario");
+        }
+        return result;
+    }
+
 }
