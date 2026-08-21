@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -6,6 +6,9 @@ import {
   Background,
   SelectionMode,
   ControlButton,
+  useReactFlow,
+  useNodesInitialized,
+  useStore,
   type Node,
   type Edge,
   type EdgeTypes,
@@ -34,6 +37,49 @@ export interface ReactFlowAppProps {
   onRelayout?: () => void;
 }
 
+const viewportSizeSelector = (s: { width: number; height: number }) => ({ width: s.width, height: s.height });
+
+function FitTopLeft({ nodes, onFitRef }: { nodes: Node[]; onFitRef: React.MutableRefObject<(() => void) | null> }) {
+  const { setViewport, getNodes } = useReactFlow();
+  const nodesInitialized = useNodesInitialized();
+  const { width: vw, height: vh } = useStore(viewportSizeSelector);
+  const fitted = useRef(false);
+
+  const doFit = useCallback(() => {
+    const measured = getNodes();
+    if (measured.length === 0 || vw === 0 || vh === 0) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const node of measured) {
+      const w = node.measured?.width ?? node.width ?? 150;
+      const h = node.measured?.height ?? node.height ?? 40;
+      minX = Math.min(minX, node.position.x);
+      minY = Math.min(minY, node.position.y);
+      maxX = Math.max(maxX, node.position.x + w);
+      maxY = Math.max(maxY, node.position.y + h);
+    }
+
+    const pad = 20;
+    const contentW = maxX - minX;
+    const contentH = maxY - minY;
+    if (contentW <= 0 || contentH <= 0) return;
+
+    const zoom = Math.min((vw - pad * 2) / contentW, (vh - pad * 2) / contentH, 1);
+    setViewport({ x: -minX * zoom + pad, y: -minY * zoom + pad, zoom });
+  }, [getNodes, setViewport, vw, vh]);
+
+  useEffect(() => { onFitRef.current = doFit; }, [doFit, onFitRef]);
+  useEffect(() => { fitted.current = false; }, [nodes]);
+
+  useEffect(() => {
+    if (!nodesInitialized || nodes.length === 0 || fitted.current) return;
+    fitted.current = true;
+    doFit();
+  }, [nodesInitialized, nodes, doFit]);
+
+  return null;
+}
+
 export function ReactFlowApp({
   nodes,
   edges,
@@ -44,6 +90,8 @@ export function ReactFlowApp({
   onViewportChange,
   onRelayout,
 }: ReactFlowAppProps): React.JSX.Element {
+  const fitRef = useRef<(() => void) | null>(null);
+
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_event, node) => { onNodeClick?.(node.id, node); },
     [onNodeClick],
@@ -79,9 +127,8 @@ export function ReactFlowApp({
       onMoveEnd={handleMoveEnd}
       selectionOnDrag
       selectionMode={SelectionMode.Partial}
-      fitView
-      fitViewOptions={{ padding: 0.05 }}
     >
+      <FitTopLeft nodes={nodes} onFitRef={fitRef} />
       <MiniMap
         pannable
         zoomable
@@ -98,7 +145,12 @@ export function ReactFlowApp({
         style={{ background: 'var(--pages-neutral-3, #e5e5e5)' }}
         maskColor="rgba(0, 0, 0, 0.3)"
       />
-      <Controls>
+      <Controls showFitView={false}>
+        <ControlButton onClick={() => fitRef.current?.()} title="Fit to view">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M3 5v4h2V5h4V3H5c-1.1 0-2 .9-2 2zm2 10H3v4c0 1.1.9 2 2 2h4v-2H5v-4zm14 4h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zm0-16h-4v2h4v4h2V5c0-1.1-.9-2-2-2z"/>
+          </svg>
+        </ControlButton>
         {onRelayout && (
           <ControlButton onClick={onRelayout} title="Re-layout">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
