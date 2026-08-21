@@ -10,12 +10,16 @@ import io.casehub.pages.scenario.HierarchicalScenario;
 import io.casehub.pages.scenario.HierarchicalStep;
 import io.casehub.pages.scenario.ScenarioCommand;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@ApplicationScoped
 public class ScenarioOrchestrator {
 
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -30,6 +34,7 @@ public class ScenarioOrchestrator {
     private volatile boolean paused;
     private volatile double speed = 1.0;
 
+    @Inject
     public ScenarioOrchestrator(SessionSender sender) {
         this.sender = sender;
     }
