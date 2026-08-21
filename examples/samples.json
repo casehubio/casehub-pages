@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 78,
+  "totalSamples": 77,
   "categories": [
     {
       "category": "Charts",
@@ -532,12 +532,6 @@
           "path": "Server/Multi-Topic Dashboard.dash.yaml",
           "category": "Server",
           "file": "Multi-Topic Dashboard.dash.yaml"
-        },
-        {
-          "name": "Persistence Demo",
-          "path": "Server/Persistence Demo.dash.yaml",
-          "category": "Server",
-          "file": "Persistence Demo.dash.yaml"
         },
         {
           "name": "Reconnect Replay",

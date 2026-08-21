@@ -1,9 +1,6 @@
-properties:
-  pushUrl: ws://localhost:8090/ws/push
-
 datasets:
-  - id: events
-    url: "${pushUrl}"
+  - uuid: events
+    url: ws://localhost:8090/ws/push
 
 pages:
   - name: Reconnect Replay Demo
@@ -22,18 +19,21 @@ pages:
                         and the EventStore replays all missed events.
                       </p>
                       <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
-                        ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">docker compose up</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
+                        ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">./start-server.sh</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
                       </p>
                     </div>
       - columns:
           - span: 4
             components:
               - type: metric
-                lookup: { dataSetId: events }
-                props:
+                properties:
+                  lookup:
+                    uuid: events
                   label: "Total Events"
                   value: "#{datasets.events.rowCount}"
           - span: 8
             components:
-              - type: event-timeline
-                lookup: { dataSetId: events }
+              - type: data-table
+                properties:
+                  lookup:
+                    uuid: events

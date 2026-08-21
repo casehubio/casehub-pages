@@ -55,8 +55,10 @@ function setActiveTab(tab) {
     }
 }
 
+const SERVER_URL = 'http://localhost:8090';
+
 function checkServerHealth() {
-    fetch('/api/demo/health')
+    fetch(`${SERVER_URL}/api/demo/health`)
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(() => {
             serverStatus.className = 'server-status connected';
@@ -73,7 +75,7 @@ function showBanner() {
     const banner = document.createElement('div');
     banner.className = 'server-banner';
     banner.id = 'server-banner';
-    banner.innerHTML = 'Server not running — start with <code>docker compose up</code> in <code>examples/</code>';
+    banner.innerHTML = 'Server not running — start with <code>./start-server.sh</code> in <code>examples/</code>';
     categoriesNav.parentElement.insertBefore(banner, categoriesNav);
 }
 

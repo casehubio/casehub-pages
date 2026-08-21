@@ -1,9 +1,6 @@
-properties:
-  pushUrl: ws://localhost:8090/ws/push
-
 datasets:
-  - id: allEvents
-    url: "${pushUrl}"
+  - uuid: allEvents
+    url: ws://localhost:8090/ws/push?dataset=events
 
 pages:
   - name: Multi-Topic Dashboard
@@ -23,10 +20,12 @@ pages:
                         and <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">demo:persistence</code> — in a single data table.
                       </p>
                       <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
-                        ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">docker compose up</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
+                        ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">./start-server.sh</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
                       </p>
                     </div>
       - columns:
           - components:
               - type: data-table
-                lookup: { dataSetId: allEvents }
+                properties:
+                  lookup:
+                    uuid: allEvents

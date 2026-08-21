@@ -23,21 +23,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.casehub</groupId>
-            <artifactId>casehub-pages-push-store-jdbc</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-websockets-next</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -73,4 +64,21 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>postgres</id>
+            <dependencies>
+                <dependency>
+                    <groupId>io.casehub</groupId>
+                    <artifactId>casehub-pages-push-store-jdbc</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-jdbc-postgresql</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

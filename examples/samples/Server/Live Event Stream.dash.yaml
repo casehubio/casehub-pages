@@ -16,7 +16,7 @@ pages:
                 Events arrive every 2 seconds via WebSocket push — claims, alerts, and metrics from the demo generator.
               </p>
               <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
-                ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">mvn quarkus:dev</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/server/</code>
+                ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">./start-server.sh</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
               </p>
             </div>
   - columns:
