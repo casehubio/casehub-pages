@@ -10,7 +10,8 @@
     "./controller": "./src/controller/index.ts"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:controller": "node ../../node_modules/esbuild/bin/esbuild src/controller/standalone.ts --bundle --format=esm --outfile=dist/controller.js --target=es2022 --tsconfig=tsconfig.json"
   },
   "dependencies": {
     "@casehubio/pages-data": "workspace:*",

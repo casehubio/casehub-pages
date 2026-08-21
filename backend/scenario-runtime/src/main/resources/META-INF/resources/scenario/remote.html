@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scenario Remote</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--pages-neutral-1, #fafafa);
+    }
+    .remote-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    pages-scenario-controller {
+      flex: 1;
+      overflow-y: auto;
+    }
+    pages-scenario-narrative {
+      border-top: 1px solid var(--pages-neutral-4, #e5e5e5);
+      max-height: 40vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="remote-layout">
+    <pages-scenario-controller id="ctrl"></pages-scenario-controller>
+    <pages-scenario-narrative id="narr"></pages-scenario-narrative>
+  </div>
+  <script type="module">
+    import '/scenario/controller.js';
+    const baseUrl = window.location.origin;
+    document.getElementById('ctrl').baseUrl = baseUrl;
+    document.getElementById('narr').baseUrl = baseUrl;
+  </script>
+</body>
+</html>
