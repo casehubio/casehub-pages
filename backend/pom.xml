@@ -28,6 +28,7 @@
         <module>push-store-redis</module>
         <module>scenario</module>
         <module>scenario-runtime</module>
+        <module>scenario-client</module>
         <module>mcp</module>
         <module>cross-parser-test</module>
     </modules>
