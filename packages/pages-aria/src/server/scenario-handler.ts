@@ -13,6 +13,37 @@ interface CommandPayload {
   timeout?: number;
 }
 
+interface ScenarioCommand {
+  action: string;
+  target?: AriaTarget;
+  value?: string;
+  data?: Record<string, unknown>;
+  state?: Record<string, unknown>;
+  timeout?: number;
+}
+
+interface DispatchStep {
+  name: string;
+  label: string;
+  actor?: string;
+  commands: ScenarioCommand[];
+}
+
+interface DispatchSequence {
+  op: 'dispatch-sequence';
+  sessionId: string;
+  steps: DispatchStep[];
+  speed: number;
+  paused: boolean;
+}
+
+interface ExecutorControl {
+  op: 'executor-control';
+  sessionId: string;
+  command: 'pause' | 'resume' | 'step' | 'speed';
+  speed?: number;
+}
+
 export interface ScenarioHandler {
   dispose(): void;
 }
@@ -31,7 +62,26 @@ function sendResult(conn: EventConnection, id: string, ok: boolean, error: strin
   conn.send({ op: 'command-result', id, ok, error });
 }
 
-function executeCommand(cmd: CommandPayload): void | Promise<void> {
+function sendStepResult(
+  conn: EventConnection,
+  sessionId: string,
+  stepName: string,
+  ok: boolean,
+  error: string | null,
+  result?: Record<string, unknown>,
+): void {
+  conn.send({
+    op: 'step-result',
+    id: crypto.randomUUID(),
+    sessionId,
+    stepName,
+    ok,
+    error,
+    ...(result ? { result } : {}),
+  });
+}
+
+function executeAriaCommand(cmd: ScenarioCommand): void | Promise<void> {
   const { action, target, value, state, timeout } = cmd;
 
   switch (action) {
@@ -71,7 +121,95 @@ export function createScenarioHandler(
 ): ScenarioHandler {
   connection.listen(['scenario:exec']);
 
-  function onEvent(e: Event): void {
+  let paused = false;
+  let speed = 1.0;
+  let sessionId: string | null = null;
+  let stepQueue: DispatchStep[] = [];
+  let executing = false;
+  let resumeResolve: (() => void) | null = null;
+
+  connection.send({
+    op: 'executor-register',
+    id: crypto.randomUUID(),
+    name: 'browser',
+    actions: ['navigate', 'click', 'fill', 'select', 'expand', 'collapse', 'assert', 'wait', 'ready'],
+  });
+
+  async function executeSequence(): Promise<void> {
+    if (executing) return;
+    executing = true;
+
+    while (stepQueue.length > 0) {
+      if (paused) {
+        await new Promise<void>((resolve) => { resumeResolve = resolve; });
+        continue;
+      }
+
+      const step = stepQueue.shift()!;
+      let stepOk = true;
+      let stepError: string | null = null;
+
+      for (const cmd of step.commands) {
+        try {
+          const result = executeAriaCommand(cmd);
+          if (result) await result;
+        } catch (err) {
+          stepOk = false;
+          stepError = (err as Error).message;
+          break;
+        }
+      }
+
+      sendStepResult(connection, sessionId!, step.name, stepOk, stepError);
+
+      if (stepQueue.length > 0 && !paused && speed < 1000) {
+        const delay = Math.max(10, 1000 / speed);
+        await new Promise<void>((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    executing = false;
+  }
+
+  function onDispatch(e: Event): void {
+    const detail = (e as CustomEvent).detail as DispatchSequence;
+    sessionId = detail.sessionId;
+    paused = detail.paused;
+    speed = detail.speed;
+    stepQueue.push(...detail.steps);
+    void executeSequence();
+  }
+
+  function onControl(e: Event): void {
+    const detail = (e as CustomEvent).detail as ExecutorControl;
+    if (sessionId && detail.sessionId !== sessionId) return;
+
+    switch (detail.command) {
+      case 'pause':
+        paused = true;
+        break;
+      case 'resume':
+        paused = false;
+        if (resumeResolve) {
+          resumeResolve();
+          resumeResolve = null;
+        }
+        break;
+      case 'step':
+        paused = false;
+        if (resumeResolve) {
+          resumeResolve();
+          resumeResolve = null;
+        }
+        queueMicrotask(() => { paused = true; });
+        break;
+      case 'speed':
+        if (detail.speed !== undefined) speed = detail.speed;
+        break;
+    }
+  }
+
+  function onLegacyEvent(e: Event): void {
     const detail = (e as CustomEvent).detail as { topic?: string; payload?: unknown };
     if (detail?.topic !== SCENARIO_TOPIC) return;
 
@@ -79,7 +217,7 @@ export function createScenarioHandler(
     if (!cmd?.id || !cmd?.action) return;
 
     try {
-      const result = executeCommand(cmd);
+      const result = executeAriaCommand(cmd);
       if (result) {
         result
           .then(() => sendResult(connection, cmd.id, true, null))
@@ -92,12 +230,22 @@ export function createScenarioHandler(
     }
   }
 
-  eventTarget.addEventListener('pages-event', onEvent);
+  eventTarget.addEventListener('pages-event', onLegacyEvent);
+  eventTarget.addEventListener('scenario-dispatch', onDispatch);
+  eventTarget.addEventListener('scenario-control', onControl);
 
   return {
     dispose() {
-      eventTarget.removeEventListener('pages-event', onEvent);
+      eventTarget.removeEventListener('pages-event', onLegacyEvent);
+      eventTarget.removeEventListener('scenario-dispatch', onDispatch);
+      eventTarget.removeEventListener('scenario-control', onControl);
       connection.unlisten(['scenario:exec']);
+      stepQueue = [];
+      paused = false;
+      if (resumeResolve) {
+        resumeResolve();
+        resumeResolve = null;
+      }
     },
   };
 }

@@ -216,6 +216,50 @@ describe("createEventConnection", () => {
     conn.close();
   });
 
+  it("dispatch-sequence op fires scenario-dispatch event", () => {
+    const target = new EventTarget();
+    const handler = vi.fn();
+    target.addEventListener("scenario-dispatch", handler);
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+    });
+    lastWs().simulateOpen();
+    lastWs().simulateMessage(JSON.stringify({
+      op: "dispatch-sequence",
+      sessionId: "s-001",
+      executorId: "browser",
+      steps: [{ name: "step1", label: "Do thing", commands: [{ action: "click" }] }],
+      speed: 1.0,
+      paused: false,
+    }));
+    expect(handler).toHaveBeenCalledTimes(1);
+    const detail = (handler.mock.calls[0]![0] as CustomEvent).detail as Record<string, unknown>;
+    expect(detail.op).toBe("dispatch-sequence");
+    expect(detail.sessionId).toBe("s-001");
+    expect(detail.steps).toHaveLength(1);
+    conn.close();
+  });
+
+  it("executor-control op fires scenario-control event", () => {
+    const target = new EventTarget();
+    const handler = vi.fn();
+    target.addEventListener("scenario-control", handler);
+    const conn = createEventConnection("wss://example.com/ws", {
+      config: { eventTarget: target },
+    });
+    lastWs().simulateOpen();
+    lastWs().simulateMessage(JSON.stringify({
+      op: "executor-control",
+      sessionId: "s-001",
+      command: "pause",
+    }));
+    expect(handler).toHaveBeenCalledTimes(1);
+    const detail = (handler.mock.calls[0]![0] as CustomEvent).detail as Record<string, unknown>;
+    expect(detail.op).toBe("executor-control");
+    expect(detail.command).toBe("pause");
+    conn.close();
+  });
+
   it("close tears down cleanly with no reconnection", () => {
     vi.useFakeTimers();
     const conn = createEventConnection("wss://example.com/ws");

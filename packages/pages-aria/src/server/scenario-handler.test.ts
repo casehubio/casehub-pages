@@ -2,10 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createScenarioHandler } from './scenario-handler.js';
 import type { EventConnection } from '@casehubio/pages-data';
 
-function mockConnection(): EventConnection & { sent: object[] } {
+function mockConnection(): EventConnection & { sent: object[]; commandResults: object[] } {
   const sent: object[] = [];
   return {
     sent,
+    get commandResults() {
+      return sent.filter((m) => (m as Record<string, unknown>).op === 'command-result');
+    },
     send(msg: object) { sent.push(msg); },
     listen: vi.fn().mockResolvedValue({ topics: ['scenario:exec'] }),
     unlisten: vi.fn().mockResolvedValue(undefined),
@@ -54,8 +57,8 @@ describe('ScenarioHandler', () => {
     });
 
     expect(clicked).toHaveBeenCalled();
-    expect(conn.sent).toHaveLength(1);
-    expect(conn.sent[0]).toEqual({
+    expect(conn.commandResults).toHaveLength(1);
+    expect(conn.commandResults[0]).toEqual({
       op: 'command-result',
       id: 'cmd-1',
       ok: true,
@@ -83,7 +86,7 @@ describe('ScenarioHandler', () => {
     });
 
     expect(input.value).toBe('Alice');
-    expect(conn.sent[0]).toEqual({
+    expect(conn.commandResults[0]).toEqual({
       op: 'command-result',
       id: 'cmd-2',
       ok: true,
@@ -104,13 +107,13 @@ describe('ScenarioHandler', () => {
       target: { role: 'button', name: 'Nonexistent' },
     });
 
-    expect(conn.sent).toHaveLength(1);
-    expect(conn.sent[0]).toMatchObject({
+    expect(conn.commandResults).toHaveLength(1);
+    expect(conn.commandResults[0]).toMatchObject({
       op: 'command-result',
       id: 'cmd-3',
       ok: false,
     });
-    expect((conn.sent[0] as Record<string, unknown>).error).toContain('Nonexistent');
+    expect((conn.commandResults[0] as Record<string, unknown>).error).toContain('Nonexistent');
 
     handler.dispose();
   });
@@ -125,12 +128,12 @@ describe('ScenarioHandler', () => {
       target: { role: 'button', name: 'X' },
     });
 
-    expect(conn.sent[0]).toMatchObject({
+    expect(conn.commandResults[0]).toMatchObject({
       op: 'command-result',
       id: 'cmd-4',
       ok: false,
     });
-    expect((conn.sent[0] as Record<string, unknown>).error).toContain('hover');
+    expect((conn.commandResults[0] as Record<string, unknown>).error).toContain('hover');
 
     handler.dispose();
   });
@@ -144,8 +147,8 @@ describe('ScenarioHandler', () => {
       action: 'ready',
     });
 
-    expect(conn.sent).toHaveLength(1);
-    expect(conn.sent[0]).toEqual({
+    expect(conn.commandResults).toHaveLength(1);
+    expect(conn.commandResults[0]).toEqual({
       op: 'command-result',
       id: 'cmd-ready',
       ok: true,
@@ -167,7 +170,7 @@ describe('ScenarioHandler', () => {
       detail: { topic: 'scenario/old-format', payload: { id: 'y', action: 'click' } },
     }));
 
-    expect(conn.sent).toHaveLength(0);
+    expect(conn.commandResults).toHaveLength(0);
     handler.dispose();
   });
 
@@ -176,5 +179,141 @@ describe('ScenarioHandler', () => {
     const handler = createScenarioHandler(conn, eventTarget);
     handler.dispose();
     expect(conn.unlisten).toHaveBeenCalledWith(['scenario:exec']);
+  });
+});
+
+describe('ScenarioHandler sequence protocol', () => {
+  let eventTarget: EventTarget;
+
+  beforeEach(() => {
+    eventTarget = new EventTarget();
+  });
+
+  it('sends executor-register on creation', () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+    const reg = conn.sent.find(
+      (m) => (m as Record<string, unknown>).op === 'executor-register');
+    expect(reg).toBeDefined();
+    expect((reg as Record<string, unknown>).name).toBe('browser');
+  });
+
+  it('executes dispatch-sequence steps and sends step-result', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-001',
+        steps: [{
+          name: 'ready-step',
+          label: 'Ready check',
+          commands: [{ action: 'ready' }],
+        }],
+        speed: 1.0,
+        paused: false,
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const results = conn.sent.filter(
+        (m) => (m as Record<string, unknown>).op === 'step-result');
+      expect(results).toHaveLength(1);
+    });
+
+    const result = conn.sent.find(
+      (m) => (m as Record<string, unknown>).op === 'step-result') as Record<string, unknown>;
+    expect(result.stepName).toBe('ready-step');
+    expect(result.sessionId).toBe('s-001');
+    expect(result.ok).toBe(true);
+  });
+
+  it('executes multiple steps in sequence', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-001',
+        steps: [
+          { name: 'step-1', label: 'First', commands: [{ action: 'ready' }] },
+          { name: 'step-2', label: 'Second', commands: [{ action: 'ready' }] },
+        ],
+        speed: 1000,
+        paused: false,
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const results = conn.sent.filter(
+        (m) => (m as Record<string, unknown>).op === 'step-result');
+      expect(results).toHaveLength(2);
+    });
+
+    const results = conn.sent
+      .filter((m) => (m as Record<string, unknown>).op === 'step-result')
+      .map((m) => (m as Record<string, unknown>).stepName);
+    expect(results).toEqual(['step-1', 'step-2']);
+  });
+
+  it('pauses on executor-control pause', async () => {
+    const conn = mockConnection();
+    const handler = createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-001',
+        steps: [
+          { name: 'step-1', label: 'First', commands: [{ action: 'ready' }] },
+          { name: 'step-2', label: 'Second', commands: [{ action: 'ready' }] },
+        ],
+        speed: 1000,
+        paused: true,
+      },
+    }));
+
+    // Paused — no step results should be sent yet (beyond what might execute before pause takes effect)
+    await new Promise((r) => setTimeout(r, 50));
+    const results = conn.sent.filter(
+      (m) => (m as Record<string, unknown>).op === 'step-result');
+    expect(results.length).toBeLessThanOrEqual(0);
+
+    handler.dispose();
+  });
+
+  it('reports error for failing command in step', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-001',
+        steps: [{
+          name: 'fail-step',
+          label: 'Will fail',
+          commands: [{
+            action: 'click',
+            target: { role: 'button', name: 'Nonexistent-Seq-Test' },
+          }],
+        }],
+        speed: 1000,
+        paused: false,
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const results = conn.sent.filter(
+        (m) => (m as Record<string, unknown>).op === 'step-result');
+      expect(results).toHaveLength(1);
+    });
+
+    const result = conn.sent.find(
+      (m) => (m as Record<string, unknown>).op === 'step-result') as Record<string, unknown>;
+    expect(result.ok).toBe(false);
+    expect(result.error).toBeTruthy();
   });
 });

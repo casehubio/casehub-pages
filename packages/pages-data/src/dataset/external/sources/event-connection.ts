@@ -213,6 +213,18 @@ export function createEventConnection(
         continue;
       }
 
+      if (op === "dispatch-sequence" && config?.eventTarget) {
+        config.eventTarget.dispatchEvent(
+          new CustomEvent('scenario-dispatch', { detail: record }));
+        continue;
+      }
+
+      if (op === "executor-control" && config?.eventTarget) {
+        config.eventTarget.dispatchEvent(
+          new CustomEvent('scenario-control', { detail: record }));
+        continue;
+      }
+
       if (op === "event" && config?.eventTarget) {
         const topic = record.topic as string | undefined;
         const seq = record.seq;
