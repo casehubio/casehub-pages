@@ -43,6 +43,7 @@ export interface Subscription {
   readonly def: ExternalDataSetDef;
   readonly listener: DataSetEventListener;
   readonly onError: (error: PushSourceError) => void;
+  snapshotReceived?: boolean;
 }
 
 export function processWireMessage(
@@ -89,6 +90,7 @@ export function processWireMessage(
           return;
         }
         const dataset = toTypedDataSet({ columns: msg.columns, data: msg.rows });
+        subscription.snapshotReceived = true;
         subscription.listener({ type: "snapshot", dataset });
         if (msg.seq !== undefined && updateSeq) updateSeq(msg.seq);
         break;
@@ -100,12 +102,17 @@ export function processWireMessage(
           return;
         }
         const dataset = toTypedDataSet({ columns: msg.columns, data: msg.rows });
-        const event: AppendEvent = {
-          type: "append",
-          rows: dataset.rows,
-          ...(subscription.def.cacheMaxRows !== undefined && { maxRows: subscription.def.cacheMaxRows }),
-        };
-        subscription.listener(event);
+        if (!subscription.snapshotReceived) {
+          subscription.snapshotReceived = true;
+          subscription.listener({ type: "snapshot", dataset });
+        } else {
+          const event: AppendEvent = {
+            type: "append",
+            rows: dataset.rows,
+            ...(subscription.def.cacheMaxRows !== undefined && { maxRows: subscription.def.cacheMaxRows }),
+          };
+          subscription.listener(event);
+        }
         if (msg.seq !== undefined && updateSeq) updateSeq(msg.seq);
         break;
       }

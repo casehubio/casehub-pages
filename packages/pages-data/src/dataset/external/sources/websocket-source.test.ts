@@ -170,6 +170,17 @@ describe("WebSocketSource", () => {
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
+    // Send snapshot first to initialize the subscription
+    ws.onmessage?.({
+      data: JSON.stringify({
+        dataset: "messages",
+        op: "snapshot",
+        columns: [{ id: "text", type: "TEXT" }],
+        rows: [["hello"]],
+      }),
+    });
+
+    // Then send append — should stay as append
     ws.onmessage?.({
       data: JSON.stringify({
         dataset: "messages",
@@ -179,8 +190,9 @@ describe("WebSocketSource", () => {
       }),
     });
 
-    expect(events).toHaveLength(1);
-    expect(events[0]!.type).toBe("append");
+    expect(events).toHaveLength(2);
+    expect(events[0]!.type).toBe("snapshot");
+    expect(events[1]!.type).toBe("append");
   });
 
   it("handles malformed JSON without crashing", async () => {
@@ -1441,6 +1453,173 @@ describe("WebSocketSource", () => {
       expect(url.origin).toBe("wss://relay.example.com");
       expect(url.searchParams.get("target")).toBe("ws://host/ws");
       vi.useRealTimers();
+    });
+  });
+
+  describe("append-before-snapshot auto-promotion (#330)", () => {
+    it("promotes first append to snapshot when no prior snapshot received", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const events: DataSetEvent[] = [];
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("events"),
+        url: "ws://localhost/ws?dataset=events",
+      };
+
+      source.subscribe(dataSetId("events"), def, (e) => events.push(e), () => {});
+
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.onmessage?.({
+        data: JSON.stringify({
+          dataset: "events",
+          op: "append",
+          columns: [{ id: "type", type: "LABEL" }, { id: "value", type: "NUMBER" }],
+          rows: [["alert", "42"]],
+        }),
+      });
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.type).toBe("snapshot");
+      if (events[0]!.type === "snapshot") {
+        expect(events[0]!.dataset.rows).toHaveLength(1);
+        expect(events[0]!.dataset.columns).toHaveLength(2);
+      }
+    });
+
+    it("keeps append as append after snapshot has been received", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const events: DataSetEvent[] = [];
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("events"),
+        url: "ws://localhost/ws?dataset=events",
+      };
+
+      source.subscribe(dataSetId("events"), def, (e) => events.push(e), () => {});
+
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      // First: a real snapshot
+      ws.onmessage?.({
+        data: JSON.stringify({
+          dataset: "events",
+          op: "snapshot",
+          columns: [{ id: "type", type: "LABEL" }],
+          rows: [["initial"]],
+        }),
+      });
+
+      // Second: an append — should stay as append
+      ws.onmessage?.({
+        data: JSON.stringify({
+          dataset: "events",
+          op: "append",
+          columns: [{ id: "type", type: "LABEL" }],
+          rows: [["added"]],
+        }),
+      });
+
+      expect(events).toHaveLength(2);
+      expect(events[0]!.type).toBe("snapshot");
+      expect(events[1]!.type).toBe("append");
+    });
+
+    it("promotes only the first append — subsequent appends stay as append", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const events: DataSetEvent[] = [];
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("events"),
+        url: "ws://localhost/ws?dataset=events",
+      };
+
+      source.subscribe(dataSetId("events"), def, (e) => events.push(e), () => {});
+
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      // Three appends with no prior snapshot
+      for (let i = 0; i < 3; i++) {
+        ws.onmessage?.({
+          data: JSON.stringify({
+            dataset: "events",
+            op: "append",
+            columns: [{ id: "type", type: "LABEL" }],
+            rows: [[`event-${i}`]],
+          }),
+        });
+      }
+
+      expect(events).toHaveLength(3);
+      expect(events[0]!.type).toBe("snapshot");
+      expect(events[1]!.type).toBe("append");
+      expect(events[2]!.type).toBe("append");
+    });
+
+    it("resets promotion state after close() and re-subscribe", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const events: DataSetEvent[] = [];
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("events"),
+        url: "ws://localhost/ws?dataset=events",
+      };
+
+      source.subscribe(dataSetId("events"), def, (e) => events.push(e), () => {});
+
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
+      const ws1 = MockWebSocket.instances[0]!;
+      ws1.open();
+
+      // Send a snapshot so the subscription is initialized
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "events",
+          op: "snapshot",
+          columns: [{ id: "type", type: "LABEL" }],
+          rows: [["first"]],
+        }),
+      });
+
+      source.close();
+      events.length = 0;
+
+      // Re-subscribe — first append should be promoted again
+      source.subscribe(dataSetId("events"), def, (e) => events.push(e), () => {});
+
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(2); });
+      const ws2 = MockWebSocket.instances[1]!;
+      ws2.open();
+
+      ws2.onmessage?.({
+        data: JSON.stringify({
+          dataset: "events",
+          op: "append",
+          columns: [{ id: "type", type: "LABEL" }],
+          rows: [["after-resubscribe"]],
+        }),
+      });
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.type).toBe("snapshot");
     });
   });
 });

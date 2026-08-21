@@ -2299,3 +2299,134 @@ describe("pipeline — server pagination (cleanup)", () => {
     expect(() => pipeline.dispose()).not.toThrow();
   });
 });
+
+describe("push delivery — onChanged → deliverDataSet chain (#330)", () => {
+  it("delivers snapshot data to registered components via onChanged", () => {
+    const ds = toTypedDataSet({
+      columns: [col("type", "Type", ColumnType.LABEL), col("value", "Value", ColumnType.NUMBER)],
+      data: [["alert", "42"]],
+    });
+
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    const lookup = { dataSetId: dataSetId("events"), operations: [] as const };
+
+    registry.set("table-1", {
+      element: document.createElement("div"),
+      component: { type: "data-table" },
+      pagePath: "",
+      hasExplicitId: false,
+      vizElement: target,
+      originalLookup: lookup,
+    });
+
+    let pipeline: ReturnType<typeof createDataPipeline>;
+    const manager = createDataSetManager({
+      onChanged: (id) => {
+        pipeline.deliverDataSet(id);
+      },
+    });
+    pipeline = createDataPipeline(
+      manager,
+      new Map() as DataSetScope,
+      registry,
+      createFilterState(),
+      createDataScopeRegistry(),
+      createComponentViewState(),
+    );
+
+    manager.apply(dataSetId("events"), { type: "snapshot", dataset: ds });
+
+    expect(target.dataSet).toBeTruthy();
+    expect(target.dataSet!.rows).toHaveLength(1);
+    expect(target.totalRows).toBe(1);
+    expect(target.error).toBe("");
+  });
+
+  it("does not crash when append arrives for non-existent dataset", () => {
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    const lookup = { dataSetId: dataSetId("events"), operations: [] as const };
+
+    registry.set("table-1", {
+      element: document.createElement("div"),
+      component: { type: "data-table" },
+      pagePath: "",
+      hasExplicitId: false,
+      vizElement: target,
+      originalLookup: lookup,
+    });
+
+    const appendRows = toTypedDataSet({
+      columns: [col("type", "Type", ColumnType.LABEL)],
+      data: [["alert"]],
+    });
+
+    let pipeline: ReturnType<typeof createDataPipeline>;
+    const manager = createDataSetManager({
+      onChanged: (id) => {
+        pipeline.deliverDataSet(id);
+      },
+    });
+    pipeline = createDataPipeline(
+      manager,
+      new Map() as DataSetScope,
+      registry,
+      createFilterState(),
+      createDataScopeRegistry(),
+      createComponentViewState(),
+    );
+
+    // append for non-existent dataset — manager silently drops, no crash
+    manager.apply(dataSetId("events"), { type: "append", rows: appendRows.rows });
+
+    expect(target.dataSet).toBeUndefined();
+    expect(target.error).toBe("");
+  });
+
+  it("delivers appended data after snapshot has initialized the dataset", () => {
+    const snapshotDs = toTypedDataSet({
+      columns: [col("type", "Type", ColumnType.LABEL)],
+      data: [["initial"]],
+    });
+    const appendDs = toTypedDataSet({
+      columns: [col("type", "Type", ColumnType.LABEL)],
+      data: [["added"]],
+    });
+
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    const lookup = { dataSetId: dataSetId("events"), operations: [] as const };
+
+    registry.set("table-1", {
+      element: document.createElement("div"),
+      component: { type: "data-table" },
+      pagePath: "",
+      hasExplicitId: false,
+      vizElement: target,
+      originalLookup: lookup,
+    });
+
+    let pipeline: ReturnType<typeof createDataPipeline>;
+    const manager = createDataSetManager({
+      onChanged: (id) => {
+        pipeline.deliverDataSet(id);
+      },
+    });
+    pipeline = createDataPipeline(
+      manager,
+      new Map() as DataSetScope,
+      registry,
+      createFilterState(),
+      createDataScopeRegistry(),
+      createComponentViewState(),
+    );
+
+    manager.apply(dataSetId("events"), { type: "snapshot", dataset: snapshotDs });
+    expect(target.totalRows).toBe(1);
+
+    manager.apply(dataSetId("events"), { type: "append", rows: appendDs.rows });
+    expect(target.totalRows).toBe(2);
+    expect(target.dataSet!.rows).toHaveLength(2);
+  });
+});

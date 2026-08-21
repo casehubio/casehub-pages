@@ -91,6 +91,14 @@ describe("SseSource", () => {
     const es = MockEventSource.instances[0]!;
     es.open();
 
+    // Send snapshot first to initialize, then test append
+    es.emit("message", JSON.stringify({
+      dataset: "metrics",
+      op: "snapshot",
+      columns: [{ id: "val", type: "NUMBER" }],
+      rows: [["0"]],
+    }));
+
     es.emit("message", JSON.stringify({
       dataset: "metrics",
       op: "append",
@@ -98,8 +106,9 @@ describe("SseSource", () => {
       rows: [["99"]],
     }));
 
-    expect(events).toHaveLength(1);
-    expect(events[0]!.type).toBe("append");
+    expect(events).toHaveLength(2);
+    expect(events[0]!.type).toBe("snapshot");
+    expect(events[1]!.type).toBe("append");
   });
 
   it("converts sse:// to http:// for EventSource URL", () => {
@@ -221,14 +230,22 @@ describe("SseSource", () => {
     const es = MockEventSource.instances[0]!;
     es.open();
 
+    // Send snapshot first to initialize
+    es.emit("snapshot", JSON.stringify({
+      dataset: "metrics",
+      columns: [{ id: "val", type: "NUMBER" }],
+      rows: [["0"]],
+    }));
+
     es.emit("append", JSON.stringify({
       dataset: "metrics",
       columns: [{ id: "val", type: "NUMBER" }],
       rows: [["99"]],
     }));
 
-    expect(events).toHaveLength(1);
-    expect(events[0]!.type).toBe("append");
+    expect(events).toHaveLength(2);
+    expect(events[0]!.type).toBe("snapshot");
+    expect(events[1]!.type).toBe("append");
   });
 
   it("handles replace event via named SSE event", () => {
