@@ -6,7 +6,8 @@
     "./walker": "./src/walker/index.ts",
     "./executor": "./src/executor/index.ts",
     "./server": "./src/server/index.ts",
-    "./scenario": "./src/scenario/index.ts"
+    "./scenario": "./src/scenario/index.ts",
+    "./controller": "./src/controller/index.ts"
   },
   "scripts": {
     "test": "vitest run"
@@ -14,6 +15,7 @@
   "dependencies": {
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-primitives": "workspace:*",
+    "lit": "^3.3.3",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
