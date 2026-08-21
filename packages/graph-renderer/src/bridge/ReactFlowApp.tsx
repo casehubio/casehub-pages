@@ -7,7 +7,6 @@ import {
   SelectionMode,
   ControlButton,
   useReactFlow,
-  useNodesInitialized,
   useStore,
   type Node,
   type Edge,
@@ -39,11 +38,30 @@ export interface ReactFlowAppProps {
 
 const viewportSizeSelector = (s: { width: number; height: number }) => ({ width: s.width, height: s.height });
 
+function computeBounds(nodes: Node[]): string {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const node of nodes) {
+    const w = node.measured?.width ?? node.width ?? 150;
+    const h = node.measured?.height ?? node.height ?? 40;
+    minX = Math.min(minX, node.position.x);
+    minY = Math.min(minY, node.position.y);
+    maxX = Math.max(maxX, node.position.x + w);
+    maxY = Math.max(maxY, node.position.y + h);
+  }
+  return `${Math.round(minX)},${Math.round(minY)},${Math.round(maxX)},${Math.round(maxY)}`;
+}
+
+const boundsSelector = (s: { nodeLookup: Map<string, Node> }) => {
+  const nodes = Array.from(s.nodeLookup.values());
+  return nodes.length > 0 ? computeBounds(nodes) : '';
+};
+
 function FitTopLeft({ nodes, onFitRef }: { nodes: Node[]; onFitRef: React.MutableRefObject<(() => void) | null> }) {
   const { setViewport, getNodes } = useReactFlow();
-  const nodesInitialized = useNodesInitialized();
   const { width: vw, height: vh } = useStore(viewportSizeSelector);
-  const fitted = useRef(false);
+  const bounds = useStore(boundsSelector);
+  const lastFittedBounds = useRef('');
+  const userInteracted = useRef(false);
 
   const doFit = useCallback(() => {
     const measured = getNodes();
@@ -66,16 +84,18 @@ function FitTopLeft({ nodes, onFitRef }: { nodes: Node[]; onFitRef: React.Mutabl
 
     const zoom = Math.min((vw - pad * 2) / contentW, (vh - pad * 2) / contentH, 1);
     setViewport({ x: -minX * zoom + pad, y: -minY * zoom + pad, zoom });
-  }, [getNodes, setViewport, vw, vh]);
+    lastFittedBounds.current = bounds;
+    userInteracted.current = false;
+  }, [getNodes, setViewport, vw, vh, bounds]);
 
-  useEffect(() => { onFitRef.current = doFit; }, [doFit, onFitRef]);
-  useEffect(() => { fitted.current = false; }, [nodes]);
+  useEffect(() => { onFitRef.current = () => { doFit(); userInteracted.current = false; }; }, [doFit, onFitRef]);
 
   useEffect(() => {
-    if (!nodesInitialized || nodes.length === 0 || fitted.current) return;
-    fitted.current = true;
+    if (!bounds || bounds === lastFittedBounds.current || userInteracted.current) return;
     doFit();
-  }, [nodesInitialized, nodes, doFit]);
+  }, [bounds, doFit]);
+
+  useEffect(() => { lastFittedBounds.current = ''; userInteracted.current = false; }, [nodes]);
 
   return null;
 }
