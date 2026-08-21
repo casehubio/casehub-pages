@@ -383,6 +383,128 @@ class HierarchicalParserTest {
     }
 
     @Test
+    void parseInlineContent() {
+        var yaml = """
+            scenario: content-test
+            steps:
+              - label: "Step with content"
+                target: browser
+                content: |
+                  ## Welcome
+                  This is the first step.
+                commands:
+                  - action: ready
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var step = scenario.steps().getFirst();
+        assertThat(step.content()).isInstanceOf(NarrativeContent.Inline.class);
+        var inline = (NarrativeContent.Inline) step.content();
+        assertThat(inline.markdown()).contains("## Welcome");
+    }
+
+    @Test
+    void parseTemplateContent() {
+        var yaml = """
+            scenario: template-test
+            chapters:
+              - label: "Chapter 1"
+                content:
+                  template: "slides/overview.md"
+                  section: "## Intake"
+                  params:
+                    category: HARDWARE
+                sections:
+                  - label: "Section 1"
+                    steps:
+                      - label: "Step"
+                        target: browser
+                        commands:
+                          - action: ready
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var chapter = scenario.chapters().getFirst();
+        assertThat(chapter.content()).isInstanceOf(NarrativeContent.Template.class);
+        var tmpl = (NarrativeContent.Template) chapter.content();
+        assertThat(tmpl.path()).isEqualTo("slides/overview.md");
+        assertThat(tmpl.section()).isEqualTo("## Intake");
+        assertThat(tmpl.params()).containsEntry("category", "HARDWARE");
+    }
+
+    @Test
+    void parseSlideContent() {
+        var yaml = """
+            scenario: slide-test
+            content:
+              slides: "presentations/demo.html"
+            steps:
+              - label: "Slide step"
+                target: browser
+                content:
+                  slide: 3
+                commands:
+                  - action: ready
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        assertThat(scenario.slides()).isEqualTo("presentations/demo.html");
+        var step = scenario.steps().getFirst();
+        assertThat(step.content()).isInstanceOf(NarrativeContent.Slide.class);
+        assertThat(((NarrativeContent.Slide) step.content()).ref()).isEqualTo(3);
+    }
+
+    @Test
+    void parseSlideContentWithStringId() {
+        var yaml = """
+            scenario: slide-id-test
+            steps:
+              - label: "Named slide"
+                target: browser
+                content:
+                  slide: "classification"
+                commands:
+                  - action: ready
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var step = scenario.steps().getFirst();
+        assertThat(step.content()).isInstanceOf(NarrativeContent.Slide.class);
+        assertThat(((NarrativeContent.Slide) step.content()).ref()).isEqualTo("classification");
+    }
+
+    @Test
+    void sectionContentParsed() {
+        var yaml = """
+            scenario: section-content
+            sections:
+              - label: "With content"
+                content: "Section narrative here"
+                steps:
+                  - label: "Step"
+                    target: browser
+                    commands:
+                      - action: ready
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var section = scenario.sections().getFirst();
+        assertThat(section.content()).isInstanceOf(NarrativeContent.Inline.class);
+        assertThat(((NarrativeContent.Inline) section.content()).markdown())
+            .isEqualTo("Section narrative here");
+    }
+
+    @Test
+    void noContentReturnsNull() {
+        var yaml = """
+            scenario: no-content
+            steps:
+              - label: "Plain step"
+                target: browser
+                commands:
+                  - action: ready
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        assertThat(scenario.steps().getFirst().content()).isNull();
+        assertThat(scenario.slides()).isNull();
+    }
+
+    @Test
     void defaultModeIsSingle() {
         var yaml = """
             scenario: default-mode

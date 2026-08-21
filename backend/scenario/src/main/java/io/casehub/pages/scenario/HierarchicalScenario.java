@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 public record HierarchicalScenario(
         String scenario, String description,
         double speed, String onError,
-        Map<String, Object> data,
+        Map<String, Object> data, String slides,
         List<ScenarioChapter> chapters,
         List<ScenarioSection> sections,
         List<HierarchicalStep> steps) {

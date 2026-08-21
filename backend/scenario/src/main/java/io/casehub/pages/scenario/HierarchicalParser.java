@@ -55,8 +55,11 @@ public final class HierarchicalParser {
                 throw new IllegalArgumentException("Missing or empty 'scenario' name");
             }
 
+            String slides = root.has("content") && root.get("content").has("slides")
+                ? root.get("content").get("slides").asText() : null;
+
             return new HierarchicalScenario(scenario, description, speed,
-                onError, data, chapters, sections, steps);
+                onError, data, slides, chapters, sections, steps);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to parse scenario YAML", e);
         }
@@ -66,8 +69,10 @@ public final class HierarchicalParser {
         List<ScenarioChapter> chapters = new ArrayList<>();
         for (JsonNode ch : node) {
             String label = ch.path("label").asText();
+            NarrativeContent content = ch.has("content")
+                ? parseContent(ch.get("content")) : null;
             List<ScenarioSection> sections = parseSections(ch.get("sections"));
-            chapters.add(new ScenarioChapter(label, sections));
+            chapters.add(new ScenarioChapter(label, content, sections));
         }
         return chapters;
     }
@@ -77,8 +82,10 @@ public final class HierarchicalParser {
         List<ScenarioSection> sections = new ArrayList<>();
         for (JsonNode sec : node) {
             String label = sec.path("label").asText();
+            NarrativeContent content = sec.has("content")
+                ? parseContent(sec.get("content")) : null;
             List<HierarchicalStep> steps = parseSteps(sec.get("steps"));
-            sections.add(new ScenarioSection(label, steps));
+            sections.add(new ScenarioSection(label, content, steps));
         }
         return sections;
     }
@@ -99,8 +106,10 @@ public final class HierarchicalParser {
         String actor = node.path("actor").asText(null);
         Trigger trigger = node.has("trigger")
             ? parseTrigger(node.get("trigger")) : null;
+        NarrativeContent content = node.has("content")
+            ? parseContent(node.get("content")) : null;
         List<ScenarioCommand> commands = parseCommands(node.get("commands"));
-        return new HierarchicalStep(name, label, target, actor, trigger, commands);
+        return new HierarchicalStep(name, label, target, actor, trigger, content, commands);
     }
 
     private static List<ScenarioCommand> parseCommands(JsonNode node) {
@@ -172,6 +181,27 @@ public final class HierarchicalParser {
             return new Trigger.DataTrigger(endpoint, match, poll);
         }
         throw new IllegalArgumentException("Unknown trigger format: " + node);
+    }
+
+    private static NarrativeContent parseContent(JsonNode node) {
+        if (node.isTextual()) {
+            return new NarrativeContent.Inline(node.asText());
+        }
+        if (node.isObject()) {
+            if (node.has("template")) {
+                String path = node.get("template").asText();
+                String section = node.path("section").asText(null);
+                Map<String, Object> params = node.has("params")
+                    ? toMap(node.get("params")) : Map.of();
+                return new NarrativeContent.Template(path, section, params);
+            }
+            if (node.has("slide")) {
+                JsonNode slideNode = node.get("slide");
+                Object ref = slideNode.isInt() ? slideNode.asInt() : slideNode.asText();
+                return new NarrativeContent.Slide(ref);
+            }
+        }
+        return new NarrativeContent.Inline(node.asText());
     }
 
     @SuppressWarnings("unchecked")

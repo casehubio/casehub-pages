@@ -6,6 +6,7 @@ import io.casehub.pages.push.PushMessage;
 import io.casehub.pages.push.PushRequest;
 import io.casehub.pages.push.SessionSender;
 import io.casehub.pages.scenario.HierarchicalParser;
+import io.casehub.pages.scenario.NarrativeContent;
 import io.casehub.pages.scenario.HierarchicalScenario;
 import io.casehub.pages.scenario.HierarchicalStep;
 import io.casehub.pages.scenario.ScenarioCommand;
@@ -95,18 +96,21 @@ public class ScenarioOrchestrator {
         String currentStep = null;
 
         int completed = completedSteps.size();
+        NarrativeContent content = null;
         if (!allSteps.isEmpty() && completed < allSteps.size()) {
             var step = allSteps.get(completed);
             currentStep = step.label();
             currentSection = findSectionLabel(completed);
             currentChapter = findChapterLabel(completed);
+            content = resolveContent(completed);
         }
 
         double progress = allSteps.isEmpty() ? 1.0
             : (double) completed / allSteps.size();
 
         return new ScenarioState(scenario.scenario(), currentChapter,
-            currentSection, currentStep, paused, speed, progress);
+            currentSection, currentStep, paused, speed, progress,
+            content, scenario.slides());
     }
 
     public String sessionId() {
@@ -231,6 +235,34 @@ public class ScenarioOrchestrator {
                 return chapter.label();
             }
             offset += chapterSize;
+        }
+        return null;
+    }
+
+    private NarrativeContent resolveContent(int stepIndex) {
+        var step = allSteps.get(stepIndex);
+        if (step.content() != null) return step.content();
+
+        if (scenario.sections() != null) {
+            int offset = 0;
+            for (var section : scenario.sections()) {
+                if (stepIndex < offset + section.steps().size()) {
+                    return section.content();
+                }
+                offset += section.steps().size();
+            }
+        }
+        if (scenario.chapters() != null) {
+            int offset = 0;
+            for (var chapter : scenario.chapters()) {
+                for (var section : chapter.sections()) {
+                    if (stepIndex < offset + section.steps().size()) {
+                        if (section.content() != null) return section.content();
+                        return chapter.content();
+                    }
+                    offset += section.steps().size();
+                }
+            }
         }
         return null;
     }
