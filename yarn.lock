@@ -1464,6 +1464,7 @@ __metadata:
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-primitives": "workspace:*"
     jsdom: "npm:^26.1.0"
+    lit: "npm:^3.3.3"
     vitest: "npm:^3.2.4"
     yaml: "npm:^2.9.0"
   languageName: unknown
