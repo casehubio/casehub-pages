@@ -323,4 +323,79 @@ class HierarchicalParserTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("mutually exclusive");
     }
+
+    @Test
+    void parseCommandWithBulkMode() {
+        var yaml = """
+            scenario: bulk-test
+            steps:
+              - label: "Seed data"
+                target: helpdesk
+                commands:
+                  - action: seed-tickets
+                    mode: bulk
+                    source: "data/tickets.json"
+                    data: {fallback: true}
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var cmd = scenario.steps().getFirst().commands().getFirst();
+        assertThat(cmd.mode()).isEqualTo(ScenarioCommand.DataMode.BULK);
+        assertThat(cmd.source()).isEqualTo("data/tickets.json");
+        assertThat(cmd.data()).containsEntry("fallback", true);
+    }
+
+    @Test
+    void parseCommandWithSteppedMode() {
+        var yaml = """
+            scenario: stepped-test
+            steps:
+              - label: "Feed items"
+                target: helpdesk
+                commands:
+                  - action: inject-ticket
+                    mode: stepped
+                    source: "data/tickets.json"
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var cmd = scenario.steps().getFirst().commands().getFirst();
+        assertThat(cmd.mode()).isEqualTo(ScenarioCommand.DataMode.STEPPED);
+        assertThat(cmd.source()).isEqualTo("data/tickets.json");
+    }
+
+    @Test
+    void parseCommandWithStreamMode() {
+        var yaml = """
+            scenario: stream-test
+            steps:
+              - label: "Stream events"
+                target: helpdesk
+                commands:
+                  - action: emit-event
+                    mode: stream
+                    source: "data/events.json"
+                    interval: 500
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var cmd = scenario.steps().getFirst().commands().getFirst();
+        assertThat(cmd.mode()).isEqualTo(ScenarioCommand.DataMode.STREAM);
+        assertThat(cmd.source()).isEqualTo("data/events.json");
+        assertThat(cmd.interval()).isEqualTo(500);
+    }
+
+    @Test
+    void defaultModeIsSingle() {
+        var yaml = """
+            scenario: default-mode
+            steps:
+              - label: "Normal"
+                target: browser
+                commands:
+                  - action: click
+            """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var cmd = scenario.steps().getFirst().commands().getFirst();
+        assertThat(cmd.mode()).isEqualTo(ScenarioCommand.DataMode.SINGLE);
+        assertThat(cmd.source()).isNull();
+        assertThat(cmd.interval()).isNull();
+    }
 }

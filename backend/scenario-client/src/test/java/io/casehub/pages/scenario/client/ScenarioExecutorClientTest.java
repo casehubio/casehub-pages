@@ -248,4 +248,109 @@ class ScenarioExecutorClientTest {
         assertThat(elapsed).isGreaterThanOrEqualTo(400);
         assertThat(elapsed).isLessThan(2000);
     }
+
+    @Test
+    void bulkModePassesAllItemsAtOnce() throws Exception {
+        var received = new CopyOnWriteArrayList<Map<String, Object>>();
+        var beans = List.<Object>of(new Object() {
+            @ScenarioAction("ingest")
+            Map<String, Object> ingest(ActionContext ctx) {
+                received.add(ctx.dataMap());
+                return Map.of("count", received.size());
+            }
+        });
+
+        var sent = new CopyOnWriteArrayList<String>();
+        var client = ScenarioExecutorClient.create("test", beans, sent::add);
+
+        String stepsJson = JSON.writeValueAsString(List.of(
+            Map.of("name", "bulk-step", "label", "Bulk ingest",
+                "commands", List.of(Map.of(
+                    "action", "ingest",
+                    "mode", "bulk",
+                    "data", List.of(
+                        Map.of("id", 1, "name", "Alice"),
+                        Map.of("id", 2, "name", "Bob")))))
+        ));
+
+        client.onMessage(PushMessage.dispatchSequence("s-bulk", "test",
+            stepsJson, 1000.0, false));
+
+        awaitStepResults(sent, 1);
+        assertThat(received).hasSize(1);
+        assertThat(received.getFirst()).containsKey("items");
+    }
+
+    @Test
+    void steppedModeInvokesPerItem() throws Exception {
+        var received = new CopyOnWriteArrayList<Map<String, Object>>();
+        var beans = List.<Object>of(new Object() {
+            @ScenarioAction("process")
+            Map<String, Object> process(ActionContext ctx) {
+                received.add(new java.util.HashMap<>(ctx.dataMap()));
+                return Map.of();
+            }
+        });
+
+        var sent = new CopyOnWriteArrayList<String>();
+        var client = ScenarioExecutorClient.create("test", beans, sent::add);
+
+        String stepsJson = JSON.writeValueAsString(List.of(
+            Map.of("name", "stepped-step", "label", "Stepped",
+                "commands", List.of(Map.of(
+                    "action", "process",
+                    "mode", "stepped",
+                    "data", List.of(
+                        Map.of("ticket", "T-001"),
+                        Map.of("ticket", "T-002"),
+                        Map.of("ticket", "T-003")))))
+        ));
+
+        client.onMessage(PushMessage.dispatchSequence("s-stepped", "test",
+            stepsJson, 1000.0, false));
+
+        awaitStepResults(sent, 1);
+        assertThat(received).hasSize(3);
+        assertThat(received.get(0)).containsEntry("ticket", "T-001");
+        assertThat(received.get(1)).containsEntry("ticket", "T-002");
+        assertThat(received.get(2)).containsEntry("ticket", "T-003");
+        assertThat(received.get(0)).containsEntry("_index", 0);
+        assertThat(received.get(2)).containsEntry("_total", 3);
+    }
+
+    @Test
+    void streamModeEmitsAtInterval() throws Exception {
+        var received = new CopyOnWriteArrayList<Map<String, Object>>();
+        var beans = List.<Object>of(new Object() {
+            @ScenarioAction("emit")
+            Map<String, Object> emit(ActionContext ctx) {
+                received.add(new java.util.HashMap<>(ctx.dataMap()));
+                return Map.of();
+            }
+        });
+
+        var sent = new CopyOnWriteArrayList<String>();
+        var client = ScenarioExecutorClient.create("test", beans, sent::add);
+
+        String stepsJson = JSON.writeValueAsString(List.of(
+            Map.of("name", "stream-step", "label", "Stream",
+                "commands", List.of(Map.of(
+                    "action", "emit",
+                    "mode", "stream",
+                    "interval", 100,
+                    "data", List.of(
+                        Map.of("event", "A"),
+                        Map.of("event", "B")))))
+        ));
+
+        long start = System.currentTimeMillis();
+        client.onMessage(PushMessage.dispatchSequence("s-stream", "test",
+            stepsJson, 1000.0, false));
+
+        awaitStepResults(sent, 1);
+        long elapsed = System.currentTimeMillis() - start;
+
+        assertThat(received).hasSize(2);
+        assertThat(elapsed).isGreaterThanOrEqualTo(80);
+    }
 }

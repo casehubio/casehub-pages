@@ -158,17 +158,19 @@ public class ScenarioExecutorClient {
         Map<String, Object> lastResult = Map.of();
         for (JsonNode cmdNode : commandsNode) {
             String action = cmdNode.path("action").asText();
-            Map<String, Object> data = cmdNode.has("data")
-                ? toMap(cmdNode.get("data")) : Map.of();
+            String mode = cmdNode.path("mode").asText("single").toUpperCase();
             Map<String, Object> awaitMatch = Map.of();
             if (cmdNode.has("await") && cmdNode.get("await").has("match")) {
                 awaitMatch = toMap(cmdNode.get("await").get("match"));
             }
 
-            var ctx = ActionContext.of(actor, data, awaitMatch);
-
             try {
-                lastResult = actionRegistry.invoke(action, ctx);
+                lastResult = switch (mode) {
+                    case "BULK" -> executeBulk(action, actor, cmdNode, awaitMatch);
+                    case "STEPPED" -> executeStepped(action, actor, cmdNode, awaitMatch);
+                    case "STREAM" -> executeStream(action, actor, cmdNode, awaitMatch);
+                    default -> executeSingle(action, actor, cmdNode, awaitMatch);
+                };
             } catch (Exception e) {
                 sendStepResult(sessionId, stepName, false, e.getMessage(), Map.of());
                 return;
@@ -176,6 +178,86 @@ public class ScenarioExecutorClient {
         }
 
         sendStepResult(sessionId, stepName, true, null, lastResult);
+    }
+
+    private Map<String, Object> executeSingle(String action, String actor,
+                                               JsonNode cmdNode,
+                                               Map<String, Object> awaitMatch) throws Exception {
+        Map<String, Object> data = cmdNode.has("data") ? toMap(cmdNode.get("data")) : Map.of();
+        return actionRegistry.invoke(action, ActionContext.of(actor, data, awaitMatch));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> executeBulk(String action, String actor,
+                                             JsonNode cmdNode,
+                                             Map<String, Object> awaitMatch) throws Exception {
+        List<Object> items = resolveItems(cmdNode);
+        Map<String, Object> bulkData = Map.of("items", items, "mode", "bulk");
+        return actionRegistry.invoke(action, ActionContext.of(actor, bulkData, awaitMatch));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> executeStepped(String action, String actor,
+                                                JsonNode cmdNode,
+                                                Map<String, Object> awaitMatch) throws Exception {
+        List<Object> items = resolveItems(cmdNode);
+        Map<String, Object> lastResult = Map.of();
+        for (int i = 0; i < items.size(); i++) {
+            waitIfPaused();
+            Object item = items.get(i);
+            Map<String, Object> itemData = item instanceof Map
+                ? (Map<String, Object>) item
+                : Map.of("value", item);
+            itemData = new HashMap<>(itemData);
+            itemData.put("_index", i);
+            itemData.put("_total", items.size());
+            lastResult = actionRegistry.invoke(action, ActionContext.of(actor, itemData, awaitMatch));
+            if (i < items.size() - 1) {
+                sleepForSpeed();
+            }
+        }
+        return lastResult;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> executeStream(String action, String actor,
+                                               JsonNode cmdNode,
+                                               Map<String, Object> awaitMatch) throws Exception {
+        List<Object> items = resolveItems(cmdNode);
+        int intervalMs = cmdNode.path("interval").asInt(1000);
+        Map<String, Object> lastResult = Map.of();
+        for (int i = 0; i < items.size(); i++) {
+            waitIfPaused();
+            Object item = items.get(i);
+            Map<String, Object> itemData = item instanceof Map
+                ? (Map<String, Object>) item
+                : Map.of("value", item);
+            itemData = new HashMap<>(itemData);
+            itemData.put("_index", i);
+            itemData.put("_total", items.size());
+            lastResult = actionRegistry.invoke(action, ActionContext.of(actor, itemData, awaitMatch));
+            if (i < items.size() - 1) {
+                try { Thread.sleep(intervalMs); } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); break;
+                }
+            }
+        }
+        return lastResult;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Object> resolveItems(JsonNode cmdNode) {
+        if (cmdNode.has("data")) {
+            JsonNode dataNode = cmdNode.get("data");
+            if (dataNode.isArray()) {
+                return JSON.convertValue(dataNode, List.class);
+            }
+            Object items = toMap(dataNode).get("items");
+            if (items instanceof List<?> list) {
+                return (List<Object>) list;
+            }
+        }
+        return List.of();
     }
 
     private void sendRegister() {

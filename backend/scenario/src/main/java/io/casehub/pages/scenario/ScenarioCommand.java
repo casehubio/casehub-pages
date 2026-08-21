@@ -6,9 +6,22 @@ import java.util.Objects;
 public record ScenarioCommand(String action, AriaTarget target,
                                String value, Map<String, Object> data,
                                String domain, AwaitCondition await,
-                               Integer timeout) {
+                               Integer timeout, DataMode mode,
+                               String source, Integer interval) {
+
+    public enum DataMode { SINGLE, BULK, STEPPED, STREAM }
+
     public ScenarioCommand {
         Objects.requireNonNull(action, "action");
         data = data != null ? Map.copyOf(data) : null;
+        if (mode == null) mode = DataMode.SINGLE;
+    }
+
+    public ScenarioCommand(String action, AriaTarget target,
+                            String value, Map<String, Object> data,
+                            String domain, AwaitCondition await,
+                            Integer timeout) {
+        this(action, target, value, data, domain, await, timeout,
+             DataMode.SINGLE, null, null);
     }
 }

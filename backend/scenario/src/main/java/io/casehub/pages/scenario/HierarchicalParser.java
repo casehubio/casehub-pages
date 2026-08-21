@@ -124,8 +124,14 @@ public final class HierarchicalParser {
             ? parseAwait(node.get("await")) : null;
         Integer timeout = node.has("timeout")
             ? node.get("timeout").asInt() : null;
+        ScenarioCommand.DataMode mode = node.has("mode")
+            ? ScenarioCommand.DataMode.valueOf(node.get("mode").asText().toUpperCase())
+            : null;
+        String source = node.path("source").asText(null);
+        Integer interval = node.has("interval")
+            ? node.get("interval").asInt() : null;
         return new ScenarioCommand(action, ariaTarget, value, data,
-            domain, await, timeout);
+            domain, await, timeout, mode, source, interval);
     }
 
     private static AriaTarget parseAriaTarget(JsonNode node) {
