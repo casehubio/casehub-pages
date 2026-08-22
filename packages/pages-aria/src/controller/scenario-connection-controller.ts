@@ -97,6 +97,10 @@ export class ScenarioConnectionController implements ReactiveController {
       this._ownEventTarget = new EventTarget();
       this._ownConnection = createEventConnection(wsUrl, {
         config: { eventTarget: this._ownEventTarget },
+        onStatusChange: (status) => {
+          this.connectionStatus = status;
+          this._host.requestUpdate();
+        },
       });
     }
   }
