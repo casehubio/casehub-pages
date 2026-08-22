@@ -1,0 +1,79 @@
+pages:
+  - name: Frame Sandbox
+    components:
+      - type: title
+        properties:
+          text: "Group-Organiser Sandbox"
+          size: h2
+      - type: frame-sandbox
+        properties:
+          organiser: free-layout
+          policy:
+            allowedOrganisers: [free-layout, tab, accordion]
+            maxDepth: 3
+          entries:
+            - key: editor
+              label: Editor
+              position: { x: 20, y: 20 }
+              size: { width: 450, height: 350 }
+              content:
+                type: frame-sandbox
+                properties:
+                  organiser: tab
+                  policy:
+                    allowedOrganisers: [tab, accordion]
+                  entries:
+                    - key: code
+                      label: Code
+                      content:
+                        type: markdown
+                        properties:
+                          content: |
+                            # Code Editor
+                            This is the **code** tab content.
+                    - key: output
+                      label: Output
+                      content:
+                        type: html
+                        properties:
+                          content: >
+                            <div style="padding:1rem;color:#ccc">
+                            Output panel — build results appear here.
+                            </div>
+                    - key: nested-accordion
+                      label: Panels
+                      content:
+                        type: frame-sandbox
+                        properties:
+                          organiser: accordion
+                          entries:
+                            - key: vars
+                              label: Variables
+                              content:
+                                type: html
+                                properties:
+                                  content: >
+                                    <div style="padding:0.5rem;color:#aaa">
+                                    x = 42, y = "hello"
+                                    </div>
+                            - key: stack
+                              label: Call Stack
+                              content:
+                                type: html
+                                properties:
+                                  content: >
+                                    <div style="padding:0.5rem;color:#aaa">
+                                    main() → process() → render()
+                                    </div>
+            - key: preview
+              label: Preview
+              position: { x: 500, y: 20 }
+              size: { width: 350, height: 250 }
+              content:
+                type: html
+                properties:
+                  content: >
+                    <div style="padding:1rem;color:#ccc;height:100%">
+                    <h3 style="color:#fff">Preview</h3>
+                    <p>Live preview of the application.</p>
+                    </div>

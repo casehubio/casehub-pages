@@ -424,6 +424,10 @@ body {
     min-height: 0;
 }
 
+#sample-target.full-bleed {
+    padding: 0;
+}
+
 /* --- Scrollbar --- */
 
 .categories::-webkit-scrollbar {

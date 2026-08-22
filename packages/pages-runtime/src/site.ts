@@ -196,7 +196,10 @@ export async function loadSite(
   let zoneEngine: ZoneLayoutEngine | undefined = options?.zoneEngine;
   let layoutSaveTimer: ReturnType<typeof setTimeout> | undefined;
   let frameLayoutStash: readonly FrameLayout[] | undefined;
-  const floatingWorkspaceRef: { engine: FloatingFrameEngine | undefined; stash: readonly FrameLayout[] | undefined } = { engine: undefined, stash: undefined };
+  const floatingWorkspaceRef: {
+    engine: FloatingFrameEngine | undefined;
+    stash: readonly FrameLayout[] | undefined;
+  } = { engine: undefined, stash: undefined };
   const actionExecutor = new ActionExecutor(
     options?.fetch ?? globalThis.fetch.bind(globalThis),
     options?.baseUrl ?? ""
@@ -1419,6 +1422,10 @@ export async function loadSite(
       }
       componentViewState.clear();
       registry.clear();
+      const themeMatch = target.className.match(/pages-theme-[^\s]+/);
+      if (themeMatch) target.classList.remove(themeMatch[0]);
+      const themeStyle = target.querySelector('style[data-pages-theme]');
+      if (themeStyle) themeStyle.remove();
       target.innerHTML = "";
     },
   };

@@ -42,7 +42,7 @@ public class JdbcEventStore implements EventStore {
                         topic        VARCHAR(255) NOT NULL,
                         seq          BIGINT NOT NULL,
                         payload_json TEXT NOT NULL,
-                        created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+                        created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                         PRIMARY KEY (topic, seq)
                     )""");
             }

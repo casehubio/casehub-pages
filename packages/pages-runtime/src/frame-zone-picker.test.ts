@@ -28,6 +28,9 @@ describe("createFrameZonePicker", () => {
     } as unknown as FloatingFrameEngine;
     backend = {
       onTitlebarDoubleClick: vi.fn((cb: any) => { dblClickCb = cb; }),
+      onViewModeToggle: vi.fn(),
+      onAddTab: vi.fn(),
+      onTabRemoved: vi.fn(),
       getFrameElement: vi.fn(() => {
         const el = document.createElement("div");
         el.getBoundingClientRect = () => ({ left: 100, top: 100, right: 500, bottom: 400, width: 400, height: 300, x: 100, y: 100, toJSON: () => ({}) });

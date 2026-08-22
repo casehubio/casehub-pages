@@ -72,6 +72,10 @@ export interface FrameConfig {
   readonly position?: { x: number; y: number };
   readonly size?: { width: number; height: number };
   readonly pinned?: boolean;
+  readonly viewMode?: "tab" | "accordion";
+  readonly allowViewToggle?: boolean;
+  readonly allowAddTab?: boolean;
+  readonly allowArrangement?: boolean;
 }
 
 export interface FloatingWorkspaceConfig {
@@ -96,6 +100,14 @@ export interface FrameLayout {
   readonly activeTabKey: string;
   readonly detached?: boolean | undefined;
   readonly snappedZone?: SnapZone | undefined;
+  readonly viewMode?: "tab" | "accordion";
+  readonly allowViewToggle?: boolean;
+  readonly allowAddTab?: boolean;
+  readonly allowArrangement?: boolean;
+  readonly accordionState?: {
+    readonly collapsed: readonly string[];
+    readonly heights: Readonly<Record<string, number>>;
+  };
 }
 
 export interface ContentFactoryResult {

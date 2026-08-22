@@ -90,6 +90,7 @@ function renderNode(
   parent.appendChild(el);
 
   // onNode fires after appendChild, before children
+
   onNode?.(el, component);
 
   // 6. Render children — items take precedence over slots

@@ -36,6 +36,29 @@ export function nextFramePosition(
   return clampPosition(candidate, frameSize, container);
 }
 
+export type EdgeZone = "left" | "right" | "top" | "bottom";
+
+export function detectEdgeZone(
+  pos: { x: number; y: number },
+  rect: { x: number; y: number; width: number; height: number },
+  threshold: number,
+): EdgeZone | null {
+  const relX = pos.x - rect.x;
+  const relY = pos.y - rect.y;
+  if (relX < 0 || relX > rect.width || relY < 0 || relY > rect.height) return null;
+  if (relX < threshold) return "left";
+  if (relX > rect.width - threshold) return "right";
+  if (relY < threshold) return "top";
+  if (relY > rect.height - threshold) return "bottom";
+  return null;
+}
+
+export type SplitDirection = "h" | "v";
+
+export function edgeToDirection(zone: EdgeZone): SplitDirection {
+  return zone === "top" || zone === "bottom" ? "h" : "v";
+}
+
 const DEFAULT_THRESHOLD = 40;
 
 export function snapToZone(
@@ -59,7 +82,7 @@ export function snapToZone(
   return null;
 }
 
-const DEFAULT_GAP = 8;
+export const DEFAULT_GAP = 8;
 
 export function zoneToRect(
   zone: SnapZone,
@@ -84,6 +107,45 @@ export function zoneToRect(
     default: {
       const _exhaustive: never = zone;
       return _exhaustive;
+    }
+  }
+}
+
+export function splitGeometry(
+  zone: EdgeZone,
+  targetRect: { x: number; y: number; width: number; height: number },
+  gap = DEFAULT_GAP,
+): { target: { position: Position; size: Size }; newFrame: { position: Position; size: Size } } {
+  const { x, y, width, height } = targetRect;
+
+  switch (zone) {
+    case "left": {
+      const halfW = Math.floor(width / 2 - gap / 2);
+      return {
+        newFrame: { position: { x, y }, size: { width: halfW, height } },
+        target: { position: { x: x + halfW + gap, y }, size: { width: halfW, height } },
+      };
+    }
+    case "right": {
+      const halfW = Math.floor(width / 2 - gap / 2);
+      return {
+        target: { position: { x, y }, size: { width: halfW, height } },
+        newFrame: { position: { x: x + halfW + gap, y }, size: { width: halfW, height } },
+      };
+    }
+    case "top": {
+      const halfH = Math.floor(height / 2 - gap / 2);
+      return {
+        newFrame: { position: { x, y }, size: { width, height: halfH } },
+        target: { position: { x, y: y + halfH + gap }, size: { width, height: halfH } },
+      };
+    }
+    case "bottom": {
+      const halfH = Math.floor(height / 2 - gap / 2);
+      return {
+        target: { position: { x, y }, size: { width, height: halfH } },
+        newFrame: { position: { x, y: y + halfH + gap }, size: { width, height: halfH } },
+      };
     }
   }
 }

@@ -14,8 +14,8 @@ export interface FloatingFrameEngine {
   removeFrame(key: string): void;
   hideFrame(key: string): void;
   showFrame(key: string): void;
-  addTab(frameKey: string, tab: FrameTabConfig): void;
-  removeTab(frameKey: string, tabKey: string): void;
+  addTab(frameKey: string, tab: FrameTabConfig, options?: { skipBackend?: boolean }): void;
+  removeTab(frameKey: string, tabKey: string, options?: { skipBackend?: boolean }): void;
   moveTab(fromFrame: string, tabKey: string, toFrame: string): void;
   setActiveTab(frameKey: string, tabKey: string): void;
   bringToFront(key: string): void;
@@ -28,15 +28,21 @@ export interface FloatingFrameEngine {
   recomputeSnappedFrames(canvasSize: { width: number; height: number }): void;
   focusDirection(direction: "up" | "down" | "left" | "right"): string | null;
   applyOrganiser(preset: Preset, canvasSize?: { width: number; height: number }): void;
+  reorderTabs(frameKey: string, tabKeys: readonly string[]): void;
+  setBackend(newBackend: FloatingFrameBackend): void;
+  renderAll(): void;
+  toggleViewMode(key: string): void;
+  setAccordionState(key: string, state: { collapsed: readonly string[]; heights: Readonly<Record<string, number>> }): void;
   captureLayout(): readonly FrameLayout[];
   restoreLayout(saved: readonly FrameLayout[]): void;
   dispose(): void;
 }
 
 export function createFloatingFrameEngine(
-  backend: FloatingFrameBackend,
+  initialBackend: FloatingFrameBackend,
   savedLayout?: readonly FrameLayout[],
 ): FloatingFrameEngine {
+  let backend = initialBackend;
   let frames = new Map<string, FrameLayout>();
   let disposed = false;
   let nextOrder = 0;
@@ -69,6 +75,10 @@ export function createFloatingFrameEngine(
         hidden: false,
         tabs: config.tabs,
         activeTabKey: config.tabs[0]?.key ?? "",
+        ...(config.viewMode ? { viewMode: config.viewMode } : {}),
+        ...(config.allowViewToggle !== undefined ? { allowViewToggle: config.allowViewToggle } : {}),
+        ...(config.allowAddTab !== undefined ? { allowAddTab: config.allowAddTab } : {}),
+        ...(config.allowArrangement !== undefined ? { allowArrangement: config.allowArrangement } : {}),
       };
       frames.set(config.key, layout);
       frames = zBringToFront(frames, config.key);
@@ -101,24 +111,45 @@ export function createFloatingFrameEngine(
       backend.renderFrame(frames.get(key)!);
     },
 
-    addTab(frameKey: string, tab: FrameTabConfig) {
+    addTab(frameKey: string, tab: FrameTabConfig, options?: { skipBackend?: boolean }) {
       assertAlive();
       const frame = frames.get(frameKey);
       if (!frame) return;
-      const updated: FrameLayout = { ...frame, tabs: [...frame.tabs, tab] };
+      let accordionState = frame.accordionState;
+      if (frame.viewMode === "accordion" && accordionState) {
+        accordionState = { ...accordionState, heights: { ...accordionState.heights } };
+      }
+      const updated: FrameLayout = { ...frame, tabs: [...frame.tabs, tab], ...(accordionState ? { accordionState } : {}) };
       frames.set(frameKey, updated);
-      backend.addTab(frameKey, tab);
+      if (!options?.skipBackend) backend.addTab(frameKey, tab);
     },
 
-    removeTab(frameKey: string, tabKey: string) {
+    removeTab(frameKey: string, tabKey: string, options?: { skipBackend?: boolean }) {
       assertAlive();
       const frame = frames.get(frameKey);
       if (!frame) return;
       const newTabs = frame.tabs.filter(t => t.key !== tabKey);
       const activeTabKey = frame.activeTabKey === tabKey ? (newTabs[0]?.key ?? "") : frame.activeTabKey;
-      const updated: FrameLayout = { ...frame, tabs: newTabs, activeTabKey };
+      let accordionState = frame.accordionState;
+      if (accordionState) {
+        const collapsed = accordionState.collapsed.filter(k => k !== tabKey);
+        const { [tabKey]: _, ...heights } = accordionState.heights;
+        accordionState = { collapsed, heights };
+      }
+      const updated: FrameLayout = { ...frame, tabs: newTabs, activeTabKey, ...(accordionState ? { accordionState } : {}) };
       frames.set(frameKey, updated);
-      backend.removeTab(frameKey, tabKey);
+      if (!options?.skipBackend) backend.removeTab(frameKey, tabKey);
+    },
+
+    reorderTabs(frameKey: string, tabKeys: readonly string[]) {
+      assertAlive();
+      const frame = frames.get(frameKey);
+      if (!frame) return;
+      const reordered = tabKeys
+        .map(k => frame.tabs.find(t => t.key === k))
+        .filter((t): t is FrameTabConfig => t !== undefined);
+      if (reordered.length !== frame.tabs.length) return;
+      frames.set(frameKey, { ...frame, tabs: reordered });
     },
 
     moveTab(fromFrame: string, tabKey: string, toFrame: string) {
@@ -238,6 +269,34 @@ export function createFloatingFrameEngine(
       }
     },
 
+    setBackend(newBackend: FloatingFrameBackend) {
+      assertAlive();
+      backend.dispose();
+      backend = newBackend;
+    },
+
+    renderAll() {
+      assertAlive();
+      for (const [, frame] of frames) {
+        if (!frame.hidden) backend.renderFrame(frame);
+      }
+    },
+
+    toggleViewMode(key: string) {
+      assertAlive();
+      const frame = frames.get(key);
+      if (!frame) return;
+      const { viewMode: _, ...rest } = frame;
+      frames.set(key, frame.viewMode === "accordion" ? rest : { ...rest, viewMode: "accordion" as const });
+    },
+
+    setAccordionState(key: string, state: { collapsed: readonly string[]; heights: Readonly<Record<string, number>> }) {
+      assertAlive();
+      const frame = frames.get(key);
+      if (!frame) return;
+      frames.set(key, { ...frame, accordionState: state });
+    },
+
     captureLayout(): readonly FrameLayout[] {
       const normalized = normalizeForSave(frames);
       return [...normalized.values()].sort((a, b) => a.order - b.order);
@@ -247,6 +306,7 @@ export function createFloatingFrameEngine(
       assertAlive();
       for (const [key] of frames) backend.removeFrame(key);
       frames.clear();
+      preSnapState.clear();
       nextOrder = 0;
       for (const layout of saved) {
         frames.set(layout.key, layout);
@@ -260,6 +320,7 @@ export function createFloatingFrameEngine(
       disposed = true;
       backend.dispose();
       frames.clear();
+      preSnapState.clear();
     },
   };
 

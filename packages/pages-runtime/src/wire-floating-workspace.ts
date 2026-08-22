@@ -1,22 +1,34 @@
-import type { ContentFactory, FrameLayout } from "@casehubio/pages-component";
+import type { ContentFactory, FrameLayout, FrameTabConfig } from "@casehubio/pages-component";
 import type { FloatingFrameBackend, FrameButtonConfig } from "./floating-frame-backend.js";
 import { createFloatingFrameEngine } from "./floating-frame-engine.js";
 import type { FloatingFrameEngine } from "./floating-frame-engine.js";
 import { createFrameDetachHandler, type FrameDetachHandler } from "./frame-detach-handler.js";
 import { createFrameZonePicker } from "./frame-zone-picker.js";
 import { injectAnimationStyles } from "./frame-animations.js";
+import type { Preset } from "./frame-organisers.js";
+import {
+  createContainerToolbar as createContainerToolbar,
+  type ContainerToolbar,
+} from "./frame-sandbox/container-toolbar";
+import type { Layout, Entry } from "./frame-sandbox/types.js";
+import { createContainer } from "./frame-sandbox/index.js";
+
+
 
 export interface WireOptions {
   readonly detachEnabled?: boolean | undefined;
   readonly contentFactory?: ContentFactory | undefined;
   readonly signal?: AbortSignal | undefined;
+  readonly getNestedEngine?: ((tabKey: string) => FloatingFrameEngine | undefined) | undefined;
+  readonly existingEngine?: FloatingFrameEngine | undefined;
 }
 
 export interface WireHandle {
   readonly engine: FloatingFrameEngine;
   readonly detachHandler?: FrameDetachHandler | undefined;
-  readonly detachButton?: FrameButtonConfig | undefined;
   readonly zonePickerButton?: FrameButtonConfig | undefined;
+  readonly containerToolbar?: ContainerToolbar | undefined;
+  applyViewMode(key: string): void;
   dispose(): void;
 }
 
@@ -26,10 +38,11 @@ export function wireFloatingWorkspace(
   savedLayout?: readonly FrameLayout[],
   options?: WireOptions,
 ): WireHandle {
-  const engine = createFloatingFrameEngine(backend, savedLayout);
+  const engine = options?.existingEngine ?? createFloatingFrameEngine(backend, savedLayout);
 
   backend.onFrameMove((key, pos) => {
     engine.updatePosition(key, pos);
+    backend.updatePosition(key, pos);
     container.dispatchEvent(new CustomEvent("pages-frame-move", {
       bubbles: true, composed: true,
       detail: { frameKey: key, position: pos },
@@ -38,6 +51,7 @@ export function wireFloatingWorkspace(
 
   backend.onFrameResize((key, size) => {
     engine.updateSize(key, size);
+    backend.updateSize(key, size);
     container.dispatchEvent(new CustomEvent("pages-frame-resize", {
       bubbles: true, composed: true,
       detail: { frameKey: key, size },
@@ -64,11 +78,15 @@ export function wireFloatingWorkspace(
   });
 
   backend.onTabDragOut((fromFrame, tabKey, position) => {
+    const frame = engine.frames.get(fromFrame);
+    const tab = frame?.tabs.find(t => t.key === tabKey);
+    if (!tab) return;
+    engine.removeTab(fromFrame, tabKey);
     const newKey = `frame-${String(Date.now())}-${Math.random().toString(36).slice(2, 6)}`;
-    engine.createFrame({ key: newKey, tabs: [], position, size: { width: 400, height: 300 } });
-    engine.moveTab(fromFrame, tabKey, newKey);
+    engine.createFrame({ key: newKey, tabs: [tab], position, size: { width: 400, height: 300 } });
     const srcFrame = engine.frames.get(fromFrame);
-    if (srcFrame && srcFrame.tabs.length === 0) {
+    const srcFrameEl = backend.getFrameElement(fromFrame);
+    if (srcFrame && srcFrame.tabs.length === 0 && !srcFrameEl?.querySelector("[data-split-container]")) {
       engine.removeFrame(fromFrame);
     }
     container.dispatchEvent(new CustomEvent("pages-tab-drag-out", {
@@ -77,7 +95,23 @@ export function wireFloatingWorkspace(
     }));
   });
 
+  backend.onEdgeSplit((fromFrame, tabKey, targetFrame, zone) => {
+    if (fromFrame !== targetFrame) {
+      engine.removeTab(fromFrame, tabKey, { skipBackend: true });
+      const sourceAfter = engine.frames.get(fromFrame);
+      const srcEl = backend.getFrameElement(fromFrame);
+      if (sourceAfter && sourceAfter.tabs.length === 0 && !srcEl?.querySelector("[data-split-container]")) {
+        engine.removeFrame(fromFrame);
+      }
+    }
+    container.dispatchEvent(new CustomEvent("pages-edge-split", {
+      bubbles: true, composed: true,
+      detail: { fromFrame, tabKey, targetFrame, zone },
+    }));
+  });
+
   backend.onTabReorder((frameKey, tabKeys) => {
+    engine.reorderTabs(frameKey, tabKeys);
     container.dispatchEvent(new CustomEvent("pages-tab-reorder", {
       bubbles: true, composed: true,
       detail: { frameKey, tabKeys },
@@ -87,16 +121,10 @@ export function wireFloatingWorkspace(
   injectAnimationStyles();
 
   let detachHandler: FrameDetachHandler | undefined;
-  let detachButton: FrameButtonConfig | undefined;
 
   if (options?.detachEnabled !== false && options?.contentFactory && options?.signal) {
     detachHandler = createFrameDetachHandler(engine, container, options.contentFactory, options.signal);
-    detachButton = {
-      icon: "\u{1F5D7}",
-      title: "Pop out to new window",
-      className: "frame-detach-btn",
-      onClick: (frameKey: string) => detachHandler!.detach(frameKey),
-    };
+    backend.onDetach((frameKey) => { detachHandler!.detach(frameKey); });
   }
 
   let zonePickerButton: FrameButtonConfig | undefined;
@@ -104,12 +132,169 @@ export function wireFloatingWorkspace(
     zonePickerButton = createFrameZonePicker(engine, backend, container, options.signal);
   }
 
+  if (options?.getNestedEngine) {
+    const getNestedEngine = options.getNestedEngine;
+    backend.onArrangement((frameKey, preset) => {
+      const frame = engine.frames.get(frameKey);
+      if (!frame) return;
+      const nestedEngine = getNestedEngine(frame.activeTabKey);
+      if (!nestedEngine) return;
+      const frameEl = backend.getFrameElement(frameKey);
+      if (!frameEl) return;
+      nestedEngine.applyOrganiser(preset as Preset, { width: frameEl.clientWidth, height: frameEl.clientHeight });
+    });
+  }
+
+  // Container handles layout changes internally — sync engine state only
+  backend.onLayoutChange((frameKey: string, layout: string) => {
+    const frame = engine.frames.get(frameKey);
+    if (!frame) return;
+    if (layout === "accordion" && frame.viewMode !== "accordion") {
+      engine.toggleViewMode(frameKey);
+    } else if (layout !== "accordion" && frame.viewMode === "accordion") {
+      engine.toggleViewMode(frameKey);
+    }
+  });
+
+  // Legacy: onViewModeToggle still registered but Container-based frames
+  // handle layout changes internally. This handles any external callers.
+  backend.onViewModeToggle((key: string) => {
+    engine.toggleViewMode(key);
+  });
+
+  let addTabCounter = 0;
+  backend.onAddTab((key: string) => {
+    addTabCounter++;
+    const tabKey = `tab-${String(Date.now())}-${String(addTabCounter)}`;
+    const newTab: FrameTabConfig = {
+      key: tabKey,
+      label: `Tab ${String((engine.frames.get(key)?.tabs.length ?? 0) + 1)}`,
+      content: { type: "html" as const, props: { content: `<div style="padding:12px"><h3>New Tab</h3><p>Empty workspace tab.</p></div>` } },
+    };
+    engine.addTab(key, newTab);
+  });
+
+  backend.onTabRemoved((frameKey: string, tabKey: string) => {
+    const frame = engine.frames.get(frameKey);
+    if (!frame || !frame.tabs.some(t => t.key === tabKey)) return;
+    try { engine.removeTab(frameKey, tabKey); } catch { /* engine already disposed */ }
+    const after = engine.frames.get(frameKey);
+    const frameEl = backend.getFrameElement(frameKey);
+    if (after && after.tabs.length === 0 && !frameEl?.querySelector("[data-split-container]")) {
+      engine.removeFrame(frameKey);
+    }
+  });
+
+  let workspaceContainer: ReturnType<typeof import("./frame-sandbox/index.js").createContainer> | null = null;
+  let workspaceMode: Layout = "free";
+  let wsHostEl: HTMLElement | null = null;
+
+  function applyWorkspaceMode(targetMode: Layout): void {
+    if (targetMode === workspaceMode) return;
+
+    if (workspaceMode !== "free" && targetMode !== "free" && workspaceContainer) {
+      workspaceContainer.setLayout(targetMode);
+      workspaceMode = targetMode;
+      return;
+    }
+
+    if (workspaceMode === "free" && targetMode !== "free") {
+      const entries: Entry[] = [];
+      for (const [key, frame] of engine.frames) {
+        if (frame.hidden) continue;
+        const frameEl = backend.getFrameElement(key);
+        if (frameEl) {
+          frameEl.style.display = "none";
+          entries.push({ key, label: frame.tabs[0]?.label ?? key });
+        }
+      }
+
+      workspaceContainer = createContainer({
+        entries,
+        layout: targetMode,
+        contentFactory: (entry) => {
+          const frame = engine.frames.get(entry.key);
+          if (!frame) return { element: document.createElement("div") };
+          const el = document.createElement("div");
+          el.style.cssText = "padding:12px;";
+          for (const tab of frame.tabs) {
+            const section = document.createElement("div");
+            section.style.cssText = "margin-bottom:8px;";
+            const h = document.createElement("h3");
+            h.textContent = tab.label;
+            section.appendChild(h);
+            el.appendChild(section);
+          }
+          return { element: el };
+        },
+        policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 1 },
+      });
+
+      wsHostEl = document.createElement("div");
+      wsHostEl.setAttribute("data-workspace-container", "");
+      wsHostEl.style.cssText = "position:absolute;inset:0;z-index:9999;background:var(--pages-neutral-2,#1e1e1e);overflow:auto;pointer-events:auto;";
+      workspaceContainer.mount(wsHostEl);
+      const wsParent = container.parentElement ?? container;
+      wsParent.appendChild(wsHostEl);
+      workspaceMode = targetMode;
+      return;
+    }
+
+    if (workspaceMode !== "free" && targetMode === "free") {
+      if (workspaceContainer) {
+        workspaceContainer.dispose();
+        workspaceContainer = null;
+      }
+      wsHostEl?.remove();
+      wsHostEl = null;
+      for (const [key] of engine.frames) {
+        const frameEl = backend.getFrameElement(key);
+        if (frameEl) frameEl.style.display = "";
+      }
+      workspaceMode = targetMode;
+    }
+  }
+
+  const containerToolbar = createContainerToolbar(
+    ["free", "tabbed", "accordion"] as readonly Layout[],
+    "free" as Layout,
+    {
+      onAdd: () => {
+        addTabCounter++;
+        const frameKey = `frame-${String(Date.now())}-${String(addTabCounter)}`;
+        const tab: FrameTabConfig = {
+          key: `tab-${frameKey}`,
+          label: `Tab 1`,
+          content: { type: "html" as const, props: { content: `<div style="padding:12px"><h3>New Frame</h3><p>Empty workspace frame.</p></div>` } },
+        };
+        engine.createFrame({
+          key: frameKey,
+          tabs: [tab],
+          position: { x: 50 + (engine.frames.size * 30), y: 50 + (engine.frames.size * 30) },
+          size: { width: 400, height: 300 },
+        });
+      },
+      onLayoutChange: (type) => {
+        applyWorkspaceMode(type);
+      },
+      onArrange: (preset) => {
+        const canvasSize = { width: container.clientWidth, height: container.clientHeight };
+        engine.applyOrganiser(preset as Preset, canvasSize);
+      },
+    },
+  );
+
   return {
     engine,
     detachHandler,
-    detachButton,
     zonePickerButton,
+    containerToolbar,
+    applyViewMode(_key: string) {
+      // No-op: Container handles layout changes internally.
+      // Kept for backward compatibility with activation.ts.
+    },
     dispose() {
+      containerToolbar.dispose();
       detachHandler?.dispose();
       engine.dispose();
     },

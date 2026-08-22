@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { clampPosition, nextFramePosition, snapToZone, zoneToRect } from "./frame-boundaries.js";
+import { clampPosition, nextFramePosition, snapToZone, zoneToRect, detectEdgeZone, splitGeometry, edgeToDirection } from "./frame-boundaries.js";
 
 describe("clampPosition", () => {
   it("clamps negative to zero", () => {
@@ -145,4 +145,87 @@ describe("zoneToRect", () => {
     const r = zoneToRect("left", container, 16);
     expect(r.size).toEqual({ width: 492, height: 800 });
   });
+});
+
+describe("detectEdgeZone", () => {
+  const rect = { x: 100, y: 100, width: 400, height: 300 };
+  const threshold = 40;
+
+  it("returns null when cursor is in center", () => {
+    expect(detectEdgeZone({ x: 300, y: 250 }, rect, threshold)).toBeNull();
+  });
+
+  it("detects left edge", () => {
+    expect(detectEdgeZone({ x: 110, y: 250 }, rect, threshold)).toBe("left");
+  });
+
+  it("detects right edge", () => {
+    expect(detectEdgeZone({ x: 490, y: 250 }, rect, threshold)).toBe("right");
+  });
+
+  it("detects top edge", () => {
+    expect(detectEdgeZone({ x: 300, y: 110 }, rect, threshold)).toBe("top");
+  });
+
+  it("detects bottom edge", () => {
+    expect(detectEdgeZone({ x: 300, y: 390 }, rect, threshold)).toBe("bottom");
+  });
+
+  it("returns null when cursor is outside rect", () => {
+    expect(detectEdgeZone({ x: 50, y: 250 }, rect, threshold)).toBeNull();
+  });
+
+  it("left takes priority over top in corner", () => {
+    expect(detectEdgeZone({ x: 110, y: 110 }, rect, threshold)).toBe("left");
+  });
+});
+
+describe("splitGeometry", () => {
+  const rect = { x: 100, y: 100, width: 400, height: 300 };
+
+  it("splits left — new frame gets left half, target slides right", () => {
+    const r = splitGeometry("left", rect);
+    expect(r.newFrame.position).toEqual({ x: 100, y: 100 });
+    expect(r.newFrame.size).toEqual({ width: 196, height: 300 });
+    expect(r.target.position).toEqual({ x: 304, y: 100 });
+    expect(r.target.size).toEqual({ width: 196, height: 300 });
+  });
+
+  it("splits right — target keeps left, new frame gets right half", () => {
+    const r = splitGeometry("right", rect);
+    expect(r.target.position).toEqual({ x: 100, y: 100 });
+    expect(r.target.size).toEqual({ width: 196, height: 300 });
+    expect(r.newFrame.position).toEqual({ x: 304, y: 100 });
+    expect(r.newFrame.size).toEqual({ width: 196, height: 300 });
+  });
+
+  it("splits top — new frame gets top half, target slides down", () => {
+    const r = splitGeometry("top", rect);
+    expect(r.newFrame.position).toEqual({ x: 100, y: 100 });
+    expect(r.newFrame.size).toEqual({ width: 400, height: 146 });
+    expect(r.target.position).toEqual({ x: 100, y: 254 });
+    expect(r.target.size).toEqual({ width: 400, height: 146 });
+  });
+
+  it("splits bottom — target keeps top, new frame gets bottom half", () => {
+    const r = splitGeometry("bottom", rect);
+    expect(r.target.position).toEqual({ x: 100, y: 100 });
+    expect(r.target.size).toEqual({ width: 400, height: 146 });
+    expect(r.newFrame.position).toEqual({ x: 100, y: 254 });
+    expect(r.newFrame.size).toEqual({ width: 400, height: 146 });
+  });
+
+  it("respects custom gap", () => {
+    const r = splitGeometry("left", rect, 16);
+    expect(r.newFrame.size.width).toBe(192);
+    expect(r.target.size.width).toBe(192);
+    expect(r.target.position.x).toBe(308);
+  });
+});
+
+describe("edgeToDirection", () => {
+  it("left → v", () => expect(edgeToDirection("left")).toBe("v"));
+  it("right → v", () => expect(edgeToDirection("right")).toBe("v"));
+  it("top → h", () => expect(edgeToDirection("top")).toBe("h"));
+  it("bottom → h", () => expect(edgeToDirection("bottom")).toBe("h"));
 });
