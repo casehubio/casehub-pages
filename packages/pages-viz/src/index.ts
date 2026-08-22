@@ -56,6 +56,14 @@ export { PagesGroupedView } from "./components/grouped-view/PagesGroupedView.js"
 export { PagesLegend } from "./components/PagesLegend.js";
 export { PagesEventTimeline } from "./components/PagesEventTimeline.js";
 export type { EventTimelineNode, EventTimelineStrategy, EventNodeStatus } from "./components/event-timeline-types.js";
+export type { EventTimelineLayout } from "@casehubio/pages-component";
+export { renderVerticalTimeline, verticalTimelineStyles } from "./components/event-timeline/renderers/vertical.js";
+export type { VerticalTimelineOptions } from "./components/event-timeline/renderers/vertical.js";
+export { renderHorizontalTimeline, horizontalTimelineStyles } from "./components/event-timeline/renderers/horizontal.js";
+export type { HorizontalTimelineOptions } from "./components/event-timeline/renderers/horizontal.js";
+export { renderCompactTimeline, compactTimelineStyles } from "./components/event-timeline/renderers/compact.js";
+export type { CompactTimelineOptions } from "./components/event-timeline/renderers/compact.js";
+export { renderFilterBar, filterBarStyles } from "./components/event-timeline/renderers/filter-bar.js";
 
 // Shared pipeline
 export { datasetToSource, applyChartSettings } from "./charts/option-pipeline.js";
