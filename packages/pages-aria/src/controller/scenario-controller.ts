@@ -66,11 +66,74 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     .connection-status.connected { color: var(--pages-success-9, #16a34a); }
     .connection-status.reconnecting { color: var(--pages-warning-9, #ca8a04); }
     .connection-status.disconnected { color: var(--pages-danger-9, #dc2626); }
+
+    :host([mode="compact"]) {
+      position: fixed; bottom: 16px; right: 16px; z-index: 9999;
+      width: auto; font-size: var(--pages-font-size-sm, 12px);
+    }
+    .compact-pill {
+      display: flex; align-items: center; gap: var(--pages-space-2, 8px);
+      padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
+      background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px);
+      color: #e2e8f0; border-radius: var(--pages-radius-lg, 8px);
+      cursor: pointer; user-select: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap;
+    }
+    .compact-pill:hover { background: rgba(15, 23, 42, 0.95); }
+    .compact-pill button {
+      background: none; border: none; color: #38bdf8;
+      cursor: pointer; font-size: 14px; padding: 0; line-height: 1;
+    }
+    .compact-pill .scenario-name {
+      color: #94a3b8; font-size: var(--pages-font-size-sm, 12px);
+      max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+    }
+    .compact-pill .progress-pct { color: #38bdf8; font-weight: 600; font-size: var(--pages-font-size-sm, 12px); }
+
+    .compact-card {
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+      border-radius: var(--pages-radius-lg, 8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4); color: #e2e8f0;
+      width: 280px; max-height: 60vh; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .compact-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
+      cursor: grab; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .compact-header:active { cursor: grabbing; }
+    .compact-header .scenario-name { color: #94a3b8; font-size: var(--pages-font-size-sm, 12px); }
+    .compact-header button {
+      background: none; border: none; color: #64748b;
+      cursor: pointer; font-size: 14px; padding: 0; line-height: 1;
+    }
+    .compact-header button:hover { color: #e2e8f0; }
+    .compact-body { overflow-y: auto; flex: 1; }
+
+    :host([mode="compact"]) .outline-empty { color: #64748b; }
+    :host([mode="compact"]) .outline-heading { color: #e2e8f0; }
+    :host([mode="compact"]) .outline-heading:hover { background: rgba(255,255,255,0.05); }
+    :host([mode="compact"]) .outline-step { color: #94a3b8; }
+    :host([mode="compact"]) .outline-step:hover { background: rgba(255,255,255,0.05); }
+    :host([mode="compact"]) .outline-step.current { background: rgba(56,189,248,0.15); color: #38bdf8; }
+    :host([mode="compact"]) .outline-step.completed { color: #475569; }
+    :host([mode="compact"]) .transport { border-color: rgba(255,255,255,0.1); }
+    :host([mode="compact"]) .transport button { color: #94a3b8; border-color: rgba(255,255,255,0.15); }
+    :host([mode="compact"]) .transport button:hover:not(:disabled) { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+    :host([mode="compact"]) .status-bar { color: #475569; }
+    :host([mode="compact"]) .connection-status.connected { color: #4ade80; }
+    :host([mode="compact"]) .connection-status.disconnected { color: #f87171; }
+    :host([mode="compact"]) .speed-label { color: #94a3b8; }
+    :host([mode="compact"]) .progress { color: #38bdf8; }
   `;
 
   @property({ attribute: false }) connection?: EventConnection;
   @property({ attribute: false }) eventTarget?: EventTarget;
   @property() baseUrl?: string;
+  @property({ reflect: true }) mode: 'full' | 'compact' = 'full';
+
+  @state() private _expanded = false;
 
   @state() private _outline: OutlineNode[] = [];
 
@@ -134,6 +197,9 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   override render(): TemplateResult {
     if (!this.connection && !this.baseUrl) {
       return html`<div class="error">No connection configured</div>`;
+    }
+    if (this.mode === 'compact') {
+      return this._expanded ? this._renderCompactCard() : this._renderCompactPill();
     }
     return html`
       ${this._renderOutline()}
@@ -233,6 +299,69 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       </div>
     `;
   }
+
+  private _renderCompactPill(): TemplateResult {
+    const s = this._conn?.state;
+    const name = s?.scenario ?? 'No scenario';
+    const pct = Math.round((s?.progress ?? 0) * 100);
+    return html`
+      <div class="compact-pill"
+           @click=${() => { this._expanded = true; }}
+           @pointerdown=${this._onDragStart}>
+        <button aria-label=${s?.paused !== false ? 'Resume' : 'Pause'}
+                @click=${(e: Event) => {
+                  e.stopPropagation();
+                  if (s?.scenario) void this._conn.sendCommand(s.paused ? '/resume' : '/pause');
+                }}>
+          ${s?.paused !== false ? '▶' : '⏸'}
+        </button>
+        <span class="scenario-name">${name}</span>
+        <span class="progress-pct">${pct}%</span>
+      </div>
+    `;
+  }
+
+  private _renderCompactCard(): TemplateResult {
+    const s = this._conn?.state;
+    const name = s?.scenario ?? 'No scenario';
+    return html`
+      <div class="compact-card">
+        <div class="compact-header" @pointerdown=${this._onDragStart}>
+          <span class="scenario-name">${name}</span>
+          <button aria-label="Collapse" @click=${() => { this._expanded = false; }}>✕</button>
+        </div>
+        <div class="compact-body">
+          ${this._renderOutline()}
+        </div>
+        ${this._renderTransport()}
+        ${this._renderStatus()}
+      </div>
+    `;
+  }
+
+  private _dragOffset = { x: 0, y: 0 };
+
+  private _onDragStart = (e: PointerEvent): void => {
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+    const host = this.getBoundingClientRect();
+    this._dragOffset = { x: e.clientX - host.left, y: e.clientY - host.top };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).addEventListener('pointermove', this._onDragMove);
+    (e.currentTarget as HTMLElement).addEventListener('pointerup', this._onDragEnd);
+  };
+
+  private _onDragMove = (e: PointerEvent): void => {
+    this.style.left = `${e.clientX - this._dragOffset.x}px`;
+    this.style.top = `${e.clientY - this._dragOffset.y}px`;
+    this.style.right = 'auto';
+    this.style.bottom = 'auto';
+  };
+
+  private _onDragEnd = (e: PointerEvent): void => {
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).removeEventListener('pointermove', this._onDragMove);
+    (e.currentTarget as HTMLElement).removeEventListener('pointerup', this._onDragEnd);
+  };
 }
 
 if (!customElements.get('pages-scenario-controller')) {
