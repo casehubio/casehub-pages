@@ -450,3 +450,49 @@ describe("exclusive dock-bar", () => {
     document.body.removeChild(el);
   });
 });
+
+describe("nested workspace depth limit", () => {
+  it("throws when nesting depth exceeds 1", () => {
+    const registry: ComponentRegistry = new Map();
+    const pagePathMap: PagePathMap = new Map();
+    const callback = createActivationCallback(registry, pagePathMap, {
+      nestingDepth: 2,
+    } as any);
+    const el = document.createElement("div");
+    el.dataset.componentId = "test-fw";
+    el.dataset.componentType = "floating-workspace";
+    expect(() => {
+      callback(el, { type: "floating-workspace", props: { centre: { type: "html", props: { content: "" } } } });
+    }).toThrow("Floating workspace nesting is limited to one level");
+  });
+
+  it("does not throw at depth 0", () => {
+    const registry: ComponentRegistry = new Map();
+    const pagePathMap: PagePathMap = new Map();
+    const callback = createActivationCallback(registry, pagePathMap, {
+      nestingDepth: 0,
+      permissions: ALLOW_ALL,
+    } as any);
+    const el = document.createElement("div");
+    el.dataset.componentId = "test-fw";
+    el.dataset.componentType = "floating-workspace";
+    expect(() => {
+      callback(el, { type: "floating-workspace", props: { centre: { type: "html", props: { content: "" } } } });
+    }).not.toThrow();
+  });
+
+  it("does not throw at depth 1", () => {
+    const registry: ComponentRegistry = new Map();
+    const pagePathMap: PagePathMap = new Map();
+    const callback = createActivationCallback(registry, pagePathMap, {
+      nestingDepth: 1,
+      permissions: ALLOW_ALL,
+    } as any);
+    const el = document.createElement("div");
+    el.dataset.componentId = "test-fw";
+    el.dataset.componentType = "floating-workspace";
+    expect(() => {
+      callback(el, { type: "floating-workspace", props: { centre: { type: "html", props: { content: "" } } } });
+    }).not.toThrow();
+  });
+});

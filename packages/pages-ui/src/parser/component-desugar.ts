@@ -193,6 +193,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
         ...(frame.position ? { position: frame.position as { x: number; y: number } } : {}),
         ...(frame.size ? { size: frame.size as { width: number; height: number } } : {}),
         ...(frame.pinned !== undefined ? { pinned: frame.pinned as boolean } : {}),
+        ...(frame.viewMode ? { viewMode: frame.viewMode as "tab" | "accordion" } : {}),
       };
     });
 
@@ -202,6 +203,30 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       ...(frames ? { frames } : {}),
       ...(organisers !== undefined ? { organisers: organisers as boolean } : {}),
     });
+  }
+
+  if ("type" in raw && raw.type === "frame-sandbox") {
+    const props = (raw.properties as Record<string, unknown> | undefined) ?? {};
+    const entriesRaw = (props.entries as unknown[] | undefined) ?? [];
+    const entries = entriesRaw.map((e: unknown) => {
+      const entry = e as Record<string, unknown>;
+      return {
+        key: entry.key as string,
+        label: entry.label as string,
+        ...(entry.content
+          ? { content: desugarComponent(entry.content as Record<string, unknown>, displayerDefaults) }
+          : {}),
+        ...(entry.position ? { position: entry.position } : {}),
+        ...(entry.size ? { size: entry.size } : {}),
+      };
+    });
+    return {
+      type: "frame-sandbox" as const,
+      props: {
+        ...props,
+        entries,
+      },
+    };
   }
 
   // Workbench primitives

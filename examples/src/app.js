@@ -2,6 +2,7 @@
 let samplesData = null;
 let currentSample = null;
 let currentSite = null;
+let suppressHashChange = false;
 let galleryThemeMode = 'dark';
 
 // Strip TypeScript syntax for companion script execution
@@ -223,6 +224,10 @@ function loadSample(sample) {
     sampleContainer.style.display = 'flex';
     currentSampleName.textContent = sample.name;
 
+    // Update URL hash (suppress hashchange reload)
+    suppressHashChange = true;
+    window.location.hash = `${sample.category}/${encodeURIComponent(sample.path)}`;
+
     // Load sample in target div
     loadSampleInTarget(sample.path);
 
@@ -368,6 +373,10 @@ async function loadSampleInTarget(samplePath) {
         const currentTheme = casehubPages.getTheme() || 'casehub-dark';
         currentSite.setTheme(currentTheme.endsWith('-dark') ? 'dark' : 'light');
         casehubPages.applyTheme(currentTheme, sampleTarget);
+
+        if (sampleTarget.querySelector('.pages-dock-workbench, [data-frame-sandbox]')) {
+            sampleTarget.classList.add('full-bleed');
+        }
 
         // Execute companion TS/JS script if present
         if (currentSample && currentSample.tsPath) {

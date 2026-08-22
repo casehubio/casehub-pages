@@ -98,7 +98,7 @@ test.describe("Floating Workspace", () => {
     await expect(pinBtns.first()).toHaveAttribute("aria-pressed", "true");
 
     // Find the frame's titlebar and get its position
-    const titlebar = page.locator(".dv-floating-titlebar").first();
+    const titlebar = page.locator("[data-frame-titlebar]").first();
     const box = await titlebar.boundingBox();
     if (!box) {
       test.skip(true, "Titlebar not visible");
@@ -106,8 +106,8 @@ test.describe("Floating Workspace", () => {
     }
 
     // Record frame position before drag attempt
-    const overlay = page.locator(".dv-resize-container").first();
-    const beforeBox = await overlay.boundingBox();
+    const frame = page.locator("[data-frame-key]").first();
+    const beforeBox = await frame.boundingBox();
 
     // Attempt to drag the titlebar
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -116,7 +116,7 @@ test.describe("Floating Workspace", () => {
     await page.mouse.up();
 
     // Frame should not have moved
-    const afterBox = await overlay.boundingBox();
+    const afterBox = await frame.boundingBox();
     if (beforeBox && afterBox) {
       expect(Math.abs(afterBox.x - beforeBox.x)).toBeLessThan(5);
       expect(Math.abs(afterBox.y - beforeBox.y)).toBeLessThan(5);
@@ -127,33 +127,33 @@ test.describe("Floating Workspace", () => {
     await openFloatingWorkspace(page);
     await page.waitForSelector("[data-floating-workspace-overlay]", { timeout: 10000 });
 
-    // Find a frame's tab container
-    const tabContainer = page.locator(".dv-tabs-container").first();
-    if (await tabContainer.count() === 0) {
-      test.skip(true, "No tab containers found");
+    // Find a frame's tab strip
+    const tabStrip = page.locator("[data-tab-strip]").first();
+    if (await tabStrip.count() === 0) {
+      test.skip(true, "No tab strips found");
       return;
     }
 
-    const overlay = page.locator(".dv-resize-container").first();
-    const beforeBox = await overlay.boundingBox();
+    const frame = page.locator("[data-frame-key]").first();
+    const beforeBox = await frame.boundingBox();
 
-    // Click and drag in the tab container area (to the right of tabs)
-    const tabContainerBox = await tabContainer.boundingBox();
-    if (!tabContainerBox) {
-      test.skip(true, "Tab container not visible");
+    // Click and drag in the tab strip area (to the right of tabs)
+    const tabStripBox = await tabStrip.boundingBox();
+    if (!tabStripBox) {
+      test.skip(true, "Tab strip not visible");
       return;
     }
 
-    // Drag from the right edge of the tab container (empty space)
-    const dragX = tabContainerBox.x + tabContainerBox.width - 5;
-    const dragY = tabContainerBox.y + tabContainerBox.height / 2;
+    // Drag from the right edge of the tab strip (empty space)
+    const dragX = tabStripBox.x + tabStripBox.width - 5;
+    const dragY = tabStripBox.y + tabStripBox.height / 2;
     await page.mouse.move(dragX, dragY);
     await page.mouse.down();
     await page.mouse.move(dragX + 100, dragY + 100, { steps: 5 });
     await page.mouse.up();
 
     // Frame should not have moved
-    const afterBox = await overlay.boundingBox();
+    const afterBox = await frame.boundingBox();
     if (beforeBox && afterBox) {
       expect(Math.abs(afterBox.x - beforeBox.x)).toBeLessThan(5);
       expect(Math.abs(afterBox.y - beforeBox.y)).toBeLessThan(5);

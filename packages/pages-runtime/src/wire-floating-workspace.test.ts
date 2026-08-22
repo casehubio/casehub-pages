@@ -37,8 +37,19 @@ function mockBackend(): FloatingFrameBackend & {
     onFramePin(cb) { pinCbs.push(cb); },
     onFrameDragMove: vi.fn(),
     onTitlebarDoubleClick: vi.fn(),
+    onViewModeToggle: vi.fn(),
+    onAddTab: vi.fn(),
+    onTabRemoved: vi.fn(),
+    onArrangement: vi.fn(),
+    onDetach: vi.fn(),
+    onCrossFrameDrop: vi.fn(),
+    onEdgeSplit: vi.fn(),
+    onLayoutChange: vi.fn(),
+    setFrameLayout: vi.fn(),
     updatePinState: vi.fn(),
     getFrameElement: vi.fn(() => null),
+    getSubFrameElements: vi.fn(() => []),
+    getTabContentElement: vi.fn(() => null),
     dispose: vi.fn(), unwrap: vi.fn(() => null),
     _fireMove(key, pos) { for (const cb of moveCbs) cb(key, pos); },
     _fireResize(key, size) { for (const cb of resizeCbs) cb(key, size); },
@@ -100,6 +111,36 @@ describe("wireFloatingWorkspace", () => {
       expect(handle.engine.frames.get("f1")!.size).toEqual({ width: 600, height: 500 });
       expect(events).toHaveLength(1);
       expect(events[0]!.detail).toEqual({ frameKey: "f1", size: { width: 600, height: 500 } });
+    });
+
+    it("preserves position when resize fires with concurrent move", () => {
+      const handle = wireFloatingWorkspace(backend, container);
+      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")], position: { x: 100, y: 200 }, size: { width: 400, height: 300 } });
+
+      backend._fireMove("f1", { x: 100, y: 200 });
+      backend._fireResize("f1", { width: 500, height: 400 });
+
+      const frame = handle.engine.frames.get("f1")!;
+      expect(frame.position).toEqual({ x: 100, y: 200 });
+      expect(frame.size).toEqual({ width: 500, height: 400 });
+    });
+
+    it("calls backend.updatePosition after move to sync overlay state", () => {
+      const handle = wireFloatingWorkspace(backend, container);
+      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")], position: { x: 100, y: 200 }, size: { width: 400, height: 300 } });
+
+      backend._fireMove("f1", { x: 150, y: 250 });
+
+      expect(backend.updatePosition).toHaveBeenCalledWith("f1", { x: 150, y: 250 });
+    });
+
+    it("calls backend.updateSize after resize to sync overlay state", () => {
+      const handle = wireFloatingWorkspace(backend, container);
+      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")], position: { x: 100, y: 200 }, size: { width: 400, height: 300 } });
+
+      backend._fireResize("f1", { width: 500, height: 400 });
+
+      expect(backend.updateSize).toHaveBeenCalledWith("f1", { width: 500, height: 400 });
     });
   });
 

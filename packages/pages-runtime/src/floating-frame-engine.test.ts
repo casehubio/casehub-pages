@@ -12,9 +12,12 @@ function mockBackend(): FloatingFrameBackend {
     addTab: vi.fn(), removeTab: vi.fn(), setActiveTab: vi.fn(),
     onFrameMove: vi.fn(), onFrameResize: vi.fn(), onTabDragOut: vi.fn(), onTabReorder: vi.fn(),
     onFrameClose: vi.fn(), onFramePin: vi.fn(),
-    onFrameDragMove: vi.fn(), onTitlebarDoubleClick: vi.fn(),
+    onFrameDragMove: vi.fn(), onTitlebarDoubleClick: vi.fn(), onViewModeToggle: vi.fn(), onAddTab: vi.fn(), onTabRemoved: vi.fn(), onArrangement: vi.fn(), onDetach: vi.fn(),
+    onCrossFrameDrop: vi.fn(), onEdgeSplit: vi.fn(), onLayoutChange: vi.fn(), setFrameLayout: vi.fn(),
     updatePinState: vi.fn(),
     getFrameElement: vi.fn(() => null),
+    getSubFrameElements: vi.fn(() => []),
+    getTabContentElement: vi.fn(() => null),
     dispose: vi.fn(), unwrap: vi.fn(() => null),
   };
 }
@@ -138,6 +141,51 @@ describe("FloatingFrameEngine", () => {
       engine.setActiveTab("f1", "t2");
       expect(engine.frames.get("f1")!.activeTabKey).toBe("t2");
       expect(backend.setActiveTab).toHaveBeenCalledWith("f1", "t2");
+    });
+
+    it("reorders tabs", () => {
+      engine.createFrame(makeFrameConfig("f1", ["t1", "t2", "t3"]));
+      engine.reorderTabs("f1", ["t3", "t1", "t2"]);
+      const tabs = engine.frames.get("f1")!.tabs.map(t => t.key);
+      expect(tabs).toEqual(["t3", "t1", "t2"]);
+    });
+
+    it("reorderTabs is no-op when keys don't match", () => {
+      engine.createFrame(makeFrameConfig("f1", ["t1", "t2"]));
+      engine.reorderTabs("f1", ["t1"]);
+      const tabs = engine.frames.get("f1")!.tabs.map(t => t.key);
+      expect(tabs).toEqual(["t1", "t2"]);
+    });
+
+    it("removeTab cleans accordionState", () => {
+      engine.createFrame({ ...makeFrameConfig("f1", ["t1", "t2"]), viewMode: "accordion" });
+      engine.setAccordionState("f1", { collapsed: ["t1"], heights: { t1: 100, t2: 200 } });
+      engine.removeTab("f1", "t1");
+      const state = engine.frames.get("f1")!.accordionState!;
+      expect(state.collapsed).toEqual([]);
+      expect(state.heights).toEqual({ t2: 200 });
+    });
+
+    it("addTab with skipBackend does not call backend.addTab", () => {
+      engine.createFrame(makeFrameConfig("f1", ["t1"]));
+      engine.addTab("f1", makeTab("t2"), { skipBackend: true });
+      expect(engine.frames.get("f1")!.tabs).toHaveLength(2);
+      expect(backend.addTab).not.toHaveBeenCalled();
+    });
+
+    it("removeTab with skipBackend does not call backend.removeTab", () => {
+      engine.createFrame(makeFrameConfig("f1", ["t1", "t2"]));
+      engine.removeTab("f1", "t2", { skipBackend: true });
+      expect(engine.frames.get("f1")!.tabs).toHaveLength(1);
+      expect(engine.frames.get("f1")!.tabs[0]!.key).toBe("t1");
+      expect(backend.removeTab).not.toHaveBeenCalled();
+    });
+
+    it("addTab preserves accordionState in accordion mode", () => {
+      engine.createFrame({ ...makeFrameConfig("f1", ["t1"]), viewMode: "accordion" });
+      engine.setAccordionState("f1", { collapsed: [], heights: { t1: 200 } });
+      engine.addTab("f1", makeTab("t2"));
+      expect(engine.frames.get("f1")!.accordionState).toBeDefined();
     });
   });
 
@@ -272,6 +320,16 @@ describe("FloatingFrameEngine", () => {
       expect(() => engine.createFrame(makeFrameConfig("f1"))).toThrow("disposed");
     });
 
+    it("toggleViewMode throws after dispose", () => {
+      engine.dispose();
+      expect(() => engine.toggleViewMode("f1")).toThrow("disposed");
+    });
+
+    it("setAccordionState throws after dispose", () => {
+      engine.dispose();
+      expect(() => engine.setAccordionState("f1", { collapsed: [], heights: {} })).toThrow("disposed");
+    });
+
     it("dispose is idempotent", () => {
       engine.dispose();
       engine.dispose();
@@ -328,6 +386,20 @@ describe("FloatingFrameEngine", () => {
       expect(engine.frames.get("f1")!.position).toEqual(before.position);
     });
 
+    it("restoreLayout clears preSnapState", () => {
+      engine.createFrame({ ...makeFrameConfig("f1"), position: { x: 100, y: 200 }, size: { width: 300, height: 250 } });
+      engine.snapFrame("f1", "left", { width: 1000, height: 800 });
+      const saved = [{
+        key: "f1", order: 0, position: { x: 50, y: 50 }, size: { width: 400, height: 300 },
+        zIndex: 1, pinned: false, hidden: false,
+        tabs: [makeTab("t1")], activeTabKey: "t1",
+      }];
+      engine.restoreLayout(saved);
+      engine.snapFrame("f1", "right", { width: 1000, height: 800 });
+      engine.unsnapFrame("f1");
+      expect(engine.frames.get("f1")!.position).toEqual({ x: 50, y: 50 });
+    });
+
     it("snap to different zone without unsnap updates zone", () => {
       engine.createFrame({ ...makeFrameConfig("f1"), position: { x: 100, y: 200 }, size: { width: 300, height: 250 } });
       engine.snapFrame("f1", "left", { width: 1000, height: 800 });
@@ -353,6 +425,84 @@ describe("FloatingFrameEngine", () => {
       engine.createFrame({ ...makeFrameConfig("f1"), position: { x: 100, y: 100 } });
       engine.recomputeSnappedFrames({ width: 1200, height: 900 });
       expect(engine.frames.get("f1")!.position).toEqual({ x: 100, y: 100 });
+    });
+  });
+
+  describe("setBackend + renderAll (persistent engine)", () => {
+    it("setBackend swaps to new backend", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      const backend2 = mockBackend();
+      engine.setBackend(backend2);
+      engine.createFrame(makeFrameConfig("f2"));
+      expect(backend2.renderFrame).toHaveBeenCalledOnce();
+      expect(backend.dispose).toHaveBeenCalledOnce();
+    });
+
+    it("renderAll re-renders all visible frames into current backend", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.createFrame(makeFrameConfig("f2"));
+      engine.hideFrame("f2");
+      const backend2 = mockBackend();
+      engine.setBackend(backend2);
+      engine.renderAll();
+      expect(backend2.renderFrame).toHaveBeenCalledOnce();
+      const rendered = (backend2.renderFrame as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+      expect(rendered.key).toBe("f1");
+    });
+
+    it("positions survive backend swap", () => {
+      engine.createFrame({ ...makeFrameConfig("f1"), position: { x: 20, y: 20 } });
+      engine.updatePosition("f1", { x: 100, y: 200 });
+      const backend2 = mockBackend();
+      engine.setBackend(backend2);
+      engine.renderAll();
+      const rendered = (backend2.renderFrame as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+      expect(rendered.position).toEqual({ x: 100, y: 200 });
+    });
+  });
+
+  describe("viewMode", () => {
+    it("copies viewMode from config to layout", () => {
+      const frame = engine.createFrame({ ...makeFrameConfig("f1"), viewMode: "accordion" });
+      expect(frame.viewMode).toBe("accordion");
+    });
+
+    it("defaults viewMode to undefined when not specified", () => {
+      const frame = engine.createFrame(makeFrameConfig("f1"));
+      expect(frame.viewMode).toBeUndefined();
+    });
+
+    it("toggleViewMode switches between tab and accordion", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.toggleViewMode("f1");
+      expect(engine.frames.get("f1")?.viewMode).toBe("accordion");
+      engine.toggleViewMode("f1");
+      expect(engine.frames.get("f1")?.viewMode).toBeUndefined();
+    });
+
+    it("setAccordionState stores collapsed and heights", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.setAccordionState("f1", { collapsed: ["tab1"], heights: { tab1: 200 } });
+      expect(engine.frames.get("f1")?.accordionState).toEqual({ collapsed: ["tab1"], heights: { tab1: 200 } });
+    });
+
+    it("captureLayout preserves viewMode and accordionState", () => {
+      engine.createFrame({ ...makeFrameConfig("f1"), viewMode: "accordion" });
+      engine.setAccordionState("f1", { collapsed: ["tab1"], heights: { tab1: 200 } });
+      const layout = engine.captureLayout();
+      expect(layout[0]!.viewMode).toBe("accordion");
+      expect(layout[0]!.accordionState).toEqual({ collapsed: ["tab1"], heights: { tab1: 200 } });
+    });
+
+    it("restoreLayout preserves viewMode", () => {
+      const saved = [{
+        key: "f1", order: 0, position: { x: 0, y: 0 }, size: { width: 400, height: 300 },
+        zIndex: 1, pinned: false, hidden: false, viewMode: "accordion" as const,
+        tabs: [makeTab("t1")],
+        activeTabKey: "t1",
+      }];
+      engine.restoreLayout(saved);
+      expect(engine.frames.get("f1")?.viewMode).toBe("accordion");
     });
   });
 });

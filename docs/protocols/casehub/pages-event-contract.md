@@ -98,6 +98,15 @@ by the runtime event delegation layer:
 | `pages-frame-organise` | Layout preset applied | Organiser toolbar |
 | `selection-change` | Master row selection for parameterised detail datasets | `PagesDataTable` component |
 | `pages-selection-changed` | Selection context forwarded to host-panel (outbound: runtime → component) | Runtime selection bridge (`site.ts`) |
+| `pages-compositor-tab-create` | New tab created in region | Compositor renderer |
+| `pages-compositor-tab-close` | Tab closed | Compositor renderer |
+| `pages-compositor-tab-rename` | Tab renamed | Compositor renderer |
+| `pages-compositor-tab-activate` | Tab switched | Compositor renderer |
+| `pages-compositor-tab-move` | Tab moved cross-region | Compositor drag |
+| `pages-compositor-split` | Split created | Compositor drag |
+| `pages-compositor-collapse` | Split collapsed (last tab closed) | Compositor |
+| `pages-compositor-view-mode` | View mode toggled | Compositor renderer |
+| `pages-frame-transfer` | Frame moved cross-tab | Compositor transfer |
 
 Do not use these names as `pages-event` topics or as custom event names in
 application code — they will collide with the framework's event delegation.
@@ -107,7 +116,7 @@ dispatched by the runtime onto component elements, rather than bubbling up
 from components. All other events in this table are inbound (component →
 runtime).
 
-This table is a snapshot as of 2026-08-11. The authoritative source for
+This table is a snapshot as of 2026-08-13. The authoritative source for
 reserved event names is `packages/pages-runtime/src/site.ts` (search for
 `addEventListener`). When adding a new framework event to the runtime, update
 this protocol's reserved names table in the same commit.

@@ -951,6 +951,18 @@ describe("dockWorkbench builder", () => {
       });
       expect(result.props?.organisers).toBe(false);
     });
+
+    it("passes viewMode through on frame config", () => {
+      const result = floatingWorkspace({
+        centre: { type: "html" as const, props: { content: "" } },
+        frames: [{
+          key: "f1",
+          viewMode: "accordion" as const,
+          tabs: [{ key: "t1", label: "Tab", content: { type: "html" as const, props: { content: "x" } } }],
+        }],
+      });
+      expect(result.props!.frames![0]!.viewMode).toBe("accordion");
+    });
   });
 
   describe("heatmapChart()", () => {

@@ -736,4 +736,20 @@ describe("desugarComponent", () => {
       expect(result.style).toEqual({ padding: "16px" });
     });
   });
+
+  describe("floating-workspace desugar", () => {
+    it("preserves viewMode on frame configs", () => {
+      const result = desugarComponent({
+        type: "floating-workspace",
+        centre: [{ type: "html", properties: { content: "x" } }],
+        frames: [{
+          key: "f1",
+          viewMode: "accordion",
+          tabs: [{ key: "t1", label: "Tab", content: { type: "html", properties: { content: "c" } } }],
+        }],
+      });
+      const frames = (result.props as any).frames;
+      expect(frames[0].viewMode).toBe("accordion");
+    });
+  });
 });

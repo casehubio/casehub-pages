@@ -1,4 +1,5 @@
 import type { FrameLayout, FrameTabConfig, ContentFactory } from "@casehubio/pages-component";
+import type { EdgeZone } from "./frame-boundaries.js";
 
 export interface FrameButtonConfig {
   readonly icon: string;
@@ -33,9 +34,20 @@ export interface FloatingFrameBackend {
   onFramePin(cb: (key: string) => void): void;
   onFrameDragMove(cb: (key: string, pos: { x: number; y: number }) => void): void;
   onTitlebarDoubleClick(cb: (key: string) => void): void;
+  onViewModeToggle(cb: (key: string) => void): void;
+  onAddTab(cb: (key: string) => void): void;
+  onTabRemoved(cb: (frameKey: string, tabKey: string) => void): void;
+  onArrangement(cb: (frameKey: string, preset: string) => void): void;
+  onDetach(cb: (frameKey: string) => void): void;
+  onCrossFrameDrop(cb: (fromFrame: string, tabKey: string, toFrame: string) => void): void;
+  onEdgeSplit(cb: (fromFrame: string, tabKey: string, targetFrame: string, zone: EdgeZone) => void): void;
+  onLayoutChange(cb: (frameKey: string, layout: string) => void): void;
+  setFrameLayout(frameKey: string, layout: string): void;
 
   updatePinState(key: string, pinned: boolean): void;
   getFrameElement(key: string): HTMLElement | null;
+  getSubFrameElements(frameKey: string): Array<{ element: HTMLElement; tabKey: string }>;
+  getTabContentElement(frameKey: string, tabKey: string): HTMLElement | null;
 
   dispose(): void;
   unwrap(): unknown | null;

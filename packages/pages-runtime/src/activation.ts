@@ -26,18 +26,20 @@ import {evaluateExpression, hasTemplateVars, resolveTemplate, allTemplateVarsRes
 import type {RuntimeContext} from "@casehubio/pages-component";
 import type {PagesContentElement} from "@casehubio/pages-viz/dist/base/PagesContentElement.js";
 import {lookupPanel} from "./panel-registry.js";
-import type {ConfigurablePanel, DataReceiver, VizTarget} from "@casehubio/pages-component";
+import type {ConfigurablePanel, DataReceiver} from "@casehubio/pages-component";
+import {createFormFieldProxy, createHostPanelProxy} from "./form-field-proxy.js";
 import type {HostPanelProps} from "@casehubio/pages-component";
-import type {SortColumn} from "@casehubio/pages-data";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
-import {attachDockDrag} from "./dock-drag.js";
+import {renderDockBar} from "./dock-bar-renderer.js";
+import type {DockBarProps, DockBarOptions} from "./dock-bar-renderer.js";
 import type {FloatingWorkspaceProps, ContentFactory, FrameLayout, FrameConfig} from "@casehubio/pages-component";
 import type {FloatingFrameEngine} from "./floating-frame-engine.js";
-import {createDockviewBackend} from "./dockview-backend.js";
+import {createGroupOrganiserBackend} from "./group-organiser-backend.js";
 import {wireFloatingWorkspace} from "./wire-floating-workspace.js";
+import {createContainer} from "./frame-sandbox/index.js";
+import {createContentManager} from "./workspace-content-lifecycle.js";
 import type {FrameButtonConfig} from "./floating-frame-backend.js";
 import {createFrameKeyboardHandler} from "./frame-keyboard.js";
-import {createOrganiserToolbar} from "./organiser-toolbar.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -95,95 +97,12 @@ export interface LazyPageOptions {
     engine: FloatingFrameEngine | undefined;
     stash: readonly FrameLayout[] | undefined;
   };
+  readonly nestingDepth?: number;
 }
 
-function createHostPanelProxy(panel: DataReceiver): VizTarget {
-  return {
-    set loading(v: boolean) { panel.loading = v; },
-    get loading() { return panel.loading; },
-    set dataSet(v: TypedDataSet | undefined) { panel.dataSet = v; },
-    get dataSet() { return panel.dataSet; },
-    set error(v: string) { panel.error = v; },
-    get error() { return panel.error; },
-    set totalRows(_: number) {},
-    get totalRows() { return 0; },
-    set activeSort(_: SortColumn | undefined) {},
-    get activeSort() { return undefined; },
-    set activePage(_: number | undefined) {},
-    get activePage() { return undefined; },
-  };
-}
 
-function renderDockButtons(
-  container: HTMLElement,
-  items: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean; zone?: string }>,
-  eventTarget: HTMLElement,
-  exclusive: boolean,
-  zoneName: string | undefined,
-): void {
-  for (const item of items) {
-    const button = document.createElement("button");
-    button.dataset.dockPanelId = item.panelId;
-    if (zoneName) button.dataset.dockZone = zoneName;
-    button.title = item.label;
-    button.textContent = item.icon;
-    button.style.border = "none";
-    button.style.background = "transparent";
-    button.style.cursor = "pointer";
-    button.style.padding = "6px";
-    button.style.borderRadius = "var(--pages-radius-sm, 4px)";
-    button.style.fontSize = "16px";
 
-    if (item.defaultOpen) {
-      button.dataset.active = "";
-    }
 
-    button.addEventListener("click", () => {
-      const isActive = button.dataset.active !== undefined;
-
-      if (exclusive) {
-        if (isActive) {
-          delete button.dataset.active;
-          eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-            bubbles: true, composed: true,
-            detail: { panelId: item.panelId, visible: false },
-          }));
-        } else {
-          const myZone = button.dataset.dockZone;
-          const scope = myZone
-            ? eventTarget.querySelectorAll<HTMLElement>(`button[data-dock-zone="${myZone}"]`)
-            : eventTarget.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
-          for (const sibling of scope) {
-            if (sibling.dataset.active !== undefined) {
-              delete sibling.dataset.active;
-              eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-                bubbles: true, composed: true,
-                detail: { panelId: sibling.dataset.dockPanelId!, visible: false },
-              }));
-            }
-          }
-          button.dataset.active = "";
-          eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-            bubbles: true, composed: true,
-            detail: { panelId: item.panelId, visible: true },
-          }));
-        }
-      } else {
-        if (isActive) {
-          delete button.dataset.active;
-        } else {
-          button.dataset.active = "";
-        }
-        eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-          bubbles: true, composed: true,
-          detail: { panelId: item.panelId, visible: !isActive },
-        }));
-      }
-    });
-
-    container.appendChild(button);
-  }
-}
 
 export function createActivationCallback(
   registry: ComponentRegistry,
@@ -574,70 +493,10 @@ export function createActivationCallback(
     }
 
     if (component.type === "dock-bar" && component.props) {
-      const { orientation, items, exclusive, side } = component.props as {
-        orientation?: string;
-        exclusive?: boolean;
-        side?: string;
-        items?: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean; zone?: string }>;
-      };
-      if (!items) return;
-
-      el.style.display = "flex";
-      el.style.flexDirection = orientation === "horizontal" ? "row" : "column";
-      el.style.gap = "0";
-      el.style.padding = "4px";
-
-      const hasZones = items.some(i => i.zone !== undefined);
-
-      if (hasZones) {
-        const topItems = items.filter(i => i.zone === "top");
-        const middleItems = items.filter(i => i.zone === "top-second");
-        const bottomItems = items.filter(i => i.zone === "bottom");
-        const flexDir = orientation === "horizontal" ? "row" : "column";
-
-        function makeGroup(zoneName: string, groupItems: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean; zone?: string }>): HTMLElement {
-          const group = document.createElement("div");
-          group.dataset.dockZone = zoneName;
-          group.style.display = "flex";
-          group.style.flexDirection = flexDir;
-          group.style.gap = "2px";
-          group.style.minWidth = "24px";
-          group.style.minHeight = "24px";
-          renderDockButtons(group, groupItems, el, exclusive ?? false, zoneName);
-          return group;
-        }
-
-        // Top: side-top panels
-        el.appendChild(makeGroup("top", topItems));
-
-        // Separator between the side's two zones
-        const sep = document.createElement("div");
-        sep.style[orientation === "horizontal" ? "borderLeft" : "borderTop"] = "1px solid var(--pages-neutral-5, #555)";
-        sep.style.margin = orientation === "horizontal" ? "0 4px" : "4px 0";
-        sep.style.alignSelf = "stretch";
-        el.appendChild(sep);
-
-        // Middle: side-bottom panels (drop zone, even if empty)
-        el.appendChild(makeGroup("middle", middleItems));
-
-        // Spacer (no visible line) pushes bottom-zone buttons to bottom
-        const spacer = document.createElement("div");
-        spacer.dataset.dockSpacer = "";
-        spacer.style.flex = "1";
-        el.appendChild(spacer);
-
-        // Bottom: bottom-zone panels (anchored to bottom of stripe)
-        el.appendChild(makeGroup("bottom", bottomItems));
-      } else {
-        renderDockButtons(el, items, el, exclusive ?? false, undefined);
-      }
-
-      if (options?.zoneEngine && options?.siteTarget) {
-        const buttons = el.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
-        for (const btn of buttons) {
-          attachDockDrag(btn, options.zoneEngine, options.siteTarget);
-        }
-      }
+      const dockBarOpts: DockBarOptions | undefined = options?.zoneEngine && options?.siteTarget
+        ? { zoneEngine: options.zoneEngine, siteTarget: options.siteTarget }
+        : undefined;
+      renderDockBar(el, component.props as DockBarProps, dockBarOpts);
       return;
     }
 
@@ -714,73 +573,169 @@ export function createActivationCallback(
       el.style.flexDirection = "column";
       el.style.minHeight = "0";
 
-      const centreContainer = document.createElement("div");
-      centreContainer.style.cssText = "position:relative;width:100%;flex:1;min-height:0;overflow:auto;background:var(--pages-neutral-1);border-radius:var(--pages-radius-sm, 4px);";
-      centreContainer.dataset.floatingWorkspaceCentre = "";
-      el.appendChild(centreContainer);
+      const wsRef = options?.floatingWorkspaceRef;
+      const depth = options?.nestingDepth ?? 0;
+      if (depth > 1) {
+        throw new Error("Floating workspace nesting is limited to one level");
+      }
+
       const centreRoot: Component = centreComponents.length === 1
         ? centreComponents[0]!
         : { type: "rows", slots: { default: [...centreComponents] } };
-      renderComponent(centreContainer, centreRoot, {
-        permissions: options?.permissions ?? ALLOW_ALL,
-        onNode: callback,
-      });
 
-      const wsRef = options?.floatingWorkspaceRef;
+      function renderCentreInto(parent: HTMLElement): void {
+        const centreContainer = document.createElement("div");
+        centreContainer.style.cssText = "position:relative;width:100%;flex:1;min-height:0;overflow:auto;background:var(--pages-neutral-1);border-radius:var(--pages-radius-sm, 4px);";
+        centreContainer.dataset.floatingWorkspaceCentre = "";
+        parent.appendChild(centreContainer);
+        renderComponent(centreContainer, centreRoot, {
+          permissions: options?.permissions ?? ALLOW_ALL,
+          onNode: callback,
+        });
+      }
 
-      createDockviewBackend().then((backend) => {
+      renderCentreInto(el);
+
+      {
+        const backend = createGroupOrganiserBackend();
+        const manager = createContentManager();
+        const tabCallbacks = new Map<string, (el: HTMLElement, component: Component) => void>();
+
+        function renderTabContent(tab: import("@casehubio/pages-component").FrameTabConfig): { element: HTMLElement } {
+          const container = document.createElement("div");
+          container.style.cssText = "position:relative;width:100%;height:100%;";
+
+          const ref = manager.getRef(tab.key);
+
+          let tabCallback = tabCallbacks.get(tab.key);
+          if (!tabCallback && depth < 1) {
+            tabCallback = createActivationCallback(registry, pagePathMap, {
+              ...(options ?? {}),
+              nestingDepth: depth + 1,
+              floatingWorkspaceRef: ref,
+            } as LazyPageOptions, contextManager);
+            tabCallbacks.set(tab.key, tabCallback);
+          }
+
+          renderComponent(container, tab.content, {
+            permissions: options?.permissions ?? ALLOW_ALL,
+            onNode: tabCallback ?? callback,
+          });
+
+          return { element: container };
+        }
+
+        const contentFactory: ContentFactory = (tab) => renderTabContent(tab);
+
         const overlayContainer = document.createElement("div");
         overlayContainer.style.cssText = "position:absolute;inset:0;pointer-events:none;";
         overlayContainer.dataset.floatingWorkspaceOverlay = "";
         el.appendChild(overlayContainer);
 
-        const defaultFactory: ContentFactory = (tab) => {
-          const container = document.createElement("div");
-          renderComponent(container, tab.content, {
-            permissions: options?.permissions ?? ALLOW_ALL,
-            onNode: callback,
-          });
-          return { element: container };
-        };
-
-        const handle = wireFloatingWorkspace(backend, overlayContainer, undefined, {
+        const savedFrames = wsRef?.stash;
+        const handle = wireFloatingWorkspace(backend, overlayContainer, savedFrames, {
           detachEnabled: true,
-          contentFactory: defaultFactory,
+          contentFactory,
           signal: options?.abortSignal,
+          getNestedEngine: (key: string) => manager.getNestedEngine(key),
+          existingEngine: wsRef?.engine,
         });
 
         const extraButtons: FrameButtonConfig[] = [];
         if (handle.zonePickerButton) extraButtons.push(handle.zonePickerButton);
-        if (handle.detachButton) extraButtons.push(handle.detachButton);
-        backend.attach(overlayContainer, defaultFactory, extraButtons.length > 0 ? { extraButtons } : undefined);
+        backend.attach(overlayContainer, contentFactory, extraButtons.length > 0 ? { extraButtons } : undefined);
 
-        if (props.organisers !== false && options?.abortSignal) {
-          const toolbar = createOrganiserToolbar(handle.engine, overlayContainer, el, options.abortSignal);
-          el.insertBefore(toolbar, overlayContainer);
+        const showOrganisers = depth > 0 ? props.organisers === true : props.organisers !== false;
+        if (showOrganisers && handle.containerToolbar) {
+          el.insertBefore(handle.containerToolbar.element, overlayContainer);
         }
 
         if (options?.abortSignal) {
           createFrameKeyboardHandler(handle.engine, overlayContainer, options.abortSignal);
         }
 
-        if (wsRef) {
-          wsRef.engine = handle.engine;
-          wsRef.stash = undefined;
-        }
+        const wsRefOrDefault = wsRef ?? { engine: undefined, stash: undefined };
+        manager.setEngine(handle.engine);
+        manager.reconnectOrCreate(handle.engine, backend, wsRefOrDefault, props.frames);
 
-        if (props.frames && !wsRef?.stash) {
-          for (const frameConfig of props.frames) {
-            handle.engine.createFrame(frameConfig);
+        backend.onCrossFrameDrop((fromFrame: string, tabKey: string, toFrame: string) => {
+          const fromEngineFrame = handle.engine.frames.get(fromFrame);
+          const tab = fromEngineFrame?.tabs.find((t: import("@casehubio/pages-component").FrameTabConfig) => t.key === tabKey);
+          if (tab) {
+            handle.engine.removeTab(fromFrame, tabKey, { skipBackend: true });
+            handle.engine.addTab(toFrame, tab, { skipBackend: true });
+          }
+        });
+
+        for (const frame of handle.engine.frames.values()) {
+          if (frame.viewMode === "accordion") {
+            handle.applyViewMode(frame.key);
           }
         }
+      }
+      return;
+    }
 
-        if (wsRef?.stash) {
-          handle.engine.restoreLayout(wsRef.stash);
-          wsRef.stash = undefined;
+    if (component.type === "frame-sandbox") {
+      const sandboxProps = component.props as Record<string, unknown> | undefined;
+      const sandboxEntries = (sandboxProps?.entries as Array<{
+        key: string; label: string; content?: Component;
+        position?: { x: number; y: number }; size?: { width: number; height: number };
+      }>) ?? [];
+      const organiserType = (sandboxProps?.organiser as string) ?? "tabbed";
+      const policyProp = sandboxProps?.policy as {
+        allowedOrganisers?: string[]; maxDepth?: number;
+      } | undefined;
+
+      const entries = sandboxEntries.map((e) => ({ key: e.key, label: e.label }));
+
+      const contentFactoryForSandbox = (entry: { key: string; label: string }) => {
+        const spec = sandboxEntries.find((s) => s.key === entry.key);
+        if (!spec?.content) {
+          const placeholder = document.createElement("div");
+          placeholder.textContent = `No content for ${entry.key}`;
+          return { element: placeholder };
         }
-      }).catch((err: unknown) => {
-        console.error("Failed to initialize floating workspace backend:", err);
-      });
+        const wrapper = document.createElement("div");
+        wrapper.style.cssText = "width:100%;height:100%;";
+        renderComponent(wrapper, spec.content, {
+          permissions: options?.permissions ?? ALLOW_ALL,
+          onNode: callback,
+        });
+        return {
+          element: wrapper,
+          dispose: () => { wrapper.innerHTML = ""; },
+        };
+      };
+
+      const freeLayoutEntries: Record<string, { position: { x: number; y: number }; size: { width: number; height: number } }> = {};
+      for (const se of sandboxEntries) {
+        if (se.position || se.size) {
+          freeLayoutEntries[se.key] = {
+            position: se.position ?? { x: 50, y: 50 },
+            size: se.size ?? { width: 300, height: 200 },
+          };
+        }
+      }
+      const hasFreeState = Object.keys(freeLayoutEntries).length > 0;
+
+      const groupConfig: Parameters<typeof createContainer>[0] = {
+        entries,
+        layout: organiserType as "tabbed" | "accordion" | "free",
+        contentFactory: contentFactoryForSandbox,
+        ...(hasFreeState ? { freeLayoutState: { entries: freeLayoutEntries, zOrder: sandboxEntries.map((e) => e.key) } } : {}),
+      };
+      if (policyProp) {
+        groupConfig.policy = {
+          allowedLayouts: (policyProp.allowedOrganisers ?? ["tabbed", "accordion", "free"]) as Array<"tabbed" | "accordion" | "free">,
+          maxDepth: policyProp.maxDepth ?? 3,
+        };
+      }
+      const group = createContainer(groupConfig);
+
+      el.style.cssText = "position:relative;width:100%;height:100%;min-height:400px;";
+      group.mount(el);
+      el.dataset.frameSandbox = "mounted";
       return;
     }
 
@@ -1105,3 +1060,4 @@ function setFormComponentValue(component: HTMLElement, value: unknown): void {
     (component as any).value = value !== undefined && value !== null ? String(value) : "";
   }
 }
+
