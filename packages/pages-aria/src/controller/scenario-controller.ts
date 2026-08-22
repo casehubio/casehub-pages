@@ -78,12 +78,6 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _speedDebounce: ReturnType<typeof setTimeout> | null = null;
 
   override connectedCallback(): void {
-    this._conn = new ScenarioConnectionController(this, {
-      connection: this.connection,
-      eventTarget: this.eventTarget,
-      baseUrl: this.baseUrl,
-      onState: (s: ScenarioState) => this._onStateChange(s),
-    });
     super.connectedCallback();
     this.registerShortcut(' ', () => {
       if (!this._conn?.state?.scenario) return;
@@ -93,6 +87,15 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       if (!this._conn?.state?.scenario) return;
       void this._conn.sendCommand('/step');
     }, { description: 'Step forward' });
+  }
+
+  protected override firstUpdated(): void {
+    this._conn = new ScenarioConnectionController(this, {
+      connection: this.connection,
+      eventTarget: this.eventTarget,
+      baseUrl: this.baseUrl,
+      onState: (s: ScenarioState) => this._onStateChange(s),
+    });
   }
 
   private _onStateChange(s: ScenarioState): void {

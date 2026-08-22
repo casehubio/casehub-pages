@@ -31,11 +31,12 @@
     <pages-scenario-controller id="ctrl"></pages-scenario-controller>
     <pages-scenario-narrative id="narr"></pages-scenario-narrative>
   </div>
+  <script>
+    document.getElementById('ctrl').setAttribute('baseurl', window.location.origin);
+    document.getElementById('narr').setAttribute('baseurl', window.location.origin);
+  </script>
   <script type="module">
     import '/scenario/controller.js';
-    const baseUrl = window.location.origin;
-    document.getElementById('ctrl').baseUrl = baseUrl;
-    document.getElementById('narr').baseUrl = baseUrl;
   </script>
 </body>
 </html>

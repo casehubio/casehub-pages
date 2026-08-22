@@ -93,7 +93,7 @@ export class ScenarioConnectionController implements ReactiveController {
   private _ensureConnection(): void {
     if (this._opts.connection) return;
     if (this._opts.baseUrl && !this._ownConnection) {
-      const wsUrl = this._opts.baseUrl.replace(/^http/, 'ws') + '/ws/push';
+      const wsUrl = this._opts.baseUrl.replace(/^http/, 'ws') + '/push';
       this._ownEventTarget = new EventTarget();
       this._ownConnection = createEventConnection(wsUrl, {
         config: { eventTarget: this._ownEventTarget },
