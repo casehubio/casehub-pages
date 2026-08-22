@@ -104,7 +104,7 @@ describe("PagesEventTimeline", () => {
     expandBtn.click();
     await el.updateComplete;
 
-    const detail = el.shadowRoot!.querySelector(".detail-content");
+    const detail = el.shadowRoot!.querySelector(".payload-detail");
     expect(detail).not.toBeNull();
   });
 
@@ -167,5 +167,42 @@ describe("PagesEventTimeline", () => {
     expect(nodes.length).toBe(3);
     const firstLabel = nodes[0]!.querySelector(".node-label");
     expect(firstLabel!.textContent).toBe("Pending Review");
+  });
+
+  it("renders horizontal layout when props.layout is 'horizontal'", async () => {
+    const horizontalStrategy: EventTimelineStrategy<EventTimelineNode[]> = {
+      toNodes: (data) => data,
+      defaultLayout: "horizontal",
+    };
+    el.strategy = horizontalStrategy;
+    el.data = testNodes;
+    el.props = { lookup: { dataSetId: "test", operations: [] }, layout: "horizontal" };
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
+    await el.updateComplete;
+
+    const pipeline = el.shadowRoot!.querySelector(".pipeline");
+    expect(pipeline).not.toBeNull();
+    expect(pipeline!.getAttribute("role")).toBe("list");
+    expect(pipeline!.getAttribute("aria-orientation")).toBe("horizontal");
+
+    const stages = el.shadowRoot!.querySelectorAll('[role="listitem"]');
+    expect(stages.length).toBe(3);
+  });
+
+  it("renders compact layout when props.layout is 'compact'", async () => {
+    el.strategy = testStrategy;
+    el.data = testNodes;
+    el.props = { lookup: { dataSetId: "test", operations: [] }, layout: "compact" };
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
+    await el.updateComplete;
+
+    const strip = el.shadowRoot!.querySelector(".compact-strip");
+    expect(strip).not.toBeNull();
+    expect(strip!.getAttribute("role")).toBe("img");
+    expect(strip!.getAttribute("aria-label")).toContain("3 events");
   });
 });

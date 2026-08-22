@@ -1,19 +1,15 @@
 import { html, css, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
-import type { EventTimelineProps, EventTimelineLayout } from "@casehubio/pages-component";
+import type { EventTimelineProps } from "@casehubio/pages-component";
 import { emitPagesEvent } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
 import type { EventTimelineNode, EventTimelineStrategy } from "./event-timeline-types.js";
-
-function formatTimestamp(ts: string): string {
-  try {
-    return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return ts;
-  }
-}
+import { renderVerticalTimeline, verticalTimelineStyles } from "./event-timeline/renderers/vertical.js";
+import { renderHorizontalTimeline, horizontalTimelineStyles } from "./event-timeline/renderers/horizontal.js";
+import { renderCompactTimeline, compactTimelineStyles } from "./event-timeline/renderers/compact.js";
+import { renderFilterBar, filterBarStyles } from "./event-timeline/renderers/filter-bar.js";
 
 const chronologicalStrategy: EventTimelineStrategy<EventTimelineNode[]> = {
   toNodes: (data) => [...data].sort((a, b) => {
@@ -40,6 +36,7 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
 
   @state() private _nodes: EventTimelineNode[] = [];
   @state() private _expandedKeys = new Set<string>();
+  @state() private _internalFilters: Set<string> | null = null;
 
   private _lastData: unknown = undefined;
 
@@ -52,64 +49,11 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
   static override styles = css`
     :host { display: block; font-family: var(--pages-font-family, system-ui); color: var(--pages-neutral-12, #111); }
     .timeline-container { padding: 16px; }
-    .filter-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .filter-chip {
-      padding: 6px 12px; border-radius: 16px;
-      border: 1px solid var(--pages-neutral-6, #d1d5db);
-      background: var(--pages-neutral-1, #fff);
-      cursor: pointer; font-size: 13px; font-weight: 500;
-      transition: all 0.2s;
-    }
-    .filter-chip[aria-checked="true"] {
-      background: var(--pages-accent-9, #2563eb);
-      color: white; border-color: var(--pages-accent-9, #2563eb);
-    }
-    .filter-chip:hover { border-color: var(--pages-accent-7, #3b82f6); }
-    .timeline { position: relative; padding-left: 40px; }
-    .timeline::before {
-      content: ''; position: absolute; left: 11px; top: 0; bottom: 0;
-      width: 2px; background: var(--pages-neutral-5, #e5e7eb);
-    }
-    .timeline-node { position: relative; margin-bottom: 24px; outline: none; }
-    .timeline-node:focus { outline: 2px solid var(--pages-accent-8, #1d4ed8); outline-offset: 4px; border-radius: 8px; }
-    .node-dot {
-      position: absolute; left: -34px; top: 12px;
-      width: 12px; height: 12px; border-radius: 50%;
-      background: var(--pages-neutral-7, #9ca3af);
-      border: 2px solid var(--pages-neutral-1, #fff); z-index: 1;
-    }
-    .status-completed .node-dot { background: var(--pages-success-9, #16a34a); }
-    .status-active .node-dot { background: var(--pages-accent-9, #2563eb); }
-    .status-pending .node-dot { background: var(--pages-neutral-7, #9ca3af); }
-    .status-failed .node-dot { background: var(--pages-danger-9, #dc2626); }
-    .status-skipped .node-dot { background: var(--pages-neutral-5, #d1d5db); }
-    .node-content {
-      background: var(--pages-neutral-1, #fff);
-      border: 1px solid var(--pages-neutral-5, #e5e7eb);
-      border-radius: 8px; padding: 12px;
-    }
-    .node-body { cursor: pointer; }
-    .node-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 4px; flex-wrap: wrap; gap: 8px;
-    }
-    .node-label { font-size: 14px; font-weight: 500; color: var(--pages-neutral-12, #111); }
-    .timestamp { font-size: 13px; color: var(--pages-neutral-9, #6b7280); }
-    .actor-info { font-size: 13px; color: var(--pages-neutral-9, #6b7280); margin-top: 4px; }
-    .expand-button {
-      display: inline-block; margin-top: 8px; padding: 4px 8px;
-      font-size: 12px; cursor: pointer; background: none;
-      border: 1px solid var(--pages-neutral-5, #e5e7eb);
-      border-radius: 4px; color: var(--pages-neutral-11, #374151);
-    }
-    .expand-button:hover { background: var(--pages-neutral-2, #f9fafb); }
-    .expanded .expand-button { background: var(--pages-neutral-3, #f3f4f6); }
-    .detail-content {
-      margin-top: 12px; padding: 12px;
-      background: var(--pages-neutral-2, #f9fafb);
-      border-radius: 4px; font-size: 13px;
-    }
     .empty-state { text-align: center; padding: 24px; color: var(--pages-neutral-9, #6b7280); }
+    ${verticalTimelineStyles}
+    ${horizontalTimelineStyles}
+    ${compactTimelineStyles}
+    ${filterBarStyles}
   `;
 
   private _resolveStrategy(): EventTimelineStrategy | undefined {
@@ -122,7 +66,7 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     if (this.activeFilters != null) {
       return this.activeFilters instanceof Set ? this.activeFilters : new Set(this.activeFilters);
     }
-    return null;
+    return this._internalFilters;
   }
 
   private get _filteredNodes(): EventTimelineNode[] {
@@ -148,13 +92,39 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
       this._nodes = strategy.toNodes(transformed);
     }
 
+    const layout = props.layout ?? strategy.defaultLayout ?? "vertical";
     const filtered = this._filteredNodes;
+
     return html`
       <div class="timeline-container">
-        ${this._renderFilterBar(strategy)}
+        ${strategy.filterCategories && layout !== "compact"
+          ? renderFilterBar(
+              strategy.filterCategories,
+              this._resolvedFilters ?? new Set(strategy.filterCategories),
+              (cat) => this._handleFilterToggle(cat, strategy.filterCategories!),
+            )
+          : nothing}
         ${filtered.length === 0
           ? html`<div class="empty-state">No events</div>`
-          : this._renderVertical(filtered, strategy)}
+          : layout === "vertical"
+          ? renderVerticalTimeline(filtered, {
+              expandedKeys: this._expandedKeys,
+              onNodeClick: (n, i) => this._handleNodeClick(n, i),
+              onToggleExpand: (k) => this._handleToggleExpand(k),
+              onKeyDown: (e, i) => this._handleVerticalKeyDown(e, i),
+              renderNode: strategy.renderNode,
+              renderDetail: strategy.renderDetail,
+            })
+          : layout === "horizontal"
+          ? renderHorizontalTimeline(filtered, {
+              onNodeClick: (n, i) => this._handleNodeClick(n, i),
+              onKeyDown: (e, i) => this._handleHorizontalKeyDown(e, i),
+              renderNode: strategy.renderNode,
+            })
+          : renderCompactTimeline(filtered, {
+              onExpandRequested: () => emitPagesEvent(this, "event-timeline:expand-requested", {}),
+              onKeyDown: () => {},
+            })}
       </div>
     `;
   }
@@ -187,24 +157,6 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     });
   }
 
-  private _renderFilterBar(strategy: EventTimelineStrategy): TemplateResult | typeof nothing {
-    const categories = strategy.filterCategories;
-    if (!categories) return nothing;
-    const active = this._resolvedFilters ?? new Set(categories);
-    return html`
-      <div class="filter-bar" role="group" aria-label="Filter">
-        ${categories.map(cat => html`
-          <button
-            class="filter-chip"
-            role="checkbox"
-            aria-checked="${active.has(cat)}"
-            @click=${() => this._handleFilterToggle(cat, categories)}
-          >${cat}</button>
-        `)}
-      </div>
-    `;
-  }
-
   private _handleFilterToggle(category: string, allCategories: string[]): void {
     const current = this._resolvedFilters ?? new Set(allCategories);
     const next = new Set(current);
@@ -213,7 +165,7 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     } else {
       next.add(category);
     }
-    this.activeFilters = next;
+    this._internalFilters = next;
   }
 
   private _handleToggleExpand(key: string): void {
@@ -231,7 +183,7 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     emitPagesEvent(this, "event-timeline:node-selected", { node, index });
   }
 
-  private _handleKeyDown(e: KeyboardEvent, index: number): void {
+  private _handleVerticalKeyDown(e: KeyboardEvent, index: number): void {
     const nodes = this.shadowRoot!.querySelectorAll(".timeline-node");
     if (e.key === "ArrowDown" && index < nodes.length - 1) {
       e.preventDefault();
@@ -242,51 +194,15 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     }
   }
 
-  private _renderVertical(nodes: EventTimelineNode[], strategy: EventTimelineStrategy): TemplateResult {
-    return html`
-      <div class="timeline" role="list" aria-label="Timeline">
-        ${nodes.map((node, index) => {
-          const isExpanded = this._expandedKeys.has(node.key);
-          const renderNode = strategy.renderNode;
-          const renderDetail = strategy.renderDetail;
-
-          return html`
-            <div
-              class="timeline-node status-${node.status} ${isExpanded ? "expanded" : ""}"
-              role="listitem"
-              tabindex="0"
-              aria-label="${node.label}"
-              @keydown=${(e: KeyboardEvent) => this._handleKeyDown(e, index)}
-            >
-              <div class="node-dot"></div>
-              <div class="node-content">
-                <div class="node-body" @click=${() => this._handleNodeClick(node, index)}>
-                  <div class="node-header">
-                    ${renderNode ? html`${renderNode(node)}` : html`<span class="node-label">${node.label}</span>`}
-                    ${node.timestamp ? html`<span class="timestamp">${formatTimestamp(node.timestamp)}</span>` : nothing}
-                  </div>
-                  ${node.actor ? html`<div class="actor-info">${node.actor}</div>` : nothing}
-                </div>
-                ${node.detail != null ? html`
-                  <button
-                    class="expand-button"
-                    aria-expanded="${isExpanded}"
-                    @click=${(e: Event) => { e.stopPropagation(); this._handleToggleExpand(node.key); }}
-                  >
-                    ${isExpanded ? "▼" : "▶"} Details
-                  </button>
-                  ${isExpanded ? html`
-                    <div class="detail-content" role="region">
-                      ${renderDetail ? renderDetail(node) : html`<pre>${JSON.stringify(node.detail, null, 2)}</pre>`}
-                    </div>
-                  ` : nothing}
-                ` : nothing}
-              </div>
-            </div>
-          `;
-        })}
-      </div>
-    `;
+  private _handleHorizontalKeyDown(e: KeyboardEvent, index: number): void {
+    const items = this.shadowRoot!.querySelectorAll('[role="listitem"]');
+    if (e.key === "ArrowRight" && index < items.length - 1) {
+      e.preventDefault();
+      (items[index + 1] as HTMLElement).focus();
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      e.preventDefault();
+      (items[index - 1] as HTMLElement).focus();
+    }
   }
 }
 
