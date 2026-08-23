@@ -219,6 +219,20 @@ describe('pages-scenario-controller', () => {
     el.remove();
   });
 
+  it('renders source toggle button in compact card', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    el.mode = 'compact';
+    el.baseUrl = 'http://localhost:8080';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }));
+    document.body.appendChild(el);
+    await el.updateComplete;
+    (el as any)._expanded = true;
+    await el.updateComplete;
+    const btn = el.shadowRoot?.querySelector('[aria-label="Toggle source"]');
+    expect(btn).not.toBeNull();
+    el.remove();
+  });
+
   it('cleans up on disconnect', async () => {
     const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
     const conn = mockConnection();

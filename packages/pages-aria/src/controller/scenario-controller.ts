@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import type { EventConnection } from '@casehubio/pages-data';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives';
 import { ScenarioConnectionController, type ScenarioState, type OutlineNode } from './scenario-connection-controller.js';
+import type { PagesScenarioYamlViewer } from './scenario-yaml-viewer.js';
 
 export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   static override styles = css`
@@ -149,11 +150,15 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   @property() scenario?: string;
 
   @state() private _expanded = false;
+  @state() private _yamlOpen = false;
 
   @state() private _outline: OutlineNode[] = [];
 
   private _conn!: ScenarioConnectionController;
   private _speedDebounce: ReturnType<typeof setTimeout> | null = null;
+  private _yamlViewer: PagesScenarioYamlViewer | null = null;
+  private _popoutWindow: Window | null = null;
+  private _popoutPoll: ReturnType<typeof setInterval> | null = null;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -344,6 +349,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       <div class="compact-card">
         <div class="compact-header" @pointerdown=${this._onDragStart}>
           <span class="scenario-name">${name}</span>
+          <button aria-label="Toggle source" @click=${() => this._toggleYaml()}>&lt;/&gt;</button>
           <button aria-label="Collapse" @click=${() => { this._expanded = false; }}>✕</button>
         </div>
         <div class="compact-body">
@@ -388,6 +394,67 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     return html`<div class="demo-actions">
       <button class="demo-btn demo-btn-restart" @click=${() => void this._restartDemo()}>Reset</button>
     </div>`;
+  }
+
+  private _toggleYaml(): void {
+    this._yamlOpen = !this._yamlOpen;
+    if (this._yamlOpen) {
+      this._showYamlViewer();
+    } else {
+      this._hideYamlViewer();
+    }
+  }
+
+  private _showYamlViewer(): void {
+    if (!this._yamlViewer) {
+      const viewer = document.createElement('pages-scenario-yaml-viewer') as PagesScenarioYamlViewer;
+      viewer.connection = this.connection;
+      viewer.eventTarget = this.eventTarget;
+      if (this.baseUrl) viewer.baseUrl = this.baseUrl;
+      if (this.scenario) viewer.scenario = this.scenario;
+      viewer.onClose = () => this._toggleYaml();
+      viewer.onDetach = () => this._detachYaml();
+      document.body.appendChild(viewer);
+      this._yamlViewer = viewer;
+    }
+    this._yamlViewer.style.display = 'block';
+  }
+
+  private _hideYamlViewer(): void {
+    if (this._yamlViewer) {
+      this._yamlViewer.style.display = 'none';
+    }
+  }
+
+  private _detachYaml(): void {
+    const base = this._conn?.restBase ?? this.baseUrl ?? window.location.origin;
+    const scenario = this.scenario ?? this._conn?.state.scenario ?? '';
+    const url = `${base}/scenario/yaml-viewer?baseUrl=${encodeURIComponent(base)}&scenario=${encodeURIComponent(scenario)}`;
+    this._popoutWindow = window.open(url, 'yaml-viewer', 'width=400,height=600');
+    this._hideYamlViewer();
+    this._yamlOpen = false;
+    if (this._popoutPoll) clearInterval(this._popoutPoll);
+    this._popoutPoll = setInterval(() => {
+      if (this._popoutWindow?.closed) {
+        this._popoutWindow = null;
+        if (this._popoutPoll) {
+          clearInterval(this._popoutPoll);
+          this._popoutPoll = null;
+        }
+      }
+    }, 500);
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._yamlViewer?.parentNode) {
+      this._yamlViewer.parentNode.removeChild(this._yamlViewer);
+      this._yamlViewer = null;
+    }
+    if (this._popoutPoll) {
+      clearInterval(this._popoutPoll);
+      this._popoutPoll = null;
+    }
   }
 
   private _dragOffset = { x: 0, y: 0 };
