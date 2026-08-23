@@ -22,10 +22,13 @@ export class PagesScenarioYamlViewer extends LitElement {
       box-shadow: 0 8px 24px rgba(0,0,0,0.4);
       color: #e2e8f0;
       width: 360px;
-      max-height: 60vh;
+      height: 50vh;
+      min-width: 240px;
+      min-height: 200px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      resize: both;
     }
     .viewer-header {
       display: flex;
@@ -109,6 +112,8 @@ export class PagesScenarioYamlViewer extends LitElement {
 
   onClose?: () => void;
   onDetach?: () => void;
+  onDragMove?: (left: number, top: number) => void;
+  onDragEnd?: () => void;
 
   protected override firstUpdated(): void {
     this._conn = new ScenarioConnectionController(this, {
@@ -215,17 +220,28 @@ export class PagesScenarioYamlViewer extends LitElement {
   };
 
   private _onDragMove = (e: PointerEvent): void => {
-    this.style.left = `${e.clientX - this._dragOffset.x}px`;
-    this.style.top = `${e.clientY - this._dragOffset.y}px`;
+    const left = e.clientX - this._dragOffset.x;
+    const top = e.clientY - this._dragOffset.y;
+    this.style.left = `${left}px`;
+    this.style.top = `${top}px`;
     this.style.right = 'auto';
     this.style.bottom = 'auto';
+    this.onDragMove?.(left, top);
   };
 
   private _onDragEnd = (e: PointerEvent): void => {
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     (e.currentTarget as HTMLElement).removeEventListener('pointermove', this._onDragMove);
     (e.currentTarget as HTMLElement).removeEventListener('pointerup', this._onDragEnd);
+    this.onDragEnd?.();
   };
+
+  setPosition(left: number, top: number): void {
+    this.style.left = `${left}px`;
+    this.style.top = `${top}px`;
+    this.style.right = 'auto';
+    this.style.bottom = 'auto';
+  }
 }
 
 if (!customElements.get('pages-scenario-yaml-viewer')) {

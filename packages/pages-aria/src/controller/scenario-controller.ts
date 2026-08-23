@@ -159,6 +159,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _yamlViewer: PagesScenarioYamlViewer | null = null;
   private _popoutWindow: Window | null = null;
   private _popoutPoll: ReturnType<typeof setInterval> | null = null;
+  private _snapped = true;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -350,6 +351,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
         <div class="compact-header" @pointerdown=${this._onDragStart}>
           <span class="scenario-name">${name}</span>
           <button aria-label="Toggle source" @click=${() => this._toggleYaml()}>&lt;/&gt;</button>
+          ${this._yamlOpen && this._snapped ? html`<button aria-label="Unsnap viewer" @click=${() => this._unsnapViewer()} title="Unlink panels">🔗</button>` : nothing}
           <button aria-label="Collapse" @click=${() => { this._expanded = false; }}>✕</button>
         </div>
         <div class="compact-body">
@@ -414,10 +416,57 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       if (this.scenario) viewer.scenario = this.scenario;
       viewer.onClose = () => this._toggleYaml();
       viewer.onDetach = () => this._detachYaml();
+      viewer.onDragMove = (left: number, top: number) => this._onViewerDrag(left, top);
+      viewer.onDragEnd = () => this._onViewerDragEnd();
       document.body.appendChild(viewer);
       this._yamlViewer = viewer;
+      this._snapped = true;
     }
     this._yamlViewer.style.display = 'block';
+    this._snapViewerToController();
+  }
+
+  private _snapViewerToController(): void {
+    if (!this._yamlViewer) return;
+    const hostRect = this.getBoundingClientRect();
+    const viewerRect = this._yamlViewer.getBoundingClientRect();
+    const left = hostRect.left - viewerRect.width - 8;
+    const top = hostRect.top;
+    this._yamlViewer.setPosition(left, top);
+    this._snapped = true;
+  }
+
+  private _onViewerDrag(left: number, _top: number): void {
+    if (!this._snapped) return;
+    const hostRect = this.getBoundingClientRect();
+    const viewerRect = this._yamlViewer!.getBoundingClientRect();
+    const gap = hostRect.left - (left + viewerRect.width);
+    if (Math.abs(gap - 8) > 30) {
+      this._snapped = false;
+      return;
+    }
+    this.style.left = `${left + viewerRect.width + 8}px`;
+    this.style.top = `${_top}px`;
+    this.style.right = 'auto';
+    this.style.bottom = 'auto';
+  }
+
+  private _onViewerDragEnd(): void {
+    this._trySnap();
+  }
+
+  private _trySnap(): void {
+    if (!this._yamlViewer || this._snapped) return;
+    const hostRect = this.getBoundingClientRect();
+    const viewerRect = this._yamlViewer.getBoundingClientRect();
+    const gap = hostRect.left - (viewerRect.left + viewerRect.width);
+    if (Math.abs(gap) < 30 && Math.abs(hostRect.top - viewerRect.top) < 30) {
+      this._snapViewerToController();
+    }
+  }
+
+  private _unsnapViewer(): void {
+    this._snapped = false;
   }
 
   private _hideYamlViewer(): void {
@@ -429,7 +478,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _detachYaml(): void {
     const base = this._conn?.restBase ?? this.baseUrl ?? window.location.origin;
     const scenario = this.scenario ?? this._conn?.state.scenario ?? '';
-    const url = `${base}/scenario/yaml-viewer?baseUrl=${encodeURIComponent(base)}&scenario=${encodeURIComponent(scenario)}`;
+    const url = `${base}/scenario/yaml-viewer.html?baseUrl=${encodeURIComponent(base)}&scenario=${encodeURIComponent(scenario)}`;
     this._popoutWindow = window.open(url, 'yaml-viewer', 'width=400,height=600');
     this._hideYamlViewer();
     this._yamlOpen = false;
@@ -469,16 +518,23 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   };
 
   private _onDragMove = (e: PointerEvent): void => {
-    this.style.left = `${e.clientX - this._dragOffset.x}px`;
-    this.style.top = `${e.clientY - this._dragOffset.y}px`;
+    const left = e.clientX - this._dragOffset.x;
+    const top = e.clientY - this._dragOffset.y;
+    this.style.left = `${left}px`;
+    this.style.top = `${top}px`;
     this.style.right = 'auto';
     this.style.bottom = 'auto';
+    if (this._snapped && this._yamlViewer) {
+      const viewerWidth = this._yamlViewer.getBoundingClientRect().width;
+      this._yamlViewer.setPosition(left - viewerWidth - 8, top);
+    }
   };
 
   private _onDragEnd = (e: PointerEvent): void => {
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     (e.currentTarget as HTMLElement).removeEventListener('pointermove', this._onDragMove);
     (e.currentTarget as HTMLElement).removeEventListener('pointerup', this._onDragEnd);
+    this._trySnap();
   };
 }
 
