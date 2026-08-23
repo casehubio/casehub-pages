@@ -74,7 +74,8 @@ export class PagesScenarioYamlViewer extends LitElement {
       font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 11px;
       line-height: 1.6;
-      white-space: pre;
+      white-space: pre-wrap;
+      word-break: break-word;
       display: flex;
     }
     .yaml-line.active {
@@ -96,12 +97,27 @@ export class PagesScenarioYamlViewer extends LitElement {
     .yaml-literal { color: #fbbf24; }
     .yaml-punct { color: #94a3b8; }
     .yaml-plain { color: #e2e8f0; }
+
+    :host([mode="standalone"]) {
+      position: static;
+      width: 100%;
+      height: 100%;
+    }
+    :host([mode="standalone"]) .viewer-card {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      border-radius: 0;
+      box-shadow: none;
+      resize: none;
+    }
   `;
 
   @property({ attribute: false }) connection?: EventConnection;
   @property({ attribute: false }) eventTarget?: EventTarget;
   @property({ attribute: 'baseurl' }) baseUrl?: string;
   @property() scenario?: string;
+  @property({ reflect: true }) mode: 'floating' | 'standalone' = 'floating';
 
   @state() private _yamlSource = '';
   @state() private _activeStep: string | null = null;

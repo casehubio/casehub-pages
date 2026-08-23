@@ -159,7 +159,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _yamlViewer: PagesScenarioYamlViewer | null = null;
   private _popoutWindow: Window | null = null;
   private _popoutPoll: ReturnType<typeof setInterval> | null = null;
-  @state() private _snapped = true;
+  @state() private _docked = true;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -351,7 +351,10 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
         <div class="compact-header" @pointerdown=${this._onDragStart}>
           <span class="scenario-name">${name}</span>
           <button aria-label="Toggle source" @click=${() => this._toggleYaml()}>&lt;/&gt;</button>
-          ${this._yamlOpen && this._snapped ? html`<button aria-label="Unsnap viewer" @click=${() => this._unsnapViewer()} title="Unlink panels">🔗</button>` : nothing}
+          ${this._yamlOpen ? (this._docked
+            ? html`<button aria-label="Undock viewer" @click=${() => this._undockViewer()} title="Undock panels">⊟</button>`
+            : html`<button aria-label="Dock viewer" @click=${() => this._dockViewer()} title="Dock panels">⊞</button>`
+          ) : nothing}
           <button aria-label="Collapse" @click=${() => { this._expanded = false; }}>✕</button>
         </div>
         <div class="compact-body">
@@ -420,7 +423,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       viewer.onDragEnd = () => this._onViewerDragEnd();
       document.body.appendChild(viewer);
       this._yamlViewer = viewer;
-      this._snapped = true;
+      this._docked = true;
     }
     this._yamlViewer.style.display = 'block';
     requestAnimationFrame(() => {
@@ -436,16 +439,16 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     const left = hostRect.left - viewerWidth - 8;
     const top = hostRect.top;
     this._yamlViewer.setPosition(left, top);
-    this._snapped = true;
+    this._docked = true;
   }
 
   private _onViewerDrag(left: number, _top: number): void {
-    if (!this._snapped) return;
+    if (!this._docked) return;
     const hostRect = this.getBoundingClientRect();
     const viewerRect = this._yamlViewer!.getBoundingClientRect();
     const gap = hostRect.left - (left + viewerRect.width);
     if (Math.abs(gap - 8) > 30) {
-      this._snapped = false;
+      this._docked = false;
       return;
     }
     this.style.left = `${left + viewerRect.width + 8}px`;
@@ -459,7 +462,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _trySnap(): void {
-    if (!this._yamlViewer || this._snapped) return;
+    if (!this._yamlViewer || this._docked) return;
     const hostRect = this.getBoundingClientRect();
     const viewerRect = this._yamlViewer.getBoundingClientRect();
     const gap = hostRect.left - (viewerRect.left + viewerRect.width);
@@ -468,8 +471,12 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     }
   }
 
-  private _unsnapViewer(): void {
-    this._snapped = false;
+  private _undockViewer(): void {
+    this._docked = false;
+  }
+
+  private _dockViewer(): void {
+    this._snapViewerToController();
   }
 
   private _hideYamlViewer(): void {
@@ -527,7 +534,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     this.style.top = `${top}px`;
     this.style.right = 'auto';
     this.style.bottom = 'auto';
-    if (this._snapped && this._yamlViewer) {
+    if (this._docked && this._yamlViewer) {
       const viewerWidth = this._yamlViewer.getBoundingClientRect().width;
       this._yamlViewer.setPosition(left - viewerWidth - 8, top);
     }

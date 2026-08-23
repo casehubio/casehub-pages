@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { EventConnection } from '@casehubio/pages-data';
 import './scenario-controller.js';
+import './scenario-yaml-viewer.js';
 import type { PagesScenarioController } from './scenario-controller.js';
 
 function mockConnection(): EventConnection {
@@ -249,7 +250,7 @@ describe('pages-scenario-controller', () => {
 
     const viewer = document.querySelector('pages-scenario-yaml-viewer');
     expect(viewer).not.toBeNull();
-    expect((el as any)._snapped).toBe(true);
+    expect((el as any)._docked).toBe(true);
     expect((el as any)._yamlOpen).toBe(true);
 
     toggleBtn.click();
@@ -261,7 +262,7 @@ describe('pages-scenario-controller', () => {
     viewer?.remove();
   });
 
-  it('shows unsnap button when yaml viewer is open and snapped', async () => {
+  it('shows undock button when yaml viewer is open and docked', async () => {
     const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
     el.mode = 'compact';
     el.baseUrl = 'http://localhost:8080';
@@ -275,15 +276,46 @@ describe('pages-scenario-controller', () => {
     toggleBtn.click();
     await el.updateComplete;
 
-    const unsnapBtn = el.shadowRoot?.querySelector('[aria-label="Unsnap viewer"]');
-    expect(unsnapBtn).not.toBeNull();
+    const undockBtn = el.shadowRoot?.querySelector('[aria-label="Undock viewer"]');
+    expect(undockBtn).not.toBeNull();
 
-    unsnapBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    undockBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await el.updateComplete;
-    expect((el as any)._snapped).toBe(false);
+    expect((el as any)._docked).toBe(false);
 
-    const unsnapBtnAfter = el.shadowRoot?.querySelector('[aria-label="Unsnap viewer"]');
-    expect(unsnapBtnAfter).toBeNull();
+    const undockBtnAfter = el.shadowRoot?.querySelector('[aria-label="Undock viewer"]');
+    expect(undockBtnAfter).toBeNull();
+
+    const dockBtn = el.shadowRoot?.querySelector('[aria-label="Dock viewer"]');
+    expect(dockBtn).not.toBeNull();
+
+    el.remove();
+    document.querySelector('pages-scenario-yaml-viewer')?.remove();
+  });
+
+  it('re-docks viewer when dock button clicked', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    el.mode = 'compact';
+    el.baseUrl = 'http://localhost:8080';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }));
+    document.body.appendChild(el);
+    await el.updateComplete;
+    (el as any)._expanded = true;
+    await el.updateComplete;
+
+    const toggleBtn = el.shadowRoot?.querySelector('[aria-label="Toggle source"]') as HTMLButtonElement;
+    toggleBtn.click();
+    await el.updateComplete;
+
+    (el as any)._docked = false;
+    await el.updateComplete;
+
+    const dockBtn = el.shadowRoot?.querySelector('[aria-label="Dock viewer"]') as HTMLButtonElement;
+    expect(dockBtn).not.toBeNull();
+    dockBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await el.updateComplete;
+
+    expect((el as any)._docked).toBe(true);
 
     el.remove();
     document.querySelector('pages-scenario-yaml-viewer')?.remove();
