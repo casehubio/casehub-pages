@@ -55,7 +55,7 @@ export { PagesCountdown } from "./components/PagesCountdown.js";
 export { PagesGroupedView } from "./components/grouped-view/PagesGroupedView.js";
 export { PagesLegend } from "./components/PagesLegend.js";
 export { PagesEventTimeline } from "./components/PagesEventTimeline.js";
-export type { EventTimelineNode, EventTimelineStrategy, EventNodeStatus } from "./components/event-timeline-types.js";
+export type { EventTimelineNode, EventTimelineStrategy, EventNodeStatus, PaginationMeta } from "./components/event-timeline-types.js";
 export type { EventTimelineLayout } from "@casehubio/pages-component";
 export { renderVerticalTimeline, verticalTimelineStyles } from "./components/event-timeline/renderers/vertical.js";
 export type { VerticalTimelineOptions } from "./components/event-timeline/renderers/vertical.js";

@@ -205,4 +205,70 @@ describe("PagesEventTimeline", () => {
     expect(strip!.getAttribute("role")).toBe("img");
     expect(strip!.getAttribute("aria-label")).toContain("3 events");
   });
+
+  it("renders nodes from data prop in standalone mode (no props)", async () => {
+    el.strategy = testStrategy;
+    el.data = testNodes;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const nodes = el.shadowRoot!.querySelectorAll(".timeline-node");
+    expect(nodes.length).toBe(3);
+  });
+
+  it("uses layout property in standalone mode", async () => {
+    el.strategy = { toNodes: (d: EventTimelineNode[]) => d, defaultLayout: "vertical" };
+    el.data = testNodes;
+    el.layout = "horizontal";
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const pipeline = el.shadowRoot!.querySelector(".pipeline");
+    expect(pipeline).not.toBeNull();
+    expect(pipeline!.getAttribute("role")).toBe("list");
+  });
+
+  it("resolves renderNode from component property over strategy", async () => {
+    let calledWith: string | undefined;
+    const customRenderNode = (node: EventTimelineNode) => {
+      calledWith = node.key;
+      return undefined;
+    };
+    el.strategy = testStrategy;
+    el.data = [testNodes[0]!];
+    el.renderNode = customRenderNode;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(calledWith).toBe("1");
+  });
+
+  it("configure sets endpoint and strategy", () => {
+    const s: EventTimelineStrategy = { toNodes: () => [], defaultLayout: "vertical" };
+    el.configure({ endpoint: "/api/events", strategy: s, layout: "compact" });
+    expect(el.endpoint).toBe("/api/events");
+    expect(el.strategy).toBe(s);
+    expect(el.layout).toBe("compact");
+  });
+
+  it("shows loading state in self-fetch mode", async () => {
+    el.strategy = testStrategy;
+    el.endpoint = "/api/events";
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const container = el.shadowRoot!.querySelector(".timeline-container");
+    expect(container).not.toBeNull();
+    expect(container!.textContent).toContain("Loading timeline");
+  });
+
+  it("renders ARIA attributes on host", async () => {
+    el.strategy = testStrategy;
+    el.data = testNodes;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(el.getAttribute("role")).toBe("region");
+    expect(el.getAttribute("aria-label")).toBe("Event timeline");
+  });
 });

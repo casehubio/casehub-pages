@@ -1,11 +1,11 @@
-import { html, css, nothing, type TemplateResult } from "lit";
+import { html, css, nothing, type TemplateResult, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
-import type { EventTimelineProps } from "@casehubio/pages-component";
+import type { EventTimelineProps, EventTimelineLayout } from "@casehubio/pages-component";
 import { emitPagesEvent } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
-import type { EventTimelineNode, EventTimelineStrategy } from "./event-timeline-types.js";
+import type { EventTimelineNode, EventTimelineStrategy, PaginationMeta } from "./event-timeline-types.js";
 import { renderVerticalTimeline, verticalTimelineStyles } from "./event-timeline/renderers/vertical.js";
 import { renderHorizontalTimeline, horizontalTimelineStyles } from "./event-timeline/renderers/horizontal.js";
 import { renderCompactTimeline, compactTimelineStyles } from "./event-timeline/renderers/compact.js";
@@ -33,12 +33,25 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
   @property({ attribute: false }) strategy?: EventTimelineStrategy;
   @property({ attribute: false }) data?: unknown;
   @property({ attribute: false }) activeFilters?: Set<string> | string[];
+  @property({ attribute: false }) renderNode?: (node: EventTimelineNode) => unknown;
+  @property({ attribute: false }) renderDetail?: (node: EventTimelineNode) => unknown;
+  @property() layout?: EventTimelineLayout;
+
+  @property({ type: String }) endpoint?: string;
+  @property({ attribute: false }) headers?: Record<string, string> | (() => Record<string, string>);
+  @property({ type: Number }) pageSize = 20;
 
   @state() private _nodes: EventTimelineNode[] = [];
   @state() private _expandedKeys = new Set<string>();
   @state() private _internalFilters: Set<string> | null = null;
+  @state() private _selfFetchLoading = false;
+  @state() private _selfFetchError = "";
+  @state() private _paginationMeta: PaginationMeta | undefined = undefined;
+  @state() private _loadingMore = false;
 
   private _lastData: unknown = undefined;
+  private _paginatedEndpoint: string | undefined = undefined;
+  private _paginatedPageSize = 0;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -50,6 +63,23 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     :host { display: block; font-family: var(--pages-font-family, system-ui); color: var(--pages-neutral-12, #111); }
     .timeline-container { padding: 16px; }
     .empty-state { text-align: center; padding: 24px; color: var(--pages-neutral-9, #6b7280); }
+    .error-message { color: var(--pages-error-11, #dc2626); margin-bottom: 12px; }
+    .pagination-footer {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; padding: 16px; margin-top: 8px;
+    }
+    .pagination-progress { font-size: 13px; color: var(--pages-neutral-9, #6b7280); }
+    .load-more-button {
+      padding: 8px 16px;
+      border: 1px solid var(--pages-accent-7, #3b82f6);
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-accent-9, #2563eb);
+      border-radius: var(--pages-radius-sm, 4px);
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      transition: background 0.2s;
+    }
+    .load-more-button:hover { background: var(--pages-accent-3, #dbeafe); }
+    .load-more-button:disabled { cursor: default; opacity: 0.6; }
     ${verticalTimelineStyles}
     ${horizontalTimelineStyles}
     ${compactTimelineStyles}
@@ -60,6 +90,10 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     if (this.strategy) return this.strategy;
     const key = this.props?.strategyKey ?? "chronological";
     return PagesEventTimeline._strategyRegistry.get(key);
+  }
+
+  private get _activeLayout(): EventTimelineLayout {
+    return this.layout ?? this.props?.layout ?? this._resolveStrategy()?.defaultLayout ?? "vertical";
   }
 
   private get _resolvedFilters(): Set<string> | null {
@@ -74,6 +108,137 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     const strategy = this._resolveStrategy();
     if (!filters || !strategy?.filterCategories) return this._nodes;
     return this._nodes.filter(n => n.category == null || filters.has(n.category));
+  }
+
+  private _resolveRenderNode(): ((node: EventTimelineNode) => unknown) | undefined {
+    return this.renderNode ?? this._resolveStrategy()?.renderNode;
+  }
+
+  private _resolveRenderDetail(): ((node: EventTimelineNode) => unknown) | undefined {
+    return this.renderDetail ?? this._resolveStrategy()?.renderDetail;
+  }
+
+  private get _isSelfFetch(): boolean {
+    return !!this.endpoint && !this.props;
+  }
+
+  private get _isPaginated(): boolean {
+    return !!this._resolveStrategy()?.supportsPagination && this._isSelfFetch;
+  }
+
+  configure(props: Record<string, unknown>): void {
+    if (props.endpoint !== undefined) this.endpoint = props.endpoint as string;
+    if (props.strategy !== undefined) this.strategy = props.strategy as EventTimelineStrategy;
+    if (props.layout !== undefined) this.layout = props.layout as EventTimelineLayout;
+  }
+
+  private _resolveHeaders(): Record<string, string> {
+    const h = typeof this.headers === "function" ? this.headers() : this.headers;
+    return h ?? {};
+  }
+
+  private _buildPagedUrl(page: number): string {
+    const base = this.endpoint!;
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}page=${page}&size=${this.pageSize}`;
+  }
+
+  private async _fetchPage(page: number): Promise<void> {
+    const strategy = this._resolveStrategy();
+    if (!strategy) return;
+    const url = this._buildPagedUrl(page);
+    const headers = this._resolveHeaders();
+    try {
+      const response = await fetch(url, { headers });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const raw = await response.json();
+      const transformed = strategy.transformData ? strategy.transformData(raw) : raw;
+      const newNodes = strategy.toNodes(transformed);
+      this._nodes = page === 0 ? newNodes : [...this._nodes, ...newNodes];
+      if (strategy.extractPaginationMeta) {
+        this._paginationMeta = strategy.extractPaginationMeta(raw);
+      }
+    } catch (err) {
+      this._selfFetchError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  private async _loadMore(): Promise<void> {
+    if (!this._paginationMeta || this._loadingMore) return;
+    const nextPage = this._paginationMeta.page + 1;
+    if (nextPage >= this._paginationMeta.totalPages) return;
+    this._loadingMore = true;
+    await this._fetchPage(nextPage);
+    this._loadingMore = false;
+  }
+
+  private async _fetchEndpoint(): Promise<void> {
+    const strategy = this._resolveStrategy();
+    if (!strategy || !this.endpoint) return;
+    this._selfFetchLoading = true;
+    this._selfFetchError = "";
+    try {
+      const headers = this._resolveHeaders();
+      const response = await fetch(this.endpoint, { headers });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const raw = await response.json();
+      const transformed = strategy.transformData ? strategy.transformData(raw) : raw;
+      this._nodes = strategy.toNodes(transformed);
+    } catch (err) {
+      this._selfFetchError = err instanceof Error ? err.message : String(err);
+    } finally {
+      this._selfFetchLoading = false;
+    }
+  }
+
+  override updated(changed: PropertyValues): void {
+    super.updated(changed);
+
+    if (this._isSelfFetch) {
+      if (this._isPaginated
+          && (changed.has("endpoint") || changed.has("strategy") || changed.has("pageSize"))
+          && (this.endpoint !== this._paginatedEndpoint || this.pageSize !== this._paginatedPageSize)) {
+        this._paginatedEndpoint = this.endpoint;
+        this._paginatedPageSize = this.pageSize;
+        this._paginationMeta = undefined;
+        this._selfFetchLoading = true;
+        this._fetchPage(0).then(() => { this._selfFetchLoading = false; });
+      } else if (!this._isPaginated && (changed.has("endpoint") || changed.has("strategy"))) {
+        this._fetchEndpoint();
+      }
+    }
+
+  }
+
+  override render(): TemplateResult {
+    if (this._isSelfFetch || this.data != null) {
+      return this._renderStandaloneContent();
+    }
+    return super.render();
+  }
+
+  private _renderStandaloneContent(): TemplateResult {
+    if (this.data != null && this.data !== this._lastData) {
+      this._lastData = this.data;
+      const strategy = this._resolveStrategy();
+      if (strategy) {
+        const transformed = strategy.transformData ? strategy.transformData(this.data) : this.data;
+        this._nodes = strategy.toNodes(transformed);
+      }
+    }
+
+    if (this._nodes.length === 0 && !this._selfFetchError && this._isSelfFetch) {
+      return html`<div class="timeline-container">Loading timeline...</div>`;
+    }
+    if (this._selfFetchError && this._nodes.length === 0) {
+      return html`
+        <div class="timeline-container">
+          <div class="error-message">Failed to load timeline: ${this._selfFetchError}</div>
+          <button @click=${() => this._fetchEndpoint()}>Retry</button>
+        </div>
+      `;
+    }
+    return this._renderTimeline();
   }
 
   protected override renderContent(
@@ -92,16 +257,23 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
       this._nodes = strategy.toNodes(transformed);
     }
 
-    const layout = props.layout ?? strategy.defaultLayout ?? "vertical";
+    return this._renderTimeline();
+  }
+
+  private _renderTimeline(): TemplateResult {
+    const strategy = this._resolveStrategy();
+    const layout = this._activeLayout;
     const filtered = this._filteredNodes;
+    const renderNodeCb = this._resolveRenderNode();
+    const renderDetailCb = this._resolveRenderDetail();
 
     return html`
       <div class="timeline-container">
-        ${strategy.filterCategories && layout !== "compact"
+        ${strategy?.filterCategories && layout !== "compact"
           ? renderFilterBar(
               strategy.filterCategories,
               this._resolvedFilters ?? new Set(strategy.filterCategories),
-              (cat) => this._handleFilterToggle(cat, strategy.filterCategories!),
+              (cat) => this._handleFilterToggle(cat),
             )
           : nothing}
         ${filtered.length === 0
@@ -112,19 +284,40 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
               onNodeClick: (n, i) => this._handleNodeClick(n, i),
               onToggleExpand: (k) => this._handleToggleExpand(k),
               onKeyDown: (e, i) => this._handleVerticalKeyDown(e, i),
-              renderNode: strategy.renderNode,
-              renderDetail: strategy.renderDetail,
+              renderNode: renderNodeCb,
+              renderDetail: renderDetailCb,
             })
           : layout === "horizontal"
           ? renderHorizontalTimeline(filtered, {
               onNodeClick: (n, i) => this._handleNodeClick(n, i),
               onKeyDown: (e, i) => this._handleHorizontalKeyDown(e, i),
-              renderNode: strategy.renderNode,
+              renderNode: renderNodeCb,
             })
           : renderCompactTimeline(filtered, {
               onExpandRequested: () => emitPagesEvent(this, "event-timeline:expand-requested", {}),
               onKeyDown: () => {},
             })}
+        ${this._renderPaginationFooter()}
+      </div>
+    `;
+  }
+
+  private _renderPaginationFooter(): TemplateResult | typeof nothing {
+    if (!this._paginationMeta || this._activeLayout !== "vertical") return nothing;
+    const { page, totalPages, totalElements } = this._paginationMeta;
+    const hasMore = page + 1 < totalPages;
+    if (!hasMore && this._nodes.length >= totalElements) return nothing;
+
+    return html`
+      <div class="pagination-footer">
+        <span class="pagination-progress">Showing ${this._nodes.length} of ${totalElements} events</span>
+        ${hasMore ? html`
+          <button class="load-more-button"
+                  ?disabled=${this._loadingMore}
+                  @click=${() => this._loadMore()}>
+            ${this._loadingMore ? "Loading…" : "Load more"}
+          </button>
+        ` : nothing}
       </div>
     `;
   }
@@ -157,7 +350,9 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
     });
   }
 
-  private _handleFilterToggle(category: string, allCategories: string[]): void {
+  private _handleFilterToggle(category: string): void {
+    const strategy = this._resolveStrategy();
+    const allCategories = strategy?.filterCategories ?? [];
     const current = this._resolvedFilters ?? new Set(allCategories);
     const next = new Set(current);
     if (next.has(category)) {
