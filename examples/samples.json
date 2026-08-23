@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 75,
+  "totalSamples": 79,
   "categories": [
     {
       "category": "Charts",
@@ -29,6 +29,12 @@
           "path": "Charts/ECharts Custom.dash.yaml",
           "category": "Charts",
           "file": "ECharts Custom.dash.yaml"
+        },
+        {
+          "name": "Event Timeline",
+          "path": "Charts/Event Timeline.dash.yaml",
+          "category": "Charts",
+          "file": "Event Timeline.dash.yaml"
         },
         {
           "name": "Heatmap",
@@ -523,6 +529,31 @@
           "file": "Workforce Analytics.dash.yaml"
         }
       ]
+    },
+    {
+      "category": "Server",
+      "samples": [
+        {
+          "name": "Live Event Stream",
+          "path": "Server/Live Event Stream.dash.yaml",
+          "category": "Server",
+          "file": "Live Event Stream.dash.yaml"
+        },
+        {
+          "name": "Multi-Topic Dashboard",
+          "path": "Server/Multi-Topic Dashboard.dash.yaml",
+          "category": "Server",
+          "file": "Multi-Topic Dashboard.dash.yaml"
+        },
+        {
+          "name": "Reconnect Replay",
+          "path": "Server/Reconnect Replay.dash.yaml",
+          "category": "Server",
+          "file": "Reconnect Replay.dash.yaml",
+          "tsPath": "Server/Reconnect Replay.ts"
+        }
+      ],
+      "requiresServer": true
     }
   ]
 }
