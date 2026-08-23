@@ -1,4 +1,5 @@
-import { click, fill, select, expand, collapse, assertState, waitFor } from '../executor/index.js';
+import { click, fill, select, expand, collapse, assertState, waitFor, resolveTarget } from '../executor/index.js';
+import { injectStyles, highlightElement, typeText } from '../executor/visual-feedback.js';
 import type { AriaTarget, AriaState } from '@casehubio/pages-primitives';
 import type { EventConnection } from '@casehubio/pages-data';
 
@@ -84,25 +85,42 @@ function sendStepResult(
 function executeAriaCommand(cmd: ScenarioCommand): void | Promise<void> {
   const { action, target, value, state, timeout } = cmd;
 
+  injectStyles();
+
   switch (action) {
     case 'navigate':
       window.location.href = value!;
       return;
-    case 'click':
-      click(target!);
+    case 'click': {
+      const el = resolveTarget(target!);
+      highlightElement(el, 'click');
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       return;
-    case 'fill':
-      fill(target!, value!);
+    }
+    case 'fill': {
+      const el = resolveTarget(target!) as HTMLInputElement | HTMLTextAreaElement;
+      highlightElement(el, 'fill');
+      return typeText(el, value!);
+    }
+    case 'select': {
+      const el = resolveTarget(target!) as HTMLSelectElement;
+      highlightElement(el, 'select');
+      el.value = value!;
+      el.dispatchEvent(new Event('change', { bubbles: true }));
       return;
-    case 'select':
-      select(target!, value!);
+    }
+    case 'expand': {
+      const el = resolveTarget(target!);
+      highlightElement(el, 'click');
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       return;
-    case 'expand':
-      expand(target!);
+    }
+    case 'collapse': {
+      const el = resolveTarget(target!);
+      highlightElement(el, 'click');
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       return;
-    case 'collapse':
-      collapse(target!);
-      return;
+    }
     case 'assert':
       assertState(target!, toAriaState(state!));
       return;

@@ -69,7 +69,7 @@ describe('ScenarioHandler', () => {
     handler.dispose();
   });
 
-  it('executes fill command', () => {
+  it('executes fill command', async () => {
     const conn = mockConnection();
     const handler = createScenarioHandler(conn, eventTarget);
 
@@ -85,7 +85,10 @@ describe('ScenarioHandler', () => {
       value: 'Alice',
     });
 
-    expect(input.value).toBe('Alice');
+    await vi.waitFor(() => {
+      expect(input.value).toBe('Alice');
+    });
+
     expect(conn.commandResults[0]).toEqual({
       op: 'command-result',
       id: 'cmd-2',
