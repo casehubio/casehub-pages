@@ -202,7 +202,7 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
         this._paginatedPageSize = this.pageSize;
         this._paginationMeta = undefined;
         this._selfFetchLoading = true;
-        this._fetchPage(0).then(() => { this._selfFetchLoading = false; });
+        this._fetchPage(0).finally(() => { this._selfFetchLoading = false; });
       } else if (!this._isPaginated && (changed.has("endpoint") || changed.has("strategy"))) {
         this._fetchEndpoint();
       }
