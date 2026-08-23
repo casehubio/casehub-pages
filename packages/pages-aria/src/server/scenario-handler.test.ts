@@ -284,6 +284,99 @@ describe('ScenarioHandler sequence protocol', () => {
     handler.dispose();
   });
 
+  it('fill command in dispatch-sequence actually changes DOM value', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    const input = document.createElement('input');
+    input.setAttribute('role', 'textbox');
+    input.setAttribute('aria-label', 'Your name');
+    document.body.appendChild(input);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-fill',
+        steps: [{
+          name: 'fill-name',
+          label: 'Fill name',
+          commands: [{
+            action: 'fill',
+            target: { role: 'textbox', name: 'Your name' },
+            value: 'Alice',
+          }],
+        }],
+        speed: 1000,
+        paused: false,
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const results = conn.sent.filter(
+        (m) => (m as Record<string, unknown>).op === 'step-result');
+      expect(results).toHaveLength(1);
+    });
+
+    expect(input.value).toBe('Alice');
+
+    const result = conn.sent.find(
+      (m) => (m as Record<string, unknown>).op === 'step-result') as Record<string, unknown>;
+    expect(result.ok).toBe(true);
+    expect(result.stepName).toBe('fill-name');
+
+    document.body.removeChild(input);
+  });
+
+  it('paused dispatch does not execute until step command', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    const input = document.createElement('input');
+    input.setAttribute('role', 'textbox');
+    input.setAttribute('aria-label', 'Test field');
+    document.body.appendChild(input);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-paused',
+        steps: [{
+          name: 'fill-paused',
+          label: 'Fill paused',
+          commands: [{
+            action: 'fill',
+            target: { role: 'textbox', name: 'Test field' },
+            value: 'Stepped',
+          }],
+        }],
+        speed: 1000,
+        paused: true,
+      },
+    }));
+
+    await new Promise((r) => setTimeout(r, 100));
+    expect(input.value).toBe('');
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: {
+        op: 'executor-control',
+        sessionId: 's-paused',
+        command: 'step',
+      },
+    }));
+
+    await vi.waitFor(() => {
+      expect(input.value).toBe('Stepped');
+    });
+
+    const result = conn.sent.find(
+      (m) => (m as Record<string, unknown>).op === 'step-result') as Record<string, unknown>;
+    expect(result.ok).toBe(true);
+    expect(result.stepName).toBe('fill-paused');
+
+    document.body.removeChild(input);
+  });
+
   it('reports error for failing command in step', async () => {
     const conn = mockConnection();
     createScenarioHandler(conn, eventTarget);
