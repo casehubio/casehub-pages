@@ -377,7 +377,6 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _renderDemoActions(): TemplateResult {
     const s = this._conn?.state;
     const hasScenario = !!s?.scenario;
-    const isDone = hasScenario && s!.progress >= 1.0;
 
     if (!this.scenario) return html``;
 
@@ -386,12 +385,9 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
         <button class="demo-btn demo-btn-start" @click=${() => void this._startDemo()}>Start Demo</button>
       </div>`;
     }
-    if (isDone) {
-      return html`<div class="demo-actions">
-        <button class="demo-btn demo-btn-restart" @click=${() => void this._restartDemo()}>Restart</button>
-      </div>`;
-    }
-    return html``;
+    return html`<div class="demo-actions">
+      <button class="demo-btn demo-btn-restart" @click=${() => void this._restartDemo()}>Reset</button>
+    </div>`;
   }
 
   private _dragOffset = { x: 0, y: 0 };
