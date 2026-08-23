@@ -46,11 +46,15 @@ public class ScenarioOrchestrator {
     }
 
     public void start(String yaml) {
+        start(yaml, false);
+    }
+
+    public void start(String yaml, boolean startPaused) {
         this.scenario  = HierarchicalParser.parse(yaml);
         this.allSteps  = scenario.allSteps().toList();
         this.sessionId = UUID.randomUUID().toString();
         this.completedSteps.clear();
-        this.paused      = false;
+        this.paused      = startPaused;
         this.speed       = scenario.speed();
         this.runToTarget = null;
 

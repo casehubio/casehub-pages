@@ -13,14 +13,14 @@ public class ScenarioControlResource {
     @Inject
     ScenarioOrchestrator orchestrator;
 
-    public record StartRequest(String yaml) {}
+    public record StartRequest(String yaml, boolean paused) {}
     public record RunToRequest(String label) {}
     public record SpeedRequest(double speed) {}
 
     @POST
     @Path("/start")
     public ScenarioState start(StartRequest req) {
-        orchestrator.start(req.yaml());
+        orchestrator.start(req.yaml(), req.paused());
         return orchestrator.state();
     }
 

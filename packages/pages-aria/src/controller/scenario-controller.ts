@@ -126,12 +126,27 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     :host([mode="compact"]) .connection-status.disconnected { color: #f87171; }
     :host([mode="compact"]) .speed-label { color: #94a3b8; }
     :host([mode="compact"]) .progress { color: #38bdf8; }
+
+    .demo-actions { display: flex; gap: var(--pages-space-2, 8px); padding: var(--pages-space-2, 8px); }
+    .demo-btn {
+      flex: 1; padding: var(--pages-space-2, 8px);
+      border: none; border-radius: var(--pages-radius-sm, 4px);
+      font-size: var(--pages-font-size-sm, 12px); font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .demo-btn-start { background: #2563eb; color: white; }
+    .demo-btn-start:hover { background: #1d4ed8; }
+    .demo-btn-restart { background: #334155; color: #e2e8f0; }
+    .demo-btn-restart:hover { background: #475569; }
+    :host(:not([mode="compact"])) .demo-btn-start { background: var(--pages-accent-9, #2563eb); color: white; }
+    :host(:not([mode="compact"])) .demo-btn-restart { background: var(--pages-neutral-4, #e5e5e5); color: var(--pages-neutral-12, #1a1a1a); }
   `;
 
   @property({ attribute: false }) connection?: EventConnection;
   @property({ attribute: false }) eventTarget?: EventTarget;
   @property() baseUrl?: string;
   @property({ reflect: true }) mode: 'full' | 'compact' = 'full';
+  @property() scenario?: string;
 
   @state() private _expanded = false;
 
@@ -203,6 +218,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     }
     return html`
       ${this._renderOutline()}
+      ${this._renderDemoActions()}
       ${this._renderTransport()}
       ${this._renderStatus()}
     `;
@@ -333,10 +349,49 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
         <div class="compact-body">
           ${this._renderOutline()}
         </div>
+        ${this._renderDemoActions()}
         ${this._renderTransport()}
         ${this._renderStatus()}
       </div>
     `;
+  }
+
+  private async _startDemo(): Promise<void> {
+    if (!this.scenario || !this._conn) return;
+    try {
+      const resp = await fetch(`${this._conn.restBase}/scenarios/${this.scenario}.yaml`);
+      if (!resp.ok) return;
+      const yaml = await resp.text();
+      await this._conn.sendCommand('/start', { yaml, paused: true });
+    } catch { /* ignore */ }
+  }
+
+  private async _restartDemo(): Promise<void> {
+    if (!this._conn) return;
+    try {
+      await this._conn.sendCommand('/reset');
+      window.location.reload();
+    } catch { /* ignore */ }
+  }
+
+  private _renderDemoActions(): TemplateResult {
+    const s = this._conn?.state;
+    const hasScenario = !!s?.scenario;
+    const isDone = hasScenario && s!.progress >= 1.0;
+
+    if (!this.scenario) return html``;
+
+    if (!hasScenario) {
+      return html`<div class="demo-actions">
+        <button class="demo-btn demo-btn-start" @click=${() => void this._startDemo()}>Start Demo</button>
+      </div>`;
+    }
+    if (isDone) {
+      return html`<div class="demo-actions">
+        <button class="demo-btn demo-btn-restart" @click=${() => void this._restartDemo()}>Restart</button>
+      </div>`;
+    }
+    return html``;
   }
 
   private _dragOffset = { x: 0, y: 0 };
