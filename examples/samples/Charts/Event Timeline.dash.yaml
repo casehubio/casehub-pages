@@ -26,13 +26,18 @@ datasets:
 
 pages:
   - components:
-      - type: title
-        properties:
-          text: Event Timeline
-          size: h3
       - type: event-timeline
         properties:
-          title: Case Activity
           layout: vertical
+          lookup:
+            uuid: events
+      - type: event-timeline
+        properties:
+          layout: horizontal
+          lookup:
+            uuid: events
+      - type: event-timeline
+        properties:
+          layout: compact
           lookup:
             uuid: events
