@@ -367,7 +367,7 @@ body {
     display: flex;
     flex-direction: row;
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .sample-content-wrapper {

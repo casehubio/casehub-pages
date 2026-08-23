@@ -4,11 +4,8 @@ datasets:
       [
         ["1", "Case Started", "completed", "2026-01-15T09:00:00Z", "System", "lifecycle"],
         ["2", "Task Created", "completed", "2026-01-15T09:05:00Z", "Alice", "task"],
-        ["3", "Agent Dispatched", "completed", "2026-01-15T09:10:00Z", "System", "task"],
-        ["4", "Processing", "active", "2026-01-15T09:30:00Z", "Bob", "task"],
-        ["5", "Review Pending", "pending", "", "", "gate"],
-        ["6", "Approval Gate", "pending", "", "", "gate"],
-        ["7", "Archive", "skipped", "", "", "lifecycle"]
+        ["3", "Processing", "active", "2026-01-15T09:30:00Z", "Bob", "task"],
+        ["4", "Review Pending", "pending", "", "", "gate"]
       ]
     columns:
       - id: key
