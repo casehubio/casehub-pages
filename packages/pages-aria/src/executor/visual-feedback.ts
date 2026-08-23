@@ -27,7 +27,7 @@ export function injectStyles(): void {
   document.head.appendChild(style);
 }
 
-export function highlightElement(el: Element, _type: 'click' | 'fill' | 'select'): void {
+export function highlightElement(el: Element, type: 'click' | 'fill' | 'select'): void {
   el.classList.add('scenario-highlight');
   setTimeout(() => {
     el.classList.remove('scenario-highlight');

@@ -442,7 +442,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     this._docked = true;
   }
 
-  private _onViewerDrag(left: number, _top: number): void {
+  private _onViewerDrag(left: number, top: number): void {
     if (!this._docked) return;
     const hostRect = this.getBoundingClientRect();
     const viewerRect = this._yamlViewer!.getBoundingClientRect();
@@ -452,7 +452,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       return;
     }
     this.style.left = `${left + viewerRect.width + 8}px`;
-    this.style.top = `${_top}px`;
+    this.style.top = `${top}px`;
     this.style.right = 'auto';
     this.style.bottom = 'auto';
   }
@@ -489,12 +489,14 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     const base = this._conn?.restBase ?? this.baseUrl ?? window.location.origin;
     const scenario = this.scenario ?? this._conn?.state.scenario ?? '';
     const url = `${base}/scenario/yaml-viewer.html?baseUrl=${encodeURIComponent(base)}&scenario=${encodeURIComponent(scenario)}`;
-    this._popoutWindow = window.open(url, 'yaml-viewer', 'width=400,height=600');
+    const win = window.open(url, 'yaml-viewer', 'width=400,height=600');
+    if (!win) return;
+    this._popoutWindow = win;
     this._hideYamlViewer();
     this._yamlOpen = false;
     if (this._popoutPoll) clearInterval(this._popoutPoll);
     this._popoutPoll = setInterval(() => {
-      if (this._popoutWindow?.closed) {
+      if (win.closed) {
         this._popoutWindow = null;
         if (this._popoutPoll) {
           clearInterval(this._popoutPoll);
