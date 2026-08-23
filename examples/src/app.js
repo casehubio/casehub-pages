@@ -37,7 +37,6 @@ const serverStatus = document.getElementById('server-status');
 
 // Tab state
 let activeTab = 'client';
-let suppressHashChange = false;
 let loadingPath = null;
 
 // Tab switching

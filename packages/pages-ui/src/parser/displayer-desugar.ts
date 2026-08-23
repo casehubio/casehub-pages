@@ -37,6 +37,7 @@ const TYPE_MAP: Record<string, string> = {
   "HEATMAP-CHART": "heatmap-chart",
   "TREEMAP-CHART": "treemap-chart",
   "DENSITY-HEATMAP": "density-heatmap",
+  "EVENT-TIMELINE": "event-timeline",
 };
 
 /**
