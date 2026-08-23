@@ -1,6 +1,7 @@
 package io.casehub.pages.scenario.runtime;
 
 import io.casehub.pages.scenario.HierarchicalStep;
+import io.casehub.pages.scenario.Trigger;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -69,7 +70,45 @@ class SequencePartitionerTest {
         assertThat(partitions.get(3).target()).isEqualTo("helpdesk");
     }
 
+    @Test
+    void triggeredStepBreaksSequence() {
+        var steps = List.of(
+            step("load-data", "browser"),
+            triggeredStep("fill-name", "browser", "load-data"),
+            triggeredStep("fill-issue", "browser", "fill-name"),
+            triggeredStep("submit", "browser", "fill-issue")
+        );
+        var initial = SequencePartitioner.partitionInitial(steps);
+        assertThat(initial).hasSize(1);
+        assertThat(initial.getFirst().steps()).hasSize(1);
+        assertThat(initial.getFirst().steps().getFirst().label()).isEqualTo("load-data");
+    }
+
+    @Test
+    void mixedTriggeredAndUntriggeredSameTarget() {
+        var steps = List.of(
+            step("A", "browser"),
+            step("B", "browser"),
+            triggeredStep("C", "browser", "B"),
+            step("D", "helpdesk"),
+            triggeredStep("E", "helpdesk", "C")
+        );
+        var initial = SequencePartitioner.partitionInitial(steps);
+        assertThat(initial).hasSize(2);
+        assertThat(initial.get(0).target()).isEqualTo("browser");
+        assertThat(initial.get(0).steps()).extracting(HierarchicalStep::label)
+            .containsExactly("A", "B");
+        assertThat(initial.get(1).target()).isEqualTo("helpdesk");
+        assertThat(initial.get(1).steps()).extracting(HierarchicalStep::label)
+            .containsExactly("D");
+    }
+
     private static HierarchicalStep step(String label, String target) {
         return new HierarchicalStep(null, label, target, null, null, List.of());
+    }
+
+    private static HierarchicalStep triggeredStep(String label, String target, String after) {
+        return new HierarchicalStep(label, label, target, null,
+            new Trigger.AfterTrigger(after, 0), List.of());
     }
 }

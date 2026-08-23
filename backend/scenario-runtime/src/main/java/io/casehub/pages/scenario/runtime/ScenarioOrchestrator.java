@@ -168,6 +168,9 @@ public class ScenarioOrchestrator {
             return;
         }
         broadcastState();
+        if (result.ok()) {
+            dispatchTriggeredSteps(result.stepName());
+        }
     }
 
     private void broadcastState() {
@@ -187,9 +190,28 @@ public class ScenarioOrchestrator {
     }
 
     private void dispatchAllSequences() {
-        var sequences = SequencePartitioner.partition(allSteps);
+        var sequences = SequencePartitioner.partitionInitial(allSteps);
         for (var seq : sequences) {
             dispatchSequence(seq);
+        }
+    }
+
+    private void dispatchTriggeredSteps(String completedStepName) {
+        for (var step : allSteps) {
+            if (step.trigger() instanceof io.casehub.pages.scenario.Trigger.AfterTrigger after
+                    && after.step().equals(completedStepName)) {
+                long delay = after.delayMs();
+                if (delay > 0) {
+                    Thread.ofVirtual().start(() -> {
+                        try { Thread.sleep(delay); } catch (InterruptedException e) { return; }
+                        dispatchSequence(new SequencePartitioner.StepSequence(
+                            step.target(), List.of(step)));
+                    });
+                } else {
+                    dispatchSequence(new SequencePartitioner.StepSequence(
+                        step.target(), List.of(step)));
+                }
+            }
         }
     }
 

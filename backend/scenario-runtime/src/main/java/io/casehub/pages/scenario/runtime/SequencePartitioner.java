@@ -16,6 +16,10 @@ public final class SequencePartitioner {
 
     private SequencePartitioner() {}
 
+    public static List<StepSequence> partitionInitial(List<HierarchicalStep> steps) {
+        return partition(steps.stream().filter(s -> s.trigger() == null).toList());
+    }
+
     public static List<StepSequence> partition(List<HierarchicalStep> steps) {
         if (steps.isEmpty()) return List.of();
 

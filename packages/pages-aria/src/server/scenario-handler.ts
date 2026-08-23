@@ -149,17 +149,22 @@ export function createScenarioHandler(
       let stepOk = true;
       let stepError: string | null = null;
 
+      console.log(`[scenario-handler] executing step: ${step.name}, commands:`, step.commands?.length);
       for (const cmd of step.commands) {
         try {
+          console.log(`[scenario-handler]   cmd: ${cmd.action} target:`, cmd.target, 'value:', cmd.value);
           const result = executeAriaCommand(cmd);
           if (result) await result;
+          console.log(`[scenario-handler]   cmd OK`);
         } catch (err) {
+          console.error(`[scenario-handler]   cmd FAILED:`, (err as Error).message);
           stepOk = false;
           stepError = (err as Error).message;
           break;
         }
       }
 
+      console.log(`[scenario-handler] step result: ${step.name} ok=${stepOk}`);
       sendStepResult(connection, sessionId!, step.name, stepOk, stepError);
 
       if (stepQueue.length > 0 && !paused && speed < 1000) {
@@ -173,6 +178,8 @@ export function createScenarioHandler(
 
   function onDispatch(e: Event): void {
     const detail = (e as CustomEvent).detail as DispatchSequence;
+    console.log('[scenario-handler] dispatch received:', detail.steps.length, 'steps, paused:', detail.paused);
+    detail.steps.forEach((s, i) => console.log(`  step[${i}]: ${s.name}`, s.commands?.map((c: ScenarioCommand) => `${c.action}(${c.target?.name ?? c.value ?? ''})`)));
     sessionId = detail.sessionId;
     paused = detail.paused;
     speed = detail.speed;
