@@ -12,6 +12,12 @@ export interface EventTimelineNode {
   readonly category?: string;
 }
 
+export interface PaginationMeta {
+  readonly page: number;
+  readonly totalPages: number;
+  readonly totalElements: number;
+}
+
 export interface EventTimelineStrategy<T = unknown> {
   toNodes(data: T): EventTimelineNode[];
   transformData?: (raw: unknown) => T;
@@ -19,4 +25,6 @@ export interface EventTimelineStrategy<T = unknown> {
   renderNode?: (node: EventTimelineNode) => unknown;
   renderDetail?: (node: EventTimelineNode) => unknown;
   filterCategories?: string[];
+  supportsPagination?: boolean;
+  extractPaginationMeta?: (raw: unknown) => PaginationMeta | undefined;
 }
