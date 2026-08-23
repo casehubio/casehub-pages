@@ -159,7 +159,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _yamlViewer: PagesScenarioYamlViewer | null = null;
   private _popoutWindow: Window | null = null;
   private _popoutPoll: ReturnType<typeof setInterval> | null = null;
-  private _snapped = true;
+  @state() private _snapped = true;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -423,14 +423,17 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       this._snapped = true;
     }
     this._yamlViewer.style.display = 'block';
-    this._snapViewerToController();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => this._snapViewerToController());
+    });
   }
 
   private _snapViewerToController(): void {
     if (!this._yamlViewer) return;
     const hostRect = this.getBoundingClientRect();
     const viewerRect = this._yamlViewer.getBoundingClientRect();
-    const left = hostRect.left - viewerRect.width - 8;
+    const viewerWidth = viewerRect.width > 0 ? viewerRect.width : 360;
+    const left = hostRect.left - viewerWidth - 8;
     const top = hostRect.top;
     this._yamlViewer.setPosition(left, top);
     this._snapped = true;
