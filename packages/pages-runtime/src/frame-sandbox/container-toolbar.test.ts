@@ -117,4 +117,29 @@ describe("organiser-toolbar", () => {
     modeBtn.click();
     expect(onChange).toHaveBeenLastCalledWith("tabbed");
   });
+
+  it("arrange dropdown opens downward (top:100%), not upward", () => {
+    const toolbar = createContainerToolbar(
+      ["free", "tabbed", "accordion"],
+      "free",
+      { onAdd: () => {}, onLayoutChange: () => {}, onArrange: () => {} },
+    );
+    const arrangeBtn = toolbar.element.querySelector(
+      "[data-toolbar-arrange]",
+    ) as HTMLElement;
+    const dropdown = arrangeBtn.querySelector(".arrange-dropdown") as HTMLElement;
+    expect(dropdown).not.toBeNull();
+    expect(dropdown.style.top).toBe("100%");
+    expect(dropdown.style.bottom).toBe("");
+  });
+
+  it("toolbar is positioned at top-right, not bottom-right", () => {
+    const toolbar = createContainerToolbar(
+      ["free", "tabbed"],
+      "tabbed",
+      { onAdd: () => {}, onLayoutChange: () => {} },
+    );
+    expect(toolbar.element.style.top).toBe("4px");
+    expect(toolbar.element.style.bottom).toBe("");
+  });
 });
