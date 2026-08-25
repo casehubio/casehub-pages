@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createContainer, containerizeEntry, flattenEntry } from "./container";
 import type { Entry, ContentFactory } from "./types.js";
 import { DEFAULT_POLICY, SPLIT_POLICY } from "./types.js";
@@ -747,6 +747,75 @@ describe("Group", () => {
 
       const siblingElAfter = container.querySelector("[data-split-child='pane-b']");
       expect(siblingElAfter).toBe(siblingEl);
+    });
+  });
+
+  describe("detachEntry", () => {
+    it("removes entry from container without disposing content", () => {
+      const disposeFn = vi.fn();
+      const factory: ContentFactory = (entry) => {
+        const el = document.createElement("div");
+        el.textContent = entry.key;
+        return { element: el, dispose: disposeFn };
+      };
+      const entry: Entry = { key: "a", label: "A" };
+      entry.component = { type: "html", props: {} };
+      const parent = createContainer({
+        entries: [entry, { key: "b", label: "B" }],
+        layout: "tabbed",
+        contentFactory: factory,
+      });
+      parent.mount(container);
+
+      const detached = parent.detachEntry("a");
+      expect(detached).not.toBeNull();
+      expect(detached!.key).toBe("a");
+      expect(detached!.component).toEqual({ type: "html", props: {} });
+      expect(parent.entries).toHaveLength(1);
+      expect(disposeFn).not.toHaveBeenCalled();
+    });
+
+    it("returns null for unknown key", () => {
+      const parent = createContainer({
+        entries: [{ key: "a", label: "A" }],
+        layout: "tabbed",
+        contentFactory: testFactory(),
+      });
+      parent.mount(container);
+      expect(parent.detachEntry("nope")).toBeNull();
+    });
+
+    it("does not fire onCollapse when one entry remains", () => {
+      const onCollapse = vi.fn();
+      const parent = createContainer({
+        entries: [{ key: "a", label: "A" }, { key: "b", label: "B" }],
+        layout: "tabbed",
+        contentFactory: testFactory(),
+        onCollapse,
+      });
+      parent.mount(container);
+
+      parent.detachEntry("a");
+      expect(onCollapse).not.toHaveBeenCalled();
+    });
+
+    it("preserves childContainer without disposing", () => {
+      const inner = createContainer({
+        entries: [{ key: "leaf", label: "Leaf" }],
+        layout: "tabbed",
+        contentFactory: testFactory(),
+        depth: 2,
+      });
+      const entry: Entry = { key: "host", label: "Host", childContainer: inner };
+      const parent = createContainer({
+        entries: [entry, { key: "b", label: "B" }],
+        layout: "tabbed",
+        contentFactory: testFactory(),
+      });
+      parent.mount(container);
+
+      const detached = parent.detachEntry("host");
+      expect(detached!.childContainer).toBe(inner);
     });
   });
 });

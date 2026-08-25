@@ -42,6 +42,7 @@ function createContentOrganiser(): LayoutStrategy {
     },
     addEntry() {},
     removeEntry() {},
+    detachEntry() { return null; },
     getState() {
       return {} as never;
     },
@@ -216,6 +217,14 @@ export function createContainer(config: ContainerConfig): Container {
       if (idx === -1) return;
       currentOrganiser.removeEntry(key);
       entries.splice(idx, 1);
+    },
+
+    detachEntry(key) {
+      const idx = entries.findIndex(e => e.key === key);
+      if (idx === -1) return null;
+      const entry = currentOrganiser.detachEntry(key);
+      if (entry) entries.splice(idx, 1);
+      return entry;
     },
 
     setLayout(type) {

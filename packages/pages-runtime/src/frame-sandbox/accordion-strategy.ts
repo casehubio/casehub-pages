@@ -155,6 +155,15 @@ export function createAccordionStrategy(
       }
     },
 
+    detachEntry(key) {
+      const idx = currentEntries.findIndex((e) => e.key === key);
+      if (idx === -1) return null;
+      const entry = currentEntries[idx]!;
+      hostElement?.querySelector(`[data-accordion-section="${key}"]`)?.remove();
+      currentEntries.splice(idx, 1);
+      return entry;
+    },
+
     getState(): AccordionState {
       return {
         collapsed: [...collapsed],

@@ -86,6 +86,7 @@ export interface LayoutStrategy {
   getState(): TabState | AccordionState | FreeLayoutState | SplitState;
   restoreState(state: unknown): void;
   refreshEntry(key: string): void;
+  detachEntry(key: string): Entry | null;
   arrange?(preset: string): void;
   dispose(): void;
 }
@@ -99,6 +100,7 @@ export interface Container {
   removeEntry(key: string): void;
   replaceChild(oldKey: string, newChild: Entry): void;
   refreshEntry(key: string): void;
+  detachEntry(key: string): Entry | null;
   setLayout(type: Layout): void;
   mount(container: HTMLElement): void;
   unmount(): void;

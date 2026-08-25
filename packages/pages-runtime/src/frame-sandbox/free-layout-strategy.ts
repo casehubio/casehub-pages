@@ -307,6 +307,18 @@ export function createFreeLayoutStrategy(
       callbacks?.onEntryClose?.(key);
     },
 
+    detachEntry(key) {
+      const idx = currentEntries.findIndex((e) => e.key === key);
+      if (idx === -1) return null;
+      const entry = currentEntries[idx]!;
+      const frameEl = frameElements.get(key);
+      if (frameEl) frameEl.remove();
+      frameElements.delete(key);
+      currentEntries.splice(idx, 1);
+      zOrder = zOrder.filter(k => k !== key);
+      return entry;
+    },
+
     getState(): FreeLayoutState {
       const entries: Record<string, FreeLayoutEntry> = {};
       for (const [key, state] of entryState) {

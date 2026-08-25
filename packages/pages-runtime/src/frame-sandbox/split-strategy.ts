@@ -169,6 +169,19 @@ export function createSplitStrategy(
       rebuild();
     },
 
+    detachEntry(key) {
+      const idx = currentEntries.findIndex((e) => e.key === key);
+      if (idx === -1) return null;
+      const entry = currentEntries[idx]!;
+      if (entry.contentElement?.parentElement) {
+        entry.contentElement.remove();
+      }
+      currentEntries.splice(idx, 1);
+      ratios = equalRatios(currentEntries.length);
+      rebuild();
+      return entry;
+    },
+
     getState(): SplitState {
       return { ratios: [...ratios] };
     },
