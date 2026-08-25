@@ -73,12 +73,12 @@ describe('PagesFilterBar', () => {
       expect(labels).toContain('ATTESTATION');
     });
 
-    it('emits filter-change on chip toggle', async () => {
+    it('emits filter-bar-change on chip toggle', async () => {
       const el = await createElement({
         chipValues: ['COMMAND', 'EVENT'],
       });
       const handler = vi.fn();
-      el.addEventListener('filter-change', handler);
+      el.addEventListener('filter-bar-change', handler);
 
       const chip = el.shadowRoot!.querySelector('[role="checkbox"]') as HTMLElement;
       chip.click();
@@ -94,7 +94,7 @@ describe('PagesFilterBar', () => {
         chipValues: ['COMMAND', 'EVENT'],
       });
       const handler = vi.fn();
-      el.addEventListener('filter-change', handler);
+      el.addEventListener('filter-bar-change', handler);
 
       const chip = el.shadowRoot!.querySelector('[role="checkbox"]') as HTMLElement;
       chip.click();
@@ -170,7 +170,7 @@ describe('PagesFilterBar', () => {
       expect(options.length).toBe(4);
     });
 
-    it('emits filter-change on entity selection', async () => {
+    it('emits filter-bar-change on entity selection', async () => {
       const ds = createTestDataSet();
       const el = await createElement({
         dataSet: ds,
@@ -178,7 +178,7 @@ describe('PagesFilterBar', () => {
         entityLabel: 'Actor',
       });
       const handler = vi.fn();
-      el.addEventListener('filter-change', handler);
+      el.addEventListener('filter-bar-change', handler);
 
       const trigger = el.shadowRoot!.querySelector('[role="combobox"]') as HTMLElement;
       trigger.click();
@@ -219,7 +219,7 @@ describe('PagesFilterBar', () => {
         entityLabel: 'Actor',
       });
       const handler = vi.fn();
-      el.addEventListener('filter-change', handler);
+      el.addEventListener('filter-bar-change', handler);
 
       const trigger = el.shadowRoot!.querySelector('[role="combobox"]') as HTMLElement;
       trigger.click();
@@ -292,10 +292,10 @@ describe('PagesFilterBar', () => {
       expect(inputs.length).toBe(0);
     });
 
-    it('emits filter-change on date from change', async () => {
+    it('emits filter-bar-change on date from change', async () => {
       const el = await createElement({ showDateRange: true });
       const handler = vi.fn();
-      el.addEventListener('filter-change', handler);
+      el.addEventListener('filter-bar-change', handler);
 
       const input = el.shadowRoot!.querySelector('#filter-date-from') as HTMLInputElement;
       input.value = '2026-01-01';
@@ -307,10 +307,10 @@ describe('PagesFilterBar', () => {
       expect(detail.dateFrom).toBe('2026-01-01');
     });
 
-    it('emits filter-change on date to change', async () => {
+    it('emits filter-bar-change on date to change', async () => {
       const el = await createElement({ showDateRange: true });
       const handler = vi.fn();
-      el.addEventListener('filter-change', handler);
+      el.addEventListener('filter-bar-change', handler);
 
       const input = el.shadowRoot!.querySelector('#filter-date-to') as HTMLInputElement;
       input.value = '2026-12-31';

@@ -155,7 +155,7 @@ export class PagesFilterBar extends LitElement {
   }
 
   private _emitFilterChange(): void {
-    this.dispatchEvent(new CustomEvent<FilterState>('filter-change', {
+    this.dispatchEvent(new CustomEvent<FilterState>('filter-bar-change', {
       bubbles: true,
       composed: true,
       detail: {
