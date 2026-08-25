@@ -8,6 +8,7 @@ import type {
 } from "./types.js";
 import { injectFrameChrome, updatePinVisual } from "../frame-chrome.js";
 import { createFrameShell, createFrameTitlebar, createFrameResizeHandles, wireTitlebarDrag } from "../frame-shell.js";
+import { computeZonePreset, type Preset } from "../layout-math.js";
 import { createZoneGrid } from "../frame-zone-picker.js";
 
 const MIN_WIDTH = 100;
@@ -119,24 +120,19 @@ export function createFreeLayoutStrategy(
     requestAnimationFrame(() => document.addEventListener("click", onClickOutside, true));
   }
 
-  function tileArrange(): void {
+  function applyArrange(preset: Preset): void {
     const host = freeHost ?? containerEl;
     if (!host) return;
     const cw = host.clientWidth || 400;
     const ch = host.clientHeight || 300;
-    const count = currentEntries.length;
-    if (count === 0) return;
-    const cols = Math.ceil(Math.sqrt(count));
-    const rows = Math.ceil(count / cols);
-    const pw = Math.floor(cw / cols) - 4;
-    const ph = Math.floor(ch / rows) - 4;
-    for (let i = 0; i < count; i++) {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
+    const rects = computeZonePreset(preset, currentEntries.length, { width: cw, height: ch });
+    for (let i = 0; i < currentEntries.length; i++) {
+      const rect = rects[i];
+      if (!rect) continue;
       const state = entryState.get(currentEntries[i]!.key);
       if (state) {
-        state.position = { x: col * (pw + 4) + 2, y: row * (ph + 4) + 2 };
-        state.size = { width: Math.max(MIN_WIDTH, pw), height: Math.max(MIN_HEIGHT, ph) };
+        state.position = { x: rect.x, y: rect.y };
+        state.size = { width: Math.max(MIN_WIDTH, rect.width), height: Math.max(MIN_HEIGHT, rect.height) };
         const el = frameElements.get(currentEntries[i]!.key);
         if (el) {
           el.style.left = `${state.position.x}px`;
@@ -340,8 +336,8 @@ export function createFreeLayoutStrategy(
       contentArea.appendChild(ensureContent(entry));
     },
 
-    arrange(_preset: string) {
-      tileArrange();
+    arrange(preset: string) {
+      applyArrange(preset as Preset);
     },
 
     dispose() {
