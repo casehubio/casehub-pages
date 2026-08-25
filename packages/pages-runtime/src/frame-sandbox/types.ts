@@ -87,6 +87,8 @@ export interface LayoutStrategy {
   restoreState(state: unknown): void;
   refreshEntry(key: string): void;
   detachEntry(key: string): Entry | null;
+  hideEntry?(key: string): void;
+  showEntry?(key: string): void;
   arrange?(preset: string): void;
   dispose(): void;
 }

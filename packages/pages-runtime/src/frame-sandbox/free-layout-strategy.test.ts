@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createFreeLayoutStrategy } from "./free-layout-strategy";
+import { createContainer } from "./container";
 import type { Entry, ContentFactory, FreeLayoutState } from "./types.js";
 
 let resizeObserverCallback: ((entries: Array<{ contentRect: { width: number; height: number } }>) => void) | null = null;
@@ -357,5 +358,50 @@ describe("FreeLayoutOrganiser", () => {
 
     expect(Number(frameA.style.zIndex)).toBeGreaterThan(Number(frameB.style.zIndex));
     expect(pinBtn.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("hideEntry removes frame from DOM but preserves entryState", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }, { key: "b", label: "B" }],
+      layout: "free",
+      contentFactory: testFactory(),
+      policy: { allowedLayouts: ["free", "tabbed"], maxDepth: 5 },
+    });
+    const host = document.createElement("div");
+    host.style.cssText = "width:800px;height:600px;position:relative;";
+    Object.defineProperty(host, "clientWidth", { value: 800, configurable: true });
+    Object.defineProperty(host, "clientHeight", { value: 600, configurable: true });
+    document.body.appendChild(host);
+    c.mount(host);
+
+    expect(host.querySelector("[data-frame-key='a']")).not.toBeNull();
+
+    c.organiser.hideEntry?.("a");
+
+    expect(host.querySelector("[data-frame-key='a']")).toBeNull();
+    expect(c.entries.find(e => e.key === "a")).toBeDefined();
+    document.body.removeChild(host);
+  });
+
+  it("showEntry re-renders hidden frame at same position", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }],
+      layout: "free",
+      contentFactory: testFactory(),
+      policy: { allowedLayouts: ["free", "tabbed"], maxDepth: 5 },
+    });
+    const host = document.createElement("div");
+    host.style.cssText = "width:800px;height:600px;position:relative;";
+    Object.defineProperty(host, "clientWidth", { value: 800, configurable: true });
+    Object.defineProperty(host, "clientHeight", { value: 600, configurable: true });
+    document.body.appendChild(host);
+    c.mount(host);
+
+    c.organiser.hideEntry?.("a");
+    expect(host.querySelector("[data-frame-key='a']")).toBeNull();
+
+    c.organiser.showEntry?.("a");
+    expect(host.querySelector("[data-frame-key='a']")).not.toBeNull();
+    document.body.removeChild(host);
   });
 });
