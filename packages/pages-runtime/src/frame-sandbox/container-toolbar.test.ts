@@ -118,7 +118,7 @@ describe("organiser-toolbar", () => {
     expect(onChange).toHaveBeenLastCalledWith("tabbed");
   });
 
-  it("arrange dropdown opens downward (top:100%), not upward", () => {
+  it("arrange dropdown renders at document level to escape overflow clipping", () => {
     const toolbar = createContainerToolbar(
       ["free", "tabbed", "accordion"],
       "free",
@@ -127,10 +127,15 @@ describe("organiser-toolbar", () => {
     const arrangeBtn = toolbar.element.querySelector(
       "[data-toolbar-arrange]",
     ) as HTMLElement;
-    const dropdown = arrangeBtn.querySelector(".arrange-dropdown") as HTMLElement;
-    expect(dropdown).not.toBeNull();
-    expect(dropdown.style.top).toBe("100%");
-    expect(dropdown.style.bottom).toBe("");
+    expect(arrangeBtn).not.toBeNull();
+
+    const inlineDropdown = arrangeBtn.querySelector(".arrange-dropdown");
+    expect(inlineDropdown).toBeNull();
+
+    arrangeBtn.click();
+    const portalDropdown = document.body.querySelector(".arrange-dropdown");
+    expect(portalDropdown).not.toBeNull();
+    expect(portalDropdown!.parentElement).toBe(document.body);
   });
 
   it("toolbar is positioned at top-right, not bottom-right", () => {

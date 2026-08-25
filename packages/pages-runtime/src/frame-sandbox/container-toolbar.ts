@@ -54,7 +54,7 @@ export function createContainerToolbar(
     const dropdown = document.createElement("div");
     dropdown.className = "arrange-dropdown";
     dropdown.style.cssText =
-      "display:none;position:absolute;top:100%;right:0;z-index:99999;" +
+      "display:none;position:fixed;z-index:99999;" +
       "background:var(--pages-neutral-2,#222);border:1px solid var(--pages-neutral-4,#444);" +
       "border-radius:var(--pages-radius-sm,4px);padding:4px 0;min-width:140px;" +
       "box-shadow:0 4px 12px rgba(0,0,0,0.3);";
@@ -74,10 +74,17 @@ export function createContainerToolbar(
       dropdown.appendChild(item);
     }
 
-    arrangeBtn.appendChild(dropdown);
+    document.body.appendChild(dropdown);
     arrangeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+      if (dropdown.style.display === "none") {
+        const rect = arrangeBtn.getBoundingClientRect();
+        dropdown.style.left = `${rect.right - 140}px`;
+        dropdown.style.top = `${rect.bottom}px`;
+        dropdown.style.display = "block";
+      } else {
+        dropdown.style.display = "none";
+      }
     });
     const closeDropdown = () => { dropdown.style.display = "none"; };
     document.addEventListener("click", closeDropdown);
