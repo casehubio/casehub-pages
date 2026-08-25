@@ -22,7 +22,7 @@ export function createContainerToolbar(
   bar.style.cssText =
     "display:flex;align-items:center;padding:2px 4px;" +
     "gap:2px;user-select:none;" +
-    "position:absolute;bottom:4px;right:4px;z-index:5;";
+    "position:absolute;top:4px;right:4px;z-index:5;";
 
   const spacer = document.createElement("span");
   spacer.style.cssText = "flex:1;";

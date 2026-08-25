@@ -86,6 +86,7 @@ export interface LayoutStrategy {
   getState(): TabState | AccordionState | FreeLayoutState | SplitState;
   restoreState(state: unknown): void;
   refreshEntry(key: string): void;
+  arrange?(preset: string): void;
   dispose(): void;
 }
 

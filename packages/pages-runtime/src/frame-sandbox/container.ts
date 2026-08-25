@@ -276,6 +276,9 @@ export function createContainer(config: ContainerConfig): Container {
             onLayoutChange: (type) => {
               group.setLayout(type);
             },
+            onArrange: (preset) => {
+              currentOrganiser.arrange?.(preset);
+            },
           },
         );
         injectToolbar();

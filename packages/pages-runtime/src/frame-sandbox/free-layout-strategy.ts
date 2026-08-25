@@ -340,6 +340,10 @@ export function createFreeLayoutStrategy(
       contentArea.appendChild(ensureContent(entry));
     },
 
+    arrange(_preset: string) {
+      tileArrange();
+    },
+
     dispose() {
       resizeObserver?.disconnect();
       resizeObserver = null;
