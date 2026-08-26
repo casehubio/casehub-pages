@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { wireFloatingWorkspace } from "./wire-floating-workspace.js";
-import type { ContainerState, FrameLayout, FrameTabConfig, ContentFactory } from "@casehubio/pages-component";
+import type { ContainerState, FrameLayout, FrameTabConfig } from "@casehubio/pages-component";
 
 function makeTab(key: string): FrameTabConfig {
   return { key, label: key, content: { type: "html", props: { content: `<div>${key}</div>` } } };
@@ -107,5 +107,82 @@ describe("wireFloatingWorkspace", () => {
     const handle = wireFloatingWorkspace(hostElement, makeContainerState());
     handle.dispose();
     expect(hostElement.children.length).toBe(0);
+  });
+
+  describe("mode switch — setLayout round-trip", () => {
+    it("setLayout('tabbed') preserves all entries", () => {
+      const state = makeContainerState();
+      const handle = wireFloatingWorkspace(hostElement, state);
+      expect(handle.rootContainer.organiser.type).toBe("free");
+      expect(handle.rootContainer.entries).toHaveLength(2);
+
+      handle.rootContainer.setLayout("tabbed");
+      expect(handle.rootContainer.organiser.type).toBe("tabbed");
+      expect(handle.rootContainer.entries).toHaveLength(2);
+      expect(handle.rootContainer.entries[0]!.key).toBe("f1");
+      expect(handle.rootContainer.entries[1]!.key).toBe("f2");
+
+      handle.dispose();
+    });
+
+    it("setLayout('tabbed') preserves child containers", () => {
+      const state = makeContainerState();
+      const handle = wireFloatingWorkspace(hostElement, state);
+
+      const childBefore = handle.rootContainer.entries[0]!.childContainer;
+      expect(childBefore).toBeDefined();
+      expect(childBefore!.entries).toHaveLength(2);
+
+      handle.rootContainer.setLayout("tabbed");
+
+      const childAfter = handle.rootContainer.entries[0]!.childContainer;
+      expect(childAfter).toBeDefined();
+      expect(childAfter!.entries).toHaveLength(2);
+      expect(childAfter!.entries[0]!.key).toBe("t1");
+
+      handle.dispose();
+    });
+
+    it("free → tabbed → free round-trip preserves entries and child containers", () => {
+      const state = makeContainerState();
+      const handle = wireFloatingWorkspace(hostElement, state);
+
+      handle.rootContainer.setLayout("tabbed");
+      handle.rootContainer.setLayout("free");
+
+      expect(handle.rootContainer.organiser.type).toBe("free");
+      expect(handle.rootContainer.entries).toHaveLength(2);
+      expect(handle.rootContainer.entries[0]!.key).toBe("f1");
+      expect(handle.rootContainer.entries[0]!.childContainer).toBeDefined();
+      expect(handle.rootContainer.entries[0]!.childContainer!.entries).toHaveLength(2);
+
+      handle.dispose();
+    });
+
+    it("setLayout('accordion') preserves entries", () => {
+      const state = makeContainerState();
+      const handle = wireFloatingWorkspace(hostElement, state);
+
+      handle.rootContainer.setLayout("accordion");
+      expect(handle.rootContainer.organiser.type).toBe("accordion");
+      expect(handle.rootContainer.entries).toHaveLength(2);
+      expect(handle.rootContainer.entries[0]!.childContainer).toBeDefined();
+
+      handle.dispose();
+    });
+
+    it("captureState after mode switch reflects new layout", () => {
+      const state = makeContainerState();
+      const handle = wireFloatingWorkspace(hostElement, state);
+
+      handle.rootContainer.setLayout("tabbed");
+      const captured = handle.captureState();
+      expect(captured.layout).toBe("tabbed");
+      expect(captured.tabs).toHaveLength(2);
+      expect(captured.tabs[0]!.children).toBeDefined();
+      expect(captured.tabs[0]!.children!.layout).toBe("tabbed");
+
+      handle.dispose();
+    });
   });
 });
