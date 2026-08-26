@@ -59,6 +59,10 @@ describe('validateField', () => {
     expect(validateField({ type: 'number', multipleOf: 3 }, 9, false)).toBeNull();
   });
 
+  it('handles floating-point multipleOf without false positives', () => {
+    expect(validateField({ type: 'number', multipleOf: 0.1 }, 0.3, false)).toBeNull();
+  });
+
   it('validates minLength on string', () => {
     expect(validateField({ type: 'string', minLength: 3 }, 'ab', false)).toBe('Must be at least 3 characters');
   });

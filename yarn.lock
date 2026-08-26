@@ -1690,6 +1690,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/pages-property-palette@workspace:packages/pages-property-palette":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-property-palette@workspace:packages/pages-property-palette"
+  dependencies:
+    "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-ui-components": "workspace:*"
+    "@casehubio/pages-ui-tokens": "workspace:*"
+    jsdom: "npm:^26.0.0"
+    lit: "npm:^3.3.3"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/pages-runtime@workspace:*, @casehubio/pages-runtime@workspace:packages/pages-runtime":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-runtime@workspace:packages/pages-runtime"

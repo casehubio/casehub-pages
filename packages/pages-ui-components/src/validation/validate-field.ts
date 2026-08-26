@@ -40,7 +40,7 @@ export function validateField(
     if (schema.exclusiveMaximum != null && value >= schema.exclusiveMaximum) {
       return `Must be less than ${schema.exclusiveMaximum}`;
     }
-    if (schema.multipleOf != null && value % schema.multipleOf !== 0) {
+    if (schema.multipleOf != null && Math.abs(Math.round(value / schema.multipleOf) - value / schema.multipleOf) > 1e-9) {
       return `Must be a multiple of ${schema.multipleOf}`;
     }
   }
