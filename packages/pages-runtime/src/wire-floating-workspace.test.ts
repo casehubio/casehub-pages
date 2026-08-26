@@ -304,6 +304,71 @@ describe("wireFloatingWorkspace", () => {
 
       handle.dispose();
     });
+
+    it("edge split structure: split has exactly 2 entries, each a leaf tabbed container", () => {
+      const state: ContainerState = {
+        layout: "free",
+        tabs: [
+          { key: "f1", label: "Frame 1", content: null, children: { layout: "tabbed", tabs: [makeTab("t1"), makeTab("t2")] } },
+          { key: "f2", label: "Frame 2", content: null, children: { layout: "tabbed", tabs: [makeTab("t3"), makeTab("t4")] } },
+        ],
+        layoutState: {
+          entries: {
+            f1: { position: { x: 0, y: 0 }, size: { width: 350, height: 500 } },
+            f2: { position: { x: 400, y: 0 }, size: { width: 350, height: 500 } },
+          },
+          zOrder: ["f1", "f2"],
+        },
+      };
+      const handle = wireFloatingWorkspace(host, state);
+
+      const freeHost = host.querySelector("[data-free-host]") as HTMLElement;
+      vi.spyOn(freeHost, "getBoundingClientRect").mockReturnValue({
+        left: 0, right: 800, top: 0, bottom: 600,
+        width: 800, height: 600, x: 0, y: 0, toJSON: () => ({}),
+      });
+
+      const childF1 = handle.rootContainer.entries[0]!.childContainer!;
+
+      const frameF1 = host.querySelector("[data-frame-key='f1']") as HTMLElement;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t1", ghost: document.createElement("div"), sourceContainer: childF1 },
+      }));
+
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 749, clientY: 250 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 749, clientY: 250 }));
+
+      const f2Entry = handle.rootContainer.entries.find(e => e.key === "f2")!;
+      const split = f2Entry.childContainer!;
+      expect(split.organiser.type).toBe("splith");
+      expect(split.entries).toHaveLength(2);
+
+      const leftChild = split.entries[0]!.childContainer;
+      const rightChild = split.entries[1]!.childContainer;
+      expect(leftChild).toBeDefined();
+      expect(rightChild).toBeDefined();
+      expect(leftChild!.organiser.type).toBe("tabbed");
+      expect(rightChild!.organiser.type).toBe("tabbed");
+
+      expect(leftChild!.entries.map(e => e.key)).toEqual(["t3", "t4"]);
+      expect(rightChild!.entries.map(e => e.key)).toEqual(["t1"]);
+
+      const leftEntries = leftChild!.entries;
+      for (const e of leftEntries) {
+        expect(e.childContainer).toBeUndefined();
+      }
+      const rightEntries = rightChild!.entries;
+      for (const e of rightEntries) {
+        expect(e.childContainer).toBeUndefined();
+      }
+
+      const f2Frame = host.querySelector("[data-frame-key='f2']") as HTMLElement;
+      const toolbarsInF2 = f2Frame.querySelectorAll("[data-container-toolbar]");
+      expect(toolbarsInF2.length).toBe(2);
+
+      handle.dispose();
+    });
   });
 
   describe("cross-frame tab drop", () => {

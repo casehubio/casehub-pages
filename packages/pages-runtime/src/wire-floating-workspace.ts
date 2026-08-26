@@ -154,7 +154,7 @@ export function wireFloatingWorkspace(
           const newChild = createContainer({ entries: [detached], layout: "tabbed", contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: 3 });
           const newEntry: Entry = { key: newKey, label: detached.label, childContainer: newChild };
           const splitEntries = (edge === "left" || edge === "top") ? [newEntry, existingEntry] : [existingEntry, newEntry];
-          const splitContainer = createContainer({ entries: splitEntries, layout: splitLayout, contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: 2 });
+          const splitContainer = createContainer({ entries: splitEntries, layout: splitLayout, contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: 2, showToolbar: false });
           targetEntry.childContainer = splitContainer;
           rootContainer.refreshEntry(targetEntryKey);
         },
