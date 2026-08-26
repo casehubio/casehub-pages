@@ -118,6 +118,13 @@ export function createContainer(config: ContainerConfig): Container {
         config.callbacks?.onStateChange?.();
         injectToolbar();
       },
+      onTabDragStart: (key: string, ghost: HTMLElement) => {
+        config.callbacks?.onTabDragStart?.(key, ghost);
+        organiserContainer?.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+          bubbles: true,
+          detail: { tabKey: key, ghost, sourceContainer: group },
+        }));
+      },
     };
     if (config.onCollapse) base.onCollapse = config.onCollapse;
     return base;

@@ -750,6 +750,103 @@ describe("Group", () => {
     });
   });
 
+  describe("pages-tab-drag-start event", () => {
+    it("fires on tab drag with tabKey, ghost, and sourceContainer", () => {
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+
+      const group = createContainer({
+        entries: makeEntries("a", "b"),
+        layout: "tabbed",
+        contentFactory: testFactory(),
+      });
+      group.mount(host);
+
+      let received: CustomEvent | null = null;
+      host.addEventListener("pages-tab-drag-start", (e) => {
+        received = e as CustomEvent;
+      });
+
+      const tabA = host.querySelector("[data-tab-key='a']") as HTMLElement;
+      tabA.dispatchEvent(new PointerEvent("pointerdown", {
+        clientX: 10, clientY: 10, bubbles: true,
+      }));
+      document.dispatchEvent(new PointerEvent("pointermove", {
+        clientX: 20, clientY: 10,
+      }));
+
+      expect(received).not.toBeNull();
+      expect(received!.detail.tabKey).toBe("a");
+      expect(received!.detail.ghost).toBeInstanceOf(HTMLElement);
+      expect(received!.detail.sourceContainer).toBe(group);
+
+      document.dispatchEvent(new PointerEvent("pointerup"));
+      group.dispose();
+      document.body.removeChild(host);
+    });
+
+    it("bubbles through the DOM tree", () => {
+      const outer = document.createElement("div");
+      const host = document.createElement("div");
+      outer.appendChild(host);
+      document.body.appendChild(outer);
+
+      const group = createContainer({
+        entries: makeEntries("a", "b"),
+        layout: "tabbed",
+        contentFactory: testFactory(),
+      });
+      group.mount(host);
+
+      let received = false;
+      outer.addEventListener("pages-tab-drag-start", () => {
+        received = true;
+      });
+
+      const tabA = host.querySelector("[data-tab-key='a']") as HTMLElement;
+      tabA.dispatchEvent(new PointerEvent("pointerdown", {
+        clientX: 10, clientY: 10, bubbles: true,
+      }));
+      document.dispatchEvent(new PointerEvent("pointermove", {
+        clientX: 20, clientY: 10,
+      }));
+
+      expect(received).toBe(true);
+
+      document.dispatchEvent(new PointerEvent("pointerup"));
+      group.dispose();
+      document.body.removeChild(outer);
+    });
+
+    it("does not fire on click (no drag)", () => {
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+
+      const group = createContainer({
+        entries: makeEntries("a", "b"),
+        layout: "tabbed",
+        contentFactory: testFactory(),
+      });
+      group.mount(host);
+
+      let received = false;
+      host.addEventListener("pages-tab-drag-start", () => {
+        received = true;
+      });
+
+      const tabA = host.querySelector("[data-tab-key='a']") as HTMLElement;
+      tabA.dispatchEvent(new PointerEvent("pointerdown", {
+        clientX: 10, clientY: 10, bubbles: true,
+      }));
+      document.dispatchEvent(new PointerEvent("pointerup"));
+
+      expect(received).toBe(false);
+
+      group.dispose();
+      document.body.removeChild(host);
+    });
+  });
+
   describe("detachEntry", () => {
     it("removes entry from container without disposing content", () => {
       const disposeFn = vi.fn();
