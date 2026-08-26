@@ -59,7 +59,7 @@ export function createFrameDetachHandler(
     const reattachBtn = win.document.createElement("button");
     reattachBtn.textContent = "⏎ Reattach";
     reattachBtn.style.cssText = "position:fixed;top:8px;right:8px;z-index:99999;cursor:pointer;padding:4px 12px;border:1px solid var(--pages-neutral-4, #ccc);border-radius:4px;background:var(--pages-neutral-2, #f5f5f5);font-size:12px;";
-    reattachBtn.addEventListener("click", () => reattach(frameKey));
+    reattachBtn.addEventListener("click", () => { reattach(frameKey); });
     win.document.body.appendChild(reattachBtn);
 
     const eventRelay = new EventRelay(win.document, container);

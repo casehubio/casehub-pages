@@ -1,7 +1,7 @@
 import type {Component, PermissionContext} from "@casehubio/pages-component";
 import {ALLOW_ALL} from "@casehubio/pages-component";
 import type {DataSetLookup} from "@casehubio/pages-data";
-import type {ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data";
+import type {ColumnId, DataSetId} from "@casehubio/pages-data";
 import {ColumnType} from "@casehubio/pages-data";
 import type {DataSetEntry, DataSetScope} from "./dataset-scope.js";
 import {extendDataSetScope} from "./dataset-scope.js";

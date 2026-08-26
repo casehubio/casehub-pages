@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { wireFloatingWorkspace } from "./wire-floating-workspace.js";
 import type { ContainerState, FrameLayout, FrameTabConfig, ContentFactory } from "@casehubio/pages-component";
 

@@ -7,7 +7,7 @@ export function migrateFrameLayout(frames: readonly FrameLayout[]): ContainerSta
   const tabs = sorted.map(frame => ({
     key: frame.key,
     label: frame.tabs[0]?.label ?? frame.key,
-    content: null as null,
+    content: null,
     children: frame.containerTree ?? {
       layout: "tabbed" as const,
       tabs: frame.tabs.map(t => ({
@@ -44,7 +44,7 @@ export function configToContainerState(configs: readonly FrameConfig[]): Contain
   const tabs = configs.map(config => ({
     key: config.key,
     label: config.tabs[0]?.label ?? config.key,
-    content: null as null,
+    content: null,
     children: {
       layout: (config.viewMode === "accordion" ? "accordion" : "tabbed") as "accordion" | "tabbed",
       tabs: config.tabs.map(t => ({ key: t.key, label: t.label, content: t.content })),

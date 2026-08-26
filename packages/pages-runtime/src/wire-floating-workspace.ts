@@ -47,7 +47,8 @@ export function wireFloatingWorkspace(
       const el = document.createElement("div");
       el.style.cssText = "display:flex;flex-direction:column;height:100%;";
       entry.childContainer.mount(el);
-      return { element: el, dispose: () => { entry.childContainer!.unmount(); } };
+      const child = entry.childContainer;
+      return { element: el, dispose: () => { child.unmount(); } };
     }
     if (entry.component && externalFactory) {
       return externalFactory({ key: entry.key, label: entry.label, content: entry.component });
