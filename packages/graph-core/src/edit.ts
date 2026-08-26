@@ -67,6 +67,62 @@ export function addEdge(model: GraphModel, newEdge: GraphEdge): EditResult {
   return { model: newModel, violations: validateConstraints(newModel) };
 }
 
+export function reconnectEdge(
+  model: GraphModel,
+  edgeId: string,
+  endpoints: { source?: string; target?: string },
+): EditResult {
+  const edge = model.edges.find(e => e.id === edgeId);
+  if (!edge) {
+    throw new Error(`Edge '${edgeId}' not found`);
+  }
+  if (endpoints.source === undefined && endpoints.target === undefined) {
+    throw new Error('At least one endpoint (source or target) must be specified');
+  }
+  if (endpoints.source !== undefined && !model.nodes.some(n => n.id === endpoints.source)) {
+    throw new Error(`Node '${endpoints.source}' not found`);
+  }
+  if (endpoints.target !== undefined && !model.nodes.some(n => n.id === endpoints.target)) {
+    throw new Error(`Node '${endpoints.target}' not found`);
+  }
+  const newModel: GraphModel = {
+    ...model,
+    edges: model.edges.map(e => {
+      if (e.id !== edgeId) return e;
+      return {
+        ...e,
+        source: endpoints.source ?? e.source,
+        target: endpoints.target ?? e.target,
+      };
+    }),
+  };
+  return { model: newModel, violations: validateConstraints(newModel) };
+}
+
+export function splitEdge(model: GraphModel, edgeId: string, insertNode: GraphNode): EditResult {
+  const edge = model.edges.find(e => e.id === edgeId);
+  if (!edge) {
+    throw new Error(`Edge '${edgeId}' not found`);
+  }
+  const newEdge1: GraphEdge = {
+    id: `${edgeId}-pre`,
+    type: edge.type,
+    source: edge.source,
+    target: insertNode.id,
+  };
+  const newEdge2: GraphEdge = {
+    id: `${edgeId}-post`,
+    type: edge.type,
+    source: insertNode.id,
+    target: edge.target,
+  };
+  let result = removeEdge(model, edgeId);
+  result = addNode(result.model, insertNode);
+  result = addEdge(result.model, newEdge1);
+  result = addEdge(result.model, newEdge2);
+  return result;
+}
+
 export function removeEdge(model: GraphModel, edgeId: string): EditResult {
   if (!model.edges.some(e => e.id === edgeId)) {
     throw new Error(`Edge '${edgeId}' not found`);
