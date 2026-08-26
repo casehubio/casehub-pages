@@ -429,5 +429,57 @@ describe("wireFloatingWorkspace", () => {
 
       handle.dispose();
     });
+
+    it("round-trip: move tab A→B then B→A shows only one preview in A", () => {
+      const handle = wireFloatingWorkspace(host, makeThreeTabState());
+      setupDnD(host);
+
+      const childF1 = handle.rootContainer.entries[0]!.childContainer!;
+      const childF2 = handle.rootContainer.entries[1]!.childContainer!;
+
+      const frameF1 = host.querySelector("[data-frame-key='f1']") as HTMLElement;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t2", ghost: document.createElement("div"), sourceContainer: childF1 },
+      }));
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 440, clientY: 15 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 440, clientY: 15 }));
+
+      expect(childF1.entries).toHaveLength(2);
+      expect(childF2.entries).toHaveLength(3);
+
+      const f1Strip = host.querySelector("[data-frame-key='f1'] [data-tab-strip]") as HTMLElement;
+      vi.spyOn(f1Strip, "getBoundingClientRect").mockReturnValue({
+        left: 0, right: 350, top: 0, bottom: 30, width: 350, height: 30, x: 0, y: 0, toJSON: () => ({}),
+      });
+      const f1Tabs = [...f1Strip.querySelectorAll("[data-tab-key]")] as HTMLElement[];
+      let tabLeft = 0;
+      for (const tab of f1Tabs) {
+        const l = tabLeft;
+        vi.spyOn(tab, "getBoundingClientRect").mockReturnValue({
+          left: l, right: l + 80, top: 0, bottom: 30, width: 80, height: 30, x: l, y: 0, toJSON: () => ({}),
+        });
+        tabLeft += 80;
+      }
+
+      const frameF2 = host.querySelector("[data-frame-key='f2']") as HTMLElement;
+      frameF2.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t2", ghost: document.createElement("div"), sourceContainer: childF2 },
+      }));
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 100, clientY: 15 }));
+
+      const previews = f1Strip.querySelectorAll("[data-tab-preview]");
+      expect(previews.length).toBe(1);
+
+      const realTabs = f1Strip.querySelectorAll("[data-tab-key='t2']");
+      expect(realTabs.length).toBe(0);
+
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 100, clientY: 15 }));
+
+      expect(childF1.entries.some(e => e.key === "t2")).toBe(true);
+
+      handle.dispose();
+    });
   });
 });

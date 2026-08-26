@@ -108,6 +108,8 @@ export function createFreeLayoutDnd(
       const strip = frameEl.querySelector("[data-tab-strip]") as HTMLElement | null;
       if (!strip) return;
 
+      for (const stale of strip.querySelectorAll("[data-tab-preview]")) stale.remove();
+
       if (!tabPreviewEl) {
         const srcEntry = sourceContainer.entries.find(en => en.key === tabKey);
         tabPreviewEl = document.createElement("button");
