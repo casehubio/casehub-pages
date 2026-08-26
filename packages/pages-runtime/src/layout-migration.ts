@@ -1,4 +1,4 @@
-import type { FrameLayout, ContainerState } from "@casehubio/pages-component";
+import type { FrameLayout, FrameConfig, ContainerState } from "@casehubio/pages-component";
 import type { FreeLayoutState, FreeLayoutEntry } from "./frame-sandbox/types.js";
 
 export function migrateFrameLayout(frames: readonly FrameLayout[]): ContainerState {
@@ -37,5 +37,29 @@ export function migrateFrameLayout(frames: readonly FrameLayout[]): ContainerSta
 
   const layoutState: FreeLayoutState = { entries, zOrder };
 
+  return { layout: "free", tabs, layoutState };
+}
+
+export function configToContainerState(configs: readonly FrameConfig[]): ContainerState {
+  const tabs = configs.map(config => ({
+    key: config.key,
+    label: config.tabs[0]?.label ?? config.key,
+    content: null as null,
+    children: {
+      layout: (config.viewMode === "accordion" ? "accordion" : "tabbed") as const,
+      tabs: config.tabs.map(t => ({ key: t.key, label: t.label, content: t.content })),
+    },
+  }));
+
+  const entries: Record<string, FreeLayoutEntry> = {};
+  for (let i = 0; i < configs.length; i++) {
+    const config = configs[i]!;
+    entries[config.key] = {
+      position: config.position ?? { x: 50 + i * 30, y: 50 + i * 30 },
+      size: config.size ?? { width: 400, height: 300 },
+    };
+  }
+
+  const layoutState: FreeLayoutState = { entries, zOrder: configs.map(c => c.key) };
   return { layout: "free", tabs, layoutState };
 }

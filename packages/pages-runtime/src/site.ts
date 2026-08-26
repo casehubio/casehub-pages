@@ -68,8 +68,10 @@ import type {PagesActionRequestDetail} from "@casehubio/pages-component";
 import type {DevAuthConfig} from "./dev-auth.js";
 import {createDevAuthTokenFn} from "./dev-auth.js";
 import {DetachController, DetachRegistry, copyStyles} from "./detach/index.js";
-import type {FloatingFrameEngine} from "./floating-frame-engine.js";
-import type {FrameLayout} from "@casehubio/pages-component";
+import type {ContainerState} from "@casehubio/pages-component";
+import type {Container} from "./frame-sandbox/types.js";
+import {captureContainerState} from "./container-tree-ops.js";
+import {migrateFrameLayout} from "./layout-migration.js";
 
 // --- Event detail interfaces for typed CustomEvent access ---
 
@@ -195,11 +197,11 @@ export async function loadSite(
   const splitRatios = new Map<string, readonly number[]>();
   let zoneEngine: ZoneLayoutEngine | undefined = options?.zoneEngine;
   let layoutSaveTimer: ReturnType<typeof setTimeout> | undefined;
-  let frameLayoutStash: readonly FrameLayout[] | undefined;
+  let containerStateStash: ContainerState | undefined;
   const floatingWorkspaceRef: {
-    engine: FloatingFrameEngine | undefined;
-    stash: readonly FrameLayout[] | undefined;
-  } = { engine: undefined, stash: undefined };
+    rootContainer: Container | undefined;
+    stash: ContainerState | undefined;
+  } = { rootContainer: undefined, stash: undefined };
   const actionExecutor = new ActionExecutor(
     options?.fetch ?? globalThis.fetch.bind(globalThis),
     options?.baseUrl ?? ""
@@ -993,11 +995,11 @@ export async function loadSite(
     const newTree = zoneEngine.movePanel(panelKey, toZone as DockZone, insertIndex);
     dockState.set(panelKey, true);
 
-    if (floatingWorkspaceRef.engine) {
-      frameLayoutStash = floatingWorkspaceRef.engine.captureLayout();
-      floatingWorkspaceRef.stash = frameLayoutStash;
-      floatingWorkspaceRef.engine.dispose();
-      floatingWorkspaceRef.engine = undefined;
+    if (floatingWorkspaceRef.rootContainer) {
+      containerStateStash = captureContainerState(floatingWorkspaceRef.rootContainer);
+      floatingWorkspaceRef.stash = containerStateStash;
+      floatingWorkspaceRef.rootContainer.dispose();
+      floatingWorkspaceRef.rootContainer = undefined;
     }
 
     if (layoutSaveTimer !== undefined) {
@@ -1131,15 +1133,15 @@ export async function loadSite(
   }
 
   function captureLayout(): LayoutState {
-    const capturedFrames = floatingWorkspaceRef.engine
-      ? floatingWorkspaceRef.engine.captureLayout()
-      : frameLayoutStash;
+    const capturedState = floatingWorkspaceRef.rootContainer
+      ? captureContainerState(floatingWorkspaceRef.rootContainer)
+      : containerStateStash;
     return Object.freeze({
       splits: Object.freeze(Object.fromEntries(splitRatios)),
       docks: Object.freeze(Object.fromEntries(dockState)),
       panels: captureHostPanels(),
       ...(zoneEngine ? { zones: Object.freeze(Object.fromEntries(zoneEngine.zoneMap)) } : {}),
-      ...(capturedFrames ? { frames: capturedFrames } : {}),
+      ...(capturedState ? { containerState: capturedState } : {}),
     });
   }
 
@@ -1163,9 +1165,12 @@ export async function loadSite(
     for (const [id, visible] of Object.entries(seedLayout.docks)) {
       dockState.set(id, visible);
     }
-    if (seedLayout.frames) {
-      frameLayoutStash = seedLayout.frames;
-      floatingWorkspaceRef.stash = seedLayout.frames;
+    if (seedLayout.containerState) {
+      containerStateStash = seedLayout.containerState;
+      floatingWorkspaceRef.stash = seedLayout.containerState;
+    } else if (seedLayout.frames) {
+      containerStateStash = migrateFrameLayout(seedLayout.frames);
+      floatingWorkspaceRef.stash = containerStateStash;
     }
   }
 
@@ -1398,9 +1403,9 @@ export async function loadSite(
     },
 
     dispose(): void {
-      if (floatingWorkspaceRef.engine) {
-        floatingWorkspaceRef.engine.dispose();
-        floatingWorkspaceRef.engine = undefined;
+      if (floatingWorkspaceRef.rootContainer) {
+        floatingWorkspaceRef.rootContainer.dispose();
+        floatingWorkspaceRef.rootContainer = undefined;
       }
       detachRegistry.reattachAll();
       abortController.abort();

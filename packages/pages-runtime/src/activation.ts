@@ -32,14 +32,12 @@ import type {HostPanelProps} from "@casehubio/pages-component";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
 import {renderDockBar} from "./dock-bar-renderer.js";
 import type {DockBarProps, DockBarOptions} from "./dock-bar-renderer.js";
-import type {FloatingWorkspaceProps, ContentFactory, FrameLayout, FrameConfig} from "@casehubio/pages-component";
-import type {FloatingFrameEngine} from "./floating-frame-engine.js";
-import {createGroupOrganiserBackend} from "./group-organiser-backend.js";
+import type {FloatingWorkspaceProps, ContentFactory, ContainerState} from "@casehubio/pages-component";
 import {wireFloatingWorkspace} from "./wire-floating-workspace.js";
 import {createContainer} from "./frame-sandbox/index.js";
-import {createContentManager} from "./workspace-content-lifecycle.js";
-import type {FrameButtonConfig} from "./floating-frame-backend.js";
+import type {Container} from "./frame-sandbox/types.js";
 import {createFrameKeyboardHandler} from "./frame-keyboard.js";
+import {configToContainerState} from "./layout-migration.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -94,8 +92,8 @@ export interface LazyPageOptions {
   readonly zoneEngine?: ZoneLayoutEngine | undefined;
   readonly siteTarget?: HTMLElement | undefined;
   readonly floatingWorkspaceRef?: {
-    engine: FloatingFrameEngine | undefined;
-    stash: readonly FrameLayout[] | undefined;
+    rootContainer: Container | undefined;
+    stash: ContainerState | undefined;
   };
   readonly nestingDepth?: number;
 }
@@ -609,22 +607,17 @@ export function createActivationCallback(
       renderCentreInto(el);
 
       {
-        const backend = createGroupOrganiserBackend();
-        const manager = createContentManager();
         const tabCallbacks = new Map<string, (el: HTMLElement, component: Component) => void>();
 
         function renderTabContent(tab: import("@casehubio/pages-component").FrameTabConfig): { element: HTMLElement } {
           const container = document.createElement("div");
           container.style.cssText = "position:relative;width:100%;height:100%;";
 
-          const ref = manager.getRef(tab.key);
-
           let tabCallback = tabCallbacks.get(tab.key);
           if (!tabCallback && depth < 1) {
             tabCallback = createActivationCallback(registry, pagePathMap, {
               ...(options ?? {}),
               nestingDepth: depth + 1,
-              floatingWorkspaceRef: ref,
             } as LazyPageOptions, contextManager);
             tabCallbacks.set(tab.key, tabCallback);
           }
@@ -646,19 +639,13 @@ export function createActivationCallback(
         overlayContainer.dataset.floatingWorkspaceOverlay = "";
         el.appendChild(overlayContainer);
 
-        const savedFrames = wsRef?.stash;
-        const handle = wireFloatingWorkspace(backend, overlayContainer, savedFrames, {
+        const savedLayout = wsRef?.stash ?? (props.frames ? configToContainerState(props.frames) : undefined);
+        const handle = wireFloatingWorkspace(overlayContainer, savedLayout, {
           detachEnabled: true,
           contentFactory,
           signal: options?.abortSignal,
-          getNestedEngine: (key: string) => manager.getNestedEngine(key),
-          existingEngine: wsRef?.engine,
+          existingContainer: wsRef?.rootContainer,
         });
-
-        const extraButtons: FrameButtonConfig[] = [];
-        if (handle.zonePickerButton) extraButtons.push(handle.zonePickerButton);
-        backend.attach(overlayContainer, contentFactory, extraButtons.length > 0 ? { extraButtons } : undefined);
-        handle.setContentFactory(contentFactory);
 
         const showOrganisers = depth > 0 ? props.organisers === true : props.organisers !== false;
         if (showOrganisers && handle.containerToolbar) {
@@ -666,26 +653,11 @@ export function createActivationCallback(
         }
 
         if (options?.abortSignal) {
-          createFrameKeyboardHandler(handle.engine, overlayContainer, options.abortSignal);
+          createFrameKeyboardHandler(handle.rootContainer, overlayContainer, options.abortSignal);
         }
 
-        const wsRefOrDefault = wsRef ?? { engine: undefined, stash: undefined };
-        manager.setEngine(handle.engine);
-        manager.reconnectOrCreate(handle.engine, backend, wsRefOrDefault, props.frames);
-
-        backend.onCrossFrameDrop((fromFrame: string, tabKey: string, toFrame: string) => {
-          const fromEngineFrame = handle.engine.frames.get(fromFrame);
-          const tab = fromEngineFrame?.tabs.find((t: import("@casehubio/pages-component").FrameTabConfig) => t.key === tabKey);
-          if (tab) {
-            handle.engine.removeTab(fromFrame, tabKey, { skipBackend: true });
-            handle.engine.addTab(toFrame, tab, { skipBackend: true });
-          }
-        });
-
-        for (const frame of handle.engine.frames.values()) {
-          if (frame.viewMode === "accordion") {
-            handle.applyViewMode(frame.key);
-          }
+        if (wsRef) {
+          (wsRef as { rootContainer: Container | undefined }).rootContainer = handle.rootContainer;
         }
       }
       return;
