@@ -316,4 +316,53 @@ describe("TabOrganiser", () => {
       document.body.removeChild(host);
     });
   });
+
+  describe("tab drag gap preview", () => {
+    it("shows a gap placeholder at the drop position during drag", () => {
+      const org = createTabbedStrategy();
+      org.mount(container, makeEntries("a", "b", "c"), testFactory());
+      mockTabBounds(container);
+
+      const tabA = container.querySelector("[data-tab-key='a']") as HTMLElement;
+
+      tabA.dispatchEvent(
+        new PointerEvent("pointerdown", { clientX: 40, clientY: 15, bubbles: true }),
+      );
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 200, clientY: 15 }),
+      );
+
+      const gap = container.querySelector("[data-tab-gap]");
+      expect(gap).not.toBeNull();
+
+      document.dispatchEvent(new PointerEvent("pointerup"));
+
+      const gapAfterDrop = container.querySelector("[data-tab-gap]");
+      expect(gapAfterDrop).toBeNull();
+
+      org.dispose();
+    });
+
+    it("does not reorder tabs until drop — entries stay in original order during drag", () => {
+      const org = createTabbedStrategy();
+      org.mount(container, makeEntries("a", "b", "c"), testFactory());
+      mockTabBounds(container);
+
+      const tabA = container.querySelector("[data-tab-key='a']") as HTMLElement;
+
+      tabA.dispatchEvent(
+        new PointerEvent("pointerdown", { clientX: 40, clientY: 15, bubbles: true }),
+      );
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 200, clientY: 15 }),
+      );
+
+      const state = org.getState() as TabState;
+      expect(state.order).toEqual(["a", "b", "c"]);
+
+      document.dispatchEvent(new PointerEvent("pointerup"));
+
+      org.dispose();
+    });
+  });
 });

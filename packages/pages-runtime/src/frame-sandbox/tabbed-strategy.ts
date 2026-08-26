@@ -87,25 +87,8 @@ export function createTabbedStrategy(
       const startX = startEvt.clientX;
       const startY = startEvt.clientY;
       let dragStarted = false;
-
-      function enableTransitions(): void {
-        const buttons = [
-          ...stripEl!.querySelectorAll("[data-tab-key]"),
-        ] as HTMLElement[];
-        for (const b of buttons) {
-          if (b !== btn) b.style.transition = "transform 0.15s ease";
-        }
-      }
-
-      function clearTransitions(): void {
-        const buttons = [
-          ...stripEl!.querySelectorAll("[data-tab-key]"),
-        ] as HTMLElement[];
-        for (const b of buttons) {
-          b.style.transition = "";
-          b.style.transform = "";
-        }
-      }
+      let gapEl: HTMLElement | null = null;
+      let dropIndex = -1;
 
       function createGhost(): HTMLElement {
         const g = btn.cloneNode(true) as HTMLElement;
@@ -122,6 +105,24 @@ export function createTabbedStrategy(
         return g;
       }
 
+      function removeGap(): void {
+        if (gapEl) { gapEl.remove(); gapEl = null; }
+      }
+
+      function placeGap(beforeEl: HTMLElement | null): void {
+        removeGap();
+        gapEl = document.createElement("div");
+        gapEl.setAttribute("data-tab-gap", "");
+        gapEl.style.cssText = "width:40px;min-height:24px;border:2px dashed var(--pages-accent-9,#3b82f6);border-radius:4px;transition:width 0.15s ease;";
+        if (beforeEl) {
+          stripEl!.insertBefore(gapEl, beforeEl);
+        } else {
+          const sentinel = stripEl!.querySelector("[data-container-toolbar], [data-toolbar-actions]");
+          if (sentinel) stripEl!.insertBefore(gapEl, sentinel);
+          else stripEl!.appendChild(gapEl);
+        }
+      }
+
       const onMove = (e: PointerEvent) => {
         lastX = e.clientX;
         lastY = e.clientY;
@@ -136,8 +137,7 @@ export function createTabbedStrategy(
         if (!dragStarted) {
           dragStarted = true;
           ghost = createGhost();
-          btn.style.opacity = "0.4";
-          enableTransitions();
+          btn.style.display = "none";
           callbacks?.onTabDragStart?.(entry.key, ghost);
         }
 
@@ -150,6 +150,7 @@ export function createTabbedStrategy(
         );
         if (dy > 30) {
           draggedOut = true;
+          removeGap();
           callbacks?.onTabDragMove?.(entry.key, e.clientX, e.clientY);
           if (ghost) {
             ghost.style.boxShadow = "0 8px 24px rgba(0,0,0,0.5)";
@@ -165,47 +166,57 @@ export function createTabbedStrategy(
         }
 
         didDrag = true;
-        const buttons = [
-          ...stripEl!.querySelectorAll("[data-tab-key]"),
-        ] as HTMLElement[];
-        for (const other of buttons) {
+        const buttons = [...stripEl!.querySelectorAll("[data-tab-key]")] as HTMLElement[];
+        let placed = false;
+        for (let i = 0; i < buttons.length; i++) {
+          const other = buttons[i]!;
           if (other === btn) continue;
           const rect = other.getBoundingClientRect();
-          if (e.clientX > rect.left && e.clientX < rect.right) {
-            const entryKey = entry.key;
-            const otherKey = other.getAttribute("data-tab-key")!;
-            const entryIdx = currentEntries.findIndex(
-              (en) => en.key === entryKey,
-            );
-            const otherIdx = currentEntries.findIndex(
-              (en) => en.key === otherKey,
-            );
-            if (entryIdx !== -1 && otherIdx !== -1 && entryIdx !== otherIdx) {
-              [currentEntries[entryIdx], currentEntries[otherIdx]] = [
-                currentEntries[otherIdx]!,
-                currentEntries[entryIdx]!,
-              ];
-              if (entryIdx < otherIdx) {
-                stripEl!.insertBefore(other, btn);
-              } else {
-                stripEl!.insertBefore(btn, other);
-              }
+          const mid = rect.left + rect.width / 2;
+          if (e.clientX < mid) {
+            const otherIdx = currentEntries.findIndex(en => en.key === other.getAttribute("data-tab-key"));
+            if (otherIdx !== dropIndex) {
+              dropIndex = otherIdx;
+              placeGap(other);
             }
+            placed = true;
             break;
           }
+        }
+        if (!placed) {
+          dropIndex = currentEntries.length;
+          placeGap(null);
         }
       };
 
       const onUp = () => {
         document.removeEventListener("pointermove", onMove);
         document.removeEventListener("pointerup", onUp);
-        btn.style.opacity = "";
-        clearTransitions();
+        btn.style.display = "";
+        removeGap();
         ghost?.remove();
         if (draggedOut) {
           callbacks?.onTabDragOut?.(entry.key, lastX, lastY);
-        } else if (didDrag) {
-          callbacks?.onEntryReorder?.(currentEntries.map((en) => en.key));
+        } else if (didDrag && dropIndex >= 0) {
+          const fromIdx = currentEntries.findIndex(en => en.key === entry.key);
+          if (fromIdx !== -1 && fromIdx !== dropIndex) {
+            const [moved] = currentEntries.splice(fromIdx, 1);
+            const insertAt = dropIndex > fromIdx ? dropIndex - 1 : dropIndex;
+            currentEntries.splice(insertAt, 0, moved!);
+            const buttons = [...stripEl!.querySelectorAll("[data-tab-key]")] as HTMLElement[];
+            const btnEl = buttons.find(b => b.getAttribute("data-tab-key") === entry.key);
+            if (btnEl) {
+              btnEl.remove();
+              const targetBtn = stripEl!.querySelectorAll("[data-tab-key]")[insertAt];
+              if (targetBtn) stripEl!.insertBefore(btnEl, targetBtn);
+              else {
+                const sentinel = stripEl!.querySelector("[data-container-toolbar], [data-toolbar-actions]");
+                if (sentinel) stripEl!.insertBefore(btnEl, sentinel);
+                else stripEl!.appendChild(btnEl);
+              }
+            }
+            callbacks?.onEntryReorder?.(currentEntries.map(en => en.key));
+          }
         } else {
           activateTab(entry.key);
         }
