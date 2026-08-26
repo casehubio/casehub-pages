@@ -915,4 +915,49 @@ describe("Group", () => {
       expect(detached!.childContainer).toBe(inner);
     });
   });
+
+  describe("toolbar at any depth", () => {
+    it("shows toolbar at depth 2", () => {
+      const group = createContainer({
+        entries: makeEntries("a", "b"),
+        layout: "tabbed",
+        contentFactory: testFactory(),
+        depth: 2,
+      });
+      group.mount(container);
+
+      const toolbar = container.querySelector("[data-container-toolbar]");
+      expect(toolbar).not.toBeNull();
+      group.dispose();
+    });
+
+    it("shows toolbar at depth 5", () => {
+      const group = createContainer({
+        entries: makeEntries("a"),
+        layout: "tabbed",
+        contentFactory: testFactory(),
+        depth: 5,
+      });
+      group.mount(container);
+
+      const toolbar = container.querySelector("[data-container-toolbar]");
+      expect(toolbar).not.toBeNull();
+      group.dispose();
+    });
+
+    it("respects explicit showToolbar: false at any depth", () => {
+      const group = createContainer({
+        entries: makeEntries("a", "b"),
+        layout: "tabbed",
+        contentFactory: testFactory(),
+        depth: 1,
+        showToolbar: false,
+      });
+      group.mount(container);
+
+      const toolbar = container.querySelector("[data-container-toolbar]");
+      expect(toolbar).toBeNull();
+      group.dispose();
+    });
+  });
 });

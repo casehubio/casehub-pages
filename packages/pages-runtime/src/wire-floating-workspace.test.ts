@@ -186,19 +186,25 @@ describe("wireFloatingWorkspace", () => {
     });
   });
 
-  it("container has no built-in toolbar — only the external toolbar is used", () => {
-    const state = makeContainerState();
-    const handle = wireFloatingWorkspace(hostElement, state);
+  it("root container has no built-in toolbar — only the external toolbar is used", () => {
+    const handle = wireFloatingWorkspace(hostElement);
 
-    const internalToolbars = hostElement.querySelectorAll("[data-container-toolbar]");
-    expect(internalToolbars.length).toBe(0);
+    const rootOrganiserEl = hostElement.firstElementChild;
+    const rootToolbar = rootOrganiserEl?.querySelector(":scope > [data-container-toolbar]");
+    expect(rootToolbar).toBeNull();
 
     expect(handle.containerToolbar).toBeDefined();
     expect(handle.containerToolbar!.element.hasAttribute("data-container-toolbar")).toBe(true);
 
-    hostElement.insertBefore(handle.containerToolbar!.element, hostElement.firstChild);
-    const allToolbars = hostElement.querySelectorAll("[data-container-toolbar]");
-    expect(allToolbars.length).toBe(1);
+    handle.dispose();
+  });
+
+  it("child containers get their own toolbars", () => {
+    const state = makeContainerState();
+    const handle = wireFloatingWorkspace(hostElement, state);
+
+    const childToolbars = hostElement.querySelectorAll("[data-container-toolbar]");
+    expect(childToolbars.length).toBeGreaterThanOrEqual(2);
 
     handle.dispose();
   });
