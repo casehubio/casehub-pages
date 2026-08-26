@@ -29,20 +29,21 @@ export type { LayoutState, PanelEntry } from "@casehubio/pages-component";
 export { DetachController, DetachRegistry } from "./detach/index.js";
 export { createZoneLayoutEngine } from "./zone-layout-engine.js";
 export type { ZoneLayoutEngine } from "./zone-layout-engine.js";
-export { createFloatingFrameEngine } from "./floating-frame-engine.js";
-export type { FloatingFrameEngine } from "./floating-frame-engine.js";
+
 export type { FloatingFrameBackend, FrameButtonConfig, BackendAttachOptions } from "./floating-frame-backend.js";
 export { createGroupOrganiserBackend } from "./group-organiser-backend.js";
 export { wireFloatingWorkspace } from "./wire-floating-workspace.js";
+export { migrateFrameLayout, configToContainerState } from "./layout-migration.js";
+export { captureContainerState, restoreContainerFromState } from "./container-tree-ops.js";
 export type { WireHandle } from "./wire-floating-workspace.js";
 export { bringToFront, normalizeForSave } from "./frame-zorder.js";
 export { findSpatialTarget } from "./frame-spatial-nav.js";
-export { applyPreset } from "./frame-organisers.js";
+
 export { clampPosition, nextFramePosition, snapToZone, zoneToRect } from "./frame-boundaries.js";
 export { createFrameKeyboardHandler } from "./frame-keyboard.js";
 export { createFrameDetachHandler } from "./frame-detach-handler.js";
 export type { FrameDetachHandler } from "./frame-detach-handler.js";
-export { createFrameZonePicker } from "./frame-zone-picker.js";
+export { createZoneGrid, ZONES } from "./frame-zone-picker.js";
 export { injectAnimationStyles, animateFrameEnter, animateFrameExit, animateFrameMove } from "./frame-animations.js";
 export type { WireOptions } from "./wire-floating-workspace.js";
 export type { SnapZone } from "@casehubio/pages-component";
