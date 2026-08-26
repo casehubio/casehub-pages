@@ -616,8 +616,9 @@ export function createActivationCallback(
 
           let tabCallback = tabCallbacks.get(tab.key);
           if (!tabCallback && depth < 1) {
+            const { floatingWorkspaceRef: _dropped, ...nestedOptions } = (options ?? {}) as Record<string, unknown>;
             tabCallback = createActivationCallback(registry, pagePathMap, {
-              ...(options ?? {}),
+              ...nestedOptions,
               nestingDepth: depth + 1,
             } as LazyPageOptions, contextManager);
             tabCallbacks.set(tab.key, tabCallback);

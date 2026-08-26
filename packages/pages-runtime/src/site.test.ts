@@ -936,6 +936,84 @@ describe("floating-workspace integration", () => {
   });
 });
 
+describe("nested floating-workspace isolation", () => {
+  it("adding a frame in one nested workspace does not affect sibling workspaces", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const tree: Component = {
+      type: "page",
+      props: { name: "App" },
+      slots: {
+        default: [{
+          type: "floating-workspace",
+          props: {
+            centre: { type: "html", props: { content: "main" } },
+            organisers: true,
+          },
+        }],
+      },
+    };
+    const seedFrames = [{
+      key: "workbench", order: 0,
+      position: { x: 40, y: 30 }, size: { width: 600, height: 400 },
+      zIndex: 1, pinned: false, hidden: false,
+      tabs: [
+        {
+          key: "editor", label: "Editor",
+          content: {
+            type: "floating-workspace" as const,
+            props: {
+              centre: { type: "html", props: { content: "editor" } },
+              organisers: true,
+            },
+          },
+        },
+        {
+          key: "debug", label: "Debug",
+          content: {
+            type: "floating-workspace" as const,
+            props: {
+              centre: { type: "html", props: { content: "debug" } },
+              organisers: true,
+            },
+          },
+        },
+      ],
+      activeTabKey: "editor",
+    }];
+    const site = await loadSite(target, tree, {
+      layout: { splits: {}, docks: {}, panels: {}, frames: seedFrames },
+    });
+
+    const overlays = target.querySelectorAll("[data-floating-workspace-overlay]");
+    expect(overlays.length).toBeGreaterThanOrEqual(2);
+
+    const countFramesIn = (overlay: Element) =>
+      overlay.querySelectorAll("[data-frame-key]").length;
+
+    const editorOverlay = overlays[1]!;
+    const debugOverlay = overlays[2];
+
+    const editorFramesBefore = countFramesIn(editorOverlay);
+    const debugFramesBefore = debugOverlay ? countFramesIn(debugOverlay) : 0;
+
+    const editorToolbar = editorOverlay.closest("[data-component-type='floating-workspace']")
+      ?.querySelector("[data-container-toolbar]");
+    const addBtn = editorToolbar?.querySelector("[data-toolbar-add]");
+    expect(addBtn).toBeTruthy();
+    (addBtn as HTMLElement).click();
+
+    const editorFramesAfter = countFramesIn(editorOverlay);
+    const debugFramesAfter = debugOverlay ? countFramesIn(debugOverlay) : 0;
+
+    expect(editorFramesAfter).toBe(editorFramesBefore + 1);
+    expect(debugFramesAfter).toBe(debugFramesBefore);
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
 describe("component-level dock-toggle", () => {
   it("hides individual component in shared slot without hiding siblings", async () => {
     const target = document.createElement("div");
