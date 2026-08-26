@@ -120,3 +120,4 @@ export type { RestSourceOptions, WsTriggerEvent } from "@casehubio/pages-data";
 export { mutableRestSource } from "@casehubio/pages-data";
 export type { WriteConfig, WriteEndpoint, UrlTemplate, MutableRestSourceOptions } from "@casehubio/pages-data";
 export type { ActionButtonProps } from "@casehubio/pages-component";
+export type { FormScopeProps, SubmitButtonProps } from "@casehubio/pages-component";

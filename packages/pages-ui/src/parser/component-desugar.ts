@@ -28,7 +28,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "badge", "countdown", "timeline", "graph", "event-timeline",
   "input", "number-input", "select", "checkbox", "date-picker", "textarea",
   "schema-form",
-  "action-button", "alert",
+  "action-button", "alert", "submit-button",
   "split", "dock-bar", "host-panel",
 ]);
 
@@ -291,6 +291,34 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       type: "action-button",
       props,
       ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
+    };
+  }
+
+  // Submit button shorthand
+  if ("submit-button" in raw) {
+    const props = raw["submit-button"] as Record<string, unknown>;
+    const style = extractStyle(raw.properties);
+    const visibleWhen = raw.visibleWhen as string | undefined;
+    return {
+      type: "submit-button",
+      props,
+      ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
+    };
+  }
+
+  // Form scope container
+  if ("form-scope" in raw) {
+    const scopeProps = raw["form-scope"] as Record<string, unknown>;
+    const components = (scopeProps.components ?? []) as Array<Record<string, unknown>>;
+    const { components: _c, ...restProps } = scopeProps;
+    const visibleWhen = raw.visibleWhen as string | undefined;
+    const children = components.map(c => desugarComponent(c, displayerDefaults));
+    return {
+      type: "form-scope",
+      props: restProps,
+      slots: { default: children },
       ...(visibleWhen ? { visibleWhen } : {}),
     };
   }
