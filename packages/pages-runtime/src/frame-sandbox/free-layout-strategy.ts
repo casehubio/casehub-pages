@@ -259,14 +259,21 @@ export function createFreeLayoutStrategy(
       resizeObserver.observe(freeHost);
 
       dndHandler = createFreeLayoutDnd(freeHost, entryState, frameElements, {
-        onDrop: (sourceContainer, tabKey, targetFrameKey, _x, _y) => {
+        onDrop: (sourceContainer, tabKey, targetFrameKey, _x, _y, insertIndex) => {
           if (targetFrameKey) {
             const targetEntry = currentEntries.find(e => e.key === targetFrameKey);
             if (targetEntry?.childContainer === sourceContainer) return;
             const detached = sourceContainer.detachEntry(tabKey);
             if (!detached) return;
             if (targetEntry?.childContainer) {
-              targetEntry.childContainer.addEntry(detached);
+              targetEntry.childContainer.addEntry(detached, insertIndex);
+              const tabBtn = targetEntry.childContainer.organiser.type === "tabbed"
+                ? frameElements.get(targetFrameKey)?.querySelector(`[data-tab-key="${detached.key}"]`) as HTMLElement | null
+                : null;
+              if (tabBtn) {
+                tabBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+                document.dispatchEvent(new PointerEvent("pointerup"));
+              }
             }
           }
         },

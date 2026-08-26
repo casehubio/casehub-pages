@@ -287,14 +287,27 @@ export function createTabbedStrategy(
       factory = null;
     },
 
-    addEntry(entry, _atIndex?) {
-      currentEntries.push(entry);
+    addEntry(entry, atIndex?) {
+      if (atIndex !== undefined && atIndex >= 0 && atIndex < currentEntries.length) {
+        currentEntries.splice(atIndex, 0, entry);
+      } else {
+        currentEntries.push(entry);
+      }
       if (stripEl) {
+        const newBtn = createTabButton(entry);
+        if (atIndex !== undefined && atIndex >= 0) {
+          const tabButtons = [...stripEl.querySelectorAll("[data-tab-key]")];
+          const beforeBtn = tabButtons[atIndex];
+          if (beforeBtn) {
+            stripEl.insertBefore(newBtn, beforeBtn);
+            return;
+          }
+        }
         const sentinel = stripEl.querySelector("[data-container-toolbar], [data-toolbar-actions]");
         if (sentinel) {
-          stripEl.insertBefore(createTabButton(entry), sentinel);
+          stripEl.insertBefore(newBtn, sentinel);
         } else {
-          stripEl.appendChild(createTabButton(entry));
+          stripEl.appendChild(newBtn);
         }
       }
     },

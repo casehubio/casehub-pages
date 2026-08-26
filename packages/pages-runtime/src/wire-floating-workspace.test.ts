@@ -305,4 +305,129 @@ describe("wireFloatingWorkspace", () => {
       handle.dispose();
     });
   });
+
+  describe("cross-frame tab drop", () => {
+    let host: HTMLElement;
+
+    beforeEach(() => {
+      host = document.createElement("div");
+      host.style.cssText = "width:800px;height:600px;position:relative;";
+      Object.defineProperty(host, "clientWidth", { value: 800, configurable: true });
+      Object.defineProperty(host, "clientHeight", { value: 600, configurable: true });
+      document.body.appendChild(host);
+    });
+
+    afterEach(() => {
+      document.body.removeChild(host);
+    });
+
+    function makeThreeTabState(): ContainerState {
+      return {
+        layout: "free",
+        tabs: [
+          { key: "f1", label: "Frame 1", content: null, children: { layout: "tabbed", tabs: [makeTab("t1"), makeTab("t2"), makeTab("t3")] } },
+          { key: "f2", label: "Frame 2", content: null, children: { layout: "tabbed", tabs: [makeTab("t4"), makeTab("t5")] } },
+        ],
+        layoutState: {
+          entries: {
+            f1: { position: { x: 0, y: 0 }, size: { width: 350, height: 500 } },
+            f2: { position: { x: 400, y: 0 }, size: { width: 350, height: 500 } },
+          },
+          zOrder: ["f1", "f2"],
+        },
+      };
+    }
+
+    function setupDnD(h: HTMLElement) {
+      const freeHost = h.querySelector("[data-free-host]") as HTMLElement;
+      vi.spyOn(freeHost, "getBoundingClientRect").mockReturnValue({
+        left: 0, right: 800, top: 0, bottom: 600, width: 800, height: 600, x: 0, y: 0, toJSON: () => ({}),
+      });
+      const f2Frame = h.querySelector("[data-frame-key='f2']") as HTMLElement;
+      const f2Strip = f2Frame?.querySelector("[data-tab-strip]") as HTMLElement;
+      if (f2Strip) {
+        vi.spyOn(f2Strip, "getBoundingClientRect").mockReturnValue({
+          left: 400, right: 750, top: 0, bottom: 30, width: 350, height: 30, x: 400, y: 0, toJSON: () => ({}),
+        });
+        const f2Tabs = [...f2Strip.querySelectorAll("[data-tab-key]")] as HTMLElement[];
+        let tabLeft = 400;
+        for (const tab of f2Tabs) {
+          const l = tabLeft;
+          vi.spyOn(tab, "getBoundingClientRect").mockReturnValue({
+            left: l, right: l + 80, top: 0, bottom: 30, width: 80, height: 30, x: l, y: 0, toJSON: () => ({}),
+          });
+          tabLeft += 80;
+        }
+      }
+      return { freeHost, f2Frame, f2Strip };
+    }
+
+    it("cross-frame drop adds tab to target container", () => {
+      const handle = wireFloatingWorkspace(host, makeThreeTabState());
+      setupDnD(host);
+
+      const childF1 = handle.rootContainer.entries[0]!.childContainer!;
+      const childF2 = handle.rootContainer.entries[1]!.childContainer!;
+      expect(childF1.entries).toHaveLength(3);
+      expect(childF2.entries).toHaveLength(2);
+
+      const frameF1 = host.querySelector("[data-frame-key='f1']") as HTMLElement;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t2", ghost: document.createElement("div"), sourceContainer: childF1 },
+      }));
+
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 440, clientY: 15 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 440, clientY: 15 }));
+
+      expect(childF1.entries).toHaveLength(2);
+      expect(childF2.entries).toHaveLength(3);
+      expect(childF2.entries.some(e => e.key === "t2")).toBe(true);
+
+      handle.dispose();
+    });
+
+    it("cross-frame drop inserts at the preview position, not at end", () => {
+      const handle = wireFloatingWorkspace(host, makeThreeTabState());
+      setupDnD(host);
+
+      const childF1 = handle.rootContainer.entries[0]!.childContainer!;
+      const childF2 = handle.rootContainer.entries[1]!.childContainer!;
+
+      const frameF1 = host.querySelector("[data-frame-key='f1']") as HTMLElement;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t2", ghost: document.createElement("div"), sourceContainer: childF1 },
+      }));
+
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 420, clientY: 15 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 420, clientY: 15 }));
+
+      expect(childF2.entries[0]!.key).toBe("t2");
+
+      handle.dispose();
+    });
+
+    it("dropped tab gets activated in target container", () => {
+      const handle = wireFloatingWorkspace(host, makeThreeTabState());
+      setupDnD(host);
+
+      const childF1 = handle.rootContainer.entries[0]!.childContainer!;
+      const childF2 = handle.rootContainer.entries[1]!.childContainer!;
+
+      const frameF1 = host.querySelector("[data-frame-key='f1']") as HTMLElement;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t2", ghost: document.createElement("div"), sourceContainer: childF1 },
+      }));
+
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 440, clientY: 15 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 440, clientY: 15 }));
+
+      const activeTab = childF2.organiser.getState() as { activeKey: string };
+      expect(activeTab.activeKey).toBe("t2");
+
+      handle.dispose();
+    });
+  });
 });

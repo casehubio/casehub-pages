@@ -12,6 +12,7 @@ export interface DndCallbacks {
     targetFrameKey: string | null,
     x: number,
     y: number,
+    insertIndex?: number,
   ): void;
   onEdgeSplit?(
     sourceContainer: Container,
@@ -229,7 +230,7 @@ export function createFreeLayoutDnd(
       if (escaped) return;
 
       if (currentOverStrip && currentFrameKey) {
-        callbacks.onDrop(sourceContainer, tabKey, currentFrameKey, upEvt.clientX, upEvt.clientY);
+        callbacks.onDrop(sourceContainer, tabKey, currentFrameKey, upEvt.clientX, upEvt.clientY, stripInsertIndex >= 0 ? stripInsertIndex : undefined);
       } else if (currentFrameKey && currentEdge && callbacks.onEdgeSplit) {
         callbacks.onEdgeSplit(sourceContainer, tabKey, currentFrameKey, currentEdge);
       } else {
