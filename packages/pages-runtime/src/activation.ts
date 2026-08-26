@@ -567,6 +567,7 @@ export function createActivationCallback(
 
       el.style.position = "relative";
       el.style.flex = "1";
+      el.style.height = "100%";
       el.style.display = "flex";
       el.style.flexDirection = "column";
       el.style.minHeight = "0";
