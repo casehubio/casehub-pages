@@ -4,7 +4,7 @@
 **Profile:** Standalone open-source project
 **Build position:** Independent — no upstream dependencies beyond npm packages
 **Consumed by:** Any CaseHub web application (DraftHouse, Claudony, DevTown, standalone sites)
-**Depends on:** Apache ECharts, js-yaml, marked, JSONata (all npm)
+**Depends on:** Apache ECharts, React Flow, ELK, Lit, js-yaml, marked, JSONata, xterm.js (all npm)
 
 ---
 
@@ -14,7 +14,7 @@
 
 `casehub-pages` is a web application framework for the CaseHub platform — a pure TypeScript runtime for composing applications from layouts, data pipelines, visualization, forms, hosted Web Components, and inter-component communication. The framework separates data from presentation, wires them together through declarative bindings and a reactive event pipeline, and renders the result as Web Components.
 
-Core packages: `@casehubio/pages-data` (DataSet model, reactive event engine, operations, external data extraction, push sources — WebSocket and SSE, JSONata), `@casehubio/pages-ui` (TypeScript DSL builders, YAML parser, component model), `@casehubio/pages-viz` (Web Component chart/metric wrappers around ECharts), `@casehubio/pages-component` (CSS grid layout renderer, interactive containers, split layouts, dock bars), `@casehubio/pages-primitives` (Lit-dependent UI primitives — a11y mixins), `@casehubio/pages-table` (data table Web Component — CSS Grid, virtual scroll, sorting, filtering, selection), `@casehubio/pages-runtime` (site orchestrator — `loadSite()` API, panel hosting, data pipeline, event delegation).
+Core packages: `@casehubio/pages-data` (DataSet model, reactive event engine, operations, external data extraction, push sources — WebSocket and SSE, JSONata), `@casehubio/pages-ui` (TypeScript DSL builders, YAML parser, component model), `@casehubio/pages-ui-tokens` (OKLCH design tokens, theme generation), `@casehubio/pages-viz` (Web Component chart/metric/timeline wrappers around ECharts), `@casehubio/pages-component` (CSS grid layout renderer, interactive containers, split layouts, dock bars), `@casehubio/pages-primitives` (Lit-dependent UI primitives — a11y mixins), `@casehubio/pages-table` (data table Web Component — CSS Grid, virtual scroll, sorting, filtering, selection), `@casehubio/pages-runtime` (site orchestrator — `loadSite()` API, panel hosting, data pipeline, event delegation, i3-style Container tree compositor, floating workspace), `@casehubio/pages-aria` (ARIA-based browser automation for scenario demos), `@casehubio/graph-core` + `@casehubio/graph-renderer` (graph model with grammar validation, React Flow + ELK rendering).
 
 ### Stakeholders
 
@@ -126,20 +126,105 @@ The filter flow (selector → `pages-filter` → listening component re-query) r
 2. `@casehubio/viz` side-effect import — custom elements must be registered for `connectedCallback` to fire
 3. `yamlLoad` call in the YAML string path
 
+### i3-style Container Tree
+
+The workspace compositor uses a recursive `Container` model — every entry can itself be a `Container`, forming an arbitrarily deep tree. Each container owns a `LayoutStrategy` that controls how its entries are arranged:
+
+- **Tabbed** — tab strip with drag reorder, cross-container tab DnD, gap preview
+- **Free layout** — absolute-positioned entries with drag/resize, zone snapping, arrange presets (grid, rows, columns, stack)
+- **Split** (horizontal/vertical) — resizable split panes with divider drag, edge-split creation from tab drops
+- **Accordion** — collapsible sections with per-entry height persistence
+- **Content** — leaf strategy for single-entry display
+
+Key decisions:
+- **Container as the recursive primitive** — `Entry.childContainer` creates nesting. `containerizeEntry` wraps a leaf in a new container; `flattenEntry` collapses a single-child container back to a leaf. Depth is bounded by `ContainerPolicy.maxDepth`.
+- **Strategy-per-layout, switchable at runtime** — `setLayout(type)` tears down the current strategy, creates a new one, and re-mounts entries. State is preserved per-layout in `Entry.meta`.
+- **Edge splits** — dropping a tab on a container edge creates a split container, inserting the dropped entry alongside the target. Scoping (pane-level vs frame-level) is controlled by `ContainerPolicy`.
+- **Toolbar per container** — each container renders a toolbar with layout cycle button and arrange dropdown (free layout only). Positioned at top, reactive to depth.
+
+### Selection Context Bridge
+
+Master-detail selection flows through `SelectionBridge` → `RuntimeContext` → parameterised datasets:
+1. Component emits `pages-filter` with selection row
+2. `SelectionBridge` captures row, updates `RuntimeContext.selection`
+3. Dependent `DataSourceController` instances detect context change, re-resolve their dataset with selection parameters
+4. `pages-selection-changed` event forwards selection state to host-panel components
+
+### Scenario Engine
+
+Scenarios are hierarchical YAML documents (chapters → sections → steps → commands) executed by distributed actors:
+
+- **Backend orchestrator** (`scenario-runtime`) — parses YAML, interpolates variables, coordinates execution via push wire protocol. Stepping protocol supports pause/resume/step/speed control.
+- **Executor client** (`scenario-client`) — CDI-discovered `@ScenarioAction` handlers. Each handler owns one command type. WebSocket client receives dispatch messages, routes to handlers, reports step results.
+- **Browser executor** (`pages-aria`) — ARIA tree walker drives UI automation. Commands: `click`, `fill`, `select`, `assertState`, `waitFor`. Visual feedback overlays (highlights, typing animation) show what's happening.
+- **Controller UI** — compact overlay with transport controls (play/pause/step/speed), outline view, dock/undock/detach. YAML viewer shows source with position tracking.
+- **Data modes** — `@ScenarioAction` methods declare delivery mode: bulk (all at once), stepped (one row per step), stream (timed emission).
+
+### Graph Model
+
+`graph-core` provides a typed graph with grammar-based validation:
+
+- **Model** — nodes, edges, containment tree (parent-child hierarchy). Nodes carry properties; edges carry source/target with optional port references.
+- **StencilGrammar** — connection rules and port cardinality constraints, registered per node type. Validator enforces grammar before mutations land.
+- **Edit operations** — add/remove/replace with pre-validation. Operations are atomic — grammar violations reject the entire edit.
+- **PersistenceBackend SPI** — serialization contract; implementations handle storage.
+
+`graph-renderer` bridges `graph-core` to React Flow + ELK:
+
+- **Stencil wrapper** — custom node rendering pipeline. `StencilDescriptor` registry maps node types to React components.
+- **ELK layout** — automatic layout from containment tree. Per-node size overrides, wrapping, direction-aware handle detection.
+- **Edge routing** — crossing-aware shortest path with per-edge handle routing.
+- **CSS isolation** — shadow-aware style injection with per-root ref-counting for multi-instance support.
+
+### Design Tokens
+
+`pages-ui-tokens` provides an OKLCH 12-step colour system with design tokens for spacing, typography, elevation, motion, and radius. Tokens are injected as CSS custom properties. Theme generation supports light and dark modes. All `pages-viz` and `pages-ui-components` consume tokens — no hardcoded colours.
+
 ---
 
 ## §5 Building Block View
 
 | Package | Responsibility |
 |---|---|
-| `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), push sources (PushSource interface, WebSocket, SSE, generic pool), JSONata expressions, `DatasetContract`, `ConnectionStatus`, segment-level wildcard matching (`matchesTopic`) |
+| `@casehubio/pages-ui-tokens` | OKLCH 12-step design tokens: colour scales, spacing, typography, elevation, motion, radius. Theme generation and injection. Must build before `pages-viz` |
+| `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), push sources (PushSource interface, WebSocket, SSE, generic pool), JSONata expressions, `DatasetContract`, `ConnectionStatus`, segment-level wildcard matching (`matchesTopic`), group extraction (`extractGroupBoundaries`, `extractGroupTree`), `SourceConnector` lifecycle primitive |
 | `@casehubio/pages-ui` | TypeScript DSL builders, YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
-| `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, metric, selector, schema-form (JSON Schema → auto-derived form input delegation), form inputs (text, number, dropdown, checkbox, date, textarea) |
-| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), split layouts, dock bars, slot management, `emitPagesEvent`/`onPagesEvent` event helpers |
-| `@casehubio/pages-primitives` | Lit-dependent UI primitives: a11y mixins (RovingTabindex, FocusTrap, KeyboardShortcut, LiveRegion). Future: `<pages-filter-chips>`, `<pages-scope-selector>` |
-| `@casehubio/pages-table` | Data table Web Component (`<pages-table>`): TypedDataSet-native API with `columnRenderers` and `TableColumnConfig`, CSS Grid rendering, virtual scroll, sorting, filtering, column visibility, multi-mode selection, multi-column sort, tree/expandable rows, CSV export, ARIA grid, keyboard navigation. Renamed from `pages-data-table` and integrated TypedDataSet in #152 |
-| `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, panel hosting (`registerPanel`, `hostPanel`), page navigation, data pipeline, event delegation |
-| `@casehubio/pages-examples` | Examples gallery: dev server, Playwright tests, sample validation |
+| `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, scatter, bubble, timeseries, timeline, heatmap, treemap, density-heatmap, meter, map, graph, metric, selector, event-timeline (vertical/horizontal/compact), grouped-view, action-button, alert, badge, countdown, legend, iframe-plugin, schema-form, form inputs (text, number, date, textarea) |
+| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), split layouts, dock bars, slot management, context subsystem (expression evaluator, template parser), `DataSourceController`, `createStandaloneConnector`, `emitPagesEvent`/`onPagesEvent` event helpers |
+| `@casehubio/pages-primitives` | Lit-dependent UI primitives: a11y mixins (RovingTabindex, FocusTrap, KeyboardShortcut, LiveRegion) |
+| `@casehubio/pages-table` | Data table Web Component (`<pages-table>`): TypedDataSet-native API with `columnRenderers` and `TableColumnConfig`, CSS Grid rendering, virtual scroll, sorting, filtering, column visibility, multi-mode selection, multi-column sort, tree/expandable rows, CSV export, ARIA grid, keyboard navigation, native `groupBy` |
+| `@casehubio/pages-runtime` | Site orchestrator: `loadSite()` API, panel hosting, page navigation, data pipeline, event delegation, Container tree (frame-sandbox: tabbed/split/free-layout/accordion strategies with DnD, edge splits, toolbar, arrange presets), floating workspace (`wireFloatingWorkspace`, z-order, spatial nav, zone picker, keyboard, animations, snap), detach controller, dock bar, layout store/migration, selection bridge/forwarding, server pagination |
+| `@casehubio/pages-filter-bar` | Standalone filter bar: type chips, entity dropdown, date range picker |
+| `@casehubio/pages-ui-components` | Lit web components styled with design tokens: badge, button, checkbox, confirm-dialog, input, select, sparkline, status-dot, textarea, property-tree |
+| `@casehubio/pages-aria` | ARIA-based browser automation for scenario demos: tree walker, command executor (`click`, `fill`, `select`, `assertState`, `waitFor`), scenario handler (push wire dispatch), visual feedback (highlights, typing animation), YAML viewer with syntax highlighting, scenario controller (compact overlay, transport controls, dock/undock, detach) |
+| `@casehubio/graph-core` | Graph model (nodes, edges, containment tree), `StencilGrammar` registry (connection rules, port cardinality), constraint validator, edit operations (add/remove/replace), `PersistenceBackend` SPI, traversal, query |
+| `@casehubio/graph-renderer` | React Flow + ELK layout bridge, stencil wrapper (custom node rendering pipeline), edge routing (crossing-aware shortest path), CSS isolation (shadow-aware per-root ref-counting), work stencil renderer, marketplace stencil registry |
+| `@casehubio/graph-work-registry` | Marketplace work stencil discovery: YAML loader (fetch, parse, validate, cache), category index, palette-ready query API |
+| `@casehubio/pages-examples` | Examples gallery: dev server, Playwright tests, sample validation, server-dependent examples tab |
+
+**Iframe Component API** (`packages/`):
+- `@casehubio/pages-iframe-api` — Component controller for iframe-isolated components
+- `@casehubio/pages-iframe-dev` — Development utilities for component testing
+
+**Standalone Components** (`components/`):
+- `@casehubio/pages-component-llm-prompter` — LLM prompt engineering UI
+- `@casehubio/pages-component-svg-heatmap` — SVG-based heatmaps
+- `@casehubio/pages-component-terminal` — xterm.js Web Component
+
+**Backend (Java)** (`backend/`):
+- `casehub-pages-push` — Typed wire protocol SDK: `PushMessage` (server→client builders), `PushRequest` (sealed client→server parser with ack/error correlation), `TopicRegistry` (wildcard-aware connection tracking), `EventStore` SPI + `InMemoryEventStore` (bounded per-topic event replay). jackson-core only, no Quarkus
+- `casehub-pages-push-runtime` — CDI producers for EventBroadcaster, TopicRegistry, EventStore. @DefaultBean InMemoryEventStore with configurable capacity. Consumer provides SessionSender. Quarkus Arc, no JPA
+- `casehub-pages-push-store-jdbc` — JDBC durable event store implementation
+- `casehub-pages-push-store-redis` — Redis durable event store implementation
+- `casehub-pages-data` — Data provider SPI + REST relay/query resource, caching, filter/sort push-down. No JDBC
+- `casehub-pages-data-sql` — SQL data provider via Agroal
+- `casehub-pages-layout` — Layout persistence SPI (`LayoutPersistenceStore`) + REST resource
+- `casehub-pages-layout-sqlite` — SQLite layout store implementation
+- `casehub-pages-auth` — Dev authentication: token-based login resource
+- `casehub-pages-mcp` — MCP server integration: ARIA command bridge, scenario resolver
+- `casehub-pages-scenario` — Scenario model: hierarchical format parser (chapters/sections/steps/commands), ARIA targets, triggers, narrative content. J2CL-compatible
+- `casehub-pages-scenario-client` — Distributed executor: WebSocket client, `@ScenarioAction` CDI handlers, sequence execution, step result reporting
+- `casehub-pages-scenario-runtime` — Scenario orchestrator: variable interpolation, event-driven await, REST controller API, stepping protocol (pause/resume/step/speed)
 
 ---
 
@@ -176,6 +261,27 @@ The filter flow (selector → `pages-filter` → listening component re-query) r
 5. Runtime re-queries listening components via the data pipeline with updated `FilterState`
 6. Components re-render; emitters track selection via `_selectedValue` for toggle (click-again-to-deselect) and visual feedback (ECharts `highlight`/`downplay` for charts, `.selected` CSS for tables)
 
+### Container Lifecycle
+
+1. `wireFloatingWorkspace` creates the root `Container` with a `ContainerPolicy` and `ContentFactory`
+2. `addEntry` creates an `Entry` (key, label) and delegates to the active `LayoutStrategy`
+3. Strategy mounts the entry's DOM — tab in strip, absolute-positioned div, split pane, or accordion section
+4. Tab drag fires `pages-tab-drag-start` → cross-container DnD transfers entries via `detachEntry`/`addEntry`
+5. Edge drops trigger `onEdgeSplit` → `createSplitStrategy` wraps the target entry and the dropped entry in a new child container
+6. `setLayout(type)` switches strategy at runtime — entries survive, only their arrangement changes
+7. Layout state persists via `LayoutStore` (local or REST-backed) — `captureContainerState`/`restoreContainerFromState` serialize the full tree
+8. `migrateFrameLayout` converts legacy `FrameLayout[]` to `ContainerState` for backward compatibility
+
+### Scenario Execution
+
+1. Host loads a scenario YAML document. Backend `HierarchicalParser` produces a `HierarchicalScenario` (chapters → sections → steps → commands)
+2. `ScenarioOrchestrator` walks the tree, dispatching each command via push wire protocol to registered executors
+3. Executor receives dispatch, routes to matching `@ScenarioAction` CDI handler, executes, reports `StepResult`
+4. Browser executor (`pages-aria`) resolves ARIA targets via tree walker, executes UI commands (`click`, `fill`, `select`), overlays visual feedback
+5. Stepping protocol — orchestrator supports pause/resume/step/speed. Controller UI renders transport controls
+6. Data delivery — `@ScenarioAction` methods declare delivery mode (bulk/stepped/stream). Orchestrator adjusts emission timing
+7. Narrative content — optional markdown per chapter/section/step, rendered in `pages-scenario-narrative` component
+
 ---
 
 ## §7 Deployment View
@@ -196,6 +302,9 @@ The examples gallery serves at `localhost:8080` via webpack-dev-server (monorepo
 | Case-insensitive column matching | `column-lookup.ts` provides `findColumnIndex` with case-insensitive fallback for filter/group/sort operations |
 | JSON resilience | `extraction.ts` handles trailing commas, single-quoted JSON, and flat primitive arrays from hand-authored YAML content |
 | Column expressions | `cell-extract.ts` evaluates per-cell expressions via JSONata (`compileOrCached` from `jsonata-bridge.ts`). Sandboxed AST evaluation, CSP-safe. Replaces `new Function()` (#16) |
+| Design tokens | OKLCH 12-step colour system (`pages-ui-tokens`). CSS custom properties injected at runtime. All viz and UI components consume tokens — no hardcoded colours. Light/dark theme generation |
+| ARIA as interaction model | UI automation uses ARIA tree as the addressing layer — scenario commands target elements by role/name, not CSS selectors. Same tree drives accessibility and automated demos |
+| J2CL compatibility | Backend core logic modules (scenario model, push protocol types) avoid JVM-only constructs (reflection, CDI, ConcurrentHashMap) so J2CL can transpile them to JS for browser/Node deployment |
 
 ---
 
@@ -235,6 +344,58 @@ Interactive gallery with sample pages, dev server, and Playwright smoke tests.
 | Case-insensitive column matching | ✅ shipped |
 | Mock data for Prometheus examples | ✅ shipped |
 
+### Chapter 3: Visual Diagram Editor
+
+**Status:** ✅ complete (foundation)
+
+Graph model, renderer, and marketplace stencil registry. Foundation for visual authoring of process and workflow diagrams.
+
+| Milestone | Status |
+|---|---|
+| graph-core: model, grammar, validation, edit ops, persistence SPI (#264-#269) | ✅ shipped |
+| graph-renderer: React Flow + ELK bridge, stencil wrapper, edge routing, CSS isolation (#270-#276) | ✅ shipped |
+| graph-work-registry: marketplace YAML loader, category index, palette query (#280-#284) | ✅ shipped |
+
+### Chapter 4: Workspace Compositor
+
+**Status:** ✅ complete
+
+i3-style Container tree with tabbed, split, free-layout, and accordion strategies. Floating workspace with snap, keyboard, animations, detach. Recursive container model.
+
+| Milestone | Status |
+|---|---|
+| Floating workspace: types, pure functions, engine, backend, builder, activation, layout persistence (#46) | ✅ shipped |
+| FloatingFrameEngine: auto-wire, pluggable chrome, tab-bar drag (#303) | ✅ shipped |
+| Detach, organisers, snap, keyboard, animations (#304-#310) | ✅ shipped |
+| i3-style Container tree — splits, tabs, accordion (#312) | ✅ shipped |
+| Recursive container model — entries as nested Containers (#345) | ✅ shipped |
+| Workspace centre as root Container (#369) | ✅ shipped |
+| Edge splits, DnD, toolbar, arrange presets (#366-#371, #376) | ✅ shipped |
+
+### Chapter 5: Scenario Engine
+
+**Status:** 🔧 active
+
+Hierarchical scenario execution with distributed actors, ARIA-driven browser automation, and demo controller UI.
+
+| Milestone | Status |
+|---|---|
+| Scenario model: hierarchical format, parser, ARIA targets (#311, #315) | ✅ shipped |
+| Scenario executor: ARIA tree driver, browser automation (#324) | ✅ shipped |
+| Local executor base module, stepping protocol (#332, #333) | ✅ shipped |
+| Data modes: bulk/stepped/stream delivery (#340) | ✅ shipped |
+| Narrative content: markdown, templates, reveal.js (#342) | ✅ shipped |
+| Controller UI: compact overlay, transport controls (#341, #347) | ✅ shipped |
+| Browser executor: push wire for UI automation (#348) | ✅ shipped |
+| YAML viewer: syntax highlighting, position tracking (#349) | ✅ shipped |
+| Demo driver mode: start paused, restart (#350) | ✅ shipped |
+| Visual feedback: highlights, focus rings, typing animation (#351) | ✅ shipped |
+| Distributed executor protocol: @ScenarioAction CDI, orchestrator (#418) | ✅ shipped |
+| MCP scenario domain (#419) | ✅ shipped |
+| Spotlight targeting, RestStep, end-to-end demo (#356-#359) | 🔲 open |
+| Scenario templates: parameterized @include (#327) | 🔲 open |
+| Scenario assertions: server-side verification (#328) | 🔲 open |
+
 ### Backlog
 
 | Issue | Title | Status |
@@ -257,6 +418,22 @@ Interactive gallery with sample pages, dev server, and Playwright smoke tests.
 | #35 | Map geo data loading — `registerMap()` for ECharts map/geo | ✅ done |
 | #36 | Accumulate + expression for inline datasets | ✅ shipped |
 | #44 | Minor polish for domain examples | ✅ done |
+| #46 | Floating workspace — free-form frame management | ✅ shipped |
+| #93 | Layout editor — drag-and-drop dashboard authoring UI | 🔲 open |
+| #95 | Dashboard platform completion | 🔲 open |
+| #142 | Scenario Engine — composition, triggers, remote control, demo UI (phases 5-7) | 🔲 open |
+| #251-#255 | UI component library (badge, status-dot, dialog, button) | ✅ shipped |
+| #256 | Durable EventStore implementation (JDBC/Redis) | ✅ shipped |
+| #258 | Visual Diagram Editor — Foundation (graph-core, graph-renderer, graph-work-registry) | ✅ shipped |
+| #285 | Dock workbench — IntelliJ-style dock layout compositor | ✅ shipped |
+| #289 | Master-detail selection context for parameterised drill-down | ✅ shipped |
+| #295-#301 | Heatmap, treemap, density heatmap chart wrappers | ✅ shipped |
+| #309 | Floating workspace UX polish — detach, organisers, snap, keyboard | ✅ shipped |
+| #312 | Workspace compositor — splits, tabs, accordion | ✅ shipped |
+| #317 | DSL composition gaps — builders, metrics, event timeline, master-detail | ✅ shipped |
+| #344 | J2CL transpilation strategy | 🔲 open |
+| #345 | Recursive Container model — entries as nested Containers | ✅ shipped |
+| #354 | Extract standalone pages-filter-bar component | ✅ shipped |
 
 ---
 
@@ -281,6 +458,15 @@ Decisions not captured inline in §4:
 | SSRF relay: no redirect following | `HttpClient.Redirect.NEVER` prevents redirect-based SSRF bypassing validateTarget(). Redirects inside the HTTP client layer would skip application-level validation. |
 | Segment-level wildcard patterns | `*` matches one segment, `**` matches zero or more (last position only). MQTT-inspired convention adapted for `:` delimiters. `TopicRegistry.matches()` (Java) and `matchesTopic()` (TypeScript) produce identical results. |
 | Lit for UI component primitives | `pages-primitives` uses Lit 3.3 for a11y mixins, form components, and UI widgets. `pages-component` stays framework-agnostic (vanilla TypeScript). Separation keeps Lit at the leaf level — data and rendering pipeline are framework-free. |
+| Container as recursive primitive | `Entry.childContainer` creates arbitrary nesting. `containerizeEntry`/`flattenEntry` manage depth. Strategy-per-layout, switchable at runtime — entries survive layout changes. Bounded by `ContainerPolicy.maxDepth`. |
+| OKLCH design tokens | 12-step perceptually uniform colour scales generated from OKLCH. CSS custom properties, not Sass variables — runtime theme switching without rebuild. All downstream components consume tokens. |
+| ARIA as unified interaction model | Scenario automation and accessibility share one addressing layer — the ARIA tree. Commands target elements by role/name, not CSS selectors. Same tree serves screen readers and automated demos. |
+| Grammar-validated graph model | `StencilGrammar` enforces connection rules and port cardinality before mutations land. Edit operations are atomic — violations reject entirely. Prevents invalid graph states from reaching the renderer. |
+| React Flow for graph rendering | React Flow provides the interaction layer (pan/zoom/selection/DnD); ELK provides automatic layout. Stencil wrapper bridges custom node types to React Flow nodes. CSS isolation handles multi-instance shadow DOM. |
+| Hierarchical scenario format | Chapters → sections → steps → commands. Structure mirrors presentation (narrative content per level) and execution (orchestrator walks the tree). Flat step lists would lose grouping and narrative placement. |
+| Distributed executor pattern | Scenario execution is not monolithic — each `@ScenarioAction` handler is a CDI bean discovered at startup. Browser, backend, and MCP executors run independently, connected via push wire protocol. Enables multi-service demo orchestration. |
+| J2CL-compatible core logic | Backend scenario model and push protocol types avoid JVM-only constructs. Enables future transpilation to JS for browser-only or Node.js deployment. CDI adapters are exempt — they don't transpile. |
+| Layout persistence SPI | `LayoutStore` interface with local (localStorage) and REST-backed implementations. Container tree serializes to `ContainerState` — full tree captured/restored. Migration path from legacy `FrameLayout[]` format. |
 
 ---
 
@@ -289,7 +475,7 @@ Decisions not captured inline in §4:
 | Requirement | Metric |
 |---|---|
 | DashBuilder compatibility | 28/31 sample pages render correctly (validation matrix: `examples/VALIDATION.md`) |
-| Test coverage | 615 tests (@casehubio/data), 158 tests (@casehubio/component), 183 tests (@casehubio/runtime), 77 Playwright tests (smoke + gallery + domain examples) |
+| Test coverage | 1229 tests (@casehubio/data), 331 tests (@casehubio/component), 1535 tests (@casehubio/runtime), 108 tests (@casehubio/graph-core), 78 tests (@casehubio/graph-renderer), 14 Playwright spec files (smoke + gallery + domain examples) |
 | No Java at runtime | `loadSite()` works without GWT compilation or Java process |
 
 ---
@@ -318,7 +504,17 @@ Decisions not captured inline in §4:
 | `PushPool` | Generic pool factory for push sources. One connection per base URL, shared across subscriptions. Configurable via `DataProviderConfig`. |
 | `hostPanel` | Component type that mounts a registered custom Web Component inside the pages tree. Host app calls `registerPanel(typeName, tagName)` before `loadSite()`. |
 | `pages-event` | DOM custom event for inter-panel communication. Dispatched by panels, listened on `document`, bubbles through Shadow DOM via `composed: true`. |
+| `Container` | Recursive workspace primitive — holds entries, owns a `LayoutStrategy`, enforces a `ContainerPolicy`. Entries can themselves contain child containers, forming an arbitrarily deep tree. |
+| `LayoutStrategy` | Pluggable arrangement for a container's entries: tabbed, free-layout, split (h/v), accordion, or content (leaf). Switchable at runtime via `setLayout()`. |
+| `ContainerPolicy` | Constraints on a container tree: allowed layout types and maximum nesting depth. `DEFAULT_POLICY` allows free/tabbed/accordion; `SPLIT_POLICY` adds horizontal/vertical splits. |
+| `ContainerState` | Serializable snapshot of a full container tree — entries, layout type, per-layout state, child container states. Used by `LayoutStore` for persistence. |
+| `StencilGrammar` | Connection rules and port cardinality constraints for a graph node type. Validator enforces grammar before edit operations land. |
+| `StencilDescriptor` | Registration of a graph node type — maps a type name to a React component, declared ports, and rendering metadata. |
+| `HierarchicalScenario` | Parsed scenario document: chapters → sections → steps → commands. Structure mirrors both narrative presentation and execution flow. |
+| `@ScenarioAction` | CDI qualifier for scenario command handlers. Each handler owns one command type, discovered at startup. Executor routes dispatched commands to matching handlers. |
+| `SelectionBridge` | Connects component selection events to `RuntimeContext.selection`. Enables master-detail flows where selecting a row in one component parameterises datasets in another. |
+| `DetachController` | Manages pop-out of pages content to separate browser windows. Copies styles, relays events, and synchronizes data pipeline across windows. |
 
 ---
 
-*Created 2026-06-17. Updated 2026-06-30 — repositioned from "dashboard rendering runtime" to "web application framework"; added reactive data pipeline, unified event bus, panel hosting, and workbench primitives context.*
+*Created 2026-06-17. Updated 2026-08-26 — added Container tree compositor, scenario engine, graph model, design tokens, selection bridge, new backend modules (data, layout, scenario, auth, MCP, durable event stores), expanded viz and UI component surface.*
