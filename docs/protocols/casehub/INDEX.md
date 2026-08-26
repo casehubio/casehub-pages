@@ -13,3 +13,5 @@
 | [workbench-integration-pattern.md](workbench-integration-pattern.md) | Complex interactive components extend pages-ui/pages-component/pages-runtime — no new packages | New workbench-level components |
 | [content-agnostic-workbench.md](content-agnostic-workbench.md) | Workbench components manage layout, not content — pluggable via factories | dock-workbench, floating-workspace |
 | [aria-interaction-contract.md](aria-interaction-contract.md) | Interactive components declare ARIA role + accessible name — no parallel automation attributes | All interactive Web Components in pages and blocks-ui |
+| [graph-core-pure-data.md](graph-core-pure-data.md) | graph-core is pure data — no callbacks, no framework deps | All code in packages/graph-core/ |
+| [per-instance-spi-registration.md](per-instance-spi-registration.md) | Rendering-tier SPIs use per-instance registration, not singletons | SPI interfaces in graph-renderer |
