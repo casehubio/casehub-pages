@@ -107,6 +107,14 @@ export type {
   PagesActionRequestDetail,
 } from "./action-types.js";
 
+// Form scope and submit button types
+export type { FormScopeProps } from "./form-scope-types.js";
+export type { SubmitButtonProps } from "./submit-button-types.js";
+
+// Field validation and access
+export { validateField } from "./field-validation.js";
+export { readFieldValue, setFieldError, STANDALONE_TYPES } from "./field-access.js";
+
 // Form input types
 export type {
   FormInputCommon,
@@ -192,4 +200,6 @@ export {
   isTextarea,
   isSchemaForm,
   isActionButton,
+  isFormScope,
+  isSubmitButton,
 } from "./type-guards.js";
