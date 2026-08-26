@@ -21,6 +21,7 @@ export function resolveEditor(schema: FieldSchema): EditorDescriptor {
     if (schema.format === 'color') return { kind: 'tag', tag: 'pages-color-swatch' };
     if (schema.format === 'date') return { kind: 'tag', tag: 'pages-date-input' };
     if (schema.format === 'date-time') return { kind: 'tag', tag: 'pages-datetime-input' };
+    if (schema.format === 'duration') return { kind: 'tag', tag: 'pages-duration-input' };
     if (schema.format === 'uri') return { kind: 'tag', tag: 'pages-input', config: { type: 'url' } };
     return { kind: 'tag', tag: 'pages-input' };
   }
