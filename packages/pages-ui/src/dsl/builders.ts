@@ -52,6 +52,8 @@ import type {
   IframePluginProps,
   SchemaFormProps,
   ActionButtonProps,
+  FormScopeProps,
+  SubmitButtonProps,
   TextInputProps,
   NumberInputProps,
   DropdownProps,
@@ -503,6 +505,34 @@ export function schemaForm(props: SchemaFormProps): TypedComponent<"schema-form"
 
 export function actionButton(props: ActionButtonProps): TypedComponent<"action-button"> {
   return freeze({ type: "action-button" as const, props: freeze({ ...props }) });
+}
+
+export type SchemaFieldsProps = Omit<SchemaFormProps, "validateOnBlur">;
+
+export function formScope(
+  props: FormScopeProps,
+  ...children: Component[]
+): TypedComponent<"form-scope"> {
+  return freeze({
+    type: "form-scope" as const,
+    props: { ...props },
+    slots: freeze({ default: Object.freeze(children) }),
+  });
+}
+
+export function schemaFields(
+  props: SchemaFieldsProps,
+): TypedComponent<"schema-form"> {
+  return freeze({
+    type: "schema-form" as const,
+    props: { ...props, fieldsOnly: true },
+  });
+}
+
+export function submitButton(
+  props: SubmitButtonProps,
+): TypedComponent<"submit-button"> {
+  return freeze({ type: "submit-button" as const, props: freeze({ ...props }) });
 }
 
 // DataSource binding builder
