@@ -90,6 +90,8 @@ export interface LayoutStrategy {
   hideEntry?(key: string): void;
   showEntry?(key: string): void;
   arrange?(preset: string): void;
+  bringToFront?(key: string): void;
+  togglePin?(key: string): void;
   dispose(): void;
 }
 

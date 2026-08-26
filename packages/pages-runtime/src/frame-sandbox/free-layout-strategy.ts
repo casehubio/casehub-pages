@@ -415,6 +415,19 @@ export function createFreeLayoutStrategy(
       applyArrange(preset as Preset);
     },
 
+    bringToFront(key: string) {
+      bringToFront(key);
+    },
+
+    togglePin(key: string) {
+      const wasPinned = pinnedKeys.has(key);
+      if (wasPinned) pinnedKeys.delete(key);
+      else pinnedKeys.add(key);
+      const frameEl = frameElements.get(key);
+      if (frameEl) updatePinVisual(frameEl, !wasPinned);
+      applyZOrder();
+    },
+
     dispose() {
       dndHandler?.dispose();
       dndHandler = null;

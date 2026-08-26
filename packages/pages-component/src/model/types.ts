@@ -57,6 +57,7 @@ export interface LayoutState {
   readonly panels: Readonly<Record<string, PanelEntry>>;
   readonly zones?: Readonly<Record<string, DockZone>>;
   readonly frames?: readonly FrameLayout[];
+  readonly containerState?: ContainerState;
 }
 
 export type Layout = "free" | "tabbed" | "accordion" | "splith" | "splitv" | "content";
