@@ -1,4 +1,5 @@
-import type { FloatingFrameEngine } from "./floating-frame-engine.js";
+import type { Container, FreeLayoutState } from "./frame-sandbox/types.js";
+import { findSpatialTarget, type SpatialFrame } from "./frame-spatial-nav.js";
 
 const INPUT_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
@@ -16,7 +17,7 @@ function isInTextInput(): boolean {
 }
 
 export function createFrameKeyboardHandler(
-  engine: FloatingFrameEngine,
+  rootContainer: Container,
   container: HTMLElement,
   signal: AbortSignal,
 ): void {
@@ -35,10 +36,15 @@ export function createFrameKeyboardHandler(
     if (key === "ArrowUp" || key === "ArrowDown" || key === "ArrowLeft" || key === "ArrowRight") {
       e.preventDefault();
       const dir = key.replace("Arrow", "").toLowerCase() as "up" | "down" | "left" | "right";
-      const target = engine.focusDirection(dir);
+      const state = rootContainer.organiser.getState() as FreeLayoutState;
+      const spatialMap = new Map<string, SpatialFrame>();
+      for (const [k, v] of Object.entries(state.entries)) spatialMap.set(k, v);
+      const current = focusedKey ?? (state.zOrder.length > 0 ? state.zOrder[state.zOrder.length - 1]! : null);
+      if (!current) return;
+      const target = findSpatialTarget(spatialMap, current, dir);
       if (target) {
         focusedKey = target;
-        engine.bringToFront(target);
+        rootContainer.organiser.bringToFront?.(target);
       }
       return;
     }
@@ -46,37 +52,37 @@ export function createFrameKeyboardHandler(
     if (key >= "1" && key <= "9") {
       e.preventDefault();
       const index = parseInt(key) - 1;
-      const visible = [...engine.frames.values()].filter(f => !f.hidden).sort((a, b) => a.order - b.order);
-      if (index < visible.length) {
-        focusedKey = visible[index]!.key;
-        engine.bringToFront(focusedKey);
+      const entries = rootContainer.entries;
+      if (index < entries.length) {
+        focusedKey = entries[index]!.key;
+        rootContainer.organiser.bringToFront?.(focusedKey);
       }
       return;
     }
 
     if (key === "]" || key === "[") {
       e.preventDefault();
-      const visible = [...engine.frames.values()].filter(f => !f.hidden).sort((a, b) => a.order - b.order);
-      if (visible.length === 0) return;
-      const currentIndex = focusedKey ? visible.findIndex(f => f.key === focusedKey) : -1;
+      const entries = rootContainer.entries;
+      if (entries.length === 0) return;
+      const currentIndex = focusedKey ? entries.findIndex(entry => entry.key === focusedKey) : -1;
       const next = key === "]"
-        ? (currentIndex + 1) % visible.length
-        : (currentIndex - 1 + visible.length) % visible.length;
-      focusedKey = visible[next]!.key;
-      engine.bringToFront(focusedKey);
+        ? (currentIndex + 1) % entries.length
+        : (currentIndex - 1 + entries.length) % entries.length;
+      focusedKey = entries[next]!.key;
+      rootContainer.organiser.bringToFront?.(focusedKey);
       return;
     }
 
     if (key === "w" && focusedKey) {
       e.preventDefault();
-      engine.removeFrame(focusedKey);
+      rootContainer.removeEntry(focusedKey);
       focusedKey = null;
       return;
     }
 
     if (key === "p" && focusedKey) {
       e.preventDefault();
-      engine.togglePin(focusedKey);
+      rootContainer.organiser.togglePin?.(focusedKey);
       return;
     }
   }

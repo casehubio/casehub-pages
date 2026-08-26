@@ -1,5 +1,5 @@
-import type { FloatingFrameEngine } from "./floating-frame-engine.js";
-import type { ContentFactory } from "@casehubio/pages-component";
+import type { ContentFactory, FrameTabConfig } from "@casehubio/pages-component";
+import type { Container, FreeLayoutState } from "./frame-sandbox/types.js";
 import { EventRelay } from "./detach/event-relay.js";
 import { copyStyles } from "./detach/copy-styles.js";
 
@@ -16,7 +16,7 @@ interface DetachedFrame {
 }
 
 export function createFrameDetachHandler(
-  engine: FloatingFrameEngine,
+  rootContainer: Container,
   container: HTMLElement,
   contentFactory: ContentFactory,
   signal: AbortSignal,
@@ -24,28 +24,34 @@ export function createFrameDetachHandler(
   const detachedFrames = new Map<string, DetachedFrame>();
 
   function detach(frameKey: string): void {
-    const frame = engine.frames.get(frameKey);
-    if (!frame) return;
+    const entry = rootContainer.entries.find(e => e.key === frameKey);
+    if (!entry) return;
 
-    engine.hideFrame(frameKey);
-    engine.setDetached(frameKey, true);
+    const state = rootContainer.organiser.getState() as FreeLayoutState;
+    const entryLayout = state.entries[frameKey];
+    const width = entryLayout?.size.width ?? 400;
+    const height = entryLayout?.size.height ?? 300;
 
-    const win = window.open("", "_blank", `width=${frame.size.width},height=${frame.size.height}`);
+    rootContainer.organiser.hideEntry?.(frameKey);
+
+    const win = window.open("", "_blank", `width=${String(width)},height=${String(height)}`);
     if (!win) {
-      engine.showFrame(frameKey);
-      engine.setDetached(frameKey, false);
+      rootContainer.organiser.showEntry?.(frameKey);
       console.warn("Popup blocked — allow popups to detach frames.");
       return;
     }
 
     copyStyles(document, win.document);
-    win.document.title = frame.tabs[0]?.label ?? "Frame";
+    win.document.title = entry.label;
     win.document.body.style.margin = "0";
     win.document.body.style.width = "100%";
     win.document.body.style.height = "100vh";
     win.document.body.style.overflow = "auto";
 
-    for (const tab of frame.tabs) {
+    const tabs: FrameTabConfig[] = entry.childContainer
+      ? entry.childContainer.entries.map(e => ({ key: e.key, label: e.label, content: e.component ?? null }))
+      : entry.component ? [{ key: entry.key, label: entry.label, content: entry.component }] : [];
+    for (const tab of tabs) {
       const result = contentFactory(tab);
       win.document.body.appendChild(win.document.adoptNode(result.element));
     }
@@ -83,8 +89,7 @@ export function createFrameDetachHandler(
 
     if (!entry.childWindow.closed) entry.childWindow.close();
 
-    engine.showFrame(frameKey);
-    engine.setDetached(frameKey, false);
+    rootContainer.organiser.showEntry?.(frameKey);
 
     container.dispatchEvent(new CustomEvent("pages-frame-reattach", {
       bubbles: true, composed: true, detail: { frameKey },
