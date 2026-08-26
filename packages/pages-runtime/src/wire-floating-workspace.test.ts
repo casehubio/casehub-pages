@@ -208,4 +208,41 @@ describe("wireFloatingWorkspace", () => {
 
     handle.dispose();
   });
+
+  it("leaf entries show a nest button at bottom-right", () => {
+    const state = makeContainerState();
+    const handle = wireFloatingWorkspace(hostElement, state);
+
+    const nestButtons = hostElement.querySelectorAll("[data-nest-button]");
+    expect(nestButtons.length).toBeGreaterThan(0);
+
+    handle.dispose();
+  });
+
+  it("nest button containerizes a leaf entry into a child container", () => {
+    const state: ContainerState = {
+      layout: "free",
+      tabs: [{
+        key: "f1", label: "Frame 1", content: null,
+        children: { layout: "tabbed", tabs: [makeTab("t1")] },
+      }],
+      layoutState: {
+        entries: { f1: { position: { x: 10, y: 20 }, size: { width: 400, height: 300 } } },
+        zOrder: ["f1"],
+      },
+    };
+    const handle = wireFloatingWorkspace(hostElement, state);
+
+    const childContainer = handle.rootContainer.entries[0]!.childContainer!;
+    const leafEntry = childContainer.entries[0]!;
+    expect(leafEntry.childContainer).toBeUndefined();
+
+    const nestBtn = hostElement.querySelector("[data-nest-button]") as HTMLElement;
+    expect(nestBtn).not.toBeNull();
+    nestBtn.click();
+
+    expect(leafEntry.childContainer).toBeDefined();
+
+    handle.dispose();
+  });
 });
