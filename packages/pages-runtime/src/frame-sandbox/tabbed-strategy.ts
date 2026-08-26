@@ -111,9 +111,16 @@ export function createTabbedStrategy(
 
       function placeGap(beforeEl: HTMLElement | null): void {
         removeGap();
-        gapEl = document.createElement("div");
+        gapEl = document.createElement("button");
         gapEl.setAttribute("data-tab-gap", "");
-        gapEl.style.cssText = "width:40px;min-height:24px;border:2px dashed var(--pages-accent-9,#3b82f6);border-radius:4px;transition:width 0.15s ease;";
+        gapEl.textContent = entry.label;
+        gapEl.style.cssText =
+          "padding:4px 12px;border:none;" +
+          "background:var(--pages-surface-3,#333);" +
+          "color:var(--pages-text-1,#e0e0e0);" +
+          "opacity:0.5;pointer-events:none;" +
+          "border-bottom:2px solid var(--pages-accent-9,#3b82f6);" +
+          "transition:all 0.15s ease;";
         if (beforeEl) {
           stripEl!.insertBefore(gapEl, beforeEl);
         } else {

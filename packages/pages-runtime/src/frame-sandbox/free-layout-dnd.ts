@@ -93,18 +93,33 @@ export function createFreeLayoutDnd(
 
       if (edge) {
         highlightEl.setAttribute("data-split-preview", edge);
-        let inset: string;
-        switch (edge) {
-          case "left": inset = "0 50% 0 0"; break;
-          case "right": inset = "0 0 0 50%"; break;
-          case "top": inset = "0 0 50% 0"; break;
-          case "bottom": inset = "50% 0 0 0"; break;
-        }
+        const contentArea = frameEl.querySelector("[data-frame-content]") as HTMLElement | null;
+        const ref = contentArea ?? frameEl;
+        const frameRect = frameEl.getBoundingClientRect();
+        const refRect = ref.getBoundingClientRect();
+        const top = refRect.top - frameRect.top;
+        const left = refRect.left - frameRect.left;
         highlightEl.style.cssText =
-          `position:absolute;inset:${inset};` +
-          "background:var(--pages-accent-3,rgba(59,130,246,0.15));" +
-          "border:2px solid var(--pages-accent-9,#3b82f6);" +
-          "pointer-events:none;z-index:99999;border-radius:4px;";
+          "position:absolute;pointer-events:none;" +
+          "background:var(--pages-accent-3,#3b82f6);opacity:0.2;z-index:9999;";
+        switch (edge) {
+          case "left":
+            highlightEl.style.top = `${top}px`; highlightEl.style.left = `${left}px`;
+            highlightEl.style.width = `${EDGE_THRESHOLD}px`; highlightEl.style.height = `${refRect.height}px`;
+            break;
+          case "right":
+            highlightEl.style.top = `${top}px`; highlightEl.style.left = `${left + refRect.width - EDGE_THRESHOLD}px`;
+            highlightEl.style.width = `${EDGE_THRESHOLD}px`; highlightEl.style.height = `${refRect.height}px`;
+            break;
+          case "top":
+            highlightEl.style.top = `${top}px`; highlightEl.style.left = `${left}px`;
+            highlightEl.style.width = `${refRect.width}px`; highlightEl.style.height = `${EDGE_THRESHOLD}px`;
+            break;
+          case "bottom":
+            highlightEl.style.top = `${top + refRect.height - EDGE_THRESHOLD}px`; highlightEl.style.left = `${left}px`;
+            highlightEl.style.width = `${refRect.width}px`; highlightEl.style.height = `${EDGE_THRESHOLD}px`;
+            break;
+        }
       } else {
         highlightEl.setAttribute("data-drop-highlight", "");
         highlightEl.style.cssText =
