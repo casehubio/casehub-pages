@@ -1,4 +1,4 @@
-import type { GraphModel, GraphNode } from './model.js';
+import type { GraphModel, GraphNode, GraphEdge } from './model.js';
 import type { ConstraintViolation } from './validator.js';
 import { validateConstraints } from './validator.js';
 import { subtreeOf } from './traversal.js';
@@ -46,6 +46,34 @@ export function replaceNode(model: GraphModel, nodeId: string, newNode: GraphNod
   const newModel: GraphModel = {
     ...model,
     nodes: model.nodes.map(n => n.id === nodeId ? newNode : n),
+  };
+  return { model: newModel, violations: validateConstraints(newModel) };
+}
+
+export function addEdge(model: GraphModel, newEdge: GraphEdge): EditResult {
+  if (model.edges.some(e => e.id === newEdge.id)) {
+    throw new Error(`Duplicate edge ID '${newEdge.id}'`);
+  }
+  if (!model.nodes.some(n => n.id === newEdge.source)) {
+    throw new Error(`Source node '${newEdge.source}' not found`);
+  }
+  if (!model.nodes.some(n => n.id === newEdge.target)) {
+    throw new Error(`Target node '${newEdge.target}' not found`);
+  }
+  const newModel: GraphModel = {
+    ...model,
+    edges: [...model.edges, newEdge],
+  };
+  return { model: newModel, violations: validateConstraints(newModel) };
+}
+
+export function removeEdge(model: GraphModel, edgeId: string): EditResult {
+  if (!model.edges.some(e => e.id === edgeId)) {
+    throw new Error(`Edge '${edgeId}' not found`);
+  }
+  const newModel: GraphModel = {
+    ...model,
+    edges: model.edges.filter(e => e.id !== edgeId),
   };
   return { model: newModel, violations: validateConstraints(newModel) };
 }

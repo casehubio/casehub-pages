@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { addNode, removeNode, replaceNode } from './edit.js';
+import { addNode, removeNode, replaceNode, addEdge, removeEdge } from './edit.js';
 import { createGraph } from './graph.js';
 import { registerGrammar, clearGrammarRegistry } from './grammar.js';
 import type { GraphNode, GraphEdge } from './model.js';
@@ -183,5 +183,105 @@ describe('replaceNode', () => {
   it('throws when replacement ID does not match target', () => {
     const model = createGraph([node('a', 'binding')], []);
     expect(() => replaceNode(model, 'a', node('b', 'worker'))).toThrow(/must match/i);
+  });
+});
+
+describe('addEdge', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+  });
+
+  it('adds an edge to a graph', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [],
+    );
+    const result = addEdge(model, edge('e1', 'n1', 'n2'));
+    expect(result.model.edges).toHaveLength(1);
+    expect(result.model.edges[0]!.id).toBe('e1');
+  });
+
+  it('produces a new model instance', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [],
+    );
+    const result = addEdge(model, edge('e1', 'n1', 'n2'));
+    expect(result.model).not.toBe(model);
+    expect(model.edges).toHaveLength(0);
+  });
+
+  it('throws on duplicate edge ID', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => addEdge(model, edge('e1', 'n1', 'n2'))).toThrow(/duplicate/i);
+  });
+
+  it('throws when source node does not exist', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [],
+    );
+    expect(() => addEdge(model, edge('e1', 'missing', 'n2'))).toThrow(/source.*not found/i);
+  });
+
+  it('throws when target node does not exist', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [],
+    );
+    expect(() => addEdge(model, edge('e1', 'n1', 'missing'))).toThrow(/target.*not found/i);
+  });
+
+  it('returns constraint violations when grammar is registered', () => {
+    registerGrammar({
+      type: 'source',
+      connections: {
+        inbound: { min: 0, max: 0, allowedFrom: [] },
+        outbound: { min: 0, max: 0, allowedTo: [] },
+      },
+    });
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [],
+    );
+    const result = addEdge(model, edge('e1', 'n1', 'n2'));
+    expect(result.violations.length).toBeGreaterThan(0);
+  });
+});
+
+describe('removeEdge', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+  });
+
+  it('removes an edge from the graph', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    const result = removeEdge(model, 'e1');
+    expect(result.model.edges).toHaveLength(0);
+    expect(result.model.nodes).toHaveLength(2);
+  });
+
+  it('produces a new model instance', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    const result = removeEdge(model, 'e1');
+    expect(result.model).not.toBe(model);
+    expect(model.edges).toHaveLength(1);
+  });
+
+  it('throws when edge not found', () => {
+    const model = createGraph(
+      [node('n1', 'source'), node('n2', 'target')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => removeEdge(model, 'missing')).toThrow(/not found/i);
   });
 });
