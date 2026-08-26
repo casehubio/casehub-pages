@@ -9,7 +9,7 @@ import {
 import type { Layout, Entry, Container, FreeLayoutState } from "./frame-sandbox/types.js";
 import { SPLIT_POLICY } from "./frame-sandbox/types.js";
 import { createContainer, containerizeEntry } from "./frame-sandbox/index.js";
-import { captureContainerState, findContainerWithTab } from "./container-tree-ops.js";
+import { captureContainerState, findContainerWithTab, findParentOf, isSplitLayout } from "./container-tree-ops.js";
 
 export interface WireOptions {
   readonly detachEnabled?: boolean | undefined;
@@ -142,21 +142,36 @@ export function wireFloatingWorkspace(
         onEdgeSplit: (sourceContainer, tabKey, targetEntryKey, edge) => {
           const detached = sourceContainer.detachEntry(tabKey);
           if (!detached) return;
-          const targetEntry = rootContainer.entries.find(e => e.key === targetEntryKey);
-          if (!targetEntry) return;
-          const existingChild = targetEntry.childContainer;
-          if (!existingChild) return;
-          existingChild.unmount();
+          const frameEntry = rootContainer.entries.find(e => e.key === targetEntryKey);
+          if (!frameEntry?.childContainer) return;
+
+          let splitTargetChild = frameEntry.childContainer;
+          let splitParentEntry: Entry = frameEntry;
+          let refreshContainer = rootContainer;
+          let refreshKey = targetEntryKey;
+
+          if (isSplitLayout(splitTargetChild.organiser.type)) {
+            const lastEntry = splitTargetChild.entries[splitTargetChild.entries.length - 1];
+            if (lastEntry?.childContainer && !isSplitLayout(lastEntry.childContainer.organiser.type)) {
+              refreshContainer = splitTargetChild;
+              refreshKey = lastEntry.key;
+              splitParentEntry = lastEntry;
+              splitTargetChild = lastEntry.childContainer;
+            }
+          }
+
+          splitTargetChild.unmount();
           const splitLayout = (edge === "left" || edge === "right") ? "splith" : "splitv";
           const existingKey = `split-${String(Date.now())}-a`;
           const newKey = `split-${String(Date.now())}-b`;
-          const existingEntry: Entry = { key: existingKey, label: targetEntry.label, childContainer: existingChild };
-          const newChild = createContainer({ entries: [detached], layout: "tabbed", contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: 3 });
+          const existingEntry: Entry = { key: existingKey, label: splitParentEntry.label, childContainer: splitTargetChild };
+          const depth = splitTargetChild.depth ?? 2;
+          const newChild = createContainer({ entries: [detached], layout: "tabbed", contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: depth + 1 });
           const newEntry: Entry = { key: newKey, label: detached.label, childContainer: newChild };
           const splitEntries = (edge === "left" || edge === "top") ? [newEntry, existingEntry] : [existingEntry, newEntry];
-          const splitContainer = createContainer({ entries: splitEntries, layout: splitLayout, contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: 2, showToolbar: false });
-          targetEntry.childContainer = splitContainer;
-          rootContainer.refreshEntry(targetEntryKey);
+          const splitContainer = createContainer({ entries: splitEntries, layout: splitLayout, contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth, showToolbar: false });
+          splitParentEntry.childContainer = splitContainer;
+          refreshContainer.refreshEntry(refreshKey);
         },
       },
       ...(containerState?.layoutState ? { freeLayoutState: containerState.layoutState as FreeLayoutState } : {}),

@@ -369,6 +369,68 @@ describe("wireFloatingWorkspace", () => {
 
       handle.dispose();
     });
+
+    it("second edge split targets the pane, not the whole frame", () => {
+      const state: ContainerState = {
+        layout: "free",
+        tabs: [
+          { key: "f1", label: "Frame 1", content: null, children: { layout: "tabbed", tabs: [makeTab("t1"), makeTab("t2"), makeTab("t3")] } },
+          { key: "f2", label: "Frame 2", content: null, children: { layout: "tabbed", tabs: [makeTab("t4"), makeTab("t5")] } },
+        ],
+        layoutState: {
+          entries: {
+            f1: { position: { x: 0, y: 0 }, size: { width: 350, height: 500 } },
+            f2: { position: { x: 400, y: 0 }, size: { width: 350, height: 500 } },
+          },
+          zOrder: ["f1", "f2"],
+        },
+      };
+      const handle = wireFloatingWorkspace(host, state);
+
+      const freeHost = host.querySelector("[data-free-host]") as HTMLElement;
+      vi.spyOn(freeHost, "getBoundingClientRect").mockReturnValue({
+        left: 0, right: 800, top: 0, bottom: 600, width: 800, height: 600, x: 0, y: 0, toJSON: () => ({}),
+      });
+
+      const childF1 = handle.rootContainer.entries[0]!.childContainer!;
+
+      const frameF1 = host.querySelector("[data-frame-key='f1']") as HTMLElement;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t1", ghost: document.createElement("div"), sourceContainer: childF1 },
+      }));
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 749, clientY: 250 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 749, clientY: 250 }));
+
+      const f2Split = handle.rootContainer.entries.find(e => e.key === "f2")!.childContainer!;
+      expect(f2Split.organiser.type).toBe("splith");
+      expect(f2Split.entries).toHaveLength(2);
+
+      const rightPane = f2Split.entries[1]!;
+      const rightChild = rightPane.childContainer!;
+      expect(rightChild.organiser.type).toBe("tabbed");
+
+      const childF1After = handle.rootContainer.entries[0]!.childContainer!;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t2", ghost: document.createElement("div"), sourceContainer: childF1After },
+      }));
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 401, clientY: 490 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 401, clientY: 490 }));
+
+      const f2After = handle.rootContainer.entries.find(e => e.key === "f2")!.childContainer!;
+      expect(f2After.organiser.type).toBe("splith");
+      expect(f2After.entries).toHaveLength(2);
+
+      const leftPaneAfter = f2After.entries[0]!.childContainer!;
+      expect(leftPaneAfter.organiser.type).toBe("tabbed");
+      expect(leftPaneAfter.entries.map(e => e.key)).toEqual(["t4", "t5"]);
+
+      const rightPaneAfter = f2After.entries[1]!.childContainer!;
+      expect(rightPaneAfter.organiser.type === "splitv" || rightPaneAfter.organiser.type === "splith").toBe(true);
+
+      handle.dispose();
+    });
   });
 
   describe("cross-frame tab drop", () => {
