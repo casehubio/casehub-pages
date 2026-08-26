@@ -3,7 +3,7 @@ import { PagesElement } from "../base/PagesElement.js";
 import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 import type { PagesFormInput } from "./PagesFormInput.js";
-import type { SchemaFormProps, FieldSchema } from "./schema-types.js";
+import type { SchemaFormProps, FieldSchema } from "@casehubio/pages-component";
 import {
   deriveSchemaFromDataSet,
   mapFieldToComponentType,

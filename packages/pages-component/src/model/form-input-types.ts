@@ -51,3 +51,29 @@ export interface TextareaProps extends FormInputCommon {
 export function isFixedOptions(opts: FixedOptions | DataSetOptions): opts is FixedOptions {
   return "values" in opts;
 }
+
+export interface FieldSchema {
+  readonly type?: string;
+  readonly format?: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly placeholder?: string;
+  readonly enum?: readonly string[];
+  readonly pattern?: string;
+  readonly minimum?: number;
+  readonly maximum?: number;
+  readonly minLength?: number;
+  readonly maxLength?: number;
+  readonly properties?: Readonly<Record<string, FieldSchema>>;
+  readonly required?: readonly string[];
+}
+
+export interface SchemaFormProps {
+  schema?: FieldSchema;
+  mode?: "display" | "edit";
+  forceCreate?: boolean;
+  validateOnBlur?: boolean;
+  excludeFields?: string[];
+  fieldOrder?: string[];
+  labels?: Record<string, string>;
+}

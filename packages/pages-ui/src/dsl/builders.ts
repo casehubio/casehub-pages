@@ -50,6 +50,7 @@ import type {
   GraphProps,
   EventTimelineProps,
   IframePluginProps,
+  SchemaFormProps,
   TextInputProps,
   NumberInputProps,
   DropdownProps,
@@ -493,6 +494,10 @@ export function datePicker(props: DatePickerProps): Component {
 
 export function textarea(props: TextareaProps): Component {
   return freeze({ type: "textarea" as const, props: freeze({ ...props }) });
+}
+
+export function schemaForm(props: SchemaFormProps): TypedComponent<"schema-form"> {
+  return freeze({ type: "schema-form" as const, props: { ...props } });
 }
 
 // DataSource binding builder
