@@ -8,6 +8,7 @@ export { PagesButton } from './button/index.js';
 export { PagesBadge } from './badge/index.js';
 export { PagesStatusDot } from './status-dot/index.js';
 export { PagesConfirmDialog } from './confirm-dialog/index.js';
+export { PagesSubmitButton } from './submit-button/index.js';
 export { renderSparkline, type SparklineOptions } from './sparkline/index.js';
 export { renderPropertyTree, propertyTreeStyles } from './property-tree/index.js';
 export { PagesNumberInput } from './number-input/index.js';
