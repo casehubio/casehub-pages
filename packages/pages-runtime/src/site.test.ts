@@ -888,9 +888,10 @@ describe("floating-workspace integration", () => {
       },
     });
     const layout = site.layout;
-    expect(layout.frames).toBeTruthy();
-    expect(layout.frames).toHaveLength(1);
-    expect(layout.frames![0]!.key).toBe("f1");
+    expect(layout.containerState).toBeTruthy();
+    expect(layout.containerState!.layout).toBe("free");
+    expect(layout.containerState!.tabs).toHaveLength(1);
+    expect(layout.containerState!.tabs[0]!.key).toBe("f1");
     site.dispose();
     document.body.removeChild(target);
   });

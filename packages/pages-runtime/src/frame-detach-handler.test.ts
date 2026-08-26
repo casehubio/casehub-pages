@@ -1,46 +1,46 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { createFrameDetachHandler } from "./frame-detach-handler.js";
-import type { FloatingFrameEngine } from "./floating-frame-engine.js";
-import type { ContentFactory, FrameLayout } from "@casehubio/pages-component";
+import type { ContentFactory } from "@casehubio/pages-component";
+import type { Container, FreeLayoutState, LayoutStrategy, Entry } from "./frame-sandbox/types.js";
 
-function makeFrame(key: string): FrameLayout {
+function mockContainer(keys: string[] = ["f1"]): Container {
+  const entries: Entry[] = keys.map((key) => ({
+    key, label: "Tab 1",
+    component: { type: "html" as const, props: { content: "<div>test</div>" } },
+  }));
+  const freeState: FreeLayoutState = {
+    entries: Object.fromEntries(keys.map((key) => [key, {
+      position: { x: 0, y: 0 },
+      size: { width: 400, height: 300 },
+    }])),
+    zOrder: [...keys],
+  };
+  const organiser = {
+    type: "free" as const,
+    mount: vi.fn(), unmount: vi.fn(), addEntry: vi.fn(), removeEntry: vi.fn(),
+    getState: vi.fn(() => freeState), restoreState: vi.fn(), refreshEntry: vi.fn(),
+    detachEntry: vi.fn(() => null), dispose: vi.fn(),
+    hideEntry: vi.fn(), showEntry: vi.fn(),
+    bringToFront: vi.fn(), togglePin: vi.fn(),
+  } as unknown as LayoutStrategy;
   return {
-    key, order: 0, position: { x: 0, y: 0 }, size: { width: 400, height: 300 },
-    zIndex: 1, pinned: false, hidden: false,
-    tabs: [{ key: "t1", label: "Tab 1", content: { type: "html", props: { content: "<div>test</div>" } } }],
-    activeTabKey: "t1",
+    entries, organiser,
+    policy: { allowedLayouts: ["free"], maxDepth: 5 }, depth: 1,
+    addEntry: vi.fn(), removeEntry: vi.fn(), replaceChild: vi.fn(),
+    refreshEntry: vi.fn(), detachEntry: vi.fn(() => null),
+    setLayout: vi.fn(), mount: vi.fn(), unmount: vi.fn(), dispose: vi.fn(),
   };
 }
 
-function mockEngine(frameKeys: string[] = ["f1"]): FloatingFrameEngine {
-  const framesMap = new Map<string, FrameLayout>();
-  for (const key of frameKeys) framesMap.set(key, makeFrame(key));
-
-  return {
-    frames: framesMap,
-    hideFrame: vi.fn(),
-    showFrame: vi.fn(),
-    setDetached: vi.fn(),
-    createFrame: vi.fn(), removeFrame: vi.fn(),
-    addTab: vi.fn(), removeTab: vi.fn(), moveTab: vi.fn(), setActiveTab: vi.fn(),
-    bringToFront: vi.fn(), togglePin: vi.fn(),
-    updatePosition: vi.fn(), updateSize: vi.fn(),
-    focusDirection: vi.fn(), applyOrganiser: vi.fn(),
-    snapFrame: vi.fn(), unsnapFrame: vi.fn(), recomputeSnappedFrames: vi.fn(),
-    captureLayout: vi.fn(() => []), restoreLayout: vi.fn(),
-    dispose: vi.fn(),
-  } as unknown as FloatingFrameEngine;
-}
-
 describe("createFrameDetachHandler", () => {
-  let engine: FloatingFrameEngine;
+  let rootContainer: Container;
   let container: HTMLElement;
   let factory: ContentFactory;
   let controller: AbortController;
   let mockWin: any;
 
   beforeEach(() => {
-    engine = mockEngine();
+    rootContainer = mockContainer();
     container = document.createElement("div");
     factory = vi.fn(() => ({ element: document.createElement("div") }));
     controller = new AbortController();
@@ -76,16 +76,15 @@ describe("createFrameDetachHandler", () => {
     vi.restoreAllMocks();
   });
 
-  it("hides frame and opens child window on detach", () => {
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+  it("hides entry and opens child window on detach", () => {
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
-    expect(engine.hideFrame).toHaveBeenCalledWith("f1");
-    expect(engine.setDetached).toHaveBeenCalledWith("f1", true);
+    expect(rootContainer.organiser.hideEntry).toHaveBeenCalledWith("f1");
     expect(globalThis.open).toHaveBeenCalled();
   });
 
   it("renders content via factory in child window", () => {
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
     expect(factory).toHaveBeenCalled();
   });
@@ -93,22 +92,21 @@ describe("createFrameDetachHandler", () => {
   it("dispatches pages-frame-detach event", () => {
     const listener = vi.fn();
     container.addEventListener("pages-frame-detach", listener);
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
     expect(listener).toHaveBeenCalled();
     expect((listener.mock.calls[0]![0] as CustomEvent).detail.frameKey).toBe("f1");
   });
 
-  it("shows frame and clears detached on reattach", () => {
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+  it("shows entry on reattach", () => {
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
     handler.reattach("f1");
-    expect(engine.showFrame).toHaveBeenCalledWith("f1");
-    expect(engine.setDetached).toHaveBeenCalledWith("f1", false);
+    expect(rootContainer.organiser.showEntry).toHaveBeenCalledWith("f1");
   });
 
   it("closes child window on reattach", () => {
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
     handler.reattach("f1");
     expect(mockWin.close).toHaveBeenCalled();
@@ -117,37 +115,36 @@ describe("createFrameDetachHandler", () => {
   it("dispatches pages-frame-reattach event", () => {
     const listener = vi.fn();
     container.addEventListener("pages-frame-reattach", listener);
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
     handler.reattach("f1");
     expect(listener).toHaveBeenCalled();
   });
 
   it("is no-op for unknown frame key", () => {
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("unknown");
-    expect(engine.hideFrame).not.toHaveBeenCalled();
+    expect(rootContainer.organiser.hideEntry).not.toHaveBeenCalled();
   });
 
   it("reattach is no-op if not detached", () => {
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.reattach("f1");
-    expect(engine.showFrame).not.toHaveBeenCalled();
+    expect(rootContainer.organiser.showEntry).not.toHaveBeenCalled();
   });
 
   it("handles popup blocked gracefully", () => {
     (globalThis.open as ReturnType<typeof vi.fn>).mockReturnValue(null);
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
-    expect(engine.hideFrame).toHaveBeenCalled();
-    expect(engine.showFrame).toHaveBeenCalledWith("f1");
-    expect(engine.setDetached).toHaveBeenLastCalledWith("f1", false);
+    expect(rootContainer.organiser.hideEntry).toHaveBeenCalled();
+    expect(rootContainer.organiser.showEntry).toHaveBeenCalledWith("f1");
   });
 
   it("dispose reattaches all detached frames", () => {
-    const handler = createFrameDetachHandler(engine, container, factory, controller.signal);
+    const handler = createFrameDetachHandler(rootContainer, container, factory, controller.signal);
     handler.detach("f1");
     handler.dispose();
-    expect(engine.showFrame).toHaveBeenCalledWith("f1");
+    expect(rootContainer.organiser.showEntry).toHaveBeenCalledWith("f1");
   });
 });

@@ -37,7 +37,7 @@ export function wireFloatingWorkspace(
   if (savedLayout) {
     containerState = Array.isArray(savedLayout)
       ? migrateFrameLayout(savedLayout as readonly FrameLayout[])
-      : savedLayout;
+      : savedLayout as ContainerState;
   }
 
   const externalFactory = options?.contentFactory;
@@ -97,7 +97,7 @@ export function wireFloatingWorkspace(
       layout: "free",
       contentFactory: entryContentFactory,
       policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 5 },
-      freeLayoutState: containerState?.layoutState as FreeLayoutState | undefined,
+      ...(containerState?.layoutState ? { freeLayoutState: containerState.layoutState as FreeLayoutState } : {}),
     });
     rootContainer.mount(hostElement);
   }

@@ -1,309 +1,111 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { wireFloatingWorkspace } from "./wire-floating-workspace.js";
-import type { FloatingFrameBackend } from "./floating-frame-backend.js";
-import type { FrameTabConfig, FrameLayout } from "@casehubio/pages-component";
-import { createContainer } from "./frame-sandbox/index.js";
-import type { Entry, ContentFactory as CF } from "./frame-sandbox/types.js";
+import type { ContainerState, FrameLayout, FrameTabConfig, ContentFactory } from "@casehubio/pages-component";
 
 function makeTab(key: string): FrameTabConfig {
   return { key, label: key, content: { type: "html", props: { content: `<div>${key}</div>` } } };
 }
 
-type Callback<T extends unknown[]> = (...args: T) => void;
-
-function mockBackend(): FloatingFrameBackend & {
-  _fireMove: (key: string, pos: { x: number; y: number }) => void;
-  _fireResize: (key: string, size: { width: number; height: number }) => void;
-  _fireClose: (key: string) => void;
-  _firePin: (key: string) => void;
-  _fireTabDragOut: (fromFrame: string, tabKey: string, pos: { x: number; y: number }) => void;
-  _fireTabReorder: (frameKey: string, tabKeys: string[]) => void;
-} {
-  const moveCbs: Callback<[string, { x: number; y: number }]>[] = [];
-  const resizeCbs: Callback<[string, { width: number; height: number }]>[] = [];
-  const closeCbs: Callback<[string]>[] = [];
-  const pinCbs: Callback<[string]>[] = [];
-  const tabDragOutCbs: Callback<[string, string, { x: number; y: number }]>[] = [];
-  const tabReorderCbs: Callback<[string, string[]]>[] = [];
-
+function makeContainerState(): ContainerState {
   return {
-    attach: vi.fn(), detach: vi.fn(),
-    renderFrame: vi.fn(), removeFrame: vi.fn(),
-    updatePosition: vi.fn(), updateSize: vi.fn(), bringToFront: vi.fn(),
-    addTab: vi.fn(), removeTab: vi.fn(), setActiveTab: vi.fn(),
-    onFrameMove(cb) { moveCbs.push(cb); },
-    onFrameResize(cb) { resizeCbs.push(cb); },
-    onTabDragOut(cb) { tabDragOutCbs.push(cb); },
-    onTabReorder(cb) { tabReorderCbs.push(cb); },
-    onFrameClose(cb) { closeCbs.push(cb); },
-    onFramePin(cb) { pinCbs.push(cb); },
-    onFrameDragMove: vi.fn(),
-    onTitlebarDoubleClick: vi.fn(),
-    onViewModeToggle: vi.fn(),
-    onAddTab: vi.fn(),
-    onTabRemoved: vi.fn(),
-    onArrangement: vi.fn(),
-    onDetach: vi.fn(),
-    onCrossFrameDrop: vi.fn(),
-    onEdgeSplit: vi.fn(),
-    onLayoutChange: vi.fn(),
-    setFrameLayout: vi.fn(),
-    updatePinState: vi.fn(),
-    getFrameElement: vi.fn(() => null),
-    getSubFrameElements: vi.fn(() => []),
-    getTabContentElement: vi.fn(() => null),
-    captureContainerTree: vi.fn(() => undefined),
-    getRootContainer: vi.fn(() => null),
-    dispose: vi.fn(), unwrap: vi.fn(() => null),
-    _fireMove(key, pos) { for (const cb of moveCbs) cb(key, pos); },
-    _fireResize(key, size) { for (const cb of resizeCbs) cb(key, size); },
-    _fireClose(key) { for (const cb of closeCbs) cb(key); },
-    _firePin(key) { for (const cb of pinCbs) cb(key); },
-    _fireTabDragOut(from, tab, pos) { for (const cb of tabDragOutCbs) cb(from, tab, pos); },
-    _fireTabReorder(fk, tks) { for (const cb of tabReorderCbs) cb(fk, tks); },
+    layout: "free",
+    tabs: [
+      {
+        key: "f1", label: "Frame 1", content: null,
+        children: { layout: "tabbed", tabs: [makeTab("t1"), makeTab("t2")] },
+      },
+      {
+        key: "f2", label: "Frame 2", content: null,
+        children: { layout: "tabbed", tabs: [makeTab("t3")] },
+      },
+    ],
+    layoutState: {
+      entries: {
+        f1: { position: { x: 10, y: 20 }, size: { width: 400, height: 300 } },
+        f2: { position: { x: 450, y: 20 }, size: { width: 300, height: 250 } },
+      },
+      zOrder: ["f1", "f2"],
+    },
   };
 }
 
 describe("wireFloatingWorkspace", () => {
-  let backend: ReturnType<typeof mockBackend>;
-  let container: HTMLElement;
+  let hostElement: HTMLElement;
 
   beforeEach(() => {
-    backend = mockBackend();
-    container = document.createElement("div");
+    hostElement = document.createElement("div");
   });
 
-  it("creates an engine and returns a WireHandle", () => {
-    const handle = wireFloatingWorkspace(backend, container);
-    expect(handle.engine).toBeDefined();
-    expect(handle.engine.frames.size).toBe(0);
+  it("creates a root Container and mounts it", () => {
+    const handle = wireFloatingWorkspace(hostElement);
+    expect(handle.rootContainer).toBeDefined();
+    expect(handle.rootContainer.entries).toHaveLength(0);
+    expect(handle.rootContainer.organiser.type).toBe("free");
+    handle.dispose();
   });
 
-  it("restores saved layout", () => {
-    const saved = [{
+  it("restores from ContainerState", () => {
+    const state = makeContainerState();
+    const handle = wireFloatingWorkspace(hostElement, state);
+    expect(handle.rootContainer.entries).toHaveLength(2);
+    expect(handle.rootContainer.entries[0]!.key).toBe("f1");
+    expect(handle.rootContainer.entries[1]!.key).toBe("f2");
+    handle.dispose();
+  });
+
+  it("restores child containers with correct layout", () => {
+    const state = makeContainerState();
+    const handle = wireFloatingWorkspace(hostElement, state);
+    const firstEntry = handle.rootContainer.entries[0]!;
+    expect(firstEntry.childContainer).toBeDefined();
+    expect(firstEntry.childContainer!.organiser.type).toBe("tabbed");
+    expect(firstEntry.childContainer!.entries).toHaveLength(2);
+    handle.dispose();
+  });
+
+  it("migrates FrameLayout[] to ContainerState", () => {
+    const frames: readonly FrameLayout[] = [{
       key: "f1", order: 0, position: { x: 10, y: 20 }, size: { width: 400, height: 300 },
       zIndex: 1, pinned: false, hidden: false, tabs: [makeTab("t1")], activeTabKey: "t1",
-    }] as const;
-    const handle = wireFloatingWorkspace(backend, container, saved);
-    expect(handle.engine.frames.size).toBe(1);
+    }];
+    const handle = wireFloatingWorkspace(hostElement, frames);
+    expect(handle.rootContainer.entries).toHaveLength(1);
+    expect(handle.rootContainer.entries[0]!.key).toBe("f1");
+    handle.dispose();
   });
 
-  describe("onFrameMove", () => {
-    it("updates engine position and dispatches event", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")] });
-
-      const events: CustomEvent[] = [];
-      container.addEventListener("pages-frame-move", ((e: Event) => events.push(e as CustomEvent)));
-
-      backend._fireMove("f1", { x: 200, y: 300 });
-      expect(handle.engine.frames.get("f1")!.position).toEqual({ x: 200, y: 300 });
-      expect(events).toHaveLength(1);
-      expect(events[0]!.detail).toEqual({ frameKey: "f1", position: { x: 200, y: 300 } });
-    });
+  it("captureState returns ContainerState", () => {
+    const state = makeContainerState();
+    const handle = wireFloatingWorkspace(hostElement, state);
+    const captured = handle.captureState();
+    expect(captured.layout).toBe("free");
+    expect(captured.tabs).toHaveLength(2);
+    expect(captured.tabs[0]!.key).toBe("f1");
+    handle.dispose();
   });
 
-  describe("onFrameResize", () => {
-    it("updates engine size and dispatches event", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")] });
-
-      const events: CustomEvent[] = [];
-      container.addEventListener("pages-frame-resize", ((e: Event) => events.push(e as CustomEvent)));
-
-      backend._fireResize("f1", { width: 600, height: 500 });
-      expect(handle.engine.frames.get("f1")!.size).toEqual({ width: 600, height: 500 });
-      expect(events).toHaveLength(1);
-      expect(events[0]!.detail).toEqual({ frameKey: "f1", size: { width: 600, height: 500 } });
-    });
-
-    it("preserves position when resize fires with concurrent move", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")], position: { x: 100, y: 200 }, size: { width: 400, height: 300 } });
-
-      backend._fireMove("f1", { x: 100, y: 200 });
-      backend._fireResize("f1", { width: 500, height: 400 });
-
-      const frame = handle.engine.frames.get("f1")!;
-      expect(frame.position).toEqual({ x: 100, y: 200 });
-      expect(frame.size).toEqual({ width: 500, height: 400 });
-    });
-
-    it("calls backend.updatePosition after move to sync overlay state", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")], position: { x: 100, y: 200 }, size: { width: 400, height: 300 } });
-
-      backend._fireMove("f1", { x: 150, y: 250 });
-
-      expect(backend.updatePosition).toHaveBeenCalledWith("f1", { x: 150, y: 250 });
-    });
-
-    it("calls backend.updateSize after resize to sync overlay state", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")], position: { x: 100, y: 200 }, size: { width: 400, height: 300 } });
-
-      backend._fireResize("f1", { width: 500, height: 400 });
-
-      expect(backend.updateSize).toHaveBeenCalledWith("f1", { width: 500, height: 400 });
-    });
+  it("creates container toolbar", () => {
+    const handle = wireFloatingWorkspace(hostElement);
+    expect(handle.containerToolbar).toBeDefined();
+    expect(handle.containerToolbar!.element).toBeDefined();
+    handle.dispose();
   });
 
-  describe("onFrameClose", () => {
-    it("removes frame from engine and dispatches event", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")] });
+  it("reuses existing container on mount", () => {
+    const state = makeContainerState();
+    const handle1 = wireFloatingWorkspace(hostElement, state);
+    const rootContainer = handle1.rootContainer;
+    handle1.rootContainer.unmount();
 
-      const events: CustomEvent[] = [];
-      container.addEventListener("pages-frame-close", ((e: Event) => events.push(e as CustomEvent)));
-
-      backend._fireClose("f1");
-      expect(handle.engine.frames.size).toBe(0);
-      expect(events).toHaveLength(1);
-      expect(events[0]!.detail).toEqual({ frameKey: "f1" });
-    });
+    const host2 = document.createElement("div");
+    const handle2 = wireFloatingWorkspace(host2, undefined, { existingContainer: rootContainer });
+    expect(handle2.rootContainer).toBe(rootContainer);
+    handle2.dispose();
   });
 
-  describe("onFramePin", () => {
-    it("toggles pin on engine, calls updatePinState, and dispatches event", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")] });
-
-      const events: CustomEvent[] = [];
-      container.addEventListener("pages-frame-pin", ((e: Event) => events.push(e as CustomEvent)));
-
-      backend._firePin("f1");
-      expect(handle.engine.frames.get("f1")!.pinned).toBe(true);
-      expect(backend.updatePinState).toHaveBeenCalledWith("f1", true);
-      expect(events).toHaveLength(1);
-      expect(events[0]!.detail).toEqual({ frameKey: "f1", pinned: true });
-
-      backend._firePin("f1");
-      expect(handle.engine.frames.get("f1")!.pinned).toBe(false);
-      expect(backend.updatePinState).toHaveBeenCalledWith("f1", false);
-      expect(events).toHaveLength(2);
-      expect(events[1]!.detail).toEqual({ frameKey: "f1", pinned: false });
-    });
-  });
-
-  describe("onTabDragOut", () => {
-    it("creates new frame, moves tab, and dispatches event", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1"), makeTab("t2")] });
-
-      const events: CustomEvent[] = [];
-      container.addEventListener("pages-tab-drag-out", ((e: Event) => events.push(e as CustomEvent)));
-
-      backend._fireTabDragOut("f1", "t2", { x: 100, y: 100 });
-
-      expect(handle.engine.frames.get("f1")!.tabs).toHaveLength(1);
-      expect(handle.engine.frames.size).toBe(2);
-      expect(events).toHaveLength(1);
-      expect(events[0]!.detail.tabKey).toBe("t2");
-      expect(events[0]!.detail.fromFrame).toBe("f1");
-    });
-
-    it("auto-closes source frame when last tab dragged out", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")] });
-
-      backend._fireTabDragOut("f1", "t1", { x: 100, y: 100 });
-
-      expect(handle.engine.frames.has("f1")).toBe(false);
-    });
-  });
-
-  describe("onTabReorder", () => {
-    it("dispatches event", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-
-      const events: CustomEvent[] = [];
-      container.addEventListener("pages-tab-reorder", ((e: Event) => events.push(e as CustomEvent)));
-
-      backend._fireTabReorder("f1", ["t2", "t1"]);
-      expect(events).toHaveLength(1);
-      expect(events[0]!.detail).toEqual({ frameKey: "f1", tabKeys: ["t2", "t1"] });
-    });
-  });
-
-  describe("dispose", () => {
-    it("disposes the engine", () => {
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.dispose();
-      expect(() => handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")] })).toThrow("Engine is disposed");
-    });
-  });
-
-  describe("workspace mount transfer", () => {
-    function makeFrameElement(key: string): HTMLElement {
-      const frameEl = document.createElement("div");
-      frameEl.setAttribute("data-frame-key", key);
-      const body = document.createElement("div");
-      body.setAttribute("data-frame-body", "");
-      body.style.cssText = "flex:1;display:flex;flex-direction:column;overflow:hidden;";
-      frameEl.appendChild(body);
-      return frameEl;
-    }
-
-    function simpleFactory(): CF {
-      return (entry: Entry) => {
-        const el = document.createElement("div");
-        el.textContent = entry.key;
-        el.dataset.testLeaf = entry.key;
-        return { element: el };
-      };
-    }
-
-    function clickModeButton(handle: ReturnType<typeof wireFloatingWorkspace>): void {
-      const modeBtn = handle.containerToolbar!.element.querySelector("[data-toolbar-mode]") as HTMLElement;
-      modeBtn.click();
-    }
-
-    it("free→tabbed calls getRootContainer for each frame", () => {
-      const frameEl = makeFrameElement("f1");
-      container.appendChild(frameEl);
-      backend.getFrameElement = vi.fn(() => frameEl);
-
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({
-        key: "f1", tabs: [makeTab("t1"), makeTab("t2")],
-        position: { x: 0, y: 0 }, size: { width: 400, height: 300 },
-      });
-
-      clickModeButton(handle); // free → tabbed
-
-      expect(backend.getRootContainer).toHaveBeenCalledWith("f1");
-    });
-
-    it("free→tabbed→free preserves container identity", () => {
-      const frameEl = makeFrameElement("f1");
-      container.appendChild(frameEl);
-      const body = frameEl.querySelector("[data-frame-body]") as HTMLElement;
-      backend.getFrameElement = vi.fn(() => frameEl);
-
-      const liveContainer = createContainer({
-        entries: [{ key: "t1", label: "T1" }, { key: "t2", label: "T2" }],
-        layout: "tabbed",
-        contentFactory: simpleFactory(),
-      });
-      liveContainer.mount(body);
-      backend.getRootContainer = vi.fn(() => liveContainer);
-
-      const handle = wireFloatingWorkspace(backend, container);
-      handle.engine.createFrame({
-        key: "f1", tabs: [makeTab("t1"), makeTab("t2")],
-        position: { x: 0, y: 0 }, size: { width: 400, height: 300 },
-      });
-
-      clickModeButton(handle); // free → tabbed
-      const wsParent = container.parentElement ?? container;
-      expect(wsParent.querySelector("[data-workspace-container]")).not.toBeNull();
-
-      clickModeButton(handle); // tabbed → accordion
-      clickModeButton(handle); // accordion → free
-
-      expect(wsParent.querySelector("[data-workspace-container]")).toBeNull();
-      expect(body.children.length).toBeGreaterThan(0);
-      expect(liveContainer.entries).toHaveLength(2);
-    });
+  it("dispose cleans up container and toolbar", () => {
+    const handle = wireFloatingWorkspace(hostElement, makeContainerState());
+    handle.dispose();
+    expect(hostElement.children.length).toBe(0);
   });
 });

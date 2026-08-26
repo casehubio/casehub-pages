@@ -14,7 +14,7 @@ export function migrateFrameLayout(frames: readonly FrameLayout[]): ContainerSta
         key: t.key,
         label: t.label,
         content: t.content,
-        children: t.children,
+        ...(t.children ? { children: t.children } : {}),
       })),
       layoutState: {
         activeKey: frame.activeTabKey,
@@ -46,7 +46,7 @@ export function configToContainerState(configs: readonly FrameConfig[]): Contain
     label: config.tabs[0]?.label ?? config.key,
     content: null as null,
     children: {
-      layout: (config.viewMode === "accordion" ? "accordion" : "tabbed") as const,
+      layout: (config.viewMode === "accordion" ? "accordion" : "tabbed") as "accordion" | "tabbed",
       tabs: config.tabs.map(t => ({ key: t.key, label: t.label, content: t.content })),
     },
   }));
