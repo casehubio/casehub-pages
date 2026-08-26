@@ -430,5 +430,47 @@ describe("TabOrganiser", () => {
       document.dispatchEvent(new PointerEvent("pointerup"));
       org.dispose();
     });
+
+    it("dragging the active tab switches content to another tab", () => {
+      const org = createTabbedStrategy();
+      org.mount(container, makeEntries("a", "b", "c"), testFactory());
+      mockTabBounds(container);
+
+      expect((org.getState() as TabState).activeKey).toBe("a");
+      expect(container.querySelector("[data-test-key='a']")).not.toBeNull();
+
+      const tabA = container.querySelector("[data-tab-key='a']") as HTMLElement;
+      tabA.dispatchEvent(
+        new PointerEvent("pointerdown", { clientX: 40, clientY: 15, bubbles: true }),
+      );
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 200, clientY: 15 }),
+      );
+
+      expect(container.querySelector("[data-test-key='b']")).not.toBeNull();
+
+      document.dispatchEvent(new PointerEvent("pointerup"));
+      org.dispose();
+    });
+
+    it("dropping active tab back in same position re-activates it", () => {
+      const org = createTabbedStrategy();
+      org.mount(container, makeEntries("a", "b", "c"), testFactory());
+      mockTabBounds(container);
+
+      const tabA = container.querySelector("[data-tab-key='a']") as HTMLElement;
+      tabA.dispatchEvent(
+        new PointerEvent("pointerdown", { clientX: 40, clientY: 15, bubbles: true }),
+      );
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 40, clientY: 15 }),
+      );
+      document.dispatchEvent(new PointerEvent("pointerup"));
+
+      expect((org.getState() as TabState).activeKey).toBe("a");
+      expect(container.querySelector("[data-test-key='a']")).not.toBeNull();
+
+      org.dispose();
+    });
   });
 });

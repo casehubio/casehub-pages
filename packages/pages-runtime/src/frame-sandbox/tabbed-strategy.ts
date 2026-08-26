@@ -145,6 +145,10 @@ export function createTabbedStrategy(
           dragStarted = true;
           ghost = createGhost();
           btn.style.display = "none";
+          if (activeKey === entry.key && currentEntries.length > 1) {
+            const other = currentEntries.find(e => e.key !== entry.key);
+            if (other) activateTab(other.key);
+          }
         }
 
         ghost!.style.left = `${e.clientX - ghost!.offsetWidth / 2}px`;
