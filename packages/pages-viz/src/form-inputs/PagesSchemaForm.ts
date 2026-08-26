@@ -30,6 +30,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
   private _childTypes: Map<string, string> = new Map();
   private _resolvedSchema: FieldSchema | null = null;
   private _editable = false;
+  private _fieldsOnly = false;
   private _liveRegion: HTMLElement | null = null;
 
   static override styles = css`
@@ -50,6 +51,14 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
 
   get editable(): boolean {
     return this._editable;
+  }
+
+  set fieldsOnly(value: boolean) {
+    this._fieldsOnly = value;
+  }
+
+  get fieldsOnly(): boolean {
+    return this._fieldsOnly;
   }
 
   override disconnectedCallback(): void {
@@ -111,7 +120,9 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
 
     const excludeSet = new Set(props.excludeFields ?? []);
     const fieldOrder = props.fieldOrder ?? Object.keys(schemaProps);
-    const fields = fieldOrder.filter((f) => !excludeSet.has(f) && f in schemaProps);
+    const fields = props.fields
+      ? props.fields.filter((f) => f in schemaProps)
+      : fieldOrder.filter((f) => !excludeSet.has(f) && f in schemaProps);
 
     const isCreateMode = props.forceCreate === true || dataset.rows.length === 0;
     const isDisplay = props.mode === "display" || !this._editable;
@@ -192,12 +203,28 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       this._childTypes.delete(key);
     }
 
+    if (this._fieldsOnly) {
+      const fieldsToRegister = fields.map((field) => ({
+        field,
+        element: this._children.get(field)!,
+        componentType: this._childTypes.get(field) ?? "input",
+      }));
+      queueMicrotask(() => {
+        for (const entry of fieldsToRegister) {
+          this.dispatchEvent(new CustomEvent("pages-field-register", {
+            bubbles: true, composed: true,
+            detail: entry,
+          }));
+        }
+      });
+    }
+
     return html`
       <div class="schema-form-fields" role="${isDisplay ? "group" : "form"}"
-        @pages-field-change=${props.validateOnBlur ? this._handleFieldChange : undefined}
+        @pages-field-change=${props.validateOnBlur && !this._fieldsOnly ? this._handleFieldChange : undefined}
       >
         ${fields.map((field) => this._children.get(field)!)}
-        ${isCreateMode && !isDisplay ? html`
+        ${isCreateMode && !isDisplay && !this._fieldsOnly ? html`
           <div class="submit-bar">
             <button class="submit-btn" @click=${() => this.submit()}>Submit</button>
           </div>
