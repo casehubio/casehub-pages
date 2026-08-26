@@ -31,27 +31,36 @@ export function createFreeLayoutDnd(
   function detectTarget(clientX: number, clientY: number): {
     frameKey: string | null;
     edge: EdgeZone | null;
+    overStrip: boolean;
   } {
     const hostRect = hostElement.getBoundingClientRect();
     const x = clientX - hostRect.left;
     const y = clientY - hostRect.top;
 
     for (const [key, state] of entryState) {
-      if (!frameElements.has(key)) continue;
+      const frameEl = frameElements.get(key);
+      if (!frameEl) continue;
       const { position, size } = state;
       if (
         x >= position.x && x <= position.x + size.width &&
         y >= position.y && y <= position.y + size.height
       ) {
+        const strip = frameEl.querySelector("[data-tab-strip]") as HTMLElement | null;
+        if (strip) {
+          const stripRect = strip.getBoundingClientRect();
+          if (clientX >= stripRect.left && clientX <= stripRect.right && clientY >= stripRect.top - 15 && clientY <= stripRect.bottom + 15) {
+            return { frameKey: key, edge: null, overStrip: true };
+          }
+        }
         const edge = detectEdgeZone(
           { x, y },
           { x: position.x, y: position.y, width: size.width, height: size.height },
           EDGE_THRESHOLD,
         );
-        return { frameKey: key, edge };
+        return { frameKey: key, edge, overStrip: false };
       }
     }
-    return { frameKey: null, edge: null };
+    return { frameKey: null, edge: null, overStrip: false };
   }
 
   function isOutsideHost(clientX: number, clientY: number): boolean {
@@ -75,13 +84,61 @@ export function createFreeLayoutDnd(
     const { tabKey, ghost, sourceContainer } = evt.detail;
     let currentFrameKey: string | null = null;
     let currentEdge: EdgeZone | null = null;
+    let currentOverStrip = false;
     let highlightEl: HTMLElement | null = null;
+    let tabPreviewEl: HTMLElement | null = null;
+    let stripInsertIndex = -1;
     let escaped = false;
 
     function clearHighlight(): void {
       if (highlightEl) {
         highlightEl.remove();
         highlightEl = null;
+      }
+      if (tabPreviewEl) {
+        tabPreviewEl.remove();
+        tabPreviewEl = null;
+      }
+    }
+
+    function showTabPreview(frameKey: string, clientX: number): void {
+      const frameEl = frameElements.get(frameKey);
+      if (!frameEl) return;
+      const strip = frameEl.querySelector("[data-tab-strip]") as HTMLElement | null;
+      if (!strip) return;
+
+      if (!tabPreviewEl) {
+        const srcEntry = sourceContainer.entries.find(en => en.key === tabKey);
+        tabPreviewEl = document.createElement("button");
+        tabPreviewEl.setAttribute("data-tab-preview", "");
+        tabPreviewEl.textContent = srcEntry?.label ?? tabKey;
+        tabPreviewEl.style.cssText =
+          "padding:4px 12px;border:none;" +
+          "background:var(--pages-surface-3,#333);" +
+          "color:var(--pages-text-1,#e0e0e0);" +
+          "opacity:0.5;pointer-events:none;" +
+          "border-bottom:2px solid transparent;" +
+          "transition:all 0.15s ease;";
+      }
+
+      const buttons = [...strip.querySelectorAll("[data-tab-key]")] as HTMLElement[];
+      let insertBefore: HTMLElement | null = null;
+      stripInsertIndex = buttons.length;
+      for (let i = 0; i < buttons.length; i++) {
+        const bRect = buttons[i]!.getBoundingClientRect();
+        const mid = bRect.left + bRect.width / 2;
+        if (clientX < mid) {
+          insertBefore = buttons[i]!;
+          stripInsertIndex = i;
+          break;
+        }
+      }
+      if (insertBefore) {
+        strip.insertBefore(tabPreviewEl, insertBefore);
+      } else {
+        const sentinel = strip.querySelector("[data-container-toolbar], [data-toolbar-actions]");
+        if (sentinel) strip.insertBefore(tabPreviewEl, sentinel);
+        else strip.appendChild(tabPreviewEl);
       }
     }
 
@@ -149,12 +206,21 @@ export function createFreeLayoutDnd(
         return;
       }
 
-      const { frameKey, edge } = detectTarget(moveEvt.clientX, moveEvt.clientY);
-      if (frameKey !== currentFrameKey || edge !== currentEdge) {
+      const { frameKey, edge, overStrip } = detectTarget(moveEvt.clientX, moveEvt.clientY);
+      if (frameKey !== currentFrameKey || edge !== currentEdge || overStrip !== currentOverStrip) {
         clearHighlight();
         currentFrameKey = frameKey;
         currentEdge = edge;
-        if (currentFrameKey) setHighlight(currentFrameKey, currentEdge);
+        currentOverStrip = overStrip;
+        if (currentFrameKey) {
+          if (currentOverStrip) {
+            showTabPreview(currentFrameKey, moveEvt.clientX);
+          } else {
+            setHighlight(currentFrameKey, currentEdge);
+          }
+        }
+      } else if (currentOverStrip && currentFrameKey) {
+        showTabPreview(currentFrameKey, moveEvt.clientX);
       }
     }
 
@@ -162,7 +228,9 @@ export function createFreeLayoutDnd(
       cleanup();
       if (escaped) return;
 
-      if (currentFrameKey && currentEdge && callbacks.onEdgeSplit) {
+      if (currentOverStrip && currentFrameKey) {
+        callbacks.onDrop(sourceContainer, tabKey, currentFrameKey, upEvt.clientX, upEvt.clientY);
+      } else if (currentFrameKey && currentEdge && callbacks.onEdgeSplit) {
         callbacks.onEdgeSplit(sourceContainer, tabKey, currentFrameKey, currentEdge);
       } else {
         callbacks.onDrop(sourceContainer, tabKey, currentFrameKey, upEvt.clientX, upEvt.clientY);
