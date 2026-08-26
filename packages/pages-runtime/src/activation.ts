@@ -42,8 +42,12 @@ import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
 import "@casehubio/pages-ui-components/checkbox";
+import "@casehubio/pages-ui-components/submit-button";
+import { FormScopeState, FormScopeRegistry } from "./form-scope.js";
+import type { FormScopeProps } from "@casehubio/pages-component";
+import { STANDALONE_TYPES } from "@casehubio/pages-component";
 
-const STANDALONE_FORM_TYPES = new Set(["input", "select", "textarea", "checkbox"]);
+const STANDALONE_FORM_TYPES = STANDALONE_TYPES;
 
 const TAG_NAME_OVERRIDES: ReadonlyMap<string, string> = new Map([
   ["badge", "pages-data-badge"],
@@ -362,6 +366,82 @@ export function createActivationCallback(
       (actionButton as unknown as PagesContentElement<Record<string, unknown>>).props = component.props;
       el.appendChild(actionButton);
 
+      if (component.visibleWhen && contextManager) {
+        registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+      }
+      return;
+    }
+
+    if (component.type === "form-scope") {
+      const nestingParent = el.parentElement?.closest('[data-component-type="form-scope"]');
+      if (nestingParent) {
+        console.error("[pages] Nested form-scope is not supported. Inner formScope will not function.");
+        return;
+      }
+
+      const fsProps = component.props as FormScopeProps | undefined;
+      const state = new FormScopeState(fsProps?.schema, fsProps?.validateOnBlur ?? false);
+      FormScopeRegistry.set(el, state);
+
+      const isDisplay = fsProps?.mode === "display";
+      el.setAttribute("role", isDisplay ? "group" : "form");
+
+      registry.set(componentId, {
+        element: el, component, pagePath,
+        hasExplicitId: component.id !== undefined,
+      });
+
+      el.addEventListener("pages-field-register", ((e: Event) => {
+        const detail = (e as CustomEvent).detail as {
+          field: string; element: HTMLElement; componentType: string;
+        };
+        state.registerField(detail.field, detail.element, detail.componentType);
+      }));
+
+      if (state.validateOnBlur) {
+        el.addEventListener("pages-field-change", ((e: Event) => {
+          const detail = (e as CustomEvent).detail as {
+            field: string; value: unknown; committed: boolean;
+          };
+          if (!detail.committed) return;
+          state.validateField(detail.field, detail.value);
+        }));
+      }
+
+      if (!isDisplay) {
+        el.addEventListener("pages-form-submit", ((e: Event) => {
+          e.stopPropagation();
+          const submitDetail = (e as CustomEvent).detail as {
+            resolve?: (result: { success: boolean; error?: string }) => void;
+          };
+
+          const errors = state.validateAll();
+          if (Object.keys(errors).length > 0) {
+            submitDetail.resolve?.({ success: false, error: "Validation failed" });
+            return;
+          }
+
+          const values = state.collectValues();
+          el.dispatchEvent(new CustomEvent("pages-record-create", {
+            bubbles: true, composed: true,
+            detail: { record: values, resolve: submitDetail.resolve },
+          }));
+        }));
+      }
+
+      if (component.visibleWhen && contextManager) {
+        registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+      }
+      return;
+    }
+
+    if (component.type === "submit-button" && component.props) {
+      const btn = document.createElement("pages-submit-button");
+      const p = component.props as Record<string, unknown>;
+      if (p.label) (btn as any).label = p.label;
+      if (p.style) (btn as any).variant = p.style;
+      if (p.disabled) (btn as any).disabled = p.disabled;
+      el.appendChild(btn);
       if (component.visibleWhen && contextManager) {
         registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
       }

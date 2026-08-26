@@ -4,7 +4,7 @@ import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 import type { PagesFormInput } from "./PagesFormInput.js";
 import type { SchemaFormProps, FieldSchema } from "@casehubio/pages-component";
-import { STANDALONE_TYPES } from "@casehubio/pages-component";
+import { STANDALONE_TYPES, readFieldValue, setFieldError } from "@casehubio/pages-component";
 import {
   deriveSchemaFromDataSet,
   mapFieldToComponentType,
@@ -89,24 +89,13 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     const record: Record<string, unknown> = {};
     for (const [field, child] of this._children) {
       const ct = this._childTypes.get(field) ?? "input";
-      record[field] = this.getChildValue(child, ct);
+      record[field] = readFieldValue(child, ct);
     }
     return record;
   }
 
-  private getChildValue(child: HTMLElement, componentType: string): unknown {
-    if (STANDALONE_TYPES.has(componentType)) {
-      return componentType === "checkbox" ? (child as any).checked : (child as any).value;
-    }
-    return (child as unknown as PagesFormInput<any>).currentValue;
-  }
-
   private setChildError(child: HTMLElement, componentType: string, error: string | undefined): void {
-    if (STANDALONE_TYPES.has(componentType)) {
-      (child as any).error = error;
-    } else {
-      (child as unknown as PagesFormInput<any>).errorMessage = error;
-    }
+    setFieldError(child, componentType, error);
   }
 
   protected override renderContent(
@@ -314,7 +303,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       if (!fieldSchema) continue;
 
       const ct = this._childTypes.get(field) ?? "input";
-      const value = this.getChildValue(child, ct);
+      const value = readFieldValue(child, ct);
       record[field] = value;
 
       const error = validateField(fieldSchema, value, requiredSet.has(field));

@@ -49,6 +49,7 @@
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
     },
+<<<<<<< HEAD
     "./validation": {
       "types": "./dist/validation/index.d.ts",
       "default": "./dist/validation/index.js"
@@ -76,10 +77,11 @@
     "./tag-editor": {
       "types": "./dist/tag-editor/index.d.ts",
       "default": "./dist/tag-editor/index.js"
-    },
-    "./duration-input": {
-      "types": "./dist/duration-input/index.d.ts",
-      "default": "./dist/duration-input/index.js"
+=======
+    "./submit-button": {
+      "types": "./dist/submit-button/index.d.ts",
+      "default": "./dist/submit-button/index.js"
+>>>>>>> 10e8c5c0 (feat: FormScopeState + form-scope activation handler)
     }
   },
   "sideEffects": [
@@ -111,8 +113,8 @@
     "./src/slider/index.ts",
     "./dist/tag-editor/index.js",
     "./src/tag-editor/index.ts",
-    "./dist/duration-input/index.js",
-    "./src/duration-input/index.ts"
+    "./dist/submit-button/index.js",
+    "./src/submit-button/index.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
