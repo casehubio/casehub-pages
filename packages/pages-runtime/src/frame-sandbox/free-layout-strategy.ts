@@ -10,6 +10,7 @@ import { injectFrameChrome, updatePinVisual } from "../frame-chrome.js";
 import { createFrameShell, createFrameTitlebar, createFrameResizeHandles, wireTitlebarDrag } from "../frame-shell.js";
 import { computeZonePreset, type Preset } from "../layout-math.js";
 import { createZoneGrid } from "../frame-zone-picker.js";
+import { createFreeLayoutDnd } from "./free-layout-dnd.js";
 
 const MIN_WIDTH = 100;
 const MIN_HEIGHT = 80;
@@ -29,6 +30,7 @@ export function createFreeLayoutStrategy(
   let resizeObserver: ResizeObserver | null = null;
   let lastContainerSize: { width: number; height: number } | null = null;
   let freeHost: HTMLElement | null = null;
+  let dndHandler: { dispose(): void } | null = null;
 
   function ensureContent(entry: Entry): HTMLElement {
     if (!entry.contentElement && factory) {
@@ -255,9 +257,25 @@ export function createFreeLayoutStrategy(
         }
       });
       resizeObserver.observe(freeHost);
+
+      dndHandler = createFreeLayoutDnd(freeHost, entryState, frameElements, {
+        onDrop: (sourceContainer, tabKey, targetFrameKey, _x, _y) => {
+          if (targetFrameKey) {
+            const targetEntry = currentEntries.find(e => e.key === targetFrameKey);
+            if (targetEntry?.childContainer === sourceContainer) return;
+            const detached = sourceContainer.detachEntry(tabKey);
+            if (!detached) return;
+            if (targetEntry?.childContainer) {
+              targetEntry.childContainer.addEntry(detached);
+            }
+          }
+        },
+      });
     },
 
     unmount() {
+      dndHandler?.dispose();
+      dndHandler = null;
       if (activeDropdown) { activeDropdown.remove(); activeDropdown = null; }
       resizeObserver?.disconnect();
       resizeObserver = null;
@@ -368,6 +386,8 @@ export function createFreeLayoutStrategy(
     },
 
     dispose() {
+      dndHandler?.dispose();
+      dndHandler = null;
       resizeObserver?.disconnect();
       resizeObserver = null;
       lastContainerSize = null;
