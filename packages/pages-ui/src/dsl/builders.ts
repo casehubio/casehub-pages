@@ -51,6 +51,7 @@ import type {
   EventTimelineProps,
   IframePluginProps,
   SchemaFormProps,
+  ActionButtonProps,
   TextInputProps,
   NumberInputProps,
   DropdownProps,
@@ -498,6 +499,10 @@ export function textarea(props: TextareaProps): Component {
 
 export function schemaForm(props: SchemaFormProps): TypedComponent<"schema-form"> {
   return freeze({ type: "schema-form" as const, props: { ...props } });
+}
+
+export function actionButton(props: ActionButtonProps): TypedComponent<"action-button"> {
+  return freeze({ type: "action-button" as const, props: freeze({ ...props }) });
 }
 
 // DataSource binding builder
