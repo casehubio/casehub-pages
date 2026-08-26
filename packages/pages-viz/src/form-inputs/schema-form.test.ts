@@ -47,7 +47,7 @@ describe("PagesSchemaForm — auto-derive schema", () => {
     expect(form.shadowRoot!.querySelector("pages-input")).not.toBeNull();
     expect(form.shadowRoot!.querySelector("pages-number-input")).not.toBeNull();
     expect(form.shadowRoot!.querySelector("pages-select")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-date-picker")).not.toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-date-input")).not.toBeNull();
   });
 
   it("excludeFields hides specified fields", async () => {
@@ -64,7 +64,7 @@ describe("PagesSchemaForm — auto-derive schema", () => {
     await form.updateComplete;
 
     const allInputs = form.shadowRoot!.querySelectorAll(
-      "pages-input, pages-number-input, pages-select, pages-checkbox, pages-date-picker, pages-textarea",
+      "pages-input, pages-number-input, pages-select, pages-checkbox, pages-date-input, pages-textarea",
     );
     expect(allInputs.length).toBe(1);
     expect(allInputs[0]!.tagName.toLowerCase()).toBe("pages-input");
@@ -142,7 +142,7 @@ describe("PagesSchemaForm — explicit schema", () => {
     await form.updateComplete;
     form.dataSet = ds;
     await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-date-picker")).not.toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-date-input")).not.toBeNull();
   });
 
   it("maps format:textarea to textarea", async () => {
@@ -224,7 +224,7 @@ describe("PagesSchemaForm — field customization", () => {
     await form.updateComplete;
 
     const numInput = form.shadowRoot!.querySelector("pages-number-input") as any;
-    expect(numInput.props.label).toBe("Years of Experience");
+    expect(numInput.label).toBe("Years of Experience");
   });
 });
 

@@ -11,14 +11,15 @@ import {
 } from "./schema-types.js";
 import { cellToRaw } from "../base/cell-extract.js";
 
-import "./PagesNumberInput.js";
-import "./PagesDatePicker.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/checkbox";
 import "@casehubio/pages-ui-components/textarea";
+import "@casehubio/pages-ui-components/number-input";
+import "@casehubio/pages-ui-components/date-input";
+import "@casehubio/pages-ui-components/datetime-input";
 
-const STANDALONE_TYPES = new Set(["input", "select", "checkbox", "textarea"]);
+const STANDALONE_TYPES = new Set(["input", "select", "checkbox", "textarea", "number-input", "date-input", "datetime-input"]);
 
 export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: DataSetLookup }> {
   private _children: Map<string, HTMLElement> = new Map();
@@ -143,6 +144,9 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
               if (componentType === "checkbox") {
                 const v = typeof cell.value === "boolean" ? cell.value : String(cell.value).toLowerCase() === "true";
                 (child as any).checked = v;
+              } else if (componentType === "number-input") {
+                const num = typeof cell.value === "number" ? cell.value : parseFloat(String(cell.value));
+                (child as any).value = isNaN(num) ? null : num;
               } else {
                 (child as any).value = String(cell.value);
               }
@@ -162,6 +166,11 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
         }
         if (componentType === "textarea") {
           if (fieldSchema.maxLength !== undefined) (child as any).maxlength = fieldSchema.maxLength;
+        }
+        if (componentType === "number-input") {
+          if (fieldSchema.minimum !== undefined) (child as any).min = fieldSchema.minimum;
+          if (fieldSchema.maximum !== undefined) (child as any).max = fieldSchema.maximum;
+          if (fieldSchema.type === "integer") (child as any).step = 1;
         }
       } else {
         const formInput = child as unknown as PagesFormInput<any>;

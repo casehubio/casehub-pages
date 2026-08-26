@@ -24,6 +24,14 @@ export class PagesSelect extends LitElement {
     }
     select:focus { outline: none; border-color: var(--pages-accent-9, #5470c6); }
     select:disabled { background: var(--pages-neutral-3, #f5f5f5); cursor: not-allowed; opacity: 0.6; }
+    .readonly-value {
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      font-size: var(--pages-font-size-base, 14px);
+      color: var(--pages-neutral-11, #374151);
+      background: var(--pages-neutral-3, #f5f5f5);
+      border: 1px solid var(--pages-neutral-4, #e5e7eb);
+      border-radius: var(--pages-radius-sm, 4px);
+    }
     .error {
       color: var(--pages-danger-9, #dc2626);
       font-size: var(--pages-font-size-xs, 11px);
@@ -35,6 +43,7 @@ export class PagesSelect extends LitElement {
   @property() label: string | undefined;
   @property({ attribute: false }) options: SelectOption[] = [];
   @property({ type: Boolean }) required = false;
+  @property({ type: Boolean }) readonly = false;
   @property({ type: Boolean }) disabled = false;
   @property() error: string | undefined;
 
@@ -42,23 +51,28 @@ export class PagesSelect extends LitElement {
     return html`
       <div class="field">
         ${this.label ? html`<label>${this.label}</label>` : nothing}
-        <select
-          ?required=${this.required}
-          ?disabled=${this.disabled}
-          aria-label=${ifDefined(this.label)}
-          aria-required=${ifDefined(this.required ? 'true' : undefined)}
-          aria-invalid=${ifDefined(this.error ? 'true' : undefined)}
-          @change=${(e: Event) => {
-            this.value = (e.target as HTMLSelectElement).value;
-            this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
-          }}
-        >
-          ${this.options.map((opt) => html`
-            <option value=${opt.value} ?selected=${this.value === opt.value}>
-              ${opt.label}
-            </option>
-          `)}
-        </select>
+        ${this.readonly
+          ? html`<span class="readonly-value" tabindex="0" aria-label=${ifDefined(this.label)}>
+              ${this.options.find(o => o.value === this.value)?.label ?? this.value}
+            </span>`
+          : html`<select
+              ?required=${this.required}
+              ?disabled=${this.disabled}
+              aria-label=${ifDefined(this.label)}
+              aria-required=${ifDefined(this.required ? 'true' : undefined)}
+              aria-invalid=${ifDefined(this.error ? 'true' : undefined)}
+              @change=${(e: Event) => {
+                this.value = (e.target as HTMLSelectElement).value;
+                this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+              }}
+            >
+              ${this.options.map((opt) => html`
+                <option value=${opt.value} ?selected=${this.value === opt.value}>
+                  ${opt.label}
+                </option>
+              `)}
+            </select>`
+        }
         ${this.error ? html`<span class="error" role="alert">${this.error}</span>` : nothing}
       </div>
     `;

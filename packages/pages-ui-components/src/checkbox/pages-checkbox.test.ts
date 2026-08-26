@@ -88,4 +88,19 @@ describe('PagesCheckbox', () => {
     expect(input.required).toBe(true);
     expect(input.getAttribute('aria-required')).toBe('true');
   });
+
+  it('preserves checked state when readonly', async () => {
+    (el as any).readonly = true;
+    (el as any).checked = true;
+    await (el as any).updateComplete;
+    const input = el.shadowRoot!.querySelector('input[type="checkbox"]')! as HTMLInputElement;
+    expect(input.checked).toBe(true);
+  });
+
+  it('adds readonly class to field container', async () => {
+    (el as any).readonly = true;
+    await (el as any).updateComplete;
+    const field = el.shadowRoot!.querySelector('.field')!;
+    expect(field.classList.contains('readonly')).toBe(true);
+  });
 });

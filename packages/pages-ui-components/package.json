@@ -48,6 +48,34 @@
     "./types": {
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
+    },
+    "./validation": {
+      "types": "./dist/validation/index.d.ts",
+      "default": "./dist/validation/index.js"
+    },
+    "./number-input": {
+      "types": "./dist/number-input/index.d.ts",
+      "default": "./dist/number-input/index.js"
+    },
+    "./date-input": {
+      "types": "./dist/date-input/index.d.ts",
+      "default": "./dist/date-input/index.js"
+    },
+    "./datetime-input": {
+      "types": "./dist/datetime-input/index.d.ts",
+      "default": "./dist/datetime-input/index.js"
+    },
+    "./color-swatch": {
+      "types": "./dist/color-swatch/index.d.ts",
+      "default": "./dist/color-swatch/index.js"
+    },
+    "./slider": {
+      "types": "./dist/slider/index.d.ts",
+      "default": "./dist/slider/index.js"
+    },
+    "./tag-editor": {
+      "types": "./dist/tag-editor/index.d.ts",
+      "default": "./dist/tag-editor/index.js"
     }
   },
   "sideEffects": [
@@ -66,7 +94,19 @@
     "./dist/badge/index.js",
     "./dist/status-dot/index.js",
     "./src/badge/index.ts",
-    "./src/status-dot/index.ts"
+    "./src/status-dot/index.ts",
+    "./dist/number-input/index.js",
+    "./dist/date-input/index.js",
+    "./dist/datetime-input/index.js",
+    "./src/number-input/index.ts",
+    "./src/date-input/index.ts",
+    "./src/datetime-input/index.ts",
+    "./dist/color-swatch/index.js",
+    "./dist/slider/index.js",
+    "./src/color-swatch/index.ts",
+    "./src/slider/index.ts",
+    "./dist/tag-editor/index.js",
+    "./src/tag-editor/index.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

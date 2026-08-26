@@ -17,6 +17,7 @@ export class PagesCheckbox extends LitElement {
       accent-color: var(--pages-accent-9, #5470c6);
     }
     input[type="checkbox"]:disabled { cursor: not-allowed; }
+    .field.readonly { pointer-events: none; }
     .error {
       color: var(--pages-danger-9, #dc2626);
       font-size: var(--pages-font-size-xs, 11px);
@@ -27,13 +28,14 @@ export class PagesCheckbox extends LitElement {
   @property({ type: Boolean }) checked = false;
   @property() label: string | undefined;
   @property({ type: Boolean }) required = false;
+  @property({ type: Boolean }) readonly = false;
   @property({ type: Boolean }) disabled = false;
   @property() error: string | undefined;
 
   override render() {
     return html`
       <div>
-        <div class="field">
+        <div class="field${this.readonly ? ' readonly' : ''}">
           <input
             type="checkbox"
             id="cb"

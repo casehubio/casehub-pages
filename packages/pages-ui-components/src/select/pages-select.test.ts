@@ -122,4 +122,34 @@ describe('PagesSelect', () => {
   it('defaults to empty value', () => {
     expect((el as any).value).toBe('');
   });
+
+  it('renders static text when readonly', async () => {
+    (el as any).readonly = true;
+    (el as any).value = 'foo';
+    (el as any).options = [{ value: 'foo', label: 'Foo' }];
+    await (el as any).updateComplete;
+    const select = el.shadowRoot!.querySelector('select');
+    expect(select).toBeNull();
+    const text = el.shadowRoot!.querySelector('.readonly-value');
+    expect(text).not.toBeNull();
+    expect(text!.textContent!.trim()).toBe('Foo');
+  });
+
+  it('shows raw value when readonly and no matching option label', async () => {
+    (el as any).readonly = true;
+    (el as any).value = 'unknown';
+    (el as any).options = [{ value: 'foo', label: 'Foo' }];
+    await (el as any).updateComplete;
+    const text = el.shadowRoot!.querySelector('.readonly-value');
+    expect(text!.textContent!.trim()).toBe('unknown');
+  });
+
+  it('makes readonly value focusable', async () => {
+    (el as any).readonly = true;
+    (el as any).value = 'foo';
+    (el as any).options = [{ value: 'foo', label: 'Foo' }];
+    await (el as any).updateComplete;
+    const text = el.shadowRoot!.querySelector('.readonly-value') as HTMLElement;
+    expect(text.tabIndex).toBe(0);
+  });
 });
