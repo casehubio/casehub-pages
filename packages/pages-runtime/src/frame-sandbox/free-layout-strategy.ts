@@ -31,6 +31,7 @@ export function createFreeLayoutStrategy(
   let lastContainerSize: { width: number; height: number } | null = null;
   let freeHost: HTMLElement | null = null;
   let dndHandler: { dispose(): void } | null = null;
+  let activePreset: Preset | null = null;
 
   function ensureContent(entry: Entry): HTMLElement {
     if (!entry.contentElement && factory) {
@@ -201,7 +202,7 @@ export function createFreeLayoutStrategy(
     ]);
 
     wireTitlebarDrag(titlebar, frame, state,
-      (k, x, y) => { callbacks?.onEntryMove?.(k, x, y); }, entry.key);
+      (k, x, y) => { activePreset = null; callbacks?.onEntryMove?.(k, x, y); }, entry.key);
 
     const contentArea = document.createElement("div");
     contentArea.setAttribute("data-frame-content", "");
@@ -315,6 +316,7 @@ export function createFreeLayoutStrategy(
       if (freeHost) {
         freeHost.appendChild(createFrame(entry));
       }
+      if (activePreset) applyArrange(activePreset);
     },
 
     removeEntry(key) {
@@ -392,7 +394,8 @@ export function createFreeLayoutStrategy(
     },
 
     arrange(preset: string) {
-      applyArrange(preset as Preset);
+      activePreset = preset as Preset;
+      applyArrange(activePreset);
     },
 
     bringToFront(key: string) {
