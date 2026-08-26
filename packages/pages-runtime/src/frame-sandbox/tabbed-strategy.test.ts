@@ -364,5 +364,71 @@ describe("TabOrganiser", () => {
 
       org.dispose();
     });
+
+    it("within-strip drag does not fire onTabDragStart", () => {
+      const onTabDragStart = vi.fn();
+      const org = createTabbedStrategy({ onTabDragStart });
+      org.mount(container, makeEntries("a", "b", "c"), testFactory());
+      mockTabBounds(container);
+
+      const tabA = container.querySelector("[data-tab-key='a']") as HTMLElement;
+
+      tabA.dispatchEvent(
+        new PointerEvent("pointerdown", { clientX: 40, clientY: 15, bubbles: true }),
+      );
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 200, clientY: 15 }),
+      );
+
+      expect(onTabDragStart).not.toHaveBeenCalled();
+
+      document.dispatchEvent(new PointerEvent("pointerup"));
+      org.dispose();
+    });
+
+    it("within-strip drop reorders entries at the gap position", () => {
+      const onEntryReorder = vi.fn();
+      const org = createTabbedStrategy({ onEntryReorder });
+      org.mount(container, makeEntries("a", "b", "c"), testFactory());
+      mockTabBounds(container);
+
+      const tabA = container.querySelector("[data-tab-key='a']") as HTMLElement;
+
+      tabA.dispatchEvent(
+        new PointerEvent("pointerdown", { clientX: 40, clientY: 15, bubbles: true }),
+      );
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 200, clientY: 15 }),
+      );
+      document.dispatchEvent(new PointerEvent("pointerup"));
+
+      expect(onEntryReorder).toHaveBeenCalled();
+      const state = org.getState() as TabState;
+      expect(state.order.indexOf("a")).toBeGreaterThan(0);
+
+      org.dispose();
+    });
+
+    it("gap preview has transparent border-bottom, not active indicator", () => {
+      const org = createTabbedStrategy();
+      org.mount(container, makeEntries("a", "b", "c"), testFactory());
+      mockTabBounds(container);
+
+      const tabA = container.querySelector("[data-tab-key='a']") as HTMLElement;
+
+      tabA.dispatchEvent(
+        new PointerEvent("pointerdown", { clientX: 40, clientY: 15, bubbles: true }),
+      );
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 200, clientY: 15 }),
+      );
+
+      const gap = container.querySelector("[data-tab-gap]") as HTMLElement;
+      expect(gap).not.toBeNull();
+      expect(gap.style.borderBottom).toContain("transparent");
+
+      document.dispatchEvent(new PointerEvent("pointerup"));
+      org.dispose();
+    });
   });
 });

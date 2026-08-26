@@ -751,7 +751,7 @@ describe("Group", () => {
   });
 
   describe("pages-tab-drag-start event", () => {
-    it("fires on tab drag with tabKey, ghost, and sourceContainer", () => {
+    it("fires on tab drag outside strip with tabKey, ghost, and sourceContainer", () => {
       const host = document.createElement("div");
       document.body.appendChild(host);
 
@@ -761,6 +761,11 @@ describe("Group", () => {
         contentFactory: testFactory(),
       });
       group.mount(host);
+
+      const strip = host.querySelector("[data-tab-strip]") as HTMLElement;
+      vi.spyOn(strip, "getBoundingClientRect").mockReturnValue({
+        left: 0, right: 400, top: 0, bottom: 30, width: 400, height: 30, x: 0, y: 0, toJSON: () => ({}),
+      } as DOMRect);
 
       let received: CustomEvent | null = null;
       host.addEventListener("pages-tab-drag-start", (e) => {
@@ -772,7 +777,7 @@ describe("Group", () => {
         clientX: 10, clientY: 10, bubbles: true,
       }));
       document.dispatchEvent(new PointerEvent("pointermove", {
-        clientX: 20, clientY: 10,
+        clientX: 20, clientY: 60,
       }));
 
       expect(received).not.toBeNull();
@@ -798,6 +803,11 @@ describe("Group", () => {
       });
       group.mount(host);
 
+      const strip = host.querySelector("[data-tab-strip]") as HTMLElement;
+      vi.spyOn(strip, "getBoundingClientRect").mockReturnValue({
+        left: 0, right: 400, top: 0, bottom: 30, width: 400, height: 30, x: 0, y: 0, toJSON: () => ({}),
+      } as DOMRect);
+
       let received = false;
       outer.addEventListener("pages-tab-drag-start", () => {
         received = true;
@@ -808,7 +818,7 @@ describe("Group", () => {
         clientX: 10, clientY: 10, bubbles: true,
       }));
       document.dispatchEvent(new PointerEvent("pointermove", {
-        clientX: 20, clientY: 10,
+        clientX: 20, clientY: 60,
       }));
 
       expect(received).toBe(true);

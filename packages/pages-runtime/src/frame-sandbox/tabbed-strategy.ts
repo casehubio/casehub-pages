@@ -119,7 +119,7 @@ export function createTabbedStrategy(
           "background:var(--pages-surface-3,#333);" +
           "color:var(--pages-text-1,#e0e0e0);" +
           "opacity:0.5;pointer-events:none;" +
-          "border-bottom:2px solid var(--pages-accent-9,#3b82f6);" +
+          "border-bottom:2px solid transparent;" +
           "transition:all 0.15s ease;";
         if (beforeEl) {
           stripEl!.insertBefore(gapEl, beforeEl);
@@ -145,7 +145,6 @@ export function createTabbedStrategy(
           dragStarted = true;
           ghost = createGhost();
           btn.style.display = "none";
-          callbacks?.onTabDragStart?.(entry.key, ghost);
         }
 
         ghost!.style.left = `${e.clientX - ghost!.offsetWidth / 2}px`;
@@ -156,6 +155,9 @@ export function createTabbedStrategy(
           e.clientY - currentStripRect.top - currentStripRect.height / 2,
         );
         if (dy > 30) {
+          if (!draggedOut) {
+            callbacks?.onTabDragStart?.(entry.key, ghost!);
+          }
           draggedOut = true;
           removeGap();
           callbacks?.onTabDragMove?.(entry.key, e.clientX, e.clientY);
