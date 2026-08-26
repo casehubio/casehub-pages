@@ -9,7 +9,6 @@ import type {
 import { injectFrameChrome, updatePinVisual } from "../frame-chrome.js";
 import { createFrameShell, createFrameTitlebar, createFrameResizeHandles, wireTitlebarDrag } from "../frame-shell.js";
 import { computeZonePreset, type Preset } from "../layout-math.js";
-import { splitGeometry } from "../frame-boundaries.js";
 import { createZoneGrid } from "../frame-zone-picker.js";
 import { createFreeLayoutDnd } from "./free-layout-dnd.js";
 
@@ -272,33 +271,7 @@ export function createFreeLayoutStrategy(
           }
         },
         onEdgeSplit: (sourceContainer, tabKey, targetFrameKey, edge) => {
-          const detached = sourceContainer.detachEntry(tabKey);
-          if (!detached) return;
-          const targetState = entryState.get(targetFrameKey);
-          if (!targetState) return;
-          const geo = splitGeometry(edge, {
-            x: targetState.position.x,
-            y: targetState.position.y,
-            width: targetState.size.width,
-            height: targetState.size.height,
-          });
-          targetState.position = geo.target.position;
-          targetState.size = geo.target.size;
-          const targetEl = frameElements.get(targetFrameKey);
-          if (targetEl) {
-            targetEl.style.left = `${geo.target.position.x}px`;
-            targetEl.style.top = `${geo.target.position.y}px`;
-            targetEl.style.width = `${geo.target.size.width}px`;
-            targetEl.style.height = `${geo.target.size.height}px`;
-          }
-          if (!detached.meta) (detached as { meta?: unknown }).meta = {};
-          detached.meta!.free = {
-            x: geo.newFrame.position.x,
-            y: geo.newFrame.position.y,
-            width: geo.newFrame.size.width,
-            height: geo.newFrame.size.height,
-          };
-          organiser.addEntry(detached);
+          callbacks?.onEdgeSplit?.(sourceContainer, tabKey, targetFrameKey, edge);
         },
       });
     },

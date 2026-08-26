@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { wireFloatingWorkspace } from "./wire-floating-workspace.js";
 import type { ContainerState, FrameLayout, FrameTabConfig } from "@casehubio/pages-component";
 
@@ -244,5 +244,65 @@ describe("wireFloatingWorkspace", () => {
     expect(leafEntry.childContainer).toBeDefined();
 
     handle.dispose();
+  });
+
+  describe("edge split creates split container", () => {
+    let host: HTMLElement;
+
+    beforeEach(() => {
+      host = document.createElement("div");
+      host.style.cssText = "width:800px;height:600px;position:relative;";
+      Object.defineProperty(host, "clientWidth", { value: 800, configurable: true });
+      Object.defineProperty(host, "clientHeight", { value: 600, configurable: true });
+      document.body.appendChild(host);
+    });
+
+    afterEach(() => {
+      document.body.removeChild(host);
+    });
+
+    it("dropping on left edge wraps target in splith container", () => {
+      const state: ContainerState = {
+        layout: "free",
+        tabs: [
+          { key: "f1", label: "Frame 1", content: null, children: { layout: "tabbed", tabs: [makeTab("t1"), makeTab("t2")] } },
+          { key: "f2", label: "Frame 2", content: null, children: { layout: "tabbed", tabs: [makeTab("t3")] } },
+        ],
+        layoutState: {
+          entries: {
+            f1: { position: { x: 0, y: 0 }, size: { width: 350, height: 500 } },
+            f2: { position: { x: 400, y: 0 }, size: { width: 350, height: 500 } },
+          },
+          zOrder: ["f1", "f2"],
+        },
+      };
+      const handle = wireFloatingWorkspace(host, state);
+
+      const freeHost = host.querySelector("[data-free-host]") as HTMLElement;
+      vi.spyOn(freeHost, "getBoundingClientRect").mockReturnValue({
+        left: 0, right: 800, top: 0, bottom: 600,
+        width: 800, height: 600, x: 0, y: 0, toJSON: () => ({}),
+      });
+
+      const childF1 = handle.rootContainer.entries[0]!.childContainer!;
+
+      const frameF1 = host.querySelector("[data-frame-key='f1']") as HTMLElement;
+      frameF1.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+        bubbles: true,
+        detail: { tabKey: "t1", ghost: document.createElement("div"), sourceContainer: childF1 },
+      }));
+
+      document.dispatchEvent(new PointerEvent("pointermove", { clientX: 401, clientY: 250 }));
+      document.dispatchEvent(new PointerEvent("pointerup", { clientX: 401, clientY: 250 }));
+
+      expect(handle.rootContainer.entries).toHaveLength(2);
+
+      const f2Entry = handle.rootContainer.entries.find(e => e.key === "f2");
+      expect(f2Entry).toBeDefined();
+      expect(f2Entry!.childContainer).toBeDefined();
+      expect(f2Entry!.childContainer!.organiser.type).toBe("splith");
+
+      handle.dispose();
+    });
   });
 });

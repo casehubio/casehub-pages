@@ -136,8 +136,29 @@ export function wireFloatingWorkspace(
       entries: rootEntries,
       layout: "free",
       contentFactory: entryContentFactory,
-      policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 5 },
+      policy: { allowedLayouts: ["free", "tabbed", "accordion", "splith", "splitv"], maxDepth: 5 },
       showToolbar: false,
+      callbacks: {
+        onEdgeSplit: (sourceContainer, tabKey, targetEntryKey, edge) => {
+          const detached = sourceContainer.detachEntry(tabKey);
+          if (!detached) return;
+          const targetEntry = rootContainer.entries.find(e => e.key === targetEntryKey);
+          if (!targetEntry) return;
+          const existingChild = targetEntry.childContainer;
+          if (!existingChild) return;
+          existingChild.unmount();
+          const splitLayout = (edge === "left" || edge === "right") ? "splith" : "splitv";
+          const existingKey = `split-${String(Date.now())}-a`;
+          const newKey = `split-${String(Date.now())}-b`;
+          const existingEntry: Entry = { key: existingKey, label: targetEntry.label, childContainer: existingChild };
+          const newChild = createContainer({ entries: [detached], layout: "tabbed", contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: 3 });
+          const newEntry: Entry = { key: newKey, label: detached.label, childContainer: newChild };
+          const splitEntries = (edge === "left" || edge === "top") ? [newEntry, existingEntry] : [existingEntry, newEntry];
+          const splitContainer = createContainer({ entries: splitEntries, layout: splitLayout, contentFactory: entryContentFactory, policy: SPLIT_POLICY, depth: 2 });
+          targetEntry.childContainer = splitContainer;
+          rootContainer.refreshEntry(targetEntryKey);
+        },
+      },
       ...(containerState?.layoutState ? { freeLayoutState: containerState.layoutState as FreeLayoutState } : {}),
     });
     rootContainer.mount(hostElement);

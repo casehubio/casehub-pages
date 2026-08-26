@@ -378,4 +378,59 @@ describe("DnD integration — cross-entry tab transfer in free layout", () => {
     document.body.removeEventListener("pages-tab-drag-start", parentSpy);
     root.dispose();
   });
+
+  it("edge split delegates to onEdgeSplit callback", () => {
+    const onEdgeSplit = vi.fn();
+    const factory = simpleTestFactory();
+    const childA = createContainer({
+      entries: [
+        { key: "t1", label: "Tab1", component: { type: "html", props: {} } },
+        { key: "t2", label: "Tab2", component: { type: "html", props: {} } },
+      ],
+      layout: "tabbed",
+      contentFactory: factory,
+      depth: 2,
+    });
+    const childB = createContainer({
+      entries: [
+        { key: "t3", label: "Tab3", component: { type: "html", props: {} } },
+      ],
+      layout: "tabbed",
+      contentFactory: factory,
+      depth: 2,
+    });
+    const freeState: FreeLayoutState = {
+      entries: {
+        "frame-a": { position: { x: 0, y: 0 }, size: { width: 350, height: 500 } },
+        "frame-b": { position: { x: 400, y: 0 }, size: { width: 350, height: 500 } },
+      },
+      zOrder: ["frame-a", "frame-b"],
+    };
+    const root = createContainer({
+      entries: [
+        { key: "frame-a", label: "Frame A", childContainer: childA },
+        { key: "frame-b", label: "Frame B", childContainer: childB },
+      ],
+      layout: "free",
+      contentFactory: factory,
+      freeLayoutState: freeState,
+      policy: { allowedLayouts: ["free", "tabbed", "accordion", "splith", "splitv"], maxDepth: 5 },
+      callbacks: { onEdgeSplit },
+    });
+    root.mount(host);
+    mockFreeHost(host);
+
+    const frameAEl = host.querySelector("[data-frame-key='frame-a']") as HTMLElement;
+    frameAEl.dispatchEvent(new CustomEvent("pages-tab-drag-start", {
+      bubbles: true,
+      detail: { tabKey: "t1", ghost: document.createElement("div"), sourceContainer: childA },
+    }));
+
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: 401, clientY: 100 }));
+    document.dispatchEvent(new PointerEvent("pointerup", { clientX: 401, clientY: 100 }));
+
+    expect(onEdgeSplit).toHaveBeenCalledWith(childA, "t1", "frame-b", "left");
+
+    root.dispose();
+  });
 });

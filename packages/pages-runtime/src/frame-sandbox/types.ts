@@ -71,6 +71,7 @@ export interface LayoutCallbacks {
   onEntryMove?: (key: string, x: number, y: number) => void;
   onEntryResize?: (key: string, w: number, h: number) => void;
   onCollapse?: (remaining: Entry) => void;
+  onEdgeSplit?: (sourceContainer: Container, tabKey: string, targetEntryKey: string, edge: string) => void;
 }
 
 export interface LayoutStrategy {
