@@ -448,3 +448,100 @@ describe("PagesSchemaForm — create mode", () => {
     expect(submitBtn).toBeNull();
   });
 });
+
+describe("PagesSchemaForm — fieldsOnly mode", () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    container.remove();
+  });
+
+  it("skips submit button when fieldsOnly is true", async () => {
+    const ds = makeDataSet([], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      forceCreate: true,
+      fieldsOnly: true,
+      schema: { properties: { name: { type: "string" } } },
+    };
+    form.editable = true;
+    form.fieldsOnly = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const submitBtn = form.shadowRoot!.querySelector(".submit-btn");
+    expect(submitBtn).toBeNull();
+  });
+
+  it("dispatches pages-field-register for each field in fieldsOnly mode", async () => {
+    const ds = makeDataSet(
+      [["name", "TEXT"], ["age", "NUMBER"]],
+      [["Alice", "30"]],
+    );
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      fieldsOnly: true,
+      schema: { properties: { name: { type: "string" }, age: { type: "number" } } },
+    };
+    form.editable = true;
+    form.fieldsOnly = true;
+
+    const events: CustomEvent[] = [];
+    form.addEventListener("pages-field-register", (e) => events.push(e as CustomEvent));
+
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    expect(events.length).toBe(2);
+    expect(events[0]!.detail.field).toBe("name");
+    expect(events[1]!.detail.field).toBe("age");
+  });
+});
+
+describe("PagesSchemaForm — fields prop", () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    container.remove();
+  });
+
+  it("renders only listed fields in specified order", async () => {
+    const ds = makeDataSet(
+      [["name", "TEXT"], ["age", "NUMBER"], ["email", "TEXT"]],
+      [["Alice", "30", "alice@example.com"]],
+    );
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      schema: {
+        properties: {
+          name: { type: "string" },
+          age: { type: "number" },
+          email: { type: "string" },
+        },
+      },
+      fields: ["email", "name"],
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const children = form.shadowRoot!.querySelectorAll("pages-input");
+    expect(children.length).toBe(2);
+  });
+});
