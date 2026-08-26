@@ -16,3 +16,4 @@ export { PagesDatetimeInput } from './datetime-input/index.js';
 export { PagesColorSwatch } from './color-swatch/index.js';
 export { PagesSlider } from './slider/index.js';
 export { PagesTagEditor } from './tag-editor/index.js';
+export { PagesDurationInput, type DurationField } from './duration-input/index.js';

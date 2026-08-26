@@ -76,6 +76,10 @@
     "./tag-editor": {
       "types": "./dist/tag-editor/index.d.ts",
       "default": "./dist/tag-editor/index.js"
+    },
+    "./duration-input": {
+      "types": "./dist/duration-input/index.d.ts",
+      "default": "./dist/duration-input/index.js"
     }
   },
   "sideEffects": [
@@ -106,7 +110,9 @@
     "./src/color-swatch/index.ts",
     "./src/slider/index.ts",
     "./dist/tag-editor/index.js",
-    "./src/tag-editor/index.ts"
+    "./src/tag-editor/index.ts",
+    "./dist/duration-input/index.js",
+    "./src/duration-input/index.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

@@ -12,3 +12,4 @@ import '@casehubio/pages-ui-components/datetime-input';
 import '@casehubio/pages-ui-components/color-swatch';
 import '@casehubio/pages-ui-components/slider';
 import '@casehubio/pages-ui-components/tag-editor';
+import '@casehubio/pages-ui-components/duration-input';

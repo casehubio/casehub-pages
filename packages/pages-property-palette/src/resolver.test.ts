@@ -85,6 +85,10 @@ describe('resolveEditor', () => {
     expect(result.kind).toBe('render');
   });
 
+  it('resolves string format:duration to pages-duration-input', () => {
+    expect(resolveEditor({ type: 'string', format: 'duration' })).toEqual({ kind: 'tag', tag: 'pages-duration-input' });
+  });
+
   it('enum takes precedence over format for strings', () => {
     const result = resolveEditor({ type: 'string', enum: ['red', 'blue'], format: 'color' });
     expect((result as any).tag).toBe('pages-select');
