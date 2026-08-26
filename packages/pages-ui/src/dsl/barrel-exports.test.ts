@@ -12,5 +12,6 @@ describe("dsl barrel exports", () => {
     expect(typeof dsl.graph).toBe("function");
     expect(typeof dsl.eventTimeline).toBe("function");
     expect(typeof dsl.masterDetail).toBe("function");
+    expect(typeof dsl.schemaForm).toBe("function");
   });
 });

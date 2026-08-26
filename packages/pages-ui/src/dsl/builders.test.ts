@@ -34,6 +34,7 @@ import {
   checkbox,
   datePicker,
   textarea,
+  schemaForm,
   split,
   dockBar,
   hostPanel,
@@ -648,6 +649,25 @@ describe("builders", () => {
     it("textarea creates textarea component", () => {
       const c = textarea({ field: "notes", rows: 5 });
       expect(c.type).toBe("textarea");
+    });
+
+    it("schemaForm creates schema-form component", () => {
+      const c = schemaForm({
+        schema: {
+          properties: {
+            name: { type: "string", minLength: 1 },
+            active: { type: "boolean" },
+          },
+          required: ["name"],
+        },
+        validateOnBlur: true,
+        forceCreate: true,
+      });
+      expect(c.type).toBe("schema-form");
+      expect(c.props?.schema?.properties?.name?.type).toBe("string");
+      expect(c.props?.validateOnBlur).toBe(true);
+      expect(c.props?.forceCreate).toBe(true);
+      expect(Object.isFrozen(c)).toBe(true);
     });
   });
 
