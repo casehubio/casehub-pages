@@ -147,4 +147,26 @@ describe("organiser-toolbar", () => {
     expect(toolbar.element.style.top).toBe("4px");
     expect(toolbar.element.style.bottom).toBe("");
   });
+
+  it("layout cycle skips splith and splitv", () => {
+    const onLayoutChange = vi.fn();
+    const toolbar = createContainerToolbar(
+      ["free", "tabbed", "accordion", "splith", "splitv"],
+      "tabbed",
+      { onAdd: () => {}, onLayoutChange },
+    );
+
+    const modeBtn = toolbar.element.querySelector("[data-toolbar-mode]") as HTMLElement;
+    modeBtn.click();
+    expect(onLayoutChange).toHaveBeenCalledWith("accordion");
+
+    modeBtn.click();
+    expect(onLayoutChange).toHaveBeenCalledWith("free");
+
+    modeBtn.click();
+    expect(onLayoutChange).toHaveBeenCalledWith("tabbed");
+
+    expect(onLayoutChange).not.toHaveBeenCalledWith("splith");
+    expect(onLayoutChange).not.toHaveBeenCalledWith("splitv");
+  });
 });

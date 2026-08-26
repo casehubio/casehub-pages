@@ -28,7 +28,7 @@ export function createContainerToolbar(
   spacer.style.cssText = "flex:1;";
   bar.appendChild(spacer);
 
-  const containerModes: Layout[] = allowedOrganisers.filter(o => o !== "content");
+  const containerModes: Layout[] = allowedOrganisers.filter(o => o !== "content" && o !== "splith" && o !== "splitv");
   let currentMode = activeOrganiser;
   let arrangeEl: HTMLElement | null = null;
 

@@ -185,7 +185,7 @@ export function wireFloatingWorkspace(
   }
 
   const containerToolbar = createContainerToolbar(
-    ["free", "tabbed", "accordion"] as readonly Layout[],
+    SPLIT_POLICY.allowedLayouts,
     "free" as Layout,
     {
       onAdd: () => {
