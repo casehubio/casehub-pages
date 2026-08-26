@@ -30,8 +30,7 @@ export { DetachController, DetachRegistry } from "./detach/index.js";
 export { createZoneLayoutEngine } from "./zone-layout-engine.js";
 export type { ZoneLayoutEngine } from "./zone-layout-engine.js";
 
-export type { FloatingFrameBackend, FrameButtonConfig, BackendAttachOptions } from "./floating-frame-backend.js";
-export { createGroupOrganiserBackend } from "./group-organiser-backend.js";
+
 export { wireFloatingWorkspace } from "./wire-floating-workspace.js";
 export { migrateFrameLayout, configToContainerState } from "./layout-migration.js";
 export { captureContainerState, restoreContainerFromState } from "./container-tree-ops.js";
