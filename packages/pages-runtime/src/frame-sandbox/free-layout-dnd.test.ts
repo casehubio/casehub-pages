@@ -173,6 +173,71 @@ describe("free-layout-dnd", () => {
     dnd.dispose();
   });
 
+  it("shows split preview when pointer is at frame edge", () => {
+    const entryState = new Map<string, FreeLayoutEntry>([
+      ["frame-a", { position: { x: 0, y: 0 }, size: { width: 300, height: 200 } }],
+    ]);
+    const frameA = document.createElement("div");
+    host.appendChild(frameA);
+    const frameElements = new Map([["frame-a", frameA]]);
+    const onDrop = vi.fn();
+
+    const dnd = createFreeLayoutDnd(host, entryState, frameElements, { onDrop });
+
+    fireTabDragStart(host, "tab1", mockContainer([]));
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: 10, clientY: 100 }));
+
+    const preview = frameA.querySelector("[data-split-preview]");
+    expect(preview).not.toBeNull();
+    expect(preview!.getAttribute("data-split-preview")).toBe("left");
+
+    document.dispatchEvent(new PointerEvent("pointerup", { clientX: 10, clientY: 100 }));
+    dnd.dispose();
+  });
+
+  it("calls onEdgeSplit instead of onDrop when dropping on frame edge", () => {
+    const entryState = new Map<string, FreeLayoutEntry>([
+      ["frame-a", { position: { x: 0, y: 0 }, size: { width: 300, height: 200 } }],
+    ]);
+    const frameElements = new Map([["frame-a", document.createElement("div")]]);
+    const sourceContainer = mockContainer(["tab1"]);
+    const onDrop = vi.fn();
+    const onEdgeSplit = vi.fn();
+
+    const dnd = createFreeLayoutDnd(host, entryState, frameElements, { onDrop, onEdgeSplit });
+
+    fireTabDragStart(host, "tab1", sourceContainer);
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: 10, clientY: 100 }));
+    document.dispatchEvent(new PointerEvent("pointerup", { clientX: 10, clientY: 100 }));
+
+    expect(onEdgeSplit).toHaveBeenCalledWith(sourceContainer, "tab1", "frame-a", "left");
+    expect(onDrop).not.toHaveBeenCalled();
+
+    dnd.dispose();
+  });
+
+  it("fires pages-tab-escaped when pointer exits host bounds", () => {
+    const sourceContainer = mockContainer(["tab1"]);
+    const onDrop = vi.fn();
+
+    const dnd = createFreeLayoutDnd(host, new Map(), new Map(), { onDrop });
+
+    let escaped: CustomEvent | null = null;
+    host.addEventListener("pages-tab-escaped", (e) => { escaped = e as CustomEvent; });
+
+    fireTabDragStart(host, "tab1", sourceContainer);
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: -10, clientY: 300 }));
+
+    expect(escaped).not.toBeNull();
+    expect(escaped!.detail.tabKey).toBe("tab1");
+    expect(escaped!.detail.sourceContainer).toBe(sourceContainer);
+
+    document.dispatchEvent(new PointerEvent("pointerup", { clientX: -10, clientY: 300 }));
+    expect(onDrop).not.toHaveBeenCalled();
+
+    dnd.dispose();
+  });
+
   it("does not respond after dispose", () => {
     const onDrop = vi.fn();
     const dnd = createFreeLayoutDnd(host, new Map(), new Map(), { onDrop });
