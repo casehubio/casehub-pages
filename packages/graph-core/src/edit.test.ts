@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { addNode, removeNode, replaceNode, addEdge, removeEdge } from './edit.js';
+import { addNode, removeNode, replaceNode, addEdge, removeEdge, reconnectEdge, splitEdge } from './edit.js';
 import { createGraph } from './graph.js';
 import { registerGrammar, clearGrammarRegistry } from './grammar.js';
 import type { GraphNode, GraphEdge } from './model.js';
@@ -283,5 +283,114 @@ describe('removeEdge', () => {
       [edge('e1', 'n1', 'n2')],
     );
     expect(() => removeEdge(model, 'missing')).toThrow(/not found/i);
+  });
+});
+
+describe('reconnectEdge', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+  });
+
+  it('changes the target of an existing edge', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b'), node('n3', 'c')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    const result = reconnectEdge(model, 'e1', { target: 'n3' });
+    expect(result.model.edges).toHaveLength(1);
+    expect(result.model.edges[0]!.target).toBe('n3');
+    expect(result.model.edges[0]!.source).toBe('n1');
+    expect(result.model.edges[0]!.id).toBe('e1');
+  });
+
+  it('changes the source of an existing edge', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b'), node('n3', 'c')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    const result = reconnectEdge(model, 'e1', { source: 'n3' });
+    expect(result.model.edges).toHaveLength(1);
+    expect(result.model.edges[0]!.source).toBe('n3');
+    expect(result.model.edges[0]!.target).toBe('n2');
+    expect(result.model.edges[0]!.id).toBe('e1');
+  });
+
+  it('changes both endpoints', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b'), node('n3', 'c')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    const result = reconnectEdge(model, 'e1', { source: 'n3', target: 'n3' });
+    expect(result.model.edges[0]!.source).toBe('n3');
+    expect(result.model.edges[0]!.target).toBe('n3');
+  });
+
+  it('throws when edge not found', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b'), node('n3', 'c')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => reconnectEdge(model, 'missing', { target: 'n3' })).toThrow(/not found/i);
+  });
+
+  it('throws when new target not found', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => reconnectEdge(model, 'e1', { target: 'missing' })).toThrow(/not found/i);
+  });
+
+  it('throws when new source not found', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => reconnectEdge(model, 'e1', { source: 'missing' })).toThrow(/not found/i);
+  });
+
+  it('throws when no endpoints specified', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => reconnectEdge(model, 'e1', {})).toThrow(/at least one endpoint/i);
+  });
+});
+
+describe('splitEdge', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+  });
+
+  it('removes original edge, adds node, adds two new edges', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    const insertNode = node('n3', 'c');
+    const result = splitEdge(model, 'e1', insertNode);
+    expect(result.model.nodes).toHaveLength(3);
+    expect(result.model.nodes.find(n => n.id === 'n3')).toBeDefined();
+    expect(result.model.edges).toHaveLength(2);
+    expect(result.model.edges.find(e => e.source === 'n1' && e.target === 'n3')).toBeDefined();
+    expect(result.model.edges.find(e => e.source === 'n3' && e.target === 'n2')).toBeDefined();
+    expect(result.model.edges.find(e => e.id === 'e1')).toBeUndefined();
+  });
+
+  it('throws when edge not found', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => splitEdge(model, 'missing', node('n3', 'c'))).toThrow(/not found/i);
+  });
+
+  it('throws when insert node has duplicate ID', () => {
+    const model = createGraph(
+      [node('n1', 'a'), node('n2', 'b')],
+      [edge('e1', 'n1', 'n2')],
+    );
+    expect(() => splitEdge(model, 'e1', node('n1', 'c'))).toThrow(/duplicate/i);
   });
 });

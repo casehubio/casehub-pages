@@ -30,5 +30,5 @@ export { validateConstraints } from './validator.js';
 export type { ConstraintViolation, ConstraintRule } from './validator.js';
 export { InMemoryBackend } from './persistence.js';
 export type { PersistenceBackend, ReadResult, WriteResult, ValidationError } from './persistence.js';
-export { addNode, removeNode, replaceNode, addEdge, removeEdge } from './edit.js';
+export { addNode, removeNode, replaceNode, addEdge, removeEdge, reconnectEdge, splitEdge } from './edit.js';
 export type { EditResult } from './edit.js';
