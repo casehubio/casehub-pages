@@ -118,6 +118,8 @@ export type {
   CheckboxProps,
   DatePickerProps,
   TextareaProps,
+  FieldSchema,
+  SchemaFormProps,
 } from "./form-input-types.js";
 export { isFixedOptions } from "./form-input-types.js";
 
@@ -188,4 +190,5 @@ export {
   isCheckbox,
   isDatePicker,
   isTextarea,
+  isSchemaForm,
 } from "./type-guards.js";

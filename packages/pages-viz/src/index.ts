@@ -32,7 +32,7 @@ export { PagesIframePlugin } from "./components/PagesIframePlugin.js";
 
 // Schema form
 export { PagesSchemaForm } from "./form-inputs/PagesSchemaForm.js";
-export type { FieldSchema, SchemaFormProps } from "./form-inputs/schema-types.js";
+export type { FieldSchema, SchemaFormProps } from "@casehubio/pages-component";
 
 // Form inputs
 export { PagesFormInput } from "./form-inputs/PagesFormInput.js";

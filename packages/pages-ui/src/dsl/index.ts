@@ -64,6 +64,7 @@ export {
   checkbox,
   datePicker,
   textarea,
+  schemaForm,
   // Workbench primitive builders
   split,
   dockBar,

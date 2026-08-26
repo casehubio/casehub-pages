@@ -54,6 +54,7 @@ import type {
   CheckboxProps,
   DatePickerProps,
   TextareaProps,
+  SchemaFormProps,
 } from "./form-input-types.js";
 import type { PageProps } from "./page-props.js";
 
@@ -119,6 +120,7 @@ export interface ComponentTypeRegistry {
   checkbox: CheckboxProps;
   "date-picker": DatePickerProps;
   textarea: TextareaProps;
+  "schema-form": SchemaFormProps;
 }
 
 export type ComponentType = keyof ComponentTypeRegistry;
@@ -349,4 +351,8 @@ export function isDatePicker(c: Component): c is TypedComponent<"date-picker"> {
 
 export function isTextarea(c: Component): c is TypedComponent<"textarea"> {
   return c.type === "textarea";
+}
+
+export function isSchemaForm(c: Component): c is TypedComponent<"schema-form"> {
+  return c.type === "schema-form";
 }
