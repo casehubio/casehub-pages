@@ -56,6 +56,7 @@ import type {
   TextareaProps,
   SchemaFormProps,
 } from "./form-input-types.js";
+import type { ActionButtonProps } from "./action-types.js";
 import type { PageProps } from "./page-props.js";
 
 export interface ComponentTypeRegistry {
@@ -121,6 +122,7 @@ export interface ComponentTypeRegistry {
   "date-picker": DatePickerProps;
   textarea: TextareaProps;
   "schema-form": SchemaFormProps;
+  "action-button": ActionButtonProps;
 }
 
 export type ComponentType = keyof ComponentTypeRegistry;
@@ -355,4 +357,8 @@ export function isTextarea(c: Component): c is TypedComponent<"textarea"> {
 
 export function isSchemaForm(c: Component): c is TypedComponent<"schema-form"> {
   return c.type === "schema-form";
+}
+
+export function isActionButton(c: Component): c is TypedComponent<"action-button"> {
+  return c.type === "action-button";
 }

@@ -191,4 +191,5 @@ export {
   isDatePicker,
   isTextarea,
   isSchemaForm,
+  isActionButton,
 } from "./type-guards.js";
