@@ -113,6 +113,7 @@ interface RecordNavigateDetail {
 
 interface RecordCreateDetail {
   readonly record?: Record<string, unknown>;
+  readonly resolve?: (result: { success: boolean; error?: string }) => void;
 }
 
 interface RecordDeleteDetail {
@@ -771,38 +772,41 @@ export async function loadSite(
   }), { signal: abortController.signal });
 
   target.addEventListener("pages-record-create", ((e: Event) => {
-    const { record: eventRecord } = (e as CustomEvent<RecordCreateDetail>).detail;
+    const { record: eventRecord, resolve } = (e as CustomEvent<RecordCreateDetail>).detail;
     const componentId = findComponentId(e);
-    if (!componentId) return;
+    if (!componentId) { resolve?.({ success: false, error: "No component context" }); return; }
     const entry = registry.get(componentId);
-    if (!entry) return;
+    if (!entry) { resolve?.({ success: false, error: "Component not registered" }); return; }
 
     const scope = getDataScope(dataScopeRegistry, entry.pagePath);
-    if (!scope) return;
+    if (!scope) { resolve?.({ success: false, error: "No data scope" }); return; }
 
     const saveConfig = getSaveConfig(saveConfigRegistry, entry.pagePath);
-    if (!saveConfig) return;
+    if (!saveConfig) { resolve?.({ success: false, error: "No save configuration" }); return; }
 
     const record: Record<string, unknown> = eventRecord ?? {};
 
     const adapter = resolveAdapter(saveConfig, scope.dataset, entry.pagePath);
-    if (!adapter?.create) return;
+    if (!adapter?.create) { resolve?.({ success: false, error: "No create adapter" }); return; }
 
     adapter.create(scope.dataset, record)
       .then((result) => {
         if (result.success) {
           pipeline.refreshDataSet(scope.dataset);
+          resolve?.({ success: true });
         } else {
           target.dispatchEvent(new CustomEvent("pages-save-error", {
             bubbles: true,
             detail: { pagePath: entry.pagePath, error: result.error ?? "Create failed" },
           }));
           showErrorBanner(target, result.error ?? "Create failed");
+          resolve?.({ success: false, error: result.error ?? "Create failed" });
         }
       })
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
         showErrorBanner(target, msg);
+        resolve?.({ success: false, error: msg });
       });
   }), { signal: abortController.signal });
 
