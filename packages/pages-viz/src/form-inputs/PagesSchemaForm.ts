@@ -4,6 +4,7 @@ import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 import type { PagesFormInput } from "./PagesFormInput.js";
 import type { SchemaFormProps, FieldSchema } from "@casehubio/pages-component";
+import { STANDALONE_TYPES } from "@casehubio/pages-component";
 import {
   deriveSchemaFromDataSet,
   mapFieldToComponentType,
@@ -19,8 +20,11 @@ import "@casehubio/pages-ui-components/number-input";
 import "@casehubio/pages-ui-components/date-input";
 import "@casehubio/pages-ui-components/datetime-input";
 
+<<<<<<< HEAD
 const STANDALONE_TYPES = new Set(["input", "select", "checkbox", "textarea", "number-input", "date-input", "datetime-input"]);
 
+=======
+>>>>>>> 0ab05a4e (refactor: move validateField to pages-component, create shared field-access utilities)
 export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: DataSetLookup }> {
   private _children: Map<string, HTMLElement> = new Map();
   private _childTypes: Map<string, string> = new Map();

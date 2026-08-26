@@ -75,5 +75,7 @@ export interface SchemaFormProps {
   validateOnBlur?: boolean;
   excludeFields?: string[];
   fieldOrder?: string[];
+  fields?: string[];
   labels?: Record<string, string>;
+  fieldsOnly?: boolean;
 }

@@ -57,6 +57,8 @@ import type {
   SchemaFormProps,
 } from "./form-input-types.js";
 import type { ActionButtonProps } from "./action-types.js";
+import type { FormScopeProps } from "./form-scope-types.js";
+import type { SubmitButtonProps } from "./submit-button-types.js";
 import type { PageProps } from "./page-props.js";
 
 export interface ComponentTypeRegistry {
@@ -123,6 +125,8 @@ export interface ComponentTypeRegistry {
   textarea: TextareaProps;
   "schema-form": SchemaFormProps;
   "action-button": ActionButtonProps;
+  "form-scope": FormScopeProps;
+  "submit-button": SubmitButtonProps;
 }
 
 export type ComponentType = keyof ComponentTypeRegistry;
@@ -361,4 +365,12 @@ export function isSchemaForm(c: Component): c is TypedComponent<"schema-form"> {
 
 export function isActionButton(c: Component): c is TypedComponent<"action-button"> {
   return c.type === "action-button";
+}
+
+export function isFormScope(c: Component): c is TypedComponent<"form-scope"> {
+  return c.type === "form-scope";
+}
+
+export function isSubmitButton(c: Component): c is TypedComponent<"submit-button"> {
+  return c.type === "submit-button";
 }

@@ -68,4 +68,4 @@ export function mapFieldToComponentType(fieldSchema: FieldSchema): string {
   return "input";
 }
 
-
+export { validateField } from "@casehubio/pages-component";
