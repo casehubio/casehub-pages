@@ -649,11 +649,6 @@ export function createActivationCallback(
           existingContainer: wsRef?.rootContainer,
         });
 
-        const showOrganisers = depth > 0 ? props.organisers === true : props.organisers !== false;
-        if (showOrganisers && handle.containerToolbar) {
-          el.insertBefore(handle.containerToolbar.element, overlayContainer);
-        }
-
         if (options?.abortSignal) {
           createFrameKeyboardHandler(handle.rootContainer, overlayContainer, options.abortSignal);
         }

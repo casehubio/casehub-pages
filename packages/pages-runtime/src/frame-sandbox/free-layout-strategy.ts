@@ -127,15 +127,13 @@ export function createFreeLayoutStrategy(
     if (!host) return;
     const cw = host.clientWidth || 400;
     const ch = host.clientHeight || 300;
-    const toolbar = host.parentElement?.querySelector("[data-container-toolbar]");
-    const topInset = toolbar ? (toolbar.getBoundingClientRect().height + 8) : 0;
-    const rects = computeZonePreset(preset, currentEntries.length, { width: cw, height: ch - topInset });
+    const rects = computeZonePreset(preset, currentEntries.length, { width: cw, height: ch });
     for (let i = 0; i < currentEntries.length; i++) {
       const rect = rects[i];
       if (!rect) continue;
       const state = entryState.get(currentEntries[i]!.key);
       if (state) {
-        state.position = { x: rect.x, y: rect.y + topInset };
+        state.position = { x: rect.x, y: rect.y };
         state.size = { width: Math.max(MIN_WIDTH, rect.width), height: Math.max(MIN_HEIGHT, rect.height) };
         const el = frameElements.get(currentEntries[i]!.key);
         if (el) {

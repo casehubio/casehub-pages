@@ -84,10 +84,10 @@ describe("wireFloatingWorkspace", () => {
     handle.dispose();
   });
 
-  it("creates container toolbar", () => {
+  it("root container has inline toolbar", () => {
     const handle = wireFloatingWorkspace(hostElement);
-    expect(handle.containerToolbar).toBeDefined();
-    expect(handle.containerToolbar!.element).toBeDefined();
+    const toolbar = hostElement.querySelector("[data-container-toolbar]");
+    expect(toolbar).not.toBeNull();
     handle.dispose();
   });
 
@@ -186,15 +186,12 @@ describe("wireFloatingWorkspace", () => {
     });
   });
 
-  it("root container has no built-in toolbar — only the external toolbar is used", () => {
-    const handle = wireFloatingWorkspace(hostElement);
+  it("root and child containers all have inline toolbars — recursively regular", () => {
+    const state = makeContainerState();
+    const handle = wireFloatingWorkspace(hostElement, state);
 
-    const rootOrganiserEl = hostElement.firstElementChild;
-    const rootToolbar = rootOrganiserEl?.querySelector(":scope > [data-container-toolbar]");
-    expect(rootToolbar).toBeNull();
-
-    expect(handle.containerToolbar).toBeDefined();
-    expect(handle.containerToolbar!.element.hasAttribute("data-container-toolbar")).toBe(true);
+    const allToolbars = hostElement.querySelectorAll("[data-container-toolbar]");
+    expect(allToolbars.length).toBeGreaterThanOrEqual(3);
 
     handle.dispose();
   });

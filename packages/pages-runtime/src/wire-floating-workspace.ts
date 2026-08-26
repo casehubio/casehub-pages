@@ -2,10 +2,7 @@ import type { ContentFactory, FrameLayout, ContainerState } from "@casehubio/pag
 import { createFrameDetachHandler, type FrameDetachHandler } from "./frame-detach-handler.js";
 import { migrateFrameLayout } from "./layout-migration.js";
 import { injectAnimationStyles } from "./frame-animations.js";
-import {
-  createContainerToolbar,
-  type ContainerToolbar,
-} from "./frame-sandbox/container-toolbar";
+
 import type { Layout, Entry, Container, FreeLayoutState } from "./frame-sandbox/types.js";
 import { SPLIT_POLICY } from "./frame-sandbox/types.js";
 import { createContainer, containerizeEntry } from "./frame-sandbox/index.js";
@@ -21,7 +18,6 @@ export interface WireOptions {
 export interface WireHandle {
   readonly rootContainer: Container;
   readonly detachHandler?: FrameDetachHandler | undefined;
-  readonly containerToolbar?: ContainerToolbar | undefined;
   captureState(): ContainerState;
   dispose(): void;
 }
@@ -137,7 +133,14 @@ export function wireFloatingWorkspace(
       layout: "free",
       contentFactory: entryContentFactory,
       policy: { allowedLayouts: ["free", "tabbed", "accordion", "splith", "splitv"], maxDepth: 5 },
-      showToolbar: false,
+      onAdd: () => {
+        const frameKey = `frame-${String(Date.now())}-${Math.random().toString(36).slice(2, 6)}`;
+        rootContainer.addEntry({
+          key: frameKey,
+          label: "New Frame",
+          component: { type: "html" as const, props: { content: `<div style="padding:12px"><h3>New Frame</h3><p>Empty workspace frame.</p></div>` } },
+        });
+      },
       callbacks: {
         onEdgeSplit: (sourceContainer, tabKey, targetEntryKey, edge) => {
           const detached = sourceContainer.detachEntry(tabKey);
@@ -184,32 +187,13 @@ export function wireFloatingWorkspace(
     detachHandler = createFrameDetachHandler(rootContainer, hostElement, externalFactory, options.signal);
   }
 
-  const containerToolbar = createContainerToolbar(
-    SPLIT_POLICY.allowedLayouts,
-    "free" as Layout,
-    {
-      onAdd: () => {
-        const frameKey = `frame-${String(Date.now())}-${Math.random().toString(36).slice(2, 6)}`;
-        rootContainer.addEntry({
-          key: frameKey,
-          label: "New Frame",
-          component: { type: "html" as const, props: { content: `<div style="padding:12px"><h3>New Frame</h3><p>Empty workspace frame.</p></div>` } },
-        });
-      },
-      onLayoutChange: (type) => { rootContainer.setLayout(type); },
-      onArrange: (preset) => { rootContainer.organiser.arrange?.(preset); },
-    },
-  );
-
   return {
     rootContainer,
     detachHandler,
-    containerToolbar,
     captureState(): ContainerState {
       return captureContainerState(rootContainer);
     },
     dispose() {
-      containerToolbar.dispose();
       detachHandler?.dispose();
       rootContainer.dispose();
     },
