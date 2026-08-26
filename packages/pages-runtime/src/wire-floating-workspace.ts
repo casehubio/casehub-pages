@@ -98,6 +98,7 @@ export function wireFloatingWorkspace(
       layout: "free",
       contentFactory: entryContentFactory,
       policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 5 },
+      showToolbar: false,
       ...(containerState?.layoutState ? { freeLayoutState: containerState.layoutState as FreeLayoutState } : {}),
     });
     rootContainer.mount(hostElement);

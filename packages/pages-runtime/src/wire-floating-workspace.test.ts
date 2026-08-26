@@ -185,4 +185,21 @@ describe("wireFloatingWorkspace", () => {
       handle.dispose();
     });
   });
+
+  it("container has no built-in toolbar — only the external toolbar is used", () => {
+    const state = makeContainerState();
+    const handle = wireFloatingWorkspace(hostElement, state);
+
+    const internalToolbars = hostElement.querySelectorAll("[data-container-toolbar]");
+    expect(internalToolbars.length).toBe(0);
+
+    expect(handle.containerToolbar).toBeDefined();
+    expect(handle.containerToolbar!.element.hasAttribute("data-container-toolbar")).toBe(true);
+
+    hostElement.insertBefore(handle.containerToolbar!.element, hostElement.firstChild);
+    const allToolbars = hostElement.querySelectorAll("[data-container-toolbar]");
+    expect(allToolbars.length).toBe(1);
+
+    handle.dispose();
+  });
 });
