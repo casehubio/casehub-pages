@@ -5,6 +5,7 @@ var selectedNodeIds = [];
 var activePicker = null;
 var lastClickX = 0;
 var lastClickY = 0;
+var pickerOpenedAt = 0;
 var icons = { source: '⬇', transform: '⚙', filter: '⧖', join: '⨝', sink: '⬆' };
 
 function logMutation(label, detail) {
@@ -21,8 +22,17 @@ function dismissPicker() {
   }
 }
 
+function onDocumentClick(evt) {
+  if (Date.now() - pickerOpenedAt < 200) return;
+  if (activePicker && activePicker.contains(evt.target)) return;
+  dismissPicker();
+  document.removeEventListener('pointerdown', onDocumentClick, true);
+}
+
 function showTypePicker(x, y, types, onSelect) {
   dismissPicker();
+  document.removeEventListener('pointerdown', onDocumentClick, true);
+
   var picker = document.createElement('div');
   picker.style.cssText = 'position:fixed;z-index:9999;background:var(--pages-neutral-2,#1e1e1e);border:1px solid var(--pages-neutral-5,#555);border-radius:8px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.4);font-family:var(--pages-font-family,system-ui);font-size:12px';
   picker.style.left = x + 'px';
@@ -38,6 +48,7 @@ function showTypePicker(x, y, types, onSelect) {
     btn.addEventListener('click', function(evt) {
       var t = (evt.currentTarget as HTMLElement).getAttribute('data-type');
       dismissPicker();
+      document.removeEventListener('pointerdown', onDocumentClick, true);
       onSelect(t);
     });
     picker.appendChild(btn);
@@ -45,9 +56,8 @@ function showTypePicker(x, y, types, onSelect) {
 
   document.body.appendChild(picker);
   activePicker = picker;
-  setTimeout(function() {
-    document.addEventListener('click', dismissPicker, { once: true });
-  }, 0);
+  pickerOpenedAt = Date.now();
+  document.addEventListener('pointerdown', onDocumentClick, true);
 }
 
 if (editCanvas) {
