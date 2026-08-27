@@ -6,14 +6,22 @@ pages:
           content: |
             Interactive data pipeline editor with constraint validation.
 
-            **Try:** Drag from a node handle to draw connections &bull; Delete a middle node (select + Delete key) to see auto-join &bull; Drag an edge endpoint to reconnect it
+            **Try:** Add nodes with the toolbar &bull; Drag from a handle to connect nodes &bull; Select a node and press Delete to remove it &bull; Drag an edge endpoint to reconnect
 
-            Connection rules enforce domain constraints &mdash; Source nodes cannot connect to Sinks directly, Sink nodes have no outbound connections.
+            Connection rules enforce domain constraints &mdash; Source can only connect to Transform/Filter/Join, Sink has no outbound.
 
       - type: html
         properties:
           content: |
-            <pages-graph-canvas id="edit-canvas" style="width: 100%; height: 450px; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></pages-graph-canvas>
+            <div id="node-toolbar" style="display: flex; gap: 6px; margin-bottom: 8px; font-family: var(--pages-font-family, system-ui);">
+              <span style="font-size: 12px; color: var(--pages-neutral-8, #9ca3af); align-self: center;">Add:</span>
+              <button class="add-node-btn" data-type="source" style="font-size: 12px; padding: 4px 12px; border: 1px solid var(--pages-success-9, #16a34a); border-radius: 6px; background: transparent; color: var(--pages-success-9, #16a34a); cursor: pointer;">⬇ Source</button>
+              <button class="add-node-btn" data-type="transform" style="font-size: 12px; padding: 4px 12px; border: 1px solid var(--pages-accent-9, #5470c6); border-radius: 6px; background: transparent; color: var(--pages-accent-9, #5470c6); cursor: pointer;">⚙ Transform</button>
+              <button class="add-node-btn" data-type="filter" style="font-size: 12px; padding: 4px 12px; border: 1px solid var(--pages-warning-9, #ca8a04); border-radius: 6px; background: transparent; color: var(--pages-warning-9, #ca8a04); cursor: pointer;">⧖ Filter</button>
+              <button class="add-node-btn" data-type="join" style="font-size: 12px; padding: 4px 12px; border: 1px solid var(--pages-info-9, #0891b2); border-radius: 6px; background: transparent; color: var(--pages-info-9, #0891b2); cursor: pointer;">⨝ Join</button>
+              <button class="add-node-btn" data-type="sink" style="font-size: 12px; padding: 4px 12px; border: 1px solid var(--pages-danger-9, #dc2626); border-radius: 6px; background: transparent; color: var(--pages-danger-9, #dc2626); cursor: pointer;">⬆ Sink</button>
+            </div>
+            <pages-graph-canvas id="edit-canvas" style="width: 100%; height: 420px; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></pages-graph-canvas>
             <div style="margin-top: 8px; font-family: var(--pages-font-family, system-ui);">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                 <strong style="font-size: 13px; color: var(--pages-neutral-11, #374151);">Mutation Log</strong>
