@@ -50,6 +50,12 @@ ${pluginStyles}
   pointer-events: none !important;
   cursor: default;
 }
+.graph-connecting .react-flow__connectionline,
+.graph-connecting .react-flow__connection,
+.graph-connecting .react-flow__edges,
+.graph-connecting .react-flow__edge-interaction {
+  pointer-events: none !important;
+}
 .graph-connecting .react-flow__node .stencil-decoration-wrapper {
   box-shadow: 0 0 8px 2px rgba(22, 163, 106, 0.3);
 }
