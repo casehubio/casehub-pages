@@ -44,6 +44,7 @@ export interface ReactFlowAppProps {
   onNodeContextMenu?: (event: React.MouseEvent, node: Node) => void;
   onEdgeContextMenu?: (event: React.MouseEvent, edge: Edge) => void;
   onReactFlowReady?: (instance: ReactFlowInstance) => void;
+  onConnectEnd?: (event: MouseEvent | TouchEvent) => void;
 }
 
 function ViewportBridge({ onReactFlowReady }: { onReactFlowReady?: (instance: ReactFlowInstance) => void }) {
@@ -136,6 +137,7 @@ export function ReactFlowApp({
   onNodeContextMenu,
   onEdgeContextMenu,
   onReactFlowReady,
+  onConnectEnd,
 }: ReactFlowAppProps): React.JSX.Element {
   const fitRef = useRef<(() => void) | null>(null);
 
@@ -163,7 +165,7 @@ export function ReactFlowApp({
 
   const editingProps = Object.fromEntries(
     Object.entries({
-      onConnect, isValidConnection, onReconnect, onPaneClick,
+      onConnect, isValidConnection, onReconnect, onPaneClick, onConnectEnd,
       onNodeDragStop, onPaneContextMenu, onNodeContextMenu, onEdgeContextMenu,
     }).filter(([, v]) => v !== undefined),
   );
