@@ -8,7 +8,7 @@ import { nodeById } from '@casehubio/graph-core';
 import type { EditPolicy } from '../editing/types.js';
 import type { GraphEdit } from '../editing/types.js';
 import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
-import { ReactFlowApp } from './ReactFlowApp.js';
+import { ReactFlowApp, type ReactFlowAppProps } from './ReactFlowApp.js';
 import { getNodeTypes } from '../registry/stencil-registry.js';
 import { injectIsolationStyles, releaseIsolationStyles, DIAGRAM_ROOT_CLASS } from './css-isolation.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
@@ -23,6 +23,7 @@ export class GraphCanvas extends LitElement {
   @property({ attribute: false }) edges: Edge[] | undefined;
   @property({ attribute: false }) editPolicy: EditPolicy | undefined;
   @property({ attribute: false }) onMutation: ((edit: GraphEdit) => void) | undefined;
+  @property({ attribute: false }) miniMapNodeColor: ReactFlowAppProps['miniMapNodeColor'];
 
   @state() private _nodes: Node[] = [];
   @state() private _edges: Edge[] = [];
@@ -227,6 +228,7 @@ export class GraphCanvas extends LitElement {
         onEdgeContextMenu: (_event, edge: Edge) => {
           emitPagesEvent(this, 'graph:edge:contextmenu', { edgeId: edge.id, edgeType: edge.type ?? '' });
         },
+        miniMapNodeColor: this.miniMapNodeColor,
       }),
     );
   }

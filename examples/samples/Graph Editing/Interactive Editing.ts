@@ -61,6 +61,8 @@ if (editPalette) {
 if (editCanvas) {
   (editCanvas as any).model = (window as any).casehubPages.createBasicPipelineModel();
   (editCanvas as any).editPolicy = (window as any).casehubPages.defaultEditPolicy();
+  var miniMapColors = { source: '#16a34a', transform: '#5470c6', filter: '#ca8a04', join: '#0891b2', sink: '#dc2626' };
+  (editCanvas as any).miniMapNodeColor = function(node) { return miniMapColors[node.type] || '#2563eb'; };
 
   editCanvas.addEventListener('click', function(evt) {
     lastClickX = (evt as MouseEvent).clientX;

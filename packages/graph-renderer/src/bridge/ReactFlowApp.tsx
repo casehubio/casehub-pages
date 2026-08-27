@@ -46,6 +46,7 @@ export interface ReactFlowAppProps {
   onReactFlowReady?: (instance: ReactFlowInstance) => void;
   onConnectEnd?: (event: MouseEvent | TouchEvent) => void;
   onConnectStart?: (event: MouseEvent | TouchEvent, params: { nodeId: string | null }) => void;
+  miniMapNodeColor?: ((node: Node) => string) | undefined;
 }
 
 function ViewportBridge({ onReactFlowReady }: { onReactFlowReady?: (instance: ReactFlowInstance) => void }) {
@@ -120,6 +121,17 @@ function FitTopLeft({ nodes, onFitRef }: { nodes: Node[]; onFitRef: React.Mutabl
   return null;
 }
 
+function defaultMiniMapNodeColor(node: Node): string {
+  const t = node.type ?? '';
+  if (t.includes('try-catch')) return '#c2410c';
+  if (t.includes('switch')) return '#ca8a04';
+  if (t.includes('raise')) return '#dc2626';
+  if (t.includes('set')) return '#7c3aed';
+  if (t.includes('start') || t.includes('entry')) return '#16a34a';
+  if (t.includes('end') || t.includes('exit')) return '#64748b';
+  return '#2563eb';
+}
+
 export function ReactFlowApp({
   nodes,
   edges,
@@ -140,6 +152,7 @@ export function ReactFlowApp({
   onReactFlowReady,
   onConnectEnd,
   onConnectStart,
+  miniMapNodeColor,
 }: ReactFlowAppProps): React.JSX.Element {
   const fitRef = useRef<(() => void) | null>(null);
 
@@ -193,16 +206,7 @@ export function ReactFlowApp({
       <MiniMap
         pannable
         zoomable
-        nodeColor={(node) => {
-          const t = node.type ?? '';
-          if (t.includes('try-catch')) return '#c2410c';
-          if (t.includes('switch')) return '#ca8a04';
-          if (t.includes('raise')) return '#dc2626';
-          if (t.includes('set')) return '#7c3aed';
-          if (t.includes('start') || t.includes('entry')) return '#16a34a';
-          if (t.includes('end') || t.includes('exit')) return '#64748b';
-          return '#2563eb';
-        }}
+        nodeColor={miniMapNodeColor ?? defaultMiniMapNodeColor}
         style={{ background: 'var(--pages-neutral-3, #e5e5e5)' }}
         maskColor="rgba(0, 0, 0, 0.3)"
       />
