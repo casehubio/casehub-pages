@@ -892,7 +892,32 @@ export async function loadSite(
     const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
     if (!panelEl) return;
 
+    const btn = target.querySelector<HTMLElement>(`button[data-dock-panel-id="${escapedId}"]`);
+
     if (visible) {
+      const dockBar = btn?.closest<HTMLElement>('[data-component-type="dock-bar"]');
+      const isExclusive = dockBar?.dataset.exclusive !== undefined;
+      if (isExclusive && btn) {
+        const zoneName = btn.dataset.dockZone;
+        const scope = zoneName
+          ? dockBar!.querySelectorAll<HTMLElement>(`button[data-dock-zone="${zoneName}"]`)
+          : dockBar!.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+        for (const sibling of scope) {
+          const siblingId = sibling.dataset.dockPanelId!;
+          if (siblingId !== panelId && dockState.get(siblingId) === true) {
+            dockState.set(siblingId, false);
+            delete sibling.dataset.active;
+            const sibEscaped = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(siblingId) : siblingId;
+            const sibPanel = target.querySelector<HTMLElement>(`[data-component-id="${sibEscaped}"]`);
+            if (sibPanel) {
+              sibPanel.dataset.pagesDisplay = sibPanel.style.display;
+              sibPanel.style.display = "none";
+            }
+          }
+        }
+      }
+      if (btn) btn.dataset.active = "";
+
       // Cascade expand: ensure all ancestor slots and containers are visible (bottom-up)
       let ancestor: HTMLElement | null = panelEl.parentElement;
       while (ancestor && ancestor !== target) {
@@ -916,7 +941,8 @@ export async function loadSite(
       panelEl.style.display = panelEl.dataset.pagesDisplay ?? "";
       delete panelEl.dataset.pagesDisplay;
     } else {
-    
+      if (btn) delete btn.dataset.active;
+
       panelEl.dataset.pagesDisplay = panelEl.style.display;
       panelEl.style.display = "none";
 
@@ -1272,15 +1298,6 @@ export async function loadSite(
         bubbles: true, composed: true,
         detail: { panelId: activePanel, visible: true },
       }));
-    }
-    for (const btn of buttons) {
-      const panelId = btn.dataset.dockPanelId!;
-      if (panelId === activePanel) {
-        btn.dataset.active = "";
-      } else {
-        delete btn.dataset.active;
-        dockState.set(panelId, false);
-      }
     }
   }
 

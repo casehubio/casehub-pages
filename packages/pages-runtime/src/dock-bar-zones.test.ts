@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { loadSite } from "./site.js";
+import type { LiveSite } from "./site.js";
 import type { Component } from "@casehubio/pages-component";
 
 describe("dock-bar zone grouping", () => {
@@ -309,5 +310,160 @@ describe("dock-bar zone grouping", () => {
 
     site.dispose();
     document.body.removeChild(target);
+  });
+});
+
+describe("dock-toggle handler exclusivity", () => {
+  let target: HTMLElement;
+  let site: LiveSite;
+
+  afterEach(() => {
+    site?.dispose();
+    if (target?.parentElement) target.parentElement.removeChild(target);
+    history.replaceState(null, "", location.pathname);
+  });
+
+  it("showing panel-b hides panel-a in same exclusive zone via direct dispatch", async () => {
+    target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "panel-a", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "A" } }] } },
+                { type: "deferred", id: "panel-b", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "B" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "A", label: "A", panelId: "panel-a", defaultOpen: true, zone: "top" },
+                { icon: "B", label: "B", panelId: "panel-b", zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    site = await loadSite(target, workbench);
+
+    const panelA = target.querySelector<HTMLElement>('[data-component-id="panel-a"]')!;
+    expect(panelA.style.display).not.toBe("none");
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "panel-b", visible: true },
+    }));
+
+    const panelB = target.querySelector<HTMLElement>('[data-component-id="panel-b"]')!;
+    expect(panelB.style.display).not.toBe("none");
+    expect(panelA.style.display).toBe("none");
+  });
+
+  it("dock-bar button data-active syncs on direct dispatch", async () => {
+    target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "panel-a", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "A" } }] } },
+                { type: "deferred", id: "panel-b", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "B" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "A", label: "A", panelId: "panel-a", defaultOpen: true, zone: "top" },
+                { icon: "B", label: "B", panelId: "panel-b", zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    site = await loadSite(target, workbench);
+
+    const btnA = target.querySelector<HTMLElement>('button[data-dock-panel-id="panel-a"]')!;
+    const btnB = target.querySelector<HTMLElement>('button[data-dock-panel-id="panel-b"]')!;
+    expect(btnA.dataset.active).toBeDefined();
+    expect(btnB.dataset.active).toBeUndefined();
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "panel-b", visible: true },
+    }));
+
+    expect(btnA.dataset.active).toBeUndefined();
+    expect(btnB.dataset.active).toBeDefined();
+  });
+
+  it("non-exclusive dock bar allows multiple visible panels", async () => {
+    target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "panel-a", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "A" } }] } },
+                { type: "deferred", id: "panel-b", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "B" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              items: [
+                { icon: "A", label: "A", panelId: "panel-a", defaultOpen: true },
+                { icon: "B", label: "B", panelId: "panel-b" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    site = await loadSite(target, workbench);
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: "panel-b", visible: true },
+    }));
+
+    const panelA = target.querySelector<HTMLElement>('[data-component-id="panel-a"]')!;
+    const panelB = target.querySelector<HTMLElement>('[data-component-id="panel-b"]')!;
+    expect(panelA.style.display).not.toBe("none");
+    expect(panelB.style.display).not.toBe("none");
   });
 });

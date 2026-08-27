@@ -408,9 +408,8 @@ describe("exclusive dock-bar", () => {
     const casesBtn = el.querySelectorAll("button")[1]!;
     casesBtn.click();
 
-    expect(events).toHaveLength(2);
-    expect(events[0]).toEqual({ panelId: "inbox", visible: false });
-    expect(events[1]).toEqual({ panelId: "cases", visible: true });
+    expect(events).toHaveLength(1);
+    expect(events[0]).toEqual({ panelId: "cases", visible: true });
 
     document.body.removeChild(el);
   });
