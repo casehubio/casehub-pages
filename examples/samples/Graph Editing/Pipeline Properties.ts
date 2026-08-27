@@ -31,6 +31,7 @@ if (propsCanvas) {
         schema: schemas[node.type],
         data: nodeData,
         onChange: function(field, value) {
+          nodeData[field[0]] = value;
           node.properties[field[0]] = value;
           if (field[0] === 'name' && propsName) {
             propsName.textContent = String(value);

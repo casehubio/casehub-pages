@@ -52,6 +52,19 @@ if (editCanvas) {
   });
 }
 
+var toolbar = document.getElementById('node-toolbar');
+if (toolbar && editCanvas) {
+  var buttons = toolbar.querySelectorAll('.add-node-btn');
+  for (var b = 0; b < buttons.length; b++) {
+    buttons[b].addEventListener('click', function(evt) {
+      var nodeType = (evt.currentTarget as HTMLElement).getAttribute('data-type');
+      if (!nodeType) return;
+      var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
+      (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
+    });
+  }
+}
+
 if (clearBtn && mutationLog) {
   clearBtn.addEventListener('click', function() {
     mutationLog.textContent = '';
