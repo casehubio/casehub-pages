@@ -222,6 +222,7 @@ function loadSample(sample) {
     const activeItem = document.querySelector(`[data-path="${sample.path}"]`);
     if (activeItem) {
         activeItem.classList.add('active');
+        activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 
     // Persist sample selection for refresh recovery (loadSite overwrites the hash)
