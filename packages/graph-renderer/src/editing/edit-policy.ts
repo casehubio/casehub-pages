@@ -53,13 +53,24 @@ export function defaultEditPolicy(): EditPolicy {
         .map(s => ({ type: s.type, label: s.label, icon: s.icon }));
     },
 
-    getCreatableTypes(nearNode: GraphNode | null, _model: GraphModel): StencilTypeInfo[] {
+    getCreatableTypes(nearNode: GraphNode | null, model: GraphModel): StencilTypeInfo[] {
       return getAllStencils()
         .filter(s => {
           const parentTypes = s.grammar.containment?.allowedParentTypes;
-          if (!parentTypes) return true;
-          if (nearNode && parentTypes.includes(nearNode.type)) return true;
-          return false;
+          if (parentTypes) {
+            if (!nearNode || !parentTypes.includes(nearNode.type)) return false;
+          }
+          if (nearNode) {
+            const sourceGrammar = getGrammar(nearNode.type);
+            if (sourceGrammar) {
+              const { allowedTo, max } = sourceGrammar.connections.outbound;
+              if (max === 0) return false;
+              const currentOutbound = outboundEdges(model, nearNode.id);
+              if (currentOutbound.length >= max) return false;
+              if (allowedTo.length > 0 && !allowedTo.includes(s.type)) return false;
+            }
+          }
+          return true;
         })
         .map(s => ({ type: s.type, label: s.label, icon: s.icon }));
     },
