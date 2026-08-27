@@ -36,10 +36,14 @@ ${pluginStyles}
 }
 .react-flow__handle {
   opacity: 0;
-  width: 12px;
-  height: 12px;
+  width: 1px;
+  height: 1px;
   border: none;
   background: transparent;
+  pointer-events: all;
+}
+.stencil-source-handle {
+  cursor: crosshair;
   pointer-events: all;
 }
 .stencil-decoration-wrapper {

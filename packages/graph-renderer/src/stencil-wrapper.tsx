@@ -156,6 +156,10 @@ export function createStencilNodeComponent(
     const hasSource = rawData._sourceHandlePosition !== undefined;
     const targetPos = positionMap[rawData._targetHandlePosition as string] ?? Position.Top;
     const sourcePos = positionMap[rawData._sourceHandlePosition as string] ?? Position.Bottom;
+    const fullNodeHandle: React.CSSProperties = {
+      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+      borderRadius: 'inherit', opacity: 0, transform: 'none',
+    };
     const allPositions = [
       { key: 'top', pos: Position.Top },
       { key: 'bottom', pos: Position.Bottom },
@@ -169,7 +173,7 @@ export function createStencilNodeComponent(
         {!hideHandles && hasTarget && grammar?.connections.inbound.max !== 0 &&
           allPositions.map(({ key, pos }) => (
             <Handle key={`target-${key}`} id={`target-${key}`} type="target" position={pos}
-              style={pos !== targetPos ? hiddenHandle : undefined} />
+              style={hiddenHandle} />
           ))}
         <div
           className="stencil-decoration-wrapper"
@@ -181,10 +185,11 @@ export function createStencilNodeComponent(
           <div ref={containerRef} />
         </div>
         {!hideHandles && hasSource && grammar?.connections.outbound.max !== 0 &&
-          allPositions.map(({ key, pos }) => (
-            <Handle key={`source-${key}`} id={`source-${key}`} type="source" position={pos}
-              style={pos !== sourcePos ? hiddenHandle : undefined} />
-          ))}
+          <Handle key="source-full" id={`source-${sourcePos === Position.Bottom ? 'bottom' : 'right'}`}
+            type="source" position={sourcePos}
+            className="stencil-source-handle"
+            style={fullNodeHandle} />
+        }
       </>
     );
   }
