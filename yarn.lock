@@ -1419,7 +1419,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/graph-renderer@workspace:packages/graph-renderer":
+"@casehubio/graph-renderer@workspace:*, @casehubio/graph-renderer@workspace:packages/graph-renderer":
   version: 0.0.0-use.local
   resolution: "@casehubio/graph-renderer@workspace:packages/graph-renderer"
   dependencies:
@@ -1590,7 +1590,10 @@ __metadata:
   resolution: "@casehubio/pages-examples@workspace:examples"
   dependencies:
     "@axe-core/playwright": "npm:^4.13.0"
+    "@casehubio/graph-core": "workspace:*"
+    "@casehubio/graph-renderer": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-property-palette": "workspace:*"
     "@casehubio/pages-runtime": "workspace:*"
     "@casehubio/pages-ui": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
@@ -1690,7 +1693,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-property-palette@workspace:packages/pages-property-palette":
+"@casehubio/pages-property-palette@workspace:*, @casehubio/pages-property-palette@workspace:packages/pages-property-palette":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-property-palette@workspace:packages/pages-property-palette"
   dependencies:

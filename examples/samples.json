@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 79,
+  "totalSamples": 82,
   "categories": [
     {
       "category": "Charts",
@@ -328,6 +328,32 @@
           "path": "Interactivity/Selectors and Filters.dash.yaml",
           "category": "Interactivity",
           "file": "Selectors and Filters.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Graph Editing",
+      "samples": [
+        {
+          "name": "Basic Pipeline",
+          "path": "Graph Editing/Basic Pipeline.dash.yaml",
+          "category": "Graph Editing",
+          "file": "Basic Pipeline.dash.yaml",
+          "tsPath": "Graph Editing/Basic Pipeline.ts"
+        },
+        {
+          "name": "Interactive Editing",
+          "path": "Graph Editing/Interactive Editing.dash.yaml",
+          "category": "Graph Editing",
+          "file": "Interactive Editing.dash.yaml",
+          "tsPath": "Graph Editing/Interactive Editing.ts"
+        },
+        {
+          "name": "Pipeline Properties",
+          "path": "Graph Editing/Pipeline Properties.dash.yaml",
+          "category": "Graph Editing",
+          "file": "Pipeline Properties.dash.yaml",
+          "tsPath": "Graph Editing/Pipeline Properties.ts"
         }
       ]
     },
