@@ -12,6 +12,7 @@ const CATEGORY_ORDER = [
   'Forms',
   'Layout',
   'Interactivity',
+  'Graph Editing',
   'Live Data',
   'Content',
   'Custom Components',
