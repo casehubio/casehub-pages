@@ -35,33 +35,26 @@ ${pluginStyles}
   background: var(--pages-neutral-2, #f0f0f0);
 }
 .react-flow__handle {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--pages-neutral-6, #9ca3af);
-  border: none;
   opacity: 0;
-  transition: opacity 0.15s, background 0.15s;
-}
-.react-flow__node:hover .react-flow__handle,
-.react-flow__node.selected .react-flow__handle {
-  opacity: 0.7;
-}
-.react-flow__handle:hover {
-  opacity: 1;
-  background: var(--pages-accent-9, #5470c6);
-}
-.react-flow__handle-valid {
-  opacity: 1;
-  background: var(--pages-success-9, #16a34a);
-}
-.react-flow__handle-connecting {
-  opacity: 1;
-  background: var(--pages-accent-9, #5470c6);
+  width: 12px;
+  height: 12px;
+  border: none;
+  background: transparent;
+  pointer-events: all;
 }
 .stencil-decoration-wrapper {
   position: relative;
   z-index: 1;
+  transition: box-shadow 0.15s;
+}
+.react-flow__node.connecting .stencil-decoration-wrapper {
+  box-shadow: 0 0 0 2px var(--pages-accent-9, #5470c6);
+  border-radius: 8px;
+}
+.react-flow__handle-valid ~ .stencil-decoration-wrapper,
+.react-flow__node:has(.react-flow__handle-valid) .stencil-decoration-wrapper {
+  box-shadow: 0 0 8px 2px var(--pages-success-9, #16a34a);
+  border-radius: 8px;
 }
 `.trim();
 }
