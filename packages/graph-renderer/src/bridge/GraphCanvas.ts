@@ -208,9 +208,9 @@ export class GraphCanvas extends LitElement {
               if (!policy || policy.canConnect(source, target, this.model)) {
                 this.onMutation?.({ type: 'addEdge', sourceId, targetId: targetNodeId });
                 emitPagesEvent(this, 'graph:edge:create', { sourceId, targetId: targetNodeId });
-                return;
               }
             }
+            return;
           }
 
           emitPagesEvent(this, 'graph:connect:end-on-empty', { ...pos, sourceNodeId: sourceId });
