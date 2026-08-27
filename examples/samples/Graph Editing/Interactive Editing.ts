@@ -61,7 +61,14 @@ if (editPalette) {
 if (editCanvas) {
   (editCanvas as any).model = (window as any).casehubPages.createBasicPipelineModel();
   (editCanvas as any).editPolicy = (window as any).casehubPages.defaultEditPolicy();
-  var miniMapColors = { source: '#16a34a', transform: '#5470c6', filter: '#ca8a04', join: '#0891b2', sink: '#dc2626' };
+  var cs = getComputedStyle(editCanvas);
+  var miniMapColors = {
+    source: cs.getPropertyValue('--pages-success-9').trim() || '#16a34a',
+    transform: cs.getPropertyValue('--pages-accent-9').trim() || '#5470c6',
+    filter: cs.getPropertyValue('--pages-warning-9').trim() || '#ca8a04',
+    join: cs.getPropertyValue('--pages-info-9').trim() || '#0891b2',
+    sink: cs.getPropertyValue('--pages-danger-9').trim() || '#dc2626',
+  };
   (editCanvas as any).miniMapNodeColor = function(node) { return miniMapColors[node.type] || '#2563eb'; };
 
   editCanvas.addEventListener('click', function(evt) {
