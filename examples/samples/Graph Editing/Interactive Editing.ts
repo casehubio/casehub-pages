@@ -1,12 +1,23 @@
 var editCanvas = document.getElementById('edit-canvas');
+var editPalette = document.getElementById('edit-palette');
 var mutationLog = document.getElementById('mutation-log');
 var clearBtn = document.getElementById('clear-log');
 var selectedNodeIds = [];
-var activePicker = null;
 var lastClickX = 0;
 var lastClickY = 0;
-var pickerOpenedAt = 0;
-var icons = { source: '⬇', transform: '⚙', filter: '⧖', join: '⨝', sink: '⬆' };
+var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
+var typeColors = { source: 'var(--pages-success-9,#16a34a)', transform: 'var(--pages-accent-9,#5470c6)', filter: 'var(--pages-warning-9,#ca8a04)', join: 'var(--pages-info-9,#0891b2)', sink: 'var(--pages-danger-9,#dc2626)' };
+var stencilItems = (window as any).casehubPages.getAllStencils
+  ? (window as any).casehubPages.getAllStencils().map(function(s) {
+      return { type: s.type, label: s.label, icon: s.icon, group: undefined };
+    })
+  : [
+      { type: 'source', label: 'Source', icon: '⬇', group: 'Input' },
+      { type: 'transform', label: 'Transform', icon: '⚙', group: 'Processing' },
+      { type: 'filter', label: 'Filter', icon: '⧖', group: 'Processing' },
+      { type: 'join', label: 'Join', icon: '⨝', group: 'Processing' },
+      { type: 'sink', label: 'Sink', icon: '⬆', group: 'Output' },
+    ];
 
 function logMutation(label, detail) {
   if (mutationLog) {
@@ -15,49 +26,36 @@ function logMutation(label, detail) {
   }
 }
 
-function dismissPicker() {
-  if (activePicker) {
-    activePicker.remove();
-    activePicker = null;
-  }
+function dismissChooser() {
+  var existing = document.querySelector('pages-node-chooser');
+  if (existing) existing.remove();
 }
 
-function onDocumentClick(evt) {
-  if (Date.now() - pickerOpenedAt < 200) return;
-  if (activePicker && activePicker.contains(evt.target)) return;
-  dismissPicker();
-  document.removeEventListener('pointerdown', onDocumentClick, true);
+function showNodeChooser(x, y, types, onSelect) {
+  dismissChooser();
+  var chooser = document.createElement('pages-node-chooser') as any;
+  chooser.items = types;
+  chooser.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;z-index:9999';
+  document.body.appendChild(chooser);
+
+  chooser.addEventListener('pages-palette-select', function(e) {
+    onSelect(e.detail.item.type);
+  });
+  chooser.addEventListener('pages-chooser-dismiss', function() {
+    chooser.remove();
+  });
 }
 
-function showTypePicker(x, y, types, onSelect) {
-  dismissPicker();
-  document.removeEventListener('pointerdown', onDocumentClick, true);
-
-  var picker = document.createElement('div');
-  picker.style.cssText = 'position:fixed;z-index:9999;background:var(--pages-neutral-2,#1e1e1e);border:1px solid var(--pages-neutral-5,#555);border-radius:8px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.4);font-family:var(--pages-font-family,system-ui);font-size:12px';
-  picker.style.left = x + 'px';
-  picker.style.top = y + 'px';
-
-  for (var i = 0; i < types.length; i++) {
-    var btn = document.createElement('button');
-    btn.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;padding:6px 12px;border:none;background:transparent;color:var(--pages-neutral-12,#ddd);cursor:pointer;border-radius:4px;text-align:left;font-size:12px';
-    btn.textContent = (icons[types[i].type] || '') + ' ' + types[i].label;
-    btn.setAttribute('data-type', types[i].type);
-    btn.addEventListener('mouseover', function() { this.style.background = 'var(--pages-neutral-4,#333)'; });
-    btn.addEventListener('mouseout', function() { this.style.background = 'transparent'; });
-    btn.addEventListener('click', function(evt) {
-      var t = (evt.currentTarget as HTMLElement).getAttribute('data-type');
-      dismissPicker();
-      document.removeEventListener('pointerdown', onDocumentClick, true);
-      onSelect(t);
-    });
-    picker.appendChild(btn);
-  }
-
-  document.body.appendChild(picker);
-  activePicker = picker;
-  pickerOpenedAt = Date.now();
-  document.addEventListener('pointerdown', onDocumentClick, true);
+if (editPalette) {
+  (editPalette as any).items = stencilItems;
+  (editPalette as any).iconRenderer = function(icon) {
+    var item = stencilItems.find(function(s) { return s.icon === icon; });
+    var bg = item ? typeColors[item.type] || 'var(--pages-neutral-8)' : 'var(--pages-neutral-8)';
+    var span = document.createElement('span');
+    span.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:' + bg + ';color:#fff;font-size:14px;line-height:1';
+    span.textContent = icon;
+    return span;
+  };
 }
 
 if (editCanvas) {
@@ -74,6 +72,13 @@ if (editCanvas) {
     (editCanvas as any).model = result.model;
     logMutation(edit.type, edit);
   };
+
+  if (editPalette) {
+    editPalette.addEventListener('pages-palette-select', function(e) {
+      var nodeType = (e as CustomEvent).detail.item.type;
+      (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
+    });
+  }
 
   editCanvas.addEventListener('pages-event', function(e) {
     var detail = (e as CustomEvent).detail;
@@ -92,7 +97,7 @@ if (editCanvas) {
         (editCanvas as any).onMutation({ type: 'splitEdge', edgeId: edgeId, insertNodeType: types[0].type });
         return;
       }
-      showTypePicker(lastClickX, lastClickY, types, function(nodeType) {
+      showNodeChooser(lastClickX, lastClickY, types, function(nodeType) {
         (editCanvas as any).onMutation({ type: 'splitEdge', edgeId: edgeId, insertNodeType: nodeType });
       });
     }
@@ -102,8 +107,7 @@ if (editCanvas) {
       if (!panePolicy) return;
       var creatableTypes = panePolicy.getCreatableTypes(null, paneModel);
       if (creatableTypes.length === 0) return;
-      showTypePicker(detail.payload.x, detail.payload.y, creatableTypes, function(nodeType) {
-        var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
+      showNodeChooser(detail.payload.x, detail.payload.y, creatableTypes, function(nodeType) {
         (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
       });
     }
@@ -115,8 +119,7 @@ if (editCanvas) {
       var sourceNode = connectModel.nodes.find(function(n) { return n.id === sourceId; });
       var connectTypes = connectPolicy.getCreatableTypes(sourceNode || null, connectModel);
       if (connectTypes.length === 0) return;
-      showTypePicker(detail.payload.x, detail.payload.y, connectTypes, function(nodeType) {
-        var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
+      showNodeChooser(detail.payload.x, detail.payload.y, connectTypes, function(nodeType) {
         var newId = 'node-' + Date.now();
         (editCanvas as any).onMutation({
           type: 'compound',
@@ -130,7 +133,7 @@ if (editCanvas) {
   });
 
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { dismissPicker(); return; }
+    if (e.key === 'Escape') { dismissChooser(); return; }
     if (e.key !== 'Delete' && e.key !== 'Backspace') return;
     if (!selectedNodeIds.length) return;
     var target = e.target;
@@ -153,19 +156,6 @@ if (editCanvas) {
     (editCanvas as any).model = model;
     selectedNodeIds = [];
   });
-}
-
-var toolbar = document.getElementById('node-toolbar');
-if (toolbar && editCanvas) {
-  var buttons = toolbar.querySelectorAll('.add-node-btn');
-  for (var b = 0; b < buttons.length; b++) {
-    buttons[b].addEventListener('click', function(evt) {
-      var nodeType = (evt.currentTarget as HTMLElement).getAttribute('data-type');
-      if (!nodeType) return;
-      var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
-      (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
-    });
-  }
 }
 
 if (clearBtn && mutationLog) {

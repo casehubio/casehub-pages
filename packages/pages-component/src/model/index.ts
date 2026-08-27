@@ -94,9 +94,6 @@ export type {
   GroupedViewProps,
   GroupNode,
   RowAccentConfig,
-  FieldSchema,
-  SchemaFormProps,
-  FormScopeProps,
 } from "./displayer-types.js";
 
 // Action types
@@ -204,8 +201,5 @@ export {
   isCheckbox,
   isDatePicker,
   isTextarea,
-  isSchemaForm,
-  isActionButton,
-  isFormScope,
   isSubmitButton,
 } from "./type-guards.js";

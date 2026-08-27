@@ -10,6 +10,7 @@ import "@casehubio/pages-ui-components/status-dot";
 import "@casehubio/pages-viz";
 import "@casehubio/graph-renderer";
 import "@casehubio/pages-property-palette";
+import "@casehubio/pages-diagram-palette";
 import { createBasicPipelineModel, PIPELINE_SCHEMAS } from "./pipeline-stencils";
 import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";
@@ -20,7 +21,7 @@ export { loadSite, applyTheme, getTheme };
 export type { LiveSite, SiteOptions };
 
 export { createBasicPipelineModel, PIPELINE_SCHEMAS };
-export { defaultEditPolicy, applyGraphEdit } from "@casehubio/graph-renderer";
+export { defaultEditPolicy, applyGraphEdit, getAllStencils } from "@casehubio/graph-renderer";
 export { createZoneLayoutEngine } from "@casehubio/pages-runtime";
 export { dockWorkbench, html, rows, split, columns, withId, dockBar, deferred, withStyle, hostPanel } from "@casehubio/pages-ui/dist/dsl/builders.js";
 export type { DockWorkbenchConfig, DockPanelConfig, DockSideConfig } from "@casehubio/pages-ui/dist/dsl/builders.js";

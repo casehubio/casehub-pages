@@ -56,6 +56,10 @@ module.exports = (env = {}) => {
           test: /pages-property-palette[\/]dist[\/]/,
           sideEffects: true,
         },
+        {
+          test: /pages-diagram-palette[\/]dist[\/]/,
+          sideEffects: true,
+        },
       ],
     },
     entry: {

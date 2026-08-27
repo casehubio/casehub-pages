@@ -49,7 +49,6 @@
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
     },
-<<<<<<< HEAD
     "./validation": {
       "types": "./dist/validation/index.d.ts",
       "default": "./dist/validation/index.js"
@@ -77,11 +76,10 @@
     "./tag-editor": {
       "types": "./dist/tag-editor/index.d.ts",
       "default": "./dist/tag-editor/index.js"
-=======
+    },
     "./submit-button": {
       "types": "./dist/submit-button/index.d.ts",
       "default": "./dist/submit-button/index.js"
->>>>>>> 10e8c5c0 (feat: FormScopeState + form-scope activation handler)
     }
   },
   "sideEffects": [

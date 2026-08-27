@@ -46,8 +46,6 @@ import type {
   MetricGridProps,
   IframePluginProps,
   GroupedViewProps,
-  SchemaFormProps,
-  FormScopeProps,
 } from "./displayer-types.js";
 import type { ActionButtonProps } from "./action-types.js";
 import type {
@@ -59,7 +57,6 @@ import type {
   TextareaProps,
   SchemaFormProps,
 } from "./form-input-types.js";
-import type { ActionButtonProps } from "./action-types.js";
 import type { FormScopeProps } from "./form-scope-types.js";
 import type { SubmitButtonProps } from "./submit-button-types.js";
 import type { PageProps } from "./page-props.js";
@@ -119,12 +116,6 @@ export interface ComponentTypeRegistry {
   "grouped-view": GroupedViewProps;
   // Plugin component
   "iframe-plugin": IframePluginProps;
-  // Schema form
-  "schema-form": SchemaFormProps;
-  // Action component
-  "action-button": ActionButtonProps;
-  // Form scope
-  "form-scope": FormScopeProps;
   // Form input components
   input: TextInputProps;
   "number-input": NumberInputProps;
@@ -132,9 +123,13 @@ export interface ComponentTypeRegistry {
   checkbox: CheckboxProps;
   "date-picker": DatePickerProps;
   textarea: TextareaProps;
+  // Schema form
   "schema-form": SchemaFormProps;
+  // Action component
   "action-button": ActionButtonProps;
+  // Form scope
   "form-scope": FormScopeProps;
+  // Submit button
   "submit-button": SubmitButtonProps;
 }
 
@@ -381,18 +376,6 @@ export function isDatePicker(c: Component): c is TypedComponent<"date-picker"> {
 
 export function isTextarea(c: Component): c is TypedComponent<"textarea"> {
   return c.type === "textarea";
-}
-
-export function isSchemaForm(c: Component): c is TypedComponent<"schema-form"> {
-  return c.type === "schema-form";
-}
-
-export function isActionButton(c: Component): c is TypedComponent<"action-button"> {
-  return c.type === "action-button";
-}
-
-export function isFormScope(c: Component): c is TypedComponent<"form-scope"> {
-  return c.type === "form-scope";
 }
 
 export function isSubmitButton(c: Component): c is TypedComponent<"submit-button"> {
