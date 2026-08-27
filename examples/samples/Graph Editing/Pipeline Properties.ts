@@ -12,12 +12,12 @@ if (propsCanvas) {
   (propsCanvas as any).model = currentModel;
   (propsCanvas as any).editPolicy = (window as any).casehubPages.defaultEditPolicy();
 
-  propsCanvas.addEventListener('pages-event', function(e: any) {
+  propsCanvas.addEventListener('pages-event', function(e) {
     var detail = (e as CustomEvent).detail;
     if (detail.topic !== 'graph:node:click') return;
 
     var nodeId = detail.payload.nodeId;
-    var node = currentModel.nodes.find(function(n: any) { return n.id === nodeId; });
+    var node = currentModel.nodes.find(function(n) { return n.id === nodeId; });
     if (!node || !schemas[node.type]) return;
 
     if (propsEmpty) propsEmpty.style.display = 'none';
@@ -26,10 +26,11 @@ if (propsCanvas) {
     if (propsName) propsName.textContent = String(node.properties.name || node.type);
     if (propsPalette) {
       (propsPalette as any).style.display = 'block';
+      var nodeData = Object.assign({}, node.properties);
       (propsPalette as any).source = {
         schema: schemas[node.type],
-        data: Object.assign({}, node.properties),
-        onChange: function(field: any, value: any) {
+        data: nodeData,
+        onChange: function(field, value) {
           node.properties[field[0]] = value;
           if (field[0] === 'name' && propsName) {
             propsName.textContent = String(value);
