@@ -240,6 +240,47 @@ describe('applyGraphEdit', () => {
     expect(result.model.edges).toHaveLength(0);
   });
 
+  it('auto-joins predecessor to successor when removeNode strategy is auto-join', () => {
+    const chain: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'x', properties: {} },
+        { id: 'b', type: 'x', properties: {} },
+        { id: 'c', type: 'x', properties: {} },
+      ],
+      edges: [
+        { id: 'e1', type: 'default', source: 'a', target: 'b' },
+        { id: 'e2', type: 'default', source: 'b', target: 'c' },
+      ],
+    };
+    const result = applyGraphEdit(chain, {
+      type: 'removeNode', nodeId: 'b', strategy: { type: 'auto-join' },
+    });
+    expect(result.model.nodes).toHaveLength(2);
+    expect(result.model.nodes.find(n => n.id === 'b')).toBeUndefined();
+    expect(result.model.edges).toHaveLength(1);
+    expect(result.model.edges[0]!.source).toBe('a');
+    expect(result.model.edges[0]!.target).toBe('c');
+  });
+
+  it('disconnects edges when removeNode strategy is disconnect', () => {
+    const chain: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'x', properties: {} },
+        { id: 'b', type: 'x', properties: {} },
+        { id: 'c', type: 'x', properties: {} },
+      ],
+      edges: [
+        { id: 'e1', type: 'default', source: 'a', target: 'b' },
+        { id: 'e2', type: 'default', source: 'b', target: 'c' },
+      ],
+    };
+    const result = applyGraphEdit(chain, {
+      type: 'removeNode', nodeId: 'b', strategy: { type: 'disconnect' },
+    });
+    expect(result.model.nodes).toHaveLength(2);
+    expect(result.model.edges).toHaveLength(0);
+  });
+
   it('applies compound edit as single operation', () => {
     const noEdgeModel: GraphModel = { ...model, edges: [] };
     const result = applyGraphEdit(noEdgeModel, {

@@ -1,5 +1,5 @@
 import type { GraphNode, GraphEdge, GraphModel } from '@casehubio/graph-core';
-import { addNode, removeNode, addEdge, removeEdge, reconnectEdge, splitEdge } from '@casehubio/graph-core';
+import { addNode, removeNode, addEdge, removeEdge, reconnectEdge, splitEdge, inboundEdges, outboundEdges } from '@casehubio/graph-core';
 import type { EditResult } from '@casehubio/graph-core';
 import type { GraphEdit } from './types.js';
 
@@ -19,8 +19,24 @@ export function applyGraphEdit(model: GraphModel, edit: GraphEdit): EditResult {
       };
       return addNode(model, node);
     }
-    case 'removeNode':
+    case 'removeNode': {
+      if (edit.strategy.type === 'auto-join') {
+        const inEdges = inboundEdges(model, edit.nodeId);
+        const outEdges = outboundEdges(model, edit.nodeId);
+        let result = removeNode(model, edit.nodeId);
+        if (inEdges.length === 1 && outEdges.length === 1) {
+          const joinEdge: GraphEdge = {
+            id: nextId('edge'),
+            type: inEdges[0]!.type,
+            source: inEdges[0]!.source,
+            target: outEdges[0]!.target,
+          };
+          result = addEdge(result.model, joinEdge);
+        }
+        return result;
+      }
       return removeNode(model, edit.nodeId);
+    }
     case 'addEdge': {
       const edge: GraphEdge = {
         id: nextId('edge'),
