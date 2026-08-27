@@ -5,7 +5,7 @@ const LAYOUT_TYPES = new Set([
   "grid", "columns", "rows", "stack",
   "tabs", "pills", "accordion", "carousel",
   "sidebar", "tree", "panel", "split",
-  "metric-grid",
+  "metric-grid", "form-scope",
 ]);
 
 export function isLayoutType(type: string): boolean {
@@ -56,6 +56,11 @@ export function applyLayoutCSS(
       element.style.gap = "var(--pages-space-4, 16px)";
       break;
     case "panel":
+      break;
+    case "form-scope":
+      element.style.display = "flex";
+      element.style.flexDirection = "column";
+      element.style.gap = "var(--pages-space-3, 12px)";
       break;
     case "metric-grid": {
       const mgDirection = (component.props as { direction?: string } | undefined)?.direction;

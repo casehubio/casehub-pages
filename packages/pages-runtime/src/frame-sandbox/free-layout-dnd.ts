@@ -12,7 +12,6 @@ export interface DndCallbacks {
     targetFrameKey: string | null,
     x: number,
     y: number,
-    insertIndex?: number,
   ): void;
   onEdgeSplit?(
     sourceContainer: Container,
@@ -32,36 +31,27 @@ export function createFreeLayoutDnd(
   function detectTarget(clientX: number, clientY: number): {
     frameKey: string | null;
     edge: EdgeZone | null;
-    overStrip: boolean;
   } {
     const hostRect = hostElement.getBoundingClientRect();
     const x = clientX - hostRect.left;
     const y = clientY - hostRect.top;
 
     for (const [key, state] of entryState) {
-      const frameEl = frameElements.get(key);
-      if (!frameEl) continue;
+      if (!frameElements.has(key)) continue;
       const { position, size } = state;
       if (
         x >= position.x && x <= position.x + size.width &&
         y >= position.y && y <= position.y + size.height
       ) {
-        const strip = frameEl.querySelector("[data-tab-strip]") as HTMLElement | null;
-        if (strip) {
-          const stripRect = strip.getBoundingClientRect();
-          if (clientX >= stripRect.left && clientX <= stripRect.right && clientY >= stripRect.top - 15 && clientY <= stripRect.bottom + 15) {
-            return { frameKey: key, edge: null, overStrip: true };
-          }
-        }
         const edge = detectEdgeZone(
           { x, y },
           { x: position.x, y: position.y, width: size.width, height: size.height },
           EDGE_THRESHOLD,
         );
-        return { frameKey: key, edge, overStrip: false };
+        return { frameKey: key, edge };
       }
     }
-    return { frameKey: null, edge: null, overStrip: false };
+    return { frameKey: null, edge: null };
   }
 
   function isOutsideHost(clientX: number, clientY: number): boolean {
@@ -85,63 +75,13 @@ export function createFreeLayoutDnd(
     const { tabKey, ghost, sourceContainer } = evt.detail;
     let currentFrameKey: string | null = null;
     let currentEdge: EdgeZone | null = null;
-    let currentOverStrip = false;
     let highlightEl: HTMLElement | null = null;
-    let tabPreviewEl: HTMLElement | null = null;
-    let stripInsertIndex = -1;
     let escaped = false;
 
     function clearHighlight(): void {
       if (highlightEl) {
         highlightEl.remove();
         highlightEl = null;
-      }
-      if (tabPreviewEl) {
-        tabPreviewEl.remove();
-        tabPreviewEl = null;
-      }
-    }
-
-    function showTabPreview(frameKey: string, clientX: number): void {
-      const frameEl = frameElements.get(frameKey);
-      if (!frameEl) return;
-      const strip = frameEl.querySelector("[data-tab-strip]") as HTMLElement | null;
-      if (!strip) return;
-
-      for (const stale of strip.querySelectorAll("[data-tab-preview]")) stale.remove();
-
-      if (!tabPreviewEl) {
-        const srcEntry = sourceContainer.entries.find(en => en.key === tabKey);
-        tabPreviewEl = document.createElement("button");
-        tabPreviewEl.setAttribute("data-tab-preview", "");
-        tabPreviewEl.textContent = srcEntry?.label ?? tabKey;
-        tabPreviewEl.style.cssText =
-          "padding:4px 12px;border:none;" +
-          "background:var(--pages-surface-3,#333);" +
-          "color:var(--pages-text-1,#e0e0e0);" +
-          "opacity:0.5;pointer-events:none;" +
-          "border-bottom:2px solid transparent;" +
-          "transition:all 0.15s ease;";
-      }
-
-      const buttons = [...strip.querySelectorAll("[data-tab-key]")] as HTMLElement[];
-      let insertBefore: HTMLElement | null = null;
-      stripInsertIndex = buttons.length;
-      for (let i = 0; i < buttons.length; i++) {
-        const bRect = buttons[i]!.getBoundingClientRect();
-        const mid = bRect.left + bRect.width / 2;
-        if (clientX < mid) {
-          insertBefore = buttons[i]!;
-          stripInsertIndex = i;
-          break;
-        }
-      }
-      if (insertBefore) {
-        strip.insertBefore(tabPreviewEl, insertBefore);
-      } else {
-        const sentinel = strip.querySelector("[data-container-toolbar], [data-toolbar-actions]");
-        if (sentinel) strip.insertBefore(tabPreviewEl, sentinel);
-        else strip.appendChild(tabPreviewEl);
       }
     }
 
@@ -153,33 +93,18 @@ export function createFreeLayoutDnd(
 
       if (edge) {
         highlightEl.setAttribute("data-split-preview", edge);
-        const contentArea = frameEl.querySelector("[data-frame-content]") as HTMLElement | null;
-        const ref = contentArea ?? frameEl;
-        const frameRect = frameEl.getBoundingClientRect();
-        const refRect = ref.getBoundingClientRect();
-        const top = refRect.top - frameRect.top;
-        const left = refRect.left - frameRect.left;
-        highlightEl.style.cssText =
-          "position:absolute;pointer-events:none;" +
-          "background:var(--pages-accent-3,#3b82f6);opacity:0.2;z-index:9999;";
+        let inset: string;
         switch (edge) {
-          case "left":
-            highlightEl.style.top = `${top}px`; highlightEl.style.left = `${left}px`;
-            highlightEl.style.width = `${EDGE_THRESHOLD}px`; highlightEl.style.height = `${refRect.height}px`;
-            break;
-          case "right":
-            highlightEl.style.top = `${top}px`; highlightEl.style.left = `${left + refRect.width - EDGE_THRESHOLD}px`;
-            highlightEl.style.width = `${EDGE_THRESHOLD}px`; highlightEl.style.height = `${refRect.height}px`;
-            break;
-          case "top":
-            highlightEl.style.top = `${top}px`; highlightEl.style.left = `${left}px`;
-            highlightEl.style.width = `${refRect.width}px`; highlightEl.style.height = `${EDGE_THRESHOLD}px`;
-            break;
-          case "bottom":
-            highlightEl.style.top = `${top + refRect.height - EDGE_THRESHOLD}px`; highlightEl.style.left = `${left}px`;
-            highlightEl.style.width = `${refRect.width}px`; highlightEl.style.height = `${EDGE_THRESHOLD}px`;
-            break;
+          case "left": inset = "0 50% 0 0"; break;
+          case "right": inset = "0 0 0 50%"; break;
+          case "top": inset = "0 0 50% 0"; break;
+          case "bottom": inset = "50% 0 0 0"; break;
         }
+        highlightEl.style.cssText =
+          `position:absolute;inset:${inset};` +
+          "background:var(--pages-accent-3,rgba(59,130,246,0.15));" +
+          "border:2px solid var(--pages-accent-9,#3b82f6);" +
+          "pointer-events:none;z-index:99999;border-radius:4px;";
       } else {
         highlightEl.setAttribute("data-drop-highlight", "");
         highlightEl.style.cssText =
@@ -209,21 +134,12 @@ export function createFreeLayoutDnd(
         return;
       }
 
-      const { frameKey, edge, overStrip } = detectTarget(moveEvt.clientX, moveEvt.clientY);
-      if (frameKey !== currentFrameKey || edge !== currentEdge || overStrip !== currentOverStrip) {
+      const { frameKey, edge } = detectTarget(moveEvt.clientX, moveEvt.clientY);
+      if (frameKey !== currentFrameKey || edge !== currentEdge) {
         clearHighlight();
         currentFrameKey = frameKey;
         currentEdge = edge;
-        currentOverStrip = overStrip;
-        if (currentFrameKey) {
-          if (currentOverStrip) {
-            showTabPreview(currentFrameKey, moveEvt.clientX);
-          } else {
-            setHighlight(currentFrameKey, currentEdge);
-          }
-        }
-      } else if (currentOverStrip && currentFrameKey) {
-        showTabPreview(currentFrameKey, moveEvt.clientX);
+        if (currentFrameKey) setHighlight(currentFrameKey, currentEdge);
       }
     }
 
@@ -231,9 +147,7 @@ export function createFreeLayoutDnd(
       cleanup();
       if (escaped) return;
 
-      if (currentOverStrip && currentFrameKey) {
-        callbacks.onDrop(sourceContainer, tabKey, currentFrameKey, upEvt.clientX, upEvt.clientY, stripInsertIndex >= 0 ? stripInsertIndex : undefined);
-      } else if (currentFrameKey && currentEdge && callbacks.onEdgeSplit) {
+      if (currentFrameKey && currentEdge && callbacks.onEdgeSplit) {
         callbacks.onEdgeSplit(sourceContainer, tabKey, currentFrameKey, currentEdge);
       } else {
         callbacks.onDrop(sourceContainer, tabKey, currentFrameKey, upEvt.clientX, upEvt.clientY);

@@ -105,7 +105,8 @@ public class ScenarioOrchestrator {
 
         this.runToTarget = label;
         this.paused      = false;
-        broadcastControl("speed", 1000.0);
+        this.speed       = 10.0;
+        broadcastControl("speed", 10.0);
         broadcastControl("resume", null);
         broadcastState();
         return RunToResult.OK;
@@ -154,20 +155,48 @@ public class ScenarioOrchestrator {
     }
 
     public void onExecutorRegister(String connectionId, PushRequest.ExecutorRegister reg) {
+        boolean reRegistered = false;
+        if (sessionId != null) {
+            var existing = executorRegistry.get(reg.name());
+            if (existing != null && !existing.connectionId().equals(connectionId)) {
+                reRegistered = true;
+            }
+        }
         executorRegistry.register(connectionId, reg);
+        if (reRegistered) {
+            redispatchPending(reg.name());
+        }
+    }
+
+    private void redispatchPending(String target) {
+        if (allSteps == null) return;
+        for (var step : allSteps) {
+            if (!target.equals(step.target())) continue;
+            if (completedSteps.containsKey(step.name() != null ? step.name() : step.label())) continue;
+            boolean triggerSatisfied = step.trigger() == null
+                || (step.trigger() instanceof io.casehub.pages.scenario.Trigger.AfterTrigger after
+                    && completedSteps.containsKey(after.step()));
+            if (triggerSatisfied) {
+                dispatchSequence(new SequencePartitioner.StepSequence(
+                    step.target(), List.of(step)));
+                break;
+            }
+        }
     }
 
     public void onStepResult(PushRequest.StepResult result) {
         if (sessionId == null || !sessionId.equals(result.sessionId())) {return;}
         completedSteps.put(result.stepName(), result.ok());
 
-        if (runToTarget != null && runToTarget.equals(result.stepName())) {
+        String stepLabel = resolveLabel(result.stepName());
+        if (runToTarget != null && (runToTarget.equals(result.stepName()) || runToTarget.equals(stepLabel))) {
             runToTarget = null;
-            this.speed  = 1.0;
+            this.speed  = scenario != null ? scenario.speed() : 1.0;
+            broadcastControl("speed", this.speed);
             pause();
-            return;
+        } else {
+            broadcastState();
         }
-        broadcastState();
         if (result.ok()) {
             dispatchTriggeredSteps(result.stepName());
         }
@@ -238,9 +267,7 @@ public class ScenarioOrchestrator {
                 var cmdMap = new java.util.LinkedHashMap<String, Object>();
                 cmdMap.put("action", cmd.action());
                 if (cmd.target() != null) {
-                    cmdMap.put("target", Map.of(
-                            "role", cmd.target().role(),
-                            "name", cmd.target().name()));
+                    cmdMap.put("target", serializeAriaTarget(cmd.target()));
                 }
                 if (cmd.value() != null) {cmdMap.put("value", cmd.value());}
                 if (cmd.data() != null) {cmdMap.put("data", cmd.data());}
@@ -257,6 +284,16 @@ public class ScenarioOrchestrator {
         }
     }
 
+    private Map<String, Object> serializeAriaTarget(io.casehub.pages.scenario.AriaTarget target) {
+        var map = new java.util.LinkedHashMap<String, Object>();
+        map.put("role", target.role());
+        map.put("name", target.name());
+        if (target.within() != null) {
+            map.put("within", serializeAriaTarget(target.within()));
+        }
+        return map;
+    }
+
     private void broadcastControl(String command, Double controlSpeed) {
         String msg = PushMessage.executorControl(sessionId, command, controlSpeed);
         for (var executor : executorRegistry.all()) {
@@ -271,7 +308,7 @@ public class ScenarioOrchestrator {
                                               c.sections().stream()
                                                .map(sec -> new OutlineNode(sec.label(),
                                                                            sec.steps().stream()
-                                                                              .map(st -> new OutlineNode(st.label(), st.target()))
+                                                                              .map(this::stepToOutline)
                                                                               .toList()))
                                                .toList()))
                     .toList();
@@ -280,16 +317,30 @@ public class ScenarioOrchestrator {
             return s.sections().stream()
                     .map(sec -> new OutlineNode(sec.label(),
                                                 sec.steps().stream()
-                                                   .map(st -> new OutlineNode(st.label(), st.target()))
+                                                   .map(this::stepToOutline)
                                                    .toList()))
                     .toList();
         }
         if (s.steps() != null) {
             return s.steps().stream()
-                    .map(st -> new OutlineNode(st.label(), st.target()))
+                    .map(this::stepToOutline)
                     .toList();
         }
         return List.of();
+    }
+
+    private OutlineNode stepToOutline(HierarchicalStep st) {
+        String action = st.commands().isEmpty() ? null : st.commands().get(0).action();
+        return new OutlineNode(st.label(), st.target(), action);
+    }
+
+    private String resolveLabel(String stepName) {
+        if (allSteps == null) return stepName;
+        for (var step : allSteps) {
+            String name = step.name() != null ? step.name() : step.label();
+            if (name.equals(stepName)) return step.label();
+        }
+        return stepName;
     }
 
     private int findStepIndex(String label) {

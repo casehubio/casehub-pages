@@ -28,6 +28,25 @@ import type {PagesContentElement} from "@casehubio/pages-viz/dist/base/PagesCont
 import {lookupPanel} from "./panel-registry.js";
 import type {ConfigurablePanel, DataReceiver} from "@casehubio/pages-component";
 import {createFormFieldProxy, createHostPanelProxy} from "./form-field-proxy.js";
+
+function validateFormField(
+  schema: { minLength?: number; maxLength?: number; minimum?: number; maximum?: number; pattern?: string },
+  value: unknown,
+  required: boolean,
+): string | null {
+  if (required && (value === null || value === undefined || value === "")) return "Required";
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "string") {
+    if (schema.pattern != null && !new RegExp(schema.pattern).test(value)) return "Invalid format";
+    if (schema.minLength != null && value.length < schema.minLength) return `Must be at least ${schema.minLength} characters`;
+    if (schema.maxLength != null && value.length > schema.maxLength) return `Must be at most ${schema.maxLength} characters`;
+  }
+  if (typeof value === "number") {
+    if (schema.minimum != null && value < schema.minimum) return `Must be at least ${schema.minimum}`;
+    if (schema.maximum != null && value > schema.maximum) return `Must be at most ${schema.maximum}`;
+  }
+  return null;
+}
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
 import {renderDockBar} from "./dock-bar-renderer.js";
@@ -42,12 +61,8 @@ import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
 import "@casehubio/pages-ui-components/checkbox";
-import "@casehubio/pages-ui-components/submit-button";
-import { FormScopeState, FormScopeRegistry } from "./form-scope.js";
-import type { FormScopeProps } from "@casehubio/pages-component";
-import { STANDALONE_TYPES } from "@casehubio/pages-component";
 
-const STANDALONE_FORM_TYPES = STANDALONE_TYPES;
+const STANDALONE_FORM_TYPES = new Set(["input", "select", "textarea", "checkbox"]);
 
 const TAG_NAME_OVERRIDES: ReadonlyMap<string, string> = new Map([
   ["badge", "pages-data-badge"],
@@ -217,6 +232,18 @@ export function createActivationCallback(
             detail: { field, value: val, committed: true },
           }));
         });
+
+        formEl.addEventListener("blur", () => {
+          const scope = el.closest('[data-component-type="form-scope"]') as HTMLElement | null;
+          if (!scope || !(scope as any).__formScopeValidateOnBlur) return;
+          const schema = (scope as any).__formScopeSchema as { properties?: Record<string, unknown>; required?: string[] } | undefined;
+          if (!schema?.properties?.[field]) return;
+          const fieldSchema = schema.properties[field] as { minLength?: number; maxLength?: number; minimum?: number; maximum?: number; pattern?: string };
+          const isRequired = schema.required?.includes(field) ?? false;
+          const val = component.type === "checkbox" ? (formEl as any).checked : (formEl as any).value;
+          const error = validateFormField(fieldSchema, val, isRequired);
+          (formEl as any).error = error ?? "";
+        }, true);
       }
 
       if (proxy && lookup) {
@@ -372,78 +399,28 @@ export function createActivationCallback(
       return;
     }
 
-    if (component.type === "form-scope") {
-      const nestingParent = el.parentElement?.closest('[data-component-type="form-scope"]');
-      if (nestingParent) {
-        console.error("[pages] Nested form-scope is not supported. Inner formScope will not function.");
-        return;
-      }
+    if (component.type === "form-scope" && component.props) {
+      const scopeProps = component.props as Record<string, unknown>;
+      (el as any).__formScopeSchema = scopeProps.schema;
+      (el as any).__formScopeValidateOnBlur = scopeProps.validateOnBlur ?? false;
+      (el as any).__formScopeMode = scopeProps.mode ?? "edit";
+      (el as any).__formScopeForceCreate = scopeProps.forceCreate ?? false;
 
-      const fsProps = component.props as FormScopeProps | undefined;
-      const state = new FormScopeState(fsProps?.schema, fsProps?.validateOnBlur ?? false);
-      FormScopeRegistry.set(el, state);
-
-      const isDisplay = fsProps?.mode === "display";
-      el.setAttribute("role", isDisplay ? "group" : "form");
-
-      registry.set(componentId, {
-        element: el, component, pagePath,
-        hasExplicitId: component.id !== undefined,
-      });
-
-      el.addEventListener("pages-field-register", ((e: Event) => {
-        const detail = (e as CustomEvent).detail as {
-          field: string; element: HTMLElement; componentType: string;
-        };
-        state.registerField(detail.field, detail.element, detail.componentType);
-      }));
-
-      if (state.validateOnBlur) {
-        el.addEventListener("pages-field-change", ((e: Event) => {
-          const detail = (e as CustomEvent).detail as {
-            field: string; value: unknown; committed: boolean;
-          };
-          if (!detail.committed) return;
-          state.validateField(detail.field, detail.value);
-        }));
-      }
-
-      if (!isDisplay) {
-        el.addEventListener("pages-form-submit", ((e: Event) => {
-          e.stopPropagation();
-          const submitDetail = (e as CustomEvent).detail as {
-            resolve?: (result: { success: boolean; error?: string }) => void;
-          };
-
-          const errors = state.validateAll();
-          if (Object.keys(errors).length > 0) {
-            submitDetail.resolve?.({ success: false, error: "Validation failed" });
-            return;
-          }
-
-          const values = state.collectValues();
-          el.dispatchEvent(new CustomEvent("pages-record-create", {
-            bubbles: true, composed: true,
-            detail: { record: values, resolve: submitDetail.resolve },
-          }));
-        }));
-      }
-
-      if (component.visibleWhen && contextManager) {
-        registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
-      }
-      return;
-    }
-
-    if (component.type === "submit-button" && component.props) {
-      const btn = document.createElement("pages-submit-button");
-      const p = component.props as Record<string, unknown>;
-      if (p.label) (btn as any).label = p.label;
-      if (p.style) (btn as any).variant = p.style;
-      if (p.disabled) (btn as any).disabled = p.disabled;
-      el.appendChild(btn);
-      if (component.visibleWhen && contextManager) {
-        registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+      if (options) {
+        const pageDataScope = options.dataScopeRegistry.get(pagePath);
+        if (pageDataScope) {
+          const hasSave = options.saveConfigRegistry.has(pagePath);
+          el.addEventListener("pages-field-change", ((e: CustomEvent) => {
+            if (!hasSave) return;
+            const { field, value, committed } = e.detail as { field: string; value: unknown; committed: boolean };
+            if (committed) {
+              el.dispatchEvent(new CustomEvent("pages-form-commit", {
+                bubbles: true, composed: true,
+                detail: { field, value },
+              }));
+            }
+          }) as EventListener);
+        }
       }
       return;
     }
@@ -647,7 +624,6 @@ export function createActivationCallback(
 
       el.style.position = "relative";
       el.style.flex = "1";
-      el.style.height = "100%";
       el.style.display = "flex";
       el.style.flexDirection = "column";
       el.style.minHeight = "0";
@@ -696,9 +672,8 @@ export function createActivationCallback(
 
           let tabCallback = tabCallbacks.get(tab.key);
           if (!tabCallback && depth < 1) {
-            const { floatingWorkspaceRef: _dropped, ...nestedOptions } = (options ?? {}) as Record<string, unknown>;
             tabCallback = createActivationCallback(registry, pagePathMap, {
-              ...nestedOptions,
+              ...(options ?? {}),
               nestingDepth: depth + 1,
             } as LazyPageOptions, contextManager);
             tabCallbacks.set(tab.key, tabCallback);
@@ -728,6 +703,11 @@ export function createActivationCallback(
           signal: options?.abortSignal,
           existingContainer: wsRef?.rootContainer,
         });
+
+        const showOrganisers = depth > 0 ? props.organisers === true : props.organisers !== false;
+        if (showOrganisers && handle.containerToolbar) {
+          el.insertBefore(handle.containerToolbar.element, overlayContainer);
+        }
 
         if (options?.abortSignal) {
           createFrameKeyboardHandler(handle.rootContainer, overlayContainer, options.abortSignal);

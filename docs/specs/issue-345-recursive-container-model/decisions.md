@@ -65,18 +65,21 @@
 **Exploration:** quick
 **Status:** revised
 
-## D6: Collapse — auto-flatten on single child
+## D6: Collapse — layout-aware auto-flatten on single child
 
-**Choice:** When a nested Container's last sibling is closed and only one child remains, the remaining child's content replaces the Container — the entry reverts to a leaf. This is the same behavior as split collapse (where the sibling leaf becomes root when the other is emptied).
+**Choice:** When a nested Container's last sibling is closed and only one child remains, auto-flatten ONLY IF the child container's layout matches the parent container's layout (e.g., tabbed-in-tabbed flattens; accordion-in-tabbed preserves). When layouts differ, the single-child container is preserved — the user intentionally nested it for layout isolation.
 **Alternatives:**
-- Stay nested, require manual flatten — more predictable but creates unnecessary single-child depth
+- Stay nested, require manual flatten — more predictable but creates unnecessary single-child depth for same-layout nesting
+- Always auto-flatten regardless of layout — destroys intentional layout isolation (R1-06)
 - Auto-flatten only when empty (zero children) — inconsistent with split behavior
-**Rationale:** Consistent with the existing split collapse pattern in `group-organiser-backend.ts:297-311`. Prevents orphaned single-child nesting that adds depth without utility. The user can always re-nest.
-**Trade-offs:** Auto-flatten may surprise users who intentionally want a single-tab nested Container (e.g., for layout isolation). But this is an edge case — the common case is that single-child nesting is accidental cleanup residue.
+**Rationale:** Layout-match check distinguishes accidental cleanup residue (same-layout nesting is just depth waste) from intentional isolation (different-layout nesting is a feature). Consistent with the i3 model where each container has its own layout identity.
+**Trade-offs:** More nuanced collapse logic — must compare child.organiser.type to parent.organiser.type before flattening. Slightly more code but prevents a class of user-surprising behavior.
+**Implementation note (R1-01):** The `onCollapse` callback must be invoked by ALL strategies, not just split-strategy. Currently only `split-strategy.ts:134-137` checks `currentEntries.length === 1 && callbacks.onCollapse`. The tabbed and accordion strategies must add the same check in their `removeEntry` methods.
 **Depends on:** D1 (collapse operates on Entry.childContainer)
-**Sources:** `packages/pages-runtime/src/group-organiser-backend.ts:297-311` (existing split collapse pattern)
+**Sources:** `packages/pages-runtime/src/group-organiser-backend.ts:297-311` (existing split collapse pattern), `packages/pages-runtime/src/frame-sandbox/split-strategy.ts:134-137` (only strategy with onCollapse check)
+**Review:** R1-01 — tabbed/accordion strategies missing onCollapse check. R1-06 — layout-match refinement.
 **Exploration:** quick
-**Status:** captured
+**Status:** revised
 
 ## D7: Tree walking — unified traversal via Entry.childContainer
 
@@ -91,3 +94,87 @@
 **Review:** R1-01 — refactor complexity acknowledged. Updated from "parameter removal" to accurate description of logic changes. The new traversal is simpler (one condition instead of layout-type branching) but it IS a logic change at every call site, not just a signature change.
 **Exploration:** quick
 **Status:** revised
+
+## D8: Backend decomposition — concern-based modules
+
+**Choice:** Extract the 1355-line `createGroupOrganiserBackend` god closure into three focused modules: `frame-renderer.ts` (frame DOM creation), `container-tree-ops.ts` (tree traversal, split, collapse), `dnd-coordinator.ts` (drag state machine, previews). The backend stays as a thin orchestrator (~300 lines) implementing `FloatingFrameBackend`, keeping frame registry and callback arrays. Includes split brain fix (mount transfer), code unification (shared resize handles, titlebar, zone picker), typed content identity on Entry, and dead code removal.
+**Alternatives:**
+- Entity-centric modules (Frame class, ContainerTree class, DragSession class) — cross-entity operations (split touches frames + containers + DnD) don't have a natural home, ends up needing a coordinator anyway
+- Container-centric push-down (containers own their own chrome, resize, DnD) — DnD requires cross-container visibility, split creates/destroys containers at tree level, forces a coordinator that collapses back to concern-based with worse boundaries
+**Rationale:** Maps directly to the concerns tangled in the god closure. Each module is independently readable and testable. When tracing a split, read container-tree-ops. When tracing frame creation, read frame-renderer. When debugging drag, read dnd-coordinator. The backend's orchestrator role is natural — it implements the FloatingFrameBackend interface by composing modules.
+**Trade-offs:** More files to navigate (~3 new, but each is focused). Module interfaces must be designed carefully — the wrong boundaries create pass-through boilerplate. The registry staying in the backend means frame-renderer and dnd-coordinator receive FrameState as a parameter rather than looking it up.
+**Sources:** Audit of group-organiser-backend.ts — 6 concerns identified (frame registry, rendering, container lifecycle, split/collapse, DnD, event dispatch). Handover analysis of split brain problem. Code duplication audit (resize handles, titlebar, zone picker).
+**Exploration:** deep-analysis
+**Status:** captured
+
+## D9: Split brain fix — direct re-parent
+
+**Choice:** When workspace mode changes, unmount each frame's `rootContainer` from its `tabContentEl` and mount it into a workspace entry. On switch-back, unmount from workspace and remount into `tabContentEl`. Zero serialization. `restoreWorkspaceTree` is deleted entirely. `buildWorkspaceContainer` becomes a simple loop: unmount containers, create workspace container with entries that mount the live containers.
+**Alternatives:**
+- Persistent mount point (wrapper div that gets re-parented, container stays mounted) — adds indirection without benefit; container unmount/mount is already clean since strategies detach/reattach their DOM
+- Lazy capture (keep serialize, but restore references live containers) — doesn't eliminate the fundamental duplication; serialized state still exists as a divergent copy
+**Rationale:** Eliminates all 3 symptoms: no serialization loss, no orphaned containers, no divergent state copies. Container mount/unmount is already the established lifecycle — strategies handle it correctly.
+**Trade-offs:** Strategies must handle re-mount without reinitializing state. Current strategies already do this (mount creates DOM from current entries/state, unmount removes DOM). Free layout strategy needs to preserve `entryState` Map and `zOrder` across unmount/mount — verified that it does (state lives in closure, not in DOM). SyncWorkspaceStateToFrames (the accent-color DOM inspection hack) is eliminated.
+**Depends on:** D8 (part of the full decomposition)
+**Implementation note (R1-05):** `FloatingFrameBackend` interface gains `getRootContainer(frameKey: string): Container | null` to expose live containers for workspace mount transfer. The Container's mount/unmount lifecycle is already public (Container interface in types.ts). This is consistent with existing backend methods that expose DOM elements (`getFrameElement`, `getTabContentElement`).
+**Sources:** wire-floating-workspace.ts analysis — buildWorkspaceContainer, restoreWorkspaceTree, applyWorkspaceMode flow. Free-layout-strategy.ts — state is closure-based, survives unmount/mount.
+**Review:** R1-05 — backend interface needs getRootContainer for mount transfer. Added.
+**Exploration:** quick
+**Status:** revised
+
+## D10: Replant everywhere — surgical subtree re-parent, never full-tree teardown
+
+**Choice:** All container moves use surgical unmount/mount of the affected subtree only. Never unmount the entire root tree to change one branch. This applies to workspace transitions (D9), split operations, collapse operations, and any future container moves. The pattern: `container.unmount()` from old parent, re-parent in the tree, `container.mount()` into new parent. Siblings and ancestors are untouched.
+**Alternatives:**
+- Full-tree unmount/remount (current approach) — simpler to reason about ("just rebuild everything") but cascades side effects, loses ephemeral DOM state in unrelated subtrees, and is the root cause of state divergence bugs
+**Rationale:** Consistency — one pattern for all container movement. Performance — avoids tearing down and rebuilding unrelated subtrees. Correctness — ephemeral state (scroll positions, ECharts highlights, user selections) in sibling containers is preserved. The current full-tree teardown is the structural cause of repeated regression bugs.
+**Trade-offs:** Requires each container move site (splitFrame pane-level, splitFrame root-level, onCollapse nested, workspace transition) to identify and re-parent only the affected subtree. More precise code, but more code to verify. Strategy mount/unmount must be idempotent and preserve state across cycles — verified that current strategies already do this (closure-based state, DOM is ephemeral).
+**Implementation note (R1-03, spec-R1-01/R1-03/R1-05):** The mechanism is NOT `Container.replaceChild` — that method uses remove/add decomposition which triggers cascade collapse on splits (spec review R1-01) and doesn't preserve entry position (R1-03). Instead: add `refreshEntry(key: string)` to both `LayoutStrategy` and `Container`. Surgical replant mutates `entry.childContainer` directly (it's already a mutable field), then calls `container.refreshEntry(entry.key)`. The strategy disposes old content, runs the content factory, and replaces the content element in place. No remove/add cycle, no collapse cascade, no position issues.
+**Depends on:** D8, D9
+**Sources:** group-organiser-backend.ts splitFrame (root unmount/remount lines 588, 594), onCollapse nested (root unmount/remount line 383), wire-floating-workspace.ts buildWorkspaceContainer. User directive: "replant in all places instead, to keep the architecture consistent."
+**Review:** R1-03 — mechanism specified via Container.replaceChild. No new strategy API needed.
+**Exploration:** quick
+**Status:** revised
+
+## D11: FrameState extends PositionedState — unified resize handles and titlebar
+
+**Choice:** `FrameState` extends `PositionedState` from frame-shell.ts. The backend's duplicate `createResizeHandles` function is deleted. `renderFrame` uses `createFrameResizeHandles(frameEl, state, onResize, key)` from frame-shell. Additionally, the backend uses `createFrameTitlebar()` and `wireTitlebarDrag()` from frame-shell instead of manual DOM creation (currently imported but unused).
+**Alternatives:** Adapter function wrapping FrameState as PositionedState — unnecessary since the shapes already match
+**Rationale:** FrameState already has `position: {x, y}` and `size: {width, height}` — identical to PositionedState. Extending is zero-cost. Eliminates ~100 lines of duplicate resize handle code and manual titlebar creation.
+**Trade-offs:** None significant. FrameState gains a type dependency on frame-shell — acceptable, frame-shell is a sibling module in the same package.
+**Exploration:** quick
+**Status:** captured
+
+## D12: Unified zone picker with snap callback
+
+**Choice:** `frame-zone-picker.ts` exports a shared `showZonePicker(anchorEl: HTMLElement, onSnap: (zone: SnapZone) => void)` function. Root frames pass `(zone) => engine.snapFrame(key, zone, canvasSize)`. Inner free-layout panels pass `(zone) => zoneToRect(zone, containerWidth, containerHeight)`. The inline zone picker implementation in `free-layout-strategy.ts` is deleted.
+**Alternatives:** Keep two implementations — no benefit, same UI, only the callback differs
+**Rationale:** Identical 3x3 grid UI with identical behavior, differing only in what happens on click. A callback parameter makes this one function.
+**Trade-offs:** None. Pure code reduction.
+**Exploration:** quick
+**Status:** captured
+
+## D13: Entry.component typed field — eliminate _content casts
+
+**Choice:** `Entry` gains `component?: Component | undefined`. All `(entry as any)._content` casts are replaced with `entry.component`. Content identity flows through the type system. `containerizeEntry` reads `entry.component` to transfer identity to the wrapped child entry, then clears `entry.component`. `flattenEntry` reads the surviving child's `component` and sets it on the parent entry. Named `component` (not `content`) to distinguish from `contentElement` — `component` is the descriptor, `contentElement` is the rendered DOM.
+**Alternatives:**
+- Keep _content as convention — maintainers must know about the hidden property, TypeScript can't catch misuse
+- Name it `content` — ambiguous alongside `contentElement` (R1-07)
+**Rationale:** Content identity is a core concept used in 5+ locations across 3 files. It belongs in the type system, not hidden behind casts. The name `component` matches the `Component` type and is unambiguous.
+**Trade-offs:** `Component` type from `@casehubio/pages-component` becomes a dependency of the Entry type in `pages-runtime`. This dependency already exists via `ContentFactory` and `ContainerConfig` — no new coupling.
+**Review:** R1-07 — renamed from `content` to `component` for clarity.
+**Exploration:** quick
+**Status:** revised
+
+## D14: refreshEntry — surgical replant primitive
+
+**Choice:** Add `refreshEntry(key: string): void` to both `LayoutStrategy` and `Container` interfaces. For surgical tree surgery (split, collapse, flatten), mutate the parent entry's `childContainer` directly, then call `container.refreshEntry(key)` to re-render. Do NOT use `Container.replaceChild` — its remove/add decomposition triggers cascade collapse on splits and doesn't preserve entry position.
+**Alternatives:**
+- Fix `replaceChild` to use `LayoutStrategy.replaceEntry` (atomic swap) — more complex, requires new Entry objects instead of in-place mutation
+- Use `replaceChild` as-is — broken: cascade collapse on 2-entry splits (spec-R1-01), wrong position (R1-03), parent left in broken render state (R1-05)
+**Rationale:** `refreshEntry` is the minimal primitive that makes surgical replant work. It re-renders one entry's content area without touching entries, position, or triggering collapse checks. Each strategy implements it by disposing old content, running factory, replacing in DOM — only for currently-visible entries (active tab in tabbed, all panes in split, etc.). Spec review (R1-01/R1-03/R1-05) confirmed `replaceChild` is broken and has zero callers in the codebase.
+**Trade-offs:** Adds one method to LayoutStrategy interface. Each strategy needs an implementation (~5-10 lines each). Entry mutation is in-place — the entry object is shared between Container.entries and Strategy.currentEntries, so both see the change.
+**Depends on:** D10 (surgical replant pattern), D8 (decomposition)
+**Sources:** Spec review R1-01 (cascade collapse), R1-03 (position), R1-05 (broken render state). container.ts `replaceChild` implementation (lines 197-204). split-strategy.ts onCollapse check (lines 133-135).
+**Exploration:** quick
+**Status:** captured

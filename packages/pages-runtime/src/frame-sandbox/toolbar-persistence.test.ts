@@ -258,7 +258,7 @@ describe("Container toolbar placement: strip vs overlay", () => {
     expect(addCalled).toBe(true);
   });
 
-  it("toolbar present at any depth", () => {
+  it("no toolbar at depth > 1", () => {
     const c = createContainer({
       entries: [{ key: "a", label: "A" }],
       layout: "tabbed",
@@ -267,8 +267,7 @@ describe("Container toolbar placement: strip vs overlay", () => {
     });
     c.mount(host);
 
-    expect(host.querySelector("[data-container-toolbar]")).not.toBeNull();
-    c.dispose();
+    expect(host.querySelector("[data-container-toolbar]")).toBeNull();
   });
 });
 

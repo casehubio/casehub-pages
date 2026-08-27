@@ -46,7 +46,10 @@ import type {
   MetricGridProps,
   IframePluginProps,
   GroupedViewProps,
+  SchemaFormProps,
+  FormScopeProps,
 } from "./displayer-types.js";
+import type { ActionButtonProps } from "./action-types.js";
 import type {
   TextInputProps,
   NumberInputProps,
@@ -116,6 +119,12 @@ export interface ComponentTypeRegistry {
   "grouped-view": GroupedViewProps;
   // Plugin component
   "iframe-plugin": IframePluginProps;
+  // Schema form
+  "schema-form": SchemaFormProps;
+  // Action component
+  "action-button": ActionButtonProps;
+  // Form scope
+  "form-scope": FormScopeProps;
   // Form input components
   input: TextInputProps;
   "number-input": NumberInputProps;
@@ -332,6 +341,21 @@ export function isGroupedView(c: Component): c is TypedComponent<"grouped-view">
 // Plugin component
 export function isIframePlugin(c: Component): c is TypedComponent<"iframe-plugin"> {
   return c.type === "iframe-plugin";
+}
+
+// Schema form
+export function isSchemaForm(c: Component): c is TypedComponent<"schema-form"> {
+  return c.type === "schema-form";
+}
+
+// Action component
+export function isActionButton(c: Component): c is TypedComponent<"action-button"> {
+  return c.type === "action-button";
+}
+
+// Form scope
+export function isFormScope(c: Component): c is TypedComponent<"form-scope"> {
+  return c.type === "form-scope";
 }
 
 // Form input components

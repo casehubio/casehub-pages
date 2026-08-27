@@ -2,6 +2,7 @@ import type { TypedDataSet, Column } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 export type { FieldSchema } from "@casehubio/pages-ui-components/types";
 import type { FieldSchema } from "@casehubio/pages-ui-components/types";
 export { validateField } from "@casehubio/pages-ui-components/validation";
@@ -19,6 +20,10 @@ export interface SchemaFormProps {
 export type { FieldSchema, SchemaFormProps } from "@casehubio/pages-component";
 import type { FieldSchema } from "@casehubio/pages-component";
 >>>>>>> 22dba29a (feat(dsl): add schemaForm() TypeScript DSL builder)
+=======
+export type { FieldSchema, SchemaFormProps } from "@casehubio/pages-component";
+import type { FieldSchema } from "@casehubio/pages-component";
+>>>>>>> c71b1656 (feat: scenario engine, DSL builders, and helpdesk demo)
 
 export function deriveSchemaFromDataSet(dataset: TypedDataSet): FieldSchema {
   const properties: Record<string, FieldSchema> = {};

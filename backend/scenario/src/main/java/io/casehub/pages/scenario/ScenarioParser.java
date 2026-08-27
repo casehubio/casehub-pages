@@ -15,7 +15,7 @@ import java.util.Set;
 public final class ScenarioParser {
 
     private static final Set<String> KNOWN_ACTIONS =
-        Set.of("navigate", "click", "fill", "select", "expand", "collapse", "assert", "wait");
+        Set.of("navigate", "click", "fill", "select", "expand", "collapse", "assert", "wait", "spotlight");
 
     private static final JsonFactory YAML_FACTORY = new YAMLFactory();
 
@@ -94,6 +94,7 @@ public final class ScenarioParser {
         return switch (delivery) {
             case "graphql" -> buildGraphQLStep(fields);
             case "simulated" -> buildSimulatedStep(fields);
+            case "rest" -> buildRestStep(fields);
             default -> throw new IllegalArgumentException("Unknown delivery type: " + delivery);
         };
     }
@@ -134,8 +135,11 @@ public final class ScenarioParser {
                 case "name" -> name = p.getText();
                 case "within" -> within = parseAriaTarget(p);
                 case "value" -> value = p.getText();
+                case "content" -> value = p.getText();
                 case "state" -> state = parseState(p);
                 case "timeout" -> timeout = p.getIntValue();
+                case "position" -> { if (state == null) state = new HashMap<>(); state.put("position", p.getText()); }
+                case "duration" -> { if (state == null) state = new HashMap<>(); state.put("duration", p.getIntValue()); }
                 default -> p.skipChildren();
             }
         }
@@ -170,6 +174,38 @@ public final class ScenarioParser {
         Map<String, Object> data = fields.containsKey("data")
                 ? (Map<String, Object>) fields.get("data") : Map.of();
         return new ScenarioStep.SimulatedStep(name, dataset, data);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ScenarioStep.RestStep buildRestStep(Map<String, Object> fields) {
+        String name = (String) fields.get("name");
+        String method = (String) fields.getOrDefault("method", "POST");
+        String url = (String) fields.get("url");
+        Map<String, Object> body = fields.containsKey("body")
+                ? (Map<String, Object>) fields.get("body") : Map.of();
+        Map<String, String> headers = Map.of();
+        if (fields.containsKey("headers")) {
+            Map<String, Object> rawHeaders = (Map<String, Object>) fields.get("headers");
+            headers = new HashMap<>();
+            for (var entry : rawHeaders.entrySet()) {
+                headers.put(entry.getKey(), String.valueOf(entry.getValue()));
+            }
+        }
+        Integer expectedStatus = null;
+        AwaitCondition await = null;
+        if (fields.containsKey("await")) {
+            Map<String, Object> awaitMap = (Map<String, Object>) fields.get("await");
+            if (awaitMap.containsKey("status")) {
+                expectedStatus = ((Number) awaitMap.get("status")).intValue();
+            }
+            if (awaitMap.containsKey("match")) {
+                Map<String, Object> match = (Map<String, Object>) awaitMap.get("match");
+                Integer timeout = awaitMap.containsKey("timeout") ? ((Number) awaitMap.get("timeout")).intValue() : null;
+                Integer interval = awaitMap.containsKey("interval") ? ((Number) awaitMap.get("interval")).intValue() : null;
+                await = new AwaitCondition(match, timeout, interval);
+            }
+        }
+        return new ScenarioStep.RestStep(name, method, url, body, headers, expectedStatus, await);
     }
 
     @SuppressWarnings("unchecked")

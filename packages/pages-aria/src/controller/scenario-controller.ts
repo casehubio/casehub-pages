@@ -5,6 +5,14 @@ import { KeyboardShortcutMixin } from '@casehubio/pages-primitives';
 import { ScenarioConnectionController, type ScenarioState, type OutlineNode } from './scenario-connection-controller.js';
 import type { PagesScenarioYamlViewer } from './scenario-yaml-viewer.js';
 
+const ACTION_ICONS: Record<string, string> = {
+  'show-markdown': '◫',
+  'spotlight': '◎',
+  'click': '⊙',
+  'fill': '✎',
+  'navigate': '→',
+};
+
 export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   static override styles = css`
     :host {
@@ -40,11 +48,16 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     }
     .outline-step.completed { color: var(--pages-neutral-8, #999); }
     .step-icon { width: 14px; text-align: center; flex-shrink: 0; }
+    .step-type-icon { font-size: 12px; flex-shrink: 0; width: 16px; text-align: center; }
+    .run-to { margin-left: auto; opacity: 0; font-size: 10px; color: var(--pages-accent-9, #2563eb); flex-shrink: 0; transition: opacity 0.15s; }
+    .outline-step:hover .run-to, .outline-heading:hover .run-to { opacity: 1; }
+    .outline-step.completed .run-to { display: none; }
     .transport {
       display: flex; align-items: center; gap: var(--pages-space-2, 8px);
       padding: var(--pages-space-2, 8px);
       border-top: 1px solid var(--pages-neutral-4, #e5e5e5);
       border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+      flex-wrap: wrap;
     }
     .transport button {
       background: none; border: 1px solid var(--pages-neutral-6, #ccc);
@@ -56,6 +69,10 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     .transport button:disabled { opacity: 0.4; cursor: not-allowed; }
     .speed-slider { width: 80px; }
     .speed-label { font-size: var(--pages-font-size-sm, 12px); min-width: 36px; }
+    .callout-slider { width: 60px; }
+    .callout-label { font-size: var(--pages-font-size-sm, 12px); min-width: 46px; color: var(--pages-neutral-8, #999); }
+    .slider-group { display: flex; align-items: center; gap: 4px; }
+    .slider-group-label { font-size: 10px; color: var(--pages-neutral-7, #aaa); text-transform: uppercase; letter-spacing: 0.5px; }
     .progress { font-size: var(--pages-font-size-sm, 12px); color: var(--pages-neutral-8, #999); margin-left: auto; }
     .status-bar {
       display: flex; align-items: center; justify-content: space-between;
@@ -69,7 +86,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     .connection-status.disconnected { color: var(--pages-danger-9, #dc2626); }
 
     :host([mode="compact"]) {
-      position: fixed; bottom: 16px; right: 16px; z-index: 9999;
+      position: fixed; bottom: 16px; right: 16px; z-index: 10001;
       width: auto; font-size: var(--pages-font-size-sm, 12px);
     }
     .compact-pill {
@@ -119,6 +136,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     :host([mode="compact"]) .outline-step:hover { background: rgba(255,255,255,0.05); }
     :host([mode="compact"]) .outline-step.current { background: rgba(56,189,248,0.15); color: #38bdf8; }
     :host([mode="compact"]) .outline-step.completed { color: #475569; }
+    :host([mode="compact"]) .run-to { color: #38bdf8; }
     :host([mode="compact"]) .transport { border-color: rgba(255,255,255,0.1); }
     :host([mode="compact"]) .transport button { color: #94a3b8; border-color: rgba(255,255,255,0.15); }
     :host([mode="compact"]) .transport button:hover:not(:disabled) { background: rgba(255,255,255,0.05); color: #e2e8f0; }
@@ -126,6 +144,8 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     :host([mode="compact"]) .connection-status.connected { color: #4ade80; }
     :host([mode="compact"]) .connection-status.disconnected { color: #f87171; }
     :host([mode="compact"]) .speed-label { color: #94a3b8; }
+    :host([mode="compact"]) .callout-label { color: #64748b; }
+    :host([mode="compact"]) .slider-group-label { color: #475569; }
     :host([mode="compact"]) .progress { color: #38bdf8; }
 
     .demo-actions { display: flex; gap: var(--pages-space-2, 8px); padding: var(--pages-space-2, 8px); }
@@ -137,8 +157,8 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     }
     .demo-btn-start { background: #2563eb; color: white; }
     .demo-btn-start:hover { background: #1d4ed8; }
-    .demo-btn-restart { background: #334155; color: #e2e8f0; }
-    .demo-btn-restart:hover { background: #475569; }
+    .demo-btn-restart { background: #b45309; color: #fff; }
+    .demo-btn-restart:hover { background: #d97706; }
     :host(:not([mode="compact"])) .demo-btn-start { background: var(--pages-accent-9, #2563eb); color: white; }
     :host(:not([mode="compact"])) .demo-btn-restart { background: var(--pages-neutral-4, #e5e5e5); color: var(--pages-neutral-12, #1a1a1a); }
   `;
@@ -151,6 +171,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
 
   @state() private _expanded = false;
   @state() private _yamlOpen = false;
+  @state() private _calloutMsPerChar = 25;
 
   @state() private _outline: OutlineNode[] = [];
 
@@ -160,6 +181,9 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _popoutWindow: Window | null = null;
   private _popoutPoll: ReturnType<typeof setInterval> | null = null;
   @state() private _docked = true;
+  @state() private _fullOutline = false;
+
+  private _resizeHandler = (): void => this._clampToViewport();
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -171,6 +195,11 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       if (!this._conn?.state?.scenario) return;
       void this._conn.sendCommand('/step');
     }, { description: 'Step forward' });
+    window.addEventListener('resize', this._resizeHandler);
+    if (this.mode === 'compact' && sessionStorage.getItem('scenario-controller-expanded') === 'true') {
+      this._expanded = true;
+      sessionStorage.removeItem('scenario-controller-expanded');
+    }
   }
 
   protected override firstUpdated(): void {
@@ -185,6 +214,18 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private _onStateChange(s: ScenarioState): void {
     if (s.scenario && this._outline.length === 0) void this._fetchOutline();
     if (!s.scenario) this._outline = [];
+    this.updateComplete.then(() => this._scrollToCurrent());
+  }
+
+  private _scrollToCurrent(): void {
+    const current = this.shadowRoot?.querySelector('.outline-step.current') as HTMLElement | null;
+    if (!current) return;
+    const container = current.closest('.compact-body, .outline')?.parentElement as HTMLElement | null;
+    const scroller = this.shadowRoot?.querySelector('.compact-body') as HTMLElement | null ?? container;
+    if (!scroller) return;
+    const targetOffset = scroller.clientHeight / 3;
+    const stepTop = current.offsetTop - scroller.offsetTop;
+    scroller.scrollTo({ top: Math.max(0, stepTop - targetOffset), behavior: 'smooth' });
   }
 
   private async _fetchOutline(): Promise<void> {
@@ -241,19 +282,60 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     `;
   }
 
+  private _flattenLeaves(nodes: OutlineNode[]): OutlineNode[] {
+    const result: OutlineNode[] = [];
+    for (const node of nodes) {
+      if (node.children.length === 0) result.push(node);
+      else result.push(...this._flattenLeaves(node.children));
+    }
+    return result;
+  }
+
+  private _renderCompactOutline(): TemplateResult {
+    const leaves = this._flattenLeaves(this._outline);
+    if (leaves.length === 0) {
+      return html`<div class="outline-empty">No scenario running</div>`;
+    }
+    const currentIdx = leaves.findIndex(n => n.label === this._conn?.state.step);
+    const start = Math.max(0, Math.min(currentIdx < 0 ? 0 : currentIdx - 1, leaves.length - 3));
+    const window = leaves.slice(start, start + 3);
+    return html`
+      <div class="outline" role="tree" aria-label="Scenario outline">
+        ${window.map(node => {
+          const isCurrent = node.label === this._conn?.state.step;
+          const isCompleted = this._isBeforeCurrent(node.label);
+          const icon = node.action ? ACTION_ICONS[node.action] : undefined;
+          return html`
+            <div class="outline-step ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}"
+                 role="treeitem" tabindex="-1"
+                 style="padding-left: 8px"
+                 @click=${() => void this._conn.sendCommand('/run-to', { label: node.label })}>
+              <span class="step-icon">${isCurrent ? '●' : isCompleted ? '✓' : '○'}</span>
+              ${icon ? html`<span class="step-type-icon">${icon}</span>` : ''}
+              ${node.label}
+            </div>
+          `;
+        })}
+      </div>
+    `;
+  }
+
   private _renderNode(node: OutlineNode, depth: number): TemplateResult {
     const isLeaf = node.children.length === 0;
     const isCurrent = isLeaf && node.label === this._conn?.state.step;
     const isCompleted = isLeaf && this._isBeforeCurrent(node.label);
 
     if (isLeaf) {
+      const icon = node.action ? ACTION_ICONS[node.action] : undefined;
       return html`
         <div class="outline-step ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}"
              role="treeitem" tabindex="-1"
              style="padding-left: ${depth * 16 + 8}px"
              @click=${() => void this._conn.sendCommand('/run-to', { label: node.label })}>
           <span class="step-icon">${isCurrent ? '●' : isCompleted ? '✓' : '○'}</span>
+          ${icon ? html`<span class="step-type-icon">${icon}</span>` : ''}
           ${node.label}
+          <span class="run-to" aria-label="Run to ${node.label}">▶</span>
         </div>
       `;
     }
@@ -263,6 +345,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
              style="padding-left: ${depth * 16}px"
              @click=${() => void this._conn.sendCommand('/run-to', { label: node.label })}>
           ${node.label}
+          <span class="run-to" aria-label="Run to ${node.label}">▶</span>
         </div>
         ${node.children.map(child => this._renderNode(child, depth + 1))}
       </div>
@@ -293,6 +376,16 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
                aria-valuetext="${(s?.speed ?? 1).toFixed(1)}x speed"
                @input=${this._onSpeedChange}>
         <span class="speed-label">${(s?.speed ?? 1).toFixed(1)}x</span>
+        <input type="range" class="callout-slider"
+               min="10" max="120" step="5"
+               .value=${String(this._calloutMsPerChar)}
+               ?disabled=${!hasScenario}
+               aria-label="Callout speed"
+               aria-valuemin="10" aria-valuemax="120"
+               aria-valuenow=${String(this._calloutMsPerChar)}
+               aria-valuetext="${this._calloutMsPerChar}ms/char callout speed"
+               @input=${this._onCalloutSpeedChange}>
+        <span class="callout-label">${this._calloutMsPerChar}ms</span>
         <span class="progress">${Math.round((s?.progress ?? 0) * 100)}%</span>
       </div>
     `;
@@ -305,6 +398,13 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     this._speedDebounce = setTimeout(() => {
       void this._conn.sendCommand('/speed', { speed: Math.round(speed * 100) / 100 });
     }, 250);
+  }
+
+  private _onCalloutSpeedChange(e: Event): void {
+    this._calloutMsPerChar = parseInt((e.target as HTMLInputElement).value, 10);
+    this.eventTarget?.dispatchEvent(new CustomEvent('scenario-callout-speed', {
+      detail: { msPerChar: this._calloutMsPerChar },
+    }));
   }
 
   private _renderStatus(): TemplateResult {
@@ -328,7 +428,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     const pct = Math.round((s?.progress ?? 0) * 100);
     return html`
       <div class="compact-pill"
-           @click=${() => { this._expanded = true; }}
+           @click=${() => { this._expanded = true; this._resetPosition(); }}
            @pointerdown=${this._onDragStart}>
         <button aria-label=${s?.paused !== false ? 'Resume' : 'Pause'}
                 @click=${(e: Event) => {
@@ -350,17 +450,21 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       <div class="compact-card">
         <div class="compact-header" @pointerdown=${this._onDragStart}>
           <span class="scenario-name">${name}</span>
+          <button aria-label=${this._fullOutline ? 'Compact outline' : 'Full outline'}
+                  @click=${() => { this._fullOutline = !this._fullOutline; }}>${this._fullOutline ? '⊟' : '⊞'}</button>
           <button aria-label="Toggle source" @click=${() => this._toggleYaml()}>&lt;/&gt;</button>
           ${this._yamlOpen ? (this._docked
             ? html`<button aria-label="Undock viewer" @click=${() => this._undockViewer()} title="Undock panels">⊟</button>`
             : html`<button aria-label="Dock viewer" @click=${() => this._dockViewer()} title="Dock panels">⊞</button>`
           ) : nothing}
-          <button aria-label="Collapse" @click=${() => { this._expanded = false; }}>✕</button>
+          <button aria-label="Collapse" @click=${() => { this._expanded = false; this._resetPosition(); }}>✕</button>
         </div>
         <div class="compact-body">
-          ${this._renderOutline()}
+          ${this._fullOutline ? this._renderOutline() : this._renderCompactOutline()}
         </div>
-        ${this._renderDemoActions()}
+        ${!s?.scenario && this.scenario ? html`<div class="demo-actions">
+          <button class="demo-btn demo-btn-start" @click=${() => void this._startDemo()}>Start Demo</button>
+        </div>` : nothing}
         ${this._renderTransport()}
         ${this._renderStatus()}
       </div>
@@ -370,7 +474,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   private async _startDemo(): Promise<void> {
     if (!this.scenario || !this._conn) return;
     try {
-      const resp = await fetch(`${this._conn.restBase}/scenarios/${this.scenario}.yaml`);
+      const resp = await fetch(`${this._conn.restBase}/scenarios/${this.scenario}.yaml`, { cache: 'no-store' });
       if (!resp.ok) return;
       const yaml = await resp.text();
       await this._conn.sendCommand('/start', { yaml, paused: true });
@@ -381,6 +485,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     if (!this._conn) return;
     try {
       await this._conn.sendCommand('/reset');
+      sessionStorage.setItem('scenario-controller-expanded', 'true');
       window.location.reload();
     } catch { /* ignore */ }
   }
@@ -421,6 +526,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       viewer.onDetach = () => this._detachYaml();
       viewer.onDragMove = (left: number, top: number) => this._onViewerDrag(left, top);
       viewer.onDragEnd = () => this._onViewerDragEnd();
+      viewer.onResize = () => { if (this._docked) this._snapViewerToController(); };
       document.body.appendChild(viewer);
       this._yamlViewer = viewer;
       this._docked = true;
@@ -437,7 +543,8 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     const viewerRect = this._yamlViewer.getBoundingClientRect();
     const viewerWidth = viewerRect.width > 0 ? viewerRect.width : 360;
     const left = hostRect.left - viewerWidth - 8;
-    const top = hostRect.top;
+    const viewerHeight = viewerRect.height > 0 ? viewerRect.height : window.innerHeight * 0.5;
+    const top = hostRect.bottom - viewerHeight;
     this._yamlViewer.setPosition(left, top);
     this._docked = true;
   }
@@ -451,8 +558,9 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       this._docked = false;
       return;
     }
+    const viewerBottom = top + viewerRect.height;
     this.style.left = `${left + viewerRect.width + 8}px`;
-    this.style.top = `${top}px`;
+    this.style.top = `${viewerBottom - hostRect.height}px`;
     this.style.right = 'auto';
     this.style.bottom = 'auto';
   }
@@ -466,7 +574,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     const hostRect = this.getBoundingClientRect();
     const viewerRect = this._yamlViewer.getBoundingClientRect();
     const gap = hostRect.left - (viewerRect.left + viewerRect.width);
-    if (Math.abs(gap) < 30 && Math.abs(hostRect.top - viewerRect.top) < 30) {
+    if (Math.abs(gap) < 30 && Math.abs(hostRect.bottom - viewerRect.bottom) < 30) {
       this._snapViewerToController();
     }
   }
@@ -508,6 +616,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    window.removeEventListener('resize', this._resizeHandler);
     if (this._yamlViewer?.parentNode) {
       this._yamlViewer.parentNode.removeChild(this._yamlViewer);
       this._yamlViewer = null;
@@ -515,6 +624,26 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     if (this._popoutPoll) {
       clearInterval(this._popoutPoll);
       this._popoutPoll = null;
+    }
+  }
+
+  private _resetPosition(): void {
+    this.style.removeProperty('left');
+    this.style.removeProperty('top');
+    this.style.removeProperty('right');
+    this.style.removeProperty('bottom');
+    this.style.removeProperty('inset');
+  }
+
+  private _clampToViewport(): void {
+    if (!this.style.left && !this.style.top) return;
+    const rect = this.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const margin = 8;
+    if (rect.right > vw - margin || rect.bottom > vh - margin || rect.left < margin || rect.top < margin) {
+      this._resetPosition();
     }
   }
 
@@ -530,15 +659,21 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   };
 
   private _onDragMove = (e: PointerEvent): void => {
-    const left = e.clientX - this._dragOffset.x;
-    const top = e.clientY - this._dragOffset.y;
+    const rect = this.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const margin = 8;
+    const left = Math.max(margin, Math.min(e.clientX - this._dragOffset.x, vw - rect.width - margin));
+    const top = Math.max(margin, Math.min(e.clientY - this._dragOffset.y, vh - rect.height - margin));
     this.style.left = `${left}px`;
     this.style.top = `${top}px`;
     this.style.right = 'auto';
     this.style.bottom = 'auto';
     if (this._docked && this._yamlViewer) {
-      const viewerWidth = this._yamlViewer.getBoundingClientRect().width;
-      this._yamlViewer.setPosition(left - viewerWidth - 8, top);
+      const viewerRect = this._yamlViewer.getBoundingClientRect();
+      const viewerWidth = viewerRect.width;
+      const viewerHeight = viewerRect.height > 0 ? viewerRect.height : window.innerHeight * 0.5;
+      this._yamlViewer.setPosition(left - viewerWidth - 8, top + rect.height - viewerHeight);
     }
   };
 

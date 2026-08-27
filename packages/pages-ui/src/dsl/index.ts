@@ -55,6 +55,9 @@ export {
   timeline,
   graph,
   eventTimeline,
+  schemaForm,
+  actionButton,
+  formScope,
   masterDetail,
   iframePlugin,
   // Form input builders
@@ -64,7 +67,6 @@ export {
   checkbox,
   datePicker,
   textarea,
-  schemaForm,
   // Workbench primitive builders
   split,
   dockBar,
@@ -118,6 +120,4 @@ export type { InlineSourceOptions } from "@casehubio/pages-data";
 export { restSource } from "@casehubio/pages-data";
 export type { RestSourceOptions, WsTriggerEvent } from "@casehubio/pages-data";
 export { mutableRestSource } from "@casehubio/pages-data";
-export type { WriteConfig, WriteEndpoint, UrlTemplate, MutableRestSourceOptions } from "@casehubio/pages-data";
-export type { ActionButtonProps } from "@casehubio/pages-component";
-export type { FormScopeProps, SubmitButtonProps } from "@casehubio/pages-component";
+export type { WriteConfig, MutableRestSourceOptions } from "@casehubio/pages-data";

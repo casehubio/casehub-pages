@@ -197,3 +197,5 @@ CLAUDE.md
 .worktrees
 .worktrees/
 .claude/
+*.png
+.playwright-mcp

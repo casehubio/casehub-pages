@@ -22,6 +22,24 @@ class OutlineNodeTest {
     }
 
     @Test
+    void leafNodeWithAction() throws Exception {
+        var node = new OutlineNode("Step 1", "browser", "spotlight");
+        String json = mapper.writeValueAsString(node);
+        var tree = mapper.readTree(json);
+        assertThat(tree.get("label").asText()).isEqualTo("Step 1");
+        assertThat(tree.get("action").asText()).isEqualTo("spotlight");
+        assertThat(tree.get("children")).isEmpty();
+    }
+
+    @Test
+    void leafNodeWithoutActionSerializesNull() throws Exception {
+        var node = new OutlineNode("Step 1", "browser");
+        String json = mapper.writeValueAsString(node);
+        var tree = mapper.readTree(json);
+        assertThat(tree.get("action").isNull()).isTrue();
+    }
+
+    @Test
     void branchNodeHasNullTarget() throws Exception {
         var node = new OutlineNode("Chapter 1", List.of(
             new OutlineNode("Section 1", List.of(
