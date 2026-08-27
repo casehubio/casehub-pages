@@ -17,6 +17,7 @@ import {
   type OnSelectionChangeFunc,
   type OnMoveEnd,
   type ReactFlowInstance,
+  type Connection,
 } from '@xyflow/react';
 import { SmartBezierEdge, SmartEdgeProvider } from '@tisoap/react-flow-smart-edge';
 
@@ -34,6 +35,23 @@ export interface ReactFlowAppProps {
   onSelectionChange?: (nodes: Node[], edges: Edge[]) => void;
   onViewportChange?: (viewport: { x: number; y: number; zoom: number }) => void;
   onRelayout?: () => void;
+  onConnect?: (connection: Connection) => void;
+  isValidConnection?: (connection: Connection) => boolean;
+  onReconnect?: (oldEdge: Edge, newConnection: Connection) => void;
+  onPaneClick?: (event: React.MouseEvent) => void;
+  onNodeDragStop?: (event: React.MouseEvent, node: Node, nodes: Node[]) => void;
+  onPaneContextMenu?: (event: React.MouseEvent) => void;
+  onNodeContextMenu?: (event: React.MouseEvent, node: Node) => void;
+  onEdgeContextMenu?: (event: React.MouseEvent, edge: Edge) => void;
+  onReactFlowReady?: (instance: ReactFlowInstance) => void;
+}
+
+function ViewportBridge({ onReactFlowReady }: { onReactFlowReady?: (instance: ReactFlowInstance) => void }) {
+  const instance = useReactFlow();
+  useEffect(() => {
+    onReactFlowReady?.(instance);
+  }, [instance, onReactFlowReady]);
+  return null;
 }
 
 const viewportSizeSelector = (s: { width: number; height: number }) => ({ width: s.width, height: s.height });
@@ -109,6 +127,15 @@ export function ReactFlowApp({
   onSelectionChange,
   onViewportChange,
   onRelayout,
+  onConnect,
+  isValidConnection,
+  onReconnect,
+  onPaneClick,
+  onNodeDragStop,
+  onPaneContextMenu,
+  onNodeContextMenu,
+  onEdgeContextMenu,
+  onReactFlowReady,
 }: ReactFlowAppProps): React.JSX.Element {
   const fitRef = useRef<(() => void) | null>(null);
 
@@ -145,9 +172,19 @@ export function ReactFlowApp({
       onEdgeClick={handleEdgeClick}
       onSelectionChange={handleSelectionChange}
       onMoveEnd={handleMoveEnd}
+      onConnect={onConnect}
+      isValidConnection={isValidConnection}
+      onReconnect={onReconnect}
+      onPaneClick={onPaneClick}
+      onNodeDragStop={onNodeDragStop}
+      onPaneContextMenu={onPaneContextMenu}
+      onNodeContextMenu={onNodeContextMenu}
+      onEdgeContextMenu={onEdgeContextMenu}
+      reconnectEdges
       selectionOnDrag
       selectionMode={SelectionMode.Partial}
     >
+      <ViewportBridge onReactFlowReady={onReactFlowReady} />
       <FitTopLeft nodes={nodes} onFitRef={fitRef} />
       <MiniMap
         pannable
