@@ -179,8 +179,10 @@ export class GraphCanvas extends LitElement {
         },
         onConnectStart: (_event: MouseEvent | TouchEvent, params: { nodeId: string | null }) => {
           this._connectSourceNodeId = params.nodeId ?? undefined;
+          this.classList.add('graph-connecting');
         },
         onConnectEnd: (event: MouseEvent | TouchEvent) => {
+          this.classList.remove('graph-connecting');
           const target = event.target as HTMLElement | null;
           const isOnNode = target?.closest('.react-flow__node');
           if (!isOnNode && this._connectSourceNodeId) {

@@ -97,6 +97,13 @@ describe('GraphCanvas', () => {
     });
   });
 
+  describe('connecting state', () => {
+    it('does not have graph-connecting class initially', () => {
+      document.body.appendChild(element);
+      expect(element.classList.contains('graph-connecting')).toBe(false);
+    });
+  });
+
   describe('viewport bridge', () => {
     it('exposes screenToFlow method', () => {
       expect(typeof (element as any).screenToFlow).toBe('function');
