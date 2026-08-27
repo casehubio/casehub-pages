@@ -2,8 +2,11 @@ import { LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import type { Node, Edge } from '@xyflow/react';
+import type { Node, Edge, ReactFlowInstance, Connection } from '@xyflow/react';
 import type { GraphModel } from '@casehubio/graph-core';
+import { nodeById } from '@casehubio/graph-core';
+import type { EditPolicy } from '../editing/types.js';
+import type { GraphEdit } from '../editing/types.js';
 import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
 import { ReactFlowApp } from './ReactFlowApp.js';
 import { getNodeTypes } from '../registry/stencil-registry.js';
@@ -18,6 +21,8 @@ export class GraphCanvas extends LitElement {
   @property({ attribute: false }) layoutOptions: ElkLayoutOptions | undefined;
   @property({ attribute: false }) nodes: Node[] | undefined;
   @property({ attribute: false }) edges: Edge[] | undefined;
+  @property({ attribute: false }) editPolicy: EditPolicy | undefined;
+  @property({ attribute: false }) onMutation: ((edit: GraphEdit) => void) | undefined;
 
   @state() private _nodes: Node[] = [];
   @state() private _edges: Edge[] = [];
@@ -26,6 +31,15 @@ export class GraphCanvas extends LitElement {
   private _container: HTMLDivElement | undefined;
   private _themeListener: ((e: Event) => void) | undefined;
   private _layoutGeneration = 0;
+  private _reactFlowInstance: ReactFlowInstance | undefined;
+
+  screenToFlow(screenX: number, screenY: number): { x: number; y: number } | undefined {
+    return this._reactFlowInstance?.screenToFlowPosition({ x: screenX, y: screenY });
+  }
+
+  flowToScreen(flowX: number, flowY: number): { x: number; y: number } | undefined {
+    return this._reactFlowInstance?.flowToScreenPosition({ x: flowX, y: flowY });
+  }
 
   override createRenderRoot(): HTMLElement {
     return this;
@@ -137,6 +151,40 @@ export class GraphCanvas extends LitElement {
         onRelayout: () => {
           emitPagesEvent(this, 'graph:layout:relayout', {});
           void this._runLayout();
+        },
+        onConnect: (connection: Connection) => {
+          if (!this.model) return;
+          const source = nodeById(this.model, connection.source);
+          const target = nodeById(this.model, connection.target);
+          if (!source || !target) return;
+          const policy = this.editPolicy;
+          if (policy && !policy.canConnect(source, target, this.model)) return;
+          this.onMutation?.({ type: 'addEdge', sourceId: connection.source, targetId: connection.target });
+          emitPagesEvent(this, 'graph:edge:create', { sourceId: connection.source, targetId: connection.target });
+        },
+        isValidConnection: (connection: Connection) => {
+          if (!this.model) return false;
+          const policy = this.editPolicy;
+          if (!policy) return true;
+          const source = nodeById(this.model, connection.source);
+          const target = nodeById(this.model, connection.target);
+          if (!source || !target) return false;
+          return policy.canConnect(source, target, this.model);
+        },
+        onReactFlowReady: (instance: ReactFlowInstance) => {
+          this._reactFlowInstance = instance;
+        },
+        onPaneClick: (event) => {
+          emitPagesEvent(this, 'graph:pane:click', { x: event.clientX, y: event.clientY });
+        },
+        onPaneContextMenu: (event) => {
+          emitPagesEvent(this, 'graph:pane:contextmenu', { x: event.clientX, y: event.clientY });
+        },
+        onNodeContextMenu: (_event, node: Node) => {
+          emitPagesEvent(this, 'graph:node:contextmenu', { nodeId: node.id, nodeType: node.type ?? '' });
+        },
+        onEdgeContextMenu: (_event, edge: Edge) => {
+          emitPagesEvent(this, 'graph:edge:contextmenu', { edgeId: edge.id, edgeType: edge.type ?? '' });
         },
       }),
     );

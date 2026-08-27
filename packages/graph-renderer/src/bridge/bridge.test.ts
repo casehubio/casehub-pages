@@ -96,4 +96,22 @@ describe('GraphCanvas', () => {
       expect((element as any).edges).toEqual(testEdges);
     });
   });
+
+  describe('viewport bridge', () => {
+    it('exposes screenToFlow method', () => {
+      expect(typeof (element as any).screenToFlow).toBe('function');
+    });
+
+    it('returns undefined when React Flow not ready', () => {
+      expect((element as any).screenToFlow(100, 200)).toBeUndefined();
+    });
+
+    it('exposes flowToScreen method', () => {
+      expect(typeof (element as any).flowToScreen).toBe('function');
+    });
+
+    it('returns undefined for flowToScreen when React Flow not ready', () => {
+      expect((element as any).flowToScreen(100, 200)).toBeUndefined();
+    });
+  });
 });
