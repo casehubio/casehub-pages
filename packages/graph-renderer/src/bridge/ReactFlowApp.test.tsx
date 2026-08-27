@@ -23,6 +23,8 @@ vi.mock('@xyflow/react', () => ({
   ControlButton: () => React.createElement('button'),
   Background: () => React.createElement('div', { 'data-testid': 'background' }),
   SelectionMode: { Partial: 'partial' },
+  useReactFlow: () => ({ setViewport: vi.fn(), getNodes: () => [] }),
+  useStore: () => ({ width: 800, height: 600 }),
 }));
 
 import { ReactFlowApp } from './ReactFlowApp.js';
