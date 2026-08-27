@@ -3,6 +3,8 @@ var mutationLog = document.getElementById('mutation-log');
 var clearBtn = document.getElementById('clear-log');
 var selectedNodeIds = [];
 var activePicker = null;
+var lastClickX = 0;
+var lastClickY = 0;
 var icons = { source: '⬇', transform: '⚙', filter: '⧖', join: '⨝', sink: '⬆' };
 
 function logMutation(label, detail) {
@@ -52,6 +54,11 @@ if (editCanvas) {
   (editCanvas as any).model = (window as any).casehubPages.createBasicPipelineModel();
   (editCanvas as any).editPolicy = (window as any).casehubPages.defaultEditPolicy();
 
+  editCanvas.addEventListener('click', function(evt) {
+    lastClickX = (evt as MouseEvent).clientX;
+    lastClickY = (evt as MouseEvent).clientY;
+  }, true);
+
   (editCanvas as any).onMutation = function(edit) {
     var result = (window as any).casehubPages.applyGraphEdit((editCanvas as any).model, edit);
     (editCanvas as any).model = result.model;
@@ -75,8 +82,7 @@ if (editCanvas) {
         (editCanvas as any).onMutation({ type: 'splitEdge', edgeId: edgeId, insertNodeType: types[0].type });
         return;
       }
-      var rect = editCanvas.getBoundingClientRect();
-      showTypePicker(rect.left + rect.width / 2 - 60, rect.top + rect.height / 2 - 40, types, function(nodeType) {
+      showTypePicker(lastClickX, lastClickY, types, function(nodeType) {
         (editCanvas as any).onMutation({ type: 'splitEdge', edgeId: edgeId, insertNodeType: nodeType });
       });
     }
