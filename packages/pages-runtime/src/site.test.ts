@@ -1091,3 +1091,217 @@ describe("component-level dock-toggle", () => {
   });
 });
 
+describe("activateDockPanel", () => {
+  it("shows the panel and returns true", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "nav", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Nav" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "N", label: "Nav", panelId: "nav", zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    const result = site.activateDockPanel("nav");
+    expect(result).toBe(true);
+
+    const panel = target.querySelector<HTMLElement>('[data-component-id="nav"]')!;
+    expect(panel.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("returns false for unknown key", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const site = await loadSite(target, { type: "html", props: { content: "<p>Hello</p>" } });
+
+    const result = site.activateDockPanel("nonexistent");
+    expect(result).toBe(false);
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
+describe("restoreFromUrl dock dispatch", () => {
+  it("popstate with dock state change dispatches pages-dock-toggle", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "nav", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Nav" } }] } },
+                { type: "deferred", id: "files", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Files" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "N", label: "Nav", panelId: "nav", defaultOpen: true, zone: "top" },
+                { icon: "F", label: "Files", panelId: "files", zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    const navPanel = target.querySelector<HTMLElement>('[data-component-id="nav"]')!;
+    expect(navPanel.style.display).not.toBe("none");
+
+    history.pushState(null, "", "#/page/?dock=nav:closed,files:open");
+    history.pushState(null, "", "#/page/");
+
+    history.back();
+    await new Promise(r => setTimeout(r, 50));
+
+    const filesPanel = target.querySelector<HTMLElement>('[data-component-id="files"]')!;
+    expect(filesPanel.style.display).not.toBe("none");
+    expect(navPanel.style.display).toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+    history.replaceState(null, "", location.pathname);
+  });
+});
+
+describe("panel merge in restoreFromUrl", () => {
+  it("panel=nav activates nav panel even when dock=nav:closed", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "nav", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Nav" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "N", label: "Nav", panelId: "nav", defaultOpen: true, zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    history.pushState(null, "", "#/page/?dock=nav:closed&panel=nav");
+    history.pushState(null, "", "#/page/");
+
+    history.back();
+    await new Promise(r => setTimeout(r, 50));
+
+    const navPanel = target.querySelector<HTMLElement>('[data-component-id="nav"]')!;
+    expect(navPanel.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+    history.replaceState(null, "", location.pathname);
+  });
+
+  it("panel activates panels not mentioned in dock param", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "nav", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Nav" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "N", label: "Nav", panelId: "nav", zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    history.pushState(null, "", "#/page/?panel=nav");
+    history.pushState(null, "", "#/page/");
+
+    history.back();
+    await new Promise(r => setTimeout(r, 50));
+
+    const navPanel = target.querySelector<HTMLElement>('[data-component-id="nav"]')!;
+    expect(navPanel.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+    history.replaceState(null, "", location.pathname);
+  });
+});
+

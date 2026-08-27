@@ -125,6 +125,7 @@ export interface LiveSite extends Site {
   setTheme(mode: "light" | "dark"): void;
   dispose(): void;
   readonly layout: LayoutState;
+  activateDockPanel(key: string): boolean;
 }
 
 export interface SiteOptions {
@@ -345,9 +346,32 @@ export async function loadSite(
         updateTextFilter(cvs, id, text);
       }
     }
-    if (link.dock) {
-      for (const [id, state] of Object.entries(link.dock)) {
-        dockState.set(id, state === "open");
+    if (link.dock || link.panel) {
+      const panelOverrides = new Set(link.panel ?? []);
+      if (link.dock) {
+        for (const [id, state] of Object.entries(link.dock)) {
+          const visible = panelOverrides.has(id) ? true : state === "open";
+          const wasVisible = dockState.get(id);
+          dockState.set(id, visible);
+          if (visible !== wasVisible) {
+            target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+              bubbles: true, composed: true,
+              detail: { panelId: id, visible },
+            }));
+          }
+        }
+      }
+      for (const key of panelOverrides) {
+        if (!link.dock || !(key in link.dock)) {
+          const wasVisible = dockState.get(key);
+          dockState.set(key, true);
+          if (wasVisible !== true) {
+            target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+              bubbles: true, composed: true,
+              detail: { panelId: key, visible: true },
+            }));
+          }
+        }
       }
     }
     return link;
@@ -892,7 +916,32 @@ export async function loadSite(
     const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
     if (!panelEl) return;
 
+    const btn = target.querySelector<HTMLElement>(`button[data-dock-panel-id="${escapedId}"]`);
+
     if (visible) {
+      const dockBar = btn?.closest<HTMLElement>('[data-component-type="dock-bar"]');
+      const isExclusive = dockBar?.dataset.exclusive !== undefined;
+      if (isExclusive && btn) {
+        const zoneName = btn.dataset.dockZone;
+        const scope = zoneName
+          ? dockBar!.querySelectorAll<HTMLElement>(`button[data-dock-zone="${zoneName}"]`)
+          : dockBar!.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+        for (const sibling of scope) {
+          const siblingId = sibling.dataset.dockPanelId!;
+          if (siblingId !== panelId && dockState.get(siblingId) === true) {
+            dockState.set(siblingId, false);
+            delete sibling.dataset.active;
+            const sibEscaped = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(siblingId) : siblingId;
+            const sibPanel = target.querySelector<HTMLElement>(`[data-component-id="${sibEscaped}"]`);
+            if (sibPanel) {
+              sibPanel.dataset.pagesDisplay = sibPanel.style.display;
+              sibPanel.style.display = "none";
+            }
+          }
+        }
+      }
+      if (btn) btn.dataset.active = "";
+
       // Cascade expand: ensure all ancestor slots and containers are visible (bottom-up)
       let ancestor: HTMLElement | null = panelEl.parentElement;
       while (ancestor && ancestor !== target) {
@@ -916,7 +965,8 @@ export async function loadSite(
       panelEl.style.display = panelEl.dataset.pagesDisplay ?? "";
       delete panelEl.dataset.pagesDisplay;
     } else {
-    
+      if (btn) delete btn.dataset.active;
+
       panelEl.dataset.pagesDisplay = panelEl.style.display;
       panelEl.style.display = "none";
 
@@ -1017,52 +1067,34 @@ export async function loadSite(
     renderComponent(target, newTree, { permissions, onNode });
     applySavedSplitRatios(target);
 
-    // Restore dock state per zone group — at most one active panel per zone
+    // Restore dock state per zone group — dispatch only, handler owns exclusivity and button state
     const dockBars = target.querySelectorAll<HTMLElement>('[data-component-type="dock-bar"]');
     for (const bar of dockBars) {
       const zoneGroups = bar.querySelectorAll<HTMLElement>(":scope > [data-dock-zone]");
       if (zoneGroups.length > 0) {
         for (const group of zoneGroups) {
           const buttons = group.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
-          let zoneActive: string | undefined;
           for (const btn of buttons) {
             const pid = btn.dataset.dockPanelId!;
-            if (dockState.get(pid) === true && zoneActive === undefined) {
-              zoneActive = pid;
-            }
-          }
-          for (const btn of buttons) {
-            const pid = btn.dataset.dockPanelId!;
-            if (pid === zoneActive) {
+            if (dockState.get(pid) === true) {
               target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
                 bubbles: true, composed: true,
                 detail: { panelId: pid, visible: true },
               }));
-              btn.dataset.active = "";
-            } else {
-              delete btn.dataset.active;
-              dockState.set(pid, false);
+              break;
             }
           }
         }
       } else {
         const buttons = bar.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
-        let barActive: string | undefined;
         for (const btn of buttons) {
           const pid = btn.dataset.dockPanelId!;
-          if (dockState.get(pid) === true && barActive === undefined) barActive = pid;
-        }
-        for (const btn of buttons) {
-          const pid = btn.dataset.dockPanelId!;
-          if (pid === barActive) {
+          if (dockState.get(pid) === true) {
             target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
               bubbles: true, composed: true,
               detail: { panelId: pid, visible: true },
             }));
-            btn.dataset.active = "";
-          } else {
-            delete btn.dataset.active;
-            dockState.set(pid, false);
+            break;
           }
         }
       }
@@ -1273,15 +1305,6 @@ export async function loadSite(
         detail: { panelId: activePanel, visible: true },
       }));
     }
-    for (const btn of buttons) {
-      const panelId = btn.dataset.dockPanelId!;
-      if (panelId === activePanel) {
-        btn.dataset.active = "";
-      } else {
-        delete btn.dataset.active;
-        dockState.set(panelId, false);
-      }
-    }
   }
 
   const initDockBars = target.querySelectorAll<HTMLElement>('[data-component-type="dock-bar"]');
@@ -1367,6 +1390,17 @@ export async function loadSite(
     textFilter: { get: () => deriveUrlTextFilter(componentViewState, registry), enumerable: true },
   });
 
+  function activateDockPanel(key: string): boolean {
+    const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(key) : key;
+    const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
+    if (!panelEl) return false;
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: key, visible: true },
+    }));
+    return true;
+  }
+
   const site: LiveSite = {
     root,
 
@@ -1437,6 +1471,8 @@ export async function loadSite(
       if (themeStyle) themeStyle.remove();
       target.innerHTML = "";
     },
+
+    activateDockPanel,
   };
 
   // Initialization reorder: parse URL and populate state BEFORE navigation

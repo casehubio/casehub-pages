@@ -34,9 +34,9 @@ describe("serializeToUrl", () => {
     expect(serializeToUrl(link)).toBe("#/page/Home");
   });
 
-  it("root page (empty path)", () => {
+  it("root page (empty path) produces empty string", () => {
     const link: DeepLink = { page: "" };
-    expect(serializeToUrl(link)).toBe("#/page/");
+    expect(serializeToUrl(link)).toBe("");
   });
 });
 
@@ -309,5 +309,82 @@ describe("round-trip — sort + pagination", () => {
     expect(link.filters).toEqual({ region: ["North"] });
     expect(link.sort).toBeUndefined();
     expect(link.pagination).toBeUndefined();
+  });
+});
+
+describe("panel param", () => {
+  describe("parseFromUrl", () => {
+    it("parses single panel", () => {
+      const link = parseFromUrl("#/page/dashboard?panel=backlog");
+      expect(link.panel).toEqual(["backlog"]);
+    });
+
+    it("parses multiple panels", () => {
+      const link = parseFromUrl("#/page/dashboard?panel=backlog,properties");
+      expect(link.panel).toEqual(["backlog", "properties"]);
+    });
+
+    it("parses panel-only deep link without page prefix", () => {
+      const link = parseFromUrl("#?panel=backlog");
+      expect(link.page).toBe("");
+      expect(link.panel).toEqual(["backlog"]);
+    });
+
+    it("parses panel alongside dock", () => {
+      const link = parseFromUrl("#/page/dashboard?dock=nav:open&panel=backlog");
+      expect(link.dock).toEqual({ nav: "open" });
+      expect(link.panel).toEqual(["backlog"]);
+    });
+
+    it("ignores empty panel param", () => {
+      const link = parseFromUrl("#/page/dashboard?panel=");
+      expect(link.panel).toBeUndefined();
+    });
+
+    it("returns empty page for unknown hash format", () => {
+      const link = parseFromUrl("#unknown");
+      expect(link.page).toBe("");
+      expect(link.panel).toBeUndefined();
+    });
+  });
+
+  describe("serializeToUrl", () => {
+    it("serializes panel param", () => {
+      const link: DeepLink = { page: "dashboard", panel: ["backlog"] };
+      expect(serializeToUrl(link)).toBe("#/page/dashboard?panel=backlog");
+    });
+
+    it("serializes multiple panels", () => {
+      const link: DeepLink = { page: "dashboard", panel: ["backlog", "properties"] };
+      expect(serializeToUrl(link)).toBe("#/page/dashboard?panel=backlog,properties");
+    });
+
+    it("panel-only link uses #? format", () => {
+      const link: DeepLink = { page: "", panel: ["backlog"] };
+      expect(serializeToUrl(link)).toBe("#?panel=backlog");
+    });
+
+    it("empty page with no params produces empty string", () => {
+      const link: DeepLink = { page: "" };
+      expect(serializeToUrl(link)).toBe("");
+    });
+  });
+
+  describe("round-trip", () => {
+    it("panel with page round-trips", () => {
+      const original: DeepLink = { page: "dashboard", panel: ["backlog", "props"] };
+      const url = serializeToUrl(original);
+      const parsed = parseFromUrl(url);
+      expect(parsed.page).toBe("dashboard");
+      expect(parsed.panel).toEqual(["backlog", "props"]);
+    });
+
+    it("panel-only round-trips", () => {
+      const original: DeepLink = { page: "", panel: ["backlog"] };
+      const url = serializeToUrl(original);
+      const parsed = parseFromUrl(url);
+      expect(parsed.page).toBe("");
+      expect(parsed.panel).toEqual(["backlog"]);
+    });
   });
 });

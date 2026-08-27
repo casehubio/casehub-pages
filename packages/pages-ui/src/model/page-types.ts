@@ -31,6 +31,7 @@ export interface DeepLink {
   readonly pagination?: Readonly<Record<string, number>>;
   readonly textFilter?: Readonly<Record<string, string>>;
   readonly dock?: Readonly<Record<string, "open" | "closed">>;
+  readonly panel?: readonly string[];
 }
 
 export interface Site {

@@ -17,7 +17,6 @@ function decodePagePath(encoded: string): string {
 }
 
 export function serializeToUrl(link: DeepLink): string {
-  let url = `#/page/${encodePagePath(link.page)}`;
   const params: string[] = [];
 
   if (link.filters) {
@@ -70,30 +69,48 @@ export function serializeToUrl(link: DeepLink): string {
     }
   }
 
-  if (params.length > 0) {
-    url += `?${params.join("&")}`;
+  if (link.panel && link.panel.length > 0) {
+    params.push(`panel=${link.panel.map(encodeURIComponent).join(",")}`);
   }
-  return url;
+
+  if (link.page) {
+    let url = `#/page/${encodePagePath(link.page)}`;
+    if (params.length > 0) url += `?${params.join("&")}`;
+    return url;
+  } else if (params.length > 0) {
+    return `#?${params.join("&")}`;
+  } else {
+    return "";
+  }
 }
 
 export function parseFromUrl(hash: string): DeepLink {
-  if (!hash || !hash.startsWith("#/page/")) {
+  if (!hash) return { page: "" };
+
+  let page = "";
+  let queryStr = "";
+
+  if (hash.startsWith("#/page/")) {
+    const withoutPrefix = hash.substring("#/page/".length);
+    const qIndex = withoutPrefix.indexOf("?");
+    page = qIndex === -1
+      ? decodePagePath(withoutPrefix)
+      : decodePagePath(withoutPrefix.substring(0, qIndex));
+    if (qIndex !== -1) queryStr = withoutPrefix.substring(qIndex + 1);
+  } else if (hash.startsWith("#?")) {
+    queryStr = hash.substring(2);
+  } else {
     return { page: "" };
   }
-
-  const withoutPrefix = hash.substring("#/page/".length);
-  const qIndex = withoutPrefix.indexOf("?");
-  const rawPage = qIndex === -1 ? withoutPrefix : withoutPrefix.substring(0, qIndex);
-  const page = decodePagePath(rawPage);
 
   let filters: Record<string, readonly string[]> | undefined;
   let sort: Record<string, { readonly columnId: string; readonly order: "ASCENDING" | "DESCENDING" }> | undefined;
   let pagination: Record<string, number> | undefined;
   let textFilter: Record<string, string> | undefined;
   let dock: Record<string, "open" | "closed"> | undefined;
+  let panel: string[] | undefined;
 
-  if (qIndex !== -1) {
-    const queryStr = withoutPrefix.substring(qIndex + 1);
+  if (queryStr) {
     const params = new URLSearchParams(queryStr);
 
     const filterStr = params.get("filter");
@@ -163,6 +180,12 @@ export function parseFromUrl(hash: string): DeepLink {
         }
       }
     }
+
+    const panelStr = params.get("panel");
+    if (panelStr) {
+      panel = panelStr.split(",").map(decodeURIComponent).filter(Boolean);
+      if (panel.length === 0) panel = undefined;
+    }
   }
 
   return {
@@ -172,5 +195,6 @@ export function parseFromUrl(hash: string): DeepLink {
     ...(pagination ? { pagination } : {}),
     ...(textFilter ? { textFilter } : {}),
     ...(dock ? { dock } : {}),
+    ...(panel ? { panel } : {}),
   };
 }

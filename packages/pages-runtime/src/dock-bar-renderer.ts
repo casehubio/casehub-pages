@@ -47,45 +47,10 @@ function renderDockButtons(
 
     button.addEventListener("click", () => {
       const isActive = button.dataset.active !== undefined;
-
-      if (exclusive) {
-        if (isActive) {
-          delete button.dataset.active;
-          eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-            bubbles: true, composed: true,
-            detail: { panelId: item.panelId, visible: false },
-          }));
-        } else {
-          const myZone = button.dataset.dockZone;
-          const scope = myZone
-            ? eventTarget.querySelectorAll<HTMLElement>(`button[data-dock-zone="${myZone}"]`)
-            : eventTarget.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
-          for (const sibling of scope) {
-            if (sibling.dataset.active !== undefined) {
-              delete sibling.dataset.active;
-              eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-                bubbles: true, composed: true,
-                detail: { panelId: sibling.dataset.dockPanelId!, visible: false },
-              }));
-            }
-          }
-          button.dataset.active = "";
-          eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-            bubbles: true, composed: true,
-            detail: { panelId: item.panelId, visible: true },
-          }));
-        }
-      } else {
-        if (isActive) {
-          delete button.dataset.active;
-        } else {
-          button.dataset.active = "";
-        }
-        eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-          bubbles: true, composed: true,
-          detail: { panelId: item.panelId, visible: !isActive },
-        }));
-      }
+      eventTarget.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+        bubbles: true, composed: true,
+        detail: { panelId: item.panelId, visible: !isActive },
+      }));
     });
 
     container.appendChild(button);
@@ -100,6 +65,10 @@ export function renderDockBar(el: HTMLElement, props: DockBarProps, options?: Do
   el.style.flexDirection = orientation === "horizontal" ? "row" : "column";
   el.style.gap = "0";
   el.style.padding = "4px";
+
+  if (exclusive) {
+    el.dataset.exclusive = "";
+  }
 
   const hasZones = items.some(i => i.zone !== undefined);
 
