@@ -347,7 +347,15 @@ export async function loadSite(
     }
     if (link.dock) {
       for (const [id, state] of Object.entries(link.dock)) {
-        dockState.set(id, state === "open");
+        const visible = state === "open";
+        const wasVisible = dockState.get(id);
+        dockState.set(id, visible);
+        if (visible !== wasVisible) {
+          target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+            bubbles: true, composed: true,
+            detail: { panelId: id, visible },
+          }));
+        }
       }
     }
     return link;

@@ -1090,3 +1090,60 @@ describe("component-level dock-toggle", () => {
   });
 });
 
+describe("restoreFromUrl dock dispatch", () => {
+  it("popstate with dock state change dispatches pages-dock-toggle", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "nav", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Nav" } }] } },
+                { type: "deferred", id: "files", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Files" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "N", label: "Nav", panelId: "nav", defaultOpen: true, zone: "top" },
+                { icon: "F", label: "Files", panelId: "files", zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    const navPanel = target.querySelector<HTMLElement>('[data-component-id="nav"]')!;
+    expect(navPanel.style.display).not.toBe("none");
+
+    history.pushState(null, "", "#/page/?dock=nav:closed,files:open");
+    history.pushState(null, "", "#/page/");
+
+    history.back();
+    await new Promise(r => setTimeout(r, 50));
+
+    const filesPanel = target.querySelector<HTMLElement>('[data-component-id="files"]')!;
+    expect(filesPanel.style.display).not.toBe("none");
+    expect(navPanel.style.display).toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+    history.replaceState(null, "", location.pathname);
+  });
+});
+
