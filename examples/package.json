@@ -18,7 +18,10 @@
     "test:headed": "npx playwright test --headed"
   },
   "dependencies": {
+    "@casehubio/graph-core": "workspace:*",
+    "@casehubio/graph-renderer": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-property-palette": "workspace:*",
     "@casehubio/pages-runtime": "workspace:*",
     "@casehubio/pages-ui": "workspace:*",
     "@casehubio/pages-ui-tokens": "workspace:*",
