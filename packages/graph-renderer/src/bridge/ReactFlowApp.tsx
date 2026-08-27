@@ -180,7 +180,8 @@ export function ReactFlowApp({
       onSelectionChange={handleSelectionChange}
       onMoveEnd={handleMoveEnd}
       edgesReconnectable
-      connectionRadius={40}
+      nodesDraggable={false}
+      connectionRadius={60}
       selectionOnDrag
       selectionMode={SelectionMode.Partial}
       {...editingProps}
