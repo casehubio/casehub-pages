@@ -128,6 +128,8 @@ export class GraphCanvas extends LitElement {
         edges: this.edges ?? this._edges,
         nodeTypes: getNodeTypes(),
         onNodeClick: (nodeId: string, node: Node) => {
+          this._nodes = this._nodes.map(n => ({ ...n, selected: n.id === nodeId }));
+          this._renderReact();
           emitPagesEvent(this, 'graph:node:click', {
             nodeId,
             nodeType: node.type ?? '',
