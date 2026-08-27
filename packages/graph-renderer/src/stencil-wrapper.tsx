@@ -171,10 +171,10 @@ export function createStencilNodeComponent(
     return (
       <>
         {!hideHandles && hasTarget && grammar?.connections.inbound.max !== 0 &&
-          allPositions.map(({ key, pos }) => (
-            <Handle key={`target-${key}`} id={`target-${key}`} type="target" position={pos}
-              style={hiddenHandle} />
-          ))}
+          <Handle key="target-full" id={`target-${targetPos === Position.Top ? 'top' : 'left'}`}
+            type="target" position={targetPos}
+            style={{ ...fullNodeHandle, zIndex: 1 }} />
+        }
         <div
           className="stencil-decoration-wrapper"
           style={{ position: 'relative', ...borderStyle, ...sizeStyle }}

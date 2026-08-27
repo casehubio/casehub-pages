@@ -108,14 +108,23 @@ if (editCanvas) {
       });
     }
     if (detail.topic === 'graph:connect:end-on-empty') {
+      var sourceId = detail.payload.sourceNodeId;
       var connectPolicy = (editCanvas as any).editPolicy;
       var connectModel = (editCanvas as any).model;
-      if (!connectPolicy) return;
-      var connectTypes = connectPolicy.getCreatableTypes(null, connectModel);
+      if (!connectPolicy || !sourceId) return;
+      var sourceNode = connectModel.nodes.find(function(n) { return n.id === sourceId; });
+      var connectTypes = connectPolicy.getCreatableTypes(sourceNode || null, connectModel);
       if (connectTypes.length === 0) return;
       showTypePicker(detail.payload.x, detail.payload.y, connectTypes, function(nodeType) {
         var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
-        (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
+        var newId = 'node-' + Date.now();
+        (editCanvas as any).onMutation({
+          type: 'compound',
+          edits: [
+            { type: 'addNode', id: newId, nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } },
+            { type: 'addEdge', sourceId: sourceId, targetId: newId },
+          ],
+        });
       });
     }
   });

@@ -121,10 +121,10 @@ describe('createStencilNodeComponent', () => {
     const Component = createStencilNodeComponent(renderFn);
     const { container, unmount } = mountWithProps(Component, defaultNodeProps);
     const handles = Array.from(container.querySelectorAll('[data-handletype]'));
-    expect(handles).toHaveLength(5);
+    expect(handles).toHaveLength(2);
     const targets = handles.filter(h => h.getAttribute('data-handletype') === 'target');
     const sources = handles.filter(h => h.getAttribute('data-handletype') === 'source');
-    expect(targets).toHaveLength(4);
+    expect(targets).toHaveLength(1);
     expect(sources).toHaveLength(1);
     unmount();
   });
@@ -164,7 +164,7 @@ describe('createStencilNodeComponent', () => {
       type: 'goal',
     });
     const handles = Array.from(container.querySelectorAll('[data-handletype]'));
-    expect(handles).toHaveLength(4);
+    expect(handles).toHaveLength(1);
     expect(handles.every(h => h.getAttribute('data-handletype') === 'target')).toBe(true);
     unmount();
   });

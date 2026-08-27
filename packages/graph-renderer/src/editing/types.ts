@@ -26,7 +26,7 @@ export interface EditPolicy {
 }
 
 export type GraphEdit =
-  | { readonly type: 'addNode'; readonly nodeType: string; readonly properties?: Readonly<Record<string, unknown>> }
+  | { readonly type: 'addNode'; readonly nodeType: string; readonly id?: string; readonly properties?: Readonly<Record<string, unknown>> }
   | { readonly type: 'removeNode'; readonly nodeId: string; readonly strategy: DeleteStrategy }
   | { readonly type: 'addEdge'; readonly sourceId: string; readonly targetId: string; readonly edgeType?: string }
   | { readonly type: 'removeEdge'; readonly edgeId: string }

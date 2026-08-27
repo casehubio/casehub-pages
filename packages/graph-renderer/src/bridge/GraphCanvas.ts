@@ -32,6 +32,7 @@ export class GraphCanvas extends LitElement {
   private _themeListener: ((e: Event) => void) | undefined;
   private _layoutGeneration = 0;
   private _reactFlowInstance: ReactFlowInstance | undefined;
+  private _connectSourceNodeId: string | undefined;
 
   screenToFlow(screenX: number, screenY: number): { x: number; y: number } | undefined {
     return this._reactFlowInstance?.screenToFlowPosition({ x: screenX, y: screenY });
@@ -176,15 +177,19 @@ export class GraphCanvas extends LitElement {
         onReactFlowReady: (instance: ReactFlowInstance) => {
           this._reactFlowInstance = instance;
         },
+        onConnectStart: (_event: MouseEvent | TouchEvent, params: { nodeId: string | null }) => {
+          this._connectSourceNodeId = params.nodeId ?? undefined;
+        },
         onConnectEnd: (event: MouseEvent | TouchEvent) => {
           const target = event.target as HTMLElement | null;
           const isOnNode = target?.closest('.react-flow__node');
-          if (!isOnNode) {
+          if (!isOnNode && this._connectSourceNodeId) {
             const pos = event instanceof MouseEvent
               ? { x: event.clientX, y: event.clientY }
               : { x: event.changedTouches[0]?.clientX ?? 0, y: event.changedTouches[0]?.clientY ?? 0 };
-            emitPagesEvent(this, 'graph:connect:end-on-empty', pos);
+            emitPagesEvent(this, 'graph:connect:end-on-empty', { ...pos, sourceNodeId: this._connectSourceNodeId });
           }
+          this._connectSourceNodeId = undefined;
         },
         onPaneClick: (event) => {
           emitPagesEvent(this, 'graph:pane:click', { x: event.clientX, y: event.clientY });
