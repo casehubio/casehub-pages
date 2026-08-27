@@ -37,8 +37,8 @@ export type { FieldSchema, SchemaFormProps } from "@casehubio/pages-component";
 // Form inputs
 export { PagesFormInput } from "./form-inputs/PagesFormInput.js";
 export type { PagesFieldChangeDetail } from "./form-inputs/PagesFormInput.js";
-export { PagesNumberInput } from "./form-inputs/PagesNumberInput.js";
-export { PagesDatePicker } from "./form-inputs/PagesDatePicker.js";
+export type { PagesNumberInput } from "@casehubio/pages-ui-components/number-input";
+export type { PagesDateInput as PagesDatePicker } from "@casehubio/pages-ui-components/date-input";
 
 // New charts
 export { PagesTimeline } from "./charts/PagesTimeline.js";

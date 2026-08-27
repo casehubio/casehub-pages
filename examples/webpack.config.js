@@ -33,7 +33,17 @@ module.exports = (env = {}) => {
     module: {
       ...common.module,
       rules: [
-        ...rules,
+        ...rules.map((rule) => {
+          if (rule && rule.test && rule.test.toString() === '/\\.css$/') {
+            return { ...rule, resourceQuery: { not: [/raw/] } };
+          }
+          return rule;
+        }),
+        {
+          test: /\.css$/,
+          resourceQuery: /raw/,
+          type: 'asset/source',
+        },
         {
           test: /pages-ui-components[\/]dist[\/]/,
           sideEffects: true,
@@ -41,10 +51,6 @@ module.exports = (env = {}) => {
         {
           test: /graph-renderer[\/]dist[\/]/,
           sideEffects: true,
-        },
-        {
-          resourceQuery: /raw/,
-          type: 'asset/source',
         },
       ],
     },
@@ -98,6 +104,7 @@ module.exports = (env = {}) => {
         "@casehubio/pages-ui-components/tag-editor": path.resolve(__dirname, "../packages/pages-ui-components/dist/tag-editor"),
         "@casehubio/pages-ui-components/duration-input": path.resolve(__dirname, "../packages/pages-ui-components/dist/duration-input"),
         "@casehubio/pages-ui-components/validation": path.resolve(__dirname, "../packages/pages-ui-components/dist/validation"),
+        "@casehubio/pages-ui-components/types": path.resolve(__dirname, "../packages/pages-ui-components/dist/types"),
         "@casehubio/pages-ui-components": path.resolve(__dirname, "../packages/pages-ui-components"),
         "@casehubio/graph-core": path.resolve(__dirname, "../packages/graph-core"),
         "@casehubio/graph-renderer": path.resolve(__dirname, "../packages/graph-renderer"),
