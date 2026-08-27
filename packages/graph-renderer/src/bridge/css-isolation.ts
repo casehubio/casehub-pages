@@ -46,6 +46,16 @@ ${pluginStyles}
   cursor: crosshair;
   pointer-events: all;
 }
+.graph-connecting .stencil-source-handle {
+  pointer-events: none !important;
+  cursor: default;
+}
+.graph-connecting .react-flow__node .stencil-decoration-wrapper {
+  box-shadow: 0 0 8px 2px rgba(22, 163, 106, 0.3);
+}
+.graph-connecting .react-flow__node.connecting .stencil-decoration-wrapper {
+  box-shadow: 0 0 0 3px var(--pages-accent-9, #5470c6);
+}
 .stencil-decoration-wrapper {
   position: relative;
   z-index: 1;
