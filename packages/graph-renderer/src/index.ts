@@ -29,3 +29,6 @@ export { createWorkStencilRenderFn, toWorkStencilDescriptor } from './work-stenc
 export type { GraphModel, GraphNode, GraphEdge, NodeDecoration } from '@casehubio/graph-core';
 export { validateEdgeRouting } from './edge-routing-validator.js';
 export type { ValidationResult } from './edge-routing-validator.js';
+export { defaultEditPolicy } from './editing/edit-policy.js';
+export { applyGraphEdit } from './editing/apply-graph-edit.js';
+export type { EditPolicy, GraphEdit, StencilTypeInfo, DeleteStrategy, DeleteOption } from './editing/types.js';
