@@ -158,6 +158,44 @@ describe('defaultEditPolicy', () => {
     });
   });
 
+  describe('getInsertableTypes', () => {
+    it('excludes types with outbound max 0 (e.g. Sink)', () => {
+      registerStencil({
+        type: 'mid', label: 'Mid', icon: 'm',
+        grammar: { type: 'mid', connections: { inbound: { min: 0, max: 2, allowedFrom: [] }, outbound: { min: 0, max: 2, allowedTo: [] } } },
+        render: dummyRender,
+      });
+      registerStencil({
+        type: 'terminal', label: 'Terminal', icon: 't',
+        grammar: { type: 'terminal', connections: { inbound: { min: 0, max: 2, allowedFrom: [] }, outbound: { min: 0, max: 0, allowedTo: [] } } },
+        render: dummyRender,
+      });
+      const m: GraphModel = {
+        nodes: [{ id: 'a', type: 'mid', properties: {} }, { id: 'b', type: 'mid', properties: {} }],
+        edges: [{ id: 'e1', type: 'd', source: 'a', target: 'b' }],
+      };
+      const policy = defaultEditPolicy();
+      const types = policy.getInsertableTypes(m.edges[0]!, m);
+      expect(types.some(t => t.type === 'mid')).toBe(true);
+      expect(types.some(t => t.type === 'terminal')).toBe(false);
+    });
+
+    it('excludes types with inbound max 0 (e.g. Source)', () => {
+      registerStencil({
+        type: 'origin', label: 'Origin', icon: 'o',
+        grammar: { type: 'origin', connections: { inbound: { min: 0, max: 0, allowedFrom: [] }, outbound: { min: 0, max: 2, allowedTo: [] } } },
+        render: dummyRender,
+      });
+      const m: GraphModel = {
+        nodes: [{ id: 'a', type: 'origin', properties: {} }, { id: 'b', type: 'origin', properties: {} }],
+        edges: [{ id: 'e1', type: 'd', source: 'a', target: 'b' }],
+      };
+      const policy = defaultEditPolicy();
+      const types = policy.getInsertableTypes(m.edges[0]!, m);
+      expect(types.some(t => t.type === 'origin')).toBe(false);
+    });
+  });
+
   describe('getCreatableTypes', () => {
     it('includes child types when nearNode is a container', () => {
       registerGrammar({

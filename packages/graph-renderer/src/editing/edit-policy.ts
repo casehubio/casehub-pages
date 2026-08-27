@@ -42,6 +42,8 @@ export function defaultEditPolicy(): EditPolicy {
       return getAllStencils()
         .filter(s => {
           const g = s.grammar;
+          if (g.connections.inbound.max === 0) return false;
+          if (g.connections.outbound.max === 0) return false;
           const inboundOk = g.connections.inbound.allowedFrom.length === 0 ||
             g.connections.inbound.allowedFrom.includes(sourceNode.type);
           const outboundOk = g.connections.outbound.allowedTo.length === 0 ||
