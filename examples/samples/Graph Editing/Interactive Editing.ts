@@ -2,6 +2,7 @@ var editCanvas = document.getElementById('edit-canvas');
 var mutationLog = document.getElementById('mutation-log');
 var clearBtn = document.getElementById('clear-log');
 var selectedNodeIds = [];
+var insertNodeType = 'transform';
 
 function logMutation(label, detail) {
   if (mutationLog) {
@@ -24,6 +25,12 @@ if (editCanvas) {
     var detail = (e as CustomEvent).detail;
     if (detail.topic === 'graph:selection:change') {
       selectedNodeIds = detail.payload.nodeIds || [];
+    }
+    if (detail.topic === 'graph:edge:click') {
+      var edgeId = detail.payload.edgeId;
+      var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
+      (editCanvas as any).onMutation({ type: 'splitEdge', edgeId: edgeId, insertNodeType: insertNodeType });
+      logMutation('splitEdge (click edge to insert)', { edgeId: edgeId, insertNodeType: insertNodeType });
     }
   });
 
@@ -59,6 +66,7 @@ if (toolbar && editCanvas) {
     buttons[b].addEventListener('click', function(evt) {
       var nodeType = (evt.currentTarget as HTMLElement).getAttribute('data-type');
       if (!nodeType) return;
+      insertNodeType = nodeType;
       var labels = { source: 'New Source', transform: 'New Transform', filter: 'New Filter', join: 'New Join', sink: 'New Sink' };
       (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
     });
