@@ -48,7 +48,7 @@ registerStencil({
     type: 'source',
     connections: {
       inbound: { min: 0, max: 0, allowedFrom: [] },
-      outbound: { min: 0, max: 2, allowedTo: ['transform', 'filter', 'join'] },
+      outbound: { min: 0, max: 10, allowedTo: ['transform', 'filter', 'join'] },
     },
   },
 });
@@ -58,8 +58,8 @@ registerStencil({
   grammar: {
     type: 'transform',
     connections: {
-      inbound: { min: 0, max: 3, allowedFrom: [] },
-      outbound: { min: 0, max: 2, allowedTo: ['transform', 'filter', 'join', 'sink'] },
+      inbound: { min: 0, max: 10, allowedFrom: [] },
+      outbound: { min: 0, max: 10, allowedTo: ['transform', 'filter', 'join', 'sink'] },
     },
   },
 });
@@ -69,8 +69,8 @@ registerStencil({
   grammar: {
     type: 'filter',
     connections: {
-      inbound: { min: 0, max: 1, allowedFrom: [] },
-      outbound: { min: 0, max: 2, allowedTo: ['transform', 'filter', 'join', 'sink'] },
+      inbound: { min: 0, max: 10, allowedFrom: [] },
+      outbound: { min: 0, max: 10, allowedTo: ['transform', 'filter', 'join', 'sink'] },
     },
   },
 });
@@ -80,8 +80,8 @@ registerStencil({
   grammar: {
     type: 'join',
     connections: {
-      inbound: { min: 0, max: 4, allowedFrom: [] },
-      outbound: { min: 0, max: 1, allowedTo: ['transform', 'filter', 'sink'] },
+      inbound: { min: 0, max: 10, allowedFrom: [] },
+      outbound: { min: 0, max: 10, allowedTo: ['transform', 'filter', 'sink'] },
     },
   },
 });
@@ -91,7 +91,7 @@ registerStencil({
   grammar: {
     type: 'sink',
     connections: {
-      inbound: { min: 0, max: 2, allowedFrom: [] },
+      inbound: { min: 0, max: 10, allowedFrom: [] },
       outbound: { min: 0, max: 0, allowedTo: [] },
     },
   },
