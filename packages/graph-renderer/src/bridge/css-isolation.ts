@@ -35,19 +35,28 @@ ${pluginStyles}
   background: var(--pages-neutral-2, #f0f0f0);
 }
 .react-flow__handle {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--pages-neutral-6, #9ca3af);
-  border: 2px solid var(--pages-neutral-1, #fff);
+  background: var(--pages-neutral-5, #6b7280);
+  border: none;
+  opacity: 0.4;
+  transition: opacity 0.15s, background 0.15s;
+  z-index: 0;
+}
+.react-flow__node:hover .react-flow__handle {
+  opacity: 1;
 }
 .react-flow__handle:hover {
+  opacity: 1;
   background: var(--pages-accent-9, #5470c6);
 }
 .react-flow__handle-valid {
+  opacity: 1;
   background: var(--pages-success-9, #16a34a);
 }
 .react-flow__handle-connecting {
+  opacity: 1;
   background: var(--pages-accent-9, #5470c6);
 }
 `.trim();
