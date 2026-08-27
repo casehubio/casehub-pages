@@ -1,6 +1,10 @@
 package io.casehub.pages.mcp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.casehub.pages.push.EventBroadcaster;
+import io.casehub.pages.push.InMemoryEventStore;
 import io.casehub.pages.push.PushRequest;
+import io.casehub.pages.push.TopicRegistry;
 import io.casehub.pages.scenario.runtime.ScenarioOrchestrator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +22,12 @@ class ScenarioResolverTest {
     @BeforeEach
     void setUp() {
         var sent = new ArrayList<String>();
-        orchestrator = new ScenarioOrchestrator((connId, msg) -> sent.add(msg));
+        var sender = (io.casehub.pages.push.SessionSender) (connId, msg) -> sent.add(msg);
+        var mapper = new ObjectMapper();
+        var broadcaster = new EventBroadcaster(
+                new InMemoryEventStore(100), new TopicRegistry(), sender,
+                mapper::writeValueAsString);
+        orchestrator = new ScenarioOrchestrator(sender, broadcaster);
         orchestrator.onExecutorRegister("conn-1",
             new PushRequest.ExecutorRegister("1", "browser", List.of("click", "ready")));
         orchestrator.onExecutorRegister("conn-2",

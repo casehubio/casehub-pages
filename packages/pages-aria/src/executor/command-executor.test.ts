@@ -31,13 +31,13 @@ describe('ARIA command executor', () => {
         .toThrow('No element found: button "Cancel"');
     });
 
-    it('throws when multiple matches without scoping', () => {
+    it('returns first match when multiple exist', () => {
       document.body.innerHTML = `
-        <button aria-label="Delete">Delete</button>
-        <button aria-label="Delete">Delete</button>
+        <button aria-label="Delete">First</button>
+        <button aria-label="Delete">Second</button>
       `;
-      expect(() => resolveTarget({ role: 'button', name: 'Delete' }))
-        .toThrow('Multiple elements found: button "Delete" (2 matches)');
+      const el = resolveTarget({ role: 'button', name: 'Delete' });
+      expect(el.textContent).toBe('First');
     });
   });
 

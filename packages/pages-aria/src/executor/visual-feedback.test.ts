@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { injectStyles, highlightElement, typeText } from './visual-feedback.js';
+import { injectStyles, highlightElement, typeText, completeTypingNow } from './visual-feedback.js';
 
 describe('injectStyles', () => {
   afterEach(() => {
@@ -38,18 +38,24 @@ describe('highlightElement', () => {
     vi.useRealTimers();
   });
 
-  it('adds scenario-highlight class to element', () => {
+  it('adds scenario-highlight-click class for click type', () => {
     const el = document.createElement('button');
     highlightElement(el, 'click');
+    expect(el.classList.contains('scenario-highlight-click')).toBe(true);
+  });
+
+  it('adds scenario-highlight class for fill type', () => {
+    const el = document.createElement('input');
+    highlightElement(el, 'fill');
     expect(el.classList.contains('scenario-highlight')).toBe(true);
   });
 
   it('removes class after delay', () => {
     const el = document.createElement('button');
     highlightElement(el, 'click');
-    expect(el.classList.contains('scenario-highlight')).toBe(true);
-    vi.advanceTimersByTime(500);
-    expect(el.classList.contains('scenario-highlight')).toBe(false);
+    expect(el.classList.contains('scenario-highlight-click')).toBe(true);
+    vi.advanceTimersByTime(900);
+    expect(el.classList.contains('scenario-highlight-click')).toBe(false);
   });
 });
 
@@ -138,5 +144,48 @@ describe('typeText', () => {
 
     expect(el.value).toBe('ab');
     el.remove();
+  });
+
+  it('completeTypingNow fills remaining value instantly', async () => {
+    const el = document.createElement('input');
+    document.body.appendChild(el);
+
+    const promise = typeText(el, 'abcde', 50);
+
+    await vi.advanceTimersByTimeAsync(50);
+    expect(el.value).toBe('a');
+
+    completeTypingNow();
+    await vi.advanceTimersByTimeAsync(50);
+    await promise;
+
+    expect(el.value).toBe('abcde');
+    el.remove();
+  });
+
+  it('completeTypingNow does not affect subsequent typeText calls', async () => {
+    const el = document.createElement('input');
+    document.body.appendChild(el);
+
+    const promise = typeText(el, 'abcde', 50);
+    await vi.advanceTimersByTimeAsync(50);
+    expect(el.value).toBe('a');
+
+    completeTypingNow();
+    await vi.advanceTimersByTimeAsync(50);
+    await promise;
+    expect(el.value).toBe('abcde');
+
+    const el2 = document.createElement('input');
+    document.body.appendChild(el2);
+    const promise2 = typeText(el2, 'xy', 10);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(el2.value).toBe('x');
+    await vi.advanceTimersByTimeAsync(10);
+    await promise2;
+    expect(el2.value).toBe('xy');
+
+    el.remove();
+    el2.remove();
   });
 });

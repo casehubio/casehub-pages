@@ -15,12 +15,6 @@ export function resolveTarget(target: AriaTarget): Element {
     throw new Error(`No element found: ${target.role} "${target.name}"${scopeDesc}`);
   }
 
-  if (all.length > 1) {
-    throw new Error(
-      `Multiple elements found: ${target.role} "${target.name}" (${all.length} matches). Use "within" to scope.`
-    );
-  }
-
   return all[0];
 }
 

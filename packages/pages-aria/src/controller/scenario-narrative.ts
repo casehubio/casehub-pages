@@ -44,6 +44,17 @@ export class PagesScenarioNarrative extends LitElement {
   private _templateCache = new Map<string, string>();
   @state() private _templateContent: string | null = null;
   private _lastTemplatePath: string | null = null;
+  @state() private _directContent: { type: string; markdown?: string; path?: string; section?: string } | null = null;
+
+  private _onNarrative = (e: Event): void => {
+    this._directContent = (e as CustomEvent).detail as { type: string; markdown?: string; path?: string; section?: string };
+  };
+
+  private _onNarrativeDismiss = (): void => {
+    this._directContent = null;
+  };
+
+  private _boundTarget: EventTarget | null = null;
 
   override connectedCallback(): void {
     this._conn = new ScenarioConnectionController(this, {
@@ -53,6 +64,31 @@ export class PagesScenarioNarrative extends LitElement {
       onState: () => this._onContentChange(),
     });
     super.connectedCallback();
+    this._bindEventTarget(this.eventTarget);
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._bindEventTarget(null);
+  }
+
+  protected override willUpdate(changed: Map<string, unknown>): void {
+    if (changed.has('eventTarget')) {
+      this._bindEventTarget(this.eventTarget);
+    }
+  }
+
+  private _bindEventTarget(target: EventTarget | undefined | null): void {
+    if (this._boundTarget) {
+      this._boundTarget.removeEventListener('scenario-narrative', this._onNarrative);
+      this._boundTarget.removeEventListener('scenario-narrative-dismiss', this._onNarrativeDismiss);
+      this._boundTarget = null;
+    }
+    if (target) {
+      target.addEventListener('scenario-narrative', this._onNarrative);
+      target.addEventListener('scenario-narrative-dismiss', this._onNarrativeDismiss);
+      this._boundTarget = target;
+    }
   }
 
   private _onContentChange(): void {
@@ -111,6 +147,17 @@ export class PagesScenarioNarrative extends LitElement {
   }
 
   override render(): TemplateResult | typeof nothing {
+    if (this._directContent) {
+      if (this._directContent.type === 'template' && this._directContent.path) {
+        const cached = this._templateCache.get(this._directContent.path);
+        if (cached) return this._renderMarkdown(this._extractSection(cached, this._directContent.section));
+        void this._fetchTemplate(this._directContent.path, this._directContent.section);
+        return html`<div class="narrative-content"><em>Loading...</em></div>`;
+      }
+      const md = this._directContent.markdown ?? '';
+      return this._renderMarkdown(this._directContent.section ? this._extractSection(md, this._directContent.section) : md);
+    }
+
     const content = this._conn?.state?.content;
     if (!content) return nothing;
 

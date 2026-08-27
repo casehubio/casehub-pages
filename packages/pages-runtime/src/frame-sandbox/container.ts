@@ -278,7 +278,7 @@ export function createContainer(config: ContainerConfig): Container {
         }
       }
 
-      const wantToolbar = config.showToolbar ?? true;
+      const wantToolbar = config.showToolbar ?? (depth <= 1);
       if (wantToolbar) {
         toolbar = createContainerToolbar(
           policy.allowedLayouts,

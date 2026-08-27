@@ -11513,6 +11513,7 @@ function processWireMessage(msg, subscriptions, wireNameToId, config, updateSeq)
           return;
         }
         const dataset = toTypedDataSet({ columns: msg.columns, data: msg.rows });
+        subscription.snapshotReceived = true;
         subscription.listener({ type: "snapshot", dataset });
         if (msg.seq !== void 0 && updateSeq)
           updateSeq(msg.seq);
@@ -11524,12 +11525,17 @@ function processWireMessage(msg, subscriptions, wireNameToId, config, updateSeq)
           return;
         }
         const dataset = toTypedDataSet({ columns: msg.columns, data: msg.rows });
-        const event = {
-          type: "append",
-          rows: dataset.rows,
-          ...subscription.def.cacheMaxRows !== void 0 && { maxRows: subscription.def.cacheMaxRows }
-        };
-        subscription.listener(event);
+        if (!subscription.snapshotReceived) {
+          subscription.snapshotReceived = true;
+          subscription.listener({ type: "snapshot", dataset });
+        } else {
+          const event = {
+            type: "append",
+            rows: dataset.rows,
+            ...subscription.def.cacheMaxRows !== void 0 && { maxRows: subscription.def.cacheMaxRows }
+          };
+          subscription.listener(event);
+        }
         if (msg.seq !== void 0 && updateSeq)
           updateSeq(msg.seq);
         break;
@@ -12407,11 +12413,13 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
     this.mode = "full";
     this._expanded = false;
     this._yamlOpen = false;
+    this._calloutMsPerChar = 50;
     this._outline = [];
     this._speedDebounce = null;
     this._yamlViewer = null;
     this._popoutWindow = null;
     this._popoutPoll = null;
+    this._docked = true;
     this._dragOffset = { x: 0, y: 0 };
     this._onDragStart = (e5) => {
       if (e5.target.tagName === "BUTTON") return;
@@ -12422,15 +12430,22 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
       e5.currentTarget.addEventListener("pointerup", this._onDragEnd);
     };
     this._onDragMove = (e5) => {
-      this.style.left = `${e5.clientX - this._dragOffset.x}px`;
-      this.style.top = `${e5.clientY - this._dragOffset.y}px`;
+      const left = e5.clientX - this._dragOffset.x;
+      const top = e5.clientY - this._dragOffset.y;
+      this.style.left = `${left}px`;
+      this.style.top = `${top}px`;
       this.style.right = "auto";
       this.style.bottom = "auto";
+      if (this._docked && this._yamlViewer) {
+        const viewerWidth = this._yamlViewer.getBoundingClientRect().width;
+        this._yamlViewer.setPosition(left - viewerWidth - 8, top);
+      }
     };
     this._onDragEnd = (e5) => {
       e5.currentTarget.releasePointerCapture(e5.pointerId);
       e5.currentTarget.removeEventListener("pointermove", this._onDragMove);
       e5.currentTarget.removeEventListener("pointerup", this._onDragEnd);
+      this._trySnap();
     };
   }
   static {
@@ -12468,6 +12483,9 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
     }
     .outline-step.completed { color: var(--pages-neutral-8, #999); }
     .step-icon { width: 14px; text-align: center; flex-shrink: 0; }
+    .run-to { margin-left: auto; opacity: 0; font-size: 10px; color: var(--pages-accent-9, #2563eb); flex-shrink: 0; transition: opacity 0.15s; }
+    .outline-step:hover .run-to, .outline-heading:hover .run-to { opacity: 1; }
+    .outline-step.completed .run-to { display: none; }
     .transport {
       display: flex; align-items: center; gap: var(--pages-space-2, 8px);
       padding: var(--pages-space-2, 8px);
@@ -12484,6 +12502,10 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
     .transport button:disabled { opacity: 0.4; cursor: not-allowed; }
     .speed-slider { width: 80px; }
     .speed-label { font-size: var(--pages-font-size-sm, 12px); min-width: 36px; }
+    .callout-slider { width: 60px; }
+    .callout-label { font-size: var(--pages-font-size-sm, 12px); min-width: 46px; color: var(--pages-neutral-8, #999); }
+    .slider-group { display: flex; align-items: center; gap: 4px; }
+    .slider-group-label { font-size: 10px; color: var(--pages-neutral-7, #aaa); text-transform: uppercase; letter-spacing: 0.5px; }
     .progress { font-size: var(--pages-font-size-sm, 12px); color: var(--pages-neutral-8, #999); margin-left: auto; }
     .status-bar {
       display: flex; align-items: center; justify-content: space-between;
@@ -12547,6 +12569,7 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
     :host([mode="compact"]) .outline-step:hover { background: rgba(255,255,255,0.05); }
     :host([mode="compact"]) .outline-step.current { background: rgba(56,189,248,0.15); color: #38bdf8; }
     :host([mode="compact"]) .outline-step.completed { color: #475569; }
+    :host([mode="compact"]) .run-to { color: #38bdf8; }
     :host([mode="compact"]) .transport { border-color: rgba(255,255,255,0.1); }
     :host([mode="compact"]) .transport button { color: #94a3b8; border-color: rgba(255,255,255,0.15); }
     :host([mode="compact"]) .transport button:hover:not(:disabled) { background: rgba(255,255,255,0.05); color: #e2e8f0; }
@@ -12554,6 +12577,8 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
     :host([mode="compact"]) .connection-status.connected { color: #4ade80; }
     :host([mode="compact"]) .connection-status.disconnected { color: #f87171; }
     :host([mode="compact"]) .speed-label { color: #94a3b8; }
+    :host([mode="compact"]) .callout-label { color: #64748b; }
+    :host([mode="compact"]) .slider-group-label { color: #475569; }
     :host([mode="compact"]) .progress { color: #38bdf8; }
 
     .demo-actions { display: flex; gap: var(--pages-space-2, 8px); padding: var(--pages-space-2, 8px); }
@@ -12593,6 +12618,17 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
   _onStateChange(s4) {
     if (s4.scenario && this._outline.length === 0) void this._fetchOutline();
     if (!s4.scenario) this._outline = [];
+    this.updateComplete.then(() => this._scrollToCurrent());
+  }
+  _scrollToCurrent() {
+    const current = this.shadowRoot?.querySelector(".outline-step.current");
+    if (!current) return;
+    const container = current.closest(".compact-body, .outline")?.parentElement;
+    const scroller = this.shadowRoot?.querySelector(".compact-body") ?? container;
+    if (!scroller) return;
+    const targetOffset = scroller.clientHeight / 3;
+    const stepTop = current.offsetTop - scroller.offsetTop;
+    scroller.scrollTo({ top: Math.max(0, stepTop - targetOffset), behavior: "smooth" });
   }
   async _fetchOutline() {
     try {
@@ -12654,6 +12690,7 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
              @click=${() => void this._conn.sendCommand("/run-to", { label: node.label })}>
           <span class="step-icon">${isCurrent ? "\u25CF" : isCompleted ? "\u2713" : "\u25CB"}</span>
           ${node.label}
+          <span class="run-to" aria-label="Run to ${node.label}">▶</span>
         </div>
       `;
     }
@@ -12663,6 +12700,7 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
              style="padding-left: ${depth * 16}px"
              @click=${() => void this._conn.sendCommand("/run-to", { label: node.label })}>
           ${node.label}
+          <span class="run-to" aria-label="Run to ${node.label}">▶</span>
         </div>
         ${node.children.map((child) => this._renderNode(child, depth + 1))}
       </div>
@@ -12692,6 +12730,16 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
                aria-valuetext="${(s4?.speed ?? 1).toFixed(1)}x speed"
                @input=${this._onSpeedChange}>
         <span class="speed-label">${(s4?.speed ?? 1).toFixed(1)}x</span>
+        <input type="range" class="callout-slider"
+               min="10" max="120" step="5"
+               .value=${String(this._calloutMsPerChar)}
+               ?disabled=${!hasScenario}
+               aria-label="Callout speed"
+               aria-valuemin="10" aria-valuemax="120"
+               aria-valuenow=${String(this._calloutMsPerChar)}
+               aria-valuetext="${this._calloutMsPerChar}ms/char callout speed"
+               @input=${this._onCalloutSpeedChange}>
+        <span class="callout-label">${this._calloutMsPerChar}ms</span>
         <span class="progress">${Math.round((s4?.progress ?? 0) * 100)}%</span>
       </div>
     `;
@@ -12703,6 +12751,12 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
     this._speedDebounce = setTimeout(() => {
       void this._conn.sendCommand("/speed", { speed: Math.round(speed * 100) / 100 });
     }, 250);
+  }
+  _onCalloutSpeedChange(e5) {
+    this._calloutMsPerChar = parseInt(e5.target.value, 10);
+    this.eventTarget?.dispatchEvent(new CustomEvent("scenario-callout-speed", {
+      detail: { msPerChar: this._calloutMsPerChar }
+    }));
   }
   _renderStatus() {
     const s4 = this._conn?.state;
@@ -12747,6 +12801,7 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
         <div class="compact-header" @pointerdown=${this._onDragStart}>
           <span class="scenario-name">${name}</span>
           <button aria-label="Toggle source" @click=${() => this._toggleYaml()}>&lt;/&gt;</button>
+          ${this._yamlOpen ? this._docked ? b2`<button aria-label="Undock viewer" @click=${() => this._undockViewer()} title="Undock panels">⊟</button>` : b2`<button aria-label="Dock viewer" @click=${() => this._dockViewer()} title="Dock panels">⊞</button>` : A}
           <button aria-label="Collapse" @click=${() => {
       this._expanded = false;
     }}>✕</button>
@@ -12808,10 +12863,58 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
       if (this.scenario) viewer.scenario = this.scenario;
       viewer.onClose = () => this._toggleYaml();
       viewer.onDetach = () => this._detachYaml();
+      viewer.onDragMove = (left, top) => this._onViewerDrag(left, top);
+      viewer.onDragEnd = () => this._onViewerDragEnd();
       document.body.appendChild(viewer);
       this._yamlViewer = viewer;
+      this._docked = true;
     }
     this._yamlViewer.style.display = "block";
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => this._snapViewerToController());
+    });
+  }
+  _snapViewerToController() {
+    if (!this._yamlViewer) return;
+    const hostRect = this.getBoundingClientRect();
+    const viewerRect = this._yamlViewer.getBoundingClientRect();
+    const viewerWidth = viewerRect.width > 0 ? viewerRect.width : 360;
+    const left = hostRect.left - viewerWidth - 8;
+    const top = hostRect.top;
+    this._yamlViewer.setPosition(left, top);
+    this._docked = true;
+  }
+  _onViewerDrag(left, top) {
+    if (!this._docked) return;
+    const hostRect = this.getBoundingClientRect();
+    const viewerRect = this._yamlViewer.getBoundingClientRect();
+    const gap = hostRect.left - (left + viewerRect.width);
+    if (Math.abs(gap - 8) > 30) {
+      this._docked = false;
+      return;
+    }
+    this.style.left = `${left + viewerRect.width + 8}px`;
+    this.style.top = `${top}px`;
+    this.style.right = "auto";
+    this.style.bottom = "auto";
+  }
+  _onViewerDragEnd() {
+    this._trySnap();
+  }
+  _trySnap() {
+    if (!this._yamlViewer || this._docked) return;
+    const hostRect = this.getBoundingClientRect();
+    const viewerRect = this._yamlViewer.getBoundingClientRect();
+    const gap = hostRect.left - (viewerRect.left + viewerRect.width);
+    if (Math.abs(gap) < 30 && Math.abs(hostRect.top - viewerRect.top) < 30) {
+      this._snapViewerToController();
+    }
+  }
+  _undockViewer() {
+    this._docked = false;
+  }
+  _dockViewer() {
+    this._snapViewerToController();
   }
   _hideYamlViewer() {
     if (this._yamlViewer) {
@@ -12821,13 +12924,15 @@ var PagesScenarioController = class extends KeyboardShortcutMixin(i4) {
   _detachYaml() {
     const base = this._conn?.restBase ?? this.baseUrl ?? window.location.origin;
     const scenario = this.scenario ?? this._conn?.state.scenario ?? "";
-    const url = `${base}/scenario/yaml-viewer?baseUrl=${encodeURIComponent(base)}&scenario=${encodeURIComponent(scenario)}`;
-    this._popoutWindow = window.open(url, "yaml-viewer", "width=400,height=600");
+    const url = `${base}/scenario/yaml-viewer.html?baseUrl=${encodeURIComponent(base)}&scenario=${encodeURIComponent(scenario)}`;
+    const win = window.open(url, "yaml-viewer", "width=400,height=600");
+    if (!win) return;
+    this._popoutWindow = win;
     this._hideYamlViewer();
     this._yamlOpen = false;
     if (this._popoutPoll) clearInterval(this._popoutPoll);
     this._popoutPoll = setInterval(() => {
-      if (this._popoutWindow?.closed) {
+      if (win.closed) {
         this._popoutWindow = null;
         if (this._popoutPoll) {
           clearInterval(this._popoutPoll);
@@ -12871,7 +12976,13 @@ __decorateClass([
 ], PagesScenarioController.prototype, "_yamlOpen", 2);
 __decorateClass([
   r5()
+], PagesScenarioController.prototype, "_calloutMsPerChar", 2);
+__decorateClass([
+  r5()
 ], PagesScenarioController.prototype, "_outline", 2);
+__decorateClass([
+  r5()
+], PagesScenarioController.prototype, "_docked", 2);
 if (!customElements.get("pages-scenario-controller")) {
   customElements.define("pages-scenario-controller", PagesScenarioController);
 }
@@ -12883,6 +12994,13 @@ var PagesScenarioNarrative = class extends i4 {
     this._templateCache = /* @__PURE__ */ new Map();
     this._templateContent = null;
     this._lastTemplatePath = null;
+    this._directContent = null;
+    this._onNarrative = (e5) => {
+      this._directContent = e5.detail;
+    };
+    this._onNarrativeDismiss = () => {
+      this._directContent = null;
+    };
   }
   static {
     this.styles = i`
@@ -12925,6 +13043,13 @@ var PagesScenarioNarrative = class extends i4 {
       onState: () => this._onContentChange()
     });
     super.connectedCallback();
+    this.eventTarget?.addEventListener("scenario-narrative", this._onNarrative);
+    this.eventTarget?.addEventListener("scenario-narrative-dismiss", this._onNarrativeDismiss);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.eventTarget?.removeEventListener("scenario-narrative", this._onNarrative);
+    this.eventTarget?.removeEventListener("scenario-narrative-dismiss", this._onNarrativeDismiss);
   }
   _onContentChange() {
     const content = this._conn?.state?.content;
@@ -12978,6 +13103,15 @@ var PagesScenarioNarrative = class extends i4 {
     return result.join("\n").trim();
   }
   render() {
+    if (this._directContent) {
+      if (this._directContent.type === "template" && this._directContent.path) {
+        const cached = this._templateCache.get(this._directContent.path);
+        if (cached) return this._renderMarkdown(cached);
+        void this._fetchTemplate(this._directContent.path);
+        return b2`<div class="narrative-content"><em>Loading...</em></div>`;
+      }
+      return this._renderMarkdown(this._directContent.markdown ?? "");
+    }
     const content = this._conn?.state?.content;
     if (!content) return A;
     switch (content.type) {
@@ -13015,6 +13149,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], PagesScenarioNarrative.prototype, "_templateContent", 2);
+__decorateClass([
+  r5()
+], PagesScenarioNarrative.prototype, "_directContent", 2);
 if (!customElements.get("pages-scenario-narrative")) {
   customElements.define("pages-scenario-narrative", PagesScenarioNarrative);
 }
@@ -19369,6 +19506,7 @@ function buildStepLineMap(yamlSource) {
 var PagesScenarioYamlViewer = class extends i4 {
   constructor() {
     super(...arguments);
+    this.mode = "floating";
     this._yamlSource = "";
     this._activeStep = null;
     this._stepMap = /* @__PURE__ */ new Map();
@@ -19382,15 +19520,19 @@ var PagesScenarioYamlViewer = class extends i4 {
       e5.currentTarget.addEventListener("pointerup", this._onDragEnd);
     };
     this._onDragMove = (e5) => {
-      this.style.left = `${e5.clientX - this._dragOffset.x}px`;
-      this.style.top = `${e5.clientY - this._dragOffset.y}px`;
+      const left = e5.clientX - this._dragOffset.x;
+      const top = e5.clientY - this._dragOffset.y;
+      this.style.left = `${left}px`;
+      this.style.top = `${top}px`;
       this.style.right = "auto";
       this.style.bottom = "auto";
+      this.onDragMove?.(left, top);
     };
     this._onDragEnd = (e5) => {
       e5.currentTarget.releasePointerCapture(e5.pointerId);
       e5.currentTarget.removeEventListener("pointermove", this._onDragMove);
       e5.currentTarget.removeEventListener("pointerup", this._onDragEnd);
+      this.onDragEnd?.();
     };
   }
   static {
@@ -19411,10 +19553,13 @@ var PagesScenarioYamlViewer = class extends i4 {
       box-shadow: 0 8px 24px rgba(0,0,0,0.4);
       color: #e2e8f0;
       width: 360px;
-      max-height: 60vh;
+      height: 50vh;
+      min-width: 240px;
+      min-height: 200px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      resize: both;
     }
     .viewer-header {
       display: flex;
@@ -19460,7 +19605,8 @@ var PagesScenarioYamlViewer = class extends i4 {
       font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 11px;
       line-height: 1.6;
-      white-space: pre;
+      white-space: pre-wrap;
+      word-break: break-word;
       display: flex;
     }
     .yaml-line.active {
@@ -19482,6 +19628,20 @@ var PagesScenarioYamlViewer = class extends i4 {
     .yaml-literal { color: #fbbf24; }
     .yaml-punct { color: #94a3b8; }
     .yaml-plain { color: #e2e8f0; }
+
+    :host([mode="standalone"]) {
+      position: static;
+      width: 100%;
+      height: 100%;
+    }
+    :host([mode="standalone"]) .viewer-card {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      border-radius: 0;
+      box-shadow: none;
+      resize: none;
+    }
   `;
   }
   firstUpdated() {
@@ -19565,6 +19725,12 @@ var PagesScenarioYamlViewer = class extends i4 {
       `;
     })}`;
   }
+  setPosition(left, top) {
+    this.style.left = `${left}px`;
+    this.style.top = `${top}px`;
+    this.style.right = "auto";
+    this.style.bottom = "auto";
+  }
 };
 __decorateClass([
   n4({ attribute: false })
@@ -19578,6 +19744,9 @@ __decorateClass([
 __decorateClass([
   n4()
 ], PagesScenarioYamlViewer.prototype, "scenario", 2);
+__decorateClass([
+  n4({ reflect: true })
+], PagesScenarioYamlViewer.prototype, "mode", 2);
 __decorateClass([
   r5()
 ], PagesScenarioYamlViewer.prototype, "_yamlSource", 2);
@@ -19680,11 +19849,6 @@ function resolveTarget(target) {
     const scopeDesc = target.within ? ` within ${target.within.role} "${target.within.name}"` : "";
     throw new Error(`No element found: ${target.role} "${target.name}"${scopeDesc}`);
   }
-  if (all.length > 1) {
-    throw new Error(
-      `Multiple elements found: ${target.role} "${target.name}" (${all.length} matches). Use "within" to scope.`
-    );
-  }
   return all[0];
 }
 function assertState(target, expected) {
@@ -19713,19 +19877,201 @@ async function waitFor(target, expected, timeout) {
   assertState(target, expected);
 }
 
+// src/executor/spotlight.ts
+var SPOTLIGHT_STYLE_ID = "scenario-spotlight-styles";
+var BACKDROP_Z = 9998;
+var CALLOUT_Z = 9999;
+var RING_Z = 9999;
+var PADDING = 8;
+function injectSpotlightStyles() {
+  if (document.getElementById(SPOTLIGHT_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = SPOTLIGHT_STYLE_ID;
+  style.textContent = `
+    .scenario-spotlight-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: ${BACKDROP_Z};
+      transition: clip-path 0.3s ease;
+    }
+    .scenario-spotlight-ring {
+      position: fixed;
+      border: 2px solid rgba(56, 189, 248, 0.8);
+      border-radius: 4px;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+      z-index: ${RING_Z};
+      pointer-events: none;
+      animation: scenario-spotlight-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes scenario-spotlight-pulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.6); }
+    }
+    .scenario-spotlight-callout {
+      position: fixed;
+      max-width: 320px;
+      padding: 12px 16px;
+      background: var(--pages-surface-2, #1e1e2e);
+      color: var(--pages-neutral-12, #e0e0e0);
+      border: 1px solid var(--pages-neutral-6, #444);
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+      z-index: ${CALLOUT_Z};
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .scenario-spotlight-ring { animation: none; }
+      .scenario-spotlight-backdrop { transition: none; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+function clipPathCutout(rects) {
+  const cutouts = rects.map((rect) => {
+    const l3 = rect.left - PADDING;
+    const t3 = rect.top - PADDING;
+    const r6 = rect.right + PADDING;
+    const b3 = rect.bottom + PADDING;
+    return `${l3}px ${t3}px, ${l3}px ${b3}px, ${r6}px ${b3}px, ${r6}px ${t3}px, ${l3}px ${t3}px`;
+  });
+  return `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${cutouts.join(", ")})`;
+}
+function positionCallout(callout, rect, position) {
+  const gap = 12;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  let pos = position;
+  if (pos === "auto") {
+    const spaceRight = vw - rect.right;
+    const spaceLeft = rect.left;
+    const spaceBottom = vh - rect.bottom;
+    const spaceTop = rect.top;
+    const max = Math.max(spaceRight, spaceLeft, spaceBottom, spaceTop);
+    if (max === spaceRight) pos = "right";
+    else if (max === spaceLeft) pos = "left";
+    else if (max === spaceBottom) pos = "bottom";
+    else pos = "top";
+  }
+  switch (pos) {
+    case "right":
+      callout.style.left = `${rect.right + PADDING + gap}px`;
+      callout.style.top = `${rect.top}px`;
+      break;
+    case "left":
+      callout.style.right = `${vw - rect.left + PADDING + gap}px`;
+      callout.style.top = `${rect.top}px`;
+      break;
+    case "bottom":
+      callout.style.top = `${rect.bottom + PADDING + gap}px`;
+      callout.style.left = `${rect.left}px`;
+      break;
+    case "top":
+      callout.style.bottom = `${vh - rect.top + PADDING + gap}px`;
+      callout.style.left = `${rect.left}px`;
+      break;
+  }
+}
+function showSpotlight(config) {
+  injectSpotlightStyles();
+  const el = resolveTarget(config.target);
+  const rect = el.getBoundingClientRect();
+  const position = config.position ?? "auto";
+  const duration = config.duration ?? 0;
+  const allRects = [rect];
+  const alsoElements = (config.also ?? []).map((t3) => resolveTarget(t3));
+  for (const extra of alsoElements) {
+    allRects.push(extra.getBoundingClientRect());
+  }
+  const backdrop = document.createElement("div");
+  backdrop.className = "scenario-spotlight-backdrop";
+  backdrop.style.clipPath = clipPathCutout(allRects);
+  const rings = [];
+  for (const r6 of allRects) {
+    const ring = document.createElement("div");
+    ring.className = "scenario-spotlight-ring";
+    ring.style.left = `${r6.left - PADDING}px`;
+    ring.style.top = `${r6.top - PADDING}px`;
+    ring.style.width = `${r6.width + PADDING * 2}px`;
+    ring.style.height = `${r6.height + PADDING * 2}px`;
+    rings.push(ring);
+  }
+  const callouts = [];
+  const primaryCallout = document.createElement("div");
+  primaryCallout.className = "scenario-spotlight-callout";
+  primaryCallout.setAttribute("role", "status");
+  primaryCallout.setAttribute("aria-live", "polite");
+  primaryCallout.textContent = config.content;
+  callouts.push(primaryCallout);
+  const alsoConfigs = config.also ?? [];
+  for (let i5 = 0; i5 < alsoConfigs.length; i5++) {
+    if (alsoConfigs[i5].content) {
+      const c4 = document.createElement("div");
+      c4.className = "scenario-spotlight-callout";
+      c4.setAttribute("role", "status");
+      c4.setAttribute("aria-live", "polite");
+      c4.textContent = alsoConfigs[i5].content;
+      callouts.push(c4);
+    }
+  }
+  document.body.appendChild(backdrop);
+  for (const ring of rings) document.body.appendChild(ring);
+  document.body.appendChild(primaryCallout);
+  positionCallout(primaryCallout, rect, position);
+  let alsoCalloutIdx = 0;
+  for (let i5 = 0; i5 < alsoConfigs.length; i5++) {
+    if (alsoConfigs[i5].content) {
+      const c4 = callouts[1 + alsoCalloutIdx++];
+      document.body.appendChild(c4);
+      positionCallout(c4, allRects[i5 + 1], alsoConfigs[i5].position ?? "auto");
+    }
+  }
+  return new Promise((resolve) => {
+    function dismiss() {
+      backdrop.remove();
+      for (const ring of rings) ring.remove();
+      for (const c4 of callouts) c4.remove();
+      document.removeEventListener("keydown", onKey);
+      resolve();
+    }
+    function onKey(e5) {
+      if (e5.key === "Escape") dismiss();
+    }
+    backdrop.addEventListener("click", dismiss);
+    document.addEventListener("keydown", onKey);
+    if (duration > 0) {
+      setTimeout(dismiss, duration);
+    }
+  });
+}
+function dismissAllSpotlights() {
+  document.querySelectorAll(".scenario-spotlight-backdrop").forEach((el) => el.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+}
+
 // src/executor/visual-feedback.ts
 var STYLE_ID = "scenario-feedback-styles";
-var HIGHLIGHT_DURATION = 400;
+var CLICK_HIGHLIGHT_DURATION = 800;
 var DEFAULT_TYPE_SPEED = 40;
+var skipTyping = false;
 var CSS = `
 .scenario-highlight {
   outline: 2px solid rgba(56, 189, 248, 0.8) !important;
   outline-offset: 2px;
-  animation: scenario-pulse 0.4s ease-out;
+  animation: scenario-pulse 0.8s ease-out;
+}
+.scenario-highlight-click {
+  outline: 3px solid rgba(250, 204, 21, 0.9) !important;
+  outline-offset: 2px;
+  animation: scenario-click-flash 0.8s ease-out;
 }
 @keyframes scenario-pulse {
   0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); }
   100% { box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
+}
+@keyframes scenario-click-flash {
+  0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.6); transform: scale(0.98); }
+  30% { box-shadow: 0 0 12px 4px rgba(250, 204, 21, 0.4); transform: scale(1); }
+  100% { box-shadow: 0 0 0 8px rgba(250, 204, 21, 0); }
 }
 .scenario-typing {
   outline: 2px solid rgba(134, 239, 172, 0.8) !important;
@@ -19740,20 +20086,31 @@ function injectStyles() {
   style.textContent = CSS;
   document.head.appendChild(style);
 }
-function highlightElement(el, _type) {
-  el.classList.add("scenario-highlight");
+function highlightElement(el, type) {
+  const cls = type === "click" ? "scenario-highlight-click" : "scenario-highlight";
+  el.classList.add(cls);
   setTimeout(() => {
-    el.classList.remove("scenario-highlight");
-  }, HIGHLIGHT_DURATION);
+    el.classList.remove(cls);
+  }, CLICK_HIGHLIGHT_DURATION);
+}
+function completeTypingNow() {
+  skipTyping = true;
 }
 async function typeText(el, value, speed = DEFAULT_TYPE_SPEED) {
   el.focus();
   el.classList.add("scenario-typing");
+  skipTyping = false;
   for (let i5 = 1; i5 <= value.length; i5++) {
+    if (skipTyping) {
+      el.value = value;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      break;
+    }
     await new Promise((r6) => setTimeout(r6, speed));
     el.value = value.slice(0, i5);
     el.dispatchEvent(new Event("input", { bubbles: true }));
   }
+  skipTyping = false;
   el.dispatchEvent(new Event("change", { bubbles: true }));
   el.classList.remove("scenario-typing");
 }
@@ -19783,8 +20140,9 @@ function sendStepResult(conn, sessionId, stepName, ok, error, result) {
     ...result ? { result } : {}
   });
 }
-function executeAriaCommand(cmd) {
+function executeAriaCommand(cmd, currentSpeed, isPaused, calloutMsPerChar, narrativeTarget) {
   const { action, target, value, state, timeout } = cmd;
+  const fastMode = currentSpeed >= 100;
   injectStyles();
   switch (action) {
     case "navigate":
@@ -19793,12 +20151,48 @@ function executeAriaCommand(cmd) {
     case "click": {
       const el = resolveTarget(target);
       highlightElement(el, "click");
-      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-      return;
+      if (fastMode) {
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        return;
+      }
+      return new Promise((resolve) => setTimeout(() => {
+        const fresh = resolveTarget(target);
+        fresh.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        resolve();
+      }, 600));
     }
     case "fill": {
       const el = resolveTarget(target);
       highlightElement(el, "fill");
+      if (fastMode) {
+        const lines2 = value.split("\n");
+        if (lines2.length <= 1) {
+          el.value = value;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+          return;
+        }
+        return (async () => {
+          for (let i5 = 0; i5 < lines2.length; i5++) {
+            el.value = lines2.slice(0, i5 + 1).join("\n");
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+            if (i5 < lines2.length - 1) await new Promise((r6) => setTimeout(r6, 80));
+          }
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        })();
+      }
+      const lines = value.split("\n");
+      if (lines.length > 1) {
+        const lineDelay = Math.max(80, 200 / currentSpeed);
+        return (async () => {
+          for (let i5 = 0; i5 < lines.length; i5++) {
+            el.value = lines.slice(0, i5 + 1).join("\n");
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+            if (i5 < lines.length - 1) await new Promise((r6) => setTimeout(r6, lineDelay));
+          }
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        })();
+      }
       return typeText(el, value);
     }
     case "select": {
@@ -19821,12 +20215,51 @@ function executeAriaCommand(cmd) {
       return;
     }
     case "assert":
-      assertState(target, toAriaState(state));
+      assertState(target, toAriaState(state ?? cmd.data ?? {}));
       return;
     case "wait":
-      return waitFor(target, toAriaState(state), timeout ?? 5e3);
+      return waitFor(target, toAriaState(state ?? cmd.data ?? {}), timeout ?? cmd.data?.timeout ?? 5e3);
     case "ready":
       return;
+    case "spotlight": {
+      const props = state ?? cmd.data ?? {};
+      const alsoRaw = props.also;
+      if (fastMode) return;
+      const reqDur = typeof props.duration === "number" ? props.duration : 0;
+      const contentText = value ?? props.content ?? "";
+      const dur = reqDur === 0 && !isPaused ? Math.max(2e3, contentText.length * calloutMsPerChar / currentSpeed) : reqDur;
+      return showSpotlight({
+        target,
+        content: value ?? props.content ?? "",
+        position: props.position ?? "auto",
+        duration: dur,
+        also: alsoRaw?.map((t3) => ({
+          role: t3.role,
+          name: t3.name,
+          ...t3.content ? { content: t3.content } : {},
+          ...t3.position ? { position: t3.position } : {}
+        }))
+      });
+    }
+    case "show-markdown": {
+      const props = state ?? cmd.data ?? {};
+      const markdown = value ?? props.content ?? "";
+      const filePath = props.file;
+      narrativeTarget.dispatchEvent(new CustomEvent("scenario-narrative", {
+        detail: {
+          type: filePath ? "template" : "inline",
+          markdown,
+          path: filePath
+        }
+      }));
+      return new Promise((resolve) => {
+        function onDismiss() {
+          narrativeTarget.removeEventListener("scenario-narrative-dismiss", onDismiss);
+          resolve();
+        }
+        narrativeTarget.addEventListener("scenario-narrative-dismiss", onDismiss);
+      });
+    }
     default:
       throw new Error(`Unknown action: ${action}`);
   }
@@ -19839,11 +20272,12 @@ function createScenarioHandler(connection, eventTarget) {
   let stepQueue = [];
   let executing = false;
   let resumeResolve = null;
+  let calloutMsPerChar = 50;
   connection.send({
     op: "executor-register",
     id: crypto.randomUUID(),
     name: "browser",
-    actions: ["navigate", "click", "fill", "select", "expand", "collapse", "assert", "wait", "ready"]
+    actions: ["navigate", "click", "fill", "select", "expand", "collapse", "assert", "wait", "ready", "spotlight", "show-markdown"]
   });
   async function executeSequence() {
     if (executing) return;
@@ -19860,7 +20294,7 @@ function createScenarioHandler(connection, eventTarget) {
       let stepError = null;
       for (const cmd of step.commands) {
         try {
-          const result = executeAriaCommand(cmd);
+          const result = executeAriaCommand(cmd, speed, paused, calloutMsPerChar, eventTarget);
           if (result) await result;
         } catch (err) {
           stepOk = false;
@@ -19893,6 +20327,9 @@ function createScenarioHandler(connection, eventTarget) {
         break;
       case "resume":
         paused = false;
+        dismissAllSpotlights();
+        completeTypingNow();
+        eventTarget.dispatchEvent(new CustomEvent("scenario-narrative-dismiss"));
         if (resumeResolve) {
           resumeResolve();
           resumeResolve = null;
@@ -19900,6 +20337,9 @@ function createScenarioHandler(connection, eventTarget) {
         break;
       case "step":
         paused = false;
+        dismissAllSpotlights();
+        completeTypingNow();
+        eventTarget.dispatchEvent(new CustomEvent("scenario-narrative-dismiss"));
         if (resumeResolve) {
           resumeResolve();
           resumeResolve = null;
@@ -19919,7 +20359,7 @@ function createScenarioHandler(connection, eventTarget) {
     const cmd = detail.payload;
     if (!cmd?.id || !cmd?.action) return;
     try {
-      const result = executeAriaCommand(cmd);
+      const result = executeAriaCommand(cmd, speed, paused, calloutMsPerChar, eventTarget);
       if (result) {
         result.then(() => sendResult(connection, cmd.id, true, null)).catch((err) => sendResult(connection, cmd.id, false, err.message));
       } else {
@@ -19929,14 +20369,20 @@ function createScenarioHandler(connection, eventTarget) {
       sendResult(connection, cmd.id, false, err.message);
     }
   }
+  function onCalloutSpeed(e5) {
+    const detail = e5.detail;
+    if (typeof detail?.msPerChar === "number") calloutMsPerChar = detail.msPerChar;
+  }
   eventTarget.addEventListener("pages-event", onLegacyEvent);
   eventTarget.addEventListener("scenario-dispatch", onDispatch);
   eventTarget.addEventListener("scenario-control", onControl);
+  eventTarget.addEventListener("scenario-callout-speed", onCalloutSpeed);
   return {
     dispose() {
       eventTarget.removeEventListener("pages-event", onLegacyEvent);
       eventTarget.removeEventListener("scenario-dispatch", onDispatch);
       eventTarget.removeEventListener("scenario-control", onControl);
+      eventTarget.removeEventListener("scenario-callout-speed", onCalloutSpeed);
       connection.unlisten(["scenario:exec"]);
       stepQueue = [];
       paused = false;

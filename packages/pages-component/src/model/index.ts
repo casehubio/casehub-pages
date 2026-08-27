@@ -94,6 +94,9 @@ export type {
   GroupedViewProps,
   GroupNode,
   RowAccentConfig,
+  FieldSchema,
+  SchemaFormProps,
+  FormScopeProps,
 } from "./displayer-types.js";
 
 // Action types
@@ -192,6 +195,9 @@ export {
   isMetricGrid,
   isGroupedView,
   isIframePlugin,
+  isSchemaForm,
+  isActionButton,
+  isFormScope,
   isInput,
   isNumberInput,
   isSelect,

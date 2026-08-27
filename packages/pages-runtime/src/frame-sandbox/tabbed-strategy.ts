@@ -87,8 +87,25 @@ export function createTabbedStrategy(
       const startX = startEvt.clientX;
       const startY = startEvt.clientY;
       let dragStarted = false;
-      let gapEl: HTMLElement | null = null;
-      let dropIndex = -1;
+
+      function enableTransitions(): void {
+        const buttons = [
+          ...stripEl!.querySelectorAll("[data-tab-key]"),
+        ] as HTMLElement[];
+        for (const b of buttons) {
+          if (b !== btn) b.style.transition = "transform 0.15s ease";
+        }
+      }
+
+      function clearTransitions(): void {
+        const buttons = [
+          ...stripEl!.querySelectorAll("[data-tab-key]"),
+        ] as HTMLElement[];
+        for (const b of buttons) {
+          b.style.transition = "";
+          b.style.transform = "";
+        }
+      }
 
       function createGhost(): HTMLElement {
         const g = btn.cloneNode(true) as HTMLElement;
@@ -105,31 +122,6 @@ export function createTabbedStrategy(
         return g;
       }
 
-      function removeGap(): void {
-        if (gapEl) { gapEl.remove(); gapEl = null; }
-      }
-
-      function placeGap(beforeEl: HTMLElement | null): void {
-        removeGap();
-        gapEl = document.createElement("button");
-        gapEl.setAttribute("data-tab-gap", "");
-        gapEl.textContent = entry.label;
-        gapEl.style.cssText =
-          "padding:4px 12px;border:none;" +
-          "background:var(--pages-surface-3,#333);" +
-          "color:var(--pages-text-1,#e0e0e0);" +
-          "opacity:0.5;pointer-events:none;" +
-          "border-bottom:2px solid transparent;" +
-          "transition:all 0.15s ease;";
-        if (beforeEl) {
-          stripEl!.insertBefore(gapEl, beforeEl);
-        } else {
-          const sentinel = stripEl!.querySelector("[data-container-toolbar], [data-toolbar-actions]");
-          if (sentinel) stripEl!.insertBefore(gapEl, sentinel);
-          else stripEl!.appendChild(gapEl);
-        }
-      }
-
       const onMove = (e: PointerEvent) => {
         lastX = e.clientX;
         lastY = e.clientY;
@@ -144,11 +136,9 @@ export function createTabbedStrategy(
         if (!dragStarted) {
           dragStarted = true;
           ghost = createGhost();
-          btn.style.display = "none";
-          if (activeKey === entry.key && currentEntries.length > 1) {
-            const other = currentEntries.find(e => e.key !== entry.key);
-            if (other) activateTab(other.key);
-          }
+          btn.style.opacity = "0.4";
+          enableTransitions();
+          callbacks?.onTabDragStart?.(entry.key, ghost);
         }
 
         ghost!.style.left = `${e.clientX - ghost!.offsetWidth / 2}px`;
@@ -159,11 +149,7 @@ export function createTabbedStrategy(
           e.clientY - currentStripRect.top - currentStripRect.height / 2,
         );
         if (dy > 30) {
-          if (!draggedOut) {
-            callbacks?.onTabDragStart?.(entry.key, ghost!);
-          }
           draggedOut = true;
-          removeGap();
           callbacks?.onTabDragMove?.(entry.key, e.clientX, e.clientY);
           if (ghost) {
             ghost.style.boxShadow = "0 8px 24px rgba(0,0,0,0.5)";
@@ -179,57 +165,47 @@ export function createTabbedStrategy(
         }
 
         didDrag = true;
-        const buttons = [...stripEl!.querySelectorAll("[data-tab-key]")] as HTMLElement[];
-        let placed = false;
-        for (let i = 0; i < buttons.length; i++) {
-          const other = buttons[i]!;
+        const buttons = [
+          ...stripEl!.querySelectorAll("[data-tab-key]"),
+        ] as HTMLElement[];
+        for (const other of buttons) {
           if (other === btn) continue;
           const rect = other.getBoundingClientRect();
-          const mid = rect.left + rect.width / 2;
-          if (e.clientX < mid) {
-            const otherIdx = currentEntries.findIndex(en => en.key === other.getAttribute("data-tab-key"));
-            if (otherIdx !== dropIndex) {
-              dropIndex = otherIdx;
-              placeGap(other);
+          if (e.clientX > rect.left && e.clientX < rect.right) {
+            const entryKey = entry.key;
+            const otherKey = other.getAttribute("data-tab-key")!;
+            const entryIdx = currentEntries.findIndex(
+              (en) => en.key === entryKey,
+            );
+            const otherIdx = currentEntries.findIndex(
+              (en) => en.key === otherKey,
+            );
+            if (entryIdx !== -1 && otherIdx !== -1 && entryIdx !== otherIdx) {
+              [currentEntries[entryIdx], currentEntries[otherIdx]] = [
+                currentEntries[otherIdx]!,
+                currentEntries[entryIdx]!,
+              ];
+              if (entryIdx < otherIdx) {
+                stripEl!.insertBefore(other, btn);
+              } else {
+                stripEl!.insertBefore(btn, other);
+              }
             }
-            placed = true;
             break;
           }
-        }
-        if (!placed) {
-          dropIndex = currentEntries.length;
-          placeGap(null);
         }
       };
 
       const onUp = () => {
         document.removeEventListener("pointermove", onMove);
         document.removeEventListener("pointerup", onUp);
-        btn.style.display = "";
-        removeGap();
+        btn.style.opacity = "";
+        clearTransitions();
         ghost?.remove();
         if (draggedOut) {
           callbacks?.onTabDragOut?.(entry.key, lastX, lastY);
-        } else if (didDrag && dropIndex >= 0) {
-          const fromIdx = currentEntries.findIndex(en => en.key === entry.key);
-          if (fromIdx !== -1 && fromIdx !== dropIndex) {
-            const [moved] = currentEntries.splice(fromIdx, 1);
-            const insertAt = dropIndex > fromIdx ? dropIndex - 1 : dropIndex;
-            currentEntries.splice(insertAt, 0, moved!);
-            const buttons = [...stripEl!.querySelectorAll("[data-tab-key]")] as HTMLElement[];
-            const btnEl = buttons.find(b => b.getAttribute("data-tab-key") === entry.key);
-            if (btnEl) {
-              btnEl.remove();
-              const targetBtn = stripEl!.querySelectorAll("[data-tab-key]")[insertAt];
-              if (targetBtn) stripEl!.insertBefore(btnEl, targetBtn);
-              else {
-                const sentinel = stripEl!.querySelector("[data-container-toolbar], [data-toolbar-actions]");
-                if (sentinel) stripEl!.insertBefore(btnEl, sentinel);
-                else stripEl!.appendChild(btnEl);
-              }
-            }
-            callbacks?.onEntryReorder?.(currentEntries.map(en => en.key));
-          }
+        } else if (didDrag) {
+          callbacks?.onEntryReorder?.(currentEntries.map((en) => en.key));
         } else {
           activateTab(entry.key);
         }
@@ -291,27 +267,14 @@ export function createTabbedStrategy(
       factory = null;
     },
 
-    addEntry(entry, atIndex?) {
-      if (atIndex !== undefined && atIndex >= 0 && atIndex < currentEntries.length) {
-        currentEntries.splice(atIndex, 0, entry);
-      } else {
-        currentEntries.push(entry);
-      }
+    addEntry(entry, _atIndex?) {
+      currentEntries.push(entry);
       if (stripEl) {
-        const newBtn = createTabButton(entry);
-        if (atIndex !== undefined && atIndex >= 0) {
-          const tabButtons = [...stripEl.querySelectorAll("[data-tab-key]")];
-          const beforeBtn = tabButtons[atIndex];
-          if (beforeBtn) {
-            stripEl.insertBefore(newBtn, beforeBtn);
-            return;
-          }
-        }
         const sentinel = stripEl.querySelector("[data-container-toolbar], [data-toolbar-actions]");
         if (sentinel) {
-          stripEl.insertBefore(newBtn, sentinel);
+          stripEl.insertBefore(createTabButton(entry), sentinel);
         } else {
-          stripEl.appendChild(newBtn);
+          stripEl.appendChild(createTabButton(entry));
         }
       }
     },

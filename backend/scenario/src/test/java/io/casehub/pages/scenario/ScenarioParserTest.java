@@ -201,6 +201,141 @@ class ScenarioParserTest {
     }
 
     @Test
+    void parsesRestStep() {
+        String yaml = """
+                scenario: rest-test
+                steps:
+                  - name: create-trial
+                    delivery: rest
+                    method: POST
+                    url: /api/trials
+                    body:
+                      protocolId: "DEMO-001"
+                      phase: "PHASE_III"
+                    headers:
+                      X-Custom: test
+                    await:
+                      status: 201
+                """;
+        Scenario scenario = ScenarioParser.parse(yaml);
+        assertThat(scenario.steps()).hasSize(1);
+        assertThat(scenario.steps().getFirst()).isInstanceOf(ScenarioStep.RestStep.class);
+
+        var step = (ScenarioStep.RestStep) scenario.steps().getFirst();
+        assertThat(step.name()).isEqualTo("create-trial");
+        assertThat(step.method()).isEqualTo("POST");
+        assertThat(step.url()).isEqualTo("/api/trials");
+        assertThat(step.body()).containsEntry("protocolId", "DEMO-001");
+        assertThat(step.body()).containsEntry("phase", "PHASE_III");
+        assertThat(step.headers()).containsEntry("X-Custom", "test");
+        assertThat(step.expectedStatus()).isEqualTo(201);
+        assertThat(step.await()).isNull();
+    }
+
+    @Test
+    void parsesRestStepWithAwaitPolling() {
+        String yaml = """
+                scenario: rest-await-test
+                steps:
+                  - name: poll-status
+                    delivery: rest
+                    method: GET
+                    url: /api/trials/1/status
+                    await:
+                      match:
+                        phase: "ACTIVE"
+                      timeout: 10000
+                      interval: 500
+                """;
+        Scenario scenario = ScenarioParser.parse(yaml);
+        var step = (ScenarioStep.RestStep) scenario.steps().getFirst();
+        assertThat(step.method()).isEqualTo("GET");
+        assertThat(step.expectedStatus()).isNull();
+        assertThat(step.await()).isNotNull();
+        assertThat(step.await().match()).containsEntry("phase", "ACTIVE");
+        assertThat(step.await().timeout()).isEqualTo(10000);
+    }
+
+    @Test
+    void parsesSpotlightStep() {
+        String yaml = """
+                scenario: spotlight-test
+                steps:
+                  - spotlight:
+                      role: region
+                      name: "SLA Countdown"
+                      content: |
+                        This deadline is enforced by the platform.
+                      position: right
+                      duration: 0
+                """;
+        Scenario scenario = ScenarioParser.parse(yaml);
+        assertThat(scenario.steps()).hasSize(1);
+        var step = (ScenarioStep.AriaStep) scenario.steps().getFirst();
+        assertThat(step.action()).isEqualTo("spotlight");
+        assertThat(step.target().role()).isEqualTo("region");
+        assertThat(step.target().name()).isEqualTo("SLA Countdown");
+        assertThat(step.value()).contains("This deadline is enforced");
+        assertThat(step.state()).containsEntry("position", "right");
+        assertThat(step.state()).containsEntry("duration", 0);
+    }
+
+    @Test
+    void parsesHelpdeskDemoWithSpotlights() throws IOException {
+        Scenario scenario = ScenarioParser.parse(fixture("helpdesk-demo.yaml"));
+
+        assertThat(scenario.scenario()).isEqualTo("helpdesk-demo");
+        assertThat(scenario.steps()).hasSize(9);
+
+        var spotlight1 = (ScenarioStep.AriaStep) scenario.steps().get(1);
+        assertThat(spotlight1.action()).isEqualTo("spotlight");
+        assertThat(spotlight1.target().role()).isEqualTo("form");
+        assertThat(spotlight1.target().name()).isEqualTo("Support Request");
+        assertThat(spotlight1.value()).contains("intake form");
+        assertThat(spotlight1.state()).containsEntry("position", "right");
+        assertThat(spotlight1.state()).containsEntry("duration", 0);
+
+        var spotlight2 = (ScenarioStep.AriaStep) scenario.steps().get(5);
+        assertThat(spotlight2.action()).isEqualTo("spotlight");
+        assertThat(spotlight2.target().name()).isEqualTo("Priority");
+        assertThat(spotlight2.value()).contains("SLA timers");
+
+        var spotlight3 = (ScenarioStep.AriaStep) scenario.steps().get(8);
+        assertThat(spotlight3.action()).isEqualTo("spotlight");
+        assertThat(spotlight3.target().name()).isEqualTo("Submission confirmation");
+    }
+
+    @Test
+    void parsesHybridHelpdeskDemoWithRestAndSpotlights() throws IOException {
+        Scenario scenario = ScenarioParser.parse(fixture("hybrid-helpdesk-demo.yaml"));
+
+        assertThat(scenario.scenario()).isEqualTo("hybrid-helpdesk-demo");
+        assertThat(scenario.steps()).hasSize(10);
+
+        assertThat(scenario.steps().get(0)).isInstanceOf(ScenarioStep.AriaStep.class);
+        assertThat(scenario.steps().get(1)).isInstanceOf(ScenarioStep.AriaStep.class);
+        assertThat(((ScenarioStep.AriaStep) scenario.steps().get(1)).action()).isEqualTo("spotlight");
+
+        var restStep = (ScenarioStep.RestStep) scenario.steps().get(4);
+        assertThat(restStep.name()).isEqualTo("create-case");
+        assertThat(restStep.method()).isEqualTo("POST");
+        assertThat(restStep.url()).isEqualTo("/api/cases");
+        assertThat(restStep.body()).containsEntry("customer", "Alice Chen");
+        assertThat(restStep.expectedStatus()).isEqualTo(201);
+
+        var spotlightAfterRest = (ScenarioStep.AriaStep) scenario.steps().get(5);
+        assertThat(spotlightAfterRest.action()).isEqualTo("spotlight");
+        assertThat(spotlightAfterRest.value()).contains("REST endpoint");
+
+        var graphql = (ScenarioStep.GraphQLStep) scenario.steps().get(6);
+        assertThat(graphql.operation()).isEqualTo("injectChat");
+
+        var finalSpotlight = (ScenarioStep.AriaStep) scenario.steps().get(9);
+        assertThat(finalSpotlight.action()).isEqualTo("spotlight");
+        assertThat(finalSpotlight.state()).containsEntry("duration", 3000);
+    }
+
+    @Test
     void stepsListIsImmutable() throws IOException {
         Scenario scenario = ScenarioParser.parse(fixture("helpdesk-intake.yaml"));
         assertThatThrownBy(() -> scenario.steps().add(

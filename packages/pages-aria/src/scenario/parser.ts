@@ -4,6 +4,7 @@ import type { Scenario, ScenarioStep } from './types.js';
 const ARIA_ACTIONS = new Set([
   'navigate', 'click', 'fill', 'select',
   'expand', 'collapse', 'assert', 'wait',
+  'show-markdown',
 ]);
 
 function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
@@ -16,6 +17,17 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
       name: `navigate-${raw[action] as string}`,
       action: 'navigate',
       value: raw[action] as string,
+    };
+  }
+
+  if (action === 'show-markdown') {
+    const body = raw[action] as Record<string, unknown>;
+    return {
+      delivery: 'aria',
+      name: `show-markdown-${(body.file as string) ?? 'inline'}`,
+      action: 'show-markdown',
+      value: body.content as string | undefined,
+      state: body,
     };
   }
 

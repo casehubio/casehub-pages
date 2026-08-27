@@ -229,3 +229,36 @@ export interface EventTimelineProps extends DataComponentCommon {
   readonly pageSize?: number;
   readonly strategyKey?: string;
 }
+
+export interface FieldSchema {
+  readonly type?: string;
+  readonly format?: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly placeholder?: string;
+  readonly enum?: readonly string[];
+  readonly pattern?: string;
+  readonly minimum?: number;
+  readonly maximum?: number;
+  readonly minLength?: number;
+  readonly maxLength?: number;
+  readonly properties?: Readonly<Record<string, FieldSchema>>;
+  readonly required?: readonly string[];
+}
+
+export interface SchemaFormProps {
+  readonly schema?: FieldSchema;
+  readonly mode?: "display" | "edit";
+  readonly forceCreate?: boolean;
+  readonly validateOnBlur?: boolean;
+  readonly excludeFields?: readonly string[];
+  readonly fieldOrder?: readonly string[];
+  readonly labels?: Readonly<Record<string, string>>;
+}
+
+export interface FormScopeProps {
+  readonly schema?: FieldSchema;
+  readonly mode?: "display" | "edit";
+  readonly forceCreate?: boolean;
+  readonly validateOnBlur?: boolean;
+}

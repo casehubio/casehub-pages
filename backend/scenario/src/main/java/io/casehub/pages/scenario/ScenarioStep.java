@@ -34,4 +34,16 @@ public sealed interface ScenarioStep {
             data = data != null ? Map.copyOf(data) : Map.of();
         }
     }
+
+    record RestStep(String name, String method, String url,
+                    Map<String, Object> body, Map<String, String> headers,
+                    Integer expectedStatus, AwaitCondition await) implements ScenarioStep {
+        public RestStep {
+            Objects.requireNonNull(name, "name");
+            Objects.requireNonNull(method, "method");
+            Objects.requireNonNull(url, "url");
+            body = body != null ? Map.copyOf(body) : Map.of();
+            headers = headers != null ? Map.copyOf(headers) : Map.of();
+        }
+    }
 }

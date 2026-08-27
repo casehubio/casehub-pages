@@ -319,6 +319,129 @@ class ScenarioExecutorClientTest {
     }
 
     @Test
+    void awaitPollsUntilMatchSucceeds() throws Exception {
+        var callCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        var beans = List.<Object>of(new Object() {
+            @ScenarioAction("poll-action")
+            Map<String, Object> pollAction(ActionContext ctx) {
+                int n = callCount.incrementAndGet();
+                return n >= 3
+                    ? Map.of("status", "TRIAGED", "category", "HARDWARE")
+                    : Map.of("status", "OPEN");
+            }
+        });
+
+        var sent = new CopyOnWriteArrayList<String>();
+        var client = ScenarioExecutorClient.create("test", beans, sent::add);
+
+        String stepsJson = JSON.writeValueAsString(List.of(
+            Map.of("name", "poll-step", "label", "Poll",
+                "commands", List.of(Map.of(
+                    "action", "poll-action",
+                    "await", Map.of(
+                        "match", Map.of("status", "TRIAGED", "category", "HARDWARE"),
+                        "timeout", 5000,
+                        "interval", 100))))
+        ));
+
+        client.onMessage(PushMessage.dispatchSequence("s-poll", "test",
+            stepsJson, 1000.0, false));
+
+        awaitStepResults(sent, 1);
+        assertThat(callCount.get()).isGreaterThanOrEqualTo(3);
+        assertThat(stepResults(sent).getFirst()).contains("\"ok\":true");
+    }
+
+    @Test
+    void awaitTimesOutWhenMatchNeverSucceeds() throws Exception {
+        var beans = List.<Object>of(new Object() {
+            @ScenarioAction("never-match")
+            Map<String, Object> neverMatch(ActionContext ctx) {
+                return Map.of("status", "OPEN");
+            }
+        });
+
+        var sent = new CopyOnWriteArrayList<String>();
+        var client = ScenarioExecutorClient.create("test", beans, sent::add);
+
+        String stepsJson = JSON.writeValueAsString(List.of(
+            Map.of("name", "timeout-step", "label", "Timeout",
+                "commands", List.of(Map.of(
+                    "action", "never-match",
+                    "await", Map.of(
+                        "match", Map.of("status", "TRIAGED"),
+                        "timeout", 500,
+                        "interval", 100))))
+        ));
+
+        client.onMessage(PushMessage.dispatchSequence("s-timeout", "test",
+            stepsJson, 1000.0, false));
+
+        awaitStepResults(sent, 1);
+        assertThat(stepResults(sent).getFirst()).contains("\"ok\":false")
+            .contains("Await timed out");
+    }
+
+    @Test
+    void awaitRetriesAfterActionThrows() throws Exception {
+        var callCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        var beans = List.<Object>of(new Object() {
+            @ScenarioAction("flaky-action")
+            Map<String, Object> flakyAction(ActionContext ctx) {
+                int n = callCount.incrementAndGet();
+                if (n < 3) throw new RuntimeException("Not ready yet");
+                return Map.of("ready", "true");
+            }
+        });
+
+        var sent = new CopyOnWriteArrayList<String>();
+        var client = ScenarioExecutorClient.create("test", beans, sent::add);
+
+        String stepsJson = JSON.writeValueAsString(List.of(
+            Map.of("name", "flaky-step", "label", "Flaky",
+                "commands", List.of(Map.of(
+                    "action", "flaky-action",
+                    "await", Map.of(
+                        "match", Map.of("ready", "true"),
+                        "timeout", 5000,
+                        "interval", 100))))
+        ));
+
+        client.onMessage(PushMessage.dispatchSequence("s-flaky", "test",
+            stepsJson, 1000.0, false));
+
+        awaitStepResults(sent, 1);
+        assertThat(callCount.get()).isGreaterThanOrEqualTo(3);
+        assertThat(stepResults(sent).getFirst()).contains("\"ok\":true");
+    }
+
+    @Test
+    void noAwaitExecutesSingleShot() throws Exception {
+        var callCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        var beans = List.<Object>of(new Object() {
+            @ScenarioAction("single-shot")
+            Map<String, Object> singleShot(ActionContext ctx) {
+                callCount.incrementAndGet();
+                return Map.of("done", "true");
+            }
+        });
+
+        var sent = new CopyOnWriteArrayList<String>();
+        var client = ScenarioExecutorClient.create("test", beans, sent::add);
+
+        String stepsJson = JSON.writeValueAsString(List.of(
+            Map.of("name", "single", "label", "Single",
+                "commands", List.of(Map.of("action", "single-shot")))
+        ));
+
+        client.onMessage(PushMessage.dispatchSequence("s-single", "test",
+            stepsJson, 1000.0, false));
+
+        awaitStepResults(sent, 1);
+        assertThat(callCount.get()).isEqualTo(1);
+    }
+
+    @Test
     void streamModeEmitsAtInterval() throws Exception {
         var received = new CopyOnWriteArrayList<Map<String, Object>>();
         var beans = List.<Object>of(new Object() {

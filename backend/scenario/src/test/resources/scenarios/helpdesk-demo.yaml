@@ -1,0 +1,56 @@
+scenario: helpdesk-demo
+steps:
+  - navigate: /helpdesk/intake
+
+  - spotlight:
+      role: form
+      name: "Support Request"
+      content: |
+        The intake form captures customer details and routes to the right team.
+        Fields are validated against the schema — required fields prevent submission.
+      position: right
+      duration: 0
+
+  - fill:
+      role: textbox
+      name: "Customer Name"
+      value: "Alice Chen"
+
+  - fill:
+      role: textbox
+      name: "Description"
+      value: "Cannot access dashboard — getting 403 errors since this morning"
+
+  - select:
+      role: combobox
+      name: "Priority"
+      value: "High"
+
+  - spotlight:
+      role: combobox
+      name: "Priority"
+      content: |
+        Priority drives SLA timers. High priority starts a 4-hour response clock.
+        The countdown is enforced by the platform — auto-escalation if breached.
+      position: bottom
+      duration: 0
+
+  - click:
+      role: button
+      name: "Submit"
+
+  - wait:
+      role: button
+      name: "Submit"
+      state:
+        aria-busy: false
+      timeout: 5000
+
+  - spotlight:
+      role: alert
+      name: "Submission confirmation"
+      content: |
+        The platform created a case, assigned it to the on-call queue,
+        and started the SLA countdown. The investigator has 4 hours to respond.
+      position: bottom
+      duration: 0

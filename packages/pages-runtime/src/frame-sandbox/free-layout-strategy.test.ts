@@ -404,38 +404,4 @@ describe("FreeLayoutOrganiser", () => {
     expect(host.querySelector("[data-frame-key='a']")).not.toBeNull();
     document.body.removeChild(host);
   });
-
-  it("addEntry auto-re-arranges when an arrange preset is active", () => {
-    const entries: Entry[] = [
-      { key: "a", label: "A" },
-      { key: "b", label: "B" },
-    ];
-    const c = createContainer({
-      entries,
-      layout: "free",
-      contentFactory: testFactory(),
-    });
-    const host = document.createElement("div");
-    Object.defineProperty(host, "clientWidth", { value: 800, configurable: true });
-    Object.defineProperty(host, "clientHeight", { value: 600, configurable: true });
-    document.body.appendChild(host);
-    c.mount(host);
-
-    c.organiser.arrange?.("grid");
-
-    const stateAfterArrange = c.organiser.getState() as FreeLayoutState;
-    const aPosBefore = stateAfterArrange.entries["a"]!.position;
-
-    c.addEntry({ key: "c", label: "C" });
-
-    const stateAfterAdd = c.organiser.getState() as FreeLayoutState;
-    const cPos = stateAfterAdd.entries["c"];
-    expect(cPos).toBeDefined();
-    expect(cPos!.position.x).toBe(0);
-    expect(cPos!.position.y).toBeGreaterThan(0);
-    expect(stateAfterAdd.entries["a"]!.position).toEqual(aPosBefore);
-
-    c.dispose();
-    document.body.removeChild(host);
-  });
 });

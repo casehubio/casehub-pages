@@ -51,9 +51,8 @@ import type {
   EventTimelineProps,
   IframePluginProps,
   SchemaFormProps,
-  ActionButtonProps,
   FormScopeProps,
-  SubmitButtonProps,
+  ActionButtonProps,
   TextInputProps,
   NumberInputProps,
   DropdownProps,
@@ -463,6 +462,25 @@ export function eventTimeline(props: EventTimelineProps): TypedComponent<"event-
   return freeze({ type: "event-timeline" as const, props: { ...props } });
 }
 
+export function schemaForm(props: SchemaFormProps): TypedComponent<"schema-form"> {
+  return freeze({ type: "schema-form" as const, props: { ...props } });
+}
+
+export function actionButton(props: ActionButtonProps): TypedComponent<"action-button"> {
+  return freeze({ type: "action-button" as const, props: { ...props } });
+}
+
+export function formScope(
+  props: FormScopeProps,
+  ...children: Component[]
+): TypedComponent<"form-scope"> {
+  return freeze({
+    type: "form-scope" as const,
+    props: { ...props },
+    slots: { default: freeze(children) },
+  });
+}
+
 export function iframePlugin(props: IframePluginProps): TypedComponent<"iframe-plugin"> {
   return freeze({
     type: "iframe-plugin" as const,
@@ -497,42 +515,6 @@ export function datePicker(props: DatePickerProps): Component {
 
 export function textarea(props: TextareaProps): Component {
   return freeze({ type: "textarea" as const, props: freeze({ ...props }) });
-}
-
-export function schemaForm(props: SchemaFormProps): TypedComponent<"schema-form"> {
-  return freeze({ type: "schema-form" as const, props: { ...props } });
-}
-
-export function actionButton(props: ActionButtonProps): TypedComponent<"action-button"> {
-  return freeze({ type: "action-button" as const, props: freeze({ ...props }) });
-}
-
-export type SchemaFieldsProps = Omit<SchemaFormProps, "validateOnBlur">;
-
-export function formScope(
-  props: FormScopeProps,
-  ...children: Component[]
-): TypedComponent<"form-scope"> {
-  return freeze({
-    type: "form-scope" as const,
-    props: { ...props },
-    slots: freeze({ default: Object.freeze(children) }),
-  });
-}
-
-export function schemaFields(
-  props: SchemaFieldsProps,
-): TypedComponent<"schema-form"> {
-  return freeze({
-    type: "schema-form" as const,
-    props: { ...props, fieldsOnly: true },
-  });
-}
-
-export function submitButton(
-  props: SubmitButtonProps,
-): TypedComponent<"submit-button"> {
-  return freeze({ type: "submit-button" as const, props: freeze({ ...props }) });
 }
 
 // DataSource binding builder

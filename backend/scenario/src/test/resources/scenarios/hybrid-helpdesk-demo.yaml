@@ -1,0 +1,83 @@
+scenario: hybrid-helpdesk-demo
+steps:
+  - navigate: /helpdesk/intake
+
+  - spotlight:
+      role: form
+      name: "Support Request"
+      content: |
+        This demo shows the full lifecycle: form submission,
+        REST case creation, chat injection, and AI classification.
+      position: right
+      duration: 0
+
+  - fill:
+      role: textbox
+      name: "Customer Name"
+      value: "Alice Chen"
+
+  - click:
+      role: button
+      name: "Submit"
+
+  - name: create-case
+    delivery: rest
+    method: POST
+    url: /api/cases
+    body:
+      customer: "Alice Chen"
+      channel: "web"
+      summary: "Dashboard access issue"
+    await:
+      status: 201
+
+  - spotlight:
+      role: region
+      name: "Case Details"
+      content: |
+        The REST endpoint created case ${create-case.id}.
+        Now a chat message is injected to simulate the customer
+        providing more detail via Slack.
+      position: right
+      duration: 0
+
+  - name: inject-chat
+    delivery: graphql
+    domain: connectors
+    operation: injectChat
+    params:
+      platform: "slack"
+      sender: "Alice"
+      channel: "support"
+      text: "My laptop won't boot"
+
+  - spotlight:
+      role: region
+      name: "Classification"
+      content: |
+        The AI classifier analyzes the combined signals — web form
+        summary plus chat message — to determine the category.
+        Watch for HARDWARE classification.
+      position: left
+      duration: 0
+
+  - name: verify-classified
+    delivery: graphql
+    domain: engine
+    operation: caseContext
+    params:
+      caseId: "${create-case.id}"
+    await:
+      match:
+        category: "HARDWARE"
+      timeout: 30000
+      interval: 500
+
+  - spotlight:
+      role: region
+      name: "Case Status"
+      content: |
+        Case classified as HARDWARE and routed to the hardware team.
+        The SLA countdown has started — 4 hours to first response.
+      position: right
+      duration: 3000

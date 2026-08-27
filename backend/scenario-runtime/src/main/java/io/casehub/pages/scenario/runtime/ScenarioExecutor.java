@@ -16,15 +16,23 @@ public class ScenarioExecutor {
 
     private final GraphQLDispatcher graphQLDispatcher;
     private final AriaDispatcher ariaDispatcher;
+    private final RestDispatcher restDispatcher;
+
+    public ScenarioExecutor(GraphQLDispatcher graphQLDispatcher,
+                            AriaDispatcher ariaDispatcher,
+                            RestDispatcher restDispatcher) {
+        this.graphQLDispatcher = graphQLDispatcher;
+        this.ariaDispatcher = ariaDispatcher;
+        this.restDispatcher = restDispatcher;
+    }
 
     public ScenarioExecutor(GraphQLDispatcher graphQLDispatcher,
                             AriaDispatcher ariaDispatcher) {
-        this.graphQLDispatcher = graphQLDispatcher;
-        this.ariaDispatcher = ariaDispatcher;
+        this(graphQLDispatcher, ariaDispatcher, null);
     }
 
     public ScenarioExecutor(GraphQLDispatcher graphQLDispatcher) {
-        this(graphQLDispatcher, null);
+        this(graphQLDispatcher, null, null);
     }
 
     public List<ExecutionResult> execute(Scenario scenario, ScenarioConfig config) {
@@ -68,6 +76,7 @@ public class ScenarioExecutor {
             case ScenarioStep.GraphQLStep gs -> executeGraphQL(gs, config, context);
             case ScenarioStep.AriaStep as -> executeAria(as, context);
             case ScenarioStep.SimulatedStep ss -> ExecutionResult.ok(ss.name(), Map.of());
+            case ScenarioStep.RestStep rs -> executeRest(rs, config, context);
         };}
 
     private ExecutionResult executeAria(ScenarioStep.AriaStep step,
@@ -109,6 +118,28 @@ public class ScenarioExecutor {
                 result = awaitEngine.poll(step.await());
             } else {
                 result = graphQLDispatcher.dispatch(step, endpoint, context);
+            }
+            return ExecutionResult.ok(step.name(), result);
+        } catch (Exception e) {
+            return ExecutionResult.fail(step.name(), e.getMessage());
+        }
+    }
+
+    private ExecutionResult executeRest(ScenarioStep.RestStep step,
+                                         ScenarioConfig config,
+                                         VariableContext context) {
+        if (restDispatcher == null) {
+            return ExecutionResult.ok(step.name(), Map.of());
+        }
+        try {
+            String baseUrl = config.restBaseUrl();
+            Map<String, Object> result;
+            if (step.await() != null) {
+                var awaitEngine = new AwaitEngine(() ->
+                        restDispatcher.dispatch(step, baseUrl, context));
+                result = awaitEngine.poll(step.await());
+            } else {
+                result = restDispatcher.dispatch(step, baseUrl, context);
             }
             return ExecutionResult.ok(step.name(), result);
         } catch (Exception e) {

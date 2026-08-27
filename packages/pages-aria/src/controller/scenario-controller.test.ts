@@ -321,6 +321,109 @@ describe('pages-scenario-controller', () => {
     document.querySelector('pages-scenario-yaml-viewer')?.remove();
   });
 
+  describe('compact mode viewport positioning', () => {
+    it('clears inline drag position on window resize when off-screen', async () => {
+      const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+      el.mode = 'compact';
+      el.baseUrl = 'http://localhost:8080';
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }));
+      document.body.appendChild(el);
+      await el.updateComplete;
+
+      el.style.left = '2000px';
+      el.style.top = '2000px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+
+      vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(
+        { left: 2000, top: 2000, right: 2280, bottom: 2200, width: 280, height: 200, x: 2000, y: 2000, toJSON: () => ({}) } as DOMRect);
+
+      window.dispatchEvent(new Event('resize'));
+
+      expect(el.style.left).toBe('');
+      expect(el.style.top).toBe('');
+      el.remove();
+    });
+
+    it('preserves inline position on resize when still within viewport', async () => {
+      const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+      el.mode = 'compact';
+      el.baseUrl = 'http://localhost:8080';
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }));
+      document.body.appendChild(el);
+      await el.updateComplete;
+
+      el.style.left = '100px';
+      el.style.top = '100px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+
+      vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(
+        { left: 100, top: 100, right: 380, bottom: 300, width: 280, height: 200, x: 100, y: 100, toJSON: () => ({}) } as DOMRect);
+
+      window.dispatchEvent(new Event('resize'));
+
+      expect(el.style.left).toBe('100px');
+      expect(el.style.top).toBe('100px');
+      el.remove();
+    });
+
+    it('resets inline position when expanding from pill to card', async () => {
+      const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+      el.mode = 'compact';
+      el.baseUrl = 'http://localhost:8080';
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }));
+      document.body.appendChild(el);
+      await el.updateComplete;
+
+      el.style.left = '500px';
+      el.style.top = '500px';
+
+      (el as any)._expanded = true;
+      (el as any)._resetPosition();
+      await el.updateComplete;
+
+      expect(el.style.left).toBe('');
+      expect(el.style.top).toBe('');
+      el.remove();
+    });
+
+    it('resets inline position when collapsing from card to pill', async () => {
+      const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+      el.mode = 'compact';
+      el.baseUrl = 'http://localhost:8080';
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }));
+      document.body.appendChild(el);
+      await el.updateComplete;
+      (el as any)._expanded = true;
+      await el.updateComplete;
+
+      el.style.left = '300px';
+      el.style.top = '200px';
+
+      (el as any)._expanded = false;
+      (el as any)._resetPosition();
+      await el.updateComplete;
+
+      expect(el.style.left).toBe('');
+      expect(el.style.top).toBe('');
+      el.remove();
+    });
+
+    it('removes resize listener on disconnect', async () => {
+      const removeSpy = vi.spyOn(window, 'removeEventListener');
+      const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+      el.mode = 'compact';
+      el.baseUrl = 'http://localhost:8080';
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) }));
+      document.body.appendChild(el);
+      await el.updateComplete;
+      el.remove();
+      expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+      removeSpy.mockRestore();
+    });
+  });
+
   it('cleans up on disconnect', async () => {
     const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
     const conn = mockConnection();
@@ -334,5 +437,54 @@ describe('pages-scenario-controller', () => {
     el.remove();
 
     expect(conn.unlisten).toHaveBeenCalledWith(['scenario:state']);
+  });
+
+  it('renders type icon for spotlight step', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    const conn = mockConnection();
+    const target = new EventTarget();
+    el.connection = conn;
+    el.eventTarget = target;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    await new Promise(r => setTimeout(r, 0));
+
+    fireStateEvent(target, { scenario: 'test', step: null, paused: false, speed: 1, progress: 0, content: null, slides: null });
+    await el.updateComplete;
+    (el as any)._outline = [{
+      label: 'Section', target: null, children: [
+        { label: 'Spotlight the form', target: 'browser', action: 'spotlight', children: [] },
+      ],
+    }];
+    await el.updateComplete;
+
+    const icon = el.shadowRoot!.querySelector('.step-type-icon');
+    expect(icon).not.toBeNull();
+    expect(icon!.textContent!.trim()).toBe('◎');
+    el.remove();
+  });
+
+  it('renders no type icon for unknown action', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    const conn = mockConnection();
+    const target = new EventTarget();
+    el.connection = conn;
+    el.eventTarget = target;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    await new Promise(r => setTimeout(r, 0));
+
+    fireStateEvent(target, { scenario: 'test', step: null, paused: false, speed: 1, progress: 0, content: null, slides: null });
+    await el.updateComplete;
+    (el as any)._outline = [{
+      label: 'Section', target: null, children: [
+        { label: 'Wait for data', target: 'browser', action: 'wait', children: [] },
+      ],
+    }];
+    await el.updateComplete;
+
+    const icon = el.shadowRoot!.querySelector('.step-type-icon');
+    expect(icon).toBeNull();
+    el.remove();
   });
 });
