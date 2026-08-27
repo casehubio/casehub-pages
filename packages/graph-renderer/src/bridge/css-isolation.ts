@@ -38,14 +38,14 @@ ${pluginStyles}
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--pages-neutral-5, #6b7280);
+  background: var(--pages-neutral-6, #9ca3af);
   border: none;
-  opacity: 0.4;
+  opacity: 0;
   transition: opacity 0.15s, background 0.15s;
-  z-index: 0;
 }
-.react-flow__node:hover .react-flow__handle {
-  opacity: 1;
+.react-flow__node:hover .react-flow__handle,
+.react-flow__node.selected .react-flow__handle {
+  opacity: 0.7;
 }
 .react-flow__handle:hover {
   opacity: 1;
@@ -58,6 +58,10 @@ ${pluginStyles}
 .react-flow__handle-connecting {
   opacity: 1;
   background: var(--pages-accent-9, #5470c6);
+}
+.stencil-decoration-wrapper {
+  position: relative;
+  z-index: 1;
 }
 `.trim();
 }
