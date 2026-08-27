@@ -56,11 +56,14 @@ ${pluginStyles}
 .graph-connecting .react-flow__edge-interaction {
   pointer-events: none !important;
 }
-.graph-connecting .react-flow__node .stencil-decoration-wrapper {
-  box-shadow: 0 0 8px 2px rgba(22, 163, 106, 0.3);
+.graph-connecting .react-flow__node:hover .stencil-decoration-wrapper {
+  outline: 2px solid var(--pages-success-9, #16a34a);
+  outline-offset: 2px;
+  box-shadow: 0 0 12px 4px rgba(22, 163, 106, 0.25), inset 0 0 8px rgba(22, 163, 106, 0.1);
 }
 .graph-connecting .react-flow__node.connecting .stencil-decoration-wrapper {
-  box-shadow: 0 0 0 3px var(--pages-accent-9, #5470c6);
+  outline: 2px solid var(--pages-accent-9, #5470c6);
+  outline-offset: 2px;
 }
 .stencil-decoration-wrapper {
   position: relative;
