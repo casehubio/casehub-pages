@@ -182,16 +182,17 @@ export class GraphCanvas extends LitElement {
           this.classList.add('graph-connecting');
         },
         onConnectEnd: (event: MouseEvent | TouchEvent) => {
-          this.classList.remove('graph-connecting');
           const sourceId = this._connectSourceNodeId;
           this._connectSourceNodeId = undefined;
+          this.classList.remove('graph-connecting');
           if (!sourceId || !this.model) return;
 
           const pos = event instanceof MouseEvent
             ? { x: event.clientX, y: event.clientY }
             : { x: event.changedTouches[0]?.clientX ?? 0, y: event.changedTouches[0]?.clientY ?? 0 };
 
-          const targetEl = document.elementFromPoint(pos.x, pos.y)?.closest('.react-flow__node') as HTMLElement | null;
+          const el = event.target as HTMLElement | null;
+          const targetEl = el?.closest('.react-flow__node') as HTMLElement | null;
           const targetNodeId = targetEl?.dataset['id'];
 
           if (targetNodeId && targetNodeId !== sourceId) {
