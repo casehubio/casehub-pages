@@ -125,6 +125,7 @@ export interface LiveSite extends Site {
   setTheme(mode: "light" | "dark"): void;
   dispose(): void;
   readonly layout: LayoutState;
+  activateDockPanel(key: string): boolean;
 }
 
 export interface SiteOptions {
@@ -1392,6 +1393,17 @@ export async function loadSite(
     textFilter: { get: () => deriveUrlTextFilter(componentViewState, registry), enumerable: true },
   });
 
+  function activateDockPanel(key: string): boolean {
+    const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(key) : key;
+    const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
+    if (!panelEl) return false;
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true, composed: true,
+      detail: { panelId: key, visible: true },
+    }));
+    return true;
+  }
+
   const site: LiveSite = {
     root,
 
@@ -1462,6 +1474,8 @@ export async function loadSite(
       if (themeStyle) themeStyle.remove();
       target.innerHTML = "";
     },
+
+    activateDockPanel,
   };
 
   // Initialization reorder: parse URL and populate state BEFORE navigation
