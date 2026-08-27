@@ -1067,52 +1067,34 @@ export async function loadSite(
     renderComponent(target, newTree, { permissions, onNode });
     applySavedSplitRatios(target);
 
-    // Restore dock state per zone group — at most one active panel per zone
+    // Restore dock state per zone group — dispatch only, handler owns exclusivity and button state
     const dockBars = target.querySelectorAll<HTMLElement>('[data-component-type="dock-bar"]');
     for (const bar of dockBars) {
       const zoneGroups = bar.querySelectorAll<HTMLElement>(":scope > [data-dock-zone]");
       if (zoneGroups.length > 0) {
         for (const group of zoneGroups) {
           const buttons = group.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
-          let zoneActive: string | undefined;
           for (const btn of buttons) {
             const pid = btn.dataset.dockPanelId!;
-            if (dockState.get(pid) === true && zoneActive === undefined) {
-              zoneActive = pid;
-            }
-          }
-          for (const btn of buttons) {
-            const pid = btn.dataset.dockPanelId!;
-            if (pid === zoneActive) {
+            if (dockState.get(pid) === true) {
               target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
                 bubbles: true, composed: true,
                 detail: { panelId: pid, visible: true },
               }));
-              btn.dataset.active = "";
-            } else {
-              delete btn.dataset.active;
-              dockState.set(pid, false);
+              break;
             }
           }
         }
       } else {
         const buttons = bar.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
-        let barActive: string | undefined;
         for (const btn of buttons) {
           const pid = btn.dataset.dockPanelId!;
-          if (dockState.get(pid) === true && barActive === undefined) barActive = pid;
-        }
-        for (const btn of buttons) {
-          const pid = btn.dataset.dockPanelId!;
-          if (pid === barActive) {
+          if (dockState.get(pid) === true) {
             target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
               bubbles: true, composed: true,
               detail: { panelId: pid, visible: true },
             }));
-            btn.dataset.active = "";
-          } else {
-            delete btn.dataset.active;
-            dockState.set(pid, false);
+            break;
           }
         }
       }
