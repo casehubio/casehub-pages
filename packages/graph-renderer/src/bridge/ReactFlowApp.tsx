@@ -182,8 +182,6 @@ export function ReactFlowApp({
       edgesReconnectable
       nodesDraggable={false}
       connectionRadius={60}
-      selectionOnDrag
-      selectionMode={SelectionMode.Partial}
       {...editingProps}
     >
       <ViewportBridge onReactFlowReady={onReactFlowReady ?? (() => {})} />

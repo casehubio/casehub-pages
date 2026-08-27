@@ -50,6 +50,10 @@ ${pluginStyles}
   position: relative;
   z-index: 1;
   transition: box-shadow 0.15s;
+  border-radius: 8px;
+}
+.react-flow__node.selected .stencil-decoration-wrapper {
+  box-shadow: 0 0 0 2px var(--pages-accent-9, #5470c6);
 }
 .react-flow__node.connecting .stencil-decoration-wrapper {
   box-shadow: 0 0 0 2px var(--pages-accent-9, #5470c6);
