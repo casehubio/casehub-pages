@@ -13,7 +13,7 @@ export function applyGraphEdit(model: GraphModel, edit: GraphEdit): EditResult {
   switch (edit.type) {
     case 'addNode': {
       const node: GraphNode = {
-        id: nextId('node'),
+        id: edit.id ?? nextId('node'),
         type: edit.nodeType,
         properties: edit.properties ?? {},
       };
