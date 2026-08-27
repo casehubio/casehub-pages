@@ -1,4 +1,5 @@
 import type { GraphNode, GraphEdge, GraphModel, NodeDecoration } from '@casehubio/graph-core';
+import { getGrammar } from '@casehubio/graph-core';
 import type { Node, Edge } from '@xyflow/react';
 import type { NodeLayout, ElkLayoutResult } from './layout/elk-layout.js';
 
@@ -109,9 +110,12 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
   for (const node of nodes) {
     const hasOutgoing = edges.some(e => e.source === node.id);
     const hasIncoming = edges.some(e => e.target === node.id);
+    const grammar = node.type ? getGrammar(node.type) : undefined;
+    const canHaveOutgoing = hasOutgoing || (grammar ? grammar.connections.outbound.max > 0 : false);
+    const canHaveIncoming = hasIncoming || (grammar ? grammar.connections.inbound.max > 0 : false);
     const updates: Record<string, unknown> = {};
-    if (hasOutgoing) updates._sourceHandlePosition = defaults.src;
-    if (hasIncoming) updates._targetHandlePosition = defaults.tgt;
+    if (canHaveOutgoing) updates._sourceHandlePosition = defaults.src;
+    if (canHaveIncoming) updates._targetHandlePosition = defaults.tgt;
     if (Object.keys(updates).length > 0) {
       node.data = { ...node.data, ...updates };
     }
@@ -235,9 +239,15 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     const tc = tgtCounts.get(node.id);
     const updates: Record<string, unknown> = {};
     if (sc) updates._sourceHandlePosition = Object.entries(sc).sort((a, b) => b[1] - a[1])[0]![0];
-    else if (!hasOutgoing.has(node.id)) updates._sourceHandlePosition = undefined;
+    else if (!hasOutgoing.has(node.id)) {
+      const g = node.type ? getGrammar(node.type) : undefined;
+      if (!g || g.connections.outbound.max === 0) updates._sourceHandlePosition = undefined;
+    }
     if (tc) updates._targetHandlePosition = Object.entries(tc).sort((a, b) => b[1] - a[1])[0]![0];
-    else if (!hasIncoming.has(node.id)) updates._targetHandlePosition = undefined;
+    else if (!hasIncoming.has(node.id)) {
+      const g = node.type ? getGrammar(node.type) : undefined;
+      if (!g || g.connections.inbound.max === 0) updates._targetHandlePosition = undefined;
+    }
     node.data = { ...node.data, ...updates };
   }
 }
