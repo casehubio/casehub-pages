@@ -20,7 +20,7 @@ export { loadSite, applyTheme, getTheme };
 export type { LiveSite, SiteOptions };
 
 export { createBasicPipelineModel, PIPELINE_SCHEMAS };
-export { defaultEditPolicy } from "@casehubio/graph-renderer";
+export { defaultEditPolicy, applyGraphEdit } from "@casehubio/graph-renderer";
 export { createZoneLayoutEngine } from "@casehubio/pages-runtime";
 export { dockWorkbench, html, rows, split, columns, withId, dockBar, deferred, withStyle, hostPanel } from "@casehubio/pages-ui/dist/dsl/builders.js";
 export type { DockWorkbenchConfig, DockPanelConfig, DockSideConfig } from "@casehubio/pages-ui/dist/dsl/builders.js";
