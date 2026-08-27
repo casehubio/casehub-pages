@@ -185,7 +185,7 @@ export function ReactFlowApp({
       onMoveEnd={handleMoveEnd}
       edgesReconnectable
       nodesDraggable={false}
-      connectionRadius={400}
+      connectionRadius={0}
       {...editingProps}
     >
       <ViewportBridge onReactFlowReady={onReactFlowReady ?? (() => {})} />

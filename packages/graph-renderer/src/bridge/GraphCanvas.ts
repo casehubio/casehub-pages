@@ -183,15 +183,31 @@ export class GraphCanvas extends LitElement {
         },
         onConnectEnd: (event: MouseEvent | TouchEvent) => {
           this.classList.remove('graph-connecting');
-          const target = event.target as HTMLElement | null;
-          const isOnNode = target?.closest('.react-flow__node');
-          if (!isOnNode && this._connectSourceNodeId) {
-            const pos = event instanceof MouseEvent
-              ? { x: event.clientX, y: event.clientY }
-              : { x: event.changedTouches[0]?.clientX ?? 0, y: event.changedTouches[0]?.clientY ?? 0 };
-            emitPagesEvent(this, 'graph:connect:end-on-empty', { ...pos, sourceNodeId: this._connectSourceNodeId });
-          }
+          const sourceId = this._connectSourceNodeId;
           this._connectSourceNodeId = undefined;
+          if (!sourceId || !this.model) return;
+
+          const pos = event instanceof MouseEvent
+            ? { x: event.clientX, y: event.clientY }
+            : { x: event.changedTouches[0]?.clientX ?? 0, y: event.changedTouches[0]?.clientY ?? 0 };
+
+          const targetEl = document.elementFromPoint(pos.x, pos.y)?.closest('.react-flow__node') as HTMLElement | null;
+          const targetNodeId = targetEl?.dataset['id'];
+
+          if (targetNodeId && targetNodeId !== sourceId) {
+            const source = nodeById(this.model, sourceId);
+            const target = nodeById(this.model, targetNodeId);
+            if (source && target) {
+              const policy = this.editPolicy;
+              if (!policy || policy.canConnect(source, target, this.model)) {
+                this.onMutation?.({ type: 'addEdge', sourceId, targetId: targetNodeId });
+                emitPagesEvent(this, 'graph:edge:create', { sourceId, targetId: targetNodeId });
+                return;
+              }
+            }
+          }
+
+          emitPagesEvent(this, 'graph:connect:end-on-empty', { ...pos, sourceNodeId: sourceId });
         },
         onPaneClick: (event) => {
           emitPagesEvent(this, 'graph:pane:click', { x: event.clientX, y: event.clientY });
