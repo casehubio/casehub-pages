@@ -331,4 +331,166 @@ class ScenarioOrchestratorTest {
             .toList();
         assertThat(dispatches).hasSizeGreaterThanOrEqualTo(1);
     }
+
+    @Test
+    void reRegisteringExecutorRedispatchesPendingStep() {
+        var sent = createCapture();
+        var orchestrator = new ScenarioOrchestrator(
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+            new PushRequest.ExecutorRegister("1", "browser",
+                List.of("click", "fill")));
+
+        var yaml = """
+            scenario: re-register-test
+            steps:
+              - label: "Click"
+                target: browser
+                commands:
+                  - action: click
+            """;
+        orchestrator.start(yaml);
+        assertThat(orchestrator.state().scenario()).isEqualTo("re-register-test");
+
+        var dispatchesBefore = sent.stream()
+            .filter(s -> s.message().contains("dispatch-sequence"))
+            .toList();
+        assertThat(dispatchesBefore).isNotEmpty();
+        assertThat(dispatchesBefore.getFirst().connectionId()).isEqualTo("conn-1");
+
+        sent.clear();
+        orchestrator.onExecutorRegister("conn-2",
+            new PushRequest.ExecutorRegister("2", "browser",
+                List.of("click", "fill")));
+
+        assertThat(orchestrator.state().scenario()).isEqualTo("re-register-test");
+        var redispatched = sent.stream()
+            .filter(s -> s.message().contains("dispatch-sequence"))
+            .toList();
+        assertThat(redispatched).isNotEmpty();
+        assertThat(redispatched.getFirst().connectionId()).isEqualTo("conn-2");
+    }
+
+    @Test
+    void reRegisteringExecutorWithoutActiveScenarioIsHarmless() {
+        var sent = createCapture();
+        var orchestrator = new ScenarioOrchestrator(
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+            new PushRequest.ExecutorRegister("1", "browser",
+                List.of("click")));
+
+        orchestrator.onExecutorRegister("conn-2",
+            new PushRequest.ExecutorRegister("2", "browser",
+                List.of("click")));
+
+        assertThat(orchestrator.state().scenario()).isNull();
+        assertThat(orchestrator.sessionId()).isNull();
+    }
+
+    @Test
+    void runToPausesAtTargetLabelWhenStepHasSeparateName() {
+        var sent = createCapture();
+        var orchestrator = new ScenarioOrchestrator(
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+            new PushRequest.ExecutorRegister("1", "browser",
+                List.of("click", "fill")));
+
+        var yaml = """
+            scenario: run-to-test
+            steps:
+              - label: "First step"
+                name: step-a
+                target: browser
+                commands:
+                  - action: click
+              - label: "Second step"
+                name: step-b
+                target: browser
+                commands:
+                  - action: fill
+              - label: "Third step"
+                name: step-c
+                target: browser
+                commands:
+                  - action: click
+            """;
+        orchestrator.start(yaml, true);
+        String sessionId = orchestrator.sessionId();
+
+        var result = orchestrator.runTo("Second step");
+        assertThat(result).isEqualTo(RunToResult.OK);
+        assertThat(orchestrator.state().paused()).isFalse();
+        assertThat(orchestrator.state().speed()).isEqualTo(10.0);
+
+        orchestrator.onStepResult(new PushRequest.StepResult(
+            "r1", sessionId, "step-a", true, null, Map.of()));
+
+        assertThat(orchestrator.state().paused()).isFalse();
+
+        orchestrator.onStepResult(new PushRequest.StepResult(
+            "r2", sessionId, "step-b", true, null, Map.of()));
+
+        assertThat(orchestrator.state().paused()).isTrue();
+        assertThat(orchestrator.state().speed()).isEqualTo(1.0);
+    }
+
+    @Test
+    void runToDispatchesTriggeredStepsAfterTarget() {
+        var sent = createCapture();
+        var orchestrator = new ScenarioOrchestrator(
+            (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+            new PushRequest.ExecutorRegister("1", "browser",
+                List.of("click", "fill", "spotlight")));
+
+        var yaml = """
+            scenario: run-to-trigger-test
+            sections:
+              - label: "Section A"
+                steps:
+                  - label: "Step one"
+                    name: step-1
+                    target: browser
+                    commands:
+                      - action: click
+                  - label: "Step two"
+                    name: step-2
+                    target: browser
+                    trigger: { after: step-1 }
+                    commands:
+                      - action: spotlight
+                  - label: "Step three"
+                    name: step-3
+                    target: browser
+                    trigger: { after: step-2 }
+                    commands:
+                      - action: fill
+            """;
+        orchestrator.start(yaml, true);
+        String sessionId = orchestrator.sessionId();
+
+        orchestrator.runTo("Step two");
+        sent.clear();
+
+        orchestrator.onStepResult(new PushRequest.StepResult(
+            "r1", sessionId, "step-1", true, null, Map.of()));
+
+        orchestrator.onStepResult(new PushRequest.StepResult(
+            "r2", sessionId, "step-2", true, null, Map.of()));
+
+        assertThat(orchestrator.state().paused()).isTrue();
+
+        var dispatches = sent.stream()
+            .filter(s -> s.message().contains("dispatch-sequence"))
+            .filter(s -> s.message().contains("fill"))
+            .toList();
+        assertThat(dispatches).as("step-3 should be dispatched after runTo target completes")
+            .hasSize(1);
+    }
 }

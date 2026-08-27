@@ -27,6 +27,7 @@ public class ScenarioExecutorClient {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition resumeCondition = lock.newCondition();
     private volatile boolean paused;
+    private volatile int stepPermits;
     private volatile double speed = 1.0;
     private volatile String sessionId;
 
@@ -75,6 +76,7 @@ public class ScenarioExecutorClient {
             for (int i = 0; i < steps.size(); i++) {
                 waitIfPaused();
                 executeStep(sessionId, steps.get(i));
+                consumeStepPermit();
 
                 if (i < steps.size() - 1 && !paused) {
                     sleepForSpeed();
@@ -105,15 +107,12 @@ public class ScenarioExecutorClient {
             case "step" -> {
                 lock.lock();
                 try {
+                    stepPermits++;
                     paused = false;
                     resumeCondition.signalAll();
                 } finally {
                     lock.unlock();
                 }
-                Thread.ofVirtual().start(() -> {
-                    try { Thread.sleep(1); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                    paused = true;
-                });
             }
             case "speed" -> {
                 double newSpeed = root.path("speed").asDouble(1.0);
@@ -125,11 +124,25 @@ public class ScenarioExecutorClient {
     private void waitIfPaused() {
         lock.lock();
         try {
-            while (paused) {
+            while (paused && stepPermits <= 0) {
                 resumeCondition.await(1, TimeUnit.SECONDS);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void consumeStepPermit() {
+        lock.lock();
+        try {
+            if (stepPermits > 0) {
+                stepPermits--;
+                if (stepPermits <= 0) {
+                    paused = true;
+                }
+            }
         } finally {
             lock.unlock();
         }
@@ -184,7 +197,38 @@ public class ScenarioExecutorClient {
                                                JsonNode cmdNode,
                                                Map<String, Object> awaitMatch) throws Exception {
         Map<String, Object> data = cmdNode.has("data") ? toMap(cmdNode.get("data")) : Map.of();
+
+        int timeoutMs = cmdNode.has("await") && cmdNode.get("await").has("timeout")
+                ? cmdNode.get("await").get("timeout").asInt(5000) : 0;
+        int intervalMs = cmdNode.has("await") && cmdNode.get("await").has("interval")
+                ? cmdNode.get("await").get("interval").asInt(500) : 500;
+
+        if (!awaitMatch.isEmpty() && timeoutMs > 0) {
+            long deadline = System.currentTimeMillis() + timeoutMs;
+            Exception lastError = null;
+            while (System.currentTimeMillis() < deadline) {
+                try {
+                    var result = actionRegistry.invoke(action, ActionContext.of(actor, data, awaitMatch));
+                    if (matchesAwait(result, awaitMatch)) return result;
+                } catch (Exception e) {
+                    lastError = e;
+                }
+                Thread.sleep(intervalMs);
+            }
+            if (lastError != null) throw lastError;
+            throw new IllegalStateException("Await timed out after " + timeoutMs + "ms for " + action
+                    + " — expected " + awaitMatch);
+        }
+
         return actionRegistry.invoke(action, ActionContext.of(actor, data, awaitMatch));
+    }
+
+    private static boolean matchesAwait(Map<String, Object> result, Map<String, Object> awaitMatch) {
+        for (var entry : awaitMatch.entrySet()) {
+            Object actual = result.get(entry.getKey());
+            if (actual == null || !actual.toString().equals(entry.getValue().toString())) return false;
+        }
+        return true;
     }
 
     @SuppressWarnings("unchecked")

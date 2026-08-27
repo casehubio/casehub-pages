@@ -38,7 +38,8 @@ describe('ScenarioHandler', () => {
     handler.dispose();
   });
 
-  it('executes click command and sends ok result', () => {
+  it('executes click command and sends ok result', async () => {
+    vi.useFakeTimers();
     const conn = mockConnection();
     const handler = createScenarioHandler(conn, eventTarget);
 
@@ -56,6 +57,8 @@ describe('ScenarioHandler', () => {
       target: { role: 'button', name: 'Submit' },
     });
 
+    await vi.advanceTimersByTimeAsync(1000);
+
     expect(clicked).toHaveBeenCalled();
     expect(conn.commandResults).toHaveLength(1);
     expect(conn.commandResults[0]).toEqual({
@@ -67,6 +70,7 @@ describe('ScenarioHandler', () => {
 
     document.body.removeChild(button);
     handler.dispose();
+    vi.useRealTimers();
   });
 
   it('executes fill command', async () => {
@@ -89,6 +93,9 @@ describe('ScenarioHandler', () => {
       expect(input.value).toBe('Alice');
     });
 
+    await vi.waitFor(() => {
+      expect(conn.commandResults).toHaveLength(1);
+    });
     expect(conn.commandResults[0]).toEqual({
       op: 'command-result',
       id: 'cmd-2',
@@ -411,5 +418,282 @@ describe('ScenarioHandler sequence protocol', () => {
       (m) => (m as Record<string, unknown>).op === 'step-result') as Record<string, unknown>;
     expect(result.ok).toBe(false);
     expect(result.error).toBeTruthy();
+  });
+
+  it('step command dismisses active spotlight and advances', async () => {
+    vi.useFakeTimers();
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    const target = document.createElement('div');
+    target.setAttribute('role', 'region');
+    target.setAttribute('aria-label', 'Spotlight target');
+    document.body.appendChild(target);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-spot',
+        steps: [{
+          name: 'spot-step',
+          label: 'Show spotlight',
+          commands: [{
+            action: 'spotlight',
+            target: { role: 'region', name: 'Spotlight target' },
+            data: { content: 'Test callout', position: 'right', duration: 0 },
+          }],
+        }],
+        speed: 1,
+        paused: false,
+      },
+    }));
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(document.querySelectorAll('.scenario-spotlight-backdrop').length).toBe(1);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: { op: 'executor-control', sessionId: 's-spot', command: 'step' },
+    }));
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(document.querySelectorAll('.scenario-spotlight-backdrop').length).toBe(0);
+
+    await vi.waitFor(() => {
+      const results = conn.sent.filter(
+        (m) => (m as Record<string, unknown>).op === 'step-result');
+      expect(results).toHaveLength(1);
+    });
+
+    const result = conn.sent.find(
+      (m) => (m as Record<string, unknown>).op === 'step-result') as Record<string, unknown>;
+    expect(result.ok).toBe(true);
+    expect(result.stepName).toBe('spot-step');
+
+    document.body.removeChild(target);
+    vi.useRealTimers();
+  });
+
+  it('step command completes active typing instantly', async () => {
+    vi.useFakeTimers();
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    const input = document.createElement('input');
+    input.setAttribute('role', 'textbox');
+    input.setAttribute('aria-label', 'Long text');
+    document.body.appendChild(input);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-type',
+        steps: [{
+          name: 'type-step',
+          label: 'Type text',
+          commands: [{
+            action: 'fill',
+            target: { role: 'textbox', name: 'Long text' },
+            value: 'abcdefghij',
+          }],
+        }],
+        speed: 1,
+        paused: false,
+      },
+    }));
+
+    await vi.advanceTimersByTimeAsync(120);
+    expect(input.value.length).toBeGreaterThan(0);
+    expect(input.value.length).toBeLessThan(10);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: { op: 'executor-control', sessionId: 's-type', command: 'step' },
+    }));
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(input.value).toBe('abcdefghij');
+
+    document.body.removeChild(input);
+    vi.useRealTimers();
+  });
+
+  it('spotlight shows after speed resets from runTo (1000 → 1)', async () => {
+    vi.useFakeTimers();
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    const target = document.createElement('div');
+    target.setAttribute('role', 'region');
+    target.setAttribute('aria-label', 'RunTo target');
+    document.body.appendChild(target);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: { op: 'executor-control', sessionId: 's-runto', command: 'speed', speed: 1000 },
+    }));
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: { op: 'executor-control', sessionId: 's-runto', command: 'speed', speed: 1 },
+    }));
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-runto',
+        steps: [{
+          name: 'after-runto',
+          label: 'After runTo',
+          commands: [{
+            action: 'spotlight',
+            target: { role: 'region', name: 'RunTo target' },
+            data: { content: 'Should be visible', duration: 0 },
+          }],
+        }],
+        speed: 1,
+        paused: false,
+      },
+    }));
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(document.querySelectorAll('.scenario-spotlight-backdrop').length).toBe(1);
+
+    document.body.removeChild(target);
+    vi.useRealTimers();
+  });
+
+  it('typing is incremental after speed resets from runTo (1000 → 1)', async () => {
+    vi.useFakeTimers();
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    const input = document.createElement('input');
+    input.setAttribute('role', 'textbox');
+    input.setAttribute('aria-label', 'RunTo input');
+    document.body.appendChild(input);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: { op: 'executor-control', sessionId: 's-runto2', command: 'speed', speed: 1000 },
+    }));
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: { op: 'executor-control', sessionId: 's-runto2', command: 'speed', speed: 1 },
+    }));
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-runto2',
+        steps: [{
+          name: 'type-after-runto',
+          label: 'Type after runTo',
+          commands: [{
+            action: 'fill',
+            target: { role: 'textbox', name: 'RunTo input' },
+            value: 'abcdefghij',
+          }],
+        }],
+        speed: 1,
+        paused: false,
+      },
+    }));
+
+    await vi.advanceTimersByTimeAsync(160);
+    expect(input.value.length).toBeGreaterThan(0);
+    expect(input.value.length).toBeLessThan(10);
+
+    document.body.removeChild(input);
+    vi.useRealTimers();
+  });
+
+  it('show-markdown with display: modal creates full-screen overlay', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 'test-modal',
+        speed: 1, paused: false,
+        steps: [{
+          name: 'slide-1', label: 'Slide 1',
+          commands: [{ action: 'show-markdown', value: '## Slide 1', state: { display: 'modal', content: '## Slide 1' } }],
+        }],
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const overlay = document.querySelector('.scenario-modal-overlay');
+      expect(overlay).not.toBeNull();
+      expect(overlay!.querySelector('h2')!.textContent).toBe('Slide 1');
+    });
+
+    document.querySelector('.scenario-modal-overlay')?.remove();
+  });
+
+  it('collects consecutive modal steps into a deck', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 'test-deck',
+        speed: 1, paused: false,
+        steps: [
+          { name: 's1', label: 'Intro', commands: [{ action: 'show-markdown', value: '## Slide 1', state: { display: 'modal', content: '## Slide 1' } }] },
+          { name: 's2', label: 'Details', commands: [{ action: 'show-markdown', value: '## Slide 2', state: { display: 'modal', content: '## Slide 2' } }] },
+        ],
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const overlay = document.querySelector('.scenario-modal-overlay');
+      expect(overlay).not.toBeNull();
+      const dots = overlay!.querySelectorAll('.scenario-modal-dot');
+      expect(dots.length).toBe(2);
+      const pos = overlay!.querySelector('.scenario-modal-position');
+      expect(pos!.textContent).toBe('Slide 1 of 2');
+    });
+
+    document.querySelector('.scenario-modal-overlay')?.remove();
+  });
+
+  it('Escape key dismisses modal overlay', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 'test-esc',
+        speed: 1, paused: false,
+        steps: [{ name: 's1', label: 'Slide', commands: [{ action: 'show-markdown', value: '## Test', state: { display: 'modal', content: '## Test' } }] }],
+      },
+    }));
+
+    await vi.waitFor(() => expect(document.querySelector('.scenario-modal-overlay')).not.toBeNull());
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(document.querySelector('.scenario-modal-overlay')).toBeNull();
+  });
+
+  it('single-slide modal has no dot navigation', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 'test-single',
+        speed: 1, paused: false,
+        steps: [{ name: 's1', label: 'Solo', commands: [{ action: 'show-markdown', value: '## Solo', state: { display: 'modal', content: '## Solo' } }] }],
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const overlay = document.querySelector('.scenario-modal-overlay');
+      expect(overlay).not.toBeNull();
+      expect(overlay!.querySelector('.scenario-modal-dots')).toBeNull();
+      expect(overlay!.querySelector('.scenario-modal-position')).toBeNull();
+    });
+
+    document.querySelector('.scenario-modal-overlay')?.remove();
   });
 });

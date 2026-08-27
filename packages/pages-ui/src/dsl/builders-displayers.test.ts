@@ -14,6 +14,12 @@ import {
   selector,
   mapChart,
   iframePlugin,
+  schemaForm,
+  actionButton,
+  formScope,
+  textInput,
+  numberInput,
+  columns,
 } from "./builders.js";
 import { lookup, groupBy, col, sum } from "./lookup-helpers.js";
 import { isBarChart, isDataTable, isGridTable, isMetric } from "../model/type-guards.js";
@@ -129,6 +135,59 @@ describe("data component builders", () => {
 
   it("all builders return frozen components", () => {
     const c = barChart({ lookup: salesLookup });
+    expect(Object.isFrozen(c)).toBe(true);
+  });
+
+  it("schemaForm()", () => {
+    const c = schemaForm({
+      schema: { properties: { name: { type: "string", minLength: 1 } }, required: ["name"] },
+      excludeFields: ["id"],
+      labels: { name: "Full Name" },
+      fieldOrder: ["name"],
+      validateOnBlur: true,
+      forceCreate: true,
+    });
+    expect(c.type).toBe("schema-form");
+    expect(c.props!["schema"]!.properties!["name"]!.type).toBe("string");
+    expect(c.props!["excludeFields"]).toEqual(["id"]);
+    expect(c.props!["forceCreate"]).toBe(true);
+    expect(Object.isFrozen(c)).toBe(true);
+  });
+
+  it("actionButton()", () => {
+    const c = actionButton({
+      label: "Activate Trial",
+      url: "/api/trials/{trialId}/activate",
+      method: "POST",
+      style: "primary",
+      confirm: "Are you sure?",
+      onSuccess: { message: "Trial activated", refresh: ["trial-summary"] },
+      onError: { message: "Activation failed" },
+    });
+    expect(c.type).toBe("action-button");
+    expect(c.props!["label"]).toBe("Activate Trial");
+    expect(c.props!["method"]).toBe("POST");
+    expect(c.props!["style"]).toBe("primary");
+    expect(c.props!["confirm"]).toBe("Are you sure?");
+    expect(Object.isFrozen(c)).toBe(true);
+  });
+
+  it("formScope() wraps children with validation context", () => {
+    const c = formScope(
+      {
+        schema: { properties: { name: { type: "string" }, age: { type: "number" } }, required: ["name"] },
+        validateOnBlur: true,
+      },
+      columns([6, 6],
+        [textInput({ field: "name", label: "Name" })],
+        [numberInput({ field: "age", label: "Age" })],
+      ),
+    );
+    expect(c.type).toBe("form-scope");
+    expect(c.props!["schema"]!.required).toEqual(["name"]);
+    expect(c.props!["validateOnBlur"]).toBe(true);
+    expect(c.slots!["default"]).toHaveLength(1);
+    expect((c.slots!["default"]![0] as any).type).toBe("columns");
     expect(Object.isFrozen(c)).toBe(true);
   });
 });

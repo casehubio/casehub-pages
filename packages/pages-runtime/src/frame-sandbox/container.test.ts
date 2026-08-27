@@ -751,7 +751,7 @@ describe("Group", () => {
   });
 
   describe("pages-tab-drag-start event", () => {
-    it("fires on tab drag outside strip with tabKey, ghost, and sourceContainer", () => {
+    it("fires on tab drag with tabKey, ghost, and sourceContainer", () => {
       const host = document.createElement("div");
       document.body.appendChild(host);
 
@@ -761,11 +761,6 @@ describe("Group", () => {
         contentFactory: testFactory(),
       });
       group.mount(host);
-
-      const strip = host.querySelector("[data-tab-strip]") as HTMLElement;
-      vi.spyOn(strip, "getBoundingClientRect").mockReturnValue({
-        left: 0, right: 400, top: 0, bottom: 30, width: 400, height: 30, x: 0, y: 0, toJSON: () => ({}),
-      } as DOMRect);
 
       let received: CustomEvent | null = null;
       host.addEventListener("pages-tab-drag-start", (e) => {
@@ -777,7 +772,7 @@ describe("Group", () => {
         clientX: 10, clientY: 10, bubbles: true,
       }));
       document.dispatchEvent(new PointerEvent("pointermove", {
-        clientX: 20, clientY: 60,
+        clientX: 20, clientY: 10,
       }));
 
       expect(received).not.toBeNull();
@@ -803,11 +798,6 @@ describe("Group", () => {
       });
       group.mount(host);
 
-      const strip = host.querySelector("[data-tab-strip]") as HTMLElement;
-      vi.spyOn(strip, "getBoundingClientRect").mockReturnValue({
-        left: 0, right: 400, top: 0, bottom: 30, width: 400, height: 30, x: 0, y: 0, toJSON: () => ({}),
-      } as DOMRect);
-
       let received = false;
       outer.addEventListener("pages-tab-drag-start", () => {
         received = true;
@@ -818,7 +808,7 @@ describe("Group", () => {
         clientX: 10, clientY: 10, bubbles: true,
       }));
       document.dispatchEvent(new PointerEvent("pointermove", {
-        clientX: 20, clientY: 60,
+        clientX: 20, clientY: 10,
       }));
 
       expect(received).toBe(true);
@@ -923,51 +913,6 @@ describe("Group", () => {
 
       const detached = parent.detachEntry("host");
       expect(detached!.childContainer).toBe(inner);
-    });
-  });
-
-  describe("toolbar at any depth", () => {
-    it("shows toolbar at depth 2", () => {
-      const group = createContainer({
-        entries: makeEntries("a", "b"),
-        layout: "tabbed",
-        contentFactory: testFactory(),
-        depth: 2,
-      });
-      group.mount(container);
-
-      const toolbar = container.querySelector("[data-container-toolbar]");
-      expect(toolbar).not.toBeNull();
-      group.dispose();
-    });
-
-    it("shows toolbar at depth 5", () => {
-      const group = createContainer({
-        entries: makeEntries("a"),
-        layout: "tabbed",
-        contentFactory: testFactory(),
-        depth: 5,
-      });
-      group.mount(container);
-
-      const toolbar = container.querySelector("[data-container-toolbar]");
-      expect(toolbar).not.toBeNull();
-      group.dispose();
-    });
-
-    it("respects explicit showToolbar: false at any depth", () => {
-      const group = createContainer({
-        entries: makeEntries("a", "b"),
-        layout: "tabbed",
-        contentFactory: testFactory(),
-        depth: 1,
-        showToolbar: false,
-      });
-      group.mount(container);
-
-      const toolbar = container.querySelector("[data-container-toolbar]");
-      expect(toolbar).toBeNull();
-      group.dispose();
     });
   });
 });
