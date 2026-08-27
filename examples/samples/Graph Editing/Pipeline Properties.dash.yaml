@@ -1,0 +1,25 @@
+pages:
+  - name: Pipeline Properties
+    components:
+      - type: markdown
+        properties:
+          content: |
+            Click a node to view and edit its properties in the side panel.
+            The property palette renders a schema-driven form based on the selected node's type.
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; gap: 12px; height: 520px;">
+              <pages-graph-canvas id="props-canvas" style="flex: 1; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></pages-graph-canvas>
+              <div id="props-panel" style="width: 280px; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; padding: 12px; overflow-y: auto; background: var(--pages-neutral-2, #fafafa);">
+                <div id="props-empty" style="color: var(--pages-neutral-8, #9ca3af); font-size: 13px; font-family: var(--pages-font-family, system-ui); text-align: center; margin-top: 40px;">
+                  Click a node to view its properties
+                </div>
+                <div id="props-header" style="display: none; margin-bottom: 8px;">
+                  <span id="props-type" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pages-neutral-8, #9ca3af); font-family: var(--pages-font-family, system-ui);"></span>
+                  <div id="props-name" style="font-size: 15px; font-weight: 600; color: var(--pages-neutral-12, #111); font-family: var(--pages-font-family, system-ui);"></div>
+                </div>
+                <pages-property-palette id="props-palette" style="display: none;"></pages-property-palette>
+              </div>
+            </div>
