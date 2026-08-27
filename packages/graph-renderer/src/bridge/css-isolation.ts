@@ -34,6 +34,22 @@ ${pluginStyles}
 .react-flow__controls-button:hover {
   background: var(--pages-neutral-2, #f0f0f0);
 }
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pages-neutral-6, #9ca3af);
+  border: 2px solid var(--pages-neutral-1, #fff);
+}
+.react-flow__handle:hover {
+  background: var(--pages-accent-9, #5470c6);
+}
+.react-flow__handle-valid {
+  background: var(--pages-success-9, #16a34a);
+}
+.react-flow__handle-connecting {
+  background: var(--pages-accent-9, #5470c6);
+}
 `.trim();
 }
 
