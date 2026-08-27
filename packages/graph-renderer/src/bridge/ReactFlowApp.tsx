@@ -161,6 +161,13 @@ export function ReactFlowApp({
     [onViewportChange],
   );
 
+  const editingProps = Object.fromEntries(
+    Object.entries({
+      onConnect, isValidConnection, onReconnect, onPaneClick,
+      onNodeDragStop, onPaneContextMenu, onNodeContextMenu, onEdgeContextMenu,
+    }).filter(([, v]) => v !== undefined),
+  );
+
   return (
     <SmartEdgeProvider nodes={nodes}>
     <ReactFlow
@@ -172,19 +179,12 @@ export function ReactFlowApp({
       onEdgeClick={handleEdgeClick}
       onSelectionChange={handleSelectionChange}
       onMoveEnd={handleMoveEnd}
-      onConnect={onConnect}
-      isValidConnection={isValidConnection}
-      onReconnect={onReconnect}
-      onPaneClick={onPaneClick}
-      onNodeDragStop={onNodeDragStop}
-      onPaneContextMenu={onPaneContextMenu}
-      onNodeContextMenu={onNodeContextMenu}
-      onEdgeContextMenu={onEdgeContextMenu}
-      reconnectEdges
+      edgesReconnectable
       selectionOnDrag
       selectionMode={SelectionMode.Partial}
+      {...editingProps}
     >
-      <ViewportBridge onReactFlowReady={onReactFlowReady} />
+      <ViewportBridge onReactFlowReady={onReactFlowReady ?? (() => {})} />
       <FitTopLeft nodes={nodes} onFitRef={fitRef} />
       <MiniMap
         pannable
