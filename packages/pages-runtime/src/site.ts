@@ -360,10 +360,14 @@ export async function loadSite(
           const wasVisible = dockState.get(id);
           dockState.set(id, visible);
           if (visible !== wasVisible) {
-            target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-              bubbles: true, composed: true,
-              detail: { panelId: id, visible },
-            }));
+            if (visible) {
+              activateDockPanel(id);
+            } else {
+              target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+                bubbles: true, composed: true,
+                detail: { panelId: id, visible: false },
+              }));
+            }
           }
         }
       }
@@ -372,10 +376,7 @@ export async function loadSite(
           const wasVisible = dockState.get(key);
           dockState.set(key, true);
           if (wasVisible !== true) {
-            target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-              bubbles: true, composed: true,
-              detail: { panelId: key, visible: true },
-            }));
+            activateDockPanel(key);
           }
         }
       }
