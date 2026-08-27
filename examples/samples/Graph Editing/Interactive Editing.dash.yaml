@@ -6,7 +6,7 @@ pages:
           content: |
             Interactive data pipeline editor with constraint validation.
 
-            **Try:** Add nodes with the toolbar &bull; Drag from a handle to connect nodes &bull; Select a node and press Delete to remove it &bull; Drag an edge endpoint to reconnect
+            **Try:** Add nodes with the toolbar &bull; Drag from a handle to connect nodes &bull; Click an edge to insert a node (uses last toolbar type) &bull; Select a node and press Delete to remove it
 
             Connection rules enforce domain constraints &mdash; Source can only connect to Transform/Filter/Join, Sink has no outbound.
 
