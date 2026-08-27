@@ -157,7 +157,7 @@ export function createStencilNodeComponent(
     const targetPos = positionMap[rawData._targetHandlePosition as string] ?? Position.Top;
     const sourcePos = positionMap[rawData._sourceHandlePosition as string] ?? Position.Bottom;
     const fullNodeHandle: React.CSSProperties = {
-      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+      position: 'absolute', top: '-6px', left: '-6px', width: 'calc(100% + 12px)', height: 'calc(100% + 12px)',
       borderRadius: 'inherit', opacity: 0, transform: 'none',
     };
     const allPositions = [

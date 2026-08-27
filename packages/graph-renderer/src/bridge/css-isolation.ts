@@ -53,7 +53,8 @@ ${pluginStyles}
   border-radius: 8px;
 }
 .react-flow__node.selected .stencil-decoration-wrapper {
-  box-shadow: 0 0 0 2px var(--pages-accent-9, #5470c6);
+  outline: 3px solid var(--pages-accent-9, #5470c6);
+  outline-offset: 2px;
 }
 .react-flow__node.connecting .stencil-decoration-wrapper {
   box-shadow: 0 0 0 2px var(--pages-accent-9, #5470c6);
