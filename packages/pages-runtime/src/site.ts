@@ -346,16 +346,31 @@ export async function loadSite(
         updateTextFilter(cvs, id, text);
       }
     }
-    if (link.dock) {
-      for (const [id, state] of Object.entries(link.dock)) {
-        const visible = state === "open";
-        const wasVisible = dockState.get(id);
-        dockState.set(id, visible);
-        if (visible !== wasVisible) {
-          target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
-            bubbles: true, composed: true,
-            detail: { panelId: id, visible },
-          }));
+    if (link.dock || link.panel) {
+      const panelOverrides = new Set(link.panel ?? []);
+      if (link.dock) {
+        for (const [id, state] of Object.entries(link.dock)) {
+          const visible = panelOverrides.has(id) ? true : state === "open";
+          const wasVisible = dockState.get(id);
+          dockState.set(id, visible);
+          if (visible !== wasVisible) {
+            target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+              bubbles: true, composed: true,
+              detail: { panelId: id, visible },
+            }));
+          }
+        }
+      }
+      for (const key of panelOverrides) {
+        if (!link.dock || !(key in link.dock)) {
+          const wasVisible = dockState.get(key);
+          dockState.set(key, true);
+          if (wasVisible !== true) {
+            target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+              bubbles: true, composed: true,
+              detail: { panelId: key, visible: true },
+            }));
+          }
         }
       }
     }

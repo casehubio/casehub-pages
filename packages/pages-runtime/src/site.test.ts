@@ -1206,3 +1206,101 @@ describe("restoreFromUrl dock dispatch", () => {
   });
 });
 
+describe("panel merge in restoreFromUrl", () => {
+  it("panel=nav activates nav panel even when dock=nav:closed", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "nav", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Nav" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "N", label: "Nav", panelId: "nav", defaultOpen: true, zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    history.pushState(null, "", "#/page/?dock=nav:closed&panel=nav");
+    history.pushState(null, "", "#/page/");
+
+    history.back();
+    await new Promise(r => setTimeout(r, 50));
+
+    const navPanel = target.querySelector<HTMLElement>('[data-component-id="nav"]')!;
+    expect(navPanel.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+    history.replaceState(null, "", location.pathname);
+  });
+
+  it("panel activates panels not mentioned in dock param", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const workbench: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "rows",
+            slots: {
+              default: [
+                { type: "deferred", id: "nav", style: { display: "none" },
+                  slots: { default: [{ type: "html", props: { content: "Nav" } }] } },
+              ],
+            },
+          },
+          {
+            type: "dock-bar",
+            props: {
+              orientation: "vertical",
+              exclusive: true,
+              side: "left",
+              items: [
+                { icon: "N", label: "Nav", panelId: "nav", zone: "top" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, workbench);
+
+    history.pushState(null, "", "#/page/?panel=nav");
+    history.pushState(null, "", "#/page/");
+
+    history.back();
+    await new Promise(r => setTimeout(r, 50));
+
+    const navPanel = target.querySelector<HTMLElement>('[data-component-id="nav"]')!;
+    expect(navPanel.style.display).not.toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+    history.replaceState(null, "", location.pathname);
+  });
+});
+
