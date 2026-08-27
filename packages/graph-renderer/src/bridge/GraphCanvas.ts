@@ -176,6 +176,16 @@ export class GraphCanvas extends LitElement {
         onReactFlowReady: (instance: ReactFlowInstance) => {
           this._reactFlowInstance = instance;
         },
+        onConnectEnd: (event: MouseEvent | TouchEvent) => {
+          const target = event.target as HTMLElement | null;
+          const isOnNode = target?.closest('.react-flow__node');
+          if (!isOnNode) {
+            const pos = event instanceof MouseEvent
+              ? { x: event.clientX, y: event.clientY }
+              : { x: event.changedTouches[0]?.clientX ?? 0, y: event.changedTouches[0]?.clientY ?? 0 };
+            emitPagesEvent(this, 'graph:connect:end-on-empty', pos);
+          }
+        },
         onPaneClick: (event) => {
           emitPagesEvent(this, 'graph:pane:click', { x: event.clientX, y: event.clientY });
         },
