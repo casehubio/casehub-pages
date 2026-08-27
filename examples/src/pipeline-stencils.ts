@@ -100,11 +100,29 @@ registerStencil({
 export function createBasicPipelineModel(): GraphModel {
   return {
     nodes: [
-      { id: 'src1', type: 'source', properties: { name: 'API Source' } },
-      { id: 'tx1', type: 'transform', properties: { name: 'Parse JSON' } },
-      { id: 'fl1', type: 'filter', properties: { name: 'Valid Records' } },
-      { id: 'sk1', type: 'sink', properties: { name: 'Database' } },
-      { id: 'sk2', type: 'sink', properties: { name: 'Error Log' } },
+      { id: 'src1', type: 'source', properties: {
+        name: 'API Source', url: 'https://api.example.com/data', format: 'json',
+        pollInterval: 'PT30S', startDate: '2026-08-01', tags: ['production', 'rest-api'], enabled: true,
+      } },
+      { id: 'tx1', type: 'transform', properties: {
+        name: 'Parse JSON', expression: '$.data[*].{\n  id: id,\n  value: metrics.total\n}',
+        language: 'jsonata', timeout: 'PT5S', color: '#5470c6',
+      } },
+      { id: 'fl1', type: 'filter', properties: {
+        name: 'Valid Records', condition: '$.status != "invalid" && $.value > 0',
+        threshold: 75, caseSensitive: false,
+        categories: ['critical', 'warning'],
+      } },
+      { id: 'sk1', type: 'sink', properties: {
+        name: 'Database', url: 'jdbc:postgresql://db/pipeline', format: 'json',
+        batchSize: 100, retryDelay: 'PT10S', lastExport: '2026-08-27T14:30:00Z',
+        tags: ['postgres', 'primary'], description: 'Main database sink for validated pipeline records.',
+      } },
+      { id: 'sk2', type: 'sink', properties: {
+        name: 'Error Log', url: 'file:///var/log/errors.json', format: 'csv',
+        batchSize: 1, retryDelay: 'PT1S', lastExport: '2026-08-27T14:28:00Z',
+        tags: ['logging', 'errors'], description: 'Captures rejected records for review.',
+      } },
     ],
     edges: [
       { id: 'e1', type: 'default', source: 'src1', target: 'tx1' },
@@ -120,37 +138,44 @@ export const PIPELINE_SCHEMAS: Record<string, object> = {
     type: 'object',
     properties: {
       name: { type: 'string', title: 'Name' },
-      url: { type: 'string', title: 'URL' },
+      url: { type: 'string', title: 'Endpoint URL', format: 'uri' },
       format: { type: 'string', title: 'Format', enum: ['json', 'csv', 'xml'] },
-      pollIntervalSec: { type: 'number', title: 'Poll Interval (sec)', minimum: 1 },
+      pollInterval: { type: 'string', title: 'Poll Interval', format: 'duration' },
+      startDate: { type: 'string', title: 'Active Since', format: 'date' },
+      tags: { type: 'array', title: 'Tags', items: { type: 'string' } },
+      enabled: { type: 'boolean', title: 'Enabled' },
     },
-    required: ['name'],
+    required: ['name', 'url'],
   },
   transform: {
     type: 'object',
     properties: {
       name: { type: 'string', title: 'Name' },
-      expression: { type: 'string', title: 'Expression' },
+      expression: { type: 'string', title: 'Expression', 'x-display-hint': 'textarea' },
       language: { type: 'string', title: 'Language', enum: ['jsonata', 'jq', 'javascript'] },
+      timeout: { type: 'string', title: 'Timeout', format: 'duration' },
+      color: { type: 'string', title: 'Node Color', format: 'color' },
     },
-    required: ['name'],
+    required: ['name', 'expression'],
   },
   filter: {
     type: 'object',
     properties: {
       name: { type: 'string', title: 'Name' },
-      condition: { type: 'string', title: 'Condition' },
-      passLabel: { type: 'string', title: 'Pass Label' },
-      failLabel: { type: 'string', title: 'Fail Label' },
+      condition: { type: 'string', title: 'Condition', 'x-display-hint': 'textarea' },
+      threshold: { type: 'number', title: 'Pass Threshold (%)', minimum: 0, maximum: 100, 'x-display-hint': 'slider' },
+      caseSensitive: { type: 'boolean', title: 'Case Sensitive' },
+      categories: { type: 'array', title: 'Alert Categories', items: { type: 'string', enum: ['critical', 'warning', 'info', 'debug'] } },
     },
-    required: ['name'],
+    required: ['name', 'condition'],
   },
   join: {
     type: 'object',
     properties: {
       name: { type: 'string', title: 'Name' },
       strategy: { type: 'string', title: 'Strategy', enum: ['merge', 'zip', 'concat'] },
-      windowMs: { type: 'number', title: 'Window (ms)', minimum: 0 },
+      windowMs: { type: 'number', title: 'Window (ms)', minimum: 0, maximum: 30000, 'x-display-hint': 'slider' },
+      color: { type: 'string', title: 'Node Color', format: 'color' },
     },
     required: ['name'],
   },
@@ -158,10 +183,14 @@ export const PIPELINE_SCHEMAS: Record<string, object> = {
     type: 'object',
     properties: {
       name: { type: 'string', title: 'Name' },
-      url: { type: 'string', title: 'URL' },
+      url: { type: 'string', title: 'Destination URL', format: 'uri' },
       format: { type: 'string', title: 'Format', enum: ['json', 'csv'] },
       batchSize: { type: 'number', title: 'Batch Size', minimum: 1 },
+      retryDelay: { type: 'string', title: 'Retry Delay', format: 'duration' },
+      lastExport: { type: 'string', title: 'Last Export', format: 'date-time' },
+      tags: { type: 'array', title: 'Tags', items: { type: 'string' } },
+      description: { type: 'string', title: 'Description', 'x-display-hint': 'textarea' },
     },
-    required: ['name'],
+    required: ['name', 'url'],
   },
 };
