@@ -6,7 +6,7 @@ pages:
           content: |
             Interactive data pipeline editor with constraint validation.
 
-            **Try:** Click a palette item to add a node &bull; Drag from a handle to connect nodes &bull; Click an edge to insert a node &bull; Click empty canvas to create a node &bull; Select a node and press Delete to remove it
+            **Try:** Click a palette item to add a node &bull; Drag from a handle to connect nodes &bull; Click an edge to insert a node &bull; Click empty canvas to create a node &bull; Select a node and press Delete to remove it &bull; Hold a node (~300ms) then drag to move it &bull; Click a node to view its properties
 
             Connection rules enforce domain constraints &mdash; Source can only connect to Transform/Filter/Join, Sink has no outbound.
 
@@ -24,5 +24,15 @@ pages:
                   </div>
                   <pre id="mutation-log" style="font-size: 11px; max-height: 120px; overflow-y: auto; padding: 8px; background: var(--pages-neutral-2, #1e1e1e); border-radius: 4px; color: var(--pages-neutral-11, #d4d4d4); margin: 0;"></pre>
                 </div>
+              </div>
+              <div id="props-panel" style="width: 240px; flex-shrink: 0; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; padding: 12px; overflow-y: auto; background: var(--pages-neutral-2, #fafafa);">
+                <div id="props-empty" style="color: var(--pages-neutral-8, #9ca3af); font-size: 13px; font-family: var(--pages-font-family, system-ui); text-align: center; margin-top: 40px;">
+                  Click a node to view its properties
+                </div>
+                <div id="props-header" style="display: none; margin-bottom: 8px;">
+                  <span id="props-type" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pages-neutral-8, #9ca3af); font-family: var(--pages-font-family, system-ui);"></span>
+                  <div id="props-name" style="font-size: 15px; font-weight: 600; color: var(--pages-neutral-12, #111); font-family: var(--pages-font-family, system-ui);"></div>
+                </div>
+                <pages-property-palette id="props-palette" style="display: none;"></pages-property-palette>
               </div>
             </div>
