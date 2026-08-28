@@ -785,14 +785,16 @@ describe('pages-data-table', () => {
       expect(toolbar).toBeNull();
     });
 
-    it('kebab button is inside header-container', async () => {
+    it('kebab button is sibling of header-container', async () => {
       el.dataSet = testDataSet;
       el.columnConfig = testConfig;
       await el.updateComplete;
 
-      const headerContainer = el.shadowRoot!.querySelector('.header-container');
-      const kebab = headerContainer!.querySelector('.column-picker-trigger');
+      const dataTable = el.shadowRoot!.querySelector('.data-table')!;
+      const kebab = dataTable.querySelector('.column-picker-trigger');
       expect(kebab).not.toBeNull();
+      const headerContainer = dataTable.querySelector('.header-container')!;
+      expect(headerContainer.querySelector('.column-picker-trigger')).toBeNull();
     });
 
     it('filter bar has go and close buttons', async () => {
@@ -1336,15 +1338,16 @@ describe('pages-data-table', () => {
       outside.remove();
     });
 
-    it('kebab is inside header-container, no toolbar div exists', async () => {
+    it('kebab is sibling of header-container, no toolbar div exists', async () => {
       el.dataSet = testDataSet;
       el.columnConfig = testConfig;
       await el.updateComplete;
 
       const dataTable = el.shadowRoot!.querySelector('.data-table')!;
       expect(dataTable.querySelector('.toolbar')).toBeNull();
+      expect(dataTable.querySelector('.column-picker-trigger')).not.toBeNull();
       const headerContainer = dataTable.querySelector('.header-container')!;
-      expect(headerContainer.querySelector('.column-picker-trigger')).not.toBeNull();
+      expect(headerContainer.querySelector('.column-picker-trigger')).toBeNull();
     });
 
     it('mouseleave closes picker after 400ms delay', async () => {

@@ -429,6 +429,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       flex-direction: column;
       height: 100%;
       min-height: 0;
+      position: relative;
       background: var(--pages-surface-secondary, #fafafa);
     }
 
@@ -3001,8 +3002,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
               ${this.selection === 'multi' ? html`<div class="header-cell"></div>` : nothing}
               ${visibleCols.map(col => this._renderHeaderCell(col))}
             </div>
-            ${this.embedded ? nothing : this._renderKebab()}
           </div>
+          ${this.embedded ? nothing : this._renderKebab()}
           ${this.embedded ? nothing : this._renderFilterBar()}
           <div class="empty-state">${this.emptyMessage}</div>
         </div>
@@ -3024,8 +3025,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
             ${this._renderCheckbox(this._dataRows[0]!, true)}
             ${visibleCols.map(col => this._renderHeaderCell(col))}
           </div>
-          ${this.embedded ? nothing : this._renderKebab()}
         </div>
+        ${this.embedded ? nothing : this._renderKebab()}
         ${this.embedded ? nothing : this._renderFilterBar()}
         <div class="body" @scroll="${this._onScroll}">
           ${this.groupBy && this._groupBoundaries.length > 0
