@@ -18,3 +18,6 @@ export { PagesColorSwatch } from './color-swatch/index.js';
 export { PagesSlider } from './slider/index.js';
 export { PagesTagEditor } from './tag-editor/index.js';
 export { PagesDurationInput, type DurationField } from './duration-input/index.js';
+export * from './status-badge/index.js';
+export * from './split-workbench/index.js';
+export * from './event-trail/index.js';

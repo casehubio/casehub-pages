@@ -80,6 +80,22 @@
     "./submit-button": {
       "types": "./dist/submit-button/index.d.ts",
       "default": "./dist/submit-button/index.js"
+    },
+    "./duration-input": {
+      "types": "./dist/duration-input/index.d.ts",
+      "default": "./dist/duration-input/index.js"
+    },
+    "./status-badge": {
+      "types": "./dist/status-badge/index.d.ts",
+      "default": "./dist/status-badge/index.js"
+    },
+    "./split-workbench": {
+      "types": "./dist/split-workbench/index.d.ts",
+      "default": "./dist/split-workbench/index.js"
+    },
+    "./event-trail": {
+      "types": "./dist/event-trail/index.d.ts",
+      "default": "./dist/event-trail/index.js"
     }
   },
   "sideEffects": [
@@ -112,7 +128,13 @@
     "./dist/tag-editor/index.js",
     "./src/tag-editor/index.ts",
     "./dist/submit-button/index.js",
-    "./src/submit-button/index.ts"
+    "./src/submit-button/index.ts",
+    "./dist/status-badge/index.js",
+    "./src/status-badge/index.ts",
+    "./dist/split-workbench/index.js",
+    "./src/split-workbench/index.ts",
+    "./dist/event-trail/index.js",
+    "./src/event-trail/index.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -123,6 +145,11 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@casehubio/pages-component": "workspace:*",
+    "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-filter-bar": "workspace:*",
+    "@casehubio/pages-primitives": "workspace:*",
+    "@casehubio/pages-table": "workspace:*",
     "lit": "^3.3.3"
   },
   "devDependencies": {
