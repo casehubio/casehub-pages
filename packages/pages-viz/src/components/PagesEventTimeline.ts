@@ -2,7 +2,7 @@ import { html, css, nothing, type TemplateResult, type PropertyValues } from "li
 import { customElement, property, state } from "lit/decorators.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { EventTimelineProps, EventTimelineLayout } from "@casehubio/pages-component";
-import { emitPagesEvent } from "@casehubio/pages-component";
+import { emitPagesEvent } from "@casehubio/pages-data";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
 import type { EventTimelineNode, EventTimelineStrategy, PaginationMeta } from "./event-timeline-types.js";

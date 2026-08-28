@@ -11,8 +11,6 @@ export {
   clearRegistry,
 } from './registry/stencil-registry.js';
 export type { StencilDescriptor, EdgeDescriptor } from './registry/stencil-registry.js';
-export { emitPagesEvent } from '@casehubio/pages-data';
-export type { PagesEventDetail } from '@casehubio/pages-data';
 export { GraphCanvas } from './bridge/GraphCanvas.js';
 export { computeElkLayout } from './layout/elk-layout.js';
 export type { ElkLayoutOptions, ElkLayoutResult, NodeLayout } from './layout/elk-layout.js';
@@ -26,7 +24,6 @@ export type {
 } from './stencil-wrapper.js';
 
 export { createWorkStencilRenderFn, toWorkStencilDescriptor } from './work-stencil-renderer.js';
-export type { GraphModel, GraphNode, GraphEdge, NodeDecoration } from '@casehubio/graph-core';
 export { validateEdgeRouting } from './edge-routing-validator.js';
 export type { ValidationResult } from './edge-routing-validator.js';
 export { defaultEditPolicy } from './editing/edit-policy.js';

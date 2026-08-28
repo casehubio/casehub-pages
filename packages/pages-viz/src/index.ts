@@ -32,13 +32,10 @@ export { PagesIframePlugin } from "./components/PagesIframePlugin.js";
 
 // Schema form
 export { PagesSchemaForm } from "./form-inputs/PagesSchemaForm.js";
-export type { FieldSchema, SchemaFormProps } from "@casehubio/pages-component";
 
 // Form inputs
 export { PagesFormInput } from "./form-inputs/PagesFormInput.js";
 export type { PagesFieldChangeDetail } from "./form-inputs/PagesFormInput.js";
-export type { PagesNumberInput } from "@casehubio/pages-ui-components/number-input";
-export type { PagesDateInput as PagesDatePicker } from "@casehubio/pages-ui-components/date-input";
 
 // New charts
 export { PagesTimeline } from "./charts/PagesTimeline.js";
@@ -56,7 +53,6 @@ export { PagesGroupedView } from "./components/grouped-view/PagesGroupedView.js"
 export { PagesLegend } from "./components/PagesLegend.js";
 export { PagesEventTimeline } from "./components/PagesEventTimeline.js";
 export type { EventTimelineNode, EventTimelineStrategy, EventNodeStatus, PaginationMeta } from "./components/event-timeline-types.js";
-export type { EventTimelineLayout } from "@casehubio/pages-component";
 export { renderVerticalTimeline, verticalTimelineStyles } from "./components/event-timeline/renderers/vertical.js";
 export type { VerticalTimelineOptions } from "./components/event-timeline/renderers/vertical.js";
 export { renderHorizontalTimeline, horizontalTimelineStyles } from "./components/event-timeline/renderers/horizontal.js";
