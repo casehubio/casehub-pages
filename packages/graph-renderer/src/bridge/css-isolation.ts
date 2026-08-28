@@ -46,6 +46,10 @@ ${pluginStyles}
   cursor: crosshair;
   pointer-events: all;
 }
+.graph-readonly .stencil-source-handle {
+  pointer-events: none !important;
+  cursor: default;
+}
 .graph-connecting .stencil-source-handle {
   pointer-events: none !important;
   cursor: default;

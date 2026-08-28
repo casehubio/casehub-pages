@@ -68,6 +68,8 @@ export class GraphCanvas extends LitElement {
 
     this.appendChild(this._container);
 
+    this._container.classList.toggle('graph-readonly', !this.editPolicy);
+
     this._pointerDownHandler = (e: PointerEvent) => {
       const target = e.target as HTMLElement;
       const nodeEl = target.closest('.react-flow__node') as HTMLElement | null;
@@ -119,6 +121,9 @@ export class GraphCanvas extends LitElement {
   override updated(changed: Map<string, unknown>): void {
     if (changed.has('model') || changed.has('layoutOptions')) {
       void this._runLayout();
+    }
+    if (changed.has('editPolicy') && this._container) {
+      this._container.classList.toggle('graph-readonly', !this.editPolicy);
     }
     this._renderReact();
   }
@@ -210,7 +215,7 @@ export class GraphCanvas extends LitElement {
         isValidConnection: (connection: Connection) => {
           if (!this.model) return false;
           const policy = this.editPolicy;
-          if (!policy) return true;
+          if (!policy) return false;
           const source = nodeById(this.model, connection.source);
           const target = nodeById(this.model, connection.target);
           if (!source || !target) return false;
