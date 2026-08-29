@@ -1,0 +1,21 @@
+scenario: parameterized-onboard
+params:
+  - name: projectName
+    type: string
+    required: true
+  - name: enableCI
+    type: boolean
+    default: true
+steps:
+  - label: "Create project"
+    target: browser
+    commands:
+      - action: fill
+        target: {role: textbox, name: "Project Name"}
+        value: "${params.projectName}"
+  - label: "Enable CI"
+    target: browser
+    when: "${params.enableCI}"
+    commands:
+      - action: click
+        target: {role: button, name: "Enable CI"}

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,50 +19,57 @@ public final class HierarchicalParser {
         try {
             JsonNode root = YAML.readTree(yaml);
 
-            String scenario = root.path("scenario").asText(null);
+            String scenario    = root.path("scenario").asText(null);
             String description = root.path("description").asText(null);
-            double speed = root.path("speed").asDouble(1.0);
-            String onError = root.path("on-error").asText(null);
+            double speed       = root.path("speed").asDouble(1.0);
+            String onError     = root.path("on-error").asText(null);
             Map<String, Object> data = root.has("data")
-                ? toMap(root.get("data")) : null;
+                                       ? toMap(root.get("data")) : null;
+
+            List<ParamDescriptor> params = root.has("params")
+                                           ? parseParams(root.get("params")) : null;
+            ScriptMeta meta = root.has("meta")
+                              ? parseMeta(root.get("meta")) : null;
+            Map<String, Object> iterations = root.has("iterations")
+                                             ? toMap(root.get("iterations")) : null;
 
             boolean hasChapters = root.has("chapters");
             boolean hasSections = root.has("sections") && !root.has("chapters");
-            boolean hasSteps = root.has("steps") && !root.has("chapters") && !root.has("sections");
+            boolean hasSteps    = root.has("steps") && !root.has("chapters") && !root.has("sections");
 
             if (root.has("chapters") && root.has("steps")) {
                 throw new IllegalArgumentException(
-                    "chapters, sections, and steps are mutually exclusive at top level");
+                        "chapters, sections, and steps are mutually exclusive at top level");
             }
             if (root.has("chapters") && root.has("sections")) {
                 throw new IllegalArgumentException(
-                    "chapters, sections, and steps are mutually exclusive at top level");
+                        "chapters, sections, and steps are mutually exclusive at top level");
             }
             if (root.has("sections") && root.has("steps")) {
                 throw new IllegalArgumentException(
-                    "chapters, sections, and steps are mutually exclusive at top level");
+                        "chapters, sections, and steps are mutually exclusive at top level");
             }
 
             List<ScenarioChapter> chapters = hasChapters
-                ? parseChapters(root.get("chapters")) : null;
+                                             ? parseChapters(root.get("chapters")) : null;
             List<ScenarioSection> sections = hasSections
-                ? parseSections(root.get("sections")) : null;
+                                             ? parseSections(root.get("sections")) : null;
             List<HierarchicalStep> steps = hasSteps
-                ? parseSteps(root.get("steps")) : null;
+                                           ? parseSteps(root.get("steps")) : null;
 
             if (scenario == null || scenario.isBlank()) {
                 throw new IllegalArgumentException("Missing or empty 'scenario' name");
             }
 
             String slides = root.has("content") && root.get("content").has("slides")
-                ? root.get("content").get("slides").asText() : null;
+                            ? root.get("content").get("slides").asText() : null;
 
             return new HierarchicalScenario(scenario, description, speed,
-                onError, data, slides, chapters, sections, steps);
+                                            onError, params, meta, data, iterations, slides,
+                                            chapters, sections, steps);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to parse scenario YAML", e);
-        }
-    }
+        }}
 
     private static List<ScenarioChapter> parseChapters(JsonNode node) {
         List<ScenarioChapter> chapters = new ArrayList<>();
@@ -100,17 +106,68 @@ public final class HierarchicalParser {
     }
 
     private static HierarchicalStep parseStep(JsonNode node) {
-        String name = node.path("name").asText(null);
-        String label = node.path("label").asText();
+        String name   = node.path("name").asText(null);
+        String label  = node.path("label").asText();
         String target = node.path("target").asText();
-        String actor = node.path("actor").asText(null);
+        String actor  = node.path("actor").asText(null);
         Trigger trigger = node.has("trigger")
-            ? parseTrigger(node.get("trigger")) : null;
+                          ? parseTrigger(node.get("trigger")) : null;
+        Object forEach = node.has("forEach")
+                         ? parseForEach(node.get("forEach")) : null;
+        String when = node.path("when").asText(null);
         NarrativeContent content = node.has("content")
-            ? parseContent(node.get("content")) : null;
+                                   ? parseContent(node.get("content")) : null;
         List<ScenarioCommand> commands = parseCommands(node.get("commands"));
-        return new HierarchicalStep(name, label, target, actor, trigger, content, commands);
+        return new HierarchicalStep(name, label, target, actor, trigger,
+                                    forEach, when, content, commands);}
+
+    @SuppressWarnings("unchecked")
+    private static Object parseForEach(JsonNode node) {
+        if (node.isTextual()) {return node.asText();}
+        if (node.isObject()) {return YAML.convertValue(node, Map.class);}
+        throw new IllegalArgumentException("forEach must be a string or object, got: " + node.getNodeType());
     }
+
+    private static List<ParamDescriptor> parseParams(JsonNode paramsNode) {
+        List<ParamDescriptor> params = new ArrayList<>();
+        for (JsonNode p : paramsNode) {
+            String       pName        = p.path("name").asText();
+            String       type         = p.path("type").asText("string");
+            boolean      required     = p.path("required").asBoolean(false);
+            Object       defaultValue = p.has("default") ? nodeToObject(p.get("default")) : null;
+            List<Object> enumValues   = List.of();
+            if (p.has("enum")) {
+                List<Object> evs = new ArrayList<>();
+                for (JsonNode e : p.get("enum")) {evs.add(nodeToObject(e));}
+                enumValues = List.copyOf(evs);
+            }
+            params.add(new ParamDescriptor(pName, type, required, defaultValue, enumValues));
+        }
+        return List.copyOf(params);
+    }
+
+    private static ScriptMeta parseMeta(JsonNode metaNode) {
+        String       description = metaNode.path("description").asText(null);
+        List<String> labels      = extractStringList(metaNode, "labels");
+        List<String> tags        = extractStringList(metaNode, "tags");
+        return new ScriptMeta(description, labels, tags);
+    }
+
+    private static List<String> extractStringList(JsonNode parent, String field) {
+        if (!parent.has(field)) {return List.of();}
+        List<String> result = new ArrayList<>();
+        for (JsonNode item : parent.get(field)) {result.add(item.asText());}
+        return List.copyOf(result);
+    }
+
+    private static Object nodeToObject(JsonNode node) {
+        if (node.isTextual()) {return node.asText();}
+        if (node.isInt()) {return node.asInt();}
+        if (node.isBoolean()) {return node.booleanValue();}
+        if (node.isDouble()) {return node.asDouble();}
+        return node.asText();
+    }
+
 
     private static List<ScenarioCommand> parseCommands(JsonNode node) {
         if (node == null) return List.of();

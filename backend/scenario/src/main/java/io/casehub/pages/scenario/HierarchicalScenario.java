@@ -8,21 +8,25 @@ import java.util.stream.Stream;
 public record HierarchicalScenario(
         String scenario, String description,
         double speed, String onError,
-        Map<String, Object> data, String slides,
+        List<ParamDescriptor> params, ScriptMeta meta,
+        Map<String, Object> data, Map<String, Object> iterations,
+        String slides,
         List<ScenarioChapter> chapters,
         List<ScenarioSection> sections,
         List<HierarchicalStep> steps) {
 
     public HierarchicalScenario {
         Objects.requireNonNull(scenario, "scenario");
-        data = data != null ? Map.copyOf(data) : Map.of();
+        params     = params != null ? List.copyOf(params) : List.of();
+        data       = data != null ? Map.copyOf(data) : Map.of();
+        iterations = iterations != null ? Map.copyOf(iterations) : Map.of();
     }
 
     public Stream<HierarchicalStep> allSteps() {
         if (chapters != null) {
             return chapters.stream()
-                .flatMap(c -> c.sections().stream())
-                .flatMap(s -> s.steps().stream());
+                           .flatMap(c -> c.sections().stream())
+                           .flatMap(s -> s.steps().stream());
         }
         if (sections != null) {
             return sections.stream().flatMap(s -> s.steps().stream());
