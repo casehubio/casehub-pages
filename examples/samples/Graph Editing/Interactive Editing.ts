@@ -1,3 +1,4 @@
+// @ts-nocheck
 var editCanvas = document.getElementById('edit-canvas');
 var editPalette = document.getElementById('edit-palette');
 var mutationLog = document.getElementById('mutation-log');

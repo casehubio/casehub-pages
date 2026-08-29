@@ -26,6 +26,7 @@ export interface FieldSchema {
   readonly properties?: Readonly<Record<string, FieldSchema>>;
   readonly required?: readonly string[];
   readonly items?: FieldSchema;
+  readonly const?: string | number | boolean | null;
   readonly oneOf?: readonly FieldSchema[];
   readonly [key: `x-${string}`]: unknown;
 }

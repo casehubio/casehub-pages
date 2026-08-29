@@ -1,4 +1,4 @@
-export const STANDALONE_TYPES = new Set(["input", "select", "textarea", "checkbox"]);
+export const STANDALONE_TYPES = new Set(["input", "select", "textarea", "checkbox", "number-input", "date-input", "datetime-input"]);
 
 export function readFieldValue(element: HTMLElement, componentType: string): unknown {
   if (componentType === "checkbox") return (element as any).checked;

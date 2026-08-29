@@ -63,7 +63,7 @@ export declare class DiagramBaseInterface {
   _onPropertyChange(field: (string | number)[], value: unknown): void;
   _handlePaletteSelect: (e: Event) => void;
   _handleMutation: (edit: GraphEdit) => void;
-  _applyGraphEdit(yaml: string, edit: GraphEdit): string;
+  protected _applyGraphEdit(yaml: string, edit: GraphEdit): string;
   _exportDiagram(format: ExportFormat): Promise<void>;
   _renderError(): TemplateResult;
   _clearErrorAndRetry(): void;
@@ -76,6 +76,7 @@ export declare class DiagramBaseInterface {
   protected _decorations(): ReadonlyMap<string, NodeDecoration> | undefined;
   protected _editPolicy(): EditPolicy | undefined;
   protected _editorResolver(): EditorResolver | undefined;
+  protected _iconRenderer(): ((icon: string) => TemplateResult) | undefined;
   protected get _propertyPaletteSource(): PropertyPaletteSource | undefined;
 }
 
