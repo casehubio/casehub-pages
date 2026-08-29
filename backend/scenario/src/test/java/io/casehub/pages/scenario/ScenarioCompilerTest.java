@@ -140,6 +140,162 @@ class ScenarioCompilerTest {
                 .isEqualTo("#dashboard/eu-west");
     }
 
+    @Test
+    void compile_forEachCsv_providesIterationIndex() {
+        var compiled = ScenarioCompiler.compile("""
+                                                scenario: index-test
+                                                data:
+                                                  items:
+                                                    inline: |
+                                                      name:string
+                                                      Alpha
+                                                      Bravo
+                                                      Charlie
+                                                steps:
+                                                  - label: "Select row"
+                                                    target: browser
+                                                    forEach:
+                                                      as: item
+                                                      in: items
+                                                    commands:
+                                                      - action: click
+                                                        target: {role: row, name: "Row ${each.index}"}
+                                                """, Map.of());
+        assertThat(compiled.steps()).hasSize(3);
+        assertThat(compiled.steps().get(0).commands().get(0).target().name()).isEqualTo("Row 0");
+        assertThat(compiled.steps().get(1).commands().get(0).target().name()).isEqualTo("Row 1");
+        assertThat(compiled.steps().get(2).commands().get(0).target().name()).isEqualTo("Row 2");
+    }
+
+    @Test
+    void compile_forEachCsv_resolvesVariablesInTargetName() {
+        var compiled = ScenarioCompiler.compile("""
+                                                scenario: target-name-test
+                                                data:
+                                                  members:
+                                                    inline: |
+                                                      name:string,role:string
+                                                      Alice,Developer
+                                                      Bob,Viewer
+                                                steps:
+                                                  - label: "Edit member"
+                                                    target: browser
+                                                    forEach:
+                                                      as: member
+                                                      in: members
+                                                    commands:
+                                                      - action: click
+                                                        target: {role: button, name: "Edit ${each.member.name}"}
+                                                """, Map.of());
+        assertThat(compiled.steps()).hasSize(2);
+        assertThat(compiled.steps().get(0).commands().get(0).target().name())
+                .isEqualTo("Edit Alice");
+        assertThat(compiled.steps().get(1).commands().get(0).target().name())
+                .isEqualTo("Edit Bob");
+    }
+
+    @Test
+    void compile_forEachCsv_resolvesVariablesInTargetWithin() {
+        var compiled = ScenarioCompiler.compile("""
+                                                scenario: within-test
+                                                data:
+                                                  members:
+                                                    inline: |
+                                                      name:string,role:string
+                                                      Alice,Developer
+                                                      Bob,Viewer
+                                                steps:
+                                                  - label: "Fill role"
+                                                    target: browser
+                                                    forEach:
+                                                      as: member
+                                                      in: members
+                                                    commands:
+                                                      - action: fill
+                                                        target:
+                                                          role: combobox
+                                                          name: "Role"
+                                                          within: {role: row, name: "Row ${each.index}"}
+                                                        value: "${each.member.role}"
+                                                """, Map.of());
+        assertThat(compiled.steps()).hasSize(2);
+        var aliceCmd = compiled.steps().get(0).commands().get(0);
+        assertThat(aliceCmd.value()).isEqualTo("Developer");
+        assertThat(aliceCmd.target().within().name()).isEqualTo("Row 0");
+        var bobCmd = compiled.steps().get(1).commands().get(0);
+        assertThat(bobCmd.value()).isEqualTo("Viewer");
+        assertThat(bobCmd.target().within().name()).isEqualTo("Row 1");
+    }
+
+    @Test
+    void compile_forEachCsv_multiStepTablePopulation() {
+        var compiled = ScenarioCompiler.compile("""
+                                                scenario: table-populate
+                                                data:
+                                                  team:
+                                                    inline: |
+                                                      name:string,role:string,admin:boolean
+                                                      Alice,Developer,true
+                                                      Bob,Viewer,false
+                                                      Charlie,Admin,true
+                                                steps:
+                                                  - label: "Fill name"
+                                                    target: browser
+                                                    forEach:
+                                                      as: person
+                                                      in: team
+                                                    commands:
+                                                      - action: fill
+                                                        target:
+                                                          role: textbox
+                                                          name: "Name"
+                                                          within: {role: row, name: "Row ${each.index}"}
+                                                        value: "${each.person.name}"
+                                                  - label: "Fill role"
+                                                    target: browser
+                                                    forEach:
+                                                      as: person
+                                                      in: team
+                                                    commands:
+                                                      - action: fill
+                                                        target:
+                                                          role: combobox
+                                                          name: "Role"
+                                                          within: {role: row, name: "Row ${each.index}"}
+                                                        value: "${each.person.role}"
+                                                  - label: "Toggle admin"
+                                                    target: browser
+                                                    forEach:
+                                                      as: person
+                                                      in: team
+                                                    when: "${each.person.admin}"
+                                                    commands:
+                                                      - action: click
+                                                        target:
+                                                          role: checkbox
+                                                          name: "Admin"
+                                                          within: {role: row, name: "Row ${each.index}"}
+                                                """, Map.of());
+        // 3 rows × fill-name + 3 rows × fill-role + 2 admin rows × toggle
+        assertThat(compiled.steps()).hasSize(8);
+        // First fill-name targets Row 0
+        assertThat(compiled.steps().get(0).commands().get(0).target().within().name())
+                .isEqualTo("Row 0");
+        assertThat(compiled.steps().get(0).commands().get(0).value()).isEqualTo("Alice");
+        // Last fill-name targets Row 2
+        assertThat(compiled.steps().get(2).commands().get(0).target().within().name())
+                .isEqualTo("Row 2");
+        // Admin toggle only fires for Alice (index 0) and Charlie (index 2)
+        var adminSteps = compiled.steps().stream()
+                                 .filter(s -> s.label().equals("Toggle admin")).toList();
+        assertThat(adminSteps).hasSize(2);
+        assertThat(adminSteps.get(0).commands().get(0).target().within().name())
+                .isEqualTo("Row 0");
+        assertThat(adminSteps.get(1).commands().get(0).target().within().name())
+                .isEqualTo("Row 2");
+    }
+
+
     private static String fixture(String name) {
         try (InputStream is = ScenarioCompilerTest.class.getClassLoader()
                 .getResourceAsStream("scenarios/" + name)) {

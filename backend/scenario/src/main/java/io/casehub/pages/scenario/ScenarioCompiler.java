@@ -165,13 +165,15 @@ public final class ScenarioCompiler {
                 as = dataSourceName;
             }
 
-            String firstCol = csv.columns().get(0).name();
-            for (Map<String, Object> row : csv.rows()) {
-                String rowKey    = String.valueOf(row.get(firstCol));
-                String stampedId = stepId + "." + rowKey;
+            String                    firstCol = csv.columns().get(0).name();
+            List<Map<String, Object>> rows     = csv.rows();
+            for (int i = 0; i < rows.size(); i++) {
+                Map<String, Object> row       = rows.get(i);
+                String              rowKey    = String.valueOf(row.get(firstCol));
+                String              stampedId = stepId + "." + rowKey;
 
                 VariableResolver rowResolver = baseResolver
-                                                       .withEachContext(Map.of(as, rowKey))
+                                                       .withEachContext(Map.of(as, rowKey, "index", String.valueOf(i)))
                                                        .withEachRowContext(Map.of(as, row));
 
                 String when = step.when();
@@ -186,7 +188,8 @@ public final class ScenarioCompiler {
                     if (value != null && value.contains("${")) {
                         value = rowResolver.resolveString(value, stampedId);
                     }
-                    resolvedCommands.add(new ScenarioCommand(cmd.action(), cmd.target(),
+                    AriaTarget target = resolveAriaTarget(cmd.target(), rowResolver, stampedId);
+                    resolvedCommands.add(new ScenarioCommand(cmd.action(), target,
                                                              value, cmd.data(), cmd.domain(), cmd.await(), cmd.timeout(),
                                                              cmd.mode(), cmd.source(), cmd.interval()));
                 }
@@ -196,7 +199,19 @@ public final class ScenarioCompiler {
                                                            step.content(), resolvedCommands));
             }
         }
-        return result;
+        return result;}
+
+    private static AriaTarget resolveAriaTarget(AriaTarget target,
+                                                VariableResolver resolver,
+                                                String context) {
+        if (target == null) {return null;}
+        String name = target.name();
+        if (name != null && name.contains("${")) {
+            name = resolver.resolveString(name, context);
+        }
+        AriaTarget within = resolveAriaTarget(target.within(), resolver, context);
+        if (name == target.name() && within == target.within()) {return target;}
+        return new AriaTarget(target.role(), name, within);
     }
 
 
