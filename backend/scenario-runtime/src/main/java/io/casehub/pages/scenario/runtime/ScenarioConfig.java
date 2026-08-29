@@ -9,25 +9,28 @@ public class ScenarioConfig {
     private final String defaultRestBaseUrl;
     private final Map<String, String> graphQLEndpoints;
     private final Map<String, String> pushEndpoints;
+    private final String              libraryPath;
+
 
     public ScenarioConfig(String defaultGraphQLEndpoint,
                            String defaultPushEndpoint,
                            Map<String, String> graphQLEndpoints,
                            Map<String, String> pushEndpoints) {
         this(defaultGraphQLEndpoint, defaultPushEndpoint, defaultGraphQLEndpoint.replaceAll("/graphql$", ""),
-             graphQLEndpoints, pushEndpoints);
-    }
+             graphQLEndpoints, pushEndpoints, System.getProperty("java.io.tmpdir") + "/casehub-scenario-library");}
 
     public ScenarioConfig(String defaultGraphQLEndpoint,
                            String defaultPushEndpoint,
                            String defaultRestBaseUrl,
                            Map<String, String> graphQLEndpoints,
-                           Map<String, String> pushEndpoints) {
+                           Map<String, String> pushEndpoints,
+                           String libraryPath) {
         this.defaultGraphQLEndpoint = defaultGraphQLEndpoint;
         this.defaultPushEndpoint = defaultPushEndpoint;
         this.defaultRestBaseUrl = defaultRestBaseUrl;
         this.graphQLEndpoints = Map.copyOf(graphQLEndpoints);
         this.pushEndpoints = Map.copyOf(pushEndpoints);
+        this.libraryPath = libraryPath;
     }
 
     public String graphQLEndpoint(String domain) {
@@ -41,6 +44,11 @@ public class ScenarioConfig {
     public String restBaseUrl() {
         return defaultRestBaseUrl;
     }
+
+    public String libraryPath() {
+        return libraryPath;
+    }
+
 
     public static ScenarioConfig localhost() {
         return new ScenarioConfig(
