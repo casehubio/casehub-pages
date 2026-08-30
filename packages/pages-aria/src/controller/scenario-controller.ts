@@ -159,6 +159,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       background: none; border: 1px solid var(--pages-neutral-5, #ddd);
       border-radius: var(--pages-radius-sm, 4px);
       padding: 2px 8px; cursor: pointer; font-size: 12px;
+      color: var(--pages-neutral-12, #1a1a1a);
     }
     .view-toggle:hover { background: var(--pages-neutral-3, #f5f5f5); }
     .view-toggle.active { background: var(--pages-accent-3, #e8eaf6); border-color: var(--pages-accent-6, #93c5fd); }
