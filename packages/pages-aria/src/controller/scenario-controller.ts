@@ -326,11 +326,26 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
 
   private _onScriptSelected(e: CustomEvent): void {
     this._view = 'outline';
-    this.dispatchEvent(new CustomEvent('script-selected', {
-      detail: e.detail,
-      bubbles: true,
-      composed: true,
-    }));
+    const name = e.detail.name as string;
+
+    if (this._conn) {
+      void this._startScript(name);
+    } else {
+      this.dispatchEvent(new CustomEvent('script-selected', {
+        detail: e.detail,
+        bubbles: true,
+        composed: true,
+      }));
+    }
+  }
+
+  private async _startScript(name: string): Promise<void> {
+    try {
+      const resp = await fetch(`${this._conn.restBase}/scenario/library/${name}/yaml`);
+      if (!resp.ok) return;
+      const yaml = await resp.text();
+      await this._conn.sendCommand('/start', { yaml });
+    } catch { /* ignore */ }
   }
 
   private _renderOutline(): TemplateResult {

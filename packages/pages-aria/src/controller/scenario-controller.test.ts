@@ -492,6 +492,75 @@ describe('pages-scenario-controller', () => {
     el.remove();
   });
 
+  it('starts scenario when script selected from library', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    const conn = mockConnection();
+    const target = new EventTarget();
+    el.connection = conn;
+    el.eventTarget = target;
+
+    var fetchCalls = [];
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(function(url, opts) {
+      fetchCalls.push({ url: url, opts: opts });
+      if (url.includes('/yaml')) {
+        return Promise.resolve({ ok: true, text: function() { return Promise.resolve('scenario: test-script\nsteps: []'); } });
+      }
+      return Promise.resolve({ ok: true, json: function() { return Promise.resolve({}); } });
+    }));
+
+    document.body.appendChild(el);
+    await el.updateComplete;
+    await new Promise(function(r) { setTimeout(r, 20); });
+
+    (el as any)._view = 'library';
+    await el.updateComplete;
+
+    var libraryView = el.shadowRoot?.querySelector('pages-library-view');
+    expect(libraryView).not.toBeNull();
+
+    libraryView?.dispatchEvent(new CustomEvent('script-selected', {
+      detail: { name: 'test-script' },
+      bubbles: true,
+      composed: true,
+    }));
+
+    await el.updateComplete;
+    await new Promise(function(r) { setTimeout(r, 50); });
+
+    expect(fetchCalls.some(function(c) { return c.url.includes('/scenario/library/test-script/yaml'); })).toBe(true);
+    expect(fetchCalls.some(function(c) { return c.url.includes('/scenario/start'); })).toBe(true);
+
+    expect((el as any)._view).toBe('outline');
+    el.remove();
+  });
+
+  it('emits script-selected without connection for external handling', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    el.baseUrl = 'http://localhost:8080';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: function() { return Promise.resolve([]); } }));
+
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    (el as any)._view = 'library';
+    await el.updateComplete;
+
+    var handler = vi.fn();
+    el.addEventListener('script-selected', handler);
+
+    var libraryView = el.shadowRoot?.querySelector('pages-library-view');
+    libraryView?.dispatchEvent(new CustomEvent('script-selected', {
+      detail: { name: 'some-script' },
+      bubbles: true,
+      composed: true,
+    }));
+
+    await el.updateComplete;
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler.mock.calls[0][0].detail.name).toBe('some-script');
+    el.remove();
+  });
+
   it('renders no type icon for unknown action', async () => {
     const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
     const conn = mockConnection();
