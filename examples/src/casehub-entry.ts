@@ -8,6 +8,7 @@ import "@casehubio/pages-ui-components/button";
 import "@casehubio/pages-ui-components/badge";
 import "@casehubio/pages-ui-components/status-dot";
 import "@casehubio/pages-viz";
+import "@casehubio/pages-aria/dist/controller";
 import "@casehubio/graph-renderer";
 import "@casehubio/pages-property-palette";
 import "@casehubio/pages-diagram-palette";

@@ -163,4 +163,48 @@ describe('pages-library-view', () => {
     expect(texts).toContain('uploaded');
     el.remove();
   });
+
+  it('renders from scripts property without fetch', async () => {
+    const el = document.createElement('pages-library-view') as PagesLibraryView;
+    el.scripts = MOCK_LIBRARY as any;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const items = el.shadowRoot?.querySelectorAll('.script-item');
+    expect(items?.length).toBe(3);
+    expect(el.shadowRoot?.textContent).toContain('onboard-team');
+    el.remove();
+  });
+
+  it('filters scripts property by search text', async () => {
+    const el = document.createElement('pages-library-view') as PagesLibraryView;
+    el.scripts = MOCK_LIBRARY as any;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el.searchText = 'resolve';
+    await el.updateComplete;
+
+    const items = el.shadowRoot?.querySelectorAll('.script-item');
+    expect(items?.length).toBe(1);
+    expect(el.shadowRoot?.textContent).toContain('resolve-ticket');
+    el.remove();
+  });
+
+  it('emits script-selected from scripts property mode', async () => {
+    const el = document.createElement('pages-library-view') as PagesLibraryView;
+    el.scripts = MOCK_LIBRARY as any;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const handler = vi.fn();
+    el.addEventListener('script-selected', handler);
+
+    const runBtn = el.shadowRoot?.querySelector('.script-item .run-btn') as HTMLButtonElement;
+    runBtn.click();
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler.mock.calls[0][0].detail.name).toBe('onboard-team');
+    el.remove();
+  });
 });

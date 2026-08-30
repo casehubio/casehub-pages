@@ -96,6 +96,7 @@ module.exports = (env = {}) => {
         "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
         "@casehubio/pages-primitives": path.resolve(__dirname, "../packages/pages-primitives"),
         "@casehubio/pages-ui-tokens": path.resolve(__dirname, "../packages/pages-ui-tokens"),
+        "@casehubio/pages-aria/dist/controller": path.resolve(__dirname, "../packages/pages-aria/dist/controller.js"),
         "@casehubio/pages-table": path.resolve(__dirname, "../packages/pages-table"),
         "@casehubio/pages-ui-components/input": path.resolve(__dirname, "../packages/pages-ui-components/dist/input"),
         "@casehubio/pages-ui-components/select": path.resolve(__dirname, "../packages/pages-ui-components/dist/select"),

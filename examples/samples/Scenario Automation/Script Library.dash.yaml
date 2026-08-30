@@ -66,15 +66,6 @@ pages:
       - type: html
         properties:
           content: |
-            <div id="library-panel" style="background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; height: 100%; display: flex; flex-direction: column;">
-              <div style="padding: 12px 16px; border-bottom: 1px solid var(--pages-border-subtle, #333); display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 14px; font-weight: 600; color: var(--pages-text-primary, #eee);">Script Library</span>
-                <span style="font-size: 11px; padding: 2px 6px; background: rgba(22, 163, 74, 0.2); color: #4ade80; border-radius: 10px;" id="script-count"></span>
-              </div>
-              <div style="padding: 8px 12px; border-bottom: 1px solid var(--pages-border-subtle, #333);">
-                <input id="library-search" type="text" placeholder="Search scripts..." aria-label="Search scripts"
-                  style="width: 100%; padding: 6px 10px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; background: var(--pages-surface-secondary, #2a2a3e); color: var(--pages-text-primary, #eee); font-size: 12px; box-sizing: border-box;" />
-              </div>
-              <div id="label-filters" style="padding: 6px 12px; display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--pages-border-subtle, #333);"></div>
-              <div id="script-list" style="flex: 1; overflow-y: auto; padding: 8px 0;"></div>
-            </div>
+            <pages-library-view id="library-view"
+              style="background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; height: 100%;">
+            </pages-library-view>

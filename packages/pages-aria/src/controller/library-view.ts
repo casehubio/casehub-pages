@@ -3,7 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import type { AriaTarget } from '@casehubio/pages-primitives';
 import { probeReadiness, type ReadinessStatus } from './readiness-probe.js';
 
-interface ScriptDescriptor {
+export interface ScriptDescriptor {
   name: string;
   description?: string;
   labels: string[];
@@ -99,13 +99,22 @@ export class PagesLibraryView extends LitElement {
   @state() private _readiness = new Map<string, ReadinessStatus>();
   @state() private _allLabels: string[] = [];
 
+  @property({ attribute: false })
+  set scripts(value: ScriptDescriptor[]) {
+    this._scripts = value;
+    this._allLabels = [...new Set(value.flatMap(s => s.labels))];
+    this._probeAll();
+  }
+
+  get scripts(): ScriptDescriptor[] {
+    return this._scripts;
+  }
+
   async loadLibrary(): Promise<void> {
     try {
       const resp = await fetch(`${this.baseUrl}/scenario/library`);
       if (!resp.ok) return;
-      this._scripts = await resp.json() as ScriptDescriptor[];
-      this._allLabels = [...new Set(this._scripts.flatMap(s => s.labels))];
-      this._probeAll();
+      this.scripts = await resp.json() as ScriptDescriptor[];
     } catch { /* ignore */ }
   }
 
