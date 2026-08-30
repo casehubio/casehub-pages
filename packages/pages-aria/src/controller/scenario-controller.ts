@@ -4,6 +4,8 @@ import type { EventConnection } from '@casehubio/pages-data';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives';
 import { ScenarioConnectionController, type ScenarioState, type OutlineNode } from './scenario-connection-controller.js';
 import type { PagesScenarioYamlViewer } from './scenario-yaml-viewer.js';
+import './library-view.js';
+import type { PagesLibraryView } from './library-view.js';
 
 const ACTION_ICONS: Record<string, string> = {
   'show-markdown': '◫',
@@ -148,6 +150,17 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     :host([mode="compact"]) .slider-group-label { color: #475569; }
     :host([mode="compact"]) .progress { color: #38bdf8; }
 
+    .view-header {
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+    }
+    .view-toggle {
+      background: none; border: 1px solid var(--pages-neutral-5, #ddd);
+      border-radius: var(--pages-radius-sm, 4px);
+      padding: 2px 8px; cursor: pointer; font-size: 12px;
+    }
+    .view-toggle:hover { background: var(--pages-neutral-3, #f5f5f5); }
+    .view-toggle.active { background: var(--pages-accent-3, #e8eaf6); border-color: var(--pages-accent-6, #93c5fd); }
     .demo-actions { display: flex; gap: var(--pages-space-2, 8px); padding: var(--pages-space-2, 8px); }
     .demo-btn {
       flex: 1; padding: var(--pages-space-2, 8px);
@@ -172,6 +185,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   @state() private _expanded = false;
   @state() private _yamlOpen = false;
   @state() private _calloutMsPerChar = 25;
+  @state() private _view: 'outline' | 'library' = 'outline';
 
   @state() private _outline: OutlineNode[] = [];
 
@@ -264,11 +278,59 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       return this._expanded ? this._renderCompactCard() : this._renderCompactPill();
     }
     return html`
-      ${this._renderOutline()}
+      ${this._renderViewHeader()}
+      ${this._view === 'library' ? this._renderLibrary() : this._renderOutline()}
       ${this._renderDemoActions()}
       ${this._renderTransport()}
       ${this._renderStatus()}
     `;
+  }
+
+  private _renderViewHeader(): TemplateResult {
+    return html`
+      <div class="view-header">
+        <button class="view-toggle ${this._view === 'library' ? 'active' : ''}"
+                aria-label="Toggle library"
+                @click=${() => this._toggleLibrary()}>
+          ${this._view === 'library' ? '☰ Outline' : '☰ Library'}
+        </button>
+      </div>
+    `;
+  }
+
+  private _toggleLibrary(): void {
+    if (this._view === 'library') {
+      this._view = 'outline';
+    } else {
+      this._view = 'library';
+      void this._loadLibraryView();
+    }
+  }
+
+  private async _loadLibraryView(): Promise<void> {
+    await this.updateComplete;
+    const view = this.shadowRoot?.querySelector('pages-library-view') as PagesLibraryView | null;
+    if (view) {
+      await view.loadLibrary();
+    }
+  }
+
+  private _renderLibrary(): TemplateResult {
+    return html`
+      <pages-library-view
+        .baseUrl=${this._conn?.restBase ?? this.baseUrl ?? ''}
+        @script-selected=${(e: CustomEvent) => this._onScriptSelected(e)}
+      ></pages-library-view>
+    `;
+  }
+
+  private _onScriptSelected(e: CustomEvent): void {
+    this._view = 'outline';
+    this.dispatchEvent(new CustomEvent('script-selected', {
+      detail: e.detail,
+      bubbles: true,
+      composed: true,
+    }));
   }
 
   private _renderOutline(): TemplateResult {

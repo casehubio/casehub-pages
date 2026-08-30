@@ -172,8 +172,8 @@ describe('pages-scenario-controller', () => {
     document.body.appendChild(el);
     await el.updateComplete;
 
-    const buttons = el.shadowRoot?.querySelectorAll('button');
-    buttons?.forEach(btn => {
+    const transportBtns = el.shadowRoot?.querySelectorAll('.transport button');
+    transportBtns?.forEach(btn => {
       expect(btn.disabled).toBe(true);
     });
     el.remove();
@@ -461,6 +461,34 @@ describe('pages-scenario-controller', () => {
     const icon = el.shadowRoot!.querySelector('.step-type-icon');
     expect(icon).not.toBeNull();
     expect(icon!.textContent!.trim()).toBe('◎');
+    el.remove();
+  });
+
+  it('toggles library view in full mode', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    el.baseUrl = 'http://localhost:8080';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([]),
+    }));
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const libraryBtn = el.shadowRoot?.querySelector('[aria-label="Toggle library"]') as HTMLButtonElement;
+    expect(libraryBtn).not.toBeNull();
+
+    libraryBtn.click();
+    await el.updateComplete;
+
+    const libraryView = el.shadowRoot?.querySelector('pages-library-view');
+    expect(libraryView).not.toBeNull();
+
+    libraryBtn.click();
+    await el.updateComplete;
+
+    const libraryViewAfter = el.shadowRoot?.querySelector('pages-library-view');
+    expect(libraryViewAfter).toBeNull();
+
     el.remove();
   });
 
