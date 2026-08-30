@@ -1,0 +1,7 @@
+scenario: cyclic-a
+steps:
+  - label: "Call B"
+    target: browser
+    commands:
+      - action: call
+        script: cyclic-b

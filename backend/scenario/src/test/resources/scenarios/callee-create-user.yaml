@@ -1,0 +1,26 @@
+scenario: callee-create-user
+params:
+  - name: userName
+    type: string
+    required: true
+  - name: userRole
+    type: string
+    default: "Viewer"
+steps:
+  - label: "Fill name"
+    target: browser
+    commands:
+      - action: fill
+        target: {role: textbox, name: "Full Name"}
+        value: "${params.userName}"
+  - label: "Select role"
+    target: browser
+    commands:
+      - action: select
+        target: {role: combobox, name: "Role"}
+        value: "${params.userRole}"
+  - label: "Submit"
+    target: browser
+    commands:
+      - action: click
+        target: {role: button, name: "Create"}

@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 public final class ScenarioCompiler {
 
@@ -22,6 +24,11 @@ public final class ScenarioCompiler {
     private ScenarioCompiler() {}
 
     public static CompiledScenario compile(String yaml, Map<String, String> callerParams) {
+        return compile(yaml, callerParams, name -> Optional.empty());
+    }
+
+    public static CompiledScenario compile(String yaml, Map<String, String> callerParams,
+                                            Function<String, Optional<String>> scriptResolver) {
         HierarchicalScenario scenario = HierarchicalParser.parse(yaml);
 
         validateRequiredParams(scenario.params(), callerParams);
@@ -30,7 +37,7 @@ public final class ScenarioCompiler {
         VariableSource paramSource = VariableSource.chain(
                 callerParams::get,
                 defaults::get
-                                                         );
+        );
         VariableResolver resolver = new VariableResolver(
                 Map.of("params", paramSource, "var", paramSource),
                 Set.of("step")
@@ -40,8 +47,8 @@ public final class ScenarioCompiler {
         Map<String, IterationGroup> iterationGroups = buildIterationGroups(
                 scenario.iterations(), csvSources);
 
-        List<HierarchicalStep>                  allSteps = scenario.allSteps().toList();
-        LinkedHashMap<String, HierarchicalStep> stepMap  = toStepMap(allSteps);
+        List<HierarchicalStep> allSteps = scenario.allSteps().toList();
+        LinkedHashMap<String, HierarchicalStep> stepMap = toStepMap(allSteps);
 
         stepMap = expandCsvForEach(stepMap, csvSources, resolver);
 
@@ -49,10 +56,18 @@ public final class ScenarioCompiler {
         ExpansionResult<HierarchicalStep> result = ForEachExpander.expand(
                 stepMap, iterationGroups, resolver, adapter, MAX_EXPANSION);
 
+        List<HierarchicalStep> expandedSteps = result.elements();
+
         List<String> callRefs = ScriptDescriptorExtractor.extract(
                 yaml, ScriptProvenance.BUNDLED).calls();
 
-        return new CompiledScenario(result.elements(), callRefs);}
+        if (!callRefs.isEmpty() && scriptResolver != null) {
+            validateCallGraph(scenario.scenario(), callRefs, scriptResolver);
+            expandedSteps = inlineCalls(expandedSteps, callerParams, scriptResolver);
+        }
+
+        return new CompiledScenario(expandedSteps, callRefs);
+    }
 
     private static void validateRequiredParams(List<ParamDescriptor> params,
                                                 Map<String, String> callerParams) {
@@ -184,14 +199,7 @@ public final class ScenarioCompiler {
 
                 List<ScenarioCommand> resolvedCommands = new ArrayList<>();
                 for (ScenarioCommand cmd : step.commands()) {
-                    String value = cmd.value();
-                    if (value != null && value.contains("${")) {
-                        value = rowResolver.resolveString(value, stampedId);
-                    }
-                    AriaTarget target = resolveAriaTarget(cmd.target(), rowResolver, stampedId);
-                    resolvedCommands.add(new ScenarioCommand(cmd.action(), target,
-                                                             value, cmd.data(), cmd.domain(), cmd.await(), cmd.timeout(),
-                                                             cmd.mode(), cmd.source(), cmd.interval()));
+                    resolvedCommands.add(resolveCommand(cmd, rowResolver, stampedId));
                 }
 
                 result.put(stampedId, new HierarchicalStep(step.name(), step.label(),
@@ -219,5 +227,94 @@ public final class ScenarioCompiler {
         }
         return new AriaTarget(target.role(), name, index, within);}
 
+    private static ScenarioCommand resolveCommand(ScenarioCommand cmd,
+                                                  VariableResolver resolver,
+                                                  String context) {
+        String value = cmd.value();
+        if (value != null && value.contains("${")) {
+            value = resolver.resolveString(value, context);
+        }
+        AriaTarget          target     = resolveAriaTarget(cmd.target(), resolver, context);
+        Map<String, Object> callParams = resolveCallParams(cmd.callParams(), resolver, context);
+        if (value == cmd.value() && target == cmd.target() && callParams == cmd.callParams()) {
+            return cmd;
+        }
+        return new ScenarioCommand(cmd.action(), target, value, cmd.data(),
+                                   cmd.domain(), cmd.await(), cmd.timeout(), cmd.mode(),
+                                   cmd.source(), cmd.interval(), cmd.script(), callParams);
+    }
 
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> resolveCallParams(Map<String, Object> params,
+                                                         VariableResolver resolver,
+                                                         String context) {
+        if (params == null) {return null;}
+        Map<String, Object> resolved = new LinkedHashMap<>();
+        boolean             changed  = false;
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            Object val = entry.getValue();
+            if (val instanceof String s && s.contains("${")) {
+                resolved.put(entry.getKey(), resolver.resolveString(s, context));
+                changed = true;
+            } else {
+                resolved.put(entry.getKey(), val);
+            }
+        }
+        return changed ? Map.copyOf(resolved) : params;
+    }
+
+    private static void validateCallGraph(String rootName, List<String> callRefs,
+                                           Function<String, Optional<String>> scriptResolver) {
+        CallGraphValidator.validate(rootName, name -> {
+            if (name.equals(rootName)) {
+                return Optional.of(new CallGraphValidator.ScriptRef(rootName, callRefs));
+            }
+            return scriptResolver.apply(name).map(yaml -> {
+                var desc = ScriptDescriptorExtractor.extract(yaml, ScriptProvenance.BUNDLED);
+                return new CallGraphValidator.ScriptRef(desc.name(), desc.calls());
+            });
+        });
+    }
+
+    private static List<HierarchicalStep> inlineCalls(
+            List<HierarchicalStep> steps,
+            Map<String, String> parentParams,
+            Function<String, Optional<String>> scriptResolver) {
+        List<HierarchicalStep> result = new ArrayList<>();
+        for (HierarchicalStep step : steps) {
+            ScenarioCommand callCmd = step.commands().stream()
+                    .filter(c -> "call".equals(c.action()) && c.script() != null)
+                    .findFirst().orElse(null);
+
+            if (callCmd == null) {
+                result.add(step);
+                continue;
+            }
+
+            String scriptName = callCmd.script();
+            Optional<String> calleeYaml = scriptResolver.apply(scriptName);
+            if (calleeYaml.isEmpty()) {
+                result.add(step);
+                continue;
+            }
+
+            Map<String, String> mergedParams = new LinkedHashMap<>(parentParams);
+            if (callCmd.callParams() != null) {
+                for (Map.Entry<String, Object> e : callCmd.callParams().entrySet()) {
+                    mergedParams.put(e.getKey(), String.valueOf(e.getValue()));
+                }
+            }
+
+            CompiledScenario callee = compile(calleeYaml.get(), mergedParams, scriptResolver);
+            for (HierarchicalStep calleeStep : callee.steps()) {
+                String prefixedLabel = scriptName + "." + calleeStep.label();
+                String prefixedName = calleeStep.name() != null
+                        ? scriptName + "." + calleeStep.name() : null;
+                result.add(new HierarchicalStep(prefixedName, prefixedLabel,
+                        calleeStep.target(), calleeStep.actor(), calleeStep.trigger(),
+                        null, null, calleeStep.content(), calleeStep.commands()));
+            }
+        }
+        return result;
+    }
 }

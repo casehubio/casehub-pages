@@ -196,8 +196,11 @@ public final class HierarchicalParser {
         String source = node.path("source").asText(null);
         Integer interval = node.has("interval")
             ? node.get("interval").asInt() : null;
+        String script = node.path("script").asText(null);
+        Map<String, Object> callParams = node.has("params")
+            ? toMap(node.get("params")) : null;
         return new ScenarioCommand(action, ariaTarget, value, data,
-            domain, await, timeout, mode, source, interval);
+            domain, await, timeout, mode, source, interval, script, callParams);
     }
 
     private static AriaTarget parseAriaTarget(JsonNode node) {

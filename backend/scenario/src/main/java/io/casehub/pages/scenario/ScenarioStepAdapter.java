@@ -69,7 +69,8 @@ public final class ScenarioStepAdapter implements ForEachAdapter<HierarchicalSte
             }
             resolved.add(new ScenarioCommand(cmd.action(), cmd.target(), value,
                                              cmd.data(), cmd.domain(), cmd.await(), cmd.timeout(),
-                                             cmd.mode(), cmd.source(), cmd.interval()));
+                                             cmd.mode(), cmd.source(), cmd.interval(),
+                                             cmd.script(), cmd.callParams()));
         }
         return resolved;
     }
