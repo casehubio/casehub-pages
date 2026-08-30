@@ -1,4 +1,5 @@
 import { parse } from 'yaml';
+import type { AriaTarget } from '@casehubio/pages-primitives';
 import type { Scenario, ScenarioStep } from './types.js';
 
 const ARIA_ACTIONS = new Set([
@@ -22,13 +23,14 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
 
   if (action === 'show-markdown') {
     const body = raw[action] as Record<string, unknown>;
-    return {
+    const step: ScenarioStep = {
       delivery: 'aria',
       name: `show-markdown-${(body.file as string) ?? 'inline'}`,
       action: 'show-markdown',
-      value: body.content as string | undefined,
       state: body,
     };
+    if (body.content != null) (step as Record<string, unknown>).value = body.content as string;
+    return step;
   }
 
   const body = raw[action] as Record<string, unknown>;
@@ -36,15 +38,15 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
   const name = (body.name as string) ?? 'unknown';
   const autoName = `${action}-${role}-${name}`;
 
-  return {
-    delivery: 'aria',
-    name: autoName,
-    action,
-    target: { role, name, within: body.within as never },
-    value: body.value as string | undefined,
-    state: body.state as Record<string, unknown> | undefined,
-    timeout: body.timeout as number | undefined,
-  };
+  const target: AriaTarget = { role, name };
+  if (body.index != null) target.index = body.index as string;
+  if (body.within != null) target.within = body.within as AriaTarget;
+
+  const step: ScenarioStep = { delivery: 'aria', name: autoName, action, target };
+  if (body.value != null) (step as Record<string, unknown>).value = body.value as string;
+  if (body.state != null) (step as Record<string, unknown>).state = body.state;
+  if (body.timeout != null) (step as Record<string, unknown>).timeout = body.timeout;
+  return step;
 }
 
 export function parseScenario(yamlString: string): Scenario {

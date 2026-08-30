@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 82,
+  "totalSamples": 84,
   "categories": [
     {
       "category": "Charts",
@@ -347,13 +347,6 @@
           "category": "Graph Editing",
           "file": "Interactive Editing.dash.yaml",
           "tsPath": "Graph Editing/Interactive Editing.ts"
-        },
-        {
-          "name": "Pipeline Properties",
-          "path": "Graph Editing/Pipeline Properties.dash.yaml",
-          "category": "Graph Editing",
-          "file": "Pipeline Properties.dash.yaml",
-          "tsPath": "Graph Editing/Pipeline Properties.ts"
         }
       ]
     },
@@ -500,6 +493,32 @@
           "path": "Monitoring/Triton Inference Server.dash.yaml",
           "category": "Monitoring",
           "file": "Triton Inference Server.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Scenario Automation",
+      "samples": [
+        {
+          "name": "Form Automation",
+          "path": "Scenario Automation/Form Automation.dash.yaml",
+          "category": "Scenario Automation",
+          "file": "Form Automation.dash.yaml",
+          "tsPath": "Scenario Automation/Form Automation.ts"
+        },
+        {
+          "name": "Script Library",
+          "path": "Scenario Automation/Script Library.dash.yaml",
+          "category": "Scenario Automation",
+          "file": "Script Library.dash.yaml",
+          "tsPath": "Scenario Automation/Script Library.ts"
+        },
+        {
+          "name": "Table Population",
+          "path": "Scenario Automation/Table Population.dash.yaml",
+          "category": "Scenario Automation",
+          "file": "Table Population.dash.yaml",
+          "tsPath": "Scenario Automation/Table Population.ts"
         }
       ]
     },

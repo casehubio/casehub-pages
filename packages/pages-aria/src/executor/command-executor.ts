@@ -16,7 +16,7 @@ export function resolveTarget(target: AriaTarget): Element {
       const scopeDesc = target.within ? ` within ${target.within.role}` : '';
       throw new Error(`No element found: ${target.role} index ${idx}${scopeDesc} (found ${all.length})`);
     }
-    return all[idx];
+    return all[idx]!;
   }
 
   if (all.length === 0) {
@@ -24,7 +24,7 @@ export function resolveTarget(target: AriaTarget): Element {
     throw new Error(`No element found: ${target.role} "${target.name ?? ''}"${scopeDesc}`);
   }
 
-  return all[0];
+  return all[0]!;
 }
 
 export function click(target: AriaTarget): void {

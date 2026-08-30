@@ -18,6 +18,7 @@ const CATEGORY_ORDER = [
   'Custom Components',
   'Theming',
   'Monitoring',
+  'Scenario Automation',
   'Domain Showcases',
   'Server',
 ];
