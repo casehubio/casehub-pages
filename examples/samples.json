@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 84,
+  "totalSamples": 87,
   "categories": [
     {
       "category": "Charts",
@@ -500,11 +500,32 @@
       "category": "Scenario Automation",
       "samples": [
         {
+          "name": "Composable Workflow",
+          "path": "Scenario Automation/Composable Workflow.dash.yaml",
+          "category": "Scenario Automation",
+          "file": "Composable Workflow.dash.yaml",
+          "tsPath": "Scenario Automation/Composable Workflow.ts"
+        },
+        {
           "name": "Form Automation",
           "path": "Scenario Automation/Form Automation.dash.yaml",
           "category": "Scenario Automation",
           "file": "Form Automation.dash.yaml",
           "tsPath": "Scenario Automation/Form Automation.ts"
+        },
+        {
+          "name": "Parameterized Script",
+          "path": "Scenario Automation/Parameterized Script.dash.yaml",
+          "category": "Scenario Automation",
+          "file": "Parameterized Script.dash.yaml",
+          "tsPath": "Scenario Automation/Parameterized Script.ts"
+        },
+        {
+          "name": "Scenario Controller",
+          "path": "Scenario Automation/Scenario Controller.dash.yaml",
+          "category": "Scenario Automation",
+          "file": "Scenario Controller.dash.yaml",
+          "tsPath": "Scenario Automation/Scenario Controller.ts"
         },
         {
           "name": "Script Library",

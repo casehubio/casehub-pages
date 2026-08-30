@@ -1,0 +1,53 @@
+pages:
+- name: Scenario Controller
+  properties:
+    margin: 20px
+  rows:
+  - columns:
+    - span: 8
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <h2 style="margin: 0 0 16px; color: var(--pages-text-primary, #eee);">Application Under Test</h2>
+              <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                <div style="flex: 1; background: var(--pages-surface-secondary, #2a2a3e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-text-muted, #888); text-transform: uppercase; letter-spacing: 0.5px;">Status</div>
+                  <div id="app-status" style="font-size: 20px; font-weight: 700; color: #4ade80; margin-top: 4px;">Ready</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-surface-secondary, #2a2a3e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-text-muted, #888); text-transform: uppercase; letter-spacing: 0.5px;">Current Step</div>
+                  <div id="current-step" style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-top: 4px;">—</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-surface-secondary, #2a2a3e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-text-muted, #888); text-transform: uppercase; letter-spacing: 0.5px;">Steps Done</div>
+                  <div id="steps-done" style="font-size: 20px; font-weight: 700; color: #f59e0b; margin-top: 4px;">0 / 0</div>
+                </div>
+              </div>
+              <div style="background: var(--pages-surface-secondary, #2a2a3e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; overflow: hidden;">
+                <div style="padding: 10px 16px; border-bottom: 1px solid var(--pages-border-subtle, #333); font-size: 13px; font-weight: 600; color: var(--pages-text-primary, #eee);">Event Log</div>
+                <div id="event-log" style="padding: 12px 16px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; color: var(--pages-text-muted, #999); line-height: 1.8;"></div>
+              </div>
+            </div>
+    - span: 4
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; padding: 16px;">
+              <h3 style="margin: 0 0 8px; color: var(--pages-text-primary, #eee); font-size: 16px;">Scenario Controller</h3>
+              <p style="margin: 0 0 12px; color: var(--pages-text-muted, #888); font-size: 12px;">
+                Simulated controller with outline tree, transport controls, and step progression. Click a scenario to see the controller in action.
+              </p>
+              <div id="controller-scenarios" style="display: flex; flex-direction: column; gap: 8px;"></div>
+              <div id="controller-panel" style="margin-top: 16px; border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; overflow: hidden; display: none;">
+                <div id="outline-tree" style="padding: 8px 0;"></div>
+                <div id="transport" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--pages-border-subtle, #333);">
+                  <button id="btn-play" aria-label="Play" style="background: none; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; padding: 4px 8px; cursor: pointer; color: var(--pages-text-primary, #eee); font-size: 14px;">▶</button>
+                  <button id="btn-step" aria-label="Step" style="background: none; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; padding: 4px 8px; cursor: pointer; color: var(--pages-text-primary, #eee); font-size: 14px;">⏩</button>
+                  <button id="btn-reset" aria-label="Reset Controller" style="background: none; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; padding: 4px 8px; cursor: pointer; color: var(--pages-text-primary, #eee); font-size: 12px;">↺</button>
+                  <span id="progress-text" style="margin-left: auto; font-size: 11px; color: var(--pages-text-muted, #888);">0%</span>
+                </div>
+              </div>
+            </div>

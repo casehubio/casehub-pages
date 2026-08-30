@@ -1,0 +1,89 @@
+pages:
+- name: Composable Workflow
+  properties:
+    margin: 20px
+  rows:
+  - columns:
+    - span: 8
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <h2 style="margin: 0 0 16px; color: var(--pages-text-primary, #eee);">Employee Onboarding</h2>
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div id="section-identity" style="background: var(--pages-surface-secondary, #2a2a3e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; overflow: hidden;">
+                  <div style="padding: 10px 16px; border-bottom: 1px solid var(--pages-border-subtle, #333); font-size: 13px; font-weight: 600; color: var(--pages-text-primary, #eee); display: flex; justify-content: space-between;">
+                    <span>1. Identity</span><span id="badge-identity" style="font-size: 10px; padding: 2px 8px; border-radius: 10px; display: none;"></span>
+                  </div>
+                  <div style="padding: 12px 16px; display: flex; gap: 12px;">
+                    <div style="flex: 1;">
+                      <label style="display: block; margin-bottom: 4px; font-size: 11px; color: var(--pages-text-muted, #999);">First Name</label>
+                      <input aria-label="First Name" role="textbox" style="width: 100%; padding: 6px 10px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 13px; box-sizing: border-box;" />
+                    </div>
+                    <div style="flex: 1;">
+                      <label style="display: block; margin-bottom: 4px; font-size: 11px; color: var(--pages-text-muted, #999);">Last Name</label>
+                      <input aria-label="Last Name" role="textbox" style="width: 100%; padding: 6px 10px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 13px; box-sizing: border-box;" />
+                    </div>
+                    <div style="flex: 1;">
+                      <label style="display: block; margin-bottom: 4px; font-size: 11px; color: var(--pages-text-muted, #999);">Email</label>
+                      <input aria-label="Email" role="textbox" style="width: 100%; padding: 6px 10px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 13px; box-sizing: border-box;" />
+                    </div>
+                  </div>
+                </div>
+                <div id="section-role" style="background: var(--pages-surface-secondary, #2a2a3e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; overflow: hidden;">
+                  <div style="padding: 10px 16px; border-bottom: 1px solid var(--pages-border-subtle, #333); font-size: 13px; font-weight: 600; color: var(--pages-text-primary, #eee); display: flex; justify-content: space-between;">
+                    <span>2. Role Assignment</span><span id="badge-role" style="font-size: 10px; padding: 2px 8px; border-radius: 10px; display: none;"></span>
+                  </div>
+                  <div style="padding: 12px 16px; display: flex; gap: 12px;">
+                    <div style="flex: 1;">
+                      <label style="display: block; margin-bottom: 4px; font-size: 11px; color: var(--pages-text-muted, #999);">Department</label>
+                      <select aria-label="Department" role="listbox" style="width: 100%; padding: 6px 10px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 13px;">
+                        <option value="">Select...</option><option value="Engineering">Engineering</option><option value="Design">Design</option><option value="Product">Product</option>
+                      </select>
+                    </div>
+                    <div style="flex: 1;">
+                      <label style="display: block; margin-bottom: 4px; font-size: 11px; color: var(--pages-text-muted, #999);">Job Title</label>
+                      <input aria-label="Job Title" role="textbox" style="width: 100%; padding: 6px 10px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 13px; box-sizing: border-box;" />
+                    </div>
+                  </div>
+                </div>
+                <div id="section-access" style="background: var(--pages-surface-secondary, #2a2a3e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; overflow: hidden;">
+                  <div style="padding: 10px 16px; border-bottom: 1px solid var(--pages-border-subtle, #333); font-size: 13px; font-weight: 600; color: var(--pages-text-primary, #eee); display: flex; justify-content: space-between;">
+                    <span>3. Access & Tools</span><span id="badge-access" style="font-size: 10px; padding: 2px 8px; border-radius: 10px; display: none;"></span>
+                  </div>
+                  <div style="padding: 12px 16px; display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--pages-text-primary, #eee); cursor: pointer;">
+                      <input aria-label="GitHub" type="checkbox" role="checkbox" style="width: 16px; height: 16px;" /> GitHub
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--pages-text-primary, #eee); cursor: pointer;">
+                      <input aria-label="Slack" type="checkbox" role="checkbox" style="width: 16px; height: 16px;" /> Slack
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--pages-text-primary, #eee); cursor: pointer;">
+                      <input aria-label="JIRA" type="checkbox" role="checkbox" style="width: 16px; height: 16px;" /> JIRA
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--pages-text-primary, #eee); cursor: pointer;">
+                      <input aria-label="VPN" type="checkbox" role="checkbox" style="width: 16px; height: 16px;" /> VPN
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+    - span: 4
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; padding: 16px;">
+              <h3 style="margin: 0 0 8px; color: var(--pages-text-primary, #eee); font-size: 16px;">Workflow Scripts</h3>
+              <p style="margin: 0 0 8px; color: var(--pages-text-muted, #888); font-size: 12px;">
+                The parent script <strong>calls</strong> child scripts for each section. Watch each section light up as its sub-script runs.
+              </p>
+              <div style="font-size: 11px; color: var(--pages-text-muted, #666); margin-bottom: 12px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; font-family: monospace; line-height: 1.6;">
+                onboard-employee (parent)<br/>
+                &nbsp;&nbsp;→ call: fill-identity<br/>
+                &nbsp;&nbsp;→ call: assign-role<br/>
+                &nbsp;&nbsp;→ call: grant-access
+              </div>
+              <div id="workflow-picker" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
