@@ -209,10 +209,15 @@ public final class ScenarioCompiler {
         if (name != null && name.contains("${")) {
             name = resolver.resolveString(name, context);
         }
+        String index = target.index();
+        if (index != null && index.contains("${")) {
+            index = resolver.resolveString(index, context);
+        }
         AriaTarget within = resolveAriaTarget(target.within(), resolver, context);
-        if (name == target.name() && within == target.within()) {return target;}
-        return new AriaTarget(target.role(), name, within);
-    }
+        if (name == target.name() && index == target.index() && within == target.within()) {
+            return target;
+        }
+        return new AriaTarget(target.role(), name, index, within);}
 
 
 }

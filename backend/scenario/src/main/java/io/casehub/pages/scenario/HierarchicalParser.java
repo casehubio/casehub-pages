@@ -201,14 +201,17 @@ public final class HierarchicalParser {
     }
 
     private static AriaTarget parseAriaTarget(JsonNode node) {
-        if (node.isTextual()) return null;
-        String role = node.path("role").asText(null);
-        String name = node.path("name").asText(null);
-        if (role == null || name == null) return null;
+        if (node.isTextual()) {return null;}
+        String role  = node.path("role").asText(null);
+        String name  = node.path("name").asText(null);
+        String index = node.has("index") ? node.get("index").asText() : null;
+        if (role == null) {return null;}
+        if (name == null && index == null) {return null;}
         AriaTarget within = node.has("within")
-            ? parseAriaTarget(node.get("within")) : null;
-        return new AriaTarget(role, name, within);
-    }
+                            ? parseAriaTarget(node.get("within")) : null;
+        return new AriaTarget(role, name, index, within);}
+
+
 
     private static AwaitCondition parseAwait(JsonNode node) {
         Map<String, Object> match = node.has("match")

@@ -295,6 +295,85 @@ class ScenarioCompilerTest {
                 .isEqualTo("Row 2");
     }
 
+    @Test
+    void compile_forEachCsv_indexOnlyTarget_noNameRequired() {
+        var compiled = ScenarioCompiler.compile("""
+                                                scenario: index-only
+                                                data:
+                                                  rows:
+                                                    inline: |
+                                                      value:string
+                                                      Alpha
+                                                      Bravo
+                                                steps:
+                                                  - label: "Select row"
+                                                    target: browser
+                                                    forEach:
+                                                      as: row
+                                                      in: rows
+                                                    commands:
+                                                      - action: click
+                                                        target: {role: row, index: "${each.index}"}
+                                                """, Map.of());
+        assertThat(compiled.steps()).hasSize(2);
+        assertThat(compiled.steps().get(0).commands().get(0).target().index()).isEqualTo("0");
+        assertThat(compiled.steps().get(0).commands().get(0).target().name()).isNull();
+        assertThat(compiled.steps().get(1).commands().get(0).target().index()).isEqualTo("1");
+    }
+
+    @Test
+    void compile_forEachCsv_scopedByIndexedRow() {
+        var compiled = ScenarioCompiler.compile("""
+                                                scenario: scoped-index
+                                                data:
+                                                  items:
+                                                    inline: |
+                                                      name:string,qty:integer
+                                                      Widget,10
+                                                      Gadget,25
+                                                steps:
+                                                  - label: "Fill quantity"
+                                                    target: browser
+                                                    forEach:
+                                                      as: item
+                                                      in: items
+                                                    commands:
+                                                      - action: fill
+                                                        target:
+                                                          role: spinbutton
+                                                          name: "Qty"
+                                                          within: {role: row, index: "${each.index}"}
+                                                        value: "${each.item.qty}"
+                                                """, Map.of());
+        assertThat(compiled.steps()).hasSize(2);
+        var first = compiled.steps().get(0).commands().get(0);
+        assertThat(first.target().name()).isEqualTo("Qty");
+        assertThat(first.target().within().index()).isEqualTo("0");
+        assertThat(first.target().within().name()).isNull();
+        assertThat(first.value()).isEqualTo("10");
+        var second = compiled.steps().get(1).commands().get(0);
+        assertThat(second.target().within().index()).isEqualTo("1");
+        assertThat(second.value()).isEqualTo("25");
+    }
+
+    @Test
+    void compile_staticIndexTarget_parsesWithoutForEach() {
+        var compiled = ScenarioCompiler.compile("""
+                                                scenario: static-index
+                                                steps:
+                                                  - label: "Click third row"
+                                                    target: browser
+                                                    commands:
+                                                      - action: click
+                                                        target: {role: row, index: 2}
+                                                """, Map.of());
+        assertThat(compiled.steps()).hasSize(1);
+        var cmd = compiled.steps().get(0).commands().get(0);
+        assertThat(cmd.target().role()).isEqualTo("row");
+        assertThat(cmd.target().index()).isEqualTo("2");
+        assertThat(cmd.target().name()).isNull();
+    }
+
 
     private static String fixture(String name) {
         try (InputStream is = ScenarioCompilerTest.class.getClassLoader()
