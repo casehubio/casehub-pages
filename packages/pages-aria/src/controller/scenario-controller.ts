@@ -66,6 +66,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       border-radius: var(--pages-radius-sm, 4px);
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       cursor: pointer; font-size: 16px; line-height: 1;
+      color: var(--pages-neutral-12, #1a1a1a);
     }
     .transport button:hover:not(:disabled) { background: var(--pages-neutral-3, #f5f5f5); }
     .transport button:disabled { opacity: 0.4; cursor: not-allowed; }
