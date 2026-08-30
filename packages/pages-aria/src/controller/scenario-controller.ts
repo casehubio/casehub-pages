@@ -228,7 +228,11 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _onStateChange(s: ScenarioState): void {
-    if (s.scenario && this._outline.length === 0) void this._fetchOutline();
+    if (s.outline) {
+      this._outline = s.outline;
+    } else if (s.scenario && this._outline.length === 0) {
+      void this._fetchOutline();
+    }
     if (!s.scenario) this._outline = [];
     this.updateComplete.then(() => this._scrollToCurrent());
   }
@@ -265,15 +269,28 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     return result;
   }
 
+  private _isSectionBeforeCurrent(sectionLabel: string): boolean {
+    const state = this._conn?.state;
+    if (!state?.section) return false;
+    const sectionLabels = this._outline.map(n => n.label);
+    const currentIdx = sectionLabels.indexOf(state.section);
+    const labelIdx = sectionLabels.indexOf(sectionLabel);
+    return labelIdx >= 0 && currentIdx >= 0 && labelIdx < currentIdx;
+  }
+
   private _isBeforeCurrent(label: string): boolean {
+    const state = this._conn?.state;
+    if (!state?.step && state?.section) {
+      return this._isSectionBeforeCurrent(label);
+    }
     const labels = this._flattenLabels(this._outline);
-    const currentIdx = labels.indexOf(this._conn?.state.step ?? '');
+    const currentIdx = labels.indexOf(state?.step ?? '');
     const labelIdx = labels.indexOf(label);
     return labelIdx >= 0 && currentIdx >= 0 && labelIdx < currentIdx;
   }
 
   override render(): TemplateResult {
-    if (!this.connection && !this.baseUrl) {
+    if (!this.connection && !this.baseUrl && !this.eventTarget) {
       return html`<div class="error">No connection configured</div>`;
     }
     if (this.mode === 'compact') {
@@ -401,8 +418,13 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
 
   private _renderNode(node: OutlineNode, depth: number): TemplateResult {
     const isLeaf = node.children.length === 0;
-    const isCurrent = isLeaf && node.label === this._conn?.state.step;
-    const isCompleted = isLeaf && this._isBeforeCurrent(node.label);
+    const state = this._conn?.state;
+    const isCurrent = isLeaf
+      ? node.label === state?.step
+      : (!state?.step && node.label === state?.section);
+    const isCompleted = isLeaf
+      ? this._isBeforeCurrent(node.label)
+      : this._isSectionBeforeCurrent(node.label);
 
     if (isLeaf) {
       const icon = node.action ? ACTION_ICONS[node.action] : undefined;

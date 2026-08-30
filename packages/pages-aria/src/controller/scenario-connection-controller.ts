@@ -11,6 +11,8 @@ export interface ScenarioState {
   progress: number;
   content: { type: string; markdown?: string; path?: string; section?: string; ref?: unknown } | null;
   slides: string | null;
+  outline?: OutlineNode[];
+  error?: { step: string; message: string } | null;
 }
 
 export interface OutlineNode {
@@ -63,11 +65,15 @@ export class ScenarioConnectionController implements ReactiveController {
     this._ensureConnection();
     const conn = this._getConnection();
     const target = this._getEventTarget();
+    if (target) {
+      target.addEventListener('pages-event', this._eventHandler);
+    }
     if (conn && target) {
       void conn.listen(['scenario:state']);
-      target.addEventListener('pages-event', this._eventHandler);
       this.connectionStatus = conn.status ?? 'disconnected';
       void this._fetchInitialState();
+    } else if (target && !conn) {
+      this.connectionStatus = 'connected';
     }
   }
 
@@ -84,6 +90,14 @@ export class ScenarioConnectionController implements ReactiveController {
   }
 
   async sendCommand(path: string, body?: object): Promise<void> {
+    const target = this._getEventTarget();
+    if (!this._opts.baseUrl && !this._opts.connection && target) {
+      const command = path.replace(/^\//, '');
+      target.dispatchEvent(new CustomEvent('scenario-command', {
+        detail: { command, ...body },
+      }));
+      return;
+    }
     await fetch(`${this.restBase}/scenario${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

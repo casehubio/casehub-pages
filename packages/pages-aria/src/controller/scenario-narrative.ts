@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { EventConnection } from '@casehubio/pages-data';
 import { ScenarioConnectionController } from './scenario-connection-controller.js';
+import { sanitizeHtml } from './html-sanitizer.js';
 
 export class PagesScenarioNarrative extends LitElement {
   static override styles = css`
@@ -39,6 +40,8 @@ export class PagesScenarioNarrative extends LitElement {
   @property({ attribute: false }) connection?: EventConnection;
   @property({ attribute: false }) eventTarget?: EventTarget;
   @property() baseUrl?: string;
+  @property() contentBase?: string;
+  @property({ type: String }) htmlMode: 'escape' | 'sanitized' = 'escape';
 
   private _conn!: ScenarioConnectionController;
   private _templateCache = new Map<string, string>();
@@ -112,7 +115,10 @@ export class PagesScenarioNarrative extends LitElement {
 
   private async _fetchTemplate(path: string, section?: string): Promise<void> {
     try {
-      const resp = await fetch(`${this._conn.restBase}/scenario/content?path=${encodeURIComponent(path)}`);
+      const url = this.contentBase
+        ? `${this.contentBase}/${path}`
+        : `${this._conn.restBase}/scenario/content?path=${encodeURIComponent(path)}`;
+      const resp = await fetch(url);
       if (resp.ok) {
         const text = await resp.text();
         this._templateCache.set(path, text);
@@ -177,25 +183,40 @@ export class PagesScenarioNarrative extends LitElement {
   }
 
   private _renderMarkdown(md: string): TemplateResult {
-    const escaped = md
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    let processed: string;
 
-    const rendered = escaped
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/`(.+?)`/g, '<code>$1</code>')
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/^(?!<[hulo])(.+)$/gm, '<p>$1</p>');
+    if (this.htmlMode === 'sanitized') {
+      processed = md
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^(?!<[hulo]|<svg)(.+)$/gm, '<p>$1</p>');
+      processed = sanitizeHtml(processed);
+    } else {
+      const escaped = md
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      processed = escaped
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^(?!<[hulo])(.+)$/gm, '<p>$1</p>');
+    }
 
     const container = document.createElement('div');
     container.className = 'narrative-content';
-    container.innerHTML = rendered;
+    container.innerHTML = processed;
     return html`${container}`;
   }
 }
