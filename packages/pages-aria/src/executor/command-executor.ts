@@ -10,9 +10,18 @@ export function resolveTarget(target: AriaTarget): Element {
 
   const all = findAllByRole(target.role, target.name, scope);
 
+  if (target.index != null) {
+    const idx = typeof target.index === 'string' ? parseInt(target.index, 10) : target.index;
+    if (idx < 0 || idx >= all.length) {
+      const scopeDesc = target.within ? ` within ${target.within.role}` : '';
+      throw new Error(`No element found: ${target.role} index ${idx}${scopeDesc} (found ${all.length})`);
+    }
+    return all[idx];
+  }
+
   if (all.length === 0) {
-    const scopeDesc = target.within ? ` within ${target.within.role} "${target.within.name}"` : '';
-    throw new Error(`No element found: ${target.role} "${target.name}"${scopeDesc}`);
+    const scopeDesc = target.within ? ` within ${target.within.role} "${target.within.name ?? ''}"` : '';
+    throw new Error(`No element found: ${target.role} "${target.name ?? ''}"${scopeDesc}`);
   }
 
   return all[0];

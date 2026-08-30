@@ -39,6 +39,54 @@ describe('ARIA command executor', () => {
       const el = resolveTarget({ role: 'button', name: 'Delete' });
       expect(el.textContent).toBe('First');
     });
+
+    it('selects element by index without name', () => {
+      document.body.innerHTML = `
+        <div role="row">Row 0</div>
+        <div role="row">Row 1</div>
+        <div role="row">Row 2</div>
+      `;
+      const el = resolveTarget({ role: 'row', index: '1' });
+      expect(el.textContent).toBe('Row 1');
+    });
+
+    it('selects element by index within scope', () => {
+      document.body.innerHTML = `
+        <table role="grid">
+          <div role="row">
+            <div role="gridcell">A1</div>
+            <div role="gridcell">A2</div>
+          </div>
+          <div role="row">
+            <div role="gridcell">B1</div>
+            <div role="gridcell">B2</div>
+          </div>
+        </table>
+      `;
+      const el = resolveTarget({
+        role: 'gridcell', index: '1',
+        within: { role: 'row', index: '0' },
+      });
+      expect(el.textContent).toBe('A2');
+    });
+
+    it('selects by name within indexed scope', () => {
+      document.body.innerHTML = `
+        <div role="row"><input aria-label="Name" /><input aria-label="Role" /></div>
+        <div role="row"><input aria-label="Name" /><input aria-label="Role" /></div>
+      `;
+      const el = resolveTarget({
+        role: 'textbox', name: 'Role',
+        within: { role: 'row', index: '1' },
+      });
+      expect(el.closest('[role="row"]')).toBe(document.querySelectorAll('[role="row"]')[1]);
+    });
+
+    it('throws when index is out of range', () => {
+      document.body.innerHTML = '<div role="row">Only row</div>';
+      expect(() => resolveTarget({ role: 'row', index: '5' }))
+        .toThrow('No element found');
+    });
   });
 
   describe('click', () => {

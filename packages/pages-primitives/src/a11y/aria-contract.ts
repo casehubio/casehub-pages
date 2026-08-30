@@ -23,7 +23,8 @@ export interface AriaInteractive {
 
 export interface AriaTarget {
   role: string;
-  name: string;
+  name?: string;
+  index?: string;
   within?: AriaTarget;
 }
 
