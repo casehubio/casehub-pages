@@ -1,0 +1,85 @@
+scenario: form-automation-tutorial
+meta:
+  title: "Form Automation Basics"
+  description: "Automate form entry with fill, select, and click commands"
+  area: scenario-automation
+  labels:
+    - concept:aria
+    - concept:commands
+    - concept:fill
+    - concept:select
+    - concept:click
+    - difficulty:beginner
+  tags:
+    - getting-started
+    - forms
+    - hands-on
+  estimated: "10 min"
+  prerequisites:
+    - architecture-concepts
+  hero:
+    title: "Form Automation Basics"
+    subtitle: "Your first steps with ARIA-based browser automation"
+    icon: "✎"
+
+sections:
+  - title: "Introduction"
+    content:
+      type: template
+      path: content/intro.md
+    steps: []
+
+  - title: "Scenario YAML Structure"
+    content:
+      type: template
+      path: content/yaml-structure.md
+    steps: []
+
+  - title: "ARIA Commands: fill"
+    content:
+      type: template
+      path: content/fill-command.md
+    steps:
+      - fill:
+          role: textbox
+          name: "Full Name"
+          value: "Alice Chen"
+      - fill:
+          role: textbox
+          name: "Email"
+          value: "alice.chen@example.com"
+
+  - title: "ARIA Commands: select"
+    content:
+      type: template
+      path: content/select-command.md
+    steps:
+      - select:
+          role: listbox
+          name: "Department"
+          value: "Engineering"
+      - fill:
+          role: textbox
+          name: "Role"
+          value: "Senior Developer"
+
+  - title: "ARIA Commands: click"
+    content:
+      type: template
+      path: content/click-command.md
+    steps:
+      - click:
+          role: button
+          name: "Submit"
+
+  - title: "The Controller UI"
+    content:
+      type: template
+      path: content/controller-ui.md
+    steps: []
+
+  - title: "Recap"
+    content:
+      type: template
+      path: content/recap.md
+    steps: []

@@ -1,0 +1,8 @@
+path: scenario-fundamentals
+title: "Scenario Engine Fundamentals"
+description: "Complete introduction to the automation platform"
+labels:
+  - difficulty:beginner
+tutorials:
+  - architecture-concepts
+  - form-automation-tutorial

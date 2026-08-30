@@ -1,0 +1,63 @@
+scenario: architecture-concepts
+meta:
+  title: "Architecture & Concepts"
+  description: "How the scenario engine works — orchestrator, executors, ARIA targeting, compilation"
+  area: scenario-automation
+  labels:
+    - concept:architecture
+    - concept:executor-protocol
+    - concept:aria
+    - concept:compilation
+    - difficulty:beginner
+  tags:
+    - overview
+    - getting-started
+  estimated: "15 min"
+  prerequisites: []
+  hero:
+    title: "Architecture & Concepts"
+    subtitle: "Understanding the automation platform before writing your first script"
+    icon: "◎"
+
+sections:
+  - title: "What is the Scenario Engine?"
+    content:
+      type: template
+      path: content/intro.md
+    steps: []
+
+  - title: "Distributed Executor Architecture"
+    content:
+      type: template
+      path: content/executor-architecture.md
+    steps: []
+
+  - title: "Push Wire Protocol"
+    content:
+      type: template
+      path: content/push-wire.md
+    steps: []
+
+  - title: "ARIA-Based Targeting"
+    content:
+      type: template
+      path: content/aria-targeting.md
+    steps: []
+
+  - title: "Compilation Pipeline"
+    content:
+      type: template
+      path: content/compilation-pipeline.md
+    steps: []
+
+  - title: "Script Library"
+    content:
+      type: template
+      path: content/script-library.md
+    steps: []
+
+  - title: "Readiness Probes"
+    content:
+      type: template
+      path: content/readiness-probes.md
+    steps: []
