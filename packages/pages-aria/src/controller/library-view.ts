@@ -16,7 +16,11 @@ export interface ScriptDescriptor {
 
 export class PagesLibraryView extends LitElement {
   static override styles = css`
-    :host { display: block; }
+    :host {
+      display: block;
+      font-family: var(--pages-font-family, system-ui, sans-serif);
+      color: var(--pages-neutral-12, #1a1a1a);
+    }
     .search {
       padding: var(--pages-space-2, 8px);
       border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
@@ -27,7 +31,10 @@ export class PagesLibraryView extends LitElement {
       border: 1px solid var(--pages-neutral-5, #ddd);
       border-radius: var(--pages-radius-sm, 4px);
       font-size: var(--pages-font-size-sm, 12px);
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #1a1a1a);
     }
+    .search input::placeholder { color: var(--pages-neutral-8, #999); }
     .filters {
       display: flex; flex-wrap: wrap; gap: 4px;
       padding: 4px var(--pages-space-2, 8px);
@@ -43,23 +50,27 @@ export class PagesLibraryView extends LitElement {
     .script-list { padding: var(--pages-space-2, 8px) 0; }
     .script-item {
       padding: var(--pages-space-2, 8px);
-      border-bottom: 1px solid var(--pages-neutral-3, #f5f5f5);
+      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
       display: flex; align-items: flex-start; gap: var(--pages-space-2, 8px);
     }
-    .script-item:hover { background: var(--pages-neutral-2, #fafafa); }
+    .script-item:hover { background: var(--pages-neutral-3, #f5f5f5); }
     .readiness {
       font-size: 10px; font-weight: 600;
       padding: 2px 6px; border-radius: var(--pages-radius-sm, 4px);
       flex-shrink: 0; min-width: 52px; text-align: center;
     }
-    .readiness-ready { background: #dcfce7; color: #166534; }
-    .readiness-not-ready { background: #fee2e2; color: #991b1b; }
-    .readiness-unknown { background: #fef3c7; color: #92400e; }
+    .readiness-ready { background: var(--pages-success-3, #dcfce7); color: var(--pages-success-11, #166534); }
+    .readiness-not-ready { background: var(--pages-danger-3, #fee2e2); color: var(--pages-danger-11, #991b1b); }
+    .readiness-unknown { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-11, #92400e); }
     .script-info { flex: 1; min-width: 0; }
-    .script-name { font-weight: 500; font-size: var(--pages-font-size-base, 14px); }
+    .script-name {
+      font-weight: var(--pages-font-weight-medium, 500);
+      font-size: var(--pages-font-size-base, 14px);
+      color: var(--pages-neutral-12, #1a1a1a);
+    }
     .script-desc {
       font-size: var(--pages-font-size-sm, 12px);
-      color: var(--pages-neutral-8, #999);
+      color: var(--pages-neutral-9, #777);
       margin-top: 2px;
     }
     .script-meta {
