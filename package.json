@@ -27,6 +27,7 @@
     "build:webapp": "yarn workspace @casehubio/pages-webapp run build",
     "build:examples": "yarn workspace @casehubio/pages-examples run build",
     "typecheck": "npx tsc --build",
+    "build:tutorials": "node scripts/build-tutorial-registry.mjs",
     "lint": "npx eslint .",
     "clean": "yarn workspaces foreach -Apt run clean || true",
     "test": "yarn workspaces foreach -Apt run test"
