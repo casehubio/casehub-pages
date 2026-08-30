@@ -22,7 +22,7 @@ function ariaClick(name) {
 
 var PARAMS = [
   { name: 'projectName', label: 'Project Name *', type: 'text', required: true, defaultValue: 'Acme Portal' },
-  { name: 'template', label: 'Template', type: 'select', required: false, defaultValue: 'starter', options: ['blank', 'starter', 'enterprise'] },
+  { name: 'template', label: 'Template', type: 'select', required: false, defaultValue: 'starter', options: [{ value: 'blank', text: 'Blank Project' }, { value: 'starter', text: 'Starter Kit' }, { value: 'enterprise', text: 'Enterprise Suite' }] },
   { name: 'teamSize', label: 'Team Size', type: 'number', required: false, defaultValue: '5' },
   { name: 'enableCI', label: 'Enable CI', type: 'checkbox', required: false, defaultValue: 'true' },
 ];
@@ -42,8 +42,8 @@ if (paramForm) {
       sel.style.cssText = 'width: 100%; padding: 6px 8px; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; background: rgba(255,255,255,0.05); color: #e2e8f0; font-size: 12px;';
       p.options.forEach(function(opt) {
         var o = document.createElement('option');
-        o.value = opt; o.textContent = opt;
-        if (opt === p.defaultValue) o.selected = true;
+        o.value = opt.value || opt; o.textContent = opt.text || opt;
+        if ((opt.value || opt) === p.defaultValue) o.selected = true;
         sel.appendChild(o);
       });
       wrapper.appendChild(sel);
@@ -90,7 +90,7 @@ async function runParameterized(params) {
   var steps = [
     { action: 'fill', target: 'Project Name', value: params.projectName },
     { action: 'select', target: 'Template', value: params.template },
-    { action: 'fill', target: 'Team Size', value: String(params.teamSize) },
+    { action: 'fill', target: 'Team Size', value: '' + params.teamSize },
   ];
 
   if (params.enableCI) {

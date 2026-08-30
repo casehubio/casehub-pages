@@ -1,55 +1,31 @@
-// Simulates the scenario controller with outline tree, transport
-// controls, and step-by-step progression — no server needed.
+// Uses the real <pages-scenario-controller> component from @casehubio/pages-aria.
+// Pumps mock scenario:state events via eventTarget to simulate orchestrator
+// step progression — no server connection needed.
 
 var SCENARIOS = [
   {
-    name: 'Helpdesk Demo',
-    outline: [
-      { label: 'Setup', children: [
-        { label: 'Navigate to portal', children: [] },
-        { label: 'Login as agent', children: [] },
-      ]},
-      { label: 'Ticket Handling', children: [
-        { label: 'Open ticket queue', children: [] },
-        { label: 'Select priority ticket', children: [] },
-        { label: 'Fill resolution notes', children: [] },
-        { label: 'Close ticket', children: [] },
-      ]},
-      { label: 'Verification', children: [
-        { label: 'Check dashboard metrics', children: [] },
-        { label: 'Verify notification sent', children: [] },
-      ]},
-    ],
+    name: 'helpdesk-demo',
+    steps: ['Navigate to portal', 'Login as agent', 'Open ticket queue', 'Select priority ticket', 'Fill resolution notes', 'Close ticket', 'Check dashboard metrics', 'Verify notification sent'],
   },
   {
-    name: 'Data Import',
-    outline: [
-      { label: 'Preparation', children: [
-        { label: 'Open import wizard', children: [] },
-        { label: 'Select CSV file', children: [] },
-        { label: 'Map columns', children: [] },
-      ]},
-      { label: 'Execution', children: [
-        { label: 'Validate data', children: [] },
-        { label: 'Import records', children: [] },
-        { label: 'Generate report', children: [] },
-      ]},
-    ],
+    name: 'data-import',
+    steps: ['Open import wizard', 'Select CSV file', 'Map columns', 'Validate data', 'Import records', 'Generate report'],
   },
 ];
 
-function flattenSteps(nodes) {
-  var result = [];
-  nodes.forEach(function(n) {
-    if (n.children.length === 0) result.push(n.label);
-    else result.push.apply(result, flattenSteps(n.children));
-  });
-  return result;
+var eventTarget = new EventTarget();
+var mount = document.getElementById('controller-mount');
+var controller = null;
+if (mount) {
+  controller = document.createElement('pages-scenario-controller');
+  controller.style.display = 'block';
+  controller.eventTarget = eventTarget;
+  controller.baseUrl = 'http://mock';
+  mount.appendChild(controller);
 }
-
-var currentScenario = null;
-var allSteps = [];
-var currentStepIdx = -1;
+var currentSteps = [];
+var currentName = '';
+var stepIndex = -1;
 var playing = false;
 var playTimer = null;
 
@@ -63,159 +39,134 @@ function logEvent(msg) {
   log.scrollTop = log.scrollHeight;
 }
 
-function updateDisplay() {
+function updateMetrics() {
   var statusEl = document.getElementById('app-status');
   var stepEl = document.getElementById('current-step');
-  var doneEl = document.getElementById('steps-done');
-  var progressEl = document.getElementById('progress-text');
-
-  if (!currentScenario) {
-    if (statusEl) statusEl.textContent = 'Ready';
+  if (stepIndex < 0 || currentSteps.length === 0) {
+    if (statusEl) { statusEl.textContent = 'Ready'; statusEl.style.color = '#4ade80'; }
     if (stepEl) stepEl.textContent = '—';
-    if (doneEl) doneEl.textContent = '0 / 0';
-    if (progressEl) progressEl.textContent = '0%';
     return;
   }
-
-  var total = allSteps.length;
-  var done = Math.max(0, currentStepIdx);
-  var pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
+  var done = stepIndex >= currentSteps.length;
   if (statusEl) {
-    statusEl.textContent = currentStepIdx >= total ? 'Complete' : (playing ? 'Running' : 'Paused');
-    statusEl.style.color = currentStepIdx >= total ? '#4ade80' : (playing ? '#3b82f6' : '#f59e0b');
+    statusEl.textContent = done ? 'Complete' : (playing ? 'Running' : 'Paused');
+    statusEl.style.color = done ? '#4ade80' : (playing ? '#3b82f6' : '#f59e0b');
   }
-  if (stepEl) stepEl.textContent = currentStepIdx < total ? allSteps[currentStepIdx] || '—' : 'Done';
-  if (doneEl) doneEl.textContent = done + ' / ' + total;
-  if (progressEl) progressEl.textContent = pct + '%';
+  if (stepEl) stepEl.textContent = done ? 'Done' : (currentSteps[stepIndex] || '—');
 }
 
-function renderOutline() {
-  var tree = document.getElementById('outline-tree');
-  if (!tree || !currentScenario) return;
-  tree.innerHTML = '';
-
-  function renderNode(node, depth) {
-    var isLeaf = node.children.length === 0;
-    var div = document.createElement('div');
-    var stepIdx = isLeaf ? allSteps.indexOf(node.label) : -1;
-    var isCurrent = isLeaf && stepIdx === currentStepIdx;
-    var isCompleted = isLeaf && stepIdx >= 0 && stepIdx < currentStepIdx;
-
-    div.style.cssText = 'padding: 3px 12px 3px ' + (depth * 16 + 8) + 'px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;';
-    if (isLeaf) {
-      div.style.color = isCurrent ? '#38bdf8' : (isCompleted ? '#475569' : '#94a3b8');
-      if (isCurrent) div.style.fontWeight = '600';
-      div.innerHTML = '<span style="width: 12px; text-align: center;">' + (isCurrent ? '●' : (isCompleted ? '✓' : '○')) + '</span>' + node.label;
-    } else {
-      div.style.color = '#e2e8f0';
-      div.style.fontWeight = '500';
-      div.textContent = node.label;
-    }
-    tree.appendChild(div);
-
-    if (!isLeaf) {
-      node.children.forEach(function(child) { renderNode(child, depth + 1); });
-    }
-  }
-
-  currentScenario.outline.forEach(function(node) { renderNode(node, 0); });
+function fireState(scenarioName, step, paused, progress) {
+  eventTarget.dispatchEvent(new CustomEvent('pages-event', {
+    detail: {
+      topic: 'scenario:state',
+      payload: {
+        scenario: scenarioName,
+        chapter: null,
+        section: null,
+        step: step,
+        paused: paused,
+        speed: 1.0,
+        progress: progress,
+        content: null,
+        slides: null,
+      },
+    },
+  }));
 }
 
 function advanceStep() {
-  if (!currentScenario) return;
-  currentStepIdx++;
-  if (currentStepIdx < allSteps.length) {
-    logEvent('Step: ' + allSteps[currentStepIdx]);
+  if (stepIndex >= currentSteps.length) return;
+  stepIndex++;
+  if (stepIndex < currentSteps.length) {
+    var pct = stepIndex / currentSteps.length;
+    fireState(currentName, currentSteps[stepIndex], false, pct);
+    logEvent('Step: ' + currentSteps[stepIndex]);
   } else {
+    fireState(currentName, null, true, 1.0);
     logEvent('Scenario complete');
     playing = false;
     if (playTimer) { clearInterval(playTimer); playTimer = null; }
-    var playBtn = document.getElementById('btn-play');
-    if (playBtn) playBtn.textContent = '▶';
   }
-  renderOutline();
-  updateDisplay();
+  updateMetrics();
 }
 
 function startScenario(scenario) {
-  currentScenario = scenario;
-  allSteps = flattenSteps(scenario.outline);
-  currentStepIdx = 0;
-  playing = false;
-
-  document.getElementById('event-log').innerHTML = '';
-  document.getElementById('controller-panel').style.display = 'block';
-  logEvent('Scenario loaded: ' + scenario.name);
-  logEvent('Steps: ' + allSteps.length);
-  logEvent('Step: ' + allSteps[0]);
-
-  renderOutline();
-  updateDisplay();
-}
-
-function resetController() {
-  playing = false;
   if (playTimer) { clearInterval(playTimer); playTimer = null; }
-  currentScenario = null;
-  allSteps = [];
-  currentStepIdx = -1;
-  document.getElementById('controller-panel').style.display = 'none';
+  currentName = scenario.name;
+  currentSteps = scenario.steps;
+  stepIndex = 0;
+  playing = false;
+
   document.getElementById('event-log').innerHTML = '';
-  var playBtn = document.getElementById('btn-play');
-  if (playBtn) playBtn.textContent = '▶';
-  updateDisplay();
+  logEvent('Loaded: ' + scenario.name + ' (' + scenario.steps.length + ' steps)');
+  logEvent('Step: ' + currentSteps[0]);
+
+  fireState(currentName, currentSteps[0], true, 0);
+  updateMetrics();
 }
 
-var playBtn = document.getElementById('btn-play');
-if (playBtn) {
-  playBtn.onclick = function() {
-    if (!currentScenario || currentStepIdx >= allSteps.length) return;
-    playing = !playing;
-    playBtn.textContent = playing ? '⏸' : '▶';
-    logEvent(playing ? 'Playing' : 'Paused');
-    if (playing) {
-      playTimer = setInterval(function() {
-        if (currentStepIdx >= allSteps.length - 1) {
-          advanceStep();
-          return;
+if (controller) {
+  // Mock the fetch calls the controller makes
+  var origFetch = window.fetch;
+  window.fetch = function(url, opts) {
+    if (typeof url === 'string') {
+      // Mock outline endpoint
+      if (url.indexOf('/scenario/outline') >= 0) {
+        var outline = [];
+        if (currentSteps.length > 0) {
+          var mid = Math.ceil(currentSteps.length / 2);
+          outline = [
+            { label: 'Phase 1', target: null, children: currentSteps.slice(0, mid).map(function(s) { return { label: s, target: 'browser', children: [] }; }) },
+            { label: 'Phase 2', target: null, children: currentSteps.slice(mid).map(function(s) { return { label: s, target: 'browser', children: [] }; }) },
+          ];
         }
-        advanceStep();
-      }, 800);
-    } else {
-      if (playTimer) { clearInterval(playTimer); playTimer = null; }
+        return Promise.resolve({ ok: true, json: function() { return Promise.resolve(outline); } });
+      }
+      // Mock command endpoints (pause/resume/step/speed)
+      if (url.indexOf('/scenario/') >= 0 && opts && opts.method === 'POST') {
+        if (url.indexOf('/pause') >= 0) {
+          playing = false;
+          if (playTimer) { clearInterval(playTimer); playTimer = null; }
+          if (stepIndex < currentSteps.length) fireState(currentName, currentSteps[stepIndex], true, stepIndex / currentSteps.length);
+          logEvent('Paused');
+          updateMetrics();
+        } else if (url.indexOf('/resume') >= 0) {
+          playing = true;
+          logEvent('Playing');
+          playTimer = setInterval(advanceStep, 800);
+          if (stepIndex < currentSteps.length) fireState(currentName, currentSteps[stepIndex], false, stepIndex / currentSteps.length);
+          updateMetrics();
+        } else if (url.indexOf('/step') >= 0) {
+          playing = false;
+          if (playTimer) { clearInterval(playTimer); playTimer = null; }
+          advanceStep();
+        }
+        return Promise.resolve({ ok: true, json: function() { return Promise.resolve({}); } });
+      }
+      // Mock state endpoint
+      if (url.indexOf('/scenario/state') >= 0) {
+        return Promise.resolve({ ok: true, json: function() {
+          return Promise.resolve({
+            scenario: currentName || null, chapter: null, section: null,
+            step: stepIndex >= 0 && stepIndex < currentSteps.length ? currentSteps[stepIndex] : null,
+            paused: !playing, speed: 1.0,
+            progress: currentSteps.length > 0 ? stepIndex / currentSteps.length : 0,
+            content: null, slides: null,
+          });
+        }});
+      }
     }
-    updateDisplay();
+    return origFetch.apply(window, arguments);
   };
 }
 
-var stepBtn = document.getElementById('btn-step');
-if (stepBtn) {
-  stepBtn.onclick = function() {
-    if (!currentScenario || currentStepIdx >= allSteps.length) return;
-    if (playing) {
-      playing = false;
-      if (playTimer) { clearInterval(playTimer); playTimer = null; }
-      var pb = document.getElementById('btn-play');
-      if (pb) pb.textContent = '▶';
-    }
-    advanceStep();
-  };
-}
-
-var resetBtn = document.getElementById('btn-reset');
-if (resetBtn) { resetBtn.onclick = resetController; }
-
-var scenarioPicker = document.getElementById('controller-scenarios');
-if (scenarioPicker) {
+var buttons = document.getElementById('demo-buttons');
+if (buttons) {
   SCENARIOS.forEach(function(s) {
-    var steps = flattenSteps(s.outline);
     var btn = document.createElement('button');
-    btn.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 6px; cursor: pointer; color: #93c5fd; font-size: 13px; text-align: left; width: 100%;';
-    btn.innerHTML = '<strong>' + s.name + '</strong><span style="font-size: 11px; color: #64748b;">' + steps.length + ' steps across ' + s.outline.length + ' sections</span>';
-    btn.onmouseenter = function() { btn.style.background = 'rgba(37, 99, 235, 0.2)'; };
-    btn.onmouseleave = function() { btn.style.background = 'rgba(37, 99, 235, 0.1)'; };
+    btn.style.cssText = 'padding: 8px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;';
+    btn.textContent = s.name;
     btn.onclick = function() { startScenario(s); };
-    scenarioPicker.appendChild(btn);
+    buttons.appendChild(btn);
   });
 }

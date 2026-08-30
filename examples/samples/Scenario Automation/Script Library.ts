@@ -125,7 +125,7 @@ function showTicketCreated() {
     badge.style.color = '#4ade80';
   }
   var open = document.getElementById('metric-open');
-  if (open) open.textContent = String(parseInt(open.textContent || '12') + 1);
+  if (open) open.textContent = '' + (parseInt(open.textContent || '12') + 1);
 }
 
 async function runSteps(steps, delayMs) {
