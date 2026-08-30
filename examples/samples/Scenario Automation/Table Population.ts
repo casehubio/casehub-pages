@@ -1,12 +1,12 @@
 const ROW_COUNT = 5;
-const INPUT_STYLE = 'width: 100%; padding: 6px 10px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 4px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 13px; box-sizing: border-box;';
+const INPUT_STYLE = 'width: 100%; padding: 6px 10px; border: 1px solid var(--pages-neutral-5); border-radius: 4px; background: var(--pages-neutral-1); color: var(--pages-neutral-12); font-size: 13px; box-sizing: border-box;';
 
 const tbody = document.getElementById('team-table-body');
 if (tbody) {
   for (let i = 0; i < ROW_COUNT; i++) {
     const tr = document.createElement('tr');
     tr.setAttribute('role', 'row');
-    tr.style.cssText = 'border-bottom: 1px solid var(--pages-border-subtle, #333);';
+    tr.style.cssText = 'border-bottom: 1px solid var(--pages-neutral-4);';
     tr.innerHTML = `
       <td style="padding: 8px 16px; color: var(--pages-text-muted, #888); font-size: 13px;">${i + 1}</td>
       <td style="padding: 6px 8px;"><input aria-label="Name" role="textbox" style="${INPUT_STYLE}" /></td>
@@ -112,7 +112,7 @@ if (controls) {
   controls.appendChild(smallBtn);
 
   var clearBtn = document.createElement('button');
-  clearBtn.style.cssText = 'padding: 6px 16px; background: var(--pages-surface-tertiary, #333); color: var(--pages-text-primary, #eee); border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; cursor: pointer; font-size: 13px;';
+  clearBtn.style.cssText = 'padding: 6px 16px; background: var(--pages-neutral-3); color: var(--pages-neutral-12); border: 1px solid var(--pages-neutral-5); border-radius: 6px; cursor: pointer; font-size: 13px;';
   clearBtn.textContent = 'Clear';
   clearBtn.onclick = clearTable;
   controls.appendChild(clearBtn);

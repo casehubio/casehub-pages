@@ -10,22 +10,22 @@ pages:
         properties:
           content: |
             <div style="max-width: 500px;">
-              <h2 style="margin: 0 0 16px; color: var(--pages-text-primary, #eee);">New Team Member</h2>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">New Team Member</h2>
               <form id="member-form" style="display: flex; flex-direction: column; gap: 12px;">
                 <div>
-                  <label for="name-input" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-text-muted, #999);">Full Name</label>
+                  <label for="name-input" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-neutral-9);">Full Name</label>
                   <input id="name-input" type="text" aria-label="Full Name" role="textbox"
-                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-secondary, #2a2a3e); color: var(--pages-text-primary, #eee); font-size: 14px; box-sizing: border-box;" />
+                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px; box-sizing: border-box;" />
                 </div>
                 <div>
-                  <label for="email-input" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-text-muted, #999);">Email</label>
+                  <label for="email-input" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-neutral-9);">Email</label>
                   <input id="email-input" type="email" aria-label="Email" role="textbox"
-                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-secondary, #2a2a3e); color: var(--pages-text-primary, #eee); font-size: 14px; box-sizing: border-box;" />
+                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px; box-sizing: border-box;" />
                 </div>
                 <div>
-                  <label for="dept-select" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-text-muted, #999);">Department</label>
+                  <label for="dept-select" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-neutral-9);">Department</label>
                   <select id="dept-select" aria-label="Department" role="listbox"
-                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-secondary, #2a2a3e); color: var(--pages-text-primary, #eee); font-size: 14px;">
+                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px;">
                     <option value="">Select...</option>
                     <option value="Engineering">Engineering</option>
                     <option value="Design">Design</option>
@@ -34,15 +34,15 @@ pages:
                   </select>
                 </div>
                 <div>
-                  <label for="role-input" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-text-muted, #999);">Role</label>
+                  <label for="role-input" style="display: block; margin-bottom: 4px; font-size: 13px; color: var(--pages-neutral-9);">Role</label>
                   <input id="role-input" type="text" aria-label="Role" role="textbox"
-                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-secondary, #2a2a3e); color: var(--pages-text-primary, #eee); font-size: 14px; box-sizing: border-box;" />
+                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px; box-sizing: border-box;" />
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
                   <button type="button" aria-label="Submit" role="button"
                     style="padding: 8px 24px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Submit</button>
                   <button type="button" aria-label="Reset" role="button"
-                    style="padding: 8px 24px; background: var(--pages-surface-tertiary, #333); color: var(--pages-text-primary, #eee); border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; cursor: pointer; font-size: 14px;">Reset</button>
+                    style="padding: 8px 24px; background: var(--pages-neutral-3); color: var(--pages-neutral-12); border: 1px solid var(--pages-neutral-5); border-radius: 6px; cursor: pointer; font-size: 14px;">Reset</button>
                 </div>
               </form>
               <div id="form-status" style="margin-top: 16px; padding: 12px; border-radius: 6px; display: none;"></div>
@@ -52,9 +52,9 @@ pages:
       - type: html
         properties:
           content: |
-            <div style="background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; padding: 16px;">
-              <h3 style="margin: 0 0 12px; color: var(--pages-text-primary, #eee); font-size: 16px;">Scenario Scripts</h3>
-              <p style="margin: 0 0 12px; color: var(--pages-text-muted, #888); font-size: 12px;">
+            <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+              <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 16px;">Scenario Scripts</h3>
+              <p style="margin: 0 0 12px; color: var(--pages-neutral-9); font-size: 12px;">
                 Select a scenario to automate form entry. Watch the fields fill in automatically.
               </p>
               <div id="scenario-picker" style="display: flex; flex-direction: column; gap: 8px;"></div>

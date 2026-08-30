@@ -10,31 +10,31 @@ pages:
         properties:
           content: |
             <div>
-              <h2 style="margin: 0 0 16px; color: var(--pages-text-primary, #eee);">Helpdesk Portal</h2>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Helpdesk Portal</h2>
               <div style="display: flex; gap: 16px; margin-bottom: 20px;">
-                <div style="flex: 1; background: var(--pages-surface-tertiary, #1a1a2e); border-radius: 8px; padding: 16px; border: 1px solid var(--pages-border-subtle, #333);">
-                  <div style="font-size: 11px; color: var(--pages-text-muted, #888); text-transform: uppercase; letter-spacing: 0.5px;">Open Tickets</div>
+                <div style="flex: 1; background: var(--pages-neutral-1); border-radius: 8px; padding: 16px; border: 1px solid var(--pages-neutral-4);">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Open Tickets</div>
                   <div id="metric-open" style="font-size: 28px; font-weight: 700; color: #f59e0b; margin-top: 4px;">12</div>
                 </div>
-                <div style="flex: 1; background: var(--pages-surface-tertiary, #1a1a2e); border-radius: 8px; padding: 16px; border: 1px solid var(--pages-border-subtle, #333);">
-                  <div style="font-size: 11px; color: var(--pages-text-muted, #888); text-transform: uppercase; letter-spacing: 0.5px;">Resolved Today</div>
+                <div style="flex: 1; background: var(--pages-neutral-1); border-radius: 8px; padding: 16px; border: 1px solid var(--pages-neutral-4);">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Resolved Today</div>
                   <div id="metric-resolved" style="font-size: 28px; font-weight: 700; color: #22c55e; margin-top: 4px;">7</div>
                 </div>
-                <div style="flex: 1; background: var(--pages-surface-tertiary, #1a1a2e); border-radius: 8px; padding: 16px; border: 1px solid var(--pages-border-subtle, #333);">
-                  <div style="font-size: 11px; color: var(--pages-text-muted, #888); text-transform: uppercase; letter-spacing: 0.5px;">Avg Response</div>
+                <div style="flex: 1; background: var(--pages-neutral-1); border-radius: 8px; padding: 16px; border: 1px solid var(--pages-neutral-4);">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Avg Response</div>
                   <div style="font-size: 28px; font-weight: 700; color: #3b82f6; margin-top: 4px;">14m</div>
                 </div>
               </div>
-              <div style="background: var(--pages-surface-secondary, #2a2a3e); border-radius: 8px; border: 1px solid var(--pages-border-subtle, #333); overflow: hidden;">
-                <div style="padding: 12px 16px; border-bottom: 1px solid var(--pages-border-subtle, #333); display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 14px; font-weight: 600; color: var(--pages-text-primary, #eee);">New Ticket</span>
+              <div style="background: var(--pages-neutral-2); border-radius: 8px; border: 1px solid var(--pages-neutral-4); overflow: hidden;">
+                <div style="padding: 12px 16px; border-bottom: 1px solid var(--pages-neutral-4); display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 14px; font-weight: 600; color: var(--pages-neutral-12);">New Ticket</span>
                   <span id="ticket-badge" style="font-size: 11px; padding: 2px 8px; background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-radius: 10px; display: none;">In Progress</span>
                 </div>
                 <form id="ticket-form" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
                   <input aria-label="Subject" role="textbox" placeholder="Subject..."
-                    style="padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 14px;" />
+                    style="padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-1); color: var(--pages-neutral-12); font-size: 14px;" />
                   <select aria-label="Priority" role="listbox"
-                    style="padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 14px;">
+                    style="padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-1); color: var(--pages-neutral-12); font-size: 14px;">
                     <option value="">Priority...</option>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -42,9 +42,9 @@ pages:
                     <option value="critical">Critical</option>
                   </select>
                   <textarea aria-label="Description" role="textbox" rows="3" placeholder="Describe the issue..."
-                    style="padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 14px; resize: vertical;"></textarea>
+                    style="padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-1); color: var(--pages-neutral-12); font-size: 14px; resize: vertical;"></textarea>
                   <select aria-label="Category" role="listbox"
-                    style="padding: 8px 12px; border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; background: var(--pages-surface-tertiary, #1a1a2e); color: var(--pages-text-primary, #eee); font-size: 14px;">
+                    style="padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-1); color: var(--pages-neutral-12); font-size: 14px;">
                     <option value="">Category...</option>
                     <option value="access">Access & Permissions</option>
                     <option value="hardware">Hardware</option>
@@ -56,7 +56,7 @@ pages:
                     <button type="button" aria-label="Create Ticket" role="button"
                       style="padding: 8px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Create Ticket</button>
                     <button type="button" aria-label="Clear" role="button"
-                      style="padding: 8px 20px; background: var(--pages-surface-tertiary, #333); color: var(--pages-text-primary, #eee); border: 1px solid var(--pages-border-subtle, #444); border-radius: 6px; cursor: pointer; font-size: 13px;">Clear</button>
+                      style="padding: 8px 20px; background: var(--pages-neutral-3); color: var(--pages-neutral-12); border: 1px solid var(--pages-neutral-5); border-radius: 6px; cursor: pointer; font-size: 13px;">Clear</button>
                   </div>
                 </form>
               </div>
@@ -67,5 +67,5 @@ pages:
         properties:
           content: |
             <pages-library-view id="library-view"
-              style="background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; height: 100%;">
+              style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; height: 100%;">
             </pages-library-view>
