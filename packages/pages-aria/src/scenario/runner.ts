@@ -1,4 +1,5 @@
 import { click, fill, select, expand, collapse, assertState, waitFor } from '../executor/index.js';
+import { isSectioned } from './types.js';
 import type { Scenario, ScenarioStep } from './types.js';
 import type { AriaState } from '@casehubio/pages-primitives';
 
@@ -29,6 +30,9 @@ async function executeStep(step: ScenarioStep): Promise<void> {
 }
 
 export async function runScenario(scenario: Scenario): Promise<void> {
+  if (isSectioned(scenario)) {
+    throw new Error('runScenario does not support sectioned scenarios — use runSectionedScenario');
+  }
   for (const step of scenario.steps) {
     await executeStep(step);
   }

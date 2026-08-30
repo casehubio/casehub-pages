@@ -16,7 +16,45 @@ export type ScenarioStep =
   | { delivery: 'simulated'; name?: string; dataset: string;
       data: Record<string, unknown> };
 
-export interface Scenario {
-  scenario: string;
+export interface TutorialMeta {
+  title: string;
+  description: string;
+  area: string;
+  labels?: string[];
+  tags?: string[];
+  estimated?: string;
+  prerequisites?: string[];
+  hero?: { title: string; subtitle?: string; icon?: string };
+}
+
+export interface SectionContent {
+  type: 'inline' | 'template';
+  markdown?: string;
+  path?: string;
+  section?: string;
+}
+
+export interface TutorialSection {
+  title: string;
+  content?: SectionContent;
   steps: ScenarioStep[];
+}
+
+export interface ScenarioBase {
+  scenario: string;
+  meta?: TutorialMeta;
+}
+
+export interface FlatScenario extends ScenarioBase {
+  steps: ScenarioStep[];
+}
+
+export interface SectionedScenario extends ScenarioBase {
+  sections: TutorialSection[];
+}
+
+export type Scenario = FlatScenario | SectionedScenario;
+
+export function isSectioned(s: Scenario): s is SectionedScenario {
+  return 'sections' in s;
 }

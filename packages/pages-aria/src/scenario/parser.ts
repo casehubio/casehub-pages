@@ -1,6 +1,9 @@
 import { parse } from 'yaml';
 import type { AriaTarget } from '@casehubio/pages-primitives';
-import type { Scenario, ScenarioStep } from './types.js';
+import type {
+  Scenario, FlatScenario, SectionedScenario,
+  ScenarioStep, TutorialMeta, TutorialSection, SectionContent,
+} from './types.js';
 
 const ARIA_ACTIONS = new Set([
   'navigate', 'click', 'fill', 'select',
@@ -49,17 +52,55 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
   return step;
 }
 
-export function parseScenario(yamlString: string): Scenario {
-  const parsed = parse(yamlString) as { scenario?: string; steps?: unknown[] };
-  if (!parsed.scenario || !Array.isArray(parsed.steps)) {
-    throw new Error('Invalid scenario: must have "scenario" name and "steps" array');
-  }
-
-  const steps: ScenarioStep[] = parsed.steps.map((raw: unknown) => {
+function parseSteps(rawSteps: unknown[]): ScenarioStep[] {
+  return rawSteps.map((raw: unknown) => {
     const step = raw as Record<string, unknown>;
     if (step.delivery) return step as ScenarioStep;
     return expandAriaShorthand(step);
   });
+}
 
-  return { scenario: parsed.scenario, steps };
+function parseSections(rawSections: unknown[]): TutorialSection[] {
+  return rawSections.map((raw: unknown) => {
+    const sec = raw as Record<string, unknown>;
+    const title = sec.title as string;
+    const content = sec.content as SectionContent | undefined;
+    const rawSteps = Array.isArray(sec.steps) ? sec.steps : [];
+    return { title, content, steps: parseSteps(rawSteps) };
+  });
+}
+
+export function parseScenario(yamlString: string): Scenario {
+  const parsed = parse(yamlString) as Record<string, unknown>;
+  if (!parsed.scenario) {
+    throw new Error('Invalid scenario: must have "scenario" name');
+  }
+
+  const hasSteps = Array.isArray(parsed.steps);
+  const hasSections = Array.isArray(parsed.sections);
+
+  if (hasSteps && hasSections) {
+    throw new Error('Invalid scenario: "steps" and "sections" are mutually exclusive — use one or the other');
+  }
+  if (!hasSteps && !hasSections) {
+    throw new Error('Invalid scenario: must have "steps" or "sections"');
+  }
+
+  const meta = parsed.meta as TutorialMeta | undefined;
+
+  if (hasSections) {
+    const result: SectionedScenario = {
+      scenario: parsed.scenario as string,
+      sections: parseSections(parsed.sections as unknown[]),
+    };
+    if (meta) result.meta = meta;
+    return result;
+  }
+
+  const result: FlatScenario = {
+    scenario: parsed.scenario as string,
+    steps: parseSteps(parsed.steps as unknown[]),
+  };
+  if (meta) result.meta = meta;
+  return result;
 }

@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { parseScenario } from './parser.js';
 import { runScenario } from './runner.js';
-import type { ScenarioStep } from './types.js';
+import { isSectioned } from './types.js';
+import type { FlatScenario, SectionedScenario, ScenarioStep } from './types.js';
 
 describe('scenario parser', () => {
   it('parses ARIA shorthand and produces delivery: aria', () => {
@@ -160,12 +161,12 @@ steps:
     expect(step.data).toEqual({ op: 'snapshot', columns: ['id', 'customer'] });
   });
 
-  it('throws on invalid scenario — missing steps', () => {
-    expect(() => parseScenario('scenario: test')).toThrow('Invalid scenario');
+  it('throws on invalid scenario — missing steps and sections', () => {
+    expect(() => parseScenario('scenario: test')).toThrow('must have');
   });
 
   it('throws on invalid scenario — missing name', () => {
-    expect(() => parseScenario('steps: []')).toThrow('Invalid scenario');
+    expect(() => parseScenario('steps: []')).toThrow('must have "scenario"');
   });
 
   it('throws on unknown step format', () => {
@@ -276,5 +277,133 @@ describe('scenario runner', () => {
       scenario: 'test',
       steps: [{ delivery: 'graphql', name: 'inject', domain: 'connectors', operation: 'injectChat' }],
     })).resolves.toBeUndefined();
+  });
+});
+
+describe('parseScenario — sectioned format', () => {
+  it('parses sections with inline content', () => {
+    const yaml = `
+scenario: test-tutorial
+meta:
+  title: Test
+  description: A test tutorial
+  area: testing
+sections:
+  - title: Introduction
+    content:
+      type: inline
+      markdown: "Hello world"
+    steps: []
+  - title: Demo
+    steps:
+      - click:
+          role: button
+          name: Submit
+`;
+    const result = parseScenario(yaml);
+    expect(isSectioned(result)).toBe(true);
+    if (!isSectioned(result)) throw new Error('Expected sectioned');
+    expect(result.sections).toHaveLength(2);
+    expect(result.sections[0].title).toBe('Introduction');
+    expect(result.sections[0].content?.type).toBe('inline');
+    expect(result.sections[0].content?.markdown).toBe('Hello world');
+    expect(result.sections[0].steps).toHaveLength(0);
+    expect(result.sections[1].title).toBe('Demo');
+    expect(result.sections[1].steps).toHaveLength(1);
+    expect(result.meta?.title).toBe('Test');
+  });
+
+  it('normalizes missing steps to empty array', () => {
+    const yaml = `
+scenario: slides-only
+sections:
+  - title: Slide 1
+    content:
+      type: inline
+      markdown: Just a slide
+`;
+    const result = parseScenario(yaml);
+    if (!isSectioned(result)) throw new Error('Expected sectioned');
+    expect(result.sections[0].steps).toEqual([]);
+  });
+
+  it('rejects when both steps and sections present', () => {
+    const yaml = `
+scenario: invalid
+steps:
+  - click:
+      role: button
+      name: Test
+sections:
+  - title: Section 1
+    steps: []
+`;
+    expect(() => parseScenario(yaml)).toThrow('mutually exclusive');
+  });
+
+  it('rejects when neither steps nor sections present', () => {
+    const yaml = `
+scenario: empty
+`;
+    expect(() => parseScenario(yaml)).toThrow('must have');
+  });
+
+  it('parses template content reference', () => {
+    const yaml = `
+scenario: template-test
+sections:
+  - title: Slide
+    content:
+      type: template
+      path: content/slide.md
+    steps: []
+`;
+    const result = parseScenario(yaml);
+    if (!isSectioned(result)) throw new Error('Expected sectioned');
+    expect(result.sections[0].content?.type).toBe('template');
+    expect(result.sections[0].content?.path).toBe('content/slide.md');
+  });
+
+  it('preserves meta on flat scenarios', () => {
+    const yaml = `
+scenario: flat-with-meta
+meta:
+  title: Flat Test
+  description: A flat scenario with meta
+  area: testing
+steps:
+  - click:
+      role: button
+      name: Go
+`;
+    const result = parseScenario(yaml);
+    expect(isSectioned(result)).toBe(false);
+    expect(result.meta?.title).toBe('Flat Test');
+  });
+});
+
+describe('isSectioned type guard', () => {
+  it('returns false for flat scenarios', () => {
+    const flat: FlatScenario = {
+      scenario: 'test',
+      steps: [{ delivery: 'aria', action: 'click', target: { role: 'button', name: 'Submit' } }],
+    };
+    expect(isSectioned(flat)).toBe(false);
+  });
+
+  it('returns true for sectioned scenarios', () => {
+    const sectioned: SectionedScenario = {
+      scenario: 'test',
+      sections: [{ title: 'Intro', steps: [] }],
+    };
+    expect(isSectioned(sectioned)).toBe(true);
+  });
+
+  it('preserves meta on both variants', () => {
+    const meta = { title: 'T', description: 'D', area: 'a' };
+    const flat: FlatScenario = { scenario: 'test', steps: [], meta };
+    const sectioned: SectionedScenario = { scenario: 'test', sections: [], meta };
+    expect(flat.meta).toEqual(meta);
+    expect(sectioned.meta).toEqual(meta);
   });
 });
