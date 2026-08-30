@@ -89,7 +89,7 @@ var picker = document.getElementById('scenario-picker');
 if (picker) {
   SCENARIOS.forEach(function(entry) {
     var btn = document.createElement('button');
-    btn.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; background: var(--pages-accent-3); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 6px; cursor: pointer; color: var(--pages-accent-9); font-size: 13px; text-align: left; transition: background 0.15s; width: 100%;';
+    btn.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-9); font-size: 13px; text-align: left; transition: background 0.15s; width: 100%;';
     btn.innerHTML = '<strong>' + entry.name + '</strong><span style="font-size: 11px; color: var(--pages-neutral-8);">' + entry.description + '</span>';
     btn.onmouseenter = function() { btn.style.background = 'rgba(37, 99, 235, 0.2)'; };
     btn.onmouseleave = function() { btn.style.background = 'rgba(37, 99, 235, 0.1)'; };

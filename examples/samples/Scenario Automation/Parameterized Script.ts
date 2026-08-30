@@ -33,13 +33,13 @@ if (paramForm) {
     var wrapper = document.createElement('div');
     var label = document.createElement('label');
     label.textContent = p.label;
-    label.style.cssText = 'display: block; margin-bottom: 3px; font-size: 11px; color: #94a3b8;';
+    label.style.cssText = 'display: block; margin-bottom: 3px; font-size: 11px; color: var(--pages-neutral-9);';
     wrapper.appendChild(label);
 
     if (p.type === 'select') {
       var sel = document.createElement('select');
       sel.id = 'param-' + p.name;
-      sel.style.cssText = 'width: 100%; padding: 6px 8px; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; background: rgba(255,255,255,0.05); color: #e2e8f0; font-size: 12px;';
+      sel.style.cssText = 'width: 100%; padding: 6px 8px; border: 1px solid var(--pages-neutral-5); border-radius: 4px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 12px;';
       p.options.forEach(function(opt) {
         var o = document.createElement('option');
         o.value = opt.value || opt; o.textContent = opt.text || opt;
@@ -57,7 +57,7 @@ if (paramForm) {
       var inp = document.createElement('input');
       inp.type = p.type; inp.id = 'param-' + p.name;
       inp.value = p.defaultValue || '';
-      inp.style.cssText = 'width: 100%; padding: 6px 8px; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; background: rgba(255,255,255,0.05); color: #e2e8f0; font-size: 12px; box-sizing: border-box;';
+      inp.style.cssText = 'width: 100%; padding: 6px 8px; border: 1px solid var(--pages-neutral-5); border-radius: 4px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 12px; box-sizing: border-box;';
       wrapper.appendChild(inp);
     }
     paramForm.appendChild(wrapper);

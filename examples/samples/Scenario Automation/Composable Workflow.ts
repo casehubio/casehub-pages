@@ -114,8 +114,8 @@ var picker = document.getElementById('workflow-picker');
 if (picker) {
   WORKFLOWS.forEach(function(entry) {
     var btn = document.createElement('button');
-    btn.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 6px; cursor: pointer; color: #93c5fd; font-size: 13px; text-align: left; width: 100%;';
-    btn.innerHTML = '<strong>' + entry.name + '</strong><span style="font-size: 11px; color: #64748b;">' + entry.description + '</span>';
+    btn.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-9); font-size: 13px; text-align: left; width: 100%;';
+    btn.innerHTML = '<strong>' + entry.name + '</strong><span style="font-size: 11px; color: var(--pages-neutral-8);">' + entry.description + '</span>';
     btn.onmouseenter = function() { btn.style.background = 'rgba(37, 99, 235, 0.2)'; };
     btn.onmouseleave = function() { btn.style.background = 'rgba(37, 99, 235, 0.1)'; };
     btn.onclick = async function() {
@@ -128,7 +128,7 @@ if (picker) {
   });
 
   var clearBtn = document.createElement('button');
-  clearBtn.style.cssText = 'padding: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; color: #94a3b8; font-size: 12px; width: 100%;';
+  clearBtn.style.cssText = 'padding: 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 6px; cursor: pointer; color: var(--pages-neutral-9); font-size: 12px; width: 100%;';
   clearBtn.textContent = 'Reset';
   clearBtn.onclick = resetAll;
   picker.appendChild(clearBtn);
