@@ -205,7 +205,8 @@ Generation counter pattern for ECharts rendering. Each render tagged with a gene
 | Module | Purpose |
 |--------|---------|
 | `casehub-pages-push` | Typed wire protocol SDK: `PushMessage` (server->client builders with event sequence numbers), `PushRequest` (sealed client->server parser with ack/error correlation), `TopicRegistry` (wildcard-aware segment-trie connection tracking: literal `cases.123.events`, single-segment `cases.*.events`, multi-segment `cases.#`), `EventStore` SPI + `InMemoryEventStore` (bounded per-topic event replay buffer, configurable capacity, default 100 events), `EventBroadcaster` (store + fan-out to subscribed sessions via `SessionSender`, validates no wildcards in broadcast topics, supports raw JSON string and typed object broadcast via `JsonWriter` SPI), `SessionSender` SPI, `JsonWriter` SPI, `StoredEvent`, `PushColumn`. jackson-core only, no Quarkus dependency. |
-| `casehub-pages-push-runtime` | Quarkus CDI producers: `PushProducers` -- `@ApplicationScoped` producers for `TopicRegistry`, `EventStore` (`@DefaultBean` InMemoryEventStore, configurable `casehub.pages.push.max-events-per-topic`, default 1000), `JsonWriter` (`@DefaultBean` Jackson ObjectMapper), `EventBroadcaster`. Drop-in for any Quarkus app needing server-push. |
+| `casehub-pages-push-runtime` | Quarkus CDI producers: `PushProducers` -- `@ApplicationScoped` producers for `TopicRegistry`, `EventStore` (`@DefaultBean` InMemoryEventStore, configurable `casehub.pages.push.max-events-per-topic`, default 1000), `JsonWriter` (`@DefaultBean` Jackson ObjectMapper), `EventBroadcaster`. `CdiCommandResultHandler` (`@DefaultBean`) routes `PushRequest.CommandResult` from WebSocket to CDI `Event<>` consumers. Drop-in for any Quarkus app needing server-push. |
+| `casehub-pages-scenario-runtime` | Scenario execution runtime: `AriaDispatcher` (ARIA command dispatch via push wire -- send, sendBatch, navigate/ready-check protocol), `ScenarioExecutor` (dispatches `AriaStep` via `AriaDispatcher` with batching support). Depends on `push-runtime` for wire transport. |
 | `casehub-pages-auth` | Development authentication: `DevAuthResource` (JAX-RS REST endpoint), `LoginRequest` (credentials DTO), `TokenResponse` (token DTO). Token handling for backend data providers. |
 | `casehub-pages-data` | Backend data provider adapters (SQL, relay proxy). |
 | `casehub-pages-data-sql` | SQL-based data provider with frontend push-down integration (query translation from frontend filter/sort/group operations to SQL). |
@@ -234,7 +235,11 @@ Fluent builders in Java for typed message construction:
 | `LISTEN` | Subscribe to a topic (supports wildcards). |
 | `UNLISTEN` | Unsubscribe from a topic. |
 
+| `COMMAND_RESULT` | Return value from an ARIA command execution (dispatched by `AriaDispatcher`). |
+
 **Correlation:** client includes `requestId` in LISTEN/UNLISTEN -- server echoes in `listenAck()` or `error()` response.
+
+**Command results:** `CommandResultHandler` (`@FunctionalInterface`) routes `PushRequest.CommandResult` from WebSocket to Java consumers. `CdiCommandResultHandler` (`@DefaultBean` in push-runtime) fires CDI `Event<PushRequest.CommandResult>`.
 
 ### Topic Routing
 
