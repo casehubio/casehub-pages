@@ -30,10 +30,27 @@ export function composite(initial: DataSource, live: DataSource): DataSource {
           // Forward the snapshot to the outer sink
           outerSink?.apply(event);
 
-          // Disconnect initial, connect live
+          // Disconnect initial, connect live with interposing sink
           phase = "live";
           initial.disconnect();
-          live.connect(outerSink!);
+
+          let firstLiveSnapshot = true;
+          const liveSink: DataSink = {
+            apply(liveEvent): void {
+              if (phase !== "live") return;
+              if (liveEvent.type === "snapshot" && firstLiveSnapshot) {
+                firstLiveSnapshot = false;
+                outerSink?.apply({ type: "append", rows: liveEvent.dataset.rows });
+                return;
+              }
+              outerSink?.apply(liveEvent);
+            },
+            error(err): void {
+              if (phase !== "live") return;
+              outerSink?.error(err);
+            },
+          };
+          live.connect(liveSink);
         },
 
         error(err): void {

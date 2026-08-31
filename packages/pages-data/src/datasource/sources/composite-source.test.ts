@@ -239,6 +239,82 @@ describe("composite", () => {
     expect(events).toHaveLength(2);
   });
 
+  it("converts first live snapshot to append (preserves REST data)", () => {
+    const initial = controllableSource();
+    const live = controllableSource();
+    const source = composite(initial, live);
+
+    const events: DataSetEvent[] = [];
+    const sink: DataSink = {
+      apply(event) { events.push(event); },
+      error() {},
+    };
+
+    source.connect(sink);
+
+    // REST snapshot — 1 row
+    initial.emitSnapshot(textDataset("rest-row"));
+    expect(events).toHaveLength(1);
+    expect(events[0]!.type).toBe("snapshot");
+
+    // Live source emits a snapshot (the promoted-append case)
+    live.emitSnapshot(textDataset("live-row"));
+
+    // Should arrive as append, NOT snapshot
+    expect(events).toHaveLength(2);
+    expect(events[1]!.type).toBe("append");
+    expect((events[1] as { type: "append"; rows: unknown[] }).rows).toHaveLength(1);
+  });
+
+  it("passes through subsequent live snapshots as replacements", () => {
+    const initial = controllableSource();
+    const live = controllableSource();
+    const source = composite(initial, live);
+
+    const events: DataSetEvent[] = [];
+    const sink: DataSink = {
+      apply(event) { events.push(event); },
+      error() {},
+    };
+
+    source.connect(sink);
+
+    // REST snapshot
+    initial.emitSnapshot(textDataset("rest-row"));
+
+    // First live snapshot — converted to append
+    live.emitSnapshot(textDataset("live-row-1"));
+    expect(events[1]!.type).toBe("append");
+
+    // Second live snapshot — genuine server state reset, passes through
+    live.emitSnapshot(textDataset("live-row-2"));
+    expect(events).toHaveLength(3);
+    expect(events[2]!.type).toBe("snapshot");
+  });
+
+  it("does not forward live events after disconnect", () => {
+    const initial = controllableSource();
+    const live = controllableSource();
+    const source = composite(initial, live);
+
+    const events: DataSetEvent[] = [];
+    const errors: SourceError[] = [];
+    const sink: DataSink = {
+      apply(event) { events.push(event); },
+      error(err) { errors.push(err); },
+    };
+
+    source.connect(sink);
+    initial.emitSnapshot(textDataset("data"));
+
+    // Now in live phase — disconnect
+    source.disconnect();
+
+    // Only the REST snapshot should be in events
+    expect(events).toHaveLength(1);
+    expect(errors).toHaveLength(0);
+  });
+
   it("any initial error blocks live connection (spec: no transient recovery)", () => {
     const initial = controllableSource();
     const live = controllableSource();
