@@ -1,8 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { TutorialDescriptor, LearningPath } from './types.js';
-import type { SectionedScenario } from '../scenario/types.js';
-import { parseScenario, isSectioned } from '../scenario/types.js';
+import { isSectioned } from '../scenario/types.js';
 import { parseScenario as parse } from '../scenario/parser.js';
 import { runSectionedScenario, type TutorialRunner } from '../scenario/sectioned-runner.js';
 import './tutorial-catalog.js';

@@ -265,9 +265,11 @@ export function runSectionedScenario(
       rs.stepIndex = section.steps.length;
     }
 
-    // Tutorial complete
-    rs.sectionIndex = scenario.sections.length;
-    fireState(eventTarget, scenario, rs, undefined, undefined, templates);
+    // Tutorial complete — keep index on last section so outline markers persist
+    rs.sectionIndex = Math.max(0, scenario.sections.length - 1);
+    rs.stepIndex = scenario.sections[rs.sectionIndex]?.steps.length ?? 0;
+    const lastContent = resolveContent(scenario.sections[rs.sectionIndex], rs.sectionIndex, templates);
+    fireState(eventTarget, scenario, rs, undefined, lastContent, templates);
     onComplete?.(scenario.scenario);
   })();
 

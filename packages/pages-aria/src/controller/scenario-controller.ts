@@ -279,9 +279,18 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     return labelIdx >= 0 && currentIdx >= 0 && labelIdx < currentIdx;
   }
 
+  private _findParentSection(label: string): string | null {
+    for (const node of this._outline) {
+      if (node.children.some(c => c.label === label)) return node.label;
+    }
+    return null;
+  }
+
   private _isBeforeCurrent(label: string): boolean {
     const state = this._conn?.state;
     if (!state?.step && state?.section) {
+      const parentSection = this._findParentSection(label);
+      if (parentSection) return this._isSectionBeforeCurrent(parentSection);
       return this._isSectionBeforeCurrent(label);
     }
     const labels = this._flattenLabels(this._outline);
@@ -421,7 +430,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     const isLeaf = node.children.length === 0;
     const state = this._conn?.state;
     const isCurrent = isLeaf
-      ? node.label === state?.step
+      ? (node.label === state?.step || (!state?.step && node.label === state?.section))
       : (!state?.step && node.label === state?.section);
     const isCompleted = isLeaf
       ? this._isBeforeCurrent(node.label)
@@ -443,9 +452,10 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     }
     return html`
       <div class="outline-group" role="group">
-        <div class="outline-heading" role="treeitem" tabindex="-1"
+        <div class="outline-heading ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}" role="treeitem" tabindex="-1"
              style="padding-left: ${depth * 16}px"
              @click=${() => void this._conn.sendCommand('/run-to', { label: node.label })}>
+          <span class="step-icon">${isCurrent ? '●' : isCompleted ? '✓' : ''}</span>
           ${node.label}
           <span class="run-to" aria-label="Run to ${node.label}">▶</span>
         </div>

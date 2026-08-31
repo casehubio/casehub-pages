@@ -584,4 +584,98 @@ describe('pages-scenario-controller', () => {
     expect(icon).toBeNull();
     el.remove();
   });
+
+  it('marks slides-only sections completed when current step is in a later section', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    const target = new EventTarget();
+    el.eventTarget = target;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    (el as any)._outline = [
+      { label: 'Introduction', target: null, children: [] },
+      { label: 'YAML Structure', target: null, children: [] },
+      { label: 'ARIA Commands: fill', target: null, children: [
+        { label: 'fill-textbox-FullName', target: null, action: 'fill', children: [] },
+      ]},
+      { label: 'Recap', target: null, children: [] },
+    ];
+
+    fireStateEvent(target, {
+      scenario: 'tutorial', chapter: 'Tutorial', section: 'ARIA Commands: fill',
+      step: 'fill-textbox-FullName', paused: true, speed: 1, progress: 0.5,
+      content: null, slides: null,
+    });
+    await el.updateComplete;
+
+    const headings = el.shadowRoot!.querySelectorAll('.outline-step, .outline-heading');
+    const introEl = Array.from(headings).find(h => h.textContent!.includes('Introduction'));
+    const yamlEl = Array.from(headings).find(h => h.textContent!.includes('YAML Structure'));
+    const recapEl = Array.from(headings).find(h => h.textContent!.includes('Recap'));
+
+    expect(introEl?.classList.contains('completed')).toBe(true);
+    expect(yamlEl?.classList.contains('completed')).toBe(true);
+    expect(recapEl?.classList.contains('completed')).toBe(false);
+    el.remove();
+  });
+
+  it('marks child steps of completed sections as completed when on a slides-only section', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    const target = new EventTarget();
+    el.eventTarget = target;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    (el as any)._outline = [
+      { label: 'Introduction', target: null, children: [] },
+      { label: 'ARIA Commands: fill', target: null, children: [
+        { label: 'fill-textbox-FullName', target: null, action: 'fill', children: [] },
+      ]},
+      { label: 'Recap', target: null, children: [] },
+    ];
+
+    fireStateEvent(target, {
+      scenario: 'tutorial', chapter: 'Tutorial', section: 'Recap',
+      step: null, paused: true, speed: 1, progress: 1.0,
+      content: null, slides: null,
+    });
+    await el.updateComplete;
+
+    const allItems = el.shadowRoot!.querySelectorAll('.outline-step, .outline-heading');
+    const fillStep = Array.from(allItems).find(h => h.textContent!.includes('fill-textbox-FullName'));
+    const fillSection = Array.from(allItems).find(h => h.textContent!.includes('ARIA Commands: fill'));
+
+    expect(fillSection?.classList.contains('completed')).toBe(true);
+    expect(fillStep?.classList.contains('completed')).toBe(true);
+    el.remove();
+  });
+
+  it('marks slides-only leaf section as current when step is null', async () => {
+    const el = document.createElement('pages-scenario-controller') as PagesScenarioController;
+    const target = new EventTarget();
+    el.eventTarget = target;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    (el as any)._outline = [
+      { label: 'Introduction', target: null, children: [] },
+      { label: 'ARIA Commands: fill', target: null, children: [
+        { label: 'fill-textbox-FullName', target: null, action: 'fill', children: [] },
+      ]},
+      { label: 'Recap', target: null, children: [] },
+    ];
+
+    fireStateEvent(target, {
+      scenario: 'tutorial', chapter: 'Tutorial', section: 'Recap',
+      step: null, paused: true, speed: 1, progress: 1.0,
+      content: null, slides: null,
+    });
+    await el.updateComplete;
+
+    const allItems = el.shadowRoot!.querySelectorAll('.outline-step, .outline-heading');
+    const recapEl = Array.from(allItems).find(h => h.textContent!.includes('Recap'));
+
+    expect(recapEl?.classList.contains('current')).toBe(true);
+    el.remove();
+  });
 });
