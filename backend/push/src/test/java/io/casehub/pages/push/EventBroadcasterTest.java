@@ -153,6 +153,19 @@ class EventBroadcasterTest {
   }
 
   @Test
+  void broadcast_slash_topic_throws() {
+    EventBroadcaster b = broadcaster();
+
+    assertThatThrownBy(() -> b.broadcast("incidents/summary", "{}"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("not '/'");
+
+    assertThatThrownBy(() -> b.broadcast("data/feed", new Object() {}))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("not '/'");
+  }
+
+  @Test
   void constructor_rejects_null_json_writer() {
     assertThatThrownBy(() -> new EventBroadcaster(store, registry,
                                                   (connId, msg) -> {}, null))

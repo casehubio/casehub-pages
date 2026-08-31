@@ -21,6 +21,10 @@ public class EventBroadcaster {
             throw new IllegalArgumentException(
                     "broadcast topic must not contain wildcards: " + topic);
         }
+        if (topic.contains("/")) {
+            throw new IllegalArgumentException(
+                    "broadcast topic must use ':' separator, not '/': " + topic);
+        }
         long   seq  = eventStore.append(topic, payloadJson);
         String wire = PushMessage.event(topic, payloadJson, seq);
         for (String connId : topicRegistry.connections(topic)) {
