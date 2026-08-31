@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import type { EventConnection } from '@casehubio/pages-data';
 import { ScenarioConnectionController } from './scenario-connection-controller.js';
 import { sanitizeHtml } from './html-sanitizer.js';
+import { tokenizeYamlLine } from './yaml-highlighter.js';
 
 export class PagesScenarioNarrative extends LitElement {
   static override styles = css`
@@ -28,6 +29,28 @@ export class PagesScenarioNarrative extends LitElement {
       font-family: monospace;
       font-size: 0.9em;
     }
+    .narrative-content pre {
+      background: var(--pages-neutral-3, #f5f5f5);
+      border: 1px solid var(--pages-neutral-4, #e5e5e5);
+      border-radius: 6px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      margin: 0.75em 0;
+    }
+    .narrative-content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      font-size: 0.85em;
+      line-height: 1.5;
+      color: var(--pages-neutral-12, #1a1a1a);
+    }
+    .narrative-content .yaml-key { color: #7dd3fc; }
+    .narrative-content .yaml-string { color: #86efac; }
+    .narrative-content .yaml-comment { color: #6b7280; font-style: italic; }
+    .narrative-content .yaml-literal { color: #fbbf24; }
+    .narrative-content .yaml-punct { color: #94a3b8; }
+    .narrative-content .yaml-plain { color: var(--pages-neutral-12, #ededed); }
     .narrative-content ul { margin: 0.5em 0; padding-left: 1.5em; }
     .narrative-content li { margin: 0.25em 0; }
     .slide-ref {
@@ -185,8 +208,34 @@ export class PagesScenarioNarrative extends LitElement {
   private _renderMarkdown(md: string): TemplateResult {
     let processed: string;
 
+    const codeBlocks: string[] = [];
+    const withoutCode = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, lang, code) => {
+      let rendered: string;
+      if (lang === 'yaml') {
+        const lines = code.split('\n');
+        rendered = lines.map(line => {
+          const tokens = tokenizeYamlLine(line);
+          return tokens.map(t => {
+            const escaped = t.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `<span class="yaml-${t.type}">${escaped}</span>`;
+          }).join('');
+        }).join('\n');
+      } else {
+        rendered = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      const cls = lang ? ` class="language-${lang}"` : '';
+      codeBlocks.push(`<pre><code${cls}>${rendered}</code></pre>`);
+      return `\n\n__CODE_BLOCK_${codeBlocks.length - 1}__\n\n`;
+    });
+
     if (this.htmlMode === 'sanitized') {
-      processed = md
+      const svgBlocks: string[] = [];
+      let textWithPlaceholders = withoutCode.replace(/<svg[\s\S]*?<\/svg>/gi, (match) => {
+        svgBlocks.push(match);
+        return `\n\n__SVG_BLOCK_${svgBlocks.length - 1}__\n\n`;
+      });
+
+      processed = textWithPlaceholders
         .replace(/^### (.+)$/gm, '<h3>$1</h3>')
         .replace(/^## (.+)$/gm, '<h2>$1</h2>')
         .replace(/^# (.+)$/gm, '<h1>$1</h1>')
@@ -195,10 +244,17 @@ export class PagesScenarioNarrative extends LitElement {
         .replace(/`(.+?)`/g, '<code>$1</code>')
         .replace(/^- (.+)$/gm, '<li>$1</li>')
         .replace(/\n\n/g, '</p><p>')
-        .replace(/^(?!<[hulo]|<svg)(.+)$/gm, '<p>$1</p>');
+        .replace(/^(?!<[hulo])(.+)$/gm, '<p>$1</p>');
+
+      for (let i = 0; i < svgBlocks.length; i++) {
+        processed = processed.replace(
+          new RegExp(`(?:<p>)?__SVG_BLOCK_${i}__(?:</p>)?`),
+          svgBlocks[i],
+        );
+      }
       processed = sanitizeHtml(processed);
     } else {
-      const escaped = md
+      const escaped = withoutCode
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
@@ -212,6 +268,13 @@ export class PagesScenarioNarrative extends LitElement {
         .replace(/^- (.+)$/gm, '<li>$1</li>')
         .replace(/\n\n/g, '</p><p>')
         .replace(/^(?!<[hulo])(.+)$/gm, '<p>$1</p>');
+    }
+
+    for (let i = 0; i < codeBlocks.length; i++) {
+      processed = processed.replace(
+        new RegExp(`(?:<p>)?__CODE_BLOCK_${i}__(?:</p>)?`),
+        codeBlocks[i],
+      );
     }
 
     const container = document.createElement('div');

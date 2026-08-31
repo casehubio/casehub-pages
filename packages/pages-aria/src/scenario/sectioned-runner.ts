@@ -226,21 +226,23 @@ export function runSectionedScenario(
       fireState(eventTarget, scenario, rs, undefined, content, templates);
 
       if (section.steps.length === 0) {
-        // Slides-only: always pause
         rs.paused = true;
         fireState(eventTarget, scenario, rs, undefined, content, templates);
         await waitIfPaused(rs);
         if (rs.disposed) return;
+        if (rs.sectionIndex !== si) { si = rs.sectionIndex - 1; }
         continue;
       }
 
       for (let sti = 0; sti < section.steps.length; sti++) {
         if (rs.disposed) return;
+        if (rs.sectionIndex !== si) { si = rs.sectionIndex - 1; break; }
         rs.stepIndex = sti;
         fireState(eventTarget, scenario, rs, undefined, content, templates);
 
         await waitIfPaused(rs);
         if (rs.disposed) return;
+        if (rs.sectionIndex !== si) { si = rs.sectionIndex - 1; break; }
 
         const step = section.steps[sti];
         if (step.delivery === 'aria') {

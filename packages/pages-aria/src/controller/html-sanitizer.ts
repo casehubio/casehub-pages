@@ -3,7 +3,7 @@ const BLOCKED_ELEMENTS = new Set([
 ]);
 
 const ALLOWED_ELEMENTS = new Set([
-  'p', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'code', 'li', 'ul', 'ol', 'div', 'span', 'br',
+  'p', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'code', 'pre', 'li', 'ul', 'ol', 'div', 'span', 'br',
   'svg', 'g', 'defs', 'use', 'symbol', 'clippath', 'mask', 'pattern',
   'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path',
   'text', 'tspan',

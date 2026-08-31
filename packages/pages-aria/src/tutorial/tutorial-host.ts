@@ -35,6 +35,22 @@ export class PagesTutorialHost extends LitElement {
       background: rgba(239, 68, 68, 0.1);
       border-radius: var(--pages-radius-sm, 4px);
     }
+    .slide-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; margin-top: 16px;
+      border-top: 1px solid var(--pages-neutral-4, #e5e5e5);
+    }
+    .slide-nav button {
+      background: none; border: 1px solid var(--pages-neutral-5, #d4d4d4);
+      border-radius: var(--pages-radius-sm, 4px); padding: 8px 20px;
+      cursor: pointer; color: var(--pages-neutral-12, #ededed); font-size: 13px;
+      transition: background 0.15s;
+    }
+    .slide-nav button:hover:not(:disabled) { background: var(--pages-neutral-3, #f5f5f5); }
+    .slide-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+    .slide-counter {
+      font-size: 12px; color: var(--pages-neutral-8, #999);
+    }
   `;
 
   @property({ attribute: false }) registry: TutorialDescriptor[] = [];
@@ -44,9 +60,12 @@ export class PagesTutorialHost extends LitElement {
   @state() private _view: 'catalog' | 'tutorial' = 'catalog';
   @state() private _activeTutorial: TutorialDescriptor | null = null;
   @state() private _error: string | null = null;
+  @state() private _currentSection = 0;
+  @state() private _totalSections = 0;
 
   private _runner: TutorialRunner | null = null;
   private _eventTarget: EventTarget | null = null;
+  private _sectionTitles: string[] = [];
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -59,6 +78,38 @@ export class PagesTutorialHost extends LitElement {
       this._runner = null;
     }
     this._eventTarget = null;
+    this._sectionTitles = [];
+    this._currentSection = 0;
+    this._totalSections = 0;
+  }
+
+  private _trackState(): void {
+    if (!this._eventTarget) return;
+    this._eventTarget.addEventListener('pages-event', (e: Event) => {
+      const detail = (e as CustomEvent).detail as { topic?: string; payload?: Record<string, unknown> };
+      if (detail?.topic !== 'scenario:state') return;
+      const section = detail.payload?.section as string | null;
+      if (section && this._sectionTitles.length > 0) {
+        const idx = this._sectionTitles.indexOf(section);
+        if (idx >= 0) this._currentSection = idx;
+      }
+    });
+  }
+
+  private _onPrev(): void {
+    if (this._currentSection > 0 && this._runner) {
+      this._runner.runTo(this._sectionTitles[this._currentSection - 1]);
+    }
+  }
+
+  private _onNext(): void {
+    if (this._runner) {
+      if (this._currentSection < this._totalSections - 1) {
+        this._runner.runTo(this._sectionTitles[this._currentSection + 1]);
+      } else {
+        this._runner.step();
+      }
+    }
   }
 
   private async _onTutorialSelect(e: CustomEvent): Promise<void> {
@@ -86,10 +137,14 @@ export class PagesTutorialHost extends LitElement {
 
       this._disposeRunner();
       this._eventTarget = new EventTarget();
+      this._sectionTitles = parsed.sections.map(s => s.title);
+      this._totalSections = parsed.sections.length;
+      this._currentSection = 0;
       this._view = 'tutorial';
 
       await this.updateComplete;
       await new Promise(r => setTimeout(r, 50));
+      this._trackState();
 
       const tutorialDir = basePath.replace(/\/[^/]+$/, '');
       this._runner = runSectionedScenario(parsed, {
@@ -154,6 +209,13 @@ export class PagesTutorialHost extends LitElement {
             .eventTarget=${this._eventTarget}
             htmlMode="sanitized"
           ></pages-scenario-narrative>
+          <div class="slide-nav">
+            <button ?disabled=${this._currentSection <= 0}
+                    @click=${() => this._onPrev()}>← Previous</button>
+            <span class="slide-counter">${this._currentSection + 1} / ${this._totalSections}</span>
+            <button ?disabled=${this._currentSection >= this._totalSections - 1}
+                    @click=${() => this._onNext()}>Next →</button>
+          </div>
         </div>
         <div class="tutorial-sidebar">
           <pages-scenario-controller
