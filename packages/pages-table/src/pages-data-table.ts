@@ -438,7 +438,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       border-bottom: 1px solid var(--pages-border-default, #d4d4d4);
       background: var(--pages-surface-secondary, #fafafa);
       flex-shrink: 0;
-      overflow: hidden;
+      overflow: clip;
     }
 
     .header {
