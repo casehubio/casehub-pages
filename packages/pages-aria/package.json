@@ -7,11 +7,14 @@
     "./executor": "./src/executor/index.ts",
     "./server": "./src/server/index.ts",
     "./scenario": "./src/scenario/index.ts",
-    "./controller": "./src/controller/index.ts"
+    "./controller": "./src/controller/index.ts",
+    "./tutorial": "./src/tutorial/index.ts"
   },
   "scripts": {
     "test": "vitest run",
-    "build:controller": "node ../../node_modules/esbuild/bin/esbuild src/controller/standalone.ts --bundle --format=esm --outfile=dist/controller.js --target=es2022 --tsconfig=tsconfig.json"
+    "build:controller": "node ../../node_modules/esbuild/bin/esbuild src/controller/standalone.ts --bundle --format=esm --outfile=dist/controller.js --target=es2022 --tsconfig=tsconfig.json",
+    "build:tutorial": "node ../../node_modules/esbuild/bin/esbuild src/tutorial/standalone.ts --bundle --format=esm --outfile=dist/tutorial.js --target=es2022 --tsconfig=tsconfig.json",
+    "build": "yarn build:controller && yarn build:tutorial"
   },
   "dependencies": {
     "@casehubio/pages-data": "workspace:*",

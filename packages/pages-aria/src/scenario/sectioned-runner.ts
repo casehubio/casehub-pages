@@ -194,8 +194,8 @@ export function runSectionedScenario(
   };
   eventTarget.addEventListener('scenario-command', onCommand);
 
-  // Fire initial state with outline
-  fireState(eventTarget, scenario, rs, outline, resolveContent(scenario.sections[0], 0, templates), templates);
+  // Fire initial state with outline (no content yet — templates not resolved)
+  fireState(eventTarget, scenario, rs, outline, undefined, templates);
 
   // Start async execution loop
   void (async () => {

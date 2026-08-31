@@ -65,12 +65,13 @@ describe('runSectionedScenario', () => {
     runner.dispose();
   });
 
-  it('includes inline content in state', () => {
+  it('includes inline content in state after resolution', async () => {
     const scenario = makeScenario([{ title: 'Intro', markdown: 'Hello world' }]);
     const runner = runSectionedScenario(scenario, { eventTarget });
-    const first = states[0];
-    expect(first.content).toBeDefined();
-    const content = first.content as { type: string; markdown: string };
+    await new Promise(r => setTimeout(r, 100));
+    const withContent = states.find(s => (s as any).content?.markdown === 'Hello world');
+    expect(withContent).toBeDefined();
+    const content = (withContent as any).content as { type: string; markdown: string };
     expect(content.type).toBe('inline');
     expect(content.markdown).toBe('Hello world');
     runner.dispose();

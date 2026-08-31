@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scenario Automation Tutorials</title>
+  <style>
+    :root {
+      --pages-font-family: system-ui, -apple-system, sans-serif;
+      --pages-font-size-base: 14px;
+      --pages-font-size-sm: 12px;
+      --pages-font-weight-medium: 500;
+      --pages-space-1: 4px; --pages-space-2: 8px; --pages-space-3: 12px;
+      --pages-space-4: 16px; --pages-space-8: 32px;
+      --pages-radius-sm: 4px; --pages-radius-lg: 8px;
+      --pages-neutral-1: #0a0a0a; --pages-neutral-2: #141414;
+      --pages-neutral-3: #1f1f1f; --pages-neutral-4: #2a2a2a;
+      --pages-neutral-5: #3a3a3a; --pages-neutral-6: #4a4a4a;
+      --pages-neutral-7: #6a6a6a; --pages-neutral-8: #8a8a8a;
+      --pages-neutral-9: #a0a0a0; --pages-neutral-12: #ededed;
+      --pages-accent-3: #1e1b4b; --pages-accent-6: #818cf8;
+      --pages-accent-7: #6366f1; --pages-accent-9: #2563eb;
+      --pages-success-9: #16a34a; --pages-warning-9: #ca8a04;
+      --pages-danger-9: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: var(--pages-font-family);
+      background: var(--pages-neutral-1);
+      color: var(--pages-neutral-12);
+    }
+    .page-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--pages-neutral-4);
+    }
+    .page-header h1 { margin: 0 0 4px; font-size: 24px; font-weight: 700; }
+    .page-header p { margin: 0; color: var(--pages-neutral-8); font-size: 14px; }
+    #host-container {
+      max-width: 960px; margin: 0 auto; padding: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Scenario Automation Tutorials</h1>
+    <p>Learn the automation platform step by step</p>
+  </div>
+  <div id="host-container"></div>
+
+  <script type="module">
+    import '../packages/pages-aria/dist/tutorial.js';
+
+    const REGISTRY = [
+      {
+        scenario: 'architecture-concepts',
+        title: 'Architecture & Concepts',
+        description: 'How the scenario engine works — orchestrator, executors, ARIA targeting, compilation',
+        area: 'scenario-automation',
+        labels: ['concept:architecture', 'concept:executor-protocol', 'concept:aria', 'concept:compilation', 'difficulty:beginner'],
+        tags: ['overview', 'getting-started'],
+        estimated: '15 min',
+        prerequisites: [],
+        path: 'architecture-concepts/tutorial.yaml',
+        contentType: 'slides-only',
+        hero: { title: 'Architecture & Concepts', subtitle: 'Understanding the automation platform before writing your first script', icon: '◎' },
+      },
+      {
+        scenario: 'form-automation-tutorial',
+        title: 'Form Automation Basics',
+        description: 'Automate form entry with fill, select, and click commands',
+        area: 'scenario-automation',
+        labels: ['concept:aria', 'concept:commands', 'concept:fill', 'concept:select', 'concept:click', 'difficulty:beginner'],
+        tags: ['getting-started', 'forms', 'hands-on'],
+        estimated: '10 min',
+        prerequisites: ['architecture-concepts'],
+        path: 'form-automation/tutorial.yaml',
+        contentType: 'hands-on',
+        hero: { title: 'Form Automation Basics', subtitle: 'Your first steps with ARIA-based browser automation', icon: '✎' },
+      },
+    ];
+
+    const container = document.getElementById('host-container');
+    const host = document.createElement('pages-tutorial-host');
+    host.registry = REGISTRY;
+    host.paths = [];
+    container.appendChild(host);
+  </script>
+</body>
+</html>

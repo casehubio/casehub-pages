@@ -249,6 +249,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   }
 
   private async _fetchOutline(): Promise<void> {
+    if (!this.baseUrl && !this.connection) return;
     try {
       const resp = await fetch(`${this._conn.restBase}/scenario/outline`);
       if (resp.ok) {
