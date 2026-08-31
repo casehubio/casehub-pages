@@ -1,5 +1,6 @@
 import type { DataSetLookup, ColumnSettings, ColumnId, CellValue, TypedRow, Column } from "@casehubio/pages-data";
 import type { FilterSettings, RefreshSettings } from "./component-props.js";
+import type { FieldSchema } from "./form-input-types.js";
 
 export interface DataComponentCommon {
   readonly title?: string;
@@ -228,22 +229,6 @@ export interface EventTimelineProps extends DataComponentCommon {
   readonly layout?: EventTimelineLayout;
   readonly pageSize?: number;
   readonly strategyKey?: string;
-}
-
-export interface FieldSchema {
-  readonly type?: string;
-  readonly format?: string;
-  readonly title?: string;
-  readonly description?: string;
-  readonly placeholder?: string;
-  readonly enum?: readonly string[];
-  readonly pattern?: string;
-  readonly minimum?: number;
-  readonly maximum?: number;
-  readonly minLength?: number;
-  readonly maxLength?: number;
-  readonly properties?: Readonly<Record<string, FieldSchema>>;
-  readonly required?: readonly string[];
 }
 
 export interface SchemaFormProps {

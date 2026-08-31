@@ -1,4 +1,4 @@
-import type { FieldSchema } from '../types.js';
+import type { FieldSchema } from '@casehubio/pages-component';
 
 export function validateField(
   schema: FieldSchema,

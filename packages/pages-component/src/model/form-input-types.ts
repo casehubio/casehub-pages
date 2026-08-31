@@ -53,19 +53,31 @@ export function isFixedOptions(opts: FixedOptions | DataSetOptions): opts is Fix
 }
 
 export interface FieldSchema {
-  readonly type?: string;
+  readonly type?: string | readonly string[];
   readonly format?: string;
   readonly title?: string;
   readonly description?: string;
+  /** @deprecated Use x-placeholder instead */
   readonly placeholder?: string;
   readonly enum?: readonly string[];
   readonly pattern?: string;
   readonly minimum?: number;
   readonly maximum?: number;
+  readonly exclusiveMinimum?: number;
+  readonly exclusiveMaximum?: number;
   readonly minLength?: number;
   readonly maxLength?: number;
+  readonly minItems?: number;
+  readonly maxItems?: number;
+  readonly uniqueItems?: boolean;
+  readonly multipleOf?: number;
+  readonly readOnly?: boolean;
   readonly properties?: Readonly<Record<string, FieldSchema>>;
   readonly required?: readonly string[];
+  readonly items?: FieldSchema;
+  readonly const?: string | number | boolean | null;
+  readonly oneOf?: readonly FieldSchema[];
+  readonly [key: `x-${string}`]: unknown;
 }
 
 export interface SchemaFormProps {

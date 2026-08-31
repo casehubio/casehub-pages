@@ -1,7 +1,5 @@
-import type { FieldSchema } from '@casehubio/pages-ui-components/types';
+import type { FieldSchema } from '@casehubio/pages-component';
 import type { TemplateResult } from 'lit';
-
-export type { FieldSchema };
 
 export interface PropertyPaletteSource {
   readonly schema: FieldSchema;

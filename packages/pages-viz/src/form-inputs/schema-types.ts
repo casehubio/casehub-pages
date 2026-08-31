@@ -1,6 +1,5 @@
 import type { TypedDataSet, Column } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
-export type { FieldSchema, SchemaFormProps } from "@casehubio/pages-component";
 import type { FieldSchema } from "@casehubio/pages-component";
 
 export function deriveSchemaFromDataSet(dataset: TypedDataSet): FieldSchema {

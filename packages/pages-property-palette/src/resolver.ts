@@ -1,4 +1,4 @@
-import type { FieldSchema } from '@casehubio/pages-ui-components/types';
+import type { FieldSchema } from '@casehubio/pages-component';
 import type { EditorDescriptor, FieldRenderContext } from './types.js';
 import { html } from 'lit';
 

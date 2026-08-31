@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import type { FieldSchema } from '@casehubio/pages-ui-components/types';
+import type { FieldSchema } from '@casehubio/pages-component';
 import { validateField } from '@casehubio/pages-ui-components/validation';
 import { resolveEditor } from '../resolver.js';
 import type { PropertyPaletteSource, EditorDescriptor, EditorResolver, FieldRenderContext } from '../types.js';
