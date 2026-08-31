@@ -575,3 +575,38 @@ body {
     color: var(--pages-text-muted);
     align-self: center;
 }
+
+.config-bar select,
+.config-bar .config-select {
+    padding: var(--pages-space-1-5) var(--pages-space-3);
+    border: 1px solid var(--pages-border-default);
+    border-radius: var(--pages-radius-md);
+    font-size: var(--pages-font-size-sm);
+    color: var(--pages-text-primary);
+    background: var(--pages-surface-primary);
+    cursor: pointer;
+    transition: border-color var(--pages-duration-fast) var(--pages-ease-out);
+}
+
+.config-bar select:focus {
+    outline: none;
+    border-color: var(--pages-interactive);
+    box-shadow: 0 0 0 2px var(--pages-focus-ring);
+}
+
+.config-bar .config-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--pages-space-2);
+    cursor: pointer;
+    font-weight: var(--pages-font-weight-medium);
+    color: var(--pages-text-primary);
+    padding: var(--pages-space-1-5) 0;
+}
+
+.config-bar .config-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--pages-interactive);
+}

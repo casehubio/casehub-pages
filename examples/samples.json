@@ -34,7 +34,16 @@
           "name": "Event Timeline",
           "path": "Charts/Event Timeline.dash.yaml",
           "category": "Charts",
-          "file": "Event Timeline.dash.yaml"
+          "file": "Event Timeline.dash.yaml",
+          "config": [
+            {
+              "prop": "layout",
+              "label": "Layout",
+              "type": "enum",
+              "options": ["vertical", "horizontal", "compact"],
+              "default": "vertical"
+            }
+          ]
         },
         {
           "name": "Heatmap",

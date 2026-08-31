@@ -276,16 +276,64 @@ function extractUrlProperties(yamlText) {
     return props;
 }
 
-function renderConfigBar(urlProps, samplePath) {
+function renderConfigBar(urlProps, samplePath, config) {
     const configBar = document.getElementById('config-bar');
-    const keys = Object.keys(urlProps);
-    if (keys.length === 0) {
+    const urlKeys = Object.keys(urlProps);
+    const hasConfig = config && config.length > 0;
+
+    if (urlKeys.length === 0 && !hasConfig) {
         configBar.style.display = 'none';
         return;
     }
     configBar.style.display = 'flex';
     configBar.innerHTML = '';
-    for (const key of keys) {
+
+    if (hasConfig) {
+        for (const entry of config) {
+            const field = document.createElement('div');
+            field.className = 'config-field';
+
+            if (entry.type === 'enum') {
+                const currentVal = propertyOverrides[entry.prop] || entry.default || entry.options[0];
+                field.innerHTML = `<label>${entry.label}</label>`;
+                const select = document.createElement('select');
+                select.dataset.prop = entry.prop;
+                select.className = 'config-select';
+                for (const opt of entry.options) {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    option.selected = opt === currentVal;
+                    select.appendChild(option);
+                }
+                select.addEventListener('change', () => {
+                    propertyOverrides[entry.prop] = select.value;
+                    loadSampleInTarget(samplePath);
+                });
+                field.appendChild(select);
+            } else if (entry.type === 'boolean') {
+                const currentVal = propertyOverrides[entry.prop] !== undefined
+                    ? propertyOverrides[entry.prop] === 'true'
+                    : (entry.default || false);
+                const label = document.createElement('label');
+                label.className = 'config-checkbox-label';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = currentVal;
+                checkbox.addEventListener('change', () => {
+                    propertyOverrides[entry.prop] = checkbox.checked ? 'true' : 'false';
+                    loadSampleInTarget(samplePath);
+                });
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(` ${entry.label}`));
+                field.appendChild(label);
+            }
+
+            configBar.appendChild(field);
+        }
+    }
+
+    for (const key of urlKeys) {
         const defaultVal = urlProps[key];
         const override = propertyOverrides[key] || '';
         const field = document.createElement('div');
@@ -293,23 +341,20 @@ function renderConfigBar(urlProps, samplePath) {
         field.innerHTML = `<label>${key}</label><input type="text" data-prop="${key}" value="${override.replace(/"/g, '&quot;')}" placeholder="${defaultVal.replace(/"/g, '&quot;')}" />`;
         configBar.appendChild(field);
     }
-    const applyBtn = document.createElement('button');
-    applyBtn.className = 'config-apply';
-    applyBtn.textContent = 'Apply';
-    applyBtn.addEventListener('click', () => {
-        for (const input of configBar.querySelectorAll('input[data-prop]')) {
-            const val = input.value.trim();
-            if (val) propertyOverrides[input.dataset.prop] = val;
-            else delete propertyOverrides[input.dataset.prop];
-        }
-        loadSampleInTarget(samplePath);
-    });
-    configBar.appendChild(applyBtn);
-    if (Object.keys(propertyOverrides).length > 0) {
-        const status = document.createElement('span');
-        status.className = 'config-status';
-        status.textContent = 'Using custom URLs';
-        configBar.appendChild(status);
+
+    if (urlKeys.length > 0) {
+        const applyBtn = document.createElement('button');
+        applyBtn.className = 'config-apply';
+        applyBtn.textContent = 'Apply';
+        applyBtn.addEventListener('click', () => {
+            for (const input of configBar.querySelectorAll('input[type="text"][data-prop]')) {
+                const val = input.value.trim();
+                if (val) propertyOverrides[input.dataset.prop] = val;
+                else delete propertyOverrides[input.dataset.prop];
+            }
+            loadSampleInTarget(samplePath);
+        });
+        configBar.appendChild(applyBtn);
     }
 }
 
@@ -329,7 +374,7 @@ async function loadSampleInTarget(samplePath) {
         let yamlText = await response.text();
 
         const urlProps = extractUrlProperties(yamlText);
-        renderConfigBar(urlProps, samplePath);
+        renderConfigBar(urlProps, samplePath, currentSample?.config);
         yamlText = applyPropertyOverrides(yamlText);
 
         if (currentSite) {

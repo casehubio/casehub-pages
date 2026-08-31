@@ -1,0 +1,27 @@
+datasets:
+  - uuid: team
+    content: >-
+      [
+        ["Alice", "Engineering", "Senior"],
+        ["Bob", "Marketing", "Manager"],
+        ["Charlie", "Engineering", "Staff"]
+      ]
+    columns:
+      - id: name
+        type: TEXT
+      - id: department
+        type: LABEL
+      - id: role
+        type: LABEL
+
+pages:
+  - tabs:
+      - name: Team
+        components:
+          - type: data-table
+            properties:
+              lookup:
+                uuid: team
+      - name: Summary
+        components:
+          - html: "<div style='padding: 20px'>Summary view placeholder</div>"

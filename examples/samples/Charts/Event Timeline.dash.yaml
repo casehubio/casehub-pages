@@ -28,13 +28,3 @@ pages:
           layout: vertical
           lookup:
             uuid: events
-      - type: event-timeline
-        properties:
-          layout: horizontal
-          lookup:
-            uuid: events
-      - type: event-timeline
-        properties:
-          layout: compact
-          lookup:
-            uuid: events
