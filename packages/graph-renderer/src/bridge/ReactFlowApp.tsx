@@ -59,15 +59,24 @@ function ViewportBridge({ onReactFlowReady }: { onReactFlowReady?: (instance: Re
 
 const viewportSizeSelector = (s: { width: number; height: number }) => ({ width: s.width, height: s.height });
 
-function computeBounds(nodes: Node[]): string {
+interface InternalNodeLike {
+  internals?: { positionAbsolute?: { x: number; y: number } };
+}
+
+function nodeAbsolutePos(node: Node): { x: number; y: number } {
+  return (node as unknown as InternalNodeLike).internals?.positionAbsolute ?? node.position;
+}
+
+export function computeBounds(nodes: Node[]): string {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const node of nodes) {
     const w = node.measured?.width ?? node.width ?? 150;
     const h = node.measured?.height ?? node.height ?? 40;
-    minX = Math.min(minX, node.position.x);
-    minY = Math.min(minY, node.position.y);
-    maxX = Math.max(maxX, node.position.x + w);
-    maxY = Math.max(maxY, node.position.y + h);
+    const pos = nodeAbsolutePos(node);
+    minX = Math.min(minX, pos.x);
+    minY = Math.min(minY, pos.y);
+    maxX = Math.max(maxX, pos.x + w);
+    maxY = Math.max(maxY, pos.y + h);
   }
   return `${Math.round(minX)},${Math.round(minY)},${Math.round(maxX)},${Math.round(maxY)}`;
 }
@@ -78,24 +87,26 @@ const boundsSelector = (s: { nodeLookup: Map<string, Node> }) => {
 };
 
 function FitTopLeft({ nodes, onFitRef }: { nodes: Node[]; onFitRef: React.MutableRefObject<(() => void) | null> }) {
-  const { setViewport, getNodes } = useReactFlow();
+  const { setViewport } = useReactFlow();
   const { width: vw, height: vh } = useStore(viewportSizeSelector);
   const bounds = useStore(boundsSelector);
+  const nodeLookup = useStore((s: { nodeLookup: Map<string, Node> }) => s.nodeLookup);
   const lastFittedBounds = useRef('');
   const userInteracted = useRef(false);
 
   const doFit = useCallback(() => {
-    const measured = getNodes();
+    const measured = Array.from(nodeLookup.values());
     if (measured.length === 0 || vw === 0 || vh === 0) return;
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const node of measured) {
       const w = node.measured?.width ?? node.width ?? 150;
       const h = node.measured?.height ?? node.height ?? 40;
-      minX = Math.min(minX, node.position.x);
-      minY = Math.min(minY, node.position.y);
-      maxX = Math.max(maxX, node.position.x + w);
-      maxY = Math.max(maxY, node.position.y + h);
+      const pos = nodeAbsolutePos(node);
+      minX = Math.min(minX, pos.x);
+      minY = Math.min(minY, pos.y);
+      maxX = Math.max(maxX, pos.x + w);
+      maxY = Math.max(maxY, pos.y + h);
     }
 
     const pad = 20;
@@ -107,7 +118,7 @@ function FitTopLeft({ nodes, onFitRef }: { nodes: Node[]; onFitRef: React.Mutabl
     setViewport({ x: -minX * zoom + pad, y: -minY * zoom + pad, zoom });
     lastFittedBounds.current = bounds;
     userInteracted.current = false;
-  }, [getNodes, setViewport, vw, vh, bounds]);
+  }, [nodeLookup, setViewport, vw, vh, bounds]);
 
   useEffect(() => { onFitRef.current = () => { doFit(); userInteracted.current = false; }; }, [doFit, onFitRef]);
 
