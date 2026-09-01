@@ -2,7 +2,13 @@
 
 ## Project Type
 
-type: ts
+type: custom
+**Stage:** pre-release
+
+## Work Tracking
+
+Issue tracking: enabled
+GitHub repo: casehubio/casehub-pages
 
 ## Repository Role
 
