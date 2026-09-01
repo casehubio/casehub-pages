@@ -31,6 +31,7 @@
         <module>scenario-client</module>
         <module>mcp</module>
         <module>terminal</module>
+        <module>terminal-runtime</module>
         <module>cross-parser-test</module>
     </modules>
 

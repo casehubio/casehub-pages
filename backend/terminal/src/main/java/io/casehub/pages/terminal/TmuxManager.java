@@ -100,6 +100,9 @@ public class TmuxManager {
     private void run(String... command) throws IOException, InterruptedException {
         var p = new ProcessBuilder(command).redirectErrorStream(true).start();
         p.getInputStream().transferTo(OutputStream.nullOutputStream());
-        p.waitFor();
+        int exit = p.waitFor();
+        if (exit != 0) {
+            throw new IOException("tmux command failed (exit " + exit + "): " + String.join(" ", command));
+        }
     }
 }
