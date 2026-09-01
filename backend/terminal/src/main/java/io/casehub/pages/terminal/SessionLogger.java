@@ -74,6 +74,7 @@ public class SessionLogger {
                     if (raf.readByte() == '\n') skipLines++;
                     ep--;
                 }
+                if (skipLines < offset) return "";
                 endPos = ep + 2;
             }
 

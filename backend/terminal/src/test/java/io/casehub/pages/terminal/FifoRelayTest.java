@@ -32,4 +32,29 @@ class FifoRelayTest {
         new FifoRelay(input, received::add).relay();
         assertThat(received).isEmpty();
     }
+
+    @Test
+    void relay_handles_multibyte_utf8_characters() throws Exception {
+        var text = "hello éàü ☃ 🚀 world";
+        var input = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+        List<String> received = new ArrayList<>();
+        new FifoRelay(input, received::add).relay();
+        assertThat(String.join("", received)).isEqualTo(text);
+    }
+
+    @Test
+    void relay_skips_initial_cr_only() throws Exception {
+        var input = new ByteArrayInputStream("\rhello".getBytes(StandardCharsets.UTF_8));
+        List<String> received = new ArrayList<>();
+        new FifoRelay(input, received::add).relay();
+        assertThat(String.join("", received)).isEqualTo("hello");
+    }
+
+    @Test
+    void relay_preserves_newlines_after_initial() throws Exception {
+        var input = new ByteArrayInputStream("\r\nfirst\nsecond\n".getBytes(StandardCharsets.UTF_8));
+        List<String> received = new ArrayList<>();
+        new FifoRelay(input, received::add).relay();
+        assertThat(String.join("", received)).isEqualTo("first\nsecond\n");
+    }
 }
