@@ -35,6 +35,28 @@ describe('NodeDecoration', () => {
     expect(decoration.badge?.count).toBeUndefined();
   });
 
+  it('accepts decoration with pills', () => {
+    const decoration: NodeDecoration = {
+      pills: [
+        { text: '0.92', color: '#16a34a', icon: '✓' },
+        { text: '45ms', color: '#2563eb' },
+      ],
+    };
+    expect(decoration.pills).toHaveLength(2);
+    expect(decoration.pills![0]!.text).toBe('0.92');
+    expect(decoration.pills![0]!.icon).toBe('✓');
+    expect(decoration.pills![1]!.icon).toBeUndefined();
+  });
+
+  it('accepts decoration with pills and badge together', () => {
+    const decoration: NodeDecoration = {
+      badge: { icon: 'play', color: 'green' },
+      pills: [{ text: 'SLA: 2h', color: '#dc2626' }],
+    };
+    expect(decoration.badge?.icon).toBe('play');
+    expect(decoration.pills).toHaveLength(1);
+  });
+
   it('accepts highlight overlay', () => {
     const decoration: NodeDecoration = {
       overlay: { type: 'highlight', intensity: 1.0 },

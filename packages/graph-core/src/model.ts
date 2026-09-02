@@ -35,6 +35,11 @@ export interface NodeDecoration {
     readonly intensity: number;
   };
   readonly tooltip?: string;
+  readonly pills?: readonly {
+    readonly text: string;
+    readonly color: string;
+    readonly icon?: string;
+  }[];
 }
 
 export type { JSONSchema7 as PropertySchema } from 'json-schema';

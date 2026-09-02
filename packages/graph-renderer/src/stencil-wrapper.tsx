@@ -94,6 +94,47 @@ function DecorationOverlay({ overlay }: { overlay: NonNullable<NodeDecoration['o
   );
 }
 
+function DecorationPills({ pills }: { pills: NonNullable<NodeDecoration['pills']> }): React.JSX.Element {
+  return (
+    <div
+      className="stencil-decoration-pills"
+      style={{
+        position: 'absolute',
+        bottom: -10,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '3px',
+        zIndex: 10,
+        pointerEvents: 'none',
+      }}
+    >
+      {pills.map((pill, i) => (
+        <span
+          key={i}
+          className="stencil-pill"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '2px',
+            background: pill.color,
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '1px 6px',
+            fontSize: '9px',
+            fontWeight: 600,
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {pill.icon && <span className="stencil-pill-icon">{pill.icon}</span>}
+          <span className="stencil-pill-text">{pill.text}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 const PULSE_STYLE_ID = 'stencil-decoration-pulse';
 
 function ensurePulseStyle(): void {
@@ -182,6 +223,7 @@ export function createStencilNodeComponent(
         >
           {decoration?.badge && <DecorationBadge badge={decoration.badge} />}
           {decoration?.overlay && <DecorationOverlay overlay={decoration.overlay} />}
+          {decoration?.pills && decoration.pills.length > 0 && <DecorationPills pills={decoration.pills} />}
           <div ref={containerRef} />
         </div>
         {!hideHandles && hasSource && grammar?.connections.outbound.max !== 0 &&

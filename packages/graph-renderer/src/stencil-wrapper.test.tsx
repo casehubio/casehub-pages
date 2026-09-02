@@ -316,6 +316,66 @@ describe('decoration rendering', () => {
     unmount();
   });
 
+  it('renders pills when decoration has pills', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = {
+      pills: [
+        { text: '0.92', color: '#16a34a', icon: '✓' },
+        { text: '45ms', color: '#2563eb' },
+      ],
+    };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    const pillsContainer = container.querySelector('.stencil-decoration-pills');
+    expect(pillsContainer).not.toBeNull();
+    const pills = pillsContainer!.querySelectorAll('.stencil-pill');
+    expect(pills).toHaveLength(2);
+    expect(pills[0]!.querySelector('.stencil-pill-icon')?.textContent).toBe('✓');
+    expect(pills[0]!.querySelector('.stencil-pill-text')?.textContent).toBe('0.92');
+    expect(pills[1]!.querySelector('.stencil-pill-icon')).toBeNull();
+    expect(pills[1]!.querySelector('.stencil-pill-text')?.textContent).toBe('45ms');
+    unmount();
+  });
+
+  it('does not render pills when absent', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const { container, unmount } = mountWithProps(Component, defaultNodeProps);
+    expect(container.querySelector('.stencil-decoration-pills')).toBeNull();
+    unmount();
+  });
+
+  it('does not render pills when array is empty', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = { pills: [] };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    expect(container.querySelector('.stencil-decoration-pills')).toBeNull();
+    unmount();
+  });
+
+  it('renders pills alongside badge', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const decoration: NodeDecoration = {
+      badge: { icon: '▶', color: '#0f0' },
+      pills: [{ text: 'SLA: 2h', color: '#dc2626' }],
+    };
+    const { container, unmount } = mountWithProps(Component, {
+      ...defaultNodeProps,
+      data: { _decoration: decoration },
+    });
+    expect(container.querySelector('.stencil-decoration-badge')).not.toBeNull();
+    expect(container.querySelector('.stencil-decoration-pills')).not.toBeNull();
+    unmount();
+  });
+
   it('existing stencils without second param still work', () => {
     const renderFn = (node: GraphNode) => html`<span class="legacy">${String(node.properties['label'] ?? '')}</span>`;
     const Component = createStencilNodeComponent(renderFn);
