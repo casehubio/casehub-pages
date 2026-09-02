@@ -6,8 +6,7 @@
     "emitDeclarationOnly": true
   },
   "include": [
-    "src",
-    "samples"
+    "src"
   ],
   "references": [
     {
