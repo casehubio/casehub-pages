@@ -123,6 +123,40 @@ export function splitEdge(model: GraphModel, edgeId: string, insertNode: GraphNo
   return result;
 }
 
+export function removeNodes(model: GraphModel, nodeIds: ReadonlySet<string>): EditResult {
+  if (nodeIds.size === 0) return { model, violations: [] };
+
+  const ordered: string[] = [];
+  const remaining = new Set(nodeIds);
+
+  while (remaining.size > 0) {
+    const leaves: string[] = [];
+    for (const id of remaining) {
+      const hasChildInSet = model.nodes.some(
+        n => n.parentId === id && remaining.has(n.id),
+      );
+      if (!hasChildInSet) leaves.push(id);
+    }
+    if (leaves.length === 0) {
+      for (const id of remaining) ordered.push(id);
+      break;
+    }
+    for (const id of leaves) {
+      ordered.push(id);
+      remaining.delete(id);
+    }
+  }
+
+  let current = model;
+  const allViolations: ConstraintViolation[] = [];
+  for (const id of ordered) {
+    const result = removeNode(current, id);
+    current = result.model;
+    allViolations.push(...result.violations);
+  }
+  return { model: current, violations: allViolations };
+}
+
 export function removeEdge(model: GraphModel, edgeId: string): EditResult {
   if (!model.edges.some(e => e.id === edgeId)) {
     throw new Error(`Edge '${edgeId}' not found`);

@@ -1,14 +1,16 @@
 import { LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { createElement } from 'react';
+import React, { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { Node, Edge, ReactFlowInstance, Connection } from '@xyflow/react';
 import type { GraphModel } from '@casehubio/graph-core';
-import { nodeById } from '@casehubio/graph-core';
-import type { EditPolicy } from '../editing/types.js';
+import { nodeById, validateSelection, canAddToSelection, canRemoveFromSelection } from '@casehubio/graph-core';
+import type { EditPolicy, MultiSelectState } from '../editing/types.js';
 import type { GraphEdit } from '../editing/types.js';
 import { createNodeMoveCoordinator } from '../editing/node-move-coordinator.js';
 import type { NodeMoveCoordinator, DragEndResult } from '../editing/node-move-coordinator.js';
+import { createRubberBandSelect } from '../editing/rubber-band-select.js';
+import type { RubberBandSelect } from '../editing/rubber-band-select.js';
 import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
 import { ReactFlowApp, type ReactFlowAppProps } from './ReactFlowApp.js';
 import { getNodeTypes } from '../registry/stencil-registry.js';
@@ -25,6 +27,7 @@ export class GraphCanvas extends LitElement {
   @property({ attribute: false }) edges: Edge[] | undefined;
   @property({ attribute: false }) editPolicy: EditPolicy | undefined;
   @property({ attribute: false }) onMutation: ((edit: GraphEdit) => void) | undefined;
+  @property({ attribute: false }) connectionsEnabled = true;
   @property({ attribute: false }) miniMapNodeColor: ReactFlowAppProps['miniMapNodeColor'];
 
   @state() private _nodes: Node[] = [];
@@ -40,6 +43,107 @@ export class GraphCanvas extends LitElement {
   private _moveCoordinator: NodeMoveCoordinator | null = null;
   private _moveWasActive = false;
   private _pointerDownHandler: ((e: PointerEvent) => void) | undefined;
+  private _rubberBand: RubberBandSelect | null = null;
+  private _keyDownHandler: ((e: KeyboardEvent) => void) | undefined;
+  private _multiSelect: MultiSelectState = { selectedNodeIds: new Set(), mode: 'none', boundaryInput: null, boundaryOutput: null };
+
+  get multiSelect(): MultiSelectState { return this._multiSelect; }
+
+  private _setMultiSelect(state: MultiSelectState): void {
+    this._multiSelect = state;
+    this._applyMultiSelectCSS();
+    emitPagesEvent(this, 'graph:multiselect:change', {
+      mode: state.mode,
+      nodeIds: [...state.selectedNodeIds],
+    });
+  }
+
+  private _clearMultiSelect(): void {
+    this._setMultiSelect({ selectedNodeIds: new Set(), mode: 'none', boundaryInput: null, boundaryOutput: null });
+  }
+
+  private _handleShiftClick(nodeId: string): void {
+    const model = this.model;
+    if (!model) return;
+
+    const ms = this._multiSelect;
+
+    if (ms.mode === 'none') {
+      this._setMultiSelect({
+        selectedNodeIds: new Set([nodeId]),
+        mode: 'unconstrained',
+        boundaryInput: null,
+        boundaryOutput: null,
+      });
+      return;
+    }
+
+    if (ms.mode === 'unconstrained') {
+      const next = new Set(ms.selectedNodeIds);
+      if (next.has(nodeId)) next.delete(nodeId); else next.add(nodeId);
+      if (next.size === 0) { this._clearMultiSelect(); return; }
+      this._setMultiSelect({ ...ms, selectedNodeIds: next });
+      return;
+    }
+
+    // Constrained mode — validate before add/remove
+    const isRemove = ms.selectedNodeIds.has(nodeId);
+    const result = isRemove
+      ? canRemoveFromSelection(nodeId, ms.selectedNodeIds, model)
+      : canAddToSelection(nodeId, ms.selectedNodeIds, model);
+
+    if (result.invalid.size === 0 && result.valid.size > 0) {
+      this._setMultiSelect({
+        selectedNodeIds: result.valid,
+        mode: 'constrained',
+        boundaryInput: result.boundaryInput,
+        boundaryOutput: result.boundaryOutput,
+      });
+    } else if (result.valid.size === 0 && !isRemove) {
+      // Reject — flash warning
+      this._flashWarning(nodeId);
+    }
+  }
+
+  private _handleMultiSelectDelete(): void {
+    const ms = this._multiSelect;
+    if (ms.mode === 'none' || !this.model) return;
+
+    if (ms.mode === 'constrained' && ms.boundaryInput && ms.boundaryOutput) {
+      const source = nodeById(this.model, ms.boundaryInput.source);
+      const target = nodeById(this.model, ms.boundaryOutput.target);
+      const canBridge = source && target && this.editPolicy?.canConnect(source, target, this.model);
+      if (canBridge) {
+        this.onMutation?.({
+          type: 'removeSegment',
+          nodeIds: ms.selectedNodeIds,
+          bridgeEdge: { sourceId: ms.boundaryInput.source, targetId: ms.boundaryOutput.target, edgeType: ms.boundaryInput.type },
+        });
+      } else {
+        this.onMutation?.({ type: 'removeSegment', nodeIds: ms.selectedNodeIds });
+      }
+    } else {
+      this.onMutation?.({ type: 'removeSegment', nodeIds: ms.selectedNodeIds });
+    }
+    this._clearMultiSelect();
+  }
+
+  private _flashWarning(nodeId: string): void {
+    const el = this._container?.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
+    if (!el) return;
+    el.classList.add('multi-select-rejected');
+    setTimeout(() => el.classList.remove('multi-select-rejected'), 300);
+  }
+
+  private _applyMultiSelectCSS(): void {
+    const container = this._container;
+    if (!container) return;
+    const nodeEls = container.querySelectorAll('.react-flow__node');
+    for (const el of nodeEls) {
+      const nodeId = (el as HTMLElement).dataset['id'] ?? '';
+      el.classList.toggle('multi-select-active', this._multiSelect.selectedNodeIds.has(nodeId));
+    }
+  }
 
   screenToFlow(screenX: number, screenY: number): { x: number; y: number } | undefined {
     return this._reactFlowInstance?.screenToFlowPosition({ x: screenX, y: screenY });
@@ -83,9 +187,49 @@ export class GraphCanvas extends LitElement {
           onResult: (result: DragEndResult) => this._handleMoveResult(result),
         });
       }
-      this._moveCoordinator.startDrag(nodeId, e, this.model);
+
+      const ms = this._multiSelect;
+      if (ms.mode === 'constrained' && ms.selectedNodeIds.has(nodeId) && ms.boundaryInput && ms.boundaryOutput) {
+        this._moveCoordinator.startSegmentDrag({
+          type: 'segment',
+          nodeIds: ms.selectedNodeIds,
+          entryNodeId: ms.boundaryInput.target,
+          exitNodeId: ms.boundaryOutput.source,
+          boundaryInput: ms.boundaryInput,
+          boundaryOutput: ms.boundaryOutput,
+        }, e, this.model);
+      } else {
+        if (ms.mode !== 'none') this._clearMultiSelect();
+        this._moveCoordinator.startDrag(nodeId, e, this.model);
+      }
     };
     this._container.addEventListener('pointerdown', this._pointerDownHandler);
+
+    this._rubberBand = createRubberBandSelect({
+      containerEl: this._container,
+      screenToFlow: (x, y) => this.screenToFlow(x, y) ?? { x, y },
+      getNodes: () => this._nodes,
+      getModel: () => this.model ?? { nodes: [], edges: [] },
+      onComplete: (result) => {
+        if (result.type === 'selected') {
+          this._setMultiSelect({
+            selectedNodeIds: result.nodeIds,
+            mode: 'constrained',
+            boundaryInput: result.boundaryInput,
+            boundaryOutput: result.boundaryOutput,
+          });
+        }
+      },
+    });
+    this._rubberBand.attach();
+
+    this._keyDownHandler = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && this._multiSelect.mode !== 'none') {
+        e.preventDefault();
+        this._handleMultiSelectDelete();
+      }
+    };
+    this.addEventListener('keydown', this._keyDownHandler);
 
     this._root = createRoot(this._container);
     this._renderReact();
@@ -104,6 +248,12 @@ export class GraphCanvas extends LitElement {
       document.documentElement.removeEventListener('pages-theme-change', this._themeListener);
       this._themeListener = undefined;
     }
+    if (this._keyDownHandler) {
+      this.removeEventListener('keydown', this._keyDownHandler);
+      this._keyDownHandler = undefined;
+    }
+    this._rubberBand?.dispose();
+    this._rubberBand = null;
     this._moveCoordinator?.dispose();
     this._moveCoordinator = null;
     if (this._pointerDownHandler && this._container) {
@@ -164,6 +314,17 @@ export class GraphCanvas extends LitElement {
         edgeId: result.edgeId,
         sourceCleanup: result.sourceCleanup,
       });
+    } else if (result.type === 'splice-segment') {
+      const ms = this._multiSelect;
+      this._clearMultiSelect();
+      this.onMutation?.({
+        type: 'moveSegmentToEdge',
+        nodeIds: result.nodeIds,
+        entryNodeId: ms.boundaryInput?.target ?? '',
+        exitNodeId: ms.boundaryOutput?.source ?? '',
+        edgeId: result.edgeId,
+        bridgeEdge: result.bridgeEdge,
+      });
     }
   }
 
@@ -175,9 +336,14 @@ export class GraphCanvas extends LitElement {
         nodes: this.nodes ?? this._nodes,
         edges: this.edges ?? this._edges,
         nodeTypes: getNodeTypes(),
-        onNodeClick: (nodeId: string, node: Node) => {
-          this._nodes = this._nodes.map(n => ({ ...n, selected: n.id === nodeId }));
-          this._renderReact();
+        onNodeClick: (nodeId: string, node: Node, event?: React.MouseEvent) => {
+          if (event?.shiftKey && this.model) {
+            this._handleShiftClick(nodeId);
+          } else {
+            this._clearMultiSelect();
+            this._nodes = this._nodes.map(n => ({ ...n, selected: n.id === nodeId }));
+            this._renderReact();
+          }
           emitPagesEvent(this, 'graph:node:click', {
             nodeId,
             nodeType: node.type ?? '',
@@ -275,6 +441,7 @@ export class GraphCanvas extends LitElement {
           emitPagesEvent(this, 'graph:connect:end-on-empty', { ...pos, sourceNodeId: sourceId });
         },
         onPaneClick: (event) => {
+          this._clearMultiSelect();
           emitPagesEvent(this, 'graph:pane:click', { x: event.clientX, y: event.clientY });
         },
         onPaneContextMenu: (event) => {
@@ -286,6 +453,7 @@ export class GraphCanvas extends LitElement {
         onEdgeContextMenu: (_event, edge: Edge) => {
           emitPagesEvent(this, 'graph:edge:contextmenu', { edgeId: edge.id, edgeType: edge.type ?? '' });
         },
+        nodesConnectable: this.connectionsEnabled,
         miniMapNodeColor: this.miniMapNodeColor,
       }),
     );

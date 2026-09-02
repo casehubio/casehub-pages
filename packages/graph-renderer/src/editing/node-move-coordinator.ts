@@ -1,7 +1,7 @@
 import type { GraphModel, GraphNode, GraphEdge } from '@casehubio/graph-core';
 import { nodeById, childrenOf } from '@casehubio/graph-core';
-import type { EditPolicy, SourceCleanupStrategy } from './types.js';
-import { defaultCanSpliceOntoEdge } from './splice-validation.js';
+import type { EditPolicy, SourceCleanupStrategy, DragSubject } from './types.js';
+import { defaultCanSpliceOntoEdge, defaultCanSpliceSegmentOntoEdge } from './splice-validation.js';
 
 const HOLD_DURATION = 300;
 const HOLD_MOVE_TOLERANCE = 3;
@@ -9,10 +9,13 @@ const DRAG_THRESHOLD = 5;
 
 export type DragEndResult =
   | { type: 'splice'; nodeId: string; edgeId: string; sourceCleanup: SourceCleanupStrategy }
+  | { type: 'splice-segment'; nodeIds: ReadonlySet<string>; edgeId: string;
+      bridgeEdge: { sourceId: string; targetId: string; edgeType: string } }
   | { type: 'cancelled' };
 
 export interface NodeMoveCoordinator {
   startDrag(nodeId: string, event: PointerEvent, model: GraphModel): void;
+  startSegmentDrag(subject: DragSubject & { type: 'segment' }, event: PointerEvent, model: GraphModel): void;
   dispose(): void;
   readonly isActive: boolean;
 }
@@ -28,6 +31,7 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
 
   let activeModel: GraphModel | null = null;
   let draggedNodeId: string | null = null;
+  let segmentSubject: (DragSubject & { type: 'segment' }) | null = null;
   let startPos: { x: number; y: number } | null = null;
   let holdTimer: ReturnType<typeof setTimeout> | null = null;
   let holdConfirmed = false;
@@ -62,9 +66,15 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
 
   function confirmHold(): void {
     holdConfirmed = true;
+    if (segmentSubject) {
+      for (const nid of segmentSubject.nodeIds) {
+        const el = containerEl.querySelector(`.react-flow__node[data-id="${nid}"]`) as HTMLElement | null;
+        if (el) el.classList.add('node-move-ghost');
+      }
+    }
     const nodeEl = containerEl.querySelector(`.react-flow__node[data-id="${draggedNodeId}"]`) as HTMLElement | null;
     if (nodeEl) {
-      nodeEl.classList.add('node-move-ghost');
+      if (!segmentSubject) nodeEl.classList.add('node-move-ghost');
       ghostedNodeEl = nodeEl;
     }
     if (nodeEl && capturedPointerId !== null) {
@@ -84,6 +94,22 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
 
   function activateDrag(e: PointerEvent): void {
     dragActive = true;
+
+    if (segmentSubject) {
+      for (const nid of segmentSubject.nodeIds) {
+        const el = containerEl.querySelector(`.react-flow__node[data-id="${nid}"]`) as HTMLElement | null;
+        if (el) el.classList.add('node-move-ghost');
+      }
+      ghostedNodeEl = containerEl.querySelector(`.react-flow__node[data-id="${draggedNodeId}"]`) as HTMLElement | null;
+      cloneEl = document.createElement('div');
+      cloneEl.textContent = `${segmentSubject.nodeIds.size} nodes`;
+      cloneEl.style.cssText = 'position:fixed;pointer-events:none;opacity:0.85;z-index:1000;padding:8px 16px;background:var(--pages-accent-3,#dbeafe);border:2px solid var(--pages-accent-9,#2563eb);border-radius:8px;font:600 13px/1 system-ui;color:var(--pages-accent-11,#1e40af);filter:drop-shadow(0 4px 12px rgba(0,0,0,0.2));';
+      cloneEl.style.left = `${e.clientX - grabOffset.x}px`;
+      cloneEl.style.top = `${e.clientY - grabOffset.y}px`;
+      document.body.appendChild(cloneEl);
+      return;
+    }
+
     const nodeEl = containerEl.querySelector(`.react-flow__node[data-id="${draggedNodeId}"]`) as HTMLElement | null;
     if (nodeEl) {
       nodeEl.classList.add('node-move-ghost');
@@ -161,8 +187,6 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
     }
 
     clearEdgeHighlight();
-    const draggedNode = nodeById(activeModel, draggedNodeId);
-    if (!draggedNode) return;
 
     const hits = typeof document.elementsFromPoint === 'function'
       ? document.elementsFromPoint(e.clientX, e.clientY)
@@ -174,11 +198,25 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
       if (!edgeId) continue;
       const edge = activeModel.edges.find(ed => ed.id === edgeId);
       if (!edge) continue;
-      if (edge.source === draggedNodeId || edge.target === draggedNodeId) continue;
-      if (canSplice(edge, draggedNode, activeModel)) {
-        edgeEl.classList.add('edge-splice-valid');
-        highlightedEdgeEl = edgeEl;
-        showSpliceIndicator(edgeEl);
+
+      if (segmentSubject) {
+        if (segmentSubject.nodeIds.has(edge.source) || segmentSubject.nodeIds.has(edge.target)) continue;
+        const entryNode = nodeById(activeModel, segmentSubject.entryNodeId);
+        const exitNode = nodeById(activeModel, segmentSubject.exitNodeId);
+        if (entryNode && exitNode && defaultCanSpliceSegmentOntoEdge(editPolicy, edge, entryNode, exitNode, segmentSubject.nodeIds, activeModel)) {
+          edgeEl.classList.add('edge-splice-valid');
+          highlightedEdgeEl = edgeEl;
+          showSpliceIndicator(edgeEl);
+        }
+      } else {
+        if (edge.source === draggedNodeId || edge.target === draggedNodeId) continue;
+        const draggedNode = nodeById(activeModel, draggedNodeId!);
+        if (!draggedNode) continue;
+        if (canSplice(edge, draggedNode, activeModel)) {
+          edgeEl.classList.add('edge-splice-valid');
+          highlightedEdgeEl = edgeEl;
+          showSpliceIndicator(edgeEl);
+        }
       }
       break;
     }
@@ -193,9 +231,22 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
     let result: DragEndResult = { type: 'cancelled' };
     if (highlightedEdgeEl) {
       const edgeId = highlightedEdgeEl.dataset['id'];
-      const node = nodeById(activeModel, draggedNodeId);
-      if (edgeId && node) {
-        result = { type: 'splice', nodeId: draggedNodeId, edgeId, sourceCleanup: getSourceCleanup(node, activeModel) };
+      if (edgeId && segmentSubject) {
+        result = {
+          type: 'splice-segment',
+          nodeIds: segmentSubject.nodeIds,
+          edgeId,
+          bridgeEdge: {
+            sourceId: segmentSubject.boundaryInput.source,
+            targetId: segmentSubject.boundaryOutput.target,
+            edgeType: segmentSubject.boundaryInput.type,
+          },
+        };
+      } else if (edgeId) {
+        const node = nodeById(activeModel, draggedNodeId);
+        if (node) {
+          result = { type: 'splice', nodeId: draggedNodeId, edgeId, sourceCleanup: getSourceCleanup(node, activeModel) };
+        }
       }
     }
     cleanup();
@@ -238,9 +289,16 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
     containerEl.removeEventListener('pointerleave', onPointerLeave);
     containerEl.removeEventListener('pointerenter', onPointerEnter);
     containerEl.classList.remove('node-move-active');
+    if (segmentSubject) {
+      for (const nid of segmentSubject.nodeIds) {
+        const el = containerEl.querySelector(`.react-flow__node[data-id="${nid}"]`);
+        if (el) el.classList.remove('node-move-ghost');
+      }
+    }
     if (ghostedNodeEl) { ghostedNodeEl.classList.remove('node-move-ghost'); ghostedNodeEl = null; }
     if (cloneEl) { cloneEl.remove(); cloneEl = null; }
     clearEdgeHighlight();
+    segmentSubject = null;
     activeModel = null;
     draggedNodeId = null;
     startPos = null;
@@ -272,6 +330,34 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
         const rect = wrapper.getBoundingClientRect();
         grabOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
       }
+
+      document.addEventListener('pointermove', onHoldMove);
+      document.addEventListener('pointerup', onHoldUp);
+
+      holdTimer = setTimeout(() => {
+        holdTimer = null;
+        document.removeEventListener('pointermove', onHoldMove);
+        document.removeEventListener('pointerup', onHoldUp);
+        confirmHold();
+        document.addEventListener('pointermove', onDragMove, true);
+        document.addEventListener('pointerup', onDragUp, true);
+      }, HOLD_DURATION);
+    },
+
+    startSegmentDrag(subject: DragSubject & { type: 'segment' }, event: PointerEvent, model: GraphModel): void {
+      for (const nid of subject.nodeIds) {
+        const n = nodeById(model, nid);
+        if (!n || n.parentId) return;
+      }
+
+      segmentSubject = subject;
+      draggedNodeId = subject.entryNodeId;
+      activeModel = model;
+      startPos = { x: event.clientX, y: event.clientY };
+      capturedPointerId = event.pointerId;
+      holdConfirmed = false;
+      dragActive = false;
+      grabOffset = { x: 0, y: 0 };
 
       document.addEventListener('pointermove', onHoldMove);
       document.addEventListener('pointerup', onHoldUp);

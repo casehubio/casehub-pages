@@ -106,6 +106,34 @@ ${pluginStyles}
   filter: drop-shadow(0 0 8px var(--pages-success-9, #16a34a)) drop-shadow(0 0 16px var(--pages-success-9, #16a34a));
   transition: stroke-width 100ms, filter 100ms;
 }
+.react-flow__nodesselection,
+.react-flow__nodesselection-rect {
+  pointer-events: none !important;
+}
+.multi-select-valid .stencil-decoration-wrapper {
+  outline: 2px solid var(--pages-accent-9, #2563eb);
+  outline-offset: 2px;
+  transition: outline 80ms ease-out;
+}
+.multi-select-invalid .stencil-decoration-wrapper {
+  outline: 2px solid var(--pages-danger-9, #dc2626);
+  outline-offset: 2px;
+  opacity: 0.7;
+  transition: outline 80ms ease-out, opacity 80ms ease-out;
+}
+.multi-select-active .stencil-decoration-wrapper {
+  outline: 2px solid var(--pages-accent-9, #2563eb);
+  outline-offset: 2px;
+}
+.multi-select-rejected .stencil-decoration-wrapper {
+  outline: 2px solid var(--pages-danger-9, #dc2626);
+  outline-offset: 2px;
+  animation: multi-select-flash 300ms ease-out;
+}
+@keyframes multi-select-flash {
+  0% { outline-color: var(--pages-danger-9, #dc2626); }
+  100% { outline-color: transparent; }
+}
 `.trim();
 }
 

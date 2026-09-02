@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 87,
+  "totalSamples": 89,
   "categories": [
     {
       "category": "Charts",
@@ -34,16 +34,7 @@
           "name": "Event Timeline",
           "path": "Charts/Event Timeline.dash.yaml",
           "category": "Charts",
-          "file": "Event Timeline.dash.yaml",
-          "config": [
-            {
-              "prop": "layout",
-              "label": "Layout",
-              "type": "enum",
-              "options": ["vertical", "horizontal", "compact"],
-              "default": "vertical"
-            }
-          ]
+          "file": "Event Timeline.dash.yaml"
         },
         {
           "name": "Heatmap",
@@ -172,6 +163,12 @@
           "category": "Tables",
           "file": "Spanning.dash.yaml",
           "tsPath": "Tables/Spanning.ts"
+        },
+        {
+          "name": "Tabbed Table",
+          "path": "Tables/Tabbed Table.dash.yaml",
+          "category": "Tables",
+          "file": "Tabbed Table.dash.yaml"
         },
         {
           "name": "Tree Table",
@@ -356,6 +353,13 @@
           "category": "Graph Editing",
           "file": "Interactive Editing.dash.yaml",
           "tsPath": "Graph Editing/Interactive Editing.ts"
+        },
+        {
+          "name": "Multi Select",
+          "path": "Graph Editing/Multi Select.dash.yaml",
+          "category": "Graph Editing",
+          "file": "Multi Select.dash.yaml",
+          "tsPath": "Graph Editing/Multi Select.ts"
         }
       ]
     },

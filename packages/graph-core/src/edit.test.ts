@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { addNode, removeNode, replaceNode, addEdge, removeEdge, reconnectEdge, splitEdge } from './edit.js';
+import { addNode, removeNode, removeNodes, replaceNode, addEdge, removeEdge, reconnectEdge, splitEdge } from './edit.js';
 import { createGraph } from './graph.js';
 import { registerGrammar, clearGrammarRegistry } from './grammar.js';
 import type { GraphNode, GraphEdge } from './model.js';
@@ -392,5 +392,46 @@ describe('splitEdge', () => {
       [edge('e1', 'n1', 'n2')],
     );
     expect(() => splitEdge(model, 'e1', node('n1', 'c'))).toThrow(/duplicate/i);
+  });
+});
+
+describe('removeNodes', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+  });
+
+  it('removes multiple nodes and their edges', () => {
+    const model = createGraph(
+      [node('A', 'step'), node('B', 'step'), node('C', 'step'), node('D', 'step')],
+      [edge('e1', 'A', 'B'), edge('e2', 'B', 'C'), edge('e3', 'C', 'D')],
+    );
+    const result = removeNodes(model, new Set(['B', 'C']));
+    expect(result.model.nodes).toHaveLength(2);
+    expect(result.model.nodes.map(n => n.id).sort()).toEqual(['A', 'D']);
+    expect(result.model.edges).toHaveLength(0);
+  });
+
+  it('handles empty set — returns same model', () => {
+    const model = createGraph([node('A', 'step')], []);
+    const result = removeNodes(model, new Set());
+    expect(result.model.nodes).toHaveLength(1);
+  });
+
+  it('removes leaf nodes before parents in containment tree', () => {
+    const P: GraphNode = { id: 'P', type: 'container', properties: {} };
+    const Ch: GraphNode = { id: 'Ch', type: 'step', parentId: 'P', properties: {} };
+    const model = createGraph([P, Ch], []);
+    const result = removeNodes(model, new Set(['P', 'Ch']));
+    expect(result.model.nodes).toHaveLength(0);
+  });
+
+  it('removes a single node', () => {
+    const model = createGraph(
+      [node('A', 'step'), node('B', 'step')],
+      [edge('e1', 'A', 'B')],
+    );
+    const result = removeNodes(model, new Set(['B']));
+    expect(result.model.nodes).toHaveLength(1);
+    expect(result.model.edges).toHaveLength(0);
   });
 });

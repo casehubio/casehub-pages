@@ -1,5 +1,5 @@
 import type { GraphNode, GraphEdge, GraphModel } from '@casehubio/graph-core';
-import { addNode, removeNode, addEdge, removeEdge, reconnectEdge, splitEdge, inboundEdges, outboundEdges } from '@casehubio/graph-core';
+import { addNode, removeNode, removeNodes, addEdge, removeEdge, reconnectEdge, splitEdge, inboundEdges, outboundEdges } from '@casehubio/graph-core';
 import type { EditResult } from '@casehubio/graph-core';
 import type { GraphEdit } from './types.js';
 
@@ -102,6 +102,59 @@ export function applyGraphEdit(model: GraphModel, edit: GraphEdit): EditResult {
         target: targetEdge.target,
       });
 
+      return result;
+    }
+    case 'moveSegmentToEdge': {
+      let result: EditResult = { model, violations: [] };
+
+      // Source cleanup: remove EXTERNAL edges only (one endpoint in segment, one outside).
+      // Internal edges (both endpoints in segment) are preserved.
+      const externalEdges = model.edges.filter(e => {
+        const srcIn = edit.nodeIds.has(e.source);
+        const tgtIn = edit.nodeIds.has(e.target);
+        return (srcIn || tgtIn) && !(srcIn && tgtIn);
+      });
+      for (const e of externalEdges) {
+        result = removeEdge(result.model, e.id);
+      }
+      const bridgeE: GraphEdge = {
+        id: nextId('edge'),
+        type: edit.bridgeEdge.edgeType,
+        source: edit.bridgeEdge.sourceId,
+        target: edit.bridgeEdge.targetId,
+      };
+      result = addEdge(result.model, bridgeE);
+
+      // Target splice: remove target edge, wire segment in
+      const targetEdge = result.model.edges.find(e => e.id === edit.edgeId);
+      if (!targetEdge) throw new Error(`Edge ${edit.edgeId} not found`);
+      result = removeEdge(result.model, edit.edgeId);
+      result = addEdge(result.model, {
+        id: nextId('edge'),
+        type: targetEdge.type,
+        source: targetEdge.source,
+        target: edit.entryNodeId,
+      });
+      result = addEdge(result.model, {
+        id: nextId('edge'),
+        type: targetEdge.type,
+        source: edit.exitNodeId,
+        target: targetEdge.target,
+      });
+
+      return result;
+    }
+    case 'removeSegment': {
+      let result = removeNodes(model, edit.nodeIds);
+      if (edit.bridgeEdge) {
+        const bridge: GraphEdge = {
+          id: nextId('edge'),
+          type: edit.bridgeEdge.edgeType,
+          source: edit.bridgeEdge.sourceId,
+          target: edit.bridgeEdge.targetId,
+        };
+        result = addEdge(result.model, bridge);
+      }
       return result;
     }
     case 'compound': {

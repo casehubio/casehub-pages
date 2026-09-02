@@ -30,7 +30,7 @@ export interface ReactFlowAppProps {
   nodes: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
-  onNodeClick?: (nodeId: string, node: Node) => void;
+  onNodeClick?: (nodeId: string, node: Node, event?: React.MouseEvent) => void;
   onEdgeClick?: (edgeId: string, edge: Edge) => void;
   onSelectionChange?: (nodes: Node[], edges: Edge[]) => void;
   onViewportChange?: (viewport: { x: number; y: number; zoom: number }) => void;
@@ -46,6 +46,7 @@ export interface ReactFlowAppProps {
   onReactFlowReady?: (instance: ReactFlowInstance) => void;
   onConnectEnd?: (event: MouseEvent | TouchEvent) => void;
   onConnectStart?: (event: MouseEvent | TouchEvent, params: { nodeId: string | null }) => void;
+  nodesConnectable?: boolean;
   miniMapNodeColor?: ((node: Node) => string) | undefined;
 }
 
@@ -163,12 +164,13 @@ export function ReactFlowApp({
   onReactFlowReady,
   onConnectEnd,
   onConnectStart,
+  nodesConnectable,
   miniMapNodeColor,
 }: ReactFlowAppProps): React.JSX.Element {
   const fitRef = useRef<(() => void) | null>(null);
 
   const handleNodeClick: NodeMouseHandler = useCallback(
-    (_event, node) => { onNodeClick?.(node.id, node); },
+    (event, node) => { onNodeClick?.(node.id, node, event); },
     [onNodeClick],
   );
 
@@ -209,6 +211,8 @@ export function ReactFlowApp({
       onMoveEnd={handleMoveEnd}
       edgesReconnectable
       nodesDraggable={false}
+      nodesConnectable={nodesConnectable ?? true}
+      multiSelectionKeyCode={null}
       connectionRadius={0}
       {...editingProps}
     >

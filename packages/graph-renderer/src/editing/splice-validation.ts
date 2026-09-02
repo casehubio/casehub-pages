@@ -31,3 +31,29 @@ export function defaultCanSpliceOntoEdge(
   return policy.canConnect(source, node, projected)
       && policy.canConnect(node, target, projected);
 }
+
+export function defaultCanSpliceSegmentOntoEdge(
+  policy: EditPolicy,
+  edge: GraphEdge,
+  entryNode: GraphNode,
+  exitNode: GraphNode,
+  selectedNodeIds: ReadonlySet<string>,
+  model: GraphModel,
+): boolean {
+  const edgesToRemove = new Set<string>();
+  edgesToRemove.add(edge.id);
+  for (const e of model.edges) {
+    if (selectedNodeIds.has(e.source) || selectedNodeIds.has(e.target)) {
+      edgesToRemove.add(e.id);
+    }
+  }
+  const projected: GraphModel = {
+    ...model,
+    edges: model.edges.filter(e => !edgesToRemove.has(e.id)),
+  };
+  const source = nodeById(projected, edge.source);
+  const target = nodeById(projected, edge.target);
+  if (!source || !target) return false;
+  return policy.canConnect(source, entryNode, projected)
+      && policy.canConnect(exitNode, target, projected);
+}
