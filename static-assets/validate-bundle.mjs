@@ -22,6 +22,9 @@ globalThis.document = {
   createTreeWalker: () => ({ nextNode: () => null, currentNode: null }),
   adoptedStyleSheets: [],
   head: { prepend: noop },
+  addEventListener: noop,
+  removeEventListener: noop,
+  hidden: false,
 };
 globalThis.window = globalThis;
 globalThis.MutationObserver = class { observe() {} disconnect() {} };
