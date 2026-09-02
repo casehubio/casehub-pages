@@ -32,8 +32,8 @@ export class PagesDiagramToolbar extends LitElement {
     return html`
       ${saveSection}
       <span class="spacer"></span>
-      <button ?disabled=${!this.hasNodes} @click=${() => this._export('svg')}>Export SVG</button>
-      <button ?disabled=${!this.hasNodes} @click=${() => this._export('png')}>Export PNG</button>
+      <button ?disabled=${!this.hasNodes} @click=${() => { this._export('svg'); }}>Export SVG</button>
+      <button ?disabled=${!this.hasNodes} @click=${() => { this._export('png'); }}>Export PNG</button>
     `;
   }
 

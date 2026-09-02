@@ -214,13 +214,13 @@ describe('toReactFlowNode with decoration', () => {
     const node: GraphNode = { id: 'n1', type: 'binding', properties: { label: 'test' } };
     const result = toReactFlowNode(node, parentIds);
     expect(result.data).toEqual({ label: 'test' });
-    expect('_decoration' in (result.data as Record<string, unknown>)).toBe(false);
+    expect('_decoration' in (result.data)).toBe(false);
   });
 
   it('omits _decoration key when decoration is undefined', () => {
     const node: GraphNode = { id: 'n1', type: 'binding', properties: {} };
     const result = toReactFlowNode(node, parentIds, undefined, undefined);
-    expect('_decoration' in (result.data as Record<string, unknown>)).toBe(false);
+    expect('_decoration' in (result.data)).toBe(false);
   });
 });
 
@@ -239,8 +239,8 @@ describe('toReactFlowGraph with decorations', () => {
     const result = toReactFlowGraph(model, undefined, decorations);
     const n1 = result.nodes.find(n => n.id === 'n1')!;
     const n2 = result.nodes.find(n => n.id === 'n2')!;
-    expect((n1.data as Record<string, unknown>)._decoration).toEqual({ badge: { icon: 'check', color: 'green' } });
-    expect('_decoration' in (n2.data as Record<string, unknown>)).toBe(false);
+    expect((n1.data)._decoration).toEqual({ badge: { icon: 'check', color: 'green' } });
+    expect('_decoration' in (n2.data)).toBe(false);
   });
 
   it('works with no decorations map', () => {
@@ -249,7 +249,7 @@ describe('toReactFlowGraph with decorations', () => {
       edges: [],
     };
     const result = toReactFlowGraph(model);
-    expect('_decoration' in (result.nodes[0]!.data as Record<string, unknown>)).toBe(false);
+    expect('_decoration' in (result.nodes[0]!.data)).toBe(false);
   });
 
   it('works with empty decorations map', () => {
@@ -258,6 +258,6 @@ describe('toReactFlowGraph with decorations', () => {
       edges: [],
     };
     const result = toReactFlowGraph(model, undefined, new Map());
-    expect('_decoration' in (result.nodes[0]!.data as Record<string, unknown>)).toBe(false);
+    expect('_decoration' in (result.nodes[0]!.data)).toBe(false);
   });
 });

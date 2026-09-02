@@ -17,12 +17,12 @@ describe('pages-confirm-dialog', () => {
   let el: ConfirmDialog;
 
   beforeEach(async () => {
-    el = document.createElement('pages-confirm-dialog') as ConfirmDialog;
+    el = document.createElement('pages-confirm-dialog');
     document.body.appendChild(el);
     await el.updateComplete;
   });
 
-  afterEach(() => el.remove());
+  afterEach(() => { el.remove(); });
 
   it('is hidden when open is false', () => {
     expect(el.shadowRoot!.querySelector('.overlay')).toBeNull();
@@ -50,7 +50,7 @@ describe('pages-confirm-dialog', () => {
     el.open = true;
     await el.updateComplete;
     const buttons = el.shadowRoot!.querySelectorAll('button');
-    const labels = Array.from(buttons).map(b => b.textContent!.trim());
+    const labels = Array.from(buttons).map(b => b.textContent.trim());
     expect(labels).toContain('Yes, delete');
     expect(labels).toContain('Keep it');
   });

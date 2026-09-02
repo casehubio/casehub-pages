@@ -161,7 +161,8 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
         }
         if (componentType === "input") {
           if (fieldSchema.maxLength !== undefined) (child as any).maxlength = fieldSchema.maxLength;
-          if (fieldSchema.placeholder !== undefined) (child as any).placeholder = fieldSchema.placeholder;
+          const ph = (fieldSchema['x-placeholder'] ?? (fieldSchema as Record<string, unknown>)['placeholder']) as string | undefined;
+          if (ph !== undefined) (child as any).placeholder = ph;
         }
         if (componentType === "textarea") {
           if (fieldSchema.maxLength !== undefined) (child as any).maxlength = fieldSchema.maxLength;
@@ -243,7 +244,8 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
 
     if (componentType === "input") {
       if (fieldSchema.maxLength !== undefined) base.maxLength = fieldSchema.maxLength;
-      if (fieldSchema.placeholder !== undefined) base.placeholder = fieldSchema.placeholder;
+      const ph = (fieldSchema['x-placeholder'] ?? (fieldSchema as Record<string, unknown>)['placeholder']) as string | undefined;
+      if (ph !== undefined) base.placeholder = ph;
     }
 
     if (componentType === "textarea") {

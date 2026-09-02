@@ -24,7 +24,7 @@ function createContentOrganiser(): LayoutStrategy {
   let mountedContainer: HTMLElement | null = null;
 
   return {
-    type: "content" as Layout,
+    type: "content",
     mount(container, entries, factory) {
       mountedContainer = container;
       for (const entry of entries) {
@@ -282,10 +282,10 @@ export function createContainer(config: ContainerConfig): Container {
       if (wantToolbar) {
         toolbar = createContainerToolbar(
           policy.allowedLayouts,
-          currentOrganiser.type as Layout,
+          currentOrganiser.type,
           {
             onAdd: config.onAdd ?? (() => {
-              const key = `entry-${String(Date.now())}-${String(Math.random().toString(36).slice(2, 6))}`;
+              const key = `entry-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
               const entry: Entry = { key, label: `Tab ${String(entries.length + 1)}` };
               group.addEntry(entry);
             }),
@@ -340,11 +340,11 @@ export function containerizeEntry(
   entry.contentElement = undefined;
   entry.contentDispose = undefined;
 
-  const wrappedKey = `entry-${String(Date.now())}-${String(Math.random().toString(36).slice(2, 6))}`;
+  const wrappedKey = `entry-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const wrapped: Entry = { key: wrappedKey, label: entry.label };
   wrapped.component = entry.component;
 
-  const emptyKey = `entry-${String(Date.now())}-${String(Math.random().toString(36).slice(2, 6))}`;
+  const emptyKey = `entry-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const empty: Entry = { key: emptyKey, label: "New Tab" };
 
   const child = createContainer({
@@ -369,7 +369,7 @@ export function containerizeEntry(
 export function flattenEntry(
   parentEntry: Entry,
   remainingChildEntry: Entry,
-  contentFactory: ContentFactory,
+  _contentFactory: ContentFactory,
 ): void {
   if (!parentEntry.childContainer) return;
 

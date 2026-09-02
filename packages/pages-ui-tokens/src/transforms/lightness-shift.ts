@@ -21,7 +21,7 @@ function adjustColourTokens(tokens: TokenMap, adjust: (value: string) => string)
         ? { $value: adjust(value.$value), $type: 'color' }
         : value;
     } else {
-      result[key] = adjustColourTokens(value as TokenMap, adjust);
+      result[key] = adjustColourTokens(value, adjust);
     }
   }
   return result as TokenMap;

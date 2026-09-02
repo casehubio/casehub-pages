@@ -12,7 +12,7 @@ export function createSplitStrategy(
   callbacks?: LayoutCallbacks,
 ): LayoutStrategy {
   const type: Layout = direction === "horizontal" ? "splith" : "splitv";
-  let hostElement: HTMLElement | null = null;
+  let _hostElement: HTMLElement | null = null;
   let flexContainer: HTMLElement | null = null;
   let currentEntries: Entry[] = [];
   let ratios: number[] = [];
@@ -106,7 +106,7 @@ export function createSplitStrategy(
     type,
 
     mount(container, entries, contentFactory) {
-      hostElement = container;
+      _hostElement = container;
       currentEntries = [...entries];
       factory = contentFactory;
       ratios = equalRatios(entries.length);
@@ -135,7 +135,7 @@ export function createSplitStrategy(
       }
       flexContainer?.remove();
       flexContainer = null;
-      hostElement = null;
+      _hostElement = null;
       factory = null;
     },
 

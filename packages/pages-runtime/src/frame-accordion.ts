@@ -179,7 +179,7 @@ export function renderAccordion(
   };
 
   if (options?.signal) {
-    options.signal.addEventListener("abort", () => handle.dispose(), { once: true });
+    options.signal.addEventListener("abort", () => { handle.dispose(); }, { once: true });
   }
 
   return handle;

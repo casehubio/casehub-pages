@@ -37,7 +37,7 @@ describe("copyStyles", () => {
     const source = document.implementation.createHTMLDocument("source");
     const target = document.implementation.createHTMLDocument("target");
 
-    expect(() => copyStyles(source, target)).not.toThrow();
+    expect(() => { copyStyles(source, target); }).not.toThrow();
   });
 
   it("replaces existing styles on repeated calls", () => {

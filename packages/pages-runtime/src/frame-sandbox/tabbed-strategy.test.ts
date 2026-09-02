@@ -7,7 +7,7 @@ function testFactory(): ContentFactory {
     const el = document.createElement("div");
     el.textContent = `Content: ${entry.key}`;
     el.dataset.testKey = entry.key;
-    return { element: el, dispose: () => el.remove() };
+    return { element: el, dispose: () => { el.remove(); } };
   };
 }
 
@@ -43,7 +43,7 @@ function mockTabBounds(ctr: HTMLElement): void {
       x: l,
       y: 0,
       toJSON: () => ({}),
-    } as DOMRect);
+    });
     left += 80;
   }
   const strip = ctr.querySelector("[data-tab-strip]") as HTMLElement;
@@ -57,7 +57,7 @@ function mockTabBounds(ctr: HTMLElement): void {
     x: 0,
     y: 0,
     toJSON: () => ({}),
-  } as DOMRect);
+  });
 }
 
 describe("TabOrganiser", () => {

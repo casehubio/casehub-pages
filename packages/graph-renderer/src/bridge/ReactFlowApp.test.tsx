@@ -105,7 +105,7 @@ describe('ReactFlowApp', () => {
     expect(colorFn({ type: 'call' })).toBe('#2563eb');
     expect(capturedMiniMapProps['maskColor']).toBe('rgba(0, 0, 0, 0.3)');
 
-    act(() => root.unmount());
+    act(() => { root.unmount(); });
     container.remove();
   });
 });

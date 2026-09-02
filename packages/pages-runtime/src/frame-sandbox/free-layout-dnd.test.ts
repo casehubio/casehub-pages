@@ -49,7 +49,7 @@ describe("free-layout-dnd", () => {
     vi.spyOn(host, "getBoundingClientRect").mockReturnValue({
       left: 0, right: 800, top: 0, bottom: 600,
       width: 800, height: 600, x: 0, y: 0, toJSON: () => ({}),
-    } as DOMRect);
+    });
   });
 
   afterEach(() => {

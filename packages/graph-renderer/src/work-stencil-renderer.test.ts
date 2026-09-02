@@ -22,9 +22,9 @@ function makeWorkStencil(overrides?: Partial<WorkStencil>): WorkStencil {
     category: 'connectors/messaging',
     icon: '📧',
     async: true,
-    properties: { type: 'object', properties: { to: { type: 'string' } } } as JSONSchema7,
-    input: { type: 'object', properties: { body: { type: 'string' } } } as JSONSchema7,
-    output: { type: 'object', properties: { messageId: { type: 'string' } } } as JSONSchema7,
+    properties: { type: 'object', properties: { to: { type: 'string' } } },
+    input: { type: 'object', properties: { body: { type: 'string' } } },
+    output: { type: 'object', properties: { messageId: { type: 'string' } } },
     ...overrides,
   };
 }

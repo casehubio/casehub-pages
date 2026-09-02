@@ -164,7 +164,7 @@ export class PagesLibraryView extends LitElement {
         <div class="filters">
           ${this._allLabels.map(label => html`
             <span class="filter-chip ${this.filterLabels.includes(label) ? 'active' : ''}"
-                  @click=${() => this._toggleLabel(label)}>${label}</span>
+                  @click=${() => { this._toggleLabel(label); }}>${label}</span>
           `)}
         </div>
       ` : nothing}
@@ -190,7 +190,7 @@ export class PagesLibraryView extends LitElement {
             <span class="provenance">${script.provenance.toLowerCase()}</span>
           </div>
         </div>
-        <button class="run-btn" @click=${() => this._selectScript(script)}
+        <button class="run-btn" @click=${() => { this._selectScript(script); }}
                 aria-label="Run ${script.name}">Run</button>
       </div>
     `;

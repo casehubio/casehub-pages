@@ -22,7 +22,7 @@ describe('KeyboardShortcutMixin', () => {
     el.registerShortcut('c', handler, { description: 'Claim' });
   });
 
-  afterEach(() => el.remove());
+  afterEach(() => { el.remove(); });
 
   it('fires handler on key press', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }));

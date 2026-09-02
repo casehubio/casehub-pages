@@ -65,7 +65,7 @@ describe('runtime API', () => {
     });
 
     it('throws on unknown theme', () => {
-      expect(() => applyTheme('nonexistent')).toThrow(/Unknown theme/);
+      expect(() => { applyTheme('nonexistent'); }).toThrow(/Unknown theme/);
     });
   });
 

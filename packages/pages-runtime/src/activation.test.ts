@@ -403,7 +403,7 @@ describe("exclusive dock-bar", () => {
     const events: Array<{ panelId: string; visible: boolean }> = [];
     el.addEventListener("pages-dock-toggle", ((e: Event) => {
       events.push((e as CustomEvent).detail);
-    }) as EventListener);
+    }));
 
     const casesBtn = el.querySelectorAll("button")[1]!;
     casesBtn.click();
@@ -438,7 +438,7 @@ describe("exclusive dock-bar", () => {
     const events: Array<{ panelId: string; visible: boolean }> = [];
     el.addEventListener("pages-dock-toggle", ((e: Event) => {
       events.push((e as CustomEvent).detail);
-    }) as EventListener);
+    }));
 
     const inboxBtn = el.querySelector("button")!;
     inboxBtn.click();

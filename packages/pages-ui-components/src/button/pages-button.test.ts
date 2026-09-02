@@ -27,7 +27,7 @@ describe('PagesButton', () => {
     (el as any).label = 'Submit';
     await (el as any).updateComplete;
     const button = el.shadowRoot!.querySelector('button')!;
-    expect(button.textContent!.trim()).toBe('Submit');
+    expect(button.textContent.trim()).toBe('Submit');
   });
 
   it('renders slot when no label', async () => {

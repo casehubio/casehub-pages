@@ -64,7 +64,7 @@ describe("FormScopeState", () => {
     };
     const state = new FormScopeState(schema, true);
     const el = { value: "ab", error: undefined } as any;
-    (el as any).isConnected = true;
+    (el).isConnected = true;
     state.registerField("name", el as HTMLElement, "input");
     state.validateField("name", "ab");
     expect(el.error).toBe("Must be at least 3 characters");
@@ -76,7 +76,7 @@ describe("FormScopeState", () => {
     };
     const state = new FormScopeState(schema, true);
     const el = { value: "abc", error: "old error" } as any;
-    (el as any).isConnected = true;
+    (el).isConnected = true;
     state.registerField("name", el as HTMLElement, "input");
     state.validateField("name", "abc");
     expect(el.error).toBeUndefined();

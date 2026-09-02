@@ -124,7 +124,7 @@ describe("SourceConnector", () => {
       const manager = createDataSetManager();
       const connector = createSourceConnector(DS_ID, manager);
 
-      expect(() => connector.disconnect()).not.toThrow();
+      expect(() => { connector.disconnect(); }).not.toThrow();
     });
   });
 
@@ -219,7 +219,7 @@ describe("SourceConnector", () => {
       const manager = createDataSetManager();
       const connector = createSourceConnector(DS_ID, manager);
 
-      expect(() => connector.refresh()).not.toThrow();
+      expect(() => { connector.refresh(); }).not.toThrow();
     });
   });
 
@@ -238,7 +238,7 @@ describe("SourceConnector", () => {
       const manager = createDataSetManager();
       const connector = createSourceConnector(DS_ID, manager);
 
-      expect(() => connector.connect(failingSource("boom"))).not.toThrow();
+      expect(() => { connector.connect(failingSource("boom")); }).not.toThrow();
     });
   });
 

@@ -89,7 +89,7 @@ export class PagesNodeChooser extends FocusTrapMixin(LitElement) {
         <div role="listbox" id=${listboxId} aria-label="Node types">
           ${renderStencilList(this.items, {
             collapsible: false,
-            onSelect: (item) => this._onSelect(item),
+            onSelect: (item) => { this._onSelect(item); },
             searchQuery: this._searchQuery,
             itemRole: 'option',
             iconRenderer: this.iconRenderer,

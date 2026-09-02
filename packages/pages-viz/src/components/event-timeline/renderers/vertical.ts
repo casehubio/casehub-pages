@@ -53,11 +53,11 @@ export function renderVerticalTimeline(nodes: EventTimelineNode[], opts: Vertica
             role="listitem"
             tabindex="0"
             aria-label="${ariaLabel}"
-            @keydown=${(e: KeyboardEvent) => opts.onKeyDown(e, index)}
+            @keydown=${(e: KeyboardEvent) => { opts.onKeyDown(e, index); }}
           >
             <div class="node-dot"></div>
             <div class="node-content">
-              <div class="node-body" @click=${() => opts.onNodeClick(node, index)}>
+              <div class="node-body" @click=${() => { opts.onNodeClick(node, index); }}>
                 <div class="node-header">
                   ${opts.renderNode
                     ? html`${opts.renderNode(node)}`

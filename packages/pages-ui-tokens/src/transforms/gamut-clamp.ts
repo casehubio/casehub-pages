@@ -51,7 +51,7 @@ export function gamutClamp(tokens: TokenMap, _params: Record<string, unknown>): 
     if (isTokenLeaf(value)) {
       result[key] = value.$type === 'color' ? clampLeaf(value) : value;
     } else {
-      result[key] = gamutClamp(value as TokenMap, _params);
+      result[key] = gamutClamp(value, _params);
     }
   }
   return result as TokenMap;

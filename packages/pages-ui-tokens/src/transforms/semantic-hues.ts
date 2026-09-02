@@ -14,7 +14,7 @@ export function semanticHues(tokens: TokenMap, params: Record<string, unknown>):
     const existingGroup = tokens[name] as TokenMap | undefined;
     if (!existingGroup) continue;
 
-    const firstLeaf = Object.values(existingGroup).find(v => isTokenLeaf(v)) as TokenLeaf | undefined;
+    const firstLeaf = Object.values(existingGroup).find(v => isTokenLeaf(v));
     if (!firstLeaf) continue;
     const chromaMatch = firstLeaf.$value.match(/oklch\(\d+\.?\d*% (\d+\.?\d*)/);
     if (!chromaMatch) continue;

@@ -12,7 +12,7 @@ function mockConnection(): EventConnection {
     close: vi.fn(),
     connected: true,
     status: 'connected' as const,
-  } as unknown as EventConnection;
+  };
 }
 
 function fireStateEvent(target: EventTarget, payload: Record<string, unknown>): void {
@@ -336,7 +336,7 @@ describe('pages-scenario-controller', () => {
       el.style.bottom = 'auto';
 
       vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(
-        { left: 2000, top: 2000, right: 2280, bottom: 2200, width: 280, height: 200, x: 2000, y: 2000, toJSON: () => ({}) } as DOMRect);
+        { left: 2000, top: 2000, right: 2280, bottom: 2200, width: 280, height: 200, x: 2000, y: 2000, toJSON: () => ({}) });
 
       window.dispatchEvent(new Event('resize'));
 
@@ -359,7 +359,7 @@ describe('pages-scenario-controller', () => {
       el.style.bottom = 'auto';
 
       vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(
-        { left: 100, top: 100, right: 380, bottom: 300, width: 280, height: 200, x: 100, y: 100, toJSON: () => ({}) } as DOMRect);
+        { left: 100, top: 100, right: 380, bottom: 300, width: 280, height: 200, x: 100, y: 100, toJSON: () => ({}) });
 
       window.dispatchEvent(new Event('resize'));
 
@@ -460,7 +460,7 @@ describe('pages-scenario-controller', () => {
 
     const icon = el.shadowRoot!.querySelector('.step-type-icon');
     expect(icon).not.toBeNull();
-    expect(icon!.textContent!.trim()).toBe('◎');
+    expect(icon!.textContent.trim()).toBe('◎');
     el.remove();
   });
 
@@ -499,7 +499,7 @@ describe('pages-scenario-controller', () => {
     el.connection = conn;
     el.eventTarget = target;
 
-    var fetchCalls = [];
+    const fetchCalls = [];
     vi.stubGlobal('fetch', vi.fn().mockImplementation(function(url, opts) {
       fetchCalls.push({ url: url, opts: opts });
       if (url.includes('/yaml')) {
@@ -515,7 +515,7 @@ describe('pages-scenario-controller', () => {
     (el as any)._view = 'library';
     await el.updateComplete;
 
-    var libraryView = el.shadowRoot?.querySelector('pages-library-view');
+    const libraryView = el.shadowRoot?.querySelector('pages-library-view');
     expect(libraryView).not.toBeNull();
 
     libraryView?.dispatchEvent(new CustomEvent('script-selected', {
@@ -545,10 +545,10 @@ describe('pages-scenario-controller', () => {
     (el as any)._view = 'library';
     await el.updateComplete;
 
-    var handler = vi.fn();
+    const handler = vi.fn();
     el.addEventListener('script-selected', handler);
 
-    var libraryView = el.shadowRoot?.querySelector('pages-library-view');
+    const libraryView = el.shadowRoot?.querySelector('pages-library-view');
     libraryView?.dispatchEvent(new CustomEvent('script-selected', {
       detail: { name: 'some-script' },
       bubbles: true,
@@ -609,9 +609,9 @@ describe('pages-scenario-controller', () => {
     await el.updateComplete;
 
     const headings = el.shadowRoot!.querySelectorAll('.outline-step, .outline-heading');
-    const introEl = Array.from(headings).find(h => h.textContent!.includes('Introduction'));
-    const yamlEl = Array.from(headings).find(h => h.textContent!.includes('YAML Structure'));
-    const recapEl = Array.from(headings).find(h => h.textContent!.includes('Recap'));
+    const introEl = Array.from(headings).find(h => h.textContent.includes('Introduction'));
+    const yamlEl = Array.from(headings).find(h => h.textContent.includes('YAML Structure'));
+    const recapEl = Array.from(headings).find(h => h.textContent.includes('Recap'));
 
     expect(introEl?.classList.contains('completed')).toBe(true);
     expect(yamlEl?.classList.contains('completed')).toBe(true);
@@ -642,8 +642,8 @@ describe('pages-scenario-controller', () => {
     await el.updateComplete;
 
     const allItems = el.shadowRoot!.querySelectorAll('.outline-step, .outline-heading');
-    const fillStep = Array.from(allItems).find(h => h.textContent!.includes('fill-textbox-FullName'));
-    const fillSection = Array.from(allItems).find(h => h.textContent!.includes('ARIA Commands: fill'));
+    const fillStep = Array.from(allItems).find(h => h.textContent.includes('fill-textbox-FullName'));
+    const fillSection = Array.from(allItems).find(h => h.textContent.includes('ARIA Commands: fill'));
 
     expect(fillSection?.classList.contains('completed')).toBe(true);
     expect(fillStep?.classList.contains('completed')).toBe(true);
@@ -673,7 +673,7 @@ describe('pages-scenario-controller', () => {
     await el.updateComplete;
 
     const allItems = el.shadowRoot!.querySelectorAll('.outline-step, .outline-heading');
-    const recapEl = Array.from(allItems).find(h => h.textContent!.includes('Recap'));
+    const recapEl = Array.from(allItems).find(h => h.textContent.includes('Recap'));
 
     expect(recapEl?.classList.contains('current')).toBe(true);
     el.remove();

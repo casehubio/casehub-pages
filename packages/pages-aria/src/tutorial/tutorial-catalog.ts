@@ -233,10 +233,10 @@ export class PagesTutorialCatalog extends LitElement {
         <h2>Tutorials</h2>
         <div class="mode-toggle">
           <button class=${this.mode === 'tiles' ? 'active' : ''}
-                  @click=${() => this._setMode('tiles')}
+                  @click=${() => { this._setMode('tiles'); }}
                   aria-label="Tile view">▦</button>
           <button class=${this.mode === 'list' ? 'active' : ''}
-                  @click=${() => this._setMode('list')}
+                  @click=${() => { this._setMode('list'); }}
                   aria-label="List view">☰</button>
         </div>
       </div>
@@ -260,7 +260,7 @@ export class PagesTutorialCatalog extends LitElement {
                aria-label="Search tutorials" />
         ${allLabels.map(l => html`
           <button class="filter-chip ${this.labels.includes(l) ? 'active' : ''}"
-                  @click=${() => this._toggleLabel(l)}>${l}</button>
+                  @click=${() => { this._toggleLabel(l); }}>${l}</button>
         `)}
       </div>
     `;
@@ -279,7 +279,7 @@ export class PagesTutorialCatalog extends LitElement {
 
   private _renderAreaCard(area: AreaSummary): TemplateResult {
     return html`
-      <div class="area-card" @click=${() => this._fireAreaSelect(area.area)}
+      <div class="area-card" @click=${() => { this._fireAreaSelect(area.area); }}
            role="button" tabindex="0" aria-label="${area.area}">
         <div class="area-name">${area.area}</div>
         <div class="area-count">${area.count} tutorial${area.count !== 1 ? 's' : ''}</div>
@@ -293,7 +293,7 @@ export class PagesTutorialCatalog extends LitElement {
   private _renderTutorialCard(t: TutorialDescriptor): TemplateResult {
     const difficulty = this._getDifficultyLabel(t.labels);
     return html`
-      <div class="tutorial-card" @click=${() => this._fireSelect(t.scenario)}
+      <div class="tutorial-card" @click=${() => { this._fireSelect(t.scenario); }}
            role="button" tabindex="0" aria-label="${t.title}">
         ${t.hero?.icon ? html`<div class="hero-icon">${t.hero.icon}</div>` : nothing}
         <div class="title">${t.hero?.title ?? t.title}</div>
@@ -323,7 +323,7 @@ export class PagesTutorialCatalog extends LitElement {
   private _renderTutorialRow(t: TutorialDescriptor): TemplateResult {
     const difficulty = this._getDifficultyLabel(t.labels);
     return html`
-      <div class="tutorial-row" @click=${() => this._fireSelect(t.scenario)}
+      <div class="tutorial-row" @click=${() => { this._fireSelect(t.scenario); }}
            role="button" tabindex="0" aria-label="${t.title}">
         <span class="title">${t.title}</span>
         <span class="area-badge">${t.area}</span>

@@ -73,7 +73,7 @@ describe('stencil-registry', () => {
 
   it('rejects duplicate type registration', () => {
     registerStencil(makeDescriptor('goal'));
-    expect(() => registerStencil(makeDescriptor('goal'))).toThrow('already registered');
+    expect(() => { registerStencil(makeDescriptor('goal')); }).toThrow('already registered');
   });
 
   it('deregisters stencil, grammar, and nodeType', () => {
@@ -85,7 +85,7 @@ describe('stencil-registry', () => {
   });
 
   it('deregister is silent for unknown type', () => {
-    expect(() => deregisterStencil('nonexistent')).not.toThrow();
+    expect(() => { deregisterStencil('nonexistent'); }).not.toThrow();
   });
 
   it('getAllStencils returns all registered', () => {

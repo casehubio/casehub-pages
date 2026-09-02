@@ -20,7 +20,7 @@ export interface AdapterResult {
 
 const MAX_UNDO = 50;
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = Record<string, unknown>> = new (...args: any[]) => T;
 
 export declare class DiagramBaseInterface {
   yaml: string;
@@ -143,10 +143,10 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
     protected get _propertyPaletteSource(): PropertyPaletteSource | undefined {
       if (!this._selectedNodeId) return undefined;
       return {
-        schema: this._selectedSchema as any,
+        schema: this._selectedSchema,
         data: this._selectedData,
         readonly: this.readonly,
-        onChange: (field, value) => this._onPropertyChange(field, value),
+        onChange: (field, value) => { this._onPropertyChange(field, value); },
       };
     }
 
@@ -195,7 +195,7 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
       this._pushUndo();
       try {
         this._currentYaml = this._applyGraphEdit(this._currentYaml, edit);
-        this._fullRender(this._currentYaml);
+        void this._fullRender(this._currentYaml);
       } catch (e) {
         this._currentYaml = this._undoStack.pop() ?? this._currentYaml;
         this._error = `Edit failed: ${e}`;
@@ -541,14 +541,14 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
       return html`
         <div style="color: red; padding: 16px;">
           ${this._error}
-          ${showRetry ? html`<button @click=${() => this._clearErrorAndRetry()}>Retry</button>` : nothing}
+          ${showRetry ? html`<button @click=${() => { this._clearErrorAndRetry(); }}>Retry</button>` : nothing}
         </div>
       `;
     }
 
     protected _clearErrorAndRetry(): void {
       this._error = '';
-      this._fullRender(this._currentYaml);
+      void this._fullRender(this._currentYaml);
     }
 
     protected _renderConflictDialog(): TemplateResult {

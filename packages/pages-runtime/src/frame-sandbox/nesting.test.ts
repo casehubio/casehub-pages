@@ -10,7 +10,7 @@ function groupFactory(childGroup: Container): ContentFactory {
     childGroup.mount(el);
     return {
       element: el,
-      dispose: () => childGroup.dispose(),
+      dispose: () => { childGroup.dispose(); },
     };
   };
 }
@@ -199,7 +199,7 @@ describe("Recursive nesting", () => {
           if (entry.childContainer) {
             const el = document.createElement("div");
             entry.childContainer.mount(el);
-            return { element: el, dispose: () => entry.childContainer!.dispose() };
+            return { element: el, dispose: () => { entry.childContainer!.dispose(); } };
           }
           return { element: document.createElement("div") };
         },
@@ -253,7 +253,7 @@ describe("Recursive nesting", () => {
           if (entry.childContainer) {
             const el = document.createElement("div");
             entry.childContainer.mount(el);
-            return { element: el, dispose: () => entry.childContainer!.dispose() };
+            return { element: el, dispose: () => { entry.childContainer!.dispose(); } };
           }
           return { element: document.createElement("div") };
         },

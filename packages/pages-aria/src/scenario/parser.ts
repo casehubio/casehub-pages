@@ -32,7 +32,7 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
       action: 'show-markdown',
       state: body,
     };
-    if (body.content != null) (step as Record<string, unknown>).value = body.content as string;
+    if (body.content != null) (step as Record<string, unknown>).value = body.content;
     return step;
   }
 
@@ -46,7 +46,7 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
   if (body.within != null) target.within = body.within as AriaTarget;
 
   const step: ScenarioStep = { delivery: 'aria', name: autoName, action, target };
-  if (body.value != null) (step as Record<string, unknown>).value = body.value as string;
+  if (body.value != null) (step as Record<string, unknown>).value = body.value;
   if (body.state != null) (step as Record<string, unknown>).state = body.state;
   if (body.timeout != null) (step as Record<string, unknown>).timeout = body.timeout;
   return step;

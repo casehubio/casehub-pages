@@ -25,7 +25,7 @@ export function createFrameKeyboardHandler(
 
   container.addEventListener("pages-frame-focus", ((e: Event) => {
     focusedKey = (e as CustomEvent<{ frameKey: string }>).detail.frameKey;
-  }) as EventListener, { signal });
+  }), { signal });
 
   function handleKeydown(e: KeyboardEvent): void {
     if (!e.altKey || e.ctrlKey || e.metaKey) return;

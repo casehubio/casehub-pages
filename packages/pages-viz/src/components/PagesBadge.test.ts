@@ -44,7 +44,7 @@ describe("PagesBadge", () => {
     const shadowRoot = element.shadowRoot;
     const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(1);
-    expect(badges[0]!.textContent!.trim()).toBe("PENDING");
+    expect(badges[0]!.textContent.trim()).toBe("PENDING");
   });
 
   it("renders multiple badges for multi-row dataset", async () => {
@@ -61,9 +61,9 @@ describe("PagesBadge", () => {
     const shadowRoot = element.shadowRoot;
     const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(3);
-    expect(badges[0]!.textContent!.trim()).toBe("PENDING");
-    expect(badges[1]!.textContent!.trim()).toBe("ACTIVE");
-    expect(badges[2]!.textContent!.trim()).toBe("DONE");
+    expect(badges[0]!.textContent.trim()).toBe("PENDING");
+    expect(badges[1]!.textContent.trim()).toBe("ACTIVE");
+    expect(badges[2]!.textContent.trim()).toBe("DONE");
   });
 
   it("applies colorMap for matching values", async () => {
@@ -124,8 +124,8 @@ describe("PagesBadge", () => {
     const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
     // Should render from first column (id), not second (status)
-    expect(badges[0]!.textContent!.trim()).toBe("1");
-    expect(badges[1]!.textContent!.trim()).toBe("2");
+    expect(badges[0]!.textContent.trim()).toBe("1");
+    expect(badges[1]!.textContent.trim()).toBe("2");
   });
 
   it("uses specified column when column prop present", async () => {
@@ -143,8 +143,8 @@ describe("PagesBadge", () => {
     const shadowRoot = element.shadowRoot;
     const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
-    expect(badges[0]!.textContent!.trim()).toBe("PENDING");
-    expect(badges[1]!.textContent!.trim()).toBe("ACTIVE");
+    expect(badges[0]!.textContent.trim()).toBe("PENDING");
+    expect(badges[1]!.textContent.trim()).toBe("ACTIVE");
   });
 
   it("includes role=status for ARIA", async () => {
@@ -193,7 +193,7 @@ describe("PagesBadge", () => {
     const shadowRoot = element.shadowRoot;
     const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
-    expect(badges[0]!.textContent!.trim()).toBe(""); // NULL renders as empty
-    expect(badges[1]!.textContent!.trim()).toBe("ACTIVE");
+    expect(badges[0]!.textContent.trim()).toBe(""); // NULL renders as empty
+    expect(badges[1]!.textContent.trim()).toBe("ACTIVE");
   });
 });

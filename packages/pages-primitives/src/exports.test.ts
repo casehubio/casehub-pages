@@ -37,7 +37,7 @@ describe('sub-path module isolation', () => {
   beforeAll(() => {
     HTMLDialogElement.prototype.showModal = vi.fn();
     HTMLDialogElement.prototype.close = vi.fn();
-    window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
+    window.scrollTo = vi.fn();
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: vi.fn().mockImplementation((query: string) => ({

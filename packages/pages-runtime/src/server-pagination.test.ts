@@ -31,7 +31,7 @@ describe("ServerPaginationManager", () => {
     fetchFn = vi.fn().mockResolvedValue(
       mockResponse([{ name: "Alice" }, { name: "Bob" }], 100),
     );
-    manager = new ServerPaginationManager(fetchFn as unknown as typeof globalThis.fetch);
+    manager = new ServerPaginationManager(fetchFn);
   });
 
   it("registers a dataset config", () => {

@@ -10,7 +10,7 @@ export function typedRowToRecord(
     if (cell.type === "NULL") {
       record[col.id as string] = null;
     } else if (cell.type === "DATE") {
-      record[col.id as string] = (cell.value as Date).toISOString();
+      record[col.id as string] = (cell.value).toISOString();
     } else {
       record[col.id as string] = cell.value;
     }

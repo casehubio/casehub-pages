@@ -4,7 +4,7 @@ import { DataSourceAdapter } from "./data-source-adapter.js";
 import { fetchSource } from "@casehubio/pages-data";
 import type { TypedDataSet, SourceFactory } from "@casehubio/pages-data";
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = Record<string, unknown>> = new (...args: any[]) => T;
 
 export function DataSourceMixin<T extends Constructor<LitElement>>(Base: T) {
   class DataSourceHost extends Base {

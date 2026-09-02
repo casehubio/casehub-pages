@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { DataSet, ColumnId, SortColumn } from "@casehubio/pages-data";
+import type { DataSet, ColumnId } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import { toTypedDataSet } from "@casehubio/pages-data";
-import type { GroupedViewProps, TableColumnConfig, RowStyleRule, ColumnRenderer } from "@casehubio/pages-component";
+import type { GroupedViewProps, TableColumnConfig, RowStyleRule } from "@casehubio/pages-component";
 import type { DataSetLookup } from "@casehubio/pages-data";
 import { PagesGroupedView } from "./PagesGroupedView.js";
 
@@ -294,7 +294,7 @@ describe("PagesGroupedView", () => {
 
   describe("property forwarding", () => {
     it("forwards columnRenderers to all tables", async () => {
-      const renderers = new Map([["name" as ColumnId, (() => "custom") as unknown as ColumnRenderer]]);
+      const renderers = new Map([["name" as ColumnId, () => "custom"]]);
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
@@ -405,7 +405,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned", sortable: true });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      element.activeSort = { columnId: "name" as ColumnId, order: "ASCENDING" } as SortColumn;
+      element.activeSort = { columnId: "name" as ColumnId, order: "ASCENDING" };
       element.requestUpdate();
       await element.updateComplete;
       const active = element.shadowRoot!.querySelector(".col-header[data-column='name']");
@@ -578,7 +578,7 @@ describe("PagesGroupedView", () => {
   describe("list mode column renderers", () => {
     it("applies column renderer returning string in list mode", async () => {
       const renderers = new Map([
-        ["name" as ColumnId, ((cell: any) => `[${String(cell.value)}]`) as unknown as ColumnRenderer],
+        ["name" as ColumnId, (cell: any) => `[${String(cell.value)}]`],
       ]);
       element.props = makeProps({ preset: "list" });
       (element as any).setColumnRenderers(renderers);
@@ -591,12 +591,12 @@ describe("PagesGroupedView", () => {
 
     it("applies column renderer returning HTMLElement in list mode", async () => {
       const renderers = new Map([
-        ["name" as ColumnId, ((cell: any) => {
+        ["name" as ColumnId, (cell: any) => {
           const span = document.createElement("span");
           span.className = "custom-render";
           span.textContent = String(cell.value);
           return span;
-        }) as unknown as ColumnRenderer],
+        }],
       ]);
       element.props = makeProps({ preset: "list" });
       (element as any).setColumnRenderers(renderers);
@@ -609,7 +609,7 @@ describe("PagesGroupedView", () => {
 
     it("falls back to plain text when no renderer for column", async () => {
       const renderers = new Map([
-        ["nonexistent" as ColumnId, (() => "nope") as unknown as ColumnRenderer],
+        ["nonexistent" as ColumnId, () => "nope"],
       ]);
       element.props = makeProps({ preset: "list" });
       element.dataSet = makeGroupedDataset();
@@ -719,7 +719,7 @@ describe("PagesGroupedView", () => {
 
   describe("cross-group unified selection", () => {
     it("selection in one group is reflected across all tables", async () => {
-      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      const getRowKey = (row: any) => String(row.cell("name").value);
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();
@@ -736,12 +736,12 @@ describe("PagesGroupedView", () => {
       await element.updateComplete;
 
       for (const table of tables) {
-        expect((table as MockTable).selectedKeys).toBeDefined();
+        expect((table).selectedKeys).toBeDefined();
       }
     });
 
     it("emits unified selection-change from grouped view", async () => {
-      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      const getRowKey = (row: any) => String(row.cell("name").value);
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();
@@ -763,7 +763,7 @@ describe("PagesGroupedView", () => {
     });
 
     it("renders select-all checkbox in header when selection=multi", async () => {
-      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      const getRowKey = (row: any) => String(row.cell("name").value);
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();
@@ -774,7 +774,7 @@ describe("PagesGroupedView", () => {
     });
 
     it("select-all toggles all rows across all groups", async () => {
-      const getRowKey = (row: any) => String(row.cell("name" as ColumnId).value);
+      const getRowKey = (row: any) => String(row.cell("name").value);
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();

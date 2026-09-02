@@ -139,7 +139,7 @@ export class PagesConfirmDialog extends FocusTrapMixin(LitElement) {
           role="alertdialog"
           aria-modal="true"
           aria-labelledby="confirm-heading"
-          @click=${(e: Event) => e.stopPropagation()}
+          @click=${(e: Event) => { e.stopPropagation(); }}
         >
           <h2 class="heading" id="confirm-heading">${this.heading}</h2>
           ${this.message ? html`<p class="message">${this.message}</p>` : nothing}

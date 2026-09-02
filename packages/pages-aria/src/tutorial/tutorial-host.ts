@@ -188,14 +188,14 @@ export class PagesTutorialHost extends LitElement {
   private _renderTutorial(): TemplateResult {
     if (this._error) {
       return html`
-        <button class="back-btn" @click=${() => this._onBack()}>← Back to Tutorials</button>
+        <button class="back-btn" @click=${() => { this._onBack(); }}>← Back to Tutorials</button>
         <div class="error">${this._error}</div>
       `;
     }
 
     const desc = this._activeTutorial;
     return html`
-      <button class="back-btn" @click=${() => this._onBack()}>← Back to Tutorials</button>
+      <button class="back-btn" @click=${() => { this._onBack(); }}>← Back to Tutorials</button>
       ${desc ? html`
         <div class="tutorial-header">
           <h2>${desc.hero?.icon ?? ''} ${desc.title}</h2>
@@ -210,10 +210,10 @@ export class PagesTutorialHost extends LitElement {
           ></pages-scenario-narrative>
           <div class="slide-nav">
             <button ?disabled=${this._currentSection <= 0}
-                    @click=${() => this._onPrev()}>← Previous</button>
+                    @click=${() => { this._onPrev(); }}>← Previous</button>
             <span class="slide-counter">${this._currentSection + 1} / ${this._totalSections}</span>
             <button ?disabled=${this._currentSection >= this._totalSections - 1}
-                    @click=${() => this._onNext()}>Next →</button>
+                    @click=${() => { this._onNext(); }}>Next →</button>
           </div>
         </div>
         <div class="tutorial-sidebar">

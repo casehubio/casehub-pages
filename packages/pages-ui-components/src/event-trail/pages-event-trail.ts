@@ -6,7 +6,7 @@ import { fromRows } from '@casehubio/pages-data';
 import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data';
 import type { TableColumnConfig, ColumnRenderer } from '@casehubio/pages-table';
 import { EMPTY_FILTER_STATE, type FilterState } from '@casehubio/pages-filter-bar';
-import type { DataSource, DataSink } from '@casehubio/pages-data';
+import type { DataSink } from '@casehubio/pages-data';
 import '@casehubio/pages-table';
 import '@casehubio/pages-filter-bar';
 
@@ -62,7 +62,7 @@ export class PagesEventTrail extends DataSourceMixin(LiveRegionMixin(LitElement)
             });
         },
         disconnect: () => { abort?.abort(); abort = undefined; },
-      } as DataSource;
+      };
     };
   }
 
@@ -167,7 +167,7 @@ export class PagesEventTrail extends DataSourceMixin(LiveRegionMixin(LitElement)
     if (this.loading) return html`<div class="loading" aria-busy="true">Loading...</div>`;
     if (this.error) return html`<div class="error" role="alert">
       <p>${this.error}</p>
-      <button @click=${() => this.syncEndpoint()}>Retry</button>
+      <button @click=${() => { this.syncEndpoint(); }}>Retry</button>
     </div>`;
 
     const hasFilters = this.chipField || this.chipValues || this.entityField || this.showDateRange;

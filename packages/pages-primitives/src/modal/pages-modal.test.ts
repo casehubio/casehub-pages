@@ -27,7 +27,7 @@ import './pages-modal.js';
 import type { PagesModal } from './pages-modal.js';
 
 function createModal(innerHtml = ''): PagesModal {
-  const el = document.createElement('pages-modal') as PagesModal;
+  const el = document.createElement('pages-modal');
   el.innerHTML = innerHtml || `
     <span slot="header">Test Title</span>
     <p>Body content</p>
@@ -47,7 +47,7 @@ describe('pages-modal — registration', () => {
 describe('pages-modal — open/close', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('calls showModal() when open is set to true', async () => {
     el = createModal();
@@ -102,7 +102,7 @@ describe('pages-modal — open/close', () => {
 describe('pages-modal — ARIA', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('has role="dialog" by default', async () => {
     el = createModal();
@@ -157,7 +157,7 @@ describe('pages-modal — ARIA', () => {
 describe('pages-modal — requestClose', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('fires pages-modal-cancel before closing', async () => {
     el = createModal();
@@ -177,7 +177,7 @@ describe('pages-modal — requestClose', () => {
     el.open = true;
     await el.updateComplete;
 
-    el.addEventListener('pages-modal-cancel', (e) => e.preventDefault());
+    el.addEventListener('pages-modal-cancel', (e) => { e.preventDefault(); });
     el.requestClose();
     await el.updateComplete;
     expect(el.open).toBe(true);
@@ -213,7 +213,7 @@ describe('pages-modal — requestClose', () => {
 describe('pages-modal — close button', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('renders close button for dialog variant', async () => {
     el = createModal();
@@ -242,7 +242,7 @@ describe('pages-modal — close button', () => {
 describe('pages-modal — escape handling', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('routes native cancel event through requestClose', async () => {
     el = createModal();
@@ -277,7 +277,7 @@ describe('pages-modal — escape handling', () => {
 describe('pages-modal — backdrop click', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('closes on backdrop click for dialog variant', async () => {
     el = createModal();
@@ -345,7 +345,7 @@ describe('pages-modal — backdrop click', () => {
 describe('pages-modal — size variants', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('defaults to md size', async () => {
     el = createModal();
@@ -411,7 +411,7 @@ describe('pages-modal — scroll lock', () => {
 describe('pages-modal — form close', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('fires pages-modal-close via native close event (method="dialog" path)', async () => {
     el = createModal();
@@ -435,7 +435,7 @@ describe('pages-modal — form close', () => {
 describe('pages-modal — slots', () => {
   let el: PagesModal;
 
-  afterEach(() => el?.remove());
+  afterEach(() => { el?.remove(); });
 
   it('renders header slot', async () => {
     el = createModal();

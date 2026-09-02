@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { clearGrammarRegistry, registerGrammar } from '@casehubio/graph-core';
 import type { GraphModel } from '@casehubio/graph-core';
 import { defaultEditPolicy } from './edit-policy.js';
-import type { DragEndResult } from './node-move-coordinator.js';
 
 vi.mock('@xyflow/react', () => ({
   Handle: () => null,

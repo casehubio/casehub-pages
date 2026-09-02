@@ -10,7 +10,7 @@ describe('createTypedFetchSource', () => {
   beforeEach(() => {
     originalFetch = globalThis.fetch;
     mockFetch = vi.fn();
-    globalThis.fetch = mockFetch as unknown as typeof fetch;
+    globalThis.fetch = mockFetch;
   });
 
   afterEach(() => {
@@ -27,7 +27,7 @@ describe('createTypedFetchSource', () => {
     const sink: DataSink = { apply: vi.fn(), error: vi.fn() };
     source.connect(sink);
 
-    await vi.waitFor(() => expect(handler).toHaveBeenCalled());
+    await vi.waitFor(() => { expect(handler).toHaveBeenCalled(); });
     expect(handler).toHaveBeenCalledWith(data, sink, expect.any(AbortSignal));
   });
 
@@ -40,7 +40,7 @@ describe('createTypedFetchSource', () => {
     const sink: DataSink = { apply: vi.fn(), error: vi.fn() };
     source.connect(sink);
 
-    await vi.waitFor(() => expect(sink.error).toHaveBeenCalled());
+    await vi.waitFor(() => { expect(sink.error).toHaveBeenCalled(); });
     expect(handler).not.toHaveBeenCalled();
     expect(sink.error).toHaveBeenCalledWith(expect.objectContaining({
       message: expect.stringContaining('500'),
@@ -57,7 +57,7 @@ describe('createTypedFetchSource', () => {
     const sink: DataSink = { apply: vi.fn(), error: vi.fn() };
     source.connect(sink);
 
-    await vi.waitFor(() => expect(sink.error).toHaveBeenCalled());
+    await vi.waitFor(() => { expect(sink.error).toHaveBeenCalled(); });
     expect(sink.error).toHaveBeenCalledWith(expect.objectContaining({
       message: 'Network error',
       permanent: true,
@@ -75,7 +75,7 @@ describe('createTypedFetchSource', () => {
     const sink: DataSink = { apply: vi.fn(), error: vi.fn() };
     source.connect(sink);
 
-    await vi.waitFor(() => expect(abortSignal).toBeDefined());
+    await vi.waitFor(() => { expect(abortSignal).toBeDefined(); });
     source.disconnect();
     expect(abortSignal!.aborted).toBe(true);
   });
@@ -99,7 +99,7 @@ describe('createTypedFetchSource', () => {
   it('does not call sink.error for AbortError after disconnect', async () => {
     mockFetch.mockImplementation((_url: string, init?: RequestInit) => {
       return new Promise((_resolve, reject) => {
-        init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+        init?.signal?.addEventListener('abort', () => { reject(new DOMException('Aborted', 'AbortError')); });
       });
     });
 
@@ -122,7 +122,7 @@ describe('createTypedFetchSource', () => {
     const sink: DataSink = { apply: vi.fn(), error: vi.fn() };
     source.connect(sink);
 
-    await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await vi.waitFor(() => { expect(mockFetch).toHaveBeenCalled(); });
     const [, init] = mockFetch.mock.calls[0]!;
     expect(init.method).toBe('POST');
     expect(init.headers).toEqual(expect.objectContaining({ 'X-Custom': 'value' }));

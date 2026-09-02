@@ -25,7 +25,7 @@ function renderItem(
   iconRenderer?: IconRenderer,
   compact = false,
 ): TemplateResult {
-  const handleClick = () => onSelect(item);
+  const handleClick = () => { onSelect(item); };
   const handleKeydown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();

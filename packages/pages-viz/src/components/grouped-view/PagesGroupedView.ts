@@ -9,7 +9,7 @@ import type {
   ColumnRenderer,
   RowStyleRule,
   SelectionMode,
-  AggregationBinding,
+
   GroupNode,
 } from "@casehubio/pages-component";
 import { PagesElement } from "../../base/PagesElement.js";
@@ -116,7 +116,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     const primaryKey = groupByKeys[0]!;
     const keyColumnId = primaryKey.columnId;
     const aggColumnIds = (props.aggregations ?? []).map((a) => a.column);
-    const aggBindings = (props.aggregations ?? []) as readonly AggregationBinding[];
+    const aggBindings = (props.aggregations ?? []);
     const allGroupColumnIds = groupByKeys.map((k) => k.columnId);
     const contentColumnIds = dataset.columns
       .filter((c) => !allGroupColumnIds.includes(c.id))
@@ -130,7 +130,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
       const tree = extractGroupTree(
         dataset,
         groupByKeys,
-        aggBindings.map((a) => ({ column: a.column, fn: a.fn as { fn: string } })),
+        aggBindings.map((a) => ({ column: a.column, fn: a.fn })),
       );
       const columnConfig = this._buildColumnConfig(dataset, contentColumnIds, props);
       return html`
@@ -193,7 +193,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
               aria-label="Select all rows"
               .checked=${this._selectAllChecked(dataset)}
               .indeterminate=${this._selectAllIndeterminate(dataset)}
-              @click=${() => this._handleSelectAll(dataset)}
+              @click=${() => { this._handleSelectAll(dataset); }}
             >
           </div>
         ` : nothing}
@@ -207,7 +207,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
               <button class="${this._sortClass(id)}"
                 data-column="${String(id)}"
                 aria-sort="${ifDefined(this._ariaSort(id))}"
-                @click=${() => this._handleHeaderSort(id)}
+                @click=${() => { this._handleHeaderSort(id); }}
               >${label}</button>
             `;
           }
@@ -262,7 +262,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
                   <input type="checkbox"
                     .checked=${!isHidden}
                     .disabled=${isLastVisible}
-                    @change=${() => this._toggleColumnVisibility(String(id), contentColumnIds)}
+                    @change=${() => { this._toggleColumnVisibility(String(id), contentColumnIds); }}
                   >
                   <span>${col?.name ?? String(id)}</span>
                 </label>
@@ -306,7 +306,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
           aria-expanded="${String(expanded)}"
           aria-controls="${this._instanceId}-group-${gi}"
           data-group="${boundary.name}"
-          @click=${() => this._handleToggle(boundary.name, expanded)}
+          @click=${() => { this._handleToggle(boundary.name, expanded); }}
         >
           ${isSpreadsheet ? html`
             <span class="group-chevron">${expanded ? "▼" : "▶"}</span>
@@ -357,7 +357,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
           aria-expanded="${String(expanded)}"
           data-group="${path}"
           style="${ifDefined(isSubLevel ? `padding-left: ${node.depth * 16}px` : undefined)}"
-          @click=${() => this._handleToggle(path, expanded)}
+          @click=${() => { this._handleToggle(path, expanded); }}
         >
           <span class="${expanded ? "section-chevron expanded" : "section-chevron"}">${"▶"}</span>
           <span class="section-title">${node.name}</span>
@@ -602,14 +602,14 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     return dataset.columns.map((col) => {
       const contentIndex = contentColumnIds.indexOf(col.id);
       if (contentIndex === -1) {
-        return { id: col.id, visible: false } as TableColumnConfig;
+        return { id: col.id, visible: false };
       }
       const userConfig = props.columnConfig?.find((c) => c.id === col.id);
       return {
         id: col.id,
         width: userConfig?.width ?? frWidths[contentIndex]!,
         ...userConfig,
-      } as TableColumnConfig;
+      };
     });
   }
 

@@ -111,10 +111,10 @@ function ensurePulseStyle(): void {
 export function createStencilNodeComponent(
   renderFn: StencilRenderFn,
 ): React.ComponentType<NodeProps> {
-  function StencilNode({ id, type, data, parentId, width, height }: NodeProps): React.JSX.Element {
+  function StencilNode({ id, type, data, parentId, width, height: _height }: NodeProps): React.JSX.Element {
     const containerRef = useRef<HTMLDivElement>(null);
     const grammar = type ? getGrammar(type) : undefined;
-    const rawData = (data ?? {}) as Record<string, unknown>;
+    const rawData = (data ?? {});
     const decoration = rawData._decoration as NodeDecoration | undefined;
 
     useEffect(() => {
@@ -124,7 +124,7 @@ export function createStencilNodeComponent(
         id,
         type: type ?? '',
         ...(parentId ? { parentId } : {}),
-        properties: properties as Readonly<Record<string, unknown>>,
+        properties: properties,
       };
       render(renderFn(graphNode, decoration), containerRef.current);
     }, [id, type, data, parentId]);
@@ -160,13 +160,13 @@ export function createStencilNodeComponent(
       position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
       borderRadius: 'inherit', opacity: 0, transform: 'none', zIndex: 2,
     };
-    const allPositions = [
+    const _allPositions = [
       { key: 'top', pos: Position.Top },
       { key: 'bottom', pos: Position.Bottom },
       { key: 'left', pos: Position.Left },
       { key: 'right', pos: Position.Right },
     ];
-    const hiddenHandle: React.CSSProperties = { opacity: 0, width: 1, height: 1 };
+    const _hiddenHandle: React.CSSProperties = { opacity: 0, width: 1, height: 1 };
 
     return (
       <>

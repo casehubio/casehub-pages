@@ -123,7 +123,7 @@ describe('PagesPropertyPalette', () => {
       onChange: () => {},
     };
     await (el as any).updateComplete;
-    const cb = el.shadowRoot!.querySelector('pages-checkbox') as any;
+    const cb = el.shadowRoot!.querySelector('pages-checkbox');
     expect(cb).not.toBeNull();
     expect(cb.checked).toBe(true);
   });
@@ -136,7 +136,7 @@ describe('PagesPropertyPalette', () => {
       onChange: (f: (string | number)[], v: unknown) => changes.push({ field: f, value: v }),
     };
     await (el as any).updateComplete;
-    const input = el.shadowRoot!.querySelector('pages-input') as any;
+    const input = el.shadowRoot!.querySelector('pages-input');
     input.value = 'new';
     input.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
     expect(changes).toEqual([{ field: ['name'], value: 'new' }]);
@@ -162,7 +162,7 @@ describe('PagesPropertyPalette', () => {
     await (el as any).updateComplete;
     const details = el.shadowRoot!.querySelectorAll('details');
     expect(details.length).toBeGreaterThanOrEqual(1);
-    const input = el.shadowRoot!.querySelector('pages-input') as any;
+    const input = el.shadowRoot!.querySelector('pages-input');
     expect(input).not.toBeNull();
     input.value = 'Paris';
     input.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
@@ -177,7 +177,7 @@ describe('PagesPropertyPalette', () => {
       onChange: () => {},
     };
     await (el as any).updateComplete;
-    const input = el.shadowRoot!.querySelector('pages-input') as any;
+    const input = el.shadowRoot!.querySelector('pages-input');
     expect(input.readonly).toBe(true);
   });
 
@@ -200,7 +200,7 @@ describe('PagesPropertyPalette', () => {
       onChange: () => {},
     };
     await (el as any).updateComplete;
-    const select = el.shadowRoot!.querySelector('pages-select') as any;
+    const select = el.shadowRoot!.querySelector('pages-select');
     expect(select).not.toBeNull();
     expect(select.options.length).toBe(2);
   });
@@ -211,7 +211,7 @@ describe('PagesPropertyPalette', () => {
       data: {},
       onChange: () => {},
     };
-    (el as any).resolver = (schema: any) => {
+    (el as any).resolver = (_schema: any) => {
       return { kind: 'tag', tag: 'pages-textarea' };
     };
     await (el as any).updateComplete;

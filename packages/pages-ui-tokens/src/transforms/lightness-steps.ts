@@ -10,7 +10,7 @@ export function lightnessSteps(tokens: TokenMap, params: Record<string, unknown>
     if (key.startsWith('$')) { result[key] = value; continue; }
     if (isTokenLeaf(value)) { result[key] = value; continue; }
 
-    const group = value as TokenMap;
+    const group = value;
     const isColourScale = Object.keys(group).some(k => /^\d+$/.test(k) && isTokenLeaf(group[k]));
     if (!isColourScale) { result[key] = value; continue; }
 

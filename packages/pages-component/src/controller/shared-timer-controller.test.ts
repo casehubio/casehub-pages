@@ -89,6 +89,6 @@ describe('SharedTimerController', () => {
 
   it('ignores unsubscribe for unknown callback', () => {
     const cb = vi.fn();
-    expect(() => unsubscribe(cb)).not.toThrow();
+    expect(() => { unsubscribe(cb); }).not.toThrow();
   });
 });

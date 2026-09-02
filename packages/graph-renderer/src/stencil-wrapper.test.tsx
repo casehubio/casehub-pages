@@ -27,7 +27,7 @@ function mountWithProps(
   return {
     container,
     unmount: () => {
-      act(() => root.unmount());
+      act(() => { root.unmount(); });
       container.remove();
     },
   };
@@ -112,7 +112,7 @@ describe('createStencilNodeComponent', () => {
     });
     expect(container.querySelector('.v')?.textContent).toBe('B');
 
-    act(() => root.unmount());
+    act(() => { root.unmount(); });
     container.remove();
   });
 
@@ -318,7 +318,7 @@ describe('decoration rendering', () => {
 
   it('existing stencils without second param still work', () => {
     const renderFn = (node: GraphNode) => html`<span class="legacy">${String(node.properties['label'] ?? '')}</span>`;
-    const Component = createStencilNodeComponent(renderFn as StencilRenderFn);
+    const Component = createStencilNodeComponent(renderFn);
     const { container, unmount } = mountWithProps(Component, {
       ...defaultNodeProps,
       data: { label: 'Legacy', _decoration: { badge: { icon: 'x', color: 'red' } } },

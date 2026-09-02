@@ -79,7 +79,7 @@ describe("frame-accordion", () => {
   it("dispose cleans up all content", () => {
     const container = document.createElement("div");
     const disposeFn = vi.fn();
-    const factory = (tab: FrameTabConfig) => ({
+    const factory = (_tab: FrameTabConfig) => ({
       element: document.createElement("div"),
       dispose: disposeFn,
     });
@@ -97,7 +97,7 @@ describe("frame-accordion", () => {
     const container = document.createElement("div");
     const disposeFn = vi.fn();
     let callCount = 0;
-    const factory = (tab: FrameTabConfig) => {
+    const factory = (_tab: FrameTabConfig) => {
       callCount++;
       return { element: document.createElement("div"), dispose: disposeFn };
     };
@@ -158,7 +158,7 @@ describe("frame-accordion", () => {
       { key: "t1", label: "Tab 1", content: { type: "html", props: { content: "" } } },
       { key: "t2", label: "Tab 2", content: { type: "html", props: { content: "" } } },
     ];
-    const handle = renderAccordion(tabs, container, stubFactory, { heights: { t1: 200, t2: 200 } });
+    const _handle = renderAccordion(tabs, container, stubFactory, { heights: { t1: 200, t2: 200 } });
 
     // Collapse t2 — its 200px should go to t1
     (container.querySelector("[data-accordion-header='t2']") as HTMLElement).click();

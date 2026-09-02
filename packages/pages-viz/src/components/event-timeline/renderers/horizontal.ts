@@ -32,8 +32,8 @@ export function renderHorizontalTimeline(nodes: EventTimelineNode[], opts: Horiz
           role="listitem"
           tabindex="0"
           aria-label="${node.label}: ${node.status}"
-          @click=${() => opts.onNodeClick(node, i)}
-          @keydown=${(e: KeyboardEvent) => opts.onKeyDown(e, i)}
+          @click=${() => { opts.onNodeClick(node, i); }}
+          @keydown=${(e: KeyboardEvent) => { opts.onKeyDown(e, i); }}
         >
           ${opts.renderNode ? opts.renderNode(node) : defaultRenderNode(node, i)}
           <div class="stage-label">${node.label}</div>

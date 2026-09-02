@@ -64,10 +64,10 @@ describe("PagesSelector", () => {
 
       const options = Array.from(select!.querySelectorAll("option"));
       expect(options).toHaveLength(4); // All + A, B, C
-      expect(options[0]!.textContent!.trim()).toBe("All");
-      expect(options[1]!.textContent!.trim()).toBe("A");
-      expect(options[2]!.textContent!.trim()).toBe("B");
-      expect(options[3]!.textContent!.trim()).toBe("C");
+      expect(options[0]!.textContent.trim()).toBe("All");
+      expect(options[1]!.textContent.trim()).toBe("A");
+      expect(options[2]!.textContent.trim()).toBe("B");
+      expect(options[3]!.textContent.trim()).toBe("C");
     });
 
     it("selection change emits PagesFilterApply with value and row", async () => {
@@ -233,9 +233,9 @@ describe("PagesSelector", () => {
 
       const chips = el.shadowRoot!.querySelectorAll(".label-chip");
       expect(chips).toHaveLength(3); // Red, Blue, Green
-      expect(chips[0]!.textContent!.trim()).toBe("Red");
-      expect(chips[1]!.textContent!.trim()).toBe("Blue");
-      expect(chips[2]!.textContent!.trim()).toBe("Green");
+      expect(chips[0]!.textContent.trim()).toBe("Red");
+      expect(chips[1]!.textContent.trim()).toBe("Blue");
+      expect(chips[2]!.textContent.trim()).toBe("Green");
     });
 
     it("click emits PagesFilterApply with value and row and adds .selected class", async () => {

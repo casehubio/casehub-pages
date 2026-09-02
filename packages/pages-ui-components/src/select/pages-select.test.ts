@@ -32,7 +32,7 @@ describe('PagesSelect', () => {
     const options = el.shadowRoot!.querySelectorAll('option');
     expect(options.length).toBe(2);
     expect(options[0]!.value).toBe('a');
-    expect(options[0]!.textContent!.trim()).toBe('Alpha');
+    expect(options[0]!.textContent.trim()).toBe('Alpha');
     expect(options[1]!.value).toBe('b');
   });
 
@@ -132,7 +132,7 @@ describe('PagesSelect', () => {
     expect(select).toBeNull();
     const text = el.shadowRoot!.querySelector('.readonly-value');
     expect(text).not.toBeNull();
-    expect(text!.textContent!.trim()).toBe('Foo');
+    expect(text!.textContent.trim()).toBe('Foo');
   });
 
   it('shows raw value when readonly and no matching option label', async () => {
@@ -141,7 +141,7 @@ describe('PagesSelect', () => {
     (el as any).options = [{ value: 'foo', label: 'Foo' }];
     await (el as any).updateComplete;
     const text = el.shadowRoot!.querySelector('.readonly-value');
-    expect(text!.textContent!.trim()).toBe('unknown');
+    expect(text!.textContent.trim()).toBe('unknown');
   });
 
   it('makes readonly value focusable', async () => {

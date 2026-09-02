@@ -35,7 +35,7 @@ describe("PagesEventTimeline", () => {
   let el: PagesEventTimeline;
 
   beforeEach(() => {
-    el = document.createElement("pages-event-timeline") as PagesEventTimeline;
+    el = document.createElement("pages-event-timeline");
   });
 
   afterEach(() => {

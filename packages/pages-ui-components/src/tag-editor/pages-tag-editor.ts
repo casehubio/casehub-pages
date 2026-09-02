@@ -139,7 +139,7 @@ export class PagesTagEditor extends LitElement {
                 <button
                   aria-label="Remove '${tag}'"
                   ?disabled=${this.disabled}
-                  @click=${() => this._removeTag(i)}
+                  @click=${() => { this._removeTag(i); }}
                 >&times;</button>
               ` : nothing}
             </span>

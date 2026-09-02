@@ -1,6 +1,5 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { ifDefined } from 'lit/directives/if-defined.js';
 import type { FieldSchema } from '@casehubio/pages-component';
 import { validateField } from '@casehubio/pages-ui-components/validation';
 import { resolveEditor } from '../resolver.js';
@@ -122,7 +121,7 @@ export class PagesPropertyPalette extends LitElement {
           const isOpen = this._isGroupOpen(groupName);
           return html`
             <details class="group" ?open=${isOpen}
-              @toggle=${(e: Event) => this._onGroupToggle(groupName, (e.target as HTMLDetailsElement).open)}
+              @toggle=${(e: Event) => { this._onGroupToggle(groupName, (e.target as HTMLDetailsElement).open); }}
             >
               <summary>${groupName}</summary>
               <div class="group-fields">
@@ -143,8 +142,8 @@ export class PagesPropertyPalette extends LitElement {
       entries.push({
         key,
         schema: fieldSchema,
-        order: typeof fieldSchema['x-order'] === 'number' ? fieldSchema['x-order'] as number : Infinity,
-        group: typeof fieldSchema['x-group'] === 'string' ? fieldSchema['x-group'] as string : undefined,
+        order: typeof fieldSchema['x-order'] === 'number' ? fieldSchema['x-order'] : Infinity,
+        group: typeof fieldSchema['x-group'] === 'string' ? fieldSchema['x-group'] : undefined,
         advanced: fieldSchema['x-visibility'] === 'advanced',
       });
     }
@@ -183,7 +182,7 @@ export class PagesPropertyPalette extends LitElement {
     if (descriptor.kind === 'render') {
       const ctx: FieldRenderContext = {
         key, schema, value, required: isRequired, readonly: isReadonly, error,
-        onChange: (v) => this._handleChange([...path, key], v, schema, isRequired),
+        onChange: (v) => { this._handleChange([...path, key], v, schema, isRequired); },
       };
       const label = schema.title ?? this._humanize(key);
       const helpText = schema['x-help'] as string | undefined;
@@ -213,6 +212,7 @@ export class PagesPropertyPalette extends LitElement {
   ): TemplateResult {
     const tag = descriptor.tag;
     const label = schema.title ?? this._humanize(key);
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- backwards-compat fallback
     const placeholder = (schema['x-placeholder'] as string | undefined) ?? schema.placeholder;
     const helpText = schema['x-help'] as string | undefined;
     const isCheckbox = tag === 'pages-checkbox';
@@ -261,7 +261,7 @@ export class PagesPropertyPalette extends LitElement {
     }
 
     const fieldPath = [...path, key];
-    el.addEventListener('change', () => {
+    (el as HTMLElement).addEventListener('change', () => {
       const newValue = isCheckbox ? el.checked : el.value;
       this._handleChange(fieldPath, newValue, schema, required);
     });

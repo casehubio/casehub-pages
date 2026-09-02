@@ -144,7 +144,7 @@ describe("ZoneLayoutEngine", () => {
         centre: h("Centre"),
         left: [{ key: "nav", label: "Nav", icon: "N", content: h("Nav") }],
       });
-      const tree1 = engine.buildTree();
+      const _tree1 = engine.buildTree();
       const tree2 = engine.movePanel("nav", "left-top");
       expect(engine.zoneMap.get("nav")).toBe("left-top");
       expect(tree2).toBeDefined();

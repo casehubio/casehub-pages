@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { injectAnimationStyles, animateFrameEnter, animateFrameExit } from "./frame-animations.js";
 
 describe("injectAnimationStyles", () => {

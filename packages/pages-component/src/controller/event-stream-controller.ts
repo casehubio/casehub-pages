@@ -15,7 +15,7 @@ export class EventStreamController<T = unknown> implements ReactiveController {
     this.stream = new EventStream(url, topics, {
       ...options,
       batchEvents: options?.batchEvents ?? true,
-      onChange: () => host.requestUpdate(),
+      onChange: () => { host.requestUpdate(); },
     });
     host.addController(this);
   }

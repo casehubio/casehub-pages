@@ -2,9 +2,9 @@ import type { LitElement, PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { DataSourceAdapter } from './data-source-adapter.js';
 import { extractTrendPoints, type TrendPoint } from '@casehubio/pages-data';
-import type { DataSource, TypedDataSet } from '@casehubio/pages-data';
+import type { DataSource } from '@casehubio/pages-data';
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = Record<string, unknown>> = new (...args: any[]) => T;
 
 export function TrendSourceMixin<T extends Constructor<LitElement>>(Base: T) {
   class TrendSourceHost extends Base {
@@ -17,7 +17,7 @@ export function TrendSourceMixin<T extends Constructor<LitElement>>(Base: T) {
 
     readonly _trendAdapter: DataSourceAdapter = new DataSourceAdapter(this, {
       onChange: () => {
-        const ds = this._trendAdapter.dataSet as TypedDataSet | undefined;
+        const ds = this._trendAdapter.dataSet;
         if (ds) {
           const extracted = extractTrendPoints(ds);
           this._adapterTrendPoints = extracted.slice().sort(

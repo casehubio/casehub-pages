@@ -634,7 +634,7 @@ export function createActivationCallback(
       }
       let wsAncestor: HTMLElement | null = el.parentElement;
       while (wsAncestor) {
-        if ((wsAncestor as HTMLElement).dataset?.componentType === "page") {
+        if ((wsAncestor).dataset?.componentType === "page") {
           wsAncestor.style.padding = "0";
         }
         wsAncestor = wsAncestor.parentElement;
@@ -787,7 +787,7 @@ export function createActivationCallback(
       }
       let ancestor: HTMLElement | null = el.parentElement;
       while (ancestor) {
-        if ((ancestor as HTMLElement).dataset?.componentType === "page") {
+        if ((ancestor).dataset?.componentType === "page") {
           ancestor.style.padding = "0";
         }
         ancestor = ancestor.parentElement;
@@ -1009,7 +1009,7 @@ function resolvePropsTemplates(
     if (typeof value === "string") {
       resolved[key] = resolveTemplate(value, context, "none");
     } else if (Array.isArray(value)) {
-      resolved[key] = value.map(item =>
+      resolved[key] = value.map((item): unknown =>
         typeof item === "string"
           ? resolveTemplate(item, context, "none")
           : item !== null && typeof item === "object"

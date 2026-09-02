@@ -669,7 +669,7 @@ describe('ScenarioHandler sequence protocol', () => {
       },
     }));
 
-    await vi.waitFor(() => expect(document.querySelector('.scenario-modal-overlay')).not.toBeNull());
+    await vi.waitFor(() => { expect(document.querySelector('.scenario-modal-overlay')).not.toBeNull(); });
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(document.querySelector('.scenario-modal-overlay')).toBeNull();
   });

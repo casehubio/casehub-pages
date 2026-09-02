@@ -297,7 +297,7 @@ export class PagesModal extends FocusTrapMixin(LitElement) {
               <slot name="header" @slotchange=${this._onHeaderSlotChange}></slot>
             </div>
             ${this._shouldShowCloseButton ? html`
-              <button class="close-btn" @click=${() => this.requestClose()} aria-label="Close">✕</button>
+              <button class="close-btn" @click=${() => { this.requestClose(); }} aria-label="Close">✕</button>
             ` : nothing}
           </header>
           <div class="modal-body">

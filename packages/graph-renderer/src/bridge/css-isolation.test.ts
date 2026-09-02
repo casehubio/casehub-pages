@@ -21,7 +21,7 @@ describe('css-isolation', () => {
   afterEach(() => {
     resetIsolationState();
     document.head.querySelectorAll('style[data-graph-isolation]')
-      .forEach(el => el.remove());
+      .forEach(el => { el.remove(); });
   });
 
   it('generates isolation CSS with diagram-root reset', () => {
@@ -111,7 +111,7 @@ describe('css-isolation', () => {
     });
 
     it('release with no prior inject is a no-op', () => {
-      expect(() => releaseIsolationStyles()).not.toThrow();
+      expect(() => { releaseIsolationStyles(); }).not.toThrow();
       expect(document.head.querySelector('style[data-graph-isolation]')).toBeNull();
     });
   });

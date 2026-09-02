@@ -11,7 +11,7 @@ function mockConnection(): EventConnection {
     close: vi.fn(),
     connected: true,
     status: 'connected' as const,
-  } as unknown as EventConnection;
+  };
 }
 
 function fireStateEvent(target: EventTarget, payload: Record<string, unknown>): void {

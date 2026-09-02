@@ -26,14 +26,14 @@ export function oklchScale(tokens: TokenMap, params: Record<string, unknown>): T
         const scale = generateScale(hue, chromaVal, contrast, isDark, customSteps);
         group[String(i + 1)] = { $value: scale[String(i + 1)]!, $type: 'color' };
       }
-      result[name] = { ...(result[name] as Record<string, unknown> ?? {}), ...group };
+      result[name] = { ...(result[name] ?? {}), ...group };
     } else {
       const scale = generateScale(hueSpec, chromaVal, contrast, isDark, customSteps);
       const group: Record<string, TokenLeaf> = {};
       for (const [step, value] of Object.entries(scale)) {
         group[step] = { $value: value, $type: 'color' };
       }
-      result[name] = { ...(result[name] as Record<string, unknown> ?? {}), ...group };
+      result[name] = { ...(result[name] ?? {}), ...group };
     }
   }
 

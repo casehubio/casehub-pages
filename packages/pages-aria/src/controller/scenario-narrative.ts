@@ -87,7 +87,7 @@ export class PagesScenarioNarrative extends LitElement {
       connection: this.connection,
       eventTarget: this.eventTarget,
       baseUrl: this.baseUrl,
-      onState: () => this._onContentChange(),
+      onState: () => { this._onContentChange(); },
     });
     super.connectedCallback();
     this._bindEventTarget(this.eventTarget);
@@ -209,7 +209,7 @@ export class PagesScenarioNarrative extends LitElement {
     let processed: string;
 
     const codeBlocks: string[] = [];
-    const withoutCode = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, lang, code) => {
+    const withoutCode = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_match: string, lang: string, code: string) => {
       let rendered: string;
       if (lang === 'yaml') {
         const lines = code.split('\n');
@@ -230,7 +230,7 @@ export class PagesScenarioNarrative extends LitElement {
 
     if (this.htmlMode === 'sanitized') {
       const svgBlocks: string[] = [];
-      let textWithPlaceholders = withoutCode.replace(/<svg[\s\S]*?<\/svg>/gi, (match) => {
+      const textWithPlaceholders = withoutCode.replace(/<svg[\s\S]*?<\/svg>/gi, (match) => {
         svgBlocks.push(match);
         return `\n\n__SVG_BLOCK_${svgBlocks.length - 1}__\n\n`;
       });

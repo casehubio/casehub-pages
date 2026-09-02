@@ -12,7 +12,7 @@ import {createZoneLayoutEngine} from "./zone-layout-engine.js";
 import type {DockZone} from "@casehubio/pages-component";
 import type {DockWorkbenchConfig} from "@casehubio/pages-ui/dist/dsl/builders.js";
 import {renderComponent} from "@casehubio/pages-component";
-import type {CellValue, Column, ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data";
+import type {CellValue, Column, ColumnId, DataSetId} from "@casehubio/pages-data";
 import type {
     DataProviderConfig,
     ExternalDataSetDef,
@@ -185,8 +185,8 @@ export async function loadSite(
   const manager = createDataSetManager({
     onChanged: (id, dataset) => {
       contextManager.updateDataset(id, dataset);
-      contextManager.updateSelection(id as string, null);
-      dispatchSelectionToHostPanels(registry, id as string, null);
+      contextManager.updateSelection(id, null);
+      dispatchSelectionToHostPanels(registry, id, null);
       pipeline.deliverDataSet(id);
     },
   });
@@ -562,7 +562,7 @@ export async function loadSite(
     const entry = registry.get(componentId);
     if (!entry?.vizElement) return;
 
-    const ds = entry.vizElement.dataSet as TypedDataSet | undefined;
+    const ds = entry.vizElement.dataSet;
     if (!ds) return;
 
     const { columnId, group } = detail;
@@ -714,7 +714,7 @@ export async function loadSite(
     const datasetId = entry.originalLookup.dataSetId as string;
     if (detail.selectedRows.length > 0) {
       const row = detail.selectedRows[0]!;
-      const ds = entry.vizElement?.dataSet as TypedDataSet | undefined;
+      const ds = entry.vizElement?.dataSet;
       if (!ds) return;
       const rowData = typedRowToRecord(row, ds.columns);
       contextManager.updateSelection(datasetId, rowData);
@@ -924,8 +924,8 @@ export async function loadSite(
       if (isExclusive && btn) {
         const zoneName = btn.dataset.dockZone;
         const scope = zoneName
-          ? dockBar!.querySelectorAll<HTMLElement>(`button[data-dock-zone="${zoneName}"]`)
-          : dockBar!.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+          ? dockBar.querySelectorAll<HTMLElement>(`button[data-dock-zone="${zoneName}"]`)
+          : dockBar.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
         for (const sibling of scope) {
           const siblingId = sibling.dataset.dockPanelId!;
           if (siblingId !== panelId && dockState.get(siblingId) === true) {

@@ -423,7 +423,7 @@ describe("PagesMetric", () => {
 
       const trend = el.shadowRoot!.querySelector(".trend");
       expect(trend).not.toBeNull();
-      expect(trend!.textContent!.trim()).toBe("▲");
+      expect(trend!.textContent.trim()).toBe("▲");
       expect(trend!.classList.contains("trend-up")).toBe(true);
     });
 
@@ -436,7 +436,7 @@ describe("PagesMetric", () => {
       await el.updateComplete;
 
       const trend = el.shadowRoot!.querySelector(".trend");
-      expect(trend!.textContent!.trim()).toBe("▼");
+      expect(trend!.textContent.trim()).toBe("▼");
       expect(trend!.classList.contains("trend-down")).toBe(true);
     });
 
@@ -449,7 +449,7 @@ describe("PagesMetric", () => {
       await el.updateComplete;
 
       const trend = el.shadowRoot!.querySelector(".trend");
-      expect(trend!.textContent!.trim()).toBe("—");
+      expect(trend!.textContent.trim()).toBe("—");
       expect(trend!.classList.contains("trend-flat")).toBe(true);
     });
 

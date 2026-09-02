@@ -135,7 +135,7 @@ export class PagesMetric extends PagesElement<MetricProps> {
 
   private _renderSparkline(props: MetricProps) {
     if (!props.sparklineData?.length) return nothing;
-    return html`<div class="sparkline-container">${renderSparkline(props.sparklineData as number[])}</div>`;
+    return html`<div class="sparkline-container">${renderSparkline(props.sparklineData)}</div>`;
   }
 
   private renderCard(title: string, value: string, props?: MetricProps): TemplateResult {

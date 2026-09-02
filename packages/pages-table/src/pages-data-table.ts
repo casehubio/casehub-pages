@@ -157,7 +157,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   set props(p: Record<string, unknown>) {
     this._pipelineMode = true;
 
-    const lookup = p.lookup as unknown;
+    const lookup = p.lookup;
     if (lookup) {
       this._lookup = lookup;
       this._dataRequestPending = true;
@@ -1202,7 +1202,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     this._updateContainerHeight();
     if (this._dataRequestPending) {
       this._dataRequestPending = false;
-      void this.updateComplete.then(() => this._requestData());
+      void this.updateComplete.then(() => { this._requestData(); });
     }
   }
 
@@ -1237,7 +1237,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     const window = this._scrollWindow;
     if (!window) return;
 
-    const model = this._heightModel as MeasuredHeightModel;
+    const model = this._heightModel;
     let changed = false;
     for (let i = window.startIndex; i < window.endIndex && i < trackSizes.length; i++) {
       const measuredHeight = trackSizes[i]!;
@@ -1543,7 +1543,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       const btnId = `${this._instanceId}-detail-btn-${key}`;
       const btn = this.shadowRoot?.getElementById(btnId);
       if (panel && btn && panel.contains(this.shadowRoot?.activeElement ?? document.activeElement)) {
-        (btn as HTMLElement).focus();
+        (btn).focus();
       }
     }
 
@@ -2376,11 +2376,11 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     const resizeHandle = this.resizable ? html`
       <div
         class="resize-handle"
-        @pointerdown="${(e: PointerEvent) => this._handleResizeStart(e, colId)}"
+        @pointerdown="${(e: PointerEvent) => { this._handleResizeStart(e, colId); }}"
         @pointermove="${this._handleResizeMove}"
         @pointerup="${this._handleResizeEnd}"
         @pointercancel="${this._handleResizeEnd}"
-        @dblclick="${(e: MouseEvent) => this._handleResizeDblClick(e, colId)}"
+        @dblclick="${(e: MouseEvent) => { this._handleResizeDblClick(e, colId); }}"
       ></div>
     ` : nothing;
 
@@ -2390,7 +2390,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         role="columnheader"
         aria-sort="${this._ariaSortValue(column)}"
         ${this.resizable ? html`` : nothing}
-        @click="${isSortable ? (e: MouseEvent) => this._handleHeaderClick(column, e) : nothing}"
+        @click="${isSortable ? (e: MouseEvent) => { this._handleHeaderClick(column, e); } : nothing}"
       >
         ${label}${this._renderSortIndicator(column)}${resizeHandle}
       </div>
@@ -2429,7 +2429,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
               <div class="picker-divider"></div>
             ` : nothing}
             ${this._csvExportEnabled && this.dataSet ? html`
-              <button class="picker-action" aria-label="Download CSV" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">Download CSV</button>
+              <button class="picker-action" aria-label="Download CSV" @click="${() => { downloadCsv(tableToCsv(this.dataSet!, this.columnConfig)); }}">Download CSV</button>
               <button class="picker-action" aria-label="Copy CSV" @click="${this._handleCopyToClipboard}">Copy CSV</button>
               <div class="picker-divider"></div>
             ` : nothing}
@@ -2446,7 +2446,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
                     type="checkbox"
                     .checked="${isVisible}"
                     ?disabled="${isLastVisible}"
-                    @change="${() => this._toggleColumnVisibility(colId)}"
+                    @change="${() => { this._toggleColumnVisibility(colId); }}"
                   />
                   <span>${config?.label ?? col.name}</span>
                 </label>
@@ -2459,7 +2459,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
                 <button
                   role="radio"
                   aria-pressed=${this.mode === m.value ? 'true' : 'false'}
-                  @click=${() => this._setMode(m.value)}
+                  @click=${() => { this._setMode(m.value); }}
                 >${m.label}</button>
               `)}
             </div>
@@ -2598,7 +2598,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       const indent = depth * 20;
       const toggleHandler = treeNode
         ? (e: MouseEvent) => { e.stopPropagation(); this._toggleTreeExpand(treeNode.id); }
-        : (e: MouseEvent) => this._toggleExpand(row, e);
+        : (e: MouseEvent) => { this._toggleExpand(row, e); };
       const toggle = hasChildren
         ? html`<button class="tree-toggle" @click="${toggleHandler}" aria-label="${isExpanded ? 'Collapse' : 'Expand'}">${isExpanded ? '▼' : '▶'}</button>`
         : html`<span class="tree-spacer"></span>`;
@@ -2663,7 +2663,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
           role="checkbox"
           aria-checked="${isSelected ? 'true' : 'false'}"
           aria-label="Select row"
-          @click="${(e: MouseEvent) => this._handleCheckboxClick(row, e)}"
+          @click="${(e: MouseEvent) => { this._handleCheckboxClick(row, e); }}"
         ></div>
       </div>
     `;
@@ -2763,7 +2763,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         aria-labelledby="${btnId}"
         style="grid-row: ${gridRow + 1}"
         ?hidden="${!isExpanded}"
-        @transitionend="${(e: TransitionEvent) => this._handleDetailTransitionEnd(e, key)}"
+        @transitionend="${(e: TransitionEvent) => { this._handleDetailTransitionEnd(e, key); }}"
       >
         <div class="detail-content">
           ${isExpanded ? detail : nothing}
@@ -2852,8 +2852,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         aria-expanded="${treeNode && treeNode.children.length > 0 ? String(this._treeExpandState.get(treeNode.id) === true) : nothing}"
         tabindex="${tabindex}"
         data-row="${actualIndex}"
-        @click="${(e: MouseEvent) => this._handleRowClick(row, e)}"
-        @dblclick="${(e: MouseEvent) => this._handleRowDoubleClick(row, e)}"
+        @click="${(e: MouseEvent) => { this._handleRowClick(row, e); }}"
+        @dblclick="${(e: MouseEvent) => { this._handleRowDoubleClick(row, e); }}"
       >
         ${this._renderExpandCell(row, gridRow, expandCol, cellStateClasses, cellInlineStyle, hoverHandler)}
         ${this._renderCheckbox(row, false, gridRow, checkboxCol, cellStateClasses, cellInlineStyle, hoverHandler)}

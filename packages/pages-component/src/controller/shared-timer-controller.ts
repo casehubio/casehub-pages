@@ -2,7 +2,7 @@ const subscribers = new Set<() => void>();
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
 function tick(): void {
-  subscribers.forEach(cb => cb());
+  subscribers.forEach(cb => { cb(); });
 }
 
 function start(): void {

@@ -31,7 +31,7 @@ function tokensToCSSLines(tokens: TokenMap, parentPrefix: string): string[] {
       ? (mapped === '' ? parentPrefix : (parentPrefix ? `${parentPrefix}-${mapped}` : mapped))
       : (parentPrefix ? `${parentPrefix}-${key}` : key);
 
-    lines.push(...tokensToCSSLines(value as TokenMap, childPrefix));
+    lines.push(...tokensToCSSLines(value, childPrefix));
   }
   return lines;
 }
@@ -48,7 +48,7 @@ export function generateDTCG(tokens: TokenMap, name: string): Record<string, unk
     if (isTokenLeaf(value)) {
       result[key] = { $value: value.$value, $type: value.$type };
     } else {
-      result[key] = deepCopyTokens(value as TokenMap);
+      result[key] = deepCopyTokens(value);
     }
   }
   return result;
@@ -61,7 +61,7 @@ function deepCopyTokens(tokens: TokenMap): Record<string, unknown> {
     if (isTokenLeaf(value)) {
       result[key] = { $value: value.$value, $type: value.$type };
     } else {
-      result[key] = deepCopyTokens(value as TokenMap);
+      result[key] = deepCopyTokens(value);
     }
   }
   return result;

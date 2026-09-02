@@ -205,7 +205,7 @@ export function metricGrid(
 ): TypedComponent<"metric-grid"> {
   const first = args[0];
   const hasOptions = first != null && typeof first === 'object' && !('type' in first) && 'direction' in first;
-  const options = hasOptions ? first as MetricGridProps : undefined;
+  const options = hasOptions ? first : undefined;
   const children = (hasOptions ? args.slice(1) : args) as Component[];
   return freeze({
     type: "metric-grid" as const,
@@ -844,10 +844,10 @@ export function buildTreeFromZones(
 
   const splitChildren: Component[] = [];
   const splitRatio: number[] = [];
-  const leftContent = hasLeft ? buildSideContent(normalized.left!, everyPanel, zoneMap, order) : null;
+  const leftContent = hasLeft ? buildSideContent(normalized.left, everyPanel, zoneMap, order) : null;
   if (leftContent) { splitChildren.push(leftContent); splitRatio.push(1); }
   splitChildren.push(centreContent); splitRatio.push(4);
-  const rightContent = hasRight ? buildSideContent(normalized.right!, everyPanel, zoneMap, order) : null;
+  const rightContent = hasRight ? buildSideContent(normalized.right, everyPanel, zoneMap, order) : null;
   if (rightContent) { splitChildren.push(rightContent); splitRatio.push(1); }
 
   const panelSplit = splitChildren.length > 1
@@ -856,7 +856,7 @@ export function buildTreeFromZones(
 
   let middleContent: Component = panelSplit;
   if (hasBottom) {
-    const bottomContent = buildSideContent(normalized.bottom!, everyPanel, zoneMap, order);
+    const bottomContent = buildSideContent(normalized.bottom, everyPanel, zoneMap, order);
     if (bottomContent) {
       middleContent = withStyle({ flex: "1", "min-height": "0", height: "100%" }, split("vertical", [panelSplit, bottomContent], { ratio: [70, 30] }));
     }
@@ -928,5 +928,5 @@ export function floatingWorkspace(config: FloatingWorkspaceConfig): TypedCompone
     ...(config.frames ? { frames: config.frames } : {}),
     organisers: config.organisers ?? true,
   };
-  return Object.freeze({ type: "floating-workspace" as const, props }) as TypedComponent<"floating-workspace">;
+  return Object.freeze({ type: "floating-workspace" as const, props });
 }

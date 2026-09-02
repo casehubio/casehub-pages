@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { attachDockDrag, DRAG_THRESHOLD } from "./dock-drag.js";
 import type { ZoneLayoutEngine } from "./zone-layout-engine.js";
 import type { DockZone } from "@casehubio/pages-component";
-import type { Component } from "@casehubio/pages-component";
 
 function createMockEngine(
   panelId: string,
@@ -14,8 +13,8 @@ function createMockEngine(
   return {
     config: {} as any,
     get zoneMap() { return new Map(zoneMap); },
-    buildTree: vi.fn(() => ({ type: "rows" as const }) as Component),
-    movePanel: vi.fn(() => ({ type: "rows" as const }) as Component),
+    buildTree: vi.fn(() => ({ type: "rows" as const })),
+    movePanel: vi.fn(() => ({ type: "rows" as const })),
     getConstraints: vi.fn(() => ({
       allowedZones: validZones,
       fixed,
@@ -146,7 +145,7 @@ describe("dock drag", () => {
     const events: CustomEvent[] = [];
     container.addEventListener("pages-dock-rearrange", ((e: Event) => {
       events.push(e as CustomEvent);
-    }) as EventListener);
+    }));
 
     button.dispatchEvent(new MouseEvent("mousedown", { clientX: 100, clientY: 100, bubbles: true }));
     document.dispatchEvent(new MouseEvent("mousemove", { clientX: 400, clientY: 125, bubbles: true }));

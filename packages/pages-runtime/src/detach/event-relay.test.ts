@@ -85,6 +85,6 @@ describe("EventRelay", () => {
     const relay = new EventRelay(sourceDoc, targetEl);
     relay.start();
     relay.stop();
-    expect(() => relay.stop()).not.toThrow();
+    expect(() => { relay.stop(); }).not.toThrow();
   });
 });

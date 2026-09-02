@@ -13,7 +13,7 @@ export function renderFilterBar(
           class="filter-chip"
           role="checkbox"
           aria-checked="${activeFilters.has(cat)}"
-          @click=${() => onToggle(cat)}
+          @click=${() => { onToggle(cat); }}
         >${cat}</button>
       `)}
     </div>

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { validateField } from './validate-field.js';
-import type { FieldSchema } from '@casehubio/pages-component';
+
 
 describe('validateField', () => {
   it('returns "Required" for empty required string', () => {

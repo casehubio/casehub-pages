@@ -14,7 +14,7 @@ export interface ChromeExtraButton {
   readonly onClick: () => void;
 }
 
-const DC = (...args: unknown[]) => console.debug("[compositor:chrome]", ...args);
+const DC = (...args: unknown[]) => { console.debug("[compositor:chrome]", ...args); };
 
 export function injectFrameChrome(
   groupEl: HTMLElement,
@@ -25,7 +25,7 @@ export function injectFrameChrome(
   const closeDot = document.createElement("span");
   closeDot.className = "frame-close-dot";
   closeDot.style.cssText = "width:12px;height:12px;border-radius:50%;background:#ff5f57;cursor:pointer;display:inline-block;margin:0 4px;";
-  closeDot.addEventListener("pointerdown", (e) => e.stopPropagation());
+  closeDot.addEventListener("pointerdown", (e) => { e.stopPropagation(); });
   closeDot.addEventListener("click", () => { DC("button:close"); callbacks.onClose(); });
 
   const pinBtn = document.createElement("span");
@@ -33,7 +33,7 @@ export function injectFrameChrome(
   pinBtn.textContent = "\u{1F4CC}";
   pinBtn.style.cssText = "cursor:pointer;margin:0 4px;font-size:12px;opacity:0.5;";
   pinBtn.setAttribute("aria-pressed", "false");
-  pinBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+  pinBtn.addEventListener("pointerdown", (e) => { e.stopPropagation(); });
   pinBtn.addEventListener("click", () => { DC("button:pin"); callbacks.onPin(); });
 
   titlebar.prepend(pinBtn);
@@ -45,7 +45,7 @@ export function injectFrameChrome(
     detachDot.style.cssText = "width:12px;height:12px;border-radius:50%;background:#ff5f57;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin:0 4px;font-size:7px;color:#fff;line-height:1;";
     detachDot.textContent = "↗";
     detachDot.title = "Pop out to new window";
-    detachDot.addEventListener("pointerdown", (e) => e.stopPropagation());
+    detachDot.addEventListener("pointerdown", (e) => { e.stopPropagation(); });
     detachDot.addEventListener("click", () => { DC("button:detach"); callbacks.onDetach!(); });
     titlebar.insertBefore(detachDot, pinBtn.nextSibling);
   }
@@ -73,7 +73,7 @@ export function injectFrameChrome(
     btn.textContent = btnConfig.icon;
     btn.title = btnConfig.title;
     btn.style.cssText = "cursor:pointer;margin:0 4px;font-size:12px;";
-    btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    btn.addEventListener("pointerdown", (e) => { e.stopPropagation(); });
     btn.addEventListener("click", btnConfig.onClick);
     titlebar.appendChild(btn);
   }

@@ -199,7 +199,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   @state() private _docked = true;
   @state() private _fullOutline = false;
 
-  private _resizeHandler = (): void => this._clampToViewport();
+  private _resizeHandler = (): void => { this._clampToViewport(); };
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -223,7 +223,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       connection: this.connection,
       eventTarget: this.eventTarget,
       baseUrl: this.baseUrl,
-      onState: (s: ScenarioState) => this._onStateChange(s),
+      onState: (s: ScenarioState) => { this._onStateChange(s); },
     });
   }
 
@@ -234,7 +234,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       void this._fetchOutline();
     }
     if (!s.scenario) this._outline = [];
-    this.updateComplete.then(() => this._scrollToCurrent());
+    void this.updateComplete.then(() => { this._scrollToCurrent(); });
   }
 
   private _scrollToCurrent(): void {
@@ -320,7 +320,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       <div class="view-header">
         <button class="view-toggle ${this._view === 'library' ? 'active' : ''}"
                 aria-label="Toggle library"
-                @click=${() => this._toggleLibrary()}>
+                @click=${() => { this._toggleLibrary(); }}>
           ${this._view === 'library' ? '☰ Outline' : '☰ Library'}
         </button>
       </div>
@@ -348,7 +348,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     return html`
       <pages-library-view
         .baseUrl=${this._conn?.restBase ?? this.baseUrl ?? ''}
-        @script-selected=${(e: CustomEvent) => this._onScriptSelected(e)}
+        @script-selected=${(e: CustomEvent) => { this._onScriptSelected(e); }}
       ></pages-library-view>
     `;
   }
@@ -542,12 +542,12 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       <div class="compact-pill"
            @click=${() => { this._expanded = true; this._resetPosition(); }}
            @pointerdown=${this._onDragStart}>
-        <button aria-label=${s?.paused !== false ? 'Resume' : 'Pause'}
+        <button aria-label=${(s?.paused) ? 'Resume' : 'Pause'}
                 @click=${(e: Event) => {
                   e.stopPropagation();
                   if (s?.scenario) void this._conn.sendCommand(s.paused ? '/resume' : '/pause');
                 }}>
-          ${s?.paused !== false ? '▶' : '⏸'}
+          ${(s?.paused) ? '▶' : '⏸'}
         </button>
         <span class="scenario-name">${name}</span>
         <span class="progress-pct">${pct}%</span>
@@ -564,10 +564,10 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
           <span class="scenario-name">${name}</span>
           <button aria-label=${this._fullOutline ? 'Compact outline' : 'Full outline'}
                   @click=${() => { this._fullOutline = !this._fullOutline; }}>${this._fullOutline ? '⊟' : '⊞'}</button>
-          <button aria-label="Toggle source" @click=${() => this._toggleYaml()}>&lt;/&gt;</button>
+          <button aria-label="Toggle source" @click=${() => { this._toggleYaml(); }}>&lt;/&gt;</button>
           ${this._yamlOpen ? (this._docked
-            ? html`<button aria-label="Undock viewer" @click=${() => this._undockViewer()} title="Undock panels">⊟</button>`
-            : html`<button aria-label="Dock viewer" @click=${() => this._dockViewer()} title="Dock panels">⊞</button>`
+            ? html`<button aria-label="Undock viewer" @click=${() => { this._undockViewer(); }} title="Undock panels">⊟</button>`
+            : html`<button aria-label="Dock viewer" @click=${() => { this._dockViewer(); }} title="Dock panels">⊞</button>`
           ) : nothing}
           <button aria-label="Collapse" @click=${() => { this._expanded = false; this._resetPosition(); }}>✕</button>
         </div>
@@ -634,10 +634,10 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
       viewer.eventTarget = this.eventTarget;
       if (this.baseUrl) viewer.baseUrl = this.baseUrl;
       if (this.scenario) viewer.scenario = this.scenario;
-      viewer.onClose = () => this._toggleYaml();
-      viewer.onDetach = () => this._detachYaml();
-      viewer.onDragMove = (left: number, top: number) => this._onViewerDrag(left, top);
-      viewer.onDragEnd = () => this._onViewerDragEnd();
+      viewer.onClose = () => { this._toggleYaml(); };
+      viewer.onDetach = () => { this._detachYaml(); };
+      viewer.onDragMove = (left: number, top: number) => { this._onViewerDrag(left, top); };
+      viewer.onDragEnd = () => { this._onViewerDragEnd(); };
       viewer.onResize = () => { if (this._docked) this._snapViewerToController(); };
       document.body.appendChild(viewer);
       this._yamlViewer = viewer;
@@ -645,7 +645,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     }
     this._yamlViewer.style.display = 'block';
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => this._snapViewerToController());
+      requestAnimationFrame(() => { this._snapViewerToController(); });
     });
   }
 

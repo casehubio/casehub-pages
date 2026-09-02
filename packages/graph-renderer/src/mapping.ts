@@ -69,7 +69,7 @@ function handlePosPoint(rect: { x: number; y: number; w: number; h: number }, po
   }
 }
 
-function nodeBounds(node: Node): { x: number; y: number; w: number; h: number } {
+function _nodeBounds(node: Node): { x: number; y: number; w: number; h: number } {
   return { x: node.position.x, y: node.position.y, w: node.width ?? 280, h: node.height ?? 50 };
 }
 

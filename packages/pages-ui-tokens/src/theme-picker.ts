@@ -161,14 +161,14 @@ export class PagesThemePickerElement extends LitElement {
   override render() {
     if (this.compact) return this._renderCompact();
     return html`
-      <select @change=${(e: Event) => this._onFamilyChange(e)}>
+      <select @change=${(e: Event) => { this._onFamilyChange(e); }}>
         ${this._families.map(f => html`
           <option value=${f.name} ?selected=${f.name === this._family}>${f.displayName}</option>
         `)}
       </select>
       <div class="mode-toggle">
-        <button aria-pressed=${String(this._mode === 'light')} @click=${() => this._setMode('light')}>Light</button>
-        <button aria-pressed=${String(this._mode === 'dark')} @click=${() => this._setMode('dark')}>Dark</button>
+        <button aria-pressed=${String(this._mode === 'light')} @click=${() => { this._setMode('light'); }}>Light</button>
+        <button aria-pressed=${String(this._mode === 'dark')} @click=${() => { this._setMode('dark'); }}>Dark</button>
       </div>
     `;
   }
@@ -217,8 +217,8 @@ export class PagesThemePickerElement extends LitElement {
           </fieldset>
         ` : nothing}
         <div class="mode-toggle">
-          <button aria-pressed=${String(this._mode === 'light')} @click=${() => this._setMode('light')}>☀ Light</button>
-          <button aria-pressed=${String(this._mode === 'dark')} @click=${() => this._setMode('dark')}>☾ Dark</button>
+          <button aria-pressed=${String(this._mode === 'light')} @click=${() => { this._setMode('light'); }}>☀ Light</button>
+          <button aria-pressed=${String(this._mode === 'dark')} @click=${() => { this._setMode('dark'); }}>☾ Dark</button>
         </div>
       </div>
     `;

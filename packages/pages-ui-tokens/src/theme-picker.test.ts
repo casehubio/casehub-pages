@@ -149,7 +149,7 @@ describe('compact mode', () => {
   });
 
   it('selecting a family applies the theme', async () => {
-    const radios = Array.from(picker.shadowRoot?.querySelectorAll('input[type="radio"]') ?? []) as HTMLInputElement[];
+    const radios = Array.from(picker.shadowRoot?.querySelectorAll('input[type="radio"]') ?? []);
     const casehubRadio = radios.find(r => r.value === 'casehub')!;
     casehubRadio.checked = true;
     casehubRadio.dispatchEvent(new Event('change', { bubbles: true }));
@@ -159,7 +159,7 @@ describe('compact mode', () => {
 
   it('toggling mode applies the theme', async () => {
     const popover = picker.shadowRoot?.querySelector('[popover]');
-    const buttons = Array.from(popover?.querySelectorAll('.mode-toggle button') ?? []) as HTMLButtonElement[];
+    const buttons = Array.from(popover?.querySelectorAll('.mode-toggle button') ?? []);
     const lightButton = buttons.find(b => b.textContent?.includes('Light'))!;
     lightButton.click();
     await (picker as any).updateComplete;

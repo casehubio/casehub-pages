@@ -50,7 +50,7 @@ function countLeaves(tokens: TokenMap): number {
   for (const [key, value] of Object.entries(tokens)) {
     if (key.startsWith('$')) continue;
     if (isTokenLeaf(value)) count++;
-    else count += countLeaves(value as TokenMap);
+    else count += countLeaves(value);
   }
   return count;
 }

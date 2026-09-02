@@ -1,4 +1,4 @@
-import { html, css, type TemplateResult, type CSSResult } from "lit";
+import { html, css, type TemplateResult } from "lit";
 
 export function renderPropertyTree(value: unknown, depth = 0): TemplateResult {
   if (value === null || value === undefined) {
@@ -37,7 +37,7 @@ export function renderPropertyTree(value: unknown, depth = 0): TemplateResult {
     const entries = Object.entries(value);
     if (entries.length === 0) return html`<span class="pt-null">—</span>`;
     return html`<dl class="pt-object">${entries.map(([key, val]) => {
-      const isNested = val !== null && typeof val === "object" && !Array.isArray(val) && Object.keys(val).length > 0;
+      const isNested = val !== null && typeof val === "object" && !Array.isArray(val) && Object.keys(val as Record<string, unknown>).length > 0;
       const isObjectArray = Array.isArray(val) && val.length > 0 && val.some(v => typeof v === "object" && v !== null);
       return html`
         <dt class="pt-key">${key}</dt>
@@ -118,4 +118,4 @@ export const propertyTreeStyles = css`
     font-weight: 500;
     flex-shrink: 0;
   }
-` as CSSResult;
+`;

@@ -166,7 +166,7 @@ describe('pages-library-view', () => {
 
   it('renders from scripts property without fetch', async () => {
     const el = document.createElement('pages-library-view') as PagesLibraryView;
-    el.scripts = MOCK_LIBRARY as any;
+    el.scripts = MOCK_LIBRARY;
     document.body.appendChild(el);
     await el.updateComplete;
 
@@ -178,7 +178,7 @@ describe('pages-library-view', () => {
 
   it('filters scripts property by search text', async () => {
     const el = document.createElement('pages-library-view') as PagesLibraryView;
-    el.scripts = MOCK_LIBRARY as any;
+    el.scripts = MOCK_LIBRARY;
     document.body.appendChild(el);
     await el.updateComplete;
 
@@ -193,7 +193,7 @@ describe('pages-library-view', () => {
 
   it('emits script-selected from scripts property mode', async () => {
     const el = document.createElement('pages-library-view') as PagesLibraryView;
-    el.scripts = MOCK_LIBRARY as any;
+    el.scripts = MOCK_LIBRARY;
     document.body.appendChild(el);
     await el.updateComplete;
 

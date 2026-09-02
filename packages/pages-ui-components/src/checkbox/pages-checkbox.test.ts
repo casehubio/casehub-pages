@@ -26,13 +26,13 @@ describe('PagesCheckbox', () => {
   it('reflects checked property', async () => {
     (el as any).checked = true;
     await (el as any).updateComplete;
-    const input = el.shadowRoot!.querySelector('input')! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector('input')!;
     expect(input.checked).toBe(true);
   });
 
   it('defaults to unchecked', async () => {
     await (el as any).updateComplete;
-    expect((el.shadowRoot!.querySelector('input')! as HTMLInputElement).checked).toBe(false);
+    expect((el.shadowRoot!.querySelector('input')!).checked).toBe(false);
   });
 
   it('renders label', async () => {
@@ -93,7 +93,7 @@ describe('PagesCheckbox', () => {
     (el as any).readonly = true;
     (el as any).checked = true;
     await (el as any).updateComplete;
-    const input = el.shadowRoot!.querySelector('input[type="checkbox"]')! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector('input[type="checkbox"]')!;
     expect(input.checked).toBe(true);
   });
 

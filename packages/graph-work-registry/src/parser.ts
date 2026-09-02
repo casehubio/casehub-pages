@@ -1,5 +1,4 @@
 import { parse } from 'yaml';
-import type { JSONSchema7 } from 'json-schema';
 import type { WorkStencil, MarketplaceDescriptor, WorkStencilDescriptorYaml } from './model.js';
 
 export interface ParseResult {
@@ -72,9 +71,9 @@ function validateStencilDescriptor(desc: WorkStencilDescriptorYaml): ValidationR
       category: desc.category,
       icon: desc.icon,
       async: desc.async ?? false,
-      properties: (desc.properties ?? {}) as JSONSchema7,
-      input: (desc.input ?? {}) as JSONSchema7,
-      output: (desc.output ?? {}) as JSONSchema7,
+      properties: (desc.properties ?? {}),
+      input: (desc.input ?? {}),
+      output: (desc.output ?? {}),
     },
   };
 }

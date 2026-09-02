@@ -43,7 +43,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await source.dispatch({ type: "update", key: "1", changes: { name: "Alice Updated" } });
 
@@ -67,7 +67,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await source.dispatch({ type: "create", data: { id: "3", name: "Charlie", status: "Active" } });
 
@@ -89,7 +89,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await source.dispatch({ type: "delete", key: "2" });
 
@@ -110,7 +110,7 @@ describe("mutableRestSource", () => {
     });
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await expect(source.dispatch({ type: "update", key: "1", changes: {} }))
       .rejects.toThrow("Unsupported action type");
@@ -125,7 +125,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await expect(source.dispatch({ type: "update", key: "1", changes: {} }))
       .rejects.toThrow("404");
@@ -141,7 +141,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     const action: DataAction = { type: "update", key: "1", changes: { name: "X" } };
     await source.dispatch(action);
@@ -160,7 +160,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await source.dispatch({ type: "update", key: "1", changes: { name: "X" } });
 
@@ -181,7 +181,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await source.dispatch({ type: "update", key: "1", changes: { name: "Alice Updated" } });
 
@@ -202,7 +202,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await source.dispatch({ type: "create", data: { id: "3", name: "Charlie", status: "Active" } });
 
@@ -218,7 +218,7 @@ describe("mutableRestSource", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBe(1));
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
 
     await source.dispatch({ type: "update", key: "1", changes: { name: "X" } });
     expect(writeFetch.mock.calls[0]![1].method).toBe("PUT");

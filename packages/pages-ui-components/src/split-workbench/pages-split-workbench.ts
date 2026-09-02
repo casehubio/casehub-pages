@@ -121,7 +121,7 @@ export class PagesSplitWorkbench extends LiveRegionMixin(LitElement) {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._unsubs.forEach(u => u());
+    this._unsubs.forEach(u => { u(); });
     this._unsubs = [];
     document.removeEventListener('mousemove', this._handleMouseMove);
     document.removeEventListener('mouseup', this._handleMouseUp);

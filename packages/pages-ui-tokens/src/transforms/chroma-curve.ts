@@ -9,11 +9,11 @@ export function chromaCurve(tokens: TokenMap, params: Record<string, unknown>): 
     if (key.startsWith('$')) { result[key] = value; continue; }
     if (isTokenLeaf(value)) { result[key] = value; continue; }
 
-    const group = value as TokenMap;
+    const group = value;
     const isColourScale = Object.keys(group).some(k => /^\d+$/.test(k) && isTokenLeaf(group[k]));
     if (!isColourScale) { result[key] = value; continue; }
 
-    const hueMultiplier = typeof params[key] === 'number' ? params[key] as number : 1;
+    const hueMultiplier = typeof params[key] === 'number' ? params[key] : 1;
 
     const newGroup: Record<string, unknown> = {};
     for (const [step, leaf] of Object.entries(group)) {

@@ -100,8 +100,8 @@ export class PagesDiagramPalette extends LitElement {
         ${renderStencilList(this.items, {
           collapsible: !compact,
           isGroupOpen: (name) => this._isGroupOpen(name),
-          onGroupToggle: (name, open) => this._onGroupToggle(name, open),
-          onSelect: (item) => this._onSelect(item),
+          onGroupToggle: (name, open) => { this._onGroupToggle(name, open); },
+          onSelect: (item) => { this._onSelect(item); },
           searchQuery: this._searchQuery,
           itemRole: 'button',
           iconRenderer: this.iconRenderer,

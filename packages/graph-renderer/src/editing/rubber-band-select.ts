@@ -71,7 +71,7 @@ export function createRubberBandSelect(opts: RubberBandOptions): RubberBandSelec
 
   function cleanup(): void {
     if (capturedPointerId !== null) {
-      try { containerEl.releasePointerCapture(capturedPointerId); } catch (_) { /* already released */ }
+      try { containerEl.releasePointerCapture(capturedPointerId); } catch { /* already released */ }
     }
     active = false;
     capturedPointerId = null;
@@ -106,7 +106,7 @@ export function createRubberBandSelect(opts: RubberBandOptions): RubberBandSelec
       } else {
         onComplete({ type: 'empty' });
       }
-    } catch (_) {
+    } catch {
       cleanup();
       onComplete({ type: 'empty' });
     }

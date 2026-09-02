@@ -513,7 +513,7 @@ describe("PagesChartElement", () => {
     });
 
     it("sets aria-label on host from props.title", async () => {
-      el.props = { lookup: mockLookup("sales"), title: "Revenue by Region" } as TestChartProps;
+      el.props = { lookup: mockLookup("sales"), title: "Revenue by Region" };
       document.body.appendChild(el);
       await el.updateComplete;
       el.dataSet = mockDataSet();

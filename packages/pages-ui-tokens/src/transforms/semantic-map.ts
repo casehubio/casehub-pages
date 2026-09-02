@@ -33,7 +33,7 @@ function resolveRef(tokens: TokenMap, ref: string): TokenLeaf | undefined {
   if (!group || !key) return undefined;
   const g = tokens[group];
   if (!g || isTokenLeaf(g)) return undefined;
-  const leaf = (g as TokenMap)[key];
+  const leaf = (g)[key];
   return isTokenLeaf(leaf) ? leaf : undefined;
 }
 

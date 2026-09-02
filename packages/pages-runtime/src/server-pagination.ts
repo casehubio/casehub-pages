@@ -73,8 +73,8 @@ export class ServerPaginationManager {
     const response = await this._fetchFn(url);
     const contentType = response.headers?.get("content-type") ?? undefined;
     const data = contentType?.includes("application/json")
-      ? await (response as Response).json() as unknown
-      : await (response as Response).text();
+      ? await (response).json() as unknown
+      : await (response).text();
 
     let totalRows = 0;
     if (reg.totalPath) {

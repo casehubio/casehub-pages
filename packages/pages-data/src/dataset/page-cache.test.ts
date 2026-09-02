@@ -3,7 +3,7 @@ import { PageCache } from "./page-cache.js";
 import type { TypedDataSet } from "./types.js";
 
 function mockDataSet(): TypedDataSet {
-  return { columns: [], rows: [] } as unknown as TypedDataSet;
+  return { columns: [], rows: [] };
 }
 
 describe("PageCache", () => {

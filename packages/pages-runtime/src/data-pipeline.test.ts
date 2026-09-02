@@ -2320,6 +2320,7 @@ describe("push delivery — onChanged → deliverDataSet chain (#330)", () => {
       originalLookup: lookup,
     });
 
+    // eslint-disable-next-line prefer-const -- forward reference: used in onChanged before assignment
     let pipeline: ReturnType<typeof createDataPipeline>;
     const manager = createDataSetManager({
       onChanged: (id) => {
@@ -2362,6 +2363,7 @@ describe("push delivery — onChanged → deliverDataSet chain (#330)", () => {
       data: [["alert"]],
     });
 
+    // eslint-disable-next-line prefer-const -- forward reference: used in onChanged before assignment
     let pipeline: ReturnType<typeof createDataPipeline>;
     const manager = createDataSetManager({
       onChanged: (id) => {
@@ -2407,6 +2409,7 @@ describe("push delivery — onChanged → deliverDataSet chain (#330)", () => {
       originalLookup: lookup,
     });
 
+    // eslint-disable-next-line prefer-const -- forward reference: used in onChanged before assignment
     let pipeline: ReturnType<typeof createDataPipeline>;
     const manager = createDataSetManager({
       onChanged: (id) => {

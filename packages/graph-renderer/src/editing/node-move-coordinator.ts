@@ -68,7 +68,7 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
     holdConfirmed = true;
     if (segmentSubject) {
       for (const nid of segmentSubject.nodeIds) {
-        const el = containerEl.querySelector(`.react-flow__node[data-id="${nid}"]`) as HTMLElement | null;
+        const el = containerEl.querySelector(`.react-flow__node[data-id="${nid}"]`);
         if (el) el.classList.add('node-move-ghost');
       }
     }
@@ -78,9 +78,9 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
       ghostedNodeEl = nodeEl;
     }
     if (nodeEl && capturedPointerId !== null) {
-      const handle = nodeEl.querySelector('.stencil-source-handle') as HTMLElement | null;
+      const handle = nodeEl.querySelector('.stencil-source-handle');
       if (handle) {
-        try { handle.releasePointerCapture(capturedPointerId); } catch (_e) { /* ignore */ }
+        try { handle.releasePointerCapture(capturedPointerId); } catch { /* ignore */ }
       }
     }
     const canvas = containerEl.closest('pages-graph-canvas');
@@ -97,7 +97,7 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
 
     if (segmentSubject) {
       for (const nid of segmentSubject.nodeIds) {
-        const el = containerEl.querySelector(`.react-flow__node[data-id="${nid}"]`) as HTMLElement | null;
+        const el = containerEl.querySelector(`.react-flow__node[data-id="${nid}"]`);
         if (el) el.classList.add('node-move-ghost');
       }
       ghostedNodeEl = containerEl.querySelector(`.react-flow__node[data-id="${draggedNodeId}"]`) as HTMLElement | null;
@@ -210,7 +210,7 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
         }
       } else {
         if (edge.source === draggedNodeId || edge.target === draggedNodeId) continue;
-        const draggedNode = nodeById(activeModel, draggedNodeId!);
+        const draggedNode = nodeById(activeModel, draggedNodeId);
         if (!draggedNode) continue;
         if (canSplice(edge, draggedNode, activeModel)) {
           edgeEl.classList.add('edge-splice-valid');
@@ -255,7 +255,7 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
 
   function showSpliceIndicator(edgeEl: HTMLElement): void {
     clearSpliceIndicator();
-    const path = edgeEl.querySelector('.react-flow__edge-path') as SVGPathElement | null;
+    const path = edgeEl.querySelector('.react-flow__edge-path') as SVGGeometryElement | null;
     if (!path) return;
     const len = path.getTotalLength();
     const pt = path.getPointAtLength(len / 2);

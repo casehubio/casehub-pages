@@ -19,18 +19,18 @@ function mockFetchOk(data: unknown): typeof globalThis.fetch {
     ok: true,
     headers: new Headers({ 'content-type': 'application/json' }),
     json: () => Promise.resolve(data),
-  }) as unknown as typeof globalThis.fetch;
+  });
 }
 
 function mockFetchFail(status: number): typeof globalThis.fetch {
   return vi.fn().mockResolvedValue({
     ok: false,
     status,
-  }) as unknown as typeof globalThis.fetch;
+  });
 }
 
 function mockFetchReject(message: string): typeof globalThis.fetch {
-  return vi.fn().mockRejectedValue(new Error(message)) as unknown as typeof globalThis.fetch;
+  return vi.fn().mockRejectedValue(new Error(message));
 }
 
 describe('fetchSource', () => {
@@ -48,7 +48,7 @@ describe('fetchSource', () => {
 
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.applyCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.applyCalls).toHaveLength(1); });
 
     const event = sink.applyCalls[0]!;
     expect(event.type).toBe('snapshot');
@@ -66,7 +66,7 @@ describe('fetchSource', () => {
 
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.applyCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.applyCalls).toHaveLength(1); });
 
     const ds = sink.applyCalls[0]!.dataset as TypedDataSet;
     expect(ds.columns.length).toBeGreaterThan(0);
@@ -86,7 +86,7 @@ describe('fetchSource', () => {
 
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.applyCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.applyCalls).toHaveLength(1); });
 
     expect(sink.applyCalls[0]!.totalRows).toBe(100);
     const ds = sink.applyCalls[0]!.dataset as TypedDataSet;
@@ -107,7 +107,7 @@ describe('fetchSource', () => {
 
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.applyCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.applyCalls).toHaveLength(1); });
 
     expect(sink.applyCalls[0]!.totalRows).toBe(42);
   });
@@ -116,7 +116,7 @@ describe('fetchSource', () => {
     const source = fetchSource('http://api/items', { fetchFn: mockFetchFail(500) });
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.errorCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.errorCalls).toHaveLength(1); });
 
     expect(sink.errorCalls[0]!.message).toContain('500');
     expect(sink.errorCalls[0]!.permanent).toBe(true);
@@ -126,7 +126,7 @@ describe('fetchSource', () => {
     const source = fetchSource('http://api/items', { fetchFn: mockFetchReject('network down') });
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.errorCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.errorCalls).toHaveLength(1); });
 
     expect(sink.errorCalls[0]!.message).toContain('network down');
   });
@@ -158,7 +158,7 @@ describe('fetchSource', () => {
     });
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.applyCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.applyCalls).toHaveLength(1); });
 
     expect(fetchFn).toHaveBeenCalledWith('http://api/items', expect.objectContaining({
       headers: { 'X-Custom': 'value' },
@@ -174,7 +174,7 @@ describe('fetchSource', () => {
     });
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.applyCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.applyCalls).toHaveLength(1); });
 
     expect(fetchFn).toHaveBeenCalledWith('http://api/items', expect.objectContaining({
       method: 'POST',
@@ -190,7 +190,7 @@ describe('fetchSource', () => {
     });
     const sink = createMockSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(sink.applyCalls).toHaveLength(1));
+    await vi.waitFor(() => { expect(sink.applyCalls).toHaveLength(1); });
 
     expect(fetchFn).toHaveBeenCalledWith('http://api/items', expect.objectContaining({
       body: '{"q":"x"}',

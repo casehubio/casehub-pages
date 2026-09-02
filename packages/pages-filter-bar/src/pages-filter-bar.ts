@@ -255,7 +255,7 @@ export class PagesFilterBar extends LitElement {
           <button class="chip"
             role="checkbox"
             aria-checked="${this._selectedChips.includes(val)}"
-            @click=${() => this._handleChipClick(val)}
+            @click=${() => { this._handleChipClick(val); }}
           >${val}</button>
         `)}
       </div>
@@ -273,14 +273,14 @@ export class PagesFilterBar extends LitElement {
     return html`
       <div class="filter-section">
         <span class="filter-label">${label}:</span>
-        <div class="dropdown-wrapper" @click=${(e: Event) => e.stopPropagation()}>
+        <div class="dropdown-wrapper" @click=${(e: Event) => { e.stopPropagation(); }}>
           <button class="dropdown-trigger"
             role="combobox"
             aria-expanded="${this._dropdownOpen}"
             aria-haspopup="listbox"
             aria-label="${label} filter"
             aria-activedescendant="${this._dropdownOpen && this._focusedIndex >= 0 ? `entity-option-${this._focusedIndex}` : ''}"
-            @click=${() => this._toggleDropdown()}
+            @click=${() => { this._toggleDropdown(); }}
             @keydown=${this._handleDropdownKeyDown}>
             <span>${triggerText}</span>
             <span class="dropdown-arrow">${this._dropdownOpen ? '▲' : '▼'}</span>
@@ -292,7 +292,7 @@ export class PagesFilterBar extends LitElement {
                   role="option"
                   aria-selected="${entity === this._selectedEntity}"
                   id="entity-option-${index}"
-                  @click=${() => this._selectEntity(entity)}>
+                  @click=${() => { this._selectEntity(entity); }}>
                   ${entity ?? allLabel}
                 </li>
               `)}

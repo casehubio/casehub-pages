@@ -202,9 +202,9 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
         this._paginatedPageSize = this.pageSize;
         this._paginationMeta = undefined;
         this._selfFetchLoading = true;
-        this._fetchPage(0).finally(() => { this._selfFetchLoading = false; });
+        void this._fetchPage(0).finally(() => { this._selfFetchLoading = false; });
       } else if (!this._isPaginated && (changed.has("endpoint") || changed.has("strategy"))) {
-        this._fetchEndpoint();
+        void this._fetchEndpoint();
       }
     }
 
@@ -273,7 +273,7 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
           ? renderFilterBar(
               strategy.filterCategories,
               this._resolvedFilters ?? new Set(strategy.filterCategories),
-              (cat) => this._handleFilterToggle(cat),
+              (cat) => { this._handleFilterToggle(cat); },
             )
           : nothing}
         ${filtered.length === 0
@@ -281,20 +281,20 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
           : layout === "vertical"
           ? renderVerticalTimeline(filtered, {
               expandedKeys: this._expandedKeys,
-              onNodeClick: (n, i) => this._handleNodeClick(n, i),
-              onToggleExpand: (k) => this._handleToggleExpand(k),
-              onKeyDown: (e, i) => this._handleVerticalKeyDown(e, i),
+              onNodeClick: (n, i) => { this._handleNodeClick(n, i); },
+              onToggleExpand: (k) => { this._handleToggleExpand(k); },
+              onKeyDown: (e, i) => { this._handleVerticalKeyDown(e, i); },
               renderNode: renderNodeCb,
               renderDetail: renderDetailCb,
             })
           : layout === "horizontal"
           ? renderHorizontalTimeline(filtered, {
-              onNodeClick: (n, i) => this._handleNodeClick(n, i),
-              onKeyDown: (e, i) => this._handleHorizontalKeyDown(e, i),
+              onNodeClick: (n, i) => { this._handleNodeClick(n, i); },
+              onKeyDown: (e, i) => { this._handleHorizontalKeyDown(e, i); },
               renderNode: renderNodeCb,
             })
           : renderCompactTimeline(filtered, {
-              onExpandRequested: () => emitPagesEvent(this, "event-timeline:expand-requested", {}),
+              onExpandRequested: () => { emitPagesEvent(this, "event-timeline:expand-requested", {}); },
               onKeyDown: () => {},
             })}
         ${this._renderPaginationFooter()}
@@ -346,7 +346,7 @@ export class PagesEventTimeline extends PagesElement<EventTimelineProps> {
         ...(ts ? { timestamp: ts } : {}),
         ...(actor ? { actor } : {}),
         ...(cat ? { category: cat } : {}),
-      } as EventTimelineNode;
+      };
     });
   }
 

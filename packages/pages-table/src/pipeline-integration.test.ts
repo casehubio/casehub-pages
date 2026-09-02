@@ -76,7 +76,7 @@ describe('pipeline integration', () => {
       const events: CustomEvent[] = [];
       document.body.addEventListener('pages-data-request', ((e: Event) => {
         events.push(e as CustomEvent);
-      }) as EventListener);
+      }));
 
       const table = document.createElement('pages-data-table') as TableEl;
       table.props = { lookup: { dataSetId: 'employees', operations: [] } };
@@ -173,7 +173,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-sort', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-sort', ((e: Event) => events.push(e as CustomEvent)));
 
       const header = el.shadowRoot!.querySelector('[role="columnheader"]') as HTMLElement;
       header.click();
@@ -191,7 +191,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-page', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-page', ((e: Event) => events.push(e as CustomEvent)));
 
       const next = el.shadowRoot!.querySelector('[aria-label="Next page"]') as HTMLButtonElement;
       next.click();
@@ -208,7 +208,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-text-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-text-filter', ((e: Event) => events.push(e as CustomEvent)));
 
       el.filterText = 'alice';
       await el.updateComplete;
@@ -320,7 +320,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
-      expect(cells[0]!.textContent!.trim()).toBe('');
+      expect(cells[0]!.textContent.trim()).toBe('');
       expect(cells[1]!.textContent).toContain('42');
     });
   });
@@ -348,7 +348,7 @@ describe('pipeline integration', () => {
       expect(rows[0]!.classList.contains('clickable')).toBe(false);
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)));
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
       (cells[1] as HTMLElement).click();
@@ -363,7 +363,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)));
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
       (cells[1] as HTMLElement).click();
@@ -381,7 +381,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)));
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
       (cells[3] as HTMLElement).click();
@@ -397,7 +397,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)));
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
       (cells[1] as HTMLElement).click();
@@ -416,7 +416,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)));
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
       (cells[1] as HTMLElement).click();
@@ -443,7 +443,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const filterEvents: CustomEvent[] = [];
-      el.addEventListener('pages-filter', ((e: Event) => filterEvents.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-filter', ((e: Event) => filterEvents.push(e as CustomEvent)));
 
       const next = el.shadowRoot!.querySelector('[aria-label="Next page"]') as HTMLButtonElement;
       next.click();
@@ -463,7 +463,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const dataRequests: CustomEvent[] = [];
-      el.addEventListener('pages-data-request', ((e: Event) => dataRequests.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-data-request', ((e: Event) => dataRequests.push(e as CustomEvent)));
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
       (cells[1] as HTMLElement).click();
@@ -520,7 +520,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const events: CustomEvent[] = [];
-      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)) as EventListener);
+      el.addEventListener('pages-filter', ((e: Event) => events.push(e as CustomEvent)));
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
       (cells[1] as HTMLElement).click();
@@ -884,7 +884,7 @@ describe('pipeline integration', () => {
       el.dataSet = testDataSet;
       await el.updateComplete;
       expect(el.getRowAccent).toBeDefined();
-      const row = el.dataSet!.rows[0]!;
+      const row = el.dataSet.rows[0]!;
       expect(el.getRowAccent!(row)).toBe('#2e7d32');
     });
 
@@ -898,7 +898,7 @@ describe('pipeline integration', () => {
       };
       el.dataSet = testDataSet;
       await el.updateComplete;
-      const bob = el.dataSet!.rows[1]!;
+      const bob = el.dataSet.rows[1]!;
       expect(el.getRowAccent!(bob)).toBe('#9e9e9e');
     });
 
@@ -911,7 +911,7 @@ describe('pipeline integration', () => {
       };
       el.dataSet = testDataSet;
       await el.updateComplete;
-      const bob = el.dataSet!.rows[1]!;
+      const bob = el.dataSet.rows[1]!;
       expect(el.getRowAccent!(bob)).toBeUndefined();
     });
 

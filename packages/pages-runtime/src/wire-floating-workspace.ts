@@ -110,7 +110,7 @@ export function wireFloatingWorkspace(
 
   const containerToolbar = createContainerToolbar(
     ["free", "tabbed", "accordion"] as readonly Layout[],
-    "free" as Layout,
+    "free",
     {
       onAdd: () => {
         const frameKey = `frame-${String(Date.now())}-${Math.random().toString(36).slice(2, 6)}`;

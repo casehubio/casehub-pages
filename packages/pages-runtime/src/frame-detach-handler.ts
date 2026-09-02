@@ -65,7 +65,7 @@ export function createFrameDetachHandler(
     const eventRelay = new EventRelay(win.document, container);
     eventRelay.start();
 
-    win.addEventListener("beforeunload", () => reattach(frameKey));
+    win.addEventListener("beforeunload", () => { reattach(frameKey); });
     const pollTimer = setInterval(() => {
       if (win.closed) reattach(frameKey);
     }, 500);

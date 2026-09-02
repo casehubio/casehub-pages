@@ -152,26 +152,26 @@ describe('ARIA command executor', () => {
   describe('assertState', () => {
     it('passes when state matches', () => {
       document.body.innerHTML = '<button aria-label="Submit" aria-busy="false">Submit</button>';
-      expect(() => assertState(
+      expect(() => { assertState(
         { role: 'button', name: 'Submit' },
         { busy: false }
-      )).not.toThrow();
+      ); }).not.toThrow();
     });
 
     it('throws when state does not match', () => {
       document.body.innerHTML = '<button aria-label="Submit" aria-busy="true">Submit</button>';
-      expect(() => assertState(
+      expect(() => { assertState(
         { role: 'button', name: 'Submit' },
         { busy: false }
-      )).toThrow('State mismatch for button "Submit": busy expected false, got true');
+      ); }).toThrow('State mismatch for button "Submit": busy expected false, got true');
     });
 
     it('checks multiple state properties', () => {
       document.body.innerHTML = '<button aria-label="Submit" aria-busy="false" aria-disabled="true">Submit</button>';
-      expect(() => assertState(
+      expect(() => { assertState(
         { role: 'button', name: 'Submit' },
         { busy: false, disabled: true }
-      )).not.toThrow();
+      ); }).not.toThrow();
     });
   });
 });

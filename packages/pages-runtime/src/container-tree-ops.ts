@@ -1,7 +1,6 @@
 import type {
   ContainerState,
   FrameTabConfig,
-  ContentFactory,
 } from "@casehubio/pages-component";
 import type {
   Container,

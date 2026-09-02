@@ -24,7 +24,7 @@ describe('GraphCanvas', () => {
   afterEach(() => {
     element.remove();
     document.head.querySelectorAll('style[data-graph-isolation]')
-      .forEach(el => el.remove());
+      .forEach(el => { el.remove(); });
   });
 
   it('registers as a custom element', () => {

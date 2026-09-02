@@ -176,7 +176,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       ? centreRaw.map((c: unknown) => desugarComponent(c as Record<string, unknown>, displayerDefaults))
       : centreRaw ? desugarComponent(centreRaw as Record<string, unknown>, displayerDefaults) : [];
 
-    const framesRaw = (raw as Record<string, unknown>).frames as unknown[] | undefined;
+    const framesRaw = (raw).frames as unknown[] | undefined;
     const frames = framesRaw?.map((f: unknown) => {
       const frame = f as Record<string, unknown>;
       return {
@@ -197,7 +197,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       };
     });
 
-    const organisers = (raw as Record<string, unknown>).organisers;
+    const organisers = (raw).organisers;
     return floatingWorkspace({
       centre,
       ...(frames ? { frames } : {}),
@@ -501,7 +501,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       const properties = (raw.properties as Record<string, unknown> | undefined) || {};
       return {
         type: "markdown",
-        props: { content: (properties["content"] as string) ?? "" },
+        props: { content: (properties["content"]) ?? "" },
       };
     }
 
@@ -510,7 +510,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       const properties = (raw.properties as Record<string, unknown> | undefined) || {};
       return {
         type: "title",
-        props: { text: (properties["text"] as string) ?? "", size: properties["size"] as string | undefined },
+        props: { text: (properties["text"]) ?? "", size: properties["size"] },
       };
     }
 

@@ -98,7 +98,7 @@ function fireState(
   rs: RunnerState,
   outline: OutlineNode[] | undefined,
   content: SectionContent | undefined,
-  templates: Map<number, string>,
+  _templates: Map<number, string>,
 ): void {
   const section = scenario.sections[rs.sectionIndex];
   const step = section?.steps[rs.stepIndex] as { name?: string } | undefined;
@@ -203,7 +203,7 @@ export function runSectionedScenario(
     try {
       const resolved = await resolveTemplates(scenario.sections, contentBase);
       for (const [k, v] of resolved) templates.set(k, v);
-    } catch (err) {
+    } catch {
       // Template resolution failed — fire error and stop
       return;
     }

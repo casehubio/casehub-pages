@@ -18,7 +18,7 @@ describe("pages-grid-table", () => {
   let el: PagesGridTable;
 
   beforeEach(() => {
-    el = document.createElement("pages-grid-table") as PagesGridTable;
+    el = document.createElement("pages-grid-table");
     document.body.appendChild(el);
   });
 

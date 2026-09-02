@@ -114,7 +114,7 @@ export class PagesDensityHeatmap extends PagesElement<DensityHeatmapProps> {
       features.push(mod.withLegend());
     }
 
-    return mod.createHeatmap(config as never, ...features as never[]) as unknown as HeatmapInstance;
+    return mod.createHeatmap(config as never, ...features as never[]);
   }
 
   private extractAndNormalize(

@@ -195,7 +195,7 @@ export class PagesScenarioYamlViewer extends LitElement {
       connection: this.connection,
       eventTarget: this.eventTarget,
       baseUrl: this.baseUrl,
-      onState: (s: ScenarioState) => this._onStateChange(s),
+      onState: (s: ScenarioState) => { this._onStateChange(s); },
     });
     if (this.scenario) void this._fetchYaml();
     this._bindGuideEvents(this.eventTarget);

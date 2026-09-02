@@ -94,7 +94,7 @@ describe('tree table (expandable)', () => {
 
   beforeEach(async () => {
     await import('./pages-data-table');
-    el = document.createElement('pages-data-table') as TableEl;
+    el = document.createElement('pages-data-table');
     document.body.appendChild(el);
   });
 
@@ -121,7 +121,7 @@ describe('tree table (expandable)', () => {
     await el.updateComplete;
 
     const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
-    const rowText = rows[0]!.textContent!;
+    const rowText = rows[0]!.textContent;
     expect(rowText).toContain('Acme Corp');
   });
 

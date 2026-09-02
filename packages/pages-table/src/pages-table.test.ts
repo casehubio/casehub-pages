@@ -667,7 +667,7 @@ describe('pages-data-table', () => {
       header.click();
       await el.updateComplete;
 
-      const hasArrow = header.textContent!.includes('▲') || header.textContent!.includes('▼');
+      const hasArrow = header.textContent.includes('▲') || header.textContent.includes('▼');
       expect(hasArrow).toBe(true);
     });
 

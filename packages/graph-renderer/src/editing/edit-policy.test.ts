@@ -4,7 +4,7 @@ import {
   registerGrammar,
   clearGrammarRegistry,
 } from '@casehubio/graph-core';
-import type { GraphModel, GraphNode, GraphEdge } from '@casehubio/graph-core';
+import type { GraphModel } from '@casehubio/graph-core';
 
 vi.mock('@xyflow/react', () => ({
   Handle: () => null,

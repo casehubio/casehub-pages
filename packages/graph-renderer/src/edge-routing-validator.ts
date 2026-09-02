@@ -23,13 +23,13 @@ function lineIntersectsRect(
 
 function handleCenter(node: Node, type: 'source' | 'target', edge: Edge, nodeMap: Map<string, Node>): { x: number; y: number } {
   const abs = absoluteRect(node, nodeMap);
-  let x = abs.x, y = abs.y;
+  const x = abs.x, y = abs.y;
   const w = abs.w, h = abs.h;
   const handleId = type === 'source' ? edge.sourceHandle : edge.targetHandle;
   const pos = handleId?.replace(/^(source|target)-/, '')
     ?? (type === 'source'
-      ? ((node.data as Record<string, unknown>)?._sourceHandlePosition as string) ?? 'bottom'
-      : ((node.data as Record<string, unknown>)?._targetHandlePosition as string) ?? 'top');
+      ? ((node.data)?._sourceHandlePosition as string) ?? 'bottom'
+      : ((node.data)?._targetHandlePosition as string) ?? 'top');
   switch (pos) {
     case 'top': return { x: x + w / 2, y };
     case 'bottom': return { x: x + w / 2, y: y + h };

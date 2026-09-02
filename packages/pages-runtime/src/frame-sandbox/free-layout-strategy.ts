@@ -120,7 +120,7 @@ export function createFreeLayoutStrategy(
     (freeHost ?? containerEl)?.appendChild(dropdown);
     activeDropdown = dropdown;
     const onClickOutside = (ev: Event) => { if (!dropdown.contains(ev.target as Node)) { dropdown.remove(); activeDropdown = null; document.removeEventListener("click", onClickOutside, true); } };
-    requestAnimationFrame(() => document.addEventListener("click", onClickOutside, true));
+    requestAnimationFrame(() => { document.addEventListener("click", onClickOutside, true); });
   }
 
   function applyArrange(preset: Preset): void {
@@ -159,7 +159,7 @@ export function createFreeLayoutStrategy(
       } else {
         const cw = (freeHost ?? containerEl)?.clientWidth ?? 400;
         const ch = (freeHost ?? containerEl)?.clientHeight ?? 300;
-        const count = currentEntries.length || 1;
+        const _count = currentEntries.length || 1;
         const w = Math.max(MIN_WIDTH, Math.min(300, Math.round(cw * 0.6)));
         const h = Math.max(MIN_HEIGHT, Math.min(200, Math.round(ch * 0.6)));
         const offset = nextDefaultOffset * 30;
@@ -400,7 +400,7 @@ export function createFreeLayoutStrategy(
       if (!entry) return;
       const frameEl = frameElements.get(key);
       if (!frameEl) return;
-      const contentArea = frameEl.querySelector("[data-frame-content]") as HTMLElement | null;
+      const contentArea = frameEl.querySelector("[data-frame-content]");
       if (!contentArea) return;
       if (entry.contentElement?.parentElement) {
         entry.contentElement.remove();

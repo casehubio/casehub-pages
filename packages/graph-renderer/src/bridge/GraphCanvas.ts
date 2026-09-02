@@ -4,7 +4,7 @@ import React, { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { Node, Edge, ReactFlowInstance, Connection } from '@xyflow/react';
 import type { GraphModel } from '@casehubio/graph-core';
-import { nodeById, validateSelection, canAddToSelection, canRemoveFromSelection } from '@casehubio/graph-core';
+import { nodeById, canAddToSelection, canRemoveFromSelection } from '@casehubio/graph-core';
 import type { EditPolicy, MultiSelectState } from '../editing/types.js';
 import type { GraphEdit } from '../editing/types.js';
 import { createNodeMoveCoordinator } from '../editing/node-move-coordinator.js';
@@ -132,7 +132,7 @@ export class GraphCanvas extends LitElement {
     const el = this._container?.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
     if (!el) return;
     el.classList.add('multi-select-rejected');
-    setTimeout(() => el.classList.remove('multi-select-rejected'), 300);
+    setTimeout(() => { el.classList.remove('multi-select-rejected'); }, 300);
   }
 
   private _applyMultiSelectCSS(): void {
@@ -184,7 +184,7 @@ export class GraphCanvas extends LitElement {
         this._moveCoordinator = createNodeMoveCoordinator({
           editPolicy: this.editPolicy,
           containerEl: this._container!,
-          onResult: (result: DragEndResult) => this._handleMoveResult(result),
+          onResult: (result: DragEndResult) => { this._handleMoveResult(result); },
         });
       }
 
@@ -399,7 +399,7 @@ export class GraphCanvas extends LitElement {
         },
         onConnectEnd: (event: MouseEvent | TouchEvent) => {
           const sourceId = this._connectSourceNodeId;
-          const startPos = this._connectStartPos;
+          const _startPos = this._connectStartPos;
           this._connectSourceNodeId = undefined;
           this._connectStartPos = undefined;
 

@@ -25,7 +25,7 @@ describe('FocusTrapMixin', () => {
     await el.updateComplete;
   });
 
-  afterEach(() => el.remove());
+  afterEach(() => { el.remove(); });
 
   it('focuses first focusable element on trapFocus', () => {
     const container = el.shadowRoot!.querySelector('.container') as HTMLElement;
@@ -126,7 +126,7 @@ describe('FocusTrapMixin — slot traversal', () => {
     await host.updateComplete;
   });
 
-  afterEach(() => host.remove());
+  afterEach(() => { host.remove(); });
 
   it('collects focusable elements from slotted content', () => {
     const container = host.shadowRoot!.querySelector('.container') as HTMLElement;

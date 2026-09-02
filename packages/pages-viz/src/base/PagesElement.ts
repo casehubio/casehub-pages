@@ -32,7 +32,7 @@ export abstract class PagesElement<
   get loading(): boolean { return this.controller.loading; }
   set loading(v: boolean) { this.controller.loading = v; }
 
-  get dataSet(): TypedDataSet | undefined { return this.controller.dataSet as TypedDataSet | undefined; }
+  get dataSet(): TypedDataSet | undefined { return this.controller.dataSet; }
   set dataSet(value: TypedDataSet | undefined) { this.controller.dataSet = value; }
 
   get totalRows(): number { return this.controller.totalRows; }

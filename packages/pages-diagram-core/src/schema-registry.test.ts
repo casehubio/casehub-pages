@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { registerPropertySchema, getPropertySchema, clearPropertySchemas } from './schema-registry.js';
 
 describe('schema-registry', () => {
-  beforeEach(() => clearPropertySchemas());
+  beforeEach(() => { clearPropertySchemas(); });
 
   it('returns undefined for unregistered type', () => {
     expect(getPropertySchema('unknown')).toBeUndefined();

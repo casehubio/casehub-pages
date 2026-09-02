@@ -65,7 +65,7 @@ export class DetachController {
     this.eventRelay = new EventRelay(win.document, placeholder);
     this.eventRelay.start();
 
-    win.addEventListener("beforeunload", () => this.reattach());
+    win.addEventListener("beforeunload", () => { this.reattach(); });
 
     this.pollTimer = setInterval(() => {
       if (win.closed && this._isDetached) this.reattach();

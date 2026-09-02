@@ -4,7 +4,7 @@ import {
   MiniMap,
   Controls,
   Background,
-  SelectionMode,
+
   ControlButton,
   useReactFlow,
   useStore,
@@ -116,7 +116,7 @@ function FitTopLeft({ nodes, onFitRef }: { nodes: Node[]; onFitRef: React.Mutabl
     if (contentW <= 0 || contentH <= 0) return;
 
     const zoom = Math.min((vw - pad * 2) / contentW, (vh - pad * 2) / contentH, 1);
-    setViewport({ x: -minX * zoom + pad, y: -minY * zoom + pad, zoom });
+    void setViewport({ x: -minX * zoom + pad, y: -minY * zoom + pad, zoom });
     lastFittedBounds.current = bounds;
     userInteracted.current = false;
   }, [nodeLookup, setViewport, vw, vh, bounds]);

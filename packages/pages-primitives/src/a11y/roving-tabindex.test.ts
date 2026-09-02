@@ -28,7 +28,7 @@ describe('RovingTabindexMixin', () => {
     await el.updateComplete;
   });
 
-  afterEach(() => el.remove());
+  afterEach(() => { el.remove(); });
 
   it('sets first item tabindex to 0 on focus', () => {
     const items = el.shadowRoot!.querySelectorAll('[role="option"]');

@@ -1,5 +1,5 @@
-import { click, fill, select, expand, collapse, assertState, waitFor, resolveTarget } from '../executor/index.js';
-import { injectStyles, highlightElement, typeText, completeTypingNow, isTypingSkipped, resetTypingSkip } from '../executor/visual-feedback.js';
+import { assertState, waitFor, resolveTarget } from '../executor/index.js';
+import { injectStyles, highlightElement, completeTypingNow, isTypingSkipped, resetTypingSkip } from '../executor/visual-feedback.js';
 import { showSpotlight, dismissAllSpotlights } from '../executor/spotlight.js';
 import type { AriaTarget, AriaState } from '@casehubio/pages-primitives';
 import type { EventConnection } from '@casehubio/pages-data';
@@ -325,7 +325,7 @@ function renderModalMarkdown(md: string): HTMLElement {
     tab.textContent = title;
     tab.addEventListener('click', (e) => {
       e.stopPropagation();
-      tabBar.querySelectorAll('.scenario-modal-tab').forEach(t => t.classList.remove('active'));
+      tabBar.querySelectorAll('.scenario-modal-tab').forEach(t => { t.classList.remove('active'); });
       tab.classList.add('active');
       panels.forEach((p, j) => p.classList.toggle('active', j === idx));
     });
@@ -572,7 +572,7 @@ async function progressiveFill(
   const charDelay = Math.max(10, 40 / speed);
   const wordDelay = Math.max(20, 60 / speed);
 
-  const PHASES = [
+  const PHASES: { count: number; chunk: number }[] = [
     { count: 5, chunk: 1 },
     { count: 5, chunk: 1 },
     { count: 6, chunk: 2 },
@@ -610,7 +610,7 @@ async function progressiveFill(
 
   // Remaining phases: word chunks with increasing size
   for (let p = 1; p < PHASES.length && wordIdx < words.length; p++) {
-    const { count, chunk } = PHASES[p];
+    const { count, chunk } = PHASES[p]!;
     const phaseEnd = Math.min(wordIdx + count, words.length);
     while (wordIdx < phaseEnd) {
       if (isTypingSkipped()) { finish(); return; }
@@ -731,7 +731,7 @@ export function createScenarioHandler(
   connection: EventConnection,
   eventTarget: EventTarget,
 ): ScenarioHandler {
-  connection.listen(['scenario:exec']);
+  void connection.listen(['scenario:exec']);
 
   let paused = false;
   let speed = 1.0;
@@ -881,8 +881,8 @@ export function createScenarioHandler(
       const result = executeAriaCommand(cmd, speed, paused, calloutMsPerChar, eventTarget);
       if (result) {
         result
-          .then(() => sendResult(connection, cmd.id, true, null))
-          .catch((err: Error) => sendResult(connection, cmd.id, false, err.message));
+          .then(() => { sendResult(connection, cmd.id, true, null); })
+          .catch((err: Error) => { sendResult(connection, cmd.id, false, err.message); });
       } else {
         sendResult(connection, cmd.id, true, null);
       }
@@ -907,7 +907,7 @@ export function createScenarioHandler(
       eventTarget.removeEventListener('scenario-dispatch', onDispatch);
       eventTarget.removeEventListener('scenario-control', onControl);
       eventTarget.removeEventListener('scenario-callout-speed', onCalloutSpeed);
-      connection.unlisten(['scenario:exec']);
+      void connection.unlisten(['scenario:exec']);
       stepQueue = [];
       paused = false;
       if (resumeResolve) {

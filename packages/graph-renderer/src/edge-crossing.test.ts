@@ -34,7 +34,7 @@ function handleCenter(node: Node, type: 'source' | 'target', edge?: Edge): { x: 
   const edgePos = edge
     ? posFromHandleId(type === 'source' ? edge.sourceHandle : edge.targetHandle)
     : undefined;
-  const data = node.data as Record<string, unknown>;
+  const data = node.data;
   const pos = edgePos
     ?? (type === 'source'
       ? (data._sourceHandlePosition as string | undefined) ?? 'bottom'
@@ -169,11 +169,11 @@ function assertNoEdgeNodeCrossings(nodes: Node[], edges: Edge[]): void {
 
     const p1 = handleCenter(sourceNode, 'source', edge);
     const p2 = handleCenter(targetNode, 'target', edge);
-    const srcHandleDir = posFromHandleId(edge.sourceHandle)
-      ?? (sourceNode.data as Record<string, unknown>)._sourceHandlePosition as string
+    const _srcHandleDir = posFromHandleId(edge.sourceHandle)
+      ?? (sourceNode.data)._sourceHandlePosition as string
       ?? 'bottom';
-    const tgtHandleDir = posFromHandleId(edge.targetHandle)
-      ?? (targetNode.data as Record<string, unknown>)._targetHandlePosition as string
+    const _tgtHandleDir = posFromHandleId(edge.targetHandle)
+      ?? (targetNode.data)._targetHandlePosition as string
       ?? 'top';
 
     const srcParent = sourceNode.parentId;
@@ -241,7 +241,7 @@ function assertNoEdgeEdgeCrossings(nodes: Node[], edges: Edge[]): void {
 function assertShortestEdges(nodes: Node[], edges: Edge[], direction?: string): void {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
-  const positions = ['top', 'bottom', 'left', 'right'] as const;
+  const _positions = ['top', 'bottom', 'left', 'right'] as const;
 
   const outSidesPerNode = new Map<string, Set<string>>();
   const inSidesPerNode = new Map<string, Set<string>>();
@@ -257,7 +257,7 @@ function assertShortestEdges(nodes: Node[], edges: Edge[], direction?: string): 
     const targetNode = nodeMap.get(edge.target);
     if (!sourceNode || !targetNode) continue;
 
-    const currentDist = dist(
+    const _currentDist = dist(
       handleCenter(sourceNode, 'source', edge),
       handleCenter(targetNode, 'target', edge),
     );
@@ -351,7 +351,7 @@ describe('handle position auto-detection', () => {
     const layout = await computeElkLayout(model, { direction: 'DOWN' });
     const { nodes } = toReactFlowGraph(model, layout, undefined, 'DOWN');
     const a = nodes.find(n => n.id === 'a')!;
-    expect((a.data as Record<string, unknown>)._sourceHandlePosition).toBe('bottom');
+    expect((a.data)._sourceHandlePosition).toBe('bottom');
   });
 
   it('RIGHT layout: source handles are right for horizontal flow', async () => {
@@ -365,7 +365,7 @@ describe('handle position auto-detection', () => {
     const layout = await computeElkLayout(model, { direction: 'RIGHT' });
     const { nodes } = toReactFlowGraph(model, layout, undefined, 'RIGHT');
     const a = nodes.find(n => n.id === 'a')!;
-    expect((a.data as Record<string, unknown>)._sourceHandlePosition).toBe('right');
+    expect((a.data)._sourceHandlePosition).toBe('right');
   });
 
   it('DOWN layout: fan-out switch obeys all edge rules', async () => {

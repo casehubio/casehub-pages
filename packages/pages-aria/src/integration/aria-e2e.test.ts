@@ -15,7 +15,7 @@
  * 6. Navigate tree structures (expand/collapse)
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { findByRole, findAllByRole, getAccessibleName, getAriaState } from '../walker/tree-walker.js';
+import { findByRole, findAllByRole, getAccessibleName } from '../walker/tree-walker.js';
 import { click, fill, resolveTarget, assertState } from '../executor/command-executor.js';
 import type { AriaTarget } from '@casehubio/pages-primitives';
 
@@ -47,7 +47,7 @@ function buildAppShell(): HTMLElement {
   const panels = shell.shadowRoot!.querySelectorAll('[role="tabpanel"]');
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+      tabs.forEach(t => { t.setAttribute('aria-selected', 'false'); });
       panels.forEach(p => (p as HTMLElement).hidden = true);
       tab.setAttribute('aria-selected', 'true');
       const panelId = tab.getAttribute('aria-controls')!;
@@ -189,7 +189,7 @@ function buildActivityTree(): HTMLElement {
       e.stopPropagation();
       const expanded = item.getAttribute('aria-expanded') === 'true';
       item.setAttribute('aria-expanded', String(!expanded));
-      const group = item.querySelector('[role="group"]') as HTMLElement | null;
+      const group = item.querySelector('[role="group"]');
       if (group) group.hidden = expanded;
     });
   });

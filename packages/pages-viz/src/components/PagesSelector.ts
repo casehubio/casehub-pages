@@ -125,7 +125,7 @@ export class PagesSelector extends PagesElement<SelectorProps> {
   ): TemplateResult {
     return html`
       <select aria-label=${props.title ?? 'Select value'}
-              @change=${(e: Event) => this._handleDropdownChange(e, columnId, props)}>
+              @change=${(e: Event) => { this._handleDropdownChange(e, columnId, props); }}>
         <option value="-1">All</option>
         ${values.map(({ value, rowIndex }) => {
           const text = value === null ? "" : String(value);
@@ -203,7 +203,7 @@ export class PagesSelector extends PagesElement<SelectorProps> {
              min="${String(min)}"
              max="${String(max)}"
              value="${String(min)}"
-             @change=${(e: Event) => this._handleSliderChange(e, columnId, values, props)}>
+             @change=${(e: Event) => { this._handleSliderChange(e, columnId, values, props); }}>
     `;
   }
 
@@ -272,7 +272,7 @@ export class PagesSelector extends PagesElement<SelectorProps> {
                     type="button"
                     role="option"
                     aria-selected=${isSelected ? 'true' : 'false'}
-                    @click=${() => this._handleChipClick(chipText, rowIndex, columnId, props)}>
+                    @click=${() => { this._handleChipClick(chipText, rowIndex, columnId, props); }}>
               ${chipText}
             </button>
           `;

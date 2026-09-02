@@ -8,7 +8,7 @@ function testFactory(): ContentFactory {
     const el = document.createElement("div");
     el.textContent = `Content: ${entry.key}`;
     el.dataset.testKey = entry.key;
-    return { element: el, dispose: () => el.remove() };
+    return { element: el, dispose: () => { el.remove(); } };
   };
 }
 
@@ -132,7 +132,7 @@ describe("Group", () => {
     });
     group.mount(container);
 
-    expect(() => group.setLayout("accordion")).toThrow(
+    expect(() => { group.setLayout("accordion"); }).toThrow(
       /not allowed by policy/,
     );
   });
@@ -265,7 +265,7 @@ describe("Group", () => {
       });
       group.mount(container);
 
-      expect(() => group.replaceChild("z", { key: "x", label: "X" })).toThrow(/not found/);
+      expect(() => { group.replaceChild("z", { key: "x", label: "X" }); }).toThrow(/not found/);
     });
   });
 
@@ -456,7 +456,7 @@ describe("Group", () => {
       });
       parent.mount(container);
 
-      expect(() => containerizeEntry(entry, parent, factory)).toThrow(/maximum nesting depth/);
+      expect(() => { containerizeEntry(entry, parent, factory); }).toThrow(/maximum nesting depth/);
       parent.dispose();
     });
 
@@ -530,7 +530,7 @@ describe("Group", () => {
         const el = document.createElement("div");
         el.textContent = `Content: ${entry.key}`;
         el.dataset.testKey = entry.key;
-        return { element: el, dispose: () => el.remove() };
+        return { element: el, dispose: () => { el.remove(); } };
       };
     }
 
@@ -596,7 +596,7 @@ describe("Group", () => {
           const el = document.createElement("div");
           el.dataset.childHost = "true";
           e.childContainer.mount(el);
-          return { element: el, dispose: () => e.childContainer!.unmount() };
+          return { element: el, dispose: () => { e.childContainer!.unmount(); } };
         }
         const el = document.createElement("div");
         el.textContent = `Content: ${e.key}`;
@@ -639,7 +639,7 @@ describe("Group", () => {
       });
       group.mount(container);
 
-      expect(() => group.refreshEntry("b")).not.toThrow();
+      expect(() => { group.refreshEntry("b"); }).not.toThrow();
     });
 
     it("refreshEntry works on split strategy", () => {
@@ -655,7 +655,7 @@ describe("Group", () => {
           const el = document.createElement("div");
           el.dataset.splitChild = e.key;
           e.childContainer.mount(el);
-          return { element: el, dispose: () => e.childContainer!.unmount() };
+          return { element: el, dispose: () => { e.childContainer!.unmount(); } };
         }
         const el = document.createElement("div");
         el.textContent = e.key;
@@ -698,7 +698,7 @@ describe("Group", () => {
           const el = document.createElement("div");
           el.dataset.splitChild = e.key;
           e.childContainer.mount(el);
-          return { element: el, dispose: () => e.childContainer!.unmount() };
+          return { element: el, dispose: () => { e.childContainer!.unmount(); } };
         }
         const el = document.createElement("div");
         el.textContent = e.key;

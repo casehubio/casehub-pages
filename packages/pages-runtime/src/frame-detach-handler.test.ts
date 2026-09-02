@@ -57,6 +57,7 @@ describe("createFrameDetachHandler", () => {
       head: mockHead,
       createElement: (tag: string) => document.createElement(tag),
       adoptNode: (el: Node) => el,
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- mock exercises the deprecated shim
       querySelectorAll: document.querySelectorAll.bind(document),
       addEventListener: eventTarget.addEventListener.bind(eventTarget),
       removeEventListener: eventTarget.removeEventListener.bind(eventTarget),

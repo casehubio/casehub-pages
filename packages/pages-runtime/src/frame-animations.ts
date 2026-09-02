@@ -42,14 +42,14 @@ export function injectAnimationStyles(): void {
 export function animateFrameEnter(el: HTMLElement): void {
   if (reducedMotion()) return;
   el.classList.add("frame-entering");
-  el.addEventListener("animationend", () => el.classList.remove("frame-entering"), { once: true });
+  el.addEventListener("animationend", () => { el.classList.remove("frame-entering"); }, { once: true });
 }
 
 export function animateFrameExit(el: HTMLElement): Promise<void> {
   if (reducedMotion()) return Promise.resolve();
   el.classList.add("frame-exiting");
   return new Promise(resolve => {
-    el.addEventListener("animationend", () => resolve(), { once: true });
+    el.addEventListener("animationend", () => { resolve(); }, { once: true });
   });
 }
 

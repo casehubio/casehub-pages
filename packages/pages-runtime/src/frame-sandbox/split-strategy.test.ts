@@ -7,7 +7,7 @@ function testFactory(): ContentFactory {
     const el = document.createElement("div");
     el.textContent = `Content: ${entry.key}`;
     el.dataset.testKey = entry.key;
-    return { element: el, dispose: () => el.remove() };
+    return { element: el, dispose: () => { el.remove(); } };
   };
 }
 

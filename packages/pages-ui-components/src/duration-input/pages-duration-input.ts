@@ -132,7 +132,7 @@ export class PagesDurationInput extends LitElement {
                 ?readonly=${this.readonly}
                 ?disabled=${this.disabled}
                 aria-label="${groupLabel} ${UNIT_NAMES[f]}"
-                @change=${(e: Event) => this._onFieldChange(f, e)}
+                @change=${(e: Event) => { this._onFieldChange(f, e); }}
               />
               <span class="unit-label">${UNIT_LABELS[f]}</span>
             </div>

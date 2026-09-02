@@ -52,7 +52,7 @@ export function buildInitialTokenMap(): TokenMap {
   }
   tokens['radius'] = radius;
 
-  return tokens as unknown as TokenMap;
+  return tokens;
 }
 
 export function runPipeline(preset: PresetConfig): TokenMap {

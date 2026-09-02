@@ -8,26 +8,26 @@ function createTypedRow(
 ): TypedRow {
   const cells: CellValue[] = cols.map((col) =>
     col.value === null
-      ? ({ type: "NULL" } as CellValue)
+      ? ({ type: "NULL" })
       : ({ type: col.type, value: col.value } as CellValue),
   );
   return {
     cells,
     cell(colId) {
       const idx = cols.findIndex((c) => c.id === (colId as string));
-      return idx >= 0 ? cells[idx]! : ({ type: "NULL" } as CellValue);
+      return idx >= 0 ? cells[idx]! : ({ type: "NULL" });
     },
     number(colId) {
       const cell = this.cell(colId);
-      return cell.type === ColumnType.NUMBER ? (cell.value as number) : 0;
+      return cell.type === ColumnType.NUMBER ? (cell.value) : 0;
     },
     text(colId) {
       const cell = this.cell(colId);
-      return cell.type === ColumnType.TEXT ? (cell.value as string) : "";
+      return cell.type === ColumnType.TEXT ? (cell.value) : "";
     },
     date(colId) {
       const cell = this.cell(colId);
-      return cell.type === ColumnType.DATE ? (cell.value as Date) : new Date(0);
+      return cell.type === ColumnType.DATE ? (cell.value) : new Date(0);
     },
   };
 }

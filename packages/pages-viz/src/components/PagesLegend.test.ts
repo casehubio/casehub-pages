@@ -4,7 +4,7 @@ import type { PagesLegend } from "./PagesLegend.js";
 import "./PagesLegend.js";
 
 async function createLegend(props: LegendProps): Promise<PagesLegend> {
-  const el = document.createElement("pages-legend") as PagesLegend;
+  const el = document.createElement("pages-legend");
   el.props = props;
   document.body.appendChild(el);
   await el.updateComplete;

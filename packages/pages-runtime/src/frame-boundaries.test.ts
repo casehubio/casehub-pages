@@ -224,8 +224,8 @@ describe("splitGeometry", () => {
 });
 
 describe("edgeToDirection", () => {
-  it("left → v", () => expect(edgeToDirection("left")).toBe("v"));
-  it("right → v", () => expect(edgeToDirection("right")).toBe("v"));
-  it("top → h", () => expect(edgeToDirection("top")).toBe("h"));
-  it("bottom → h", () => expect(edgeToDirection("bottom")).toBe("h"));
+  it("left → v", () => { expect(edgeToDirection("left")).toBe("v"); });
+  it("right → v", () => { expect(edgeToDirection("right")).toBe("v"); });
+  it("top → h", () => { expect(edgeToDirection("top")).toBe("h"); });
+  it("bottom → h", () => { expect(edgeToDirection("bottom")).toBe("h"); });
 });

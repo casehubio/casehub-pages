@@ -71,7 +71,7 @@ describe('pages-tutorial-host', () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       text: () => Promise.resolve(SLIDES_YAML),
-    }) as unknown as typeof fetch;
+    });
 
     const catalog = el.shadowRoot?.querySelector('pages-tutorial-catalog');
     catalog?.dispatchEvent(new CustomEvent('tutorial-select', {
@@ -100,7 +100,7 @@ describe('pages-tutorial-host', () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       text: () => Promise.resolve(SLIDES_YAML),
-    }) as unknown as typeof fetch;
+    });
 
     const catalog = el.shadowRoot?.querySelector('pages-tutorial-catalog');
     catalog?.dispatchEvent(new CustomEvent('tutorial-select', {
@@ -129,7 +129,7 @@ describe('pages-tutorial-host', () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       text: () => Promise.resolve(SLIDES_YAML),
-    }) as unknown as typeof fetch;
+    });
 
     const catalog = el.shadowRoot?.querySelector('pages-tutorial-catalog');
     catalog?.dispatchEvent(new CustomEvent('tutorial-select', {
@@ -141,7 +141,7 @@ describe('pages-tutorial-host', () => {
     await new Promise(r => setTimeout(r, 100));
     await el.updateComplete;
 
-    const narrative = el.shadowRoot?.querySelector('pages-scenario-narrative') as any;
+    const narrative = el.shadowRoot?.querySelector('pages-scenario-narrative');
     expect(narrative?.htmlMode).toBe('sanitized');
   });
 });
