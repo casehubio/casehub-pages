@@ -582,11 +582,12 @@ export function masterDetail(config: {
   detail: TypedComponent<"host-panel">;
   direction?: "horizontal" | "vertical";
   ratio?: [number, number];
+  selectionKey?: string;
 }): TypedComponent<"split"> {
-  const { master, detail, direction = "horizontal", ratio = [40, 60] } = config;
+  const { master, detail, direction = "horizontal", ratio = [40, 60], selectionKey } = config;
   const wiredMaster = freeze({
     ...master,
-    props: { ...master.props, selection: "single" as const },
+    props: { ...master.props, selection: "single" as const, ...(selectionKey ? { selectionKey } : {}) },
   });
   const masterLookup = master.props!.lookup;
   const wiredDetail = freeze({

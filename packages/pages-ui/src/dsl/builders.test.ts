@@ -1140,5 +1140,36 @@ describe("dockWorkbench builder", () => {
       const result = masterDetail({ master, detail });
       expect(Object.isFrozen(result)).toBe(true);
     });
+
+    it("forwards selectionKey to master table", () => {
+      const master = dataTable({ lookup: { dataSetId: dataSetId("events"), operations: [] } });
+      const detail = hostPanel("event-detail");
+      const result = masterDetail({ master, detail, selectionKey: "id" });
+
+      const masterSlot = result.slots!["0"]![0]!;
+      expect((masterSlot.props as any).selectionKey).toBe("id");
+      expect((masterSlot.props as any).selection).toBe("single");
+    });
+
+    it("omits selectionKey when not provided", () => {
+      const master = dataTable({ lookup: { dataSetId: dataSetId("s"), operations: [] } });
+      const detail = hostPanel("d");
+      const result = masterDetail({ master, detail });
+
+      const masterSlot = result.slots!["0"]![0]!;
+      expect((masterSlot.props as any).selectionKey).toBeUndefined();
+    });
+  });
+
+  describe("dataTable()", () => {
+    it("accepts selectionKey in props", () => {
+      const result = dataTable({
+        selection: "single",
+        selectionKey: "id",
+        lookup: { dataSetId: dataSetId("items"), operations: [] },
+      });
+      expect(result.type).toBe("data-table");
+      expect((result.props as any).selectionKey).toBe("id");
+    });
   });
 });

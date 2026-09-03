@@ -1,7 +1,7 @@
 import type {Component, PermissionContext} from "@casehubio/pages-component";
 import {ALLOW_ALL} from "@casehubio/pages-component";
 import type {DataSetLookup} from "@casehubio/pages-data";
-import type {ColumnId, DataSetId} from "@casehubio/pages-data";
+import type {ColumnId, DataSetId, TypedRow} from "@casehubio/pages-data";
 import {ColumnType} from "@casehubio/pages-data";
 import type {DataSetEntry, DataSetScope} from "./dataset-scope.js";
 import {extendDataSetScope} from "./dataset-scope.js";
@@ -317,6 +317,10 @@ export function createActivationCallback(
         const selection = (component.props as Record<string, unknown> | undefined)?.selection as string | undefined;
         if (selection) {
           (vizEl as unknown as Record<string, unknown>).selection = selection;
+        }
+        const selectionKey = (component.props as Record<string, unknown> | undefined)?.selectionKey as string | undefined;
+        if (selectionKey) {
+          (vizEl as unknown as Record<string, unknown>).getRowKey = (row: TypedRow) => row.text(selectionKey as ColumnId);
         }
       }
 

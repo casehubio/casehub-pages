@@ -101,6 +101,7 @@ export interface DataTableProps extends DataComponentCommon {
   readonly rowStyle?: readonly RowStyleRule[];
   readonly expandable?: ExpandableConfig;
   readonly selection?: SelectionMode;
+  readonly selectionKey?: string;
 }
 
 export type CellDisplay = "text" | "boolean" | "color" | "badge" | "number";
