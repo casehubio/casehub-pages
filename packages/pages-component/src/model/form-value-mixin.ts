@@ -41,10 +41,5 @@ export function FormValueMixin<T extends Constructor>(Base: T) {
     protected abstract validateChildren(): boolean;
   }
 
-  return FormValueHost as unknown as Constructor<FormValueProvider & {
-    collectValue(): unknown;
-    propagateValue(v: unknown): void;
-    validateSelf(): boolean;
-    validateChildren(): boolean;
-  }> & T;
+  return FormValueHost as unknown as Constructor<FormValueProvider> & T;
 }
