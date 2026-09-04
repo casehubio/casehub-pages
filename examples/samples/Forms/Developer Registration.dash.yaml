@@ -149,3 +149,51 @@ pages:
         excludeFields: [id]
         labels:
           workingYears: Years of Experience
+
+- name: New Developer (Nested)
+  components:
+    - type: title
+      properties:
+        text: New Developer (Nested Schema)
+        size: h3
+
+    - type: markdown
+      properties:
+        content: |
+          Rich developer profile with nested address, skills array, and
+          preferred contact method (oneOf). Demonstrates all nested form
+          capabilities in a create-mode form.
+
+    - schema-form:
+        schema:
+          properties:
+            name: { type: string, minLength: 1 }
+            language: { type: string, enum: [Java, TypeScript, Python, Go, Rust, Kotlin, C++] }
+            workingYears: { type: integer, minimum: 0, maximum: 50, title: Years of Experience }
+            address:
+              type: object
+              title: Office Address
+              properties:
+                street: { type: string }
+                city: { type: string }
+                state: { type: string, maxLength: 2 }
+                zip: { type: string }
+              required: [street, city]
+            skills:
+              type: array
+              title: Skills
+              items: { type: string }
+              minItems: 1
+              maxItems: 8
+            certifications:
+              type: array
+              title: Certifications
+              items:
+                type: object
+                properties:
+                  name: { type: string, title: Certification Name }
+                  year: { type: integer, minimum: 2000, maximum: 2030 }
+                required: [name]
+          required: [name, language]
+        excludeFields: [id]
+        forceCreate: true

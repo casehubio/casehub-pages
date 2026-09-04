@@ -120,3 +120,55 @@ pages:
       labels:
         name: Full Name
         startDate: Start Date
+
+- name: Contact Form (Nested)
+  components:
+  - type: title
+    properties:
+      text: Contact Form (Nested Schema)
+      size: h3
+
+  - type: markdown
+    properties:
+      content: |
+        Nested schema form — address as a sub-object, contact method as a
+        discriminated oneOf, and tags as an array. All from one JSON Schema.
+
+  - schema-form:
+      schema:
+        properties:
+          name: { type: string, minLength: 1 }
+          address:
+            type: object
+            title: Address
+            properties:
+              street: { type: string }
+              city: { type: string }
+              zip: { type: string, pattern: "^\\d{5}$" }
+              country: { type: string, enum: [US, UK, DE, FR, JP] }
+            required: [street, city]
+          contactMethod:
+            title: Preferred Contact
+            oneOf:
+              - properties:
+                  type: { const: email }
+                  address: { type: string, title: Email Address }
+                required: [type, address]
+              - properties:
+                  type: { const: phone }
+                  number: { type: string, title: Phone Number }
+                required: [type, number]
+              - properties:
+                  type: { const: slack }
+                  handle: { type: string, title: Slack Handle }
+                required: [type, handle]
+          tags:
+            type: array
+            title: Tags
+            items: { type: string }
+            minItems: 0
+            maxItems: 5
+          notes: { type: string, format: textarea }
+        required: [name]
+      excludeFields: [id]
+      forceCreate: true

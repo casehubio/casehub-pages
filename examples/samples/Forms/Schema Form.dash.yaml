@@ -77,6 +77,58 @@ pages:
                     required: [transactionId, amount]
                   excludeFields: [id]
 
+          Nested:
+            components:
+              - type: markdown
+                properties:
+                  content: |
+                    **Nested schema form** — objects, arrays, arrays of objects,
+                    and discriminated unions. All from one JSON Schema.
+
+              - schema-form:
+                  schema:
+                    properties:
+                      transactionId: { type: string, minLength: 1 }
+                      amount: { type: number, minimum: 0 }
+                      currency: { type: string, enum: [USD, EUR, GBP] }
+                      flagged: { type: boolean }
+                      parties:
+                        type: object
+                        title: Parties
+                        properties:
+                          sender: { type: string }
+                          receiver: { type: string }
+                        required: [sender, receiver]
+                      tags:
+                        type: array
+                        title: Tags
+                        items: { type: string }
+                        minItems: 1
+                        maxItems: 10
+                      linkedTransactions:
+                        type: array
+                        title: Linked Transactions
+                        items:
+                          type: object
+                          properties:
+                            id: { type: string }
+                            amount: { type: number, minimum: 0 }
+                          required: [id]
+                      contactMethod:
+                        title: Contact Method
+                        oneOf:
+                          - properties:
+                              channel: { const: email }
+                              address: { type: string, title: Email Address }
+                            required: [channel, address]
+                          - properties:
+                              channel: { const: phone }
+                              number: { type: string, title: Phone Number }
+                            required: [channel, number]
+                    required: [transactionId, amount]
+                  excludeFields: [id]
+                  forceCreate: true
+
           HTML:
             components:
               - type: markdown
