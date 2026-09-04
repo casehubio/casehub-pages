@@ -36,10 +36,19 @@ function columnToFieldSchema(col: Column, dataset: TypedDataSet): FieldSchema {
 }
 
 export function mapFieldToComponentType(fieldSchema: FieldSchema): string {
-  if (fieldSchema.type === "boolean") return "checkbox";
-  if (fieldSchema.type === "number") return "number-input";
-  if (fieldSchema.type === "integer") return "number-input";
-  if (fieldSchema.type === "string") {
+  if (fieldSchema["x-renderer"]) return String(fieldSchema["x-renderer"]);
+  if (fieldSchema.oneOf) return "variant-group";
+
+  const effectiveType = Array.isArray(fieldSchema.type)
+    ? (fieldSchema.type as readonly string[]).find(t => t !== "null")
+    : fieldSchema.type;
+
+  if (effectiveType === "array" || fieldSchema.items) return "array-group";
+  if (effectiveType === "object" || (fieldSchema.properties && effectiveType !== "string")) return "object-group";
+  if (effectiveType === "boolean") return "checkbox";
+  if (effectiveType === "number") return "number-input";
+  if (effectiveType === "integer") return "number-input";
+  if (effectiveType === "string") {
     if (fieldSchema.enum && fieldSchema.enum.length > 0) return "select";
     if (fieldSchema.format === "date") return "date-input";
     if (fieldSchema.format === "datetime-local") return "datetime-input";

@@ -131,6 +131,12 @@ export type {
 } from "./form-input-types.js";
 export { isFixedOptions } from "./form-input-types.js";
 
+// Form value protocol
+export type { FormValueProvider } from "./form-value-provider.js";
+export { isFormValueProvider } from "./form-value-provider.js";
+export { FormValueMixin } from "./form-value-mixin.js";
+export { resolveSchemaRefs } from "./schema-ref-resolver.js";
+
 // Page props
 export type {
   PageProps,

@@ -220,8 +220,14 @@ Unified data provider interface in `@casehubio/pages-data`. Three core types:
 
 - Auto-derives schema from `TypedDataSet` column metadata (`deriveSchemaFromDataSet`)
 - Field type mapping: number -> number input, date -> date picker, label with enum values -> select dropdown, string -> text input, boolean -> checkbox
-- Validation support: `required`, `pattern`, `minimum`/`maximum`, `minLength`/`maxLength`
-- `validateOnBlur` mode for inline validation
+- **Nested schema support:** `type: "object"` properties render as `pages-object-group` fieldsets, `type: "array"` properties render as `pages-array-group` lists with add/remove/reorder, `oneOf` with discriminator properties render as `pages-variant-group` variant selectors
+- **Recursive nesting:** objects within objects, arrays of objects, and arbitrary depth
+- **`$ref` resolution:** local `#/$defs/` and `#/definitions/` references resolved before rendering (cycle detection for circular refs)
+- **Custom renderers:** `x-renderer` schema extension maps to custom web components implementing `FormValueProvider`
+- **`FormValueProvider` protocol:** unified interface (`currentValue`, `value`, `error`, `validate()`) for all form components — leaf and composite
+- **`FormValueMixin`:** shared mixin base for composite components, following the platform mixin convention
+- Validation support: `required`, `pattern`, `minimum`/`maximum`, `minLength`/`maxLength`, `exclusiveMinimum`/`exclusiveMaximum`, `minItems`/`maxItems`, `uniqueItems`
+- `validateOnBlur` mode for inline validation (works recursively through nested composites)
 - Display/edit mode toggle
 - Submit bar with action request emission
 - Uses standalone `@casehubio/pages-ui-components` for input/select/checkbox/textarea

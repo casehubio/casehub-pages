@@ -3,6 +3,7 @@ import { toTypedDataSet, ColumnType } from "@casehubio/pages-data";
 import type { ColumnId, DataSet } from "@casehubio/pages-data";
 import type { PagesSchemaForm } from "./PagesSchemaForm.js";
 import "./PagesSchemaForm.js";
+import "./PagesObjectGroup.js";
 
 function makeDataSet(
   columns: Array<[string, string]>,
@@ -543,5 +544,140 @@ describe("PagesSchemaForm — fields prop", () => {
 
     const children = form.shadowRoot!.querySelectorAll("pages-input");
     expect(children.length).toBe(2);
+  });
+});
+
+describe("PagesSchemaForm — nested objects", () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    container.remove();
+  });
+
+  it("renders pages-object-group for type: object property", async () => {
+    const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      schema: {
+        properties: {
+          name: { type: "string" },
+          address: {
+            type: "object",
+            properties: {
+              street: { type: "string" },
+              city: { type: "string" },
+            },
+          },
+        },
+      },
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    expect(form.shadowRoot!.querySelector("pages-input")).not.toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-object-group")).not.toBeNull();
+  });
+
+  it("currentValue includes nested object values", async () => {
+    const ds = makeDataSet([], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      schema: {
+        properties: {
+          name: { type: "string" },
+          address: {
+            type: "object",
+            properties: {
+              street: { type: "string" },
+              city: { type: "string" },
+            },
+          },
+        },
+      },
+      forceCreate: true,
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
+    textInput.value = "Jane";
+
+    const objectGroup = form.shadowRoot!.querySelector("pages-object-group") as any;
+    const innerInputs = objectGroup.shadowRoot!.querySelectorAll("pages-input");
+    (innerInputs[0] as any).value = "123 Main";
+    (innerInputs[1] as any).value = "NYC";
+
+    const value = form.currentValue;
+    expect(value.name).toBe("Jane");
+    expect((value.address as any).street).toBe("123 Main");
+    expect((value.address as any).city).toBe("NYC");
+  });
+
+  it("resolves $ref before rendering", async () => {
+    const ds = makeDataSet([], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      schema: {
+        $defs: {
+          address: {
+            type: "object",
+            properties: { street: { type: "string" } },
+          },
+        },
+        properties: {
+          home: { $ref: "#/$defs/address" },
+        },
+      },
+      forceCreate: true,
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const objectGroup = form.shadowRoot!.querySelector("pages-object-group");
+    expect(objectGroup).not.toBeNull();
+  });
+
+  it("extractRecord parses JSON columns for nested types", async () => {
+    const ds = makeDataSet(
+      [["name", "TEXT"], ["address", "TEXT"]],
+      [["Alice", '{"street":"123 Main","city":"NYC"}']],
+    );
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      schema: {
+        properties: {
+          name: { type: "string" },
+          address: {
+            type: "object",
+            properties: { street: { type: "string" }, city: { type: "string" } },
+          },
+        },
+      },
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await form.updateComplete;
+
+    const objectGroup = form.shadowRoot!.querySelector("pages-object-group") as any;
+    expect(objectGroup).not.toBeNull();
+    const groupValue = objectGroup.currentValue;
+    expect(groupValue.street).toBe("123 Main");
+    expect(groupValue.city).toBe("NYC");
   });
 });

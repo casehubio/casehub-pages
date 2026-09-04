@@ -82,3 +82,51 @@ describe("FormScopeState", () => {
     expect(el.error).toBeUndefined();
   });
 });
+
+describe("FormScopeState — composite validation", () => {
+  it("calls validate() on FormValueProvider-conformant elements", () => {
+    const schema = {
+      properties: {
+        address: {
+          type: "object" as const,
+          properties: { street: { type: "string" as const } },
+          required: ["street"] as readonly string[],
+        },
+      },
+    };
+    const state = new FormScopeState(schema, false);
+
+    let validateCalled = false;
+    const mockComposite = {
+      currentValue: { street: "" },
+      value: {},
+      error: "Required" as string | undefined,
+      validate: () => { validateCalled = true; return false; },
+      isConnected: true,
+    } as unknown as HTMLElement;
+
+    state.registerField("address", mockComposite, "object-group");
+    const errors = state.validateAll();
+
+    expect(validateCalled).toBe(true);
+    expect(errors.address).toBeDefined();
+  });
+
+  it("uses validateField for non-FormValueProvider elements", () => {
+    const schema = {
+      properties: { name: { type: "string" as const } },
+      required: ["name"] as readonly string[],
+    };
+    const state = new FormScopeState(schema, false);
+
+    const mockInput = {
+      value: "",
+      isConnected: true,
+    } as unknown as HTMLElement;
+
+    state.registerField("name", mockInput, "input");
+    const errors = state.validateAll();
+
+    expect(errors.name).toBeDefined();
+  });
+});

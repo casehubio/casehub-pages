@@ -4,7 +4,7 @@ import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 import type { PagesFormInput } from "./PagesFormInput.js";
 import type { SchemaFormProps, FieldSchema } from "@casehubio/pages-component";
-import { STANDALONE_TYPES, readFieldValue, setFieldError } from "@casehubio/pages-component";
+import { STANDALONE_TYPES, readFieldValue, setFieldError, resolveSchemaRefs, isFormValueProvider } from "@casehubio/pages-component";
 import {
   deriveSchemaFromDataSet,
   mapFieldToComponentType,
@@ -19,6 +19,11 @@ import "@casehubio/pages-ui-components/textarea";
 import "@casehubio/pages-ui-components/number-input";
 import "@casehubio/pages-ui-components/date-input";
 import "@casehubio/pages-ui-components/datetime-input";
+import "./PagesObjectGroup.js";
+import "./PagesArrayGroup.js";
+import "./PagesVariantGroup.js";
+
+const COMPOSITE_TYPES = new Set(["object-group", "array-group", "variant-group"]);
 
 export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: DataSetLookup }> {
   private _children: Map<string, HTMLElement> = new Map();
@@ -84,7 +89,9 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     const record: Record<string, unknown> = {};
     for (const [field, child] of this._children) {
       const ct = this._childTypes.get(field) ?? "input";
-      record[field] = readFieldValue(child, ct);
+      record[field] = isFormValueProvider(child)
+        ? child.currentValue
+        : readFieldValue(child, ct);
     }
     return record;
   }
@@ -97,7 +104,9 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     props: SchemaFormProps & { lookup?: DataSetLookup },
     dataset: TypedDataSet,
   ): TemplateResult {
-    const schema = props.schema ?? deriveSchemaFromDataSet(dataset);
+    const schema = props.schema
+      ? resolveSchemaRefs(props.schema)
+      : deriveSchemaFromDataSet(dataset);
     this._resolvedSchema = schema;
     const schemaProps = schema.properties ?? {};
     const requiredSet = new Set(schema.required ?? []);
@@ -127,11 +136,35 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       if (!child || child.tagName.toLowerCase() !== tagName) {
         child = document.createElement(tagName);
         this._children.set(field, child);
+        if (fieldSchema["x-renderer"] && !isFormValueProvider(child)) {
+          console.warn(
+            `pages-schema-form: custom renderer <${child.tagName.toLowerCase()}> does not implement FormValueProvider ` +
+            `(missing currentValue getter or validate() method). Values may be undefined and validation skipped.`,
+          );
+        }
       }
       this._childTypes.set(field, componentType);
 
+      const isComposite = COMPOSITE_TYPES.has(componentType);
       const isStandalone = STANDALONE_TYPES.has(componentType);
-      if (isStandalone) {
+      if (isComposite) {
+        (child as any).schema = fieldSchema;
+        (child as any).label = label;
+        (child as any).fieldName = field;
+        (child as any).editable = !isDisplay && this._editable;
+        (child as any).validateOnBlur = props.validateOnBlur ?? false;
+        (child as any).required = requiredSet.has(field);
+        if (dataset.rows.length > 0) {
+          const row = dataset.rows[0]!;
+          try {
+            const cell = row.cell(field as ColumnId);
+            if (cell.type !== "NULL") {
+              const raw = String(cell.value);
+              try { (child as any).value = JSON.parse(raw); } catch { /* not JSON */ }
+            }
+          } catch { /* column not found */ }
+        }
+      } else if (isStandalone) {
         (child as any).label = label;
         (child as any).disabled = isDisplay || !this._editable;
         (child as any).required = requiredSet.has(field);
@@ -288,39 +321,47 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     this.setChildError(child, ct, error ?? undefined);
   };
 
+  validate(): boolean {
+    if (!this._resolvedSchema?.properties) return true;
+    const requiredSet = new Set(this._resolvedSchema.required ?? []);
+    let allValid = true;
+    for (const [field, child] of this._children) {
+      if (isFormValueProvider(child)) {
+        if (!child.validate()) allValid = false;
+      } else {
+        const fieldSchema = this._resolvedSchema.properties[field];
+        if (!fieldSchema) continue;
+        const ct = this._childTypes.get(field) ?? "input";
+        const value = readFieldValue(child, ct);
+        const error = validateField(fieldSchema, value, requiredSet.has(field));
+        if (error) {
+          this.setChildError(child, ct, error);
+          allValid = false;
+        } else {
+          this.setChildError(child, ct, undefined);
+        }
+      }
+    }
+    return allValid;
+  }
+
   submit(): Record<string, unknown> | null {
     if (!this._resolvedSchema?.properties) return null;
 
-    const requiredSet = new Set(this._resolvedSchema.required ?? []);
-    const errors: Record<string, string> = {};
-    const record: Record<string, unknown> = {};
-
-    for (const [field, child] of this._children) {
-      const fieldSchema = this._resolvedSchema.properties[field];
-      if (!fieldSchema) continue;
-
-      const ct = this._childTypes.get(field) ?? "input";
-      const value = readFieldValue(child, ct);
-      record[field] = value;
-
-      const error = validateField(fieldSchema, value, requiredSet.has(field));
-      if (error) {
-        errors[field] = error;
-        this.setChildError(child, ct, error);
-      } else {
-        this.setChildError(child, ct, undefined);
+    const allValid = this.validate();
+    if (!allValid) {
+      let errorCount = 0;
+      for (const [, child] of this._children) {
+        if (isFormValueProvider(child) && child.error !== undefined) errorCount++;
       }
-    }
-
-    if (Object.keys(errors).length > 0) {
-      const count = Object.keys(errors).length;
       this.announce(
-        `${String(count)} validation error${count > 1 ? "s" : ""} — please correct before submitting`,
+        `${String(errorCount || 1)} validation error${errorCount !== 1 ? "s" : ""} — please correct before submitting`,
         "assertive",
       );
       return null;
     }
 
+    const record = this.currentValue;
     this.dispatchEvent(
       new CustomEvent("pages-record-create", {
         bubbles: true, composed: true,

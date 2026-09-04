@@ -1,4 +1,4 @@
-import { validateField, readFieldValue, setFieldError } from "@casehubio/pages-component";
+import { validateField, readFieldValue, setFieldError, isFormValueProvider } from "@casehubio/pages-component";
 import type { FieldSchema } from "@casehubio/pages-component";
 
 interface RegisteredField {
@@ -42,20 +42,26 @@ export class FormScopeState {
 
   validateAll(): Record<string, string> {
     this.pruneDisconnected();
-    if (!this.schema?.properties) return {};
-    const requiredSet = new Set(this.schema.required ?? []);
+    const requiredSet = new Set(this.schema?.required ?? []);
     const errors: Record<string, string> = {};
 
     for (const [field, entry] of this.fields) {
-      const fieldSchema = this.schema.properties[field];
-      if (!fieldSchema) continue;
-      const value = readFieldValue(entry.element, entry.componentType);
-      const error = validateField(fieldSchema, value, requiredSet.has(field));
-      if (error) {
-        errors[field] = error;
-        setFieldError(entry.element, entry.componentType, error);
+      if (isFormValueProvider(entry.element)) {
+        if (!entry.element.validate()) {
+          errors[field] = entry.element.error ?? "Validation failed";
+        }
       } else {
-        setFieldError(entry.element, entry.componentType, undefined);
+        if (!this.schema?.properties) continue;
+        const fieldSchema = this.schema.properties[field];
+        if (!fieldSchema) continue;
+        const value = readFieldValue(entry.element, entry.componentType);
+        const error = validateField(fieldSchema, value, requiredSet.has(field));
+        if (error) {
+          errors[field] = error;
+          setFieldError(entry.element, entry.componentType, error);
+        } else {
+          setFieldError(entry.element, entry.componentType, undefined);
+        }
       }
     }
     return errors;

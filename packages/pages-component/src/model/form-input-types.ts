@@ -77,6 +77,9 @@ export interface FieldSchema {
   readonly items?: FieldSchema;
   readonly const?: string | number | boolean | null;
   readonly oneOf?: readonly FieldSchema[];
+  readonly $ref?: string;
+  readonly $defs?: Readonly<Record<string, FieldSchema>>;
+  readonly definitions?: Readonly<Record<string, FieldSchema>>;
   readonly [key: `x-${string}`]: unknown;
 }
 

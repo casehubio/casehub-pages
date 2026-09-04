@@ -28,6 +28,12 @@ export function validateField(
     if (schema.maximum != null && value > schema.maximum) {
       return `Must be at most ${schema.maximum}`;
     }
+    if (schema.exclusiveMinimum != null && value <= schema.exclusiveMinimum) {
+      return `Must be greater than ${schema.exclusiveMinimum}`;
+    }
+    if (schema.exclusiveMaximum != null && value >= schema.exclusiveMaximum) {
+      return `Must be less than ${schema.exclusiveMaximum}`;
+    }
   }
   return null;
 }
