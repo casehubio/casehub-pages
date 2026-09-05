@@ -5,6 +5,28 @@ import type { PagesSchemaForm } from "./PagesSchemaForm.js";
 import "./PagesSchemaForm.js";
 import "./PagesObjectGroup.js";
 
+async function awaitForm(form: PagesSchemaForm): Promise<void> {
+  await form.updateComplete;
+  await new Promise(r => setTimeout(r, 0));
+  const palette = form.shadowRoot?.querySelector("pages-property-palette");
+  if (palette) {
+    await (palette as any).updateComplete;
+    await new Promise(r => setTimeout(r, 0));
+  }
+}
+
+function queryField(form: PagesSchemaForm, selector: string): Element | null {
+  const palette = form.shadowRoot?.querySelector("pages-property-palette");
+  return palette?.shadowRoot?.querySelector(selector) ?? form.shadowRoot!.querySelector(selector);
+}
+
+function queryFields(form: PagesSchemaForm, selector: string): Element[] {
+  const palette = form.shadowRoot?.querySelector("pages-property-palette");
+  const fromPalette = palette?.shadowRoot?.querySelectorAll(selector);
+  if (fromPalette && fromPalette.length > 0) return [...fromPalette];
+  return [...form.shadowRoot!.querySelectorAll(selector)];
+}
+
 function makeDataSet(
   columns: Array<[string, string]>,
   data: (string | number | null)[][],
@@ -43,12 +65,12 @@ describe("PagesSchemaForm — auto-derive schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    expect(form.shadowRoot!.querySelector("pages-input")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-number-input")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-select")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-date-input")).not.toBeNull();
+    expect(queryField(form, "pages-input")).not.toBeNull();
+    expect(queryField(form, "pages-number-input")).not.toBeNull();
+    expect(queryField(form, "pages-select")).not.toBeNull();
+    expect(queryField(form, "pages-date-input")).not.toBeNull();
   });
 
   it("excludeFields hides specified fields", async () => {
@@ -62,9 +84,9 @@ describe("PagesSchemaForm — auto-derive schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const allInputs = form.shadowRoot!.querySelectorAll(
+    const allInputs = queryFields(form,
       "pages-input, pages-number-input, pages-select, pages-checkbox, pages-date-input, pages-textarea",
     );
     expect(allInputs.length).toBe(1);
@@ -92,8 +114,8 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-input")).not.toBeNull();
+    await awaitForm(form);
+    expect(queryField(form, "pages-input")).not.toBeNull();
   });
 
   it("maps number to number-input", async () => {
@@ -104,8 +126,8 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-number-input")).not.toBeNull();
+    await awaitForm(form);
+    expect(queryField(form, "pages-number-input")).not.toBeNull();
   });
 
   it("maps string with enum to dropdown", async () => {
@@ -118,8 +140,8 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-select")).not.toBeNull();
+    await awaitForm(form);
+    expect(queryField(form, "pages-select")).not.toBeNull();
   });
 
   it("maps boolean to checkbox", async () => {
@@ -130,8 +152,8 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-checkbox")).not.toBeNull();
+    await awaitForm(form);
+    expect(queryField(form, "pages-checkbox")).not.toBeNull();
   });
 
   it("maps format:date to date-picker", async () => {
@@ -142,8 +164,8 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-date-input")).not.toBeNull();
+    await awaitForm(form);
+    expect(queryField(form, "pages-date-input")).not.toBeNull();
   });
 
   it("maps format:textarea to textarea", async () => {
@@ -154,8 +176,8 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-textarea")).not.toBeNull();
+    await awaitForm(form);
+    expect(queryField(form, "pages-textarea")).not.toBeNull();
   });
 
   it("maps integer to number-input with step=1", async () => {
@@ -166,8 +188,8 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    const numInput = form.shadowRoot!.querySelector("pages-number-input");
+    await awaitForm(form);
+    const numInput = queryField(form, "pages-number-input");
     expect(numInput).not.toBeNull();
   });
 
@@ -179,9 +201,9 @@ describe("PagesSchemaForm — explicit schema", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-textarea")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-input")).toBeNull();
+    await awaitForm(form);
+    expect(queryField(form, "pages-textarea")).not.toBeNull();
+    expect(queryField(form, "pages-input")).toBeNull();
   });
 });
 
@@ -205,9 +227,9 @@ describe("PagesSchemaForm — field customization", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const inputs = form.shadowRoot!.querySelectorAll("pages-input");
+    const inputs = queryFields(form, "pages-input");
     expect(inputs.length).toBe(3);
     expect((inputs[0] as any).label).toBe("C");
     expect((inputs[1] as any).label).toBe("A");
@@ -222,9 +244,9 @@ describe("PagesSchemaForm — field customization", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const numInput = form.shadowRoot!.querySelector("pages-number-input") as any;
+    const numInput = queryField(form, "pages-number-input") as any;
     expect(numInput.label).toBe("Years of Experience");
   });
 });
@@ -249,15 +271,15 @@ describe("PagesSchemaForm — events and data flow", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
+    const textInput = queryField(form, "pages-input") as any;
     expect(textInput).not.toBeNull();
     expect(textInput.value).toBe("Alice");
     expect(textInput.label).toBe("Name");
   });
 
-  it("display mode sets children as not editable", async () => {
+  it("display mode sets children as readonly", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
     const form = document.createElement("pages-schema-form") as PagesSchemaForm;
     form.props = { mode: "display" };
@@ -265,10 +287,10 @@ describe("PagesSchemaForm — events and data flow", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
-    expect(textInput.disabled).toBe(true);
+    const textInput = queryField(form, "pages-input") as any;
+    expect(textInput.readonly).toBe(true);
   });
 });
 
@@ -306,9 +328,9 @@ describe("PagesSchemaForm — create mode", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
+    const textInput = queryField(form, "pages-input") as any;
     textInput.value = "NewName";
 
     const events: CustomEvent[] = [];
@@ -365,17 +387,13 @@ describe("PagesSchemaForm — create mode", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const input = form.shadowRoot!.querySelector("pages-input") as any;
+    const input = queryField(form, "pages-input") as any;
     expect(input).not.toBeNull();
     input.value = "";
-
-    input.dispatchEvent(new CustomEvent("pages-field-change", {
-      bubbles: true, composed: true,
-      detail: { field: "name", value: "", committed: true },
-    }));
-    await form.updateComplete;
+    input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    await awaitForm(form);
 
     expect(input.error).toBeDefined();
     expect(input.error.toLowerCase()).toContain("required");
@@ -392,23 +410,17 @@ describe("PagesSchemaForm — create mode", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const input = form.shadowRoot!.querySelector("pages-input") as any;
+    const input = queryField(form, "pages-input") as any;
     input.value = "";
-    input.dispatchEvent(new CustomEvent("pages-field-change", {
-      bubbles: true, composed: true,
-      detail: { field: "name", value: "", committed: true },
-    }));
-    await form.updateComplete;
+    input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    await awaitForm(form);
     expect(input.error).toBeDefined();
 
     input.value = "Alice";
-    input.dispatchEvent(new CustomEvent("pages-field-change", {
-      bubbles: true, composed: true,
-      detail: { field: "name", value: "Alice", committed: true },
-    }));
-    await form.updateComplete;
+    input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    await awaitForm(form);
     expect(input.error).toBeUndefined();
   });
 
@@ -423,15 +435,12 @@ describe("PagesSchemaForm — create mode", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const input = form.shadowRoot!.querySelector("pages-input") as any;
+    const input = queryField(form, "pages-input") as any;
     input.value = "";
-    input.dispatchEvent(new CustomEvent("pages-field-change", {
-      bubbles: true, composed: true,
-      detail: { field: "name", value: "", committed: false },
-    }));
-    await form.updateComplete;
+    input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    await awaitForm(form);
     expect(input.error).toBeUndefined();
   });
 
@@ -500,7 +509,8 @@ describe("PagesSchemaForm — fieldsOnly mode", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
+    await new Promise(r => setTimeout(r, 10));
 
     expect(events.length).toBe(2);
     expect(events[0]!.detail.field).toBe("name");
@@ -540,9 +550,9 @@ describe("PagesSchemaForm — fields prop", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const children = form.shadowRoot!.querySelectorAll("pages-input");
+    const children = queryFields(form, "pages-input");
     expect(children.length).toBe(2);
   });
 });
@@ -580,10 +590,10 @@ describe("PagesSchemaForm — nested objects", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    expect(form.shadowRoot!.querySelector("pages-input")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-object-group")).not.toBeNull();
+    expect(queryField(form, "pages-input")).not.toBeNull();
+    expect(queryField(form, "pages-object-group")).not.toBeNull();
   });
 
   it("currentValue includes nested object values", async () => {
@@ -608,12 +618,12 @@ describe("PagesSchemaForm — nested objects", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
+    const textInput = queryField(form, "pages-input") as any;
     textInput.value = "Jane";
 
-    const objectGroup = form.shadowRoot!.querySelector("pages-object-group") as any;
+    const objectGroup = queryField(form, "pages-object-group") as any;
     const innerInputs = objectGroup.shadowRoot!.querySelectorAll("pages-input");
     (innerInputs[0] as any).value = "123 Main";
     (innerInputs[1] as any).value = "NYC";
@@ -645,9 +655,9 @@ describe("PagesSchemaForm — nested objects", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const objectGroup = form.shadowRoot!.querySelector("pages-object-group");
+    const objectGroup = queryField(form, "pages-object-group");
     expect(objectGroup).not.toBeNull();
   });
 
@@ -672,9 +682,9 @@ describe("PagesSchemaForm — nested objects", () => {
     container.appendChild(form);
     await form.updateComplete;
     form.dataSet = ds;
-    await form.updateComplete;
+    await awaitForm(form);
 
-    const objectGroup = form.shadowRoot!.querySelector("pages-object-group") as any;
+    const objectGroup = queryField(form, "pages-object-group") as any;
     expect(objectGroup).not.toBeNull();
     const groupValue = objectGroup.currentValue;
     expect(groupValue.street).toBe("123 Main");

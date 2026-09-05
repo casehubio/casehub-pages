@@ -1,37 +1,30 @@
-import { html, css, type TemplateResult } from "lit";
+import { html, css, nothing, type TemplateResult } from "lit";
 import { PagesElement } from "../base/PagesElement.js";
 import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
-import type { PagesFormInput } from "./PagesFormInput.js";
 import type { SchemaFormProps, FieldSchema } from "@casehubio/pages-component";
-import { STANDALONE_TYPES, readFieldValue, setFieldError, resolveSchemaRefs, isFormValueProvider } from "@casehubio/pages-component";
+import { resolveSchemaRefs, isFormValueProvider } from "@casehubio/pages-component";
+import { validateField } from "./schema-types.js";
 import {
   deriveSchemaFromDataSet,
   mapFieldToComponentType,
-  validateField,
 } from "./schema-types.js";
 import { cellToRaw } from "../base/cell-extract.js";
+import type { PropertyPaletteSource, EditorResolver, FieldRenderContext } from "@casehubio/pages-property-palette/types";
+import type { PagesPropertyPalette } from "@casehubio/pages-property-palette/palette";
 
-import "@casehubio/pages-ui-components/input";
-import "@casehubio/pages-ui-components/select";
-import "@casehubio/pages-ui-components/checkbox";
-import "@casehubio/pages-ui-components/textarea";
-import "@casehubio/pages-ui-components/number-input";
-import "@casehubio/pages-ui-components/date-input";
-import "@casehubio/pages-ui-components/datetime-input";
+import "@casehubio/pages-property-palette";
 import "./PagesObjectGroup.js";
 import "./PagesArrayGroup.js";
 import "./PagesVariantGroup.js";
 
-const COMPOSITE_TYPES = new Set(["object-group", "array-group", "variant-group"]);
-
 export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: DataSetLookup }> {
-  private _children: Map<string, HTMLElement> = new Map();
-  private _childTypes: Map<string, string> = new Map();
+  private _dataMirror: Record<string, unknown> = {};
   private _resolvedSchema: FieldSchema | null = null;
   private _editable = false;
   private _fieldsOnly = false;
   private _liveRegion: HTMLElement | null = null;
+  private _compositeRefs: Map<string, HTMLElement> = new Map();
 
   static override styles = css`
       :host { display: block; font-family: var(--pages-font-family, system-ui, sans-serif); }
@@ -44,6 +37,31 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       }
       .submit-btn:hover { opacity: 0.9; }
   `;
+
+  private _resolver: EditorResolver = (schema: FieldSchema) => {
+    if (schema["x-renderer"]) {
+      return { kind: "tag", tag: `pages-${String(schema["x-renderer"])}` };
+    }
+    if (schema.oneOf) {
+      return { kind: "render", render: (ctx) => this._renderComposite("variant-group", ctx) };
+    }
+    const effectiveType = Array.isArray(schema.type)
+      ? (schema.type as readonly string[]).find(t => t !== "null")
+      : schema.type;
+    if (effectiveType === "array" || schema.items) {
+      return { kind: "render", render: (ctx) => this._renderComposite("array-group", ctx) };
+    }
+    if (effectiveType === "object" || (schema.properties && effectiveType !== "string")) {
+      return { kind: "render", render: (ctx) => this._renderComposite("object-group", ctx) };
+    }
+    if (effectiveType === "string" && schema.format === "textarea") {
+      return { kind: "tag", tag: "pages-textarea" };
+    }
+    if (effectiveType === "string" && schema.format === "datetime-local") {
+      return { kind: "tag", tag: "pages-datetime-input" };
+    }
+    return undefined;
+  };
 
   set editable(value: boolean) {
     this._editable = value;
@@ -86,18 +104,30 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
   }
 
   get currentValue(): Record<string, unknown> {
-    const record: Record<string, unknown> = {};
-    for (const [field, child] of this._children) {
-      const ct = this._childTypes.get(field) ?? "input";
-      record[field] = isFormValueProvider(child)
-        ? child.currentValue
-        : readFieldValue(child, ct);
+    const record: Record<string, unknown> = { ...this._dataMirror };
+    if (this._palette) {
+      for (const field of Object.keys(this._resolvedSchema?.properties ?? {})) {
+        if (this._compositeRefs.has(field)) continue;
+        const el = this._palette.getFieldElement(field) as any;
+        if (el) {
+          if (el.tagName.toLowerCase() === "pages-checkbox") {
+            record[field] = el.checked;
+          } else if (el.value !== undefined) {
+            record[field] = el.value;
+          }
+        }
+      }
+    }
+    for (const [field, child] of this._compositeRefs) {
+      if (isFormValueProvider(child)) {
+        record[field] = child.currentValue;
+      }
     }
     return record;
   }
 
-  private setChildError(child: HTMLElement, componentType: string, error: string | undefined): void {
-    setFieldError(child, componentType, error);
+  private get _palette(): PagesPropertyPalette | null {
+    return this.shadowRoot?.querySelector("pages-property-palette") as PagesPropertyPalette | null;
   }
 
   protected override renderContent(
@@ -108,239 +138,160 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       ? resolveSchemaRefs(props.schema)
       : deriveSchemaFromDataSet(dataset);
     this._resolvedSchema = schema;
-    const schemaProps = schema.properties ?? {};
-    const requiredSet = new Set(schema.required ?? []);
 
-    const excludeSet = new Set(props.excludeFields ?? []);
-    const fieldOrder = props.fieldOrder ?? Object.keys(schemaProps);
-    const fields = props.fields
-      ? props.fields.filter((f) => f in schemaProps)
-      : fieldOrder.filter((f) => !excludeSet.has(f) && f in schemaProps);
+    const enrichedSchema = this._enrichSchema(schema, props, dataset);
+    const sourceData = this._extractData(enrichedSchema, dataset);
+    this._dataMirror = { ...sourceData };
 
     const isCreateMode = props.forceCreate === true || dataset.rows.length === 0;
     const isDisplay = props.mode === "display" || !this._editable;
 
-    const staleKeys = new Set(this._children.keys());
-
-    for (const field of fields) {
-      staleKeys.delete(field);
-      const fieldSchema = schemaProps[field]!;
-      const componentType = mapFieldToComponentType(fieldSchema);
-      const tagName = `pages-${componentType}`;
-
-      const label = props.labels?.[field]
-        ?? fieldSchema.title
-        ?? field.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
-
-      let child = this._children.get(field);
-      if (!child || child.tagName.toLowerCase() !== tagName) {
-        child = document.createElement(tagName);
-        this._children.set(field, child);
-        if (fieldSchema["x-renderer"] && !isFormValueProvider(child)) {
-          console.warn(
-            `pages-schema-form: custom renderer <${child.tagName.toLowerCase()}> does not implement FormValueProvider ` +
-            `(missing currentValue getter or validate() method). Values may be undefined and validation skipped.`,
-          );
-        }
-      }
-      this._childTypes.set(field, componentType);
-
-      const isComposite = COMPOSITE_TYPES.has(componentType);
-      const isStandalone = STANDALONE_TYPES.has(componentType);
-      if (isComposite) {
-        (child as any).schema = fieldSchema;
-        (child as any).label = label;
-        (child as any).fieldName = field;
-        (child as any).editable = !isDisplay && this._editable;
-        (child as any).validateOnBlur = props.validateOnBlur ?? false;
-        (child as any).required = requiredSet.has(field);
-        if (dataset.rows.length > 0) {
-          const row = dataset.rows[0]!;
-          try {
-            const cell = row.cell(field as ColumnId);
-            if (cell.type !== "NULL") {
-              const raw = String(cell.value);
-              try { (child as any).value = JSON.parse(raw); } catch { /* not JSON */ }
-            }
-          } catch { /* column not found */ }
-        }
-      } else if (isStandalone) {
-        (child as any).label = label;
-        (child as any).disabled = isDisplay || !this._editable;
-        (child as any).required = requiredSet.has(field);
-        if (dataset.rows.length > 0) {
-          const row = dataset.rows[0]!;
-          try {
-            const cell = row.cell(field as ColumnId);
-            if (cell.type !== "NULL") {
-              if (componentType === "checkbox") {
-                const v = typeof cell.value === "boolean" ? cell.value : String(cell.value).toLowerCase() === "true";
-                (child as any).checked = v;
-              } else if (componentType === "number-input") {
-                const num = typeof cell.value === "number" ? cell.value : parseFloat(String(cell.value));
-                (child as any).value = isNaN(num) ? null : num;
-              } else {
-                (child as any).value = String(cell.value);
-              }
-            }
-          } catch { /* column not found */ }
-        }
-        if (componentType === "select") {
-          const childProps = this.buildChildProps(field, fieldSchema, componentType, label, dataset);
-          const opts = childProps.options as { values?: string[] } | undefined;
-          if (opts?.values) {
-            (child as any).options = opts.values.map((v: string) => ({ value: v, label: v }));
-          }
-        }
-        if (componentType === "input") {
-          if (fieldSchema.maxLength !== undefined) (child as any).maxlength = fieldSchema.maxLength;
-          const ph = (fieldSchema['x-placeholder'] ?? (fieldSchema as Record<string, unknown>)['placeholder']) as string | undefined;
-          if (ph !== undefined) (child as any).placeholder = ph;
-        }
-        if (componentType === "textarea") {
-          if (fieldSchema.maxLength !== undefined) (child as any).maxlength = fieldSchema.maxLength;
-        }
-        if (componentType === "number-input") {
-          if (fieldSchema.minimum !== undefined) (child as any).min = fieldSchema.minimum;
-          if (fieldSchema.maximum !== undefined) (child as any).max = fieldSchema.maximum;
-          if (fieldSchema.type === "integer") (child as any).step = 1;
-        }
-      } else {
-        const formInput = child as unknown as PagesFormInput<any>;
-        const childProps = this.buildChildProps(field, fieldSchema, componentType, label, dataset);
-        formInput.props = childProps;
-        formInput.dataSet = dataset;
-        formInput.editable = !isDisplay && this._editable;
-        formInput.required = requiredSet.has(field);
-      }
-    }
-
-    for (const key of staleKeys) {
-      this._children.get(key)?.remove();
-      this._children.delete(key);
-      this._childTypes.delete(key);
-    }
-
-    if (this._fieldsOnly) {
-      const fieldsToRegister = fields.map((field) => ({
-        field,
-        element: this._children.get(field)!,
-        componentType: this._childTypes.get(field) ?? "input",
-      }));
-      queueMicrotask(() => {
-        for (const entry of fieldsToRegister) {
-          this.dispatchEvent(new CustomEvent("pages-field-register", {
-            bubbles: true, composed: true,
-            detail: entry,
-          }));
-        }
-      });
-    }
+    const source: PropertyPaletteSource = {
+      schema: enrichedSchema,
+      data: sourceData,
+      readonly: isDisplay,
+      onChange: (fieldPath, value) => {
+        const key = typeof fieldPath[0] === "string" ? fieldPath[0] : String(fieldPath[0]);
+        this._dataMirror[key] = value;
+      },
+    };
 
     return html`
-      <div class="schema-form-fields" role="${isDisplay ? "group" : "form"}"
-        @pages-field-change=${props.validateOnBlur && !this._fieldsOnly ? this._handleFieldChange : undefined}
-      >
-        ${fields.map((field) => this._children.get(field)!)}
+      <div class="schema-form-fields" role="${isDisplay ? "group" : "form"}">
+        <pages-property-palette
+          .source=${source}
+          .resolver=${this._resolver}
+        ></pages-property-palette>
         ${isCreateMode && !isDisplay && !this._fieldsOnly ? html`
           <div class="submit-bar">
             <button class="submit-btn" @click=${() => this.submit()}>Submit</button>
           </div>
-        ` : ""}
+        ` : nothing}
       </div>
     `;
   }
 
-  private buildChildProps(
-    field: string,
-    fieldSchema: FieldSchema,
-    componentType: string,
-    label: string,
-    dataset: TypedDataSet,
-  ): Record<string, unknown> {
-    const base: Record<string, unknown> = { field, label };
+  private _enrichSchema(schema: FieldSchema, props: SchemaFormProps, dataset: TypedDataSet): FieldSchema {
+    const schemaProps = schema.properties;
+    if (!schemaProps) return schema;
 
-    if (componentType === "number-input") {
-      if (fieldSchema.minimum !== undefined) base.min = fieldSchema.minimum;
-      if (fieldSchema.maximum !== undefined) base.max = fieldSchema.maximum;
-      if (fieldSchema.type === "integer") base.step = 1;
-    }
+    const excludeSet = new Set(props.excludeFields ?? []);
+    const fieldOrder = props.fieldOrder ?? Object.keys(schemaProps);
+    const visibleFields = props.fields
+      ? props.fields.filter((f) => f in schemaProps)
+      : fieldOrder.filter((f) => !excludeSet.has(f) && f in schemaProps);
 
-    if (componentType === "select") {
-      if (fieldSchema.enum && fieldSchema.enum.length > 0) {
-        base.options = { values: [...fieldSchema.enum] };
+    const enriched: Record<string, FieldSchema> = {};
+    let changed = false;
+
+    for (const key of visibleFields) {
+      const fieldSchema = schemaProps[key]!;
+
+      const label = props.labels?.[key]
+        ?? fieldSchema.title
+        ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+      if (label !== fieldSchema.title) {
+        enriched[key] = { ...fieldSchema, title: label };
+        changed = true;
       } else {
-        const distinctValues = this.extractDistinctValues(field, dataset);
-        base.options = { values: distinctValues };
+        enriched[key] = fieldSchema;
       }
     }
 
-    if (componentType === "input") {
-      if (fieldSchema.maxLength !== undefined) base.maxLength = fieldSchema.maxLength;
-      const ph = (fieldSchema['x-placeholder'] ?? (fieldSchema as Record<string, unknown>)['placeholder']) as string | undefined;
-      if (ph !== undefined) base.placeholder = ph;
+    if (changed || visibleFields.length !== Object.keys(schemaProps).length) {
+      const filteredProps: Record<string, FieldSchema> = {};
+      for (const key of visibleFields) {
+        filteredProps[key] = enriched[key] ?? schemaProps[key]!;
+      }
+      return { ...schema, properties: filteredProps };
     }
-
-    if (componentType === "textarea") {
-      if (fieldSchema.maxLength !== undefined) base.maxLength = fieldSchema.maxLength;
-    }
-
-    return base;
+    return schema;
   }
 
-  private extractDistinctValues(field: string, dataset: TypedDataSet): string[] {
+  private _extractData(schema: FieldSchema, dataset: TypedDataSet): Record<string, unknown> {
+    if (dataset.rows.length === 0) return {};
+    const row = dataset.rows[0]!;
+    const data: Record<string, unknown> = {};
+    const fields = Object.keys(schema.properties ?? {});
+    for (const field of fields) {
+      try {
+        const cell = row.cell(field as ColumnId);
+        if (cell.type !== "NULL") {
+          const fieldSchema = schema.properties?.[field];
+          const effectiveType = Array.isArray(fieldSchema?.type)
+            ? (fieldSchema!.type as readonly string[]).find(t => t !== "null")
+            : fieldSchema?.type;
+          if (effectiveType === "boolean") {
+            data[field] = typeof cell.value === "boolean" ? cell.value : String(cell.value).toLowerCase() === "true";
+          } else if (effectiveType === "number" || effectiveType === "integer") {
+            const num = typeof cell.value === "number" ? cell.value : parseFloat(String(cell.value));
+            data[field] = isNaN(num) ? null : num;
+          } else if (effectiveType === "object" || effectiveType === "array") {
+            const raw = String(cell.value);
+            try { data[field] = JSON.parse(raw); } catch { data[field] = raw; }
+          } else {
+            data[field] = String(cell.value);
+          }
+        }
+      } catch { /* column not found */ }
+    }
+    return data;
+  }
+
+  private _extractDistinctValues(field: string, dataset: TypedDataSet): string[] {
     const seen = new Set<string>();
     for (const row of dataset.rows) {
       try {
         const cell = row.cell(field as ColumnId);
         const raw = cellToRaw(cell);
         if (raw !== null) seen.add(String(raw));
-      } catch {
-        // Column not found
-      }
+      } catch { /* skip */ }
     }
     return [...seen].sort();
   }
 
-  private _handleFieldChange = (e: Event): void => {
-    const detail = (e as CustomEvent).detail as { field: string; value: unknown; committed: boolean };
-    if (!detail.committed) return;
-
-    const schema = this._resolvedSchema;
-    if (!schema?.properties) return;
-
-    const fieldSchema = schema.properties[detail.field];
-    if (!fieldSchema) return;
-
-    const child = this._children.get(detail.field);
-    if (!child) return;
-
-    const ct = this._childTypes.get(detail.field) ?? "input";
-    const requiredSet = new Set(schema.required ?? []);
-    const error = validateField(fieldSchema, detail.value, requiredSet.has(detail.field));
-    this.setChildError(child, ct, error ?? undefined);
-  };
+  private _renderComposite(componentType: string, ctx: FieldRenderContext): TemplateResult {
+    const tagName = `pages-${componentType}`;
+    let child = this._compositeRefs.get(ctx.key);
+    if (!child || child.tagName.toLowerCase() !== tagName) {
+      child = document.createElement(tagName);
+      this._compositeRefs.set(ctx.key, child);
+    }
+    (child as any).schema = ctx.schema;
+    (child as any).label = ctx.schema.title ?? ctx.key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+    (child as any).fieldName = ctx.key;
+    (child as any).editable = !ctx.readonly;
+    (child as any).required = ctx.required;
+    if (ctx.value != null) {
+      (child as any).value = ctx.value;
+    }
+    return html`${child}`;
+  }
 
   validate(): boolean {
     if (!this._resolvedSchema?.properties) return true;
     const requiredSet = new Set(this._resolvedSchema.required ?? []);
     let allValid = true;
-    for (const [field, child] of this._children) {
-      if (isFormValueProvider(child)) {
-        if (!child.validate()) allValid = false;
+    const fieldErrors = new Map<string, string | undefined>();
+
+    for (const [field, fieldSchema] of Object.entries(this._resolvedSchema.properties)) {
+      const compositeChild = this._compositeRefs.get(field);
+      if (compositeChild && isFormValueProvider(compositeChild)) {
+        if (!compositeChild.validate()) allValid = false;
       } else {
-        const fieldSchema = this._resolvedSchema.properties[field];
-        if (!fieldSchema) continue;
-        const ct = this._childTypes.get(field) ?? "input";
-        const value = readFieldValue(child, ct);
+        const value = this._dataMirror[field];
         const error = validateField(fieldSchema, value, requiredSet.has(field));
         if (error) {
-          this.setChildError(child, ct, error);
+          fieldErrors.set(field, error);
           allValid = false;
         } else {
-          this.setChildError(child, ct, undefined);
+          fieldErrors.set(field, undefined);
         }
       }
+    }
+
+    if (this._palette && fieldErrors.size > 0) {
+      this._palette.setFieldErrors(fieldErrors);
     }
     return allValid;
   }
@@ -350,12 +301,8 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
 
     const allValid = this.validate();
     if (!allValid) {
-      let errorCount = 0;
-      for (const [, child] of this._children) {
-        if (isFormValueProvider(child) && child.error !== undefined) errorCount++;
-      }
       this.announce(
-        `${String(errorCount || 1)} validation error${errorCount !== 1 ? "s" : ""} — please correct before submitting`,
+        "Validation errors — please correct before submitting",
         "assertive",
       );
       return null;

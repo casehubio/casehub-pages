@@ -182,13 +182,14 @@ export class PagesPropertyPalette extends LitElement {
     const fieldPath = [...path, key].join('.');
     const error = this._errors.get(fieldPath);
 
-    const descriptor = this._resolveField(schema);
+    const customResult = this.resolver?.(schema);
+    const descriptor = customResult ?? resolveEditor(schema);
 
-    if (descriptor.kind === 'render' && schema.type === 'object' && schema.properties && depth < MAX_NESTING_DEPTH) {
+    if (!customResult && descriptor.kind === 'render' && schema.type === 'object' && schema.properties && depth < MAX_NESTING_DEPTH) {
       return this._renderNestedObject(key, schema, value as Record<string, unknown> | undefined, path, depth);
     }
 
-    if (descriptor.kind === 'render' && schema.type === 'object' && depth >= MAX_NESTING_DEPTH) {
+    if (!customResult && descriptor.kind === 'render' && schema.type === 'object' && depth >= MAX_NESTING_DEPTH) {
       return this._renderJsonFallback(key, schema, value);
     }
 
@@ -239,9 +240,9 @@ export class PagesPropertyPalette extends LitElement {
       this._elementCache.set(cacheKey, el);
     }
 
+    el.label = label;
     if (isCheckbox) {
       el.checked = Boolean(value);
-      el.label = label;
     } else {
       el.value = value ?? (tag === 'pages-number-input' ? null : '');
     }
@@ -349,14 +350,6 @@ export class PagesPropertyPalette extends LitElement {
         <pre style="font-size: 11px; margin: 0; white-space: pre-wrap; color: var(--pages-neutral-11, #374151);">${JSON.stringify(value, null, 2) ?? '—'}</pre>
       </div>
     `;
-  }
-
-  private _resolveField(schema: FieldSchema): EditorDescriptor {
-    if (this.resolver) {
-      const custom = this.resolver(schema);
-      if (custom) return custom;
-    }
-    return resolveEditor(schema);
   }
 
   private _handleChange(
