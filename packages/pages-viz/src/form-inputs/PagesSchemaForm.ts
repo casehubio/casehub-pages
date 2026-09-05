@@ -156,6 +156,24 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       },
     };
 
+    if (this._fieldsOnly) {
+      const fields = Object.keys(enrichedSchema.properties ?? {});
+      this.updateComplete.then(async () => {
+        const palette = this._palette;
+        if (!palette) return;
+        await palette.updateComplete;
+        for (const field of fields) {
+          const element = this._compositeRefs.get(field) ?? palette.getFieldElement(field);
+          if (element) {
+            this.dispatchEvent(new CustomEvent("pages-field-register", {
+              bubbles: true, composed: true,
+              detail: { field, element, componentType: mapFieldToComponentType(enrichedSchema.properties![field]!) },
+            }));
+          }
+        }
+      });
+    }
+
     return html`
       <div class="schema-form-fields" role="${isDisplay ? "group" : "form"}">
         <pages-property-palette
