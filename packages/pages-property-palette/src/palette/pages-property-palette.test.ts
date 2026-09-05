@@ -246,6 +246,107 @@ describe('PagesPropertyPalette', () => {
     expect(indicator!.textContent).toBe('*');
   });
 
+  it('reuses DOM elements across re-renders', async () => {
+    const onChange = () => {};
+    (el as any).source = {
+      schema: { properties: { name: { type: 'string', title: 'Name' } } },
+      data: { name: 'hello' },
+      onChange,
+    } satisfies PropertyPaletteSource;
+    await (el as any).updateComplete;
+
+    const firstInput = (el as any).getFieldElement('name');
+    expect(firstInput).toBeDefined();
+    expect(firstInput.tagName.toLowerCase()).toBe('pages-input');
+
+    (el as any).source = {
+      schema: { properties: { name: { type: 'string', title: 'Name' } } },
+      data: { name: 'world' },
+      onChange,
+    };
+    await (el as any).updateComplete;
+
+    const secondInput = (el as any).getFieldElement('name');
+    expect(secondInput).toBe(firstInput);
+    expect(secondInput.value).toBe('world');
+  });
+
+  it('exposes field elements via getFieldElement', async () => {
+    (el as any).source = {
+      schema: {
+        properties: {
+          name: { type: 'string', title: 'Name' },
+          age: { type: 'number', title: 'Age' },
+        },
+      },
+      data: { name: 'test', age: 25 },
+      onChange: () => {},
+    } satisfies PropertyPaletteSource;
+    await (el as any).updateComplete;
+
+    const nameEl = (el as any).getFieldElement('name');
+    expect(nameEl).not.toBeNull();
+    expect(nameEl.tagName.toLowerCase()).toBe('pages-input');
+
+    const ageEl = (el as any).getFieldElement('age');
+    expect(ageEl).not.toBeNull();
+    expect(ageEl.tagName.toLowerCase()).toBe('pages-number-input');
+
+    const missing = (el as any).getFieldElement('nonexistent');
+    expect(missing).toBeUndefined();
+  });
+
+  it('sets errors on field elements via setFieldErrors', async () => {
+    (el as any).source = {
+      schema: {
+        properties: {
+          name: { type: 'string', title: 'Name' },
+          age: { type: 'number', title: 'Age' },
+        },
+      },
+      data: { name: '', age: 25 },
+      onChange: () => {},
+    } satisfies PropertyPaletteSource;
+    await (el as any).updateComplete;
+
+    const errors = new Map<string, string | undefined>();
+    errors.set('name', 'Required field');
+    errors.set('age', undefined);
+    (el as any).setFieldErrors(errors);
+    await (el as any).updateComplete;
+
+    const nameEl = (el as any).getFieldElement('name');
+    expect(nameEl.error).toBe('Required field');
+
+    const ageEl = (el as any).getFieldElement('age');
+    expect(ageEl.error).toBeUndefined();
+  });
+
+  it('prunes cached elements when fields are removed from schema', async () => {
+    (el as any).source = {
+      schema: {
+        properties: {
+          name: { type: 'string', title: 'Name' },
+          age: { type: 'number', title: 'Age' },
+        },
+      },
+      data: { name: 'test', age: 25 },
+      onChange: () => {},
+    } satisfies PropertyPaletteSource;
+    await (el as any).updateComplete;
+    expect((el as any).getFieldElement('age')).toBeDefined();
+
+    (el as any).source = {
+      schema: { properties: { name: { type: 'string', title: 'Name' } } },
+      data: { name: 'test' },
+      onChange: () => {},
+    };
+    await (el as any).updateComplete;
+
+    expect((el as any).getFieldElement('age')).toBeUndefined();
+    expect((el as any).getFieldElement('name')).toBeDefined();
+  });
+
   it('renders help icon from x-help', async () => {
     (el as any).source = {
       schema: {
