@@ -69,6 +69,16 @@ export function validateEdgeRouting(nodes: Node[], edges: Edge[]): ValidationRes
     }
   }
 
+  function ancestors(nodeId: string): Set<string> {
+    const result = new Set<string>();
+    let cur = nodeMap.get(nodeId);
+    while (cur?.parentId) {
+      result.add(cur.parentId);
+      cur = nodeMap.get(cur.parentId);
+    }
+    return result;
+  }
+
   // 2. No edge line crosses any shape
   for (const edge of edges) {
     const src = nodeMap.get(edge.source);
@@ -76,10 +86,12 @@ export function validateEdgeRouting(nodes: Node[], edges: Edge[]): ValidationRes
     if (!src || !tgt) continue;
     const p1 = handleCenter(src, 'source', edge, nodeMap);
     const p2 = handleCenter(tgt, 'target', edge, nodeMap);
+    const srcAncestors = ancestors(edge.source);
+    const tgtAncestors = ancestors(edge.target);
 
     for (const node of nodes) {
       if (node.id === edge.source || node.id === edge.target) continue;
-      if (node.id === src.parentId || node.id === tgt.parentId) continue;
+      if (srcAncestors.has(node.id) || tgtAncestors.has(node.id)) continue;
       if (node.parentId === edge.source || node.parentId === edge.target) continue;
       const r = absoluteRect(node, nodeMap);
       if (lineIntersectsRect(p1, p2, r.x, r.y, r.w, r.h)) {
