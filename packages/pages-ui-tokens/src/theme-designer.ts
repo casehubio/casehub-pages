@@ -7,6 +7,7 @@ import { generateCSS, generateDensityCSS } from './output.js';
 import type { ThemeStorage } from './theme-storage.js';
 import { detectStorage } from './theme-storage.js';
 import type { PresetConfig, TransformDef } from './types.js';
+import { DESIGNER_PRESETS, type DesignerPreset } from './designer-presets.js';
 
 const SEMANTIC_GROUPS: { name: string; hueFn: (a: number, n: number) => number; chromaScale: number }[] = [
   { name: 'accent', hueFn: (a) => a, chromaScale: 1 },
@@ -223,6 +224,23 @@ export class PagesThemeDesignerElement extends LitElement {
     .add-stage-btn { align-self: flex-start; }
 
     input[type="file"] { display: none; }
+
+    .preset-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+    }
+    .preset-chip {
+      background: var(--pages-neutral-3, #222);
+      border: 1px solid var(--pages-neutral-5, #444);
+      border-radius: 4px; padding: 4px 6px;
+      cursor: pointer; font-size: 10px; text-align: center;
+      color: var(--pages-neutral-11, #aaa);
+      display: flex; align-items: center; gap: 4px;
+      white-space: nowrap; overflow: hidden;
+    }
+    .preset-chip:hover { background: var(--pages-neutral-4, #333); border-color: var(--pages-neutral-7, #666); }
+    .preset-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
   `;
 
   static override properties = {
@@ -376,6 +394,13 @@ export class PagesThemeDesignerElement extends LitElement {
         { transform: 'gamut-clamp' },
       ];
     }
+  }
+
+  private _applyDesignerPreset(preset: DesignerPreset): void {
+    this._accentHue = preset.accentHue;
+    this._neutralHue = preset.neutralHue;
+    this._chroma = preset.chroma;
+    this._contrast = preset.contrast;
   }
 
   private _generateSwatches(isDark: boolean): { name: string; colors: string[] }[] {
@@ -550,6 +575,19 @@ export class PagesThemeDesignerElement extends LitElement {
   private _renderSimpleControls(swatches: { name: string; colors: string[] }[]) {
     return html`
       <div class="simple-controls">
+        <div class="control-group">
+          <div class="control-label">Starting Point</div>
+          <div class="preset-grid">
+            ${DESIGNER_PRESETS.map(p => html`
+              <button class="preset-chip" @click=${() => { this._applyDesignerPreset(p); }}
+                title="${p.name}: hue ${p.accentHue}°, chroma ${p.chroma}">
+                <span class="preset-dot" style="background: oklch(55% ${Math.max(p.chroma, 0.02)} ${p.accentHue})"></span>
+                ${p.name}
+              </button>
+            `)}
+          </div>
+        </div>
+
         <div class="control-group">
           <div class="control-label">Accent Hue</div>
           <div class="control-row">
