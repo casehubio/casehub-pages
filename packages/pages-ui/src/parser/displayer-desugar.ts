@@ -1,5 +1,7 @@
 import type { Component } from "../model/types.js";
 import { parseLookup } from "@casehubio/pages-data";
+import { z } from "zod";
+import { componentSchemaRegistry } from "@casehubio/pages-schema";
 import { desugarGroupedView } from "./grouped-view-desugar.js";
 
 /**
@@ -371,20 +373,26 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     props.inlineDataSet = raw.dataSet;
   }
 
-  // Pass through component-specific props not handled above
+  // Schema-aware property collection — only properties declared in the
+  // component's schema pass through. Replaces the old blind passthrough
+  // that forwarded ANY undeclared YAML key into props.
   const handledKeys = new Set([
     "type", "component", "general", "chart", "axis", "external", "table", "data-table", "meter",
     "badge", "countdown", "timeline", "graph", "subtype", "filter", "lookup",
     "dataSetLookup", "columns", "refresh", "extraConfiguration", "dataSet",
     "visibleWhen", "html", "properties",
   ]);
-  for (const [key, value] of Object.entries(raw)) {
-    if (!handledKeys.has(key) && !(key in props)) {
-      props[key] = value;
+  const schema = componentSchemaRegistry.get(type);
+  if (schema instanceof z.ZodObject) {
+    const declaredKeys = new Set(Object.keys(schema.shape));
+    for (const [key, value] of Object.entries(raw)) {
+      if (!handledKeys.has(key) && !(key in props) && declaredKeys.has(key)) {
+        props[key] = value;
+      }
     }
   }
 
-  // Table defaults — runs AFTER passthrough so user-specified values win
+  // Table defaults — runs AFTER property collection so user-specified values win
   if (type === "data-table") {
     if (props.pageSize === undefined) {
       props.pageSize = 10;

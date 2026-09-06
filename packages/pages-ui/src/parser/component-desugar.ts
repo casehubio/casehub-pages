@@ -1,8 +1,17 @@
 import type { Component } from "../model/types.js";
+import { z } from "zod";
+import { componentSchemaRegistry } from "@casehubio/pages-schema";
 import { desugarDisplayer } from "./displayer-desugar.js";
 import { dockWorkbench, floatingWorkspace } from "../dsl/builders.js";
 import type { DockPanelConfig, DockSideConfig } from "../dsl/builders.js";
 import type { DockZone } from "@casehubio/pages-component";
+
+function validateProps(type: string, raw: Record<string, unknown>): Record<string, unknown> {
+  const schema = componentSchemaRegistry.get(type);
+  if (!(schema instanceof z.ZodObject)) return raw;
+  const result = schema.partial().safeParse(raw);
+  return result.success ? result.data as Record<string, unknown> : raw;
+}
 
 /**
  * Maps navigation component types to lowercase strings.
@@ -94,7 +103,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
   const FORM_INPUT_TYPES = ["input", "number-input", "select", "checkbox", "date-picker", "textarea"] as const;
   for (const formType of FORM_INPUT_TYPES) {
     if (formType in raw) {
-      const props = raw[formType] as Record<string, unknown>;
+      const props = validateProps(formType, raw[formType] as Record<string, unknown>);
       const style = extractStyle(raw.properties);
       const visibleWhen = raw.visibleWhen as string | undefined;
       return {
@@ -108,7 +117,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
 
   // Schema form shorthand
   if ("schema-form" in raw) {
-    const props = raw["schema-form"] as Record<string, unknown>;
+    const props = validateProps("schema-form", raw["schema-form"] as Record<string, unknown>);
     const style = extractStyle(raw.properties);
     const visibleWhen = raw.visibleWhen as string | undefined;
     return {
@@ -284,7 +293,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
 
   // Action button shorthand
   if ("action-button" in raw) {
-    const props = raw["action-button"] as Record<string, unknown>;
+    const props = validateProps("action-button", raw["action-button"] as Record<string, unknown>);
     const style = extractStyle(raw.properties);
     const visibleWhen = raw.visibleWhen as string | undefined;
     return {
@@ -297,7 +306,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
 
   // Submit button shorthand
   if ("submit-button" in raw) {
-    const props = raw["submit-button"] as Record<string, unknown>;
+    const props = validateProps("submit-button", raw["submit-button"] as Record<string, unknown>);
     const style = extractStyle(raw.properties);
     const visibleWhen = raw.visibleWhen as string | undefined;
     return {
@@ -514,9 +523,9 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       };
     }
 
-    // Schema form — pass through props directly (not a displayer)
+    // Schema form — validate props (not a displayer)
     if (rawType === "schema-form") {
-      const properties = (raw.properties as Record<string, unknown> | undefined) ?? {};
+      const properties = validateProps("schema-form", (raw.properties as Record<string, unknown> | undefined) ?? {});
       const style = extractStyle(raw.style);
       const visibleWhen = raw.visibleWhen as string | undefined;
       return {

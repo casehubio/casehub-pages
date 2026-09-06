@@ -1923,6 +1923,7 @@ __metadata:
   dependencies:
     "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-schema": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
     glob: "npm:^11.0.0"
     happy-dom: "npm:^20.10.6"
