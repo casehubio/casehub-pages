@@ -1,5 +1,4 @@
 import type { GraphNode, GraphEdge, GraphModel, NodeDecoration } from '@casehubio/graph-core';
-import { getGrammar } from '@casehubio/graph-core';
 import type { Node, Edge } from '@xyflow/react';
 import type { NodeLayout, ElkLayoutResult } from './layout/elk-layout.js';
 
@@ -69,10 +68,6 @@ function handlePosPoint(rect: { x: number; y: number; w: number; h: number }, po
   }
 }
 
-function _nodeBounds(node: Node): { x: number; y: number; w: number; h: number } {
-  return { x: node.position.x, y: node.position.y, w: node.width ?? 280, h: node.height ?? 50 };
-}
-
 
 function absoluteBounds(node: Node, nodeMap: Map<string, Node>): { x: number; y: number; w: number; h: number } {
   let x = node.position.x;
@@ -88,142 +83,173 @@ function absoluteBounds(node: Node, nodeMap: Map<string, Node>): { x: number; y:
   return { x, y, w: node.width ?? 280, h: node.height ?? 50 };
 }
 
+interface HandleCandidate {
+  srcSide: string;
+  tgtSide: string;
+  srcPt: { x: number; y: number };
+  tgtPt: { x: number; y: number };
+  dist: number;
+}
+
+function segmentsIntersect(
+  a1: { x: number; y: number }, a2: { x: number; y: number },
+  b1: { x: number; y: number }, b2: { x: number; y: number },
+): boolean {
+  const d1x = a2.x - a1.x, d1y = a2.y - a1.y;
+  const d2x = b2.x - b1.x, d2y = b2.y - b1.y;
+  const cross = d1x * d2y - d1y * d2x;
+  if (Math.abs(cross) < 1e-10) return false;
+  const t = ((b1.x - a1.x) * d2y - (b1.y - a1.y) * d2x) / cross;
+  const u = ((b1.x - a1.x) * d1y - (b1.y - a1.y) * d1x) / cross;
+  return t > 0.01 && t < 0.99 && u > 0.01 && u < 0.99;
+}
+
 function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: string): void {
   if (!nodes.length || !edges.length) return;
 
-  // Per-node defaults set the primary handle direction; the per-edge
-  // algorithm below then assigns optimal handles per edge.
-  const dirDefaults: Record<string, { src: string; tgt: string }> = {
-    DOWN: { src: 'bottom', tgt: 'top' },
-    RIGHT: { src: 'right', tgt: 'left' },
-    LEFT: { src: 'left', tgt: 'right' },
-    UP: { src: 'top', tgt: 'bottom' },
-  };
-  const perpendicular: Record<string, { src: string; tgt: string }> = {
-    DOWN: { src: 'right', tgt: 'left' },
-    RIGHT: { src: 'bottom', tgt: 'top' },
-    LEFT: { src: 'bottom', tgt: 'top' },
-    UP: { src: 'right', tgt: 'left' },
-  };
-  const defaults = dirDefaults[_direction ?? 'DOWN'] ?? dirDefaults.DOWN!;
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const SIDES = ['top', 'bottom', 'left', 'right'] as const;
 
-  for (const node of nodes) {
-    const hasOutgoing = edges.some(e => e.source === node.id);
-    const hasIncoming = edges.some(e => e.target === node.id);
-    const grammar = node.type ? getGrammar(node.type) : undefined;
-    const canHaveOutgoing = hasOutgoing || (grammar ? grammar.connections.outbound.max > 0 : false);
-    const canHaveIncoming = hasIncoming || (grammar ? grammar.connections.inbound.max > 0 : false);
-    const updates: Record<string, unknown> = {};
-    if (canHaveOutgoing) updates._sourceHandlePosition = defaults.src;
-    if (canHaveIncoming) updates._targetHandlePosition = defaults.tgt;
-    if (Object.keys(updates).length > 0) {
-      node.data = { ...node.data, ...updates };
+  function absBounds(node: Node): { x: number; y: number; w: number; h: number } {
+    let x = node.position.x, y = node.position.y;
+    let cur = node;
+    while (cur.parentId) {
+      const parent = nodeMap.get(cur.parentId);
+      if (!parent) break;
+      x += parent.position.x; y += parent.position.y;
+      cur = parent;
+    }
+    return { x, y, w: node.width ?? 280, h: node.height ?? 50 };
+  }
+
+  function handlePoint(bounds: { x: number; y: number; w: number; h: number }, side: string) {
+    switch (side) {
+      case 'top': return { x: bounds.x + bounds.w / 2, y: bounds.y };
+      case 'bottom': return { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h };
+      case 'left': return { x: bounds.x, y: bounds.y + bounds.h / 2 };
+      case 'right': return { x: bounds.x + bounds.w, y: bounds.y + bounds.h / 2 };
+      default: return { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h };
     }
   }
 
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const parentIds = new Set(nodes.filter(n => n.parentId).map(n => n.parentId!));
-  function scopeNodes(srcId: string, tgtId: string): Node[] {
-    const srcParent = nodeMap.get(srcId)?.parentId;
-    const tgtParent = nodeMap.get(tgtId)?.parentId;
-    return nodes.filter(node => {
-      if (node.id === srcId || node.id === tgtId) return false;
-      if (node.id === srcParent || node.id === tgtParent) return false;
-      if (!srcParent && !tgtParent) return !node.parentId;
-      if (parentIds.has(node.id)) return node.parentId === srcParent || node.parentId === tgtParent || !node.parentId;
-      return node.parentId === srcParent || node.parentId === tgtParent;
-    });
+  function ancestors(nodeId: string): Set<string> {
+    const result = new Set<string>();
+    let cur = nodeMap.get(nodeId);
+    while (cur?.parentId) { result.add(cur.parentId); cur = nodeMap.get(cur.parentId); }
+    return result;
   }
-  function checkCrossing(s: { x: number; y: number }, t: { x: number; y: number }, srcId: string, tgtId: string): boolean {
-    for (const node of scopeNodes(srcId, tgtId)) {
-      const r = absoluteBounds(node, nodeMap);
+
+  function lineCrossesNode(
+    s: { x: number; y: number }, t: { x: number; y: number },
+    srcId: string, tgtId: string,
+  ): boolean {
+    const srcAnc = ancestors(srcId);
+    const tgtAnc = ancestors(tgtId);
+    for (const node of nodes) {
+      if (node.id === srcId || node.id === tgtId) continue;
+      if (srcAnc.has(node.id) || tgtAnc.has(node.id)) continue;
+      if (node.parentId === srcId || node.parentId === tgtId) continue;
+      const r = absBounds(node);
       if (lineIntersectsRect(s, t, r.x, r.y, r.w, r.h)) return true;
     }
     return false;
   }
-  function corridorBlocked(s: { x: number; y: number }, t: { x: number; y: number }, srcId: string, tgtId: string): boolean {
-    const margin = 10;
-    const cx = Math.min(s.x, t.x) - margin;
-    const cy = Math.min(s.y, t.y) - margin;
-    const cw = Math.abs(s.x - t.x) + 2 * margin;
-    const ch = Math.abs(s.y - t.y) + 2 * margin;
-    for (const node of scopeNodes(srcId, tgtId)) {
-      const r = absoluteBounds(node, nodeMap);
-      if (r.x + r.w > cx && r.x < cx + cw && r.y + r.h > cy && r.y < cy + ch) return true;
-    }
-    return false;
-  }
-  const usedOut = new Map<string, Set<string>>();
-  const usedIn = new Map<string, Set<string>>();
+
+  const edgeCandidates: HandleCandidate[][] = [];
+  const validEdges: Edge[] = [];
+
   for (const edge of edges) {
     const srcNode = nodeMap.get(edge.source);
     const tgtNode = nodeMap.get(edge.target);
     if (!srcNode || !tgtNode) continue;
-    const srcBounds = absoluteBounds(srcNode, nodeMap);
-    const tgtBounds = absoluteBounds(tgtNode, nodeMap);
-    const srcIn = usedIn.get(edge.source);
-    const tgtOut = usedOut.get(edge.target);
-    const perp = perpendicular[_direction ?? 'DOWN'] ?? perpendicular.DOWN!;
-    let bestSrc = defaults.src;
-    let bestTgt = defaults.tgt;
-    let resolved = false;
-    function canUse(sp: string, tp: string): boolean {
-      if (sp === tp) return false;
-      if (srcIn && srcIn.has(sp)) return false;
-      if (tgtOut && tgtOut.has(tp)) return false;
-      const s = handlePosPoint(srcBounds, sp);
-      const t = handlePosPoint(tgtBounds, tp);
-      return !checkCrossing(s, t, edge.source, edge.target);
+    const srcB = absBounds(srcNode);
+    const tgtB = absBounds(tgtNode);
+    const candidates: HandleCandidate[] = [];
+    for (const ss of SIDES) {
+      for (const ts of SIDES) {
+        if (ss === ts) continue;
+        const sp = handlePoint(srcB, ss);
+        const tp = handlePoint(tgtB, ts);
+        if (lineCrossesNode(sp, tp, edge.source, edge.target)) continue;
+        const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2);
+        candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist });
+      }
     }
-    const dir = _direction ?? 'DOWN';
-    const srcCx = srcBounds.x + srcBounds.w / 2;
-    const srcCy = srcBounds.y + srcBounds.h / 2;
-    const tgtCx = tgtBounds.x + tgtBounds.w / 2;
-    const tgtCy = tgtBounds.y + tgtBounds.h / 2;
-    const flowsForward = (dir === 'RIGHT' || dir === 'LEFT')
-      ? (dir === 'RIGHT' ? tgtCx > srcCx : tgtCx < srcCx)
-      : (dir === 'DOWN' ? tgtCy > srcCy : tgtCy < srcCy);
-    const primary = flowsForward ? defaults : perp;
-    const secondary = flowsForward ? perp : defaults;
-    if (canUse(primary.src, primary.tgt)) {
-      bestSrc = primary.src;
-      bestTgt = primary.tgt;
-      resolved = true;
-    }
-    if (!resolved && canUse(secondary.src, secondary.tgt)) {
-      bestSrc = secondary.src;
-      bestTgt = secondary.tgt;
-      resolved = true;
-    }
-    if (!resolved) {
-      let bestDist = Infinity;
-      for (const sp of POSITIONS) {
-        if (srcIn && srcIn.has(sp)) continue;
-        for (const tp of POSITIONS) {
-          if (sp === tp) continue;
-          if (tgtOut && tgtOut.has(tp)) continue;
-          const s = handlePosPoint(srcBounds, sp);
-          const t = handlePosPoint(tgtBounds, tp);
-          if (checkCrossing(s, t, edge.source, edge.target)) continue;
-          if (corridorBlocked(s, t, edge.source, edge.target)) continue;
-          const d = Math.sqrt((s.x - t.x) ** 2 + (s.y - t.y) ** 2);
-          if (d < bestDist) { bestDist = d; bestSrc = sp; bestTgt = tp; }
+    if (candidates.length === 0) {
+      for (const ss of SIDES) {
+        for (const ts of SIDES) {
+          if (ss === ts) continue;
+          const sp = handlePoint(srcB, ss);
+          const tp = handlePoint(tgtB, ts);
+          const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2);
+          candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist });
         }
       }
     }
-    edge.sourceHandle = `source-${bestSrc}`;
-    edge.targetHandle = `target-${bestTgt}`;
-    if (!usedOut.has(edge.source)) usedOut.set(edge.source, new Set());
-    usedOut.get(edge.source)!.add(bestSrc);
-    if (!usedIn.has(edge.target)) usedIn.set(edge.target, new Set());
-    usedIn.get(edge.target)!.add(bestTgt);
+    candidates.sort((a, b) => a.dist - b.dist);
+    edgeCandidates.push(candidates);
+    validEdges.push(edge);
+  }
+
+  if (validEdges.length === 0) return;
+
+  let bestCrossings = Infinity;
+  let bestTotalDist = Infinity;
+  let bestAssignment: HandleCandidate[] = [];
+  const current: HandleCandidate[] = new Array(validEdges.length);
+  const MAX_ITERATIONS = 500_000;
+  let iterations = 0;
+
+  function countCrossingsWith(depth: number, candidate: HandleCandidate): number {
+    let crossings = 0;
+    const ae = validEdges[depth]!;
+    for (let j = 0; j < depth; j++) {
+      const b = current[j]!;
+      const be = validEdges[j]!;
+      if (ae.source === be.source || ae.target === be.target ||
+          ae.source === be.target || ae.target === be.source) continue;
+      if (segmentsIntersect(candidate.srcPt, candidate.tgtPt, b.srcPt, b.tgtPt)) crossings++;
+    }
+    return crossings;
+  }
+
+  function search(depth: number, crossingsSoFar: number): void {
+    if (iterations++ > MAX_ITERATIONS) return;
+    if (depth === validEdges.length) {
+      const totalDist = current.reduce((sum, c) => sum + c.dist, 0);
+      if (crossingsSoFar < bestCrossings ||
+          (crossingsSoFar === bestCrossings && totalDist < bestTotalDist)) {
+        bestCrossings = crossingsSoFar;
+        bestTotalDist = totalDist;
+        bestAssignment = [...current];
+      }
+      return;
+    }
+    for (const candidate of edgeCandidates[depth]!) {
+      if (iterations > MAX_ITERATIONS) return;
+      const newCrossings = countCrossingsWith(depth, candidate);
+      const total = crossingsSoFar + newCrossings;
+      if (total >= bestCrossings) continue;
+      current[depth] = candidate;
+      search(depth + 1, total);
+      if (bestCrossings === 0) return;
+    }
+  }
+
+  search(0, 0);
+
+  for (let i = 0; i < validEdges.length; i++) {
+    const edge = validEdges[i]!;
+    const candidate = bestAssignment[i]!;
+    edge.sourceHandle = `source-${candidate.srcSide}`;
+    edge.targetHandle = `target-${candidate.tgtSide}`;
   }
 
   const srcCounts = new Map<string, Record<string, number>>();
   const tgtCounts = new Map<string, Record<string, number>>();
   for (const edge of edges) {
-    const sp = edge.sourceHandle?.replace(/^source-/, '') ?? defaults.src;
-    const tp = edge.targetHandle?.replace(/^target-/, '') ?? defaults.tgt;
+    const sp = edge.sourceHandle?.replace(/^source-/, '') ?? 'bottom';
+    const tp = edge.targetHandle?.replace(/^target-/, '') ?? 'top';
     const sc = srcCounts.get(edge.source) ?? {};
     sc[sp] = (sc[sp] ?? 0) + 1;
     srcCounts.set(edge.source, sc);
@@ -231,7 +257,6 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     tc[tp] = (tc[tp] ?? 0) + 1;
     tgtCounts.set(edge.target, tc);
   }
-
   const hasOutgoing = new Set(edges.map(e => e.source));
   const hasIncoming = new Set(edges.map(e => e.target));
   for (const node of nodes) {
@@ -239,16 +264,10 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     const tc = tgtCounts.get(node.id);
     const updates: Record<string, unknown> = {};
     if (sc) updates._sourceHandlePosition = Object.entries(sc).sort((a, b) => b[1] - a[1])[0]![0];
-    else if (!hasOutgoing.has(node.id)) {
-      const g = node.type ? getGrammar(node.type) : undefined;
-      if (!g || g.connections.outbound.max === 0) updates._sourceHandlePosition = undefined;
-    }
+    else if (!hasOutgoing.has(node.id)) updates._sourceHandlePosition = undefined;
     if (tc) updates._targetHandlePosition = Object.entries(tc).sort((a, b) => b[1] - a[1])[0]![0];
-    else if (!hasIncoming.has(node.id)) {
-      const g = node.type ? getGrammar(node.type) : undefined;
-      if (!g || g.connections.inbound.max === 0) updates._targetHandlePosition = undefined;
-    }
-    node.data = { ...node.data, ...updates };
+    else if (!hasIncoming.has(node.id)) updates._targetHandlePosition = undefined;
+    if (Object.keys(updates).length > 0) node.data = { ...node.data, ...updates };
   }
 }
 
