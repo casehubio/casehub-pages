@@ -1,6 +1,9 @@
 import type { GraphNode, GraphEdge, GraphModel, NodeDecoration } from '@casehubio/graph-core';
 import type { Node, Edge } from '@xyflow/react';
+import { MarkerType } from '@xyflow/react';
 import type { NodeLayout, ElkLayoutResult } from './layout/elk-layout.js';
+import { getEdgeDescriptor } from './registry/stencil-registry.js';
+import type { EdgeMarker } from './registry/stencil-registry.js';
 
 const DEFAULT_PARENT_WIDTH = 280;
 const DEFAULT_PARENT_HEIGHT = 180;
@@ -41,6 +44,16 @@ export function toReactFlowNode(
   return rfNode;
 }
 
+function toRfMarker(marker: EdgeMarker) {
+  const m: { type: MarkerType; color?: string; width?: number; height?: number } = {
+    type: marker.type === 'arrowclosed' ? MarkerType.ArrowClosed : MarkerType.Arrow,
+    width: 20,
+    height: 20,
+  };
+  if (marker.color) m.color = marker.color;
+  return m;
+}
+
 export function toReactFlowEdge(edge: GraphEdge): Edge {
   const rfEdge: Edge = {
     id: edge.id,
@@ -52,6 +65,10 @@ export function toReactFlowEdge(edge: GraphEdge): Edge {
   if (edge.properties) {
     rfEdge.data = { ...edge.properties };
   }
+
+  const desc = edge.type ? getEdgeDescriptor(edge.type) : undefined;
+  if (desc?.markerEnd) rfEdge.markerEnd = toRfMarker(desc.markerEnd);
+  if (desc?.markerStart) rfEdge.markerStart = toRfMarker(desc.markerStart);
 
   return rfEdge;
 }

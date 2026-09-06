@@ -10,7 +10,7 @@ export {
   getRegisteredStyles,
   clearRegistry,
 } from './registry/stencil-registry.js';
-export type { StencilDescriptor, EdgeDescriptor } from './registry/stencil-registry.js';
+export type { StencilDescriptor, EdgeDescriptor, EdgeMarker } from './registry/stencil-registry.js';
 export { GraphCanvas } from './bridge/GraphCanvas.js';
 export { computeElkLayout } from './layout/elk-layout.js';
 export type { ElkLayoutOptions, ElkLayoutResult, NodeLayout } from './layout/elk-layout.js';
