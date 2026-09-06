@@ -161,6 +161,23 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
   }
   if (validEdges.length === 0) return;
 
+  const dirDefaults: Record<string, { src: string; tgt: string }> = {
+    DOWN: { src: 'bottom', tgt: 'top' },
+    RIGHT: { src: 'right', tgt: 'left' },
+    LEFT: { src: 'left', tgt: 'right' },
+    UP: { src: 'top', tgt: 'bottom' },
+  };
+  const preferred = dirDefaults[_direction ?? ''];
+  const DIRECTION_PENALTY = 150;
+
+  function directionCost(ss: string, ts: string): number {
+    if (!preferred) return 0;
+    let penalty = 0;
+    if (ss !== preferred.src) penalty += DIRECTION_PENALTY;
+    if (ts !== preferred.tgt) penalty += DIRECTION_PENALTY;
+    return penalty;
+  }
+
   function buildCandidates(): HandleCandidate[][] {
     const result: HandleCandidate[][] = [];
     for (const edge of validEdges) {
@@ -173,7 +190,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
           const sp = handlePoint(srcB, ss);
           const tp = handlePoint(tgtB, ts);
           if (lineCrossesNode(sp, tp, edge.source, edge.target)) continue;
-          const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2);
+          const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2) + directionCost(ss, ts);
           candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist });
         }
       }
@@ -183,7 +200,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
             if (ss === ts) continue;
             const sp = handlePoint(srcB, ss);
             const tp = handlePoint(tgtB, ts);
-            const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2);
+            const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2) + directionCost(ss, ts);
             candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist });
           }
         }
