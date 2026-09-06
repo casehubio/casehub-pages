@@ -8,6 +8,10 @@ export interface ElkLayoutOptions {
   containerPadding?: number;
   nodeSizes?: ReadonlyMap<string, { width: number; height: number }>;
   wrapping?: boolean;
+  algorithm?: 'layered' | 'mrtree' | 'radial' | 'force' | 'stress';
+  elkOptions?: Readonly<Record<string, string>>;
+  headerHeight?: number;
+  partitions?: ReadonlyMap<string, number>;
 }
 
 export interface NodeLayout {
@@ -41,8 +45,12 @@ function buildElkNode(
   node: GraphNode,
   visited: Set<string>,
   padding: number,
+  headerHeight: number,
+  spacing: number,
   nodeSizes?: ReadonlyMap<string, { width: number; height: number }>,
   wrapping?: boolean,
+  partitions?: ReadonlyMap<string, number>,
+  elkOptions?: Readonly<Record<string, string>>,
 ): ElkNode {
   if (visited.has(node.id)) {
     throw new Error(`Containment cycle at node '${node.id}'`);
@@ -58,10 +66,13 @@ function buildElkNode(
     height: size?.height ?? DEFAULT_NODE_HEIGHT,
   };
   if (children.length > 0) {
-    elkNode.children = children.map(c => buildElkNode(model, c, visited, padding, nodeSizes, wrapping));
+    elkNode.children = children.map(c =>
+      buildElkNode(model, c, visited, padding, headerHeight, spacing, nodeSizes, wrapping, partitions, elkOptions));
     const containerOpts: Record<string, string> = {
       'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-      'elk.padding': `[top=${Math.max(padding, DEFAULT_HEADER_HEIGHT)},left=${padding},bottom=${padding},right=${padding}]`,
+      'elk.padding': `[top=${Math.max(padding, headerHeight)},left=${padding},bottom=${padding},right=${padding}]`,
+      'elk.spacing.nodeNode': String(spacing),
+      ...(elkOptions ?? {}),
     };
     if (wrapping) {
       containerOpts['elk.layered.wrapping.strategy'] = 'SINGLE_EDGE';
@@ -69,6 +80,10 @@ function buildElkNode(
       containerOpts['elk.aspectRatio'] = '1.6';
     }
     elkNode.layoutOptions = containerOpts;
+  }
+  const part = partitions?.get(node.id);
+  if (part !== undefined) {
+    elkNode.layoutOptions = { ...(elkNode.layoutOptions ?? {}), 'elk.partitioning.partition': String(part) };
   }
   return elkNode;
 }
@@ -86,6 +101,32 @@ function extractNodeLayouts(elkNodes: ElkNode[] | undefined, map: Map<string, No
   }
 }
 
+function findLCA(model: GraphModel, aId: string, bId: string): string | null {
+  const ancestorsA = new Set<string>();
+  let cur = model.nodes.find(n => n.id === aId);
+  while (cur?.parentId) { ancestorsA.add(cur.parentId); cur = model.nodes.find(n => n.id === cur!.parentId); }
+  cur = model.nodes.find(n => n.id === bId);
+  while (cur?.parentId) {
+    if (ancestorsA.has(cur.parentId)) return cur.parentId;
+    cur = model.nodes.find(n => n.id === cur!.parentId);
+  }
+  return null;
+}
+
+function attachEdgesToLCA(
+  rootElk: ElkNode,
+  edgesByParent: Map<string | null, ElkExtendedEdge[]>,
+): void {
+  const rootEdges = edgesByParent.get(null) ?? [];
+  rootElk.edges = rootEdges;
+  function visit(elkNode: ElkNode): void {
+    const childEdges = edgesByParent.get(elkNode.id);
+    if (childEdges) elkNode.edges = childEdges;
+    if (elkNode.children) elkNode.children.forEach(visit);
+  }
+  if (rootElk.children) rootElk.children.forEach(visit);
+}
+
 export async function computeElkLayout(
   model: GraphModel,
   options: ElkLayoutOptions = {},
@@ -93,6 +134,7 @@ export async function computeElkLayout(
   const direction = options.direction ?? 'DOWN';
   const spacing = options.spacing ?? 50;
   const padding = options.containerPadding ?? 20;
+  const headerHeight = options.headerHeight ?? DEFAULT_HEADER_HEIGHT;
 
   const roots = rootNodes(model);
   if (roots.length === 0) {
@@ -103,21 +145,31 @@ export async function computeElkLayout(
   }
 
   const nodeSizes = options.nodeSizes;
-  const rootChildren = roots.map(n => buildElkNode(model, n, new Set(), padding, nodeSizes, options.wrapping));
+  const rootChildren = roots.map(n =>
+    buildElkNode(model, n, new Set(), padding, headerHeight, spacing,
+      nodeSizes, options.wrapping, options.partitions, options.elkOptions));
 
-  const elkEdges: ElkExtendedEdge[] = model.edges.map(e => ({
-    id: e.id,
-    sources: [e.source],
-    targets: [e.target],
-  }));
+  const layoutEdges = model.edges.filter(e => !e.properties?.['excludeFromLayout']);
+  const edgesByParent = new Map<string | null, ElkExtendedEdge[]>();
+  for (const e of layoutEdges) {
+    const lca = findLCA(model, e.source, e.target);
+    const list = edgesByParent.get(lca) ?? [];
+    list.push({ id: e.id, sources: [e.source], targets: [e.target] });
+    edgesByParent.set(lca, list);
+  }
 
+  const algorithm = options.algorithm ?? 'layered';
   const layoutOpts: Record<string, string> = {
-    'elk.algorithm': 'layered',
-    'elk.direction': direction,
+    'elk.algorithm': algorithm,
     'elk.spacing.nodeNode': String(spacing),
-    'elk.layered.spacing.nodeNodeBetweenLayers': String(spacing),
     'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+    ...(options.elkOptions ?? {}),
   };
+
+  if (algorithm === 'layered') {
+    layoutOpts['elk.direction'] = direction;
+    layoutOpts['elk.layered.spacing.nodeNodeBetweenLayers'] = String(spacing);
+  }
 
   if (options.wrapping) {
     layoutOpts['elk.layered.wrapping.strategy'] = 'SINGLE_EDGE';
@@ -130,8 +182,9 @@ export async function computeElkLayout(
     id: 'root',
     layoutOptions: layoutOpts,
     children: rootChildren,
-    edges: elkEdges,
   };
+
+  attachEdgesToLCA(graph, edgesByParent);
 
   const layouted = await elk.layout(graph);
 
