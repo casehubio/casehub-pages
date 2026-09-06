@@ -5,3 +5,4 @@ export { applyTheme, registerTheme, getTheme, listThemes } from './runtime.js';
 export { PagesThemePickerElement } from './theme-picker.js';
 export { pulseAnimation } from './animations.js';
 export { injectTheme, applyThemeMode, DEFAULT_THEME, generateThemeCSS, type ThemeConfig } from './themes.js';
+export { type ThemeStorage, LocalStorageThemeStorage, ServerThemeStorage, detectStorage } from './theme-storage.js';

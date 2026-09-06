@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    environmentOptions: {
+      jsdom: { url: "http://localhost" },
+    },
     include: ["src/**/*.test.ts"],
     coverage: {
       provider: "v8",
