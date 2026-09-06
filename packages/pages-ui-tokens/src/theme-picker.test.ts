@@ -208,3 +208,52 @@ describe('compact mode', () => {
     expect(getTheme()).toBe('charlie-dark');
   });
 });
+
+describe('customize button', () => {
+  let picker: HTMLElement;
+
+  beforeEach(async () => {
+    _resetThemeRegistry();
+    _resetAppliedThemes();
+    document.body.innerHTML = '';
+    registerTheme('default-light', '.pages-theme-default-light {}');
+    registerTheme('default-dark', '.pages-theme-default-dark {}');
+    applyTheme('default-dark');
+    picker = document.createElement('pages-theme-picker');
+    document.body.appendChild(picker);
+    await (picker as any).updateComplete;
+  });
+
+  it('renders a customize button in full mode', () => {
+    const btn = picker.shadowRoot?.querySelector('.customize-btn');
+    expect(btn).not.toBeNull();
+  });
+
+  it('customize button has aria-label', () => {
+    const btn = picker.shadowRoot?.querySelector('.customize-btn');
+    expect(btn?.getAttribute('aria-label')).toBe('Customize theme');
+  });
+});
+
+describe('customize button in compact mode', () => {
+  let picker: HTMLElement;
+
+  beforeEach(async () => {
+    _resetThemeRegistry();
+    _resetAppliedThemes();
+    document.body.innerHTML = '';
+    registerTheme('default-light', '.pages-theme-default-light {}');
+    registerTheme('default-dark', '.pages-theme-default-dark {}');
+    applyTheme('default-dark');
+    picker = document.createElement('pages-theme-picker');
+    (picker as any).compact = true;
+    document.body.appendChild(picker);
+    await (picker as any).updateComplete;
+  });
+
+  it('renders a customize button in compact mode popover', () => {
+    const popover = picker.shadowRoot?.querySelector('[popover]');
+    const btn = popover?.querySelector('.customize-btn');
+    expect(btn).not.toBeNull();
+  });
+});

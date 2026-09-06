@@ -120,6 +120,19 @@ export class PagesThemePickerElement extends LitElement {
       cursor: pointer;
     }
     .family-option input[type="radio"] { accent-color: var(--pages-interactive, #4a9eff); }
+    .customize-btn {
+      background: var(--pages-surface-secondary, #222);
+      color: var(--pages-text-secondary, #ccc);
+      border: 1px solid var(--pages-border-default, #444);
+      border-radius: var(--pages-radius-sm, 4px);
+      padding: 4px 8px;
+      cursor: pointer;
+      font: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .customize-btn:hover { background: var(--pages-surface-hover, #333); }
   `;
 
   static override properties = {
@@ -170,6 +183,11 @@ export class PagesThemePickerElement extends LitElement {
         <button aria-pressed=${String(this._mode === 'light')} @click=${() => { this._setMode('light'); }}>Light</button>
         <button aria-pressed=${String(this._mode === 'dark')} @click=${() => { this._setMode('dark'); }}>Dark</button>
       </div>
+      <button class="customize-btn" aria-label="Customize theme" @click=${() => { this._openDesigner(); }}>
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+          <path d="M13.5 2.5l-1-1-9 9-.5 2 2-.5 9-9z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        </svg>
+      </button>
     `;
   }
 
@@ -220,8 +238,22 @@ export class PagesThemePickerElement extends LitElement {
           <button aria-pressed=${String(this._mode === 'light')} @click=${() => { this._setMode('light'); }}>☀ Light</button>
           <button aria-pressed=${String(this._mode === 'dark')} @click=${() => { this._setMode('dark'); }}>☾ Dark</button>
         </div>
+        <button class="customize-btn" aria-label="Customize theme" @click=${() => { this._openDesigner(); }}>
+          Customize...
+        </button>
       </div>
     `;
+  }
+
+  private _openDesigner(): void {
+    let designer = document.querySelector('pages-theme-designer') as any;
+    if (!designer) {
+      import('./theme-designer.js');
+      designer = document.createElement('pages-theme-designer');
+      designer.target = this.target;
+      document.body.appendChild(designer);
+    }
+    designer.open = true;
   }
 
   private _onFamilyChange(e: Event): void {
