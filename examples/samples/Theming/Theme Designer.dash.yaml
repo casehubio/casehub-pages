@@ -30,5 +30,3 @@ pages:
               ">Open Theme Designer</button>
             </div>
             <pages-theme-designer id="demo-designer"></pages-theme-designer>
-          scripts:
-            - Theme Designer.ts
