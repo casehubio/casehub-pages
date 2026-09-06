@@ -1,0 +1,34 @@
+pages:
+  - name: Theme Designer
+    components:
+      - type: title
+        properties:
+          text: Theme Designer
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            Create and customize themes with live preview. Pick brand colours,
+            adjust chroma and contrast, or use the advanced pipeline editor for
+            full control. Saved themes appear in the theme picker immediately.
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+              <button id="open-designer" style="
+                background: var(--pages-interactive, #4a9eff);
+                color: var(--pages-surface-primary, #111);
+                border: none;
+                border-radius: var(--pages-radius-sm, 4px);
+                padding: 8px 16px;
+                cursor: pointer;
+                font: inherit;
+                font-size: 13px;
+                font-weight: 500;
+              ">Open Theme Designer</button>
+            </div>
+            <pages-theme-designer id="demo-designer"></pages-theme-designer>
+          scripts:
+            - Theme Designer.ts
