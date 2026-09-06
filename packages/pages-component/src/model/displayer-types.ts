@@ -1,6 +1,7 @@
 import type { DataSetLookup, ColumnSettings, ColumnId, CellValue, TypedRow, Column } from "@casehubio/pages-data";
 import type { FilterSettings, RefreshSettings } from "./component-props.js";
 import type { FieldSchema } from "./form-input-types.js";
+import type { RowAccentConfig } from "./grouped-view-types.js";
 
 export interface DataComponentCommon {
   readonly title?: string;
@@ -94,11 +95,20 @@ export type SelectionMode = "none" | "single" | "multi";
 
 export type ColumnRenderer = (cell: CellValue, row: TypedRow, column: Column) => unknown;
 
+export interface RowDetailConfig {
+  readonly mode?: "single" | "multi";
+  readonly columns?: readonly { readonly id: string; readonly label?: string }[];
+}
+
 export interface DataTableProps extends DataComponentCommon {
   readonly pageSize?: number;
+  readonly pageSizeOptions?: readonly number[];
   readonly sortable?: boolean;
   readonly resizable?: boolean;
   readonly rowStyle?: readonly RowStyleRule[];
+  readonly rowAccent?: RowAccentConfig;
+  readonly rowDetail?: RowDetailConfig;
+  readonly rowHeight?: number | "auto";
   readonly expandable?: ExpandableConfig;
   readonly selection?: SelectionMode;
   readonly selectionKey?: string;
@@ -123,6 +133,8 @@ export interface MetricGridProps {
 }
 
 export interface MetricProps extends DataComponentCommon {
+  readonly text?: string;
+  readonly value?: string;
   readonly subtype?: "card" | "card2" | "plain-text" | "quota";
   readonly pattern?: string;
   readonly html?: {
@@ -232,19 +244,4 @@ export interface EventTimelineProps extends DataComponentCommon {
   readonly strategyKey?: string;
 }
 
-export interface SchemaFormProps {
-  readonly schema?: FieldSchema;
-  readonly mode?: "display" | "edit";
-  readonly forceCreate?: boolean;
-  readonly validateOnBlur?: boolean;
-  readonly excludeFields?: readonly string[];
-  readonly fieldOrder?: readonly string[];
-  readonly labels?: Readonly<Record<string, string>>;
-}
 
-export interface FormScopeProps {
-  readonly schema?: FieldSchema;
-  readonly mode?: "display" | "edit";
-  readonly forceCreate?: boolean;
-  readonly validateOnBlur?: boolean;
-}

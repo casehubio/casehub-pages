@@ -925,6 +925,7 @@ export const metricGridPropsSchema = z.object({
 
 export const dataTablePropsSchema = z.object({
   pageSize: z.number().optional(),
+  pageSizeOptions: z.array(z.number()).optional(),
   sortable: z.boolean().optional(),
   resizable: z.boolean().optional(),
   rowStyle: z.array(z.object({
@@ -932,12 +933,26 @@ export const dataTablePropsSchema = z.object({
       className: z.string().optional(),
       style: z.record(z.string()).optional(),
     })).optional(),
+  rowAccent: z.object({
+    column: z.string(),
+    colorMap: z.record(z.string()),
+    default: z.string().optional(),
+    columns: z.union([z.array(z.string()), z.string()]).optional(),
+  }).optional(),
+  rowDetail: z.object({
+    mode: z.enum(["single", "multi"]).optional(),
+    columns: z.array(z.object({
+        id: z.string(),
+        label: z.string().optional(),
+      })).optional(),
+  }).optional(),
+  rowHeight: z.union([z.number(), z.string()]).optional(),
   expandable: z.object({
     idColumn: z.string(),
     parentColumn: z.string(),
     defaultExpanded: z.union([z.number(), z.boolean(), z.boolean()]).optional(),
   }).optional(),
-  selection: z.enum(["none", "single", "multi"]).optional(),
+  selection: z.enum(["single", "multi", "none"]).optional(),
   selectionKey: z.string().optional(),
   title: z.string().optional(),
   visible: z.boolean().optional(),
@@ -1022,6 +1037,8 @@ export const gridTablePropsSchema = z.object({
 });
 
 export const metricPropsSchema = z.object({
+  text: z.string().optional(),
+  value: z.string().optional(),
   subtype: z.enum(["card", "card2", "plain-text", "quota"]).optional(),
   pattern: z.string().optional(),
   html: z.object({
@@ -1610,7 +1627,7 @@ export const groupedViewPropsSchema = z.object({
     default: z.string().optional(),
     columns: z.union([z.array(z.string()), z.string()]).optional(),
   }).optional(),
-  selection: z.enum(["none", "single", "multi"]).optional(),
+  selection: z.enum(["single", "multi", "none"]).optional(),
   sortable: z.boolean().optional(),
   clientSort: z.boolean().optional(),
   title: z.string().optional(),
@@ -1848,6 +1865,7 @@ export const formScopePropsSchema = z.object({
   schema: fieldSchemaZod.optional(),
   validateOnBlur: z.boolean().optional(),
   mode: z.enum(["display", "edit"]).optional(),
+  forceCreate: z.boolean().optional(),
 });
 
 export const submitButtonPropsSchema = z.object({
