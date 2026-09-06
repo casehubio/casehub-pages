@@ -155,92 +155,176 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     return false;
   }
 
-  const edgeCandidates: HandleCandidate[][] = [];
   const validEdges: Edge[] = [];
-
   for (const edge of edges) {
-    const srcNode = nodeMap.get(edge.source);
-    const tgtNode = nodeMap.get(edge.target);
-    if (!srcNode || !tgtNode) continue;
-    const srcB = absBounds(srcNode);
-    const tgtB = absBounds(tgtNode);
-    const candidates: HandleCandidate[] = [];
-    for (const ss of SIDES) {
-      for (const ts of SIDES) {
-        if (ss === ts) continue;
-        const sp = handlePoint(srcB, ss);
-        const tp = handlePoint(tgtB, ts);
-        if (lineCrossesNode(sp, tp, edge.source, edge.target)) continue;
-        const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2);
-        candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist });
-      }
-    }
-    if (candidates.length === 0) {
+    if (nodeMap.has(edge.source) && nodeMap.has(edge.target)) validEdges.push(edge);
+  }
+  if (validEdges.length === 0) return;
+
+  function buildCandidates(): HandleCandidate[][] {
+    const result: HandleCandidate[][] = [];
+    for (const edge of validEdges) {
+      const srcB = absBounds(nodeMap.get(edge.source)!);
+      const tgtB = absBounds(nodeMap.get(edge.target)!);
+      const candidates: HandleCandidate[] = [];
       for (const ss of SIDES) {
         for (const ts of SIDES) {
           if (ss === ts) continue;
           const sp = handlePoint(srcB, ss);
           const tp = handlePoint(tgtB, ts);
+          if (lineCrossesNode(sp, tp, edge.source, edge.target)) continue;
           const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2);
           candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist });
         }
       }
-    }
-    candidates.sort((a, b) => a.dist - b.dist);
-    edgeCandidates.push(candidates);
-    validEdges.push(edge);
-  }
-
-  if (validEdges.length === 0) return;
-
-  let bestCrossings = Infinity;
-  let bestTotalDist = Infinity;
-  let bestAssignment: HandleCandidate[] = [];
-  const current: HandleCandidate[] = new Array(validEdges.length);
-  const MAX_ITERATIONS = 500_000;
-  let iterations = 0;
-
-  function countCrossingsWith(depth: number, candidate: HandleCandidate): number {
-    let crossings = 0;
-    const ae = validEdges[depth]!;
-    for (let j = 0; j < depth; j++) {
-      const b = current[j]!;
-      const be = validEdges[j]!;
-      if (ae.source === be.source || ae.target === be.target ||
-          ae.source === be.target || ae.target === be.source) continue;
-      if (segmentsIntersect(candidate.srcPt, candidate.tgtPt, b.srcPt, b.tgtPt)) crossings++;
-    }
-    return crossings;
-  }
-
-  function search(depth: number, crossingsSoFar: number): void {
-    if (iterations++ > MAX_ITERATIONS) return;
-    if (depth === validEdges.length) {
-      const totalDist = current.reduce((sum, c) => sum + c.dist, 0);
-      if (crossingsSoFar < bestCrossings ||
-          (crossingsSoFar === bestCrossings && totalDist < bestTotalDist)) {
-        bestCrossings = crossingsSoFar;
-        bestTotalDist = totalDist;
-        bestAssignment = [...current];
+      if (candidates.length === 0) {
+        for (const ss of SIDES) {
+          for (const ts of SIDES) {
+            if (ss === ts) continue;
+            const sp = handlePoint(srcB, ss);
+            const tp = handlePoint(tgtB, ts);
+            const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2);
+            candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist });
+          }
+        }
       }
-      return;
+      candidates.sort((a, b) => a.dist - b.dist);
+      result.push(candidates);
     }
-    for (const candidate of edgeCandidates[depth]!) {
-      if (iterations > MAX_ITERATIONS) return;
-      const newCrossings = countCrossingsWith(depth, candidate);
-      const total = crossingsSoFar + newCrossings;
-      if (total >= bestCrossings) continue;
-      current[depth] = candidate;
-      search(depth + 1, total);
-      if (bestCrossings === 0) return;
-    }
+    return result;
   }
 
-  search(0, 0);
+  function optimise(edgeCandidates: HandleCandidate[][], maxIter = 500_000): { crossings: number; totalDist: number; assignment: HandleCandidate[] } {
+    let bestCr = Infinity;
+    let bestDist = Infinity;
+    let bestAsgn: HandleCandidate[] = [];
+    const cur: HandleCandidate[] = new Array(validEdges.length);
+    const MAX_ITER = maxIter;
+    let iters = 0;
+
+    function countWith(depth: number, candidate: HandleCandidate): number {
+      let cr = 0;
+      const ae = validEdges[depth]!;
+      for (let j = 0; j < depth; j++) {
+        const b = cur[j]!;
+        const be = validEdges[j]!;
+        if (ae.source === be.source || ae.target === be.target ||
+            ae.source === be.target || ae.target === be.source) continue;
+        if (segmentsIntersect(candidate.srcPt, candidate.tgtPt, b.srcPt, b.tgtPt)) cr++;
+      }
+      return cr;
+    }
+
+    function srch(depth: number, soFar: number): void {
+      if (iters++ > MAX_ITER) return;
+      if (depth === validEdges.length) {
+        const td = cur.reduce((s, c) => s + c.dist, 0);
+        if (soFar < bestCr || (soFar === bestCr && td < bestDist)) {
+          bestCr = soFar; bestDist = td; bestAsgn = [...cur];
+        }
+        return;
+      }
+      for (const cand of edgeCandidates[depth]!) {
+        if (iters > MAX_ITER) return;
+        const nc = countWith(depth, cand);
+        const total = soFar + nc;
+        if (total >= bestCr) continue;
+        cur[depth] = cand;
+        srch(depth + 1, total);
+        if (bestCr === 0) return;
+      }
+    }
+
+    srch(0, 0);
+    return { crossings: bestCr, totalDist: bestDist, assignment: bestAsgn };
+  }
+
+  function countAllViolations(assignment: HandleCandidate[]): number {
+    let violations = 0;
+    for (let i = 0; i < assignment.length; i++) {
+      const a = assignment[i]!;
+      const ae = validEdges[i]!;
+      if (lineCrossesNode(a.srcPt, a.tgtPt, ae.source, ae.target)) violations++;
+      for (let j = i + 1; j < assignment.length; j++) {
+        const b = assignment[j]!;
+        const be = validEdges[j]!;
+        if (ae.source === be.source || ae.target === be.target ||
+            ae.source === be.target || ae.target === be.source) continue;
+        if (segmentsIntersect(a.srcPt, a.tgtPt, b.srcPt, b.tgtPt)) violations++;
+      }
+    }
+    return violations;
+  }
+
+  let candidates = buildCandidates();
+  let result = optimise(candidates);
+  let totalViolations = countAllViolations(result.assignment);
+
+  // Phase 2: position offsets for remaining crossings
+  if (totalViolations > 0) {
+    const OFFSETS = [20, -20, 40, -40, 60, -60];
+    const crossingNodeIds = new Set<string>();
+    for (let i = 0; i < result.assignment.length; i++) {
+      const a = result.assignment[i]!;
+      const ae = validEdges[i]!;
+      for (let j = i + 1; j < result.assignment.length; j++) {
+        const b = result.assignment[j]!;
+        const be = validEdges[j]!;
+        if (ae.source === be.source || ae.target === be.target ||
+            ae.source === be.target || ae.target === be.source) continue;
+        if (segmentsIntersect(a.srcPt, a.tgtPt, b.srcPt, b.tgtPt)) {
+          crossingNodeIds.add(ae.source); crossingNodeIds.add(ae.target);
+          crossingNodeIds.add(be.source); crossingNodeIds.add(be.target);
+        }
+      }
+      if (lineCrossesNode(a.srcPt, a.tgtPt, ae.source, ae.target)) {
+        crossingNodeIds.add(ae.source); crossingNodeIds.add(ae.target);
+        const srcAnc = ancestors(ae.source);
+        const tgtAnc = ancestors(ae.target);
+        for (const n of nodes) {
+          if (n.id === ae.source || n.id === ae.target) continue;
+          if (srcAnc.has(n.id) || tgtAnc.has(n.id)) continue;
+          const r = absBounds(n);
+          if (lineIntersectsRect(a.srcPt, a.tgtPt, r.x, r.y, r.w, r.h)) {
+            crossingNodeIds.add(n.id);
+          }
+        }
+      }
+    }
+
+    const OFFSET_BUDGET = 50_000;
+    for (const nodeId of crossingNodeIds) {
+      if (totalViolations === 0) break;
+      const node = nodeMap.get(nodeId);
+      if (!node) continue;
+      const origX = node.position.x;
+      const origY = node.position.y;
+      let improved = false;
+      for (const off of OFFSETS) {
+        if (totalViolations === 0) break;
+        for (const [dx, dy] of [[off, 0], [0, off], [off, off], [off, -off]] as const) {
+          node.position = { x: origX + dx, y: origY + dy };
+          const tryCands = buildCandidates();
+          const tryResult = optimise(tryCands, OFFSET_BUDGET);
+          const tryViolations = countAllViolations(tryResult.assignment);
+          if (tryViolations < totalViolations) {
+            result = tryResult;
+            candidates = tryCands;
+            totalViolations = tryViolations;
+            improved = true;
+          }
+          if (totalViolations === 0) break;
+        }
+      }
+      if (!improved) {
+        node.position = { x: origX, y: origY };
+      }
+    }
+  }
 
   for (let i = 0; i < validEdges.length; i++) {
     const edge = validEdges[i]!;
-    const candidate = bestAssignment[i]!;
+    const candidate = result.assignment[i]!;
     edge.sourceHandle = `source-${candidate.srcSide}`;
     edge.targetHandle = `target-${candidate.tgtSide}`;
   }
