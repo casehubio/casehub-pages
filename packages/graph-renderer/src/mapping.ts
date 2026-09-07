@@ -216,7 +216,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
           const sp = handlePoint(srcB, ss);
           const tp = handlePoint(tgtB, ts);
           const crosses = lineCrossesNode(sp, tp, edge.source, edge.target);
-          let penalty = ss === ts ? 200 : 0;
+          let penalty = ss === ts ? 50 : 0;
           if (edgePref) {
             const pen = DIRECTION_PENALTY;
             if (ss !== edgePref.src) penalty += pen;
