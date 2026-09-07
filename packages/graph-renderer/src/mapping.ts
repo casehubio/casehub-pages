@@ -418,6 +418,53 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     edge.targetHandle = `target-${candidate.tgtSide}`;
   }
 
+  for (let i = 0; i < validEdges.length; i++) {
+    const ei = validEdges[i]!;
+    for (let j = i + 1; j < validEdges.length; j++) {
+      const ej = validEdges[j]!;
+      if (ei.source !== ej.target || ei.target !== ej.source) continue;
+      const si = nodeMap.get(ei.source)!, ti = nodeMap.get(ei.target)!;
+      const sib = absBounds(si), tib = absBounds(ti);
+      const iSrc = ei.sourceHandle!.replace('source-', ''), iTgt = ei.targetHandle!.replace('target-', '');
+      const jSrc = ej.sourceHandle!.replace('source-', ''), jTgt = ej.targetHandle!.replace('target-', '');
+      const ptA = (s: string, b: { x: number; y: number; w: number; h: number }) => handlePosPoint(b, s);
+      const curI = { s: ptA(iSrc, sib), t: ptA(iTgt, tib) };
+      const curJ = { s: ptA(jSrc, tib), t: ptA(jTgt, sib) };
+      let curCross = 0;
+      for (let k = 0; k < validEdges.length; k++) {
+        if (k === i || k === j) continue;
+        const ek = validEdges[k]!;
+        if (ek.source === ei.source || ek.target === ei.target || ek.source === ei.target || ek.target === ei.source) continue;
+        const sk = nodeMap.get(ek.source)!, tk = nodeMap.get(ek.target)!;
+        const ks = ptA(ek.sourceHandle!.replace('source-', ''), absBounds(sk));
+        const kt = ptA(ek.targetHandle!.replace('target-', ''), absBounds(tk));
+        if (segmentsIntersect(curI.s, curI.t, ks, kt)) curCross++;
+        if (segmentsIntersect(curJ.s, curJ.t, ks, kt)) curCross++;
+      }
+      if (segmentsIntersect(curI.s, curI.t, curJ.s, curJ.t)) curCross++;
+      const swpI = { s: ptA(jTgt, sib), t: ptA(jSrc, tib) };
+      const swpJ = { s: ptA(iTgt, tib), t: ptA(iSrc, sib) };
+      let swpCross = 0;
+      for (let k = 0; k < validEdges.length; k++) {
+        if (k === i || k === j) continue;
+        const ek = validEdges[k]!;
+        if (ek.source === ei.source || ek.target === ei.target || ek.source === ei.target || ek.target === ei.source) continue;
+        const sk = nodeMap.get(ek.source)!, tk = nodeMap.get(ek.target)!;
+        const ks = ptA(ek.sourceHandle!.replace('source-', ''), absBounds(sk));
+        const kt = ptA(ek.targetHandle!.replace('target-', ''), absBounds(tk));
+        if (segmentsIntersect(swpI.s, swpI.t, ks, kt)) swpCross++;
+        if (segmentsIntersect(swpJ.s, swpJ.t, ks, kt)) swpCross++;
+      }
+      if (segmentsIntersect(swpI.s, swpI.t, swpJ.s, swpJ.t)) swpCross++;
+      if (swpCross < curCross) {
+        ei.sourceHandle = `source-${jTgt}`;
+        ei.targetHandle = `target-${jSrc}`;
+        ej.sourceHandle = `source-${iTgt}`;
+        ej.targetHandle = `target-${iSrc}`;
+      }
+    }
+  }
+
   const srcCounts = new Map<string, Record<string, number>>();
   const tgtCounts = new Map<string, Record<string, number>>();
   for (const edge of edges) {
