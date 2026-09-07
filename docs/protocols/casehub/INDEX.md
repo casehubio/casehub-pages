@@ -15,3 +15,5 @@
 | [aria-interaction-contract.md](aria-interaction-contract.md) | Interactive components declare ARIA role + accessible name — no parallel automation attributes | All interactive Web Components in pages and blocks-ui |
 | [graph-core-pure-data.md](graph-core-pure-data.md) | graph-core is pure data — no callbacks, no framework deps | All code in packages/graph-core/ |
 | [per-instance-spi-registration.md](per-instance-spi-registration.md) | Rendering-tier SPIs use per-instance registration, not singletons | SPI interfaces in graph-renderer |
+| [yaml-properties-require-interface-declaration.md](yaml-properties-require-interface-declaration.md) | YAML properties must be declared in TypeScript interfaces — undeclared properties are silently dropped | All component types in ComponentTypeRegistry |
+| [generated-schemas-not-hand-written.md](generated-schemas-not-hand-written.md) | Zod schemas are generated from TS interfaces, never hand-written | pages-schema package |
