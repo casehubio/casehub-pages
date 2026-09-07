@@ -213,6 +213,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
       const candidates: HandleCandidate[] = [];
       for (const ss of SIDES) {
         for (const ts of SIDES) {
+          if (ss === ts) continue;
           const sp = handlePoint(srcB, ss);
           const tp = handlePoint(tgtB, ts);
           const crosses = lineCrossesNode(sp, tp, edge.source, edge.target);
