@@ -45,7 +45,7 @@ function DirectionalBezierEdge(props: EdgeProps) {
 const smartEdgeTypes: EdgeTypes = new Proxy({ default: SmartBezierEdge } as EdgeTypes, {
   get(target, prop) {
     if (prop === 'default' || prop === 'smart') return SmartBezierEdge;
-    if (typeof prop === 'string') return DirectionalBezierEdge;
+    if (typeof prop === 'string' && prop.startsWith('org-')) return DirectionalBezierEdge;
     return Reflect.get(target, prop);
   },
 });
