@@ -217,20 +217,69 @@ export class PagesThemeDesignerElement extends LitElement {
     .pipeline-stage {
       background: var(--pages-neutral-3, #222);
       border: 1px solid var(--pages-neutral-5, #444);
-      border-radius: 6px; padding: 10px;
+      border-radius: 8px; padding: 12px;
     }
     .pipeline-stage-header {
       display: flex; align-items: center; gap: 8px;
-      font-size: 13px; font-weight: 500;
+      font-size: 13px; font-weight: 600;
     }
-    .pipeline-stage-header button { padding: 2px 6px; font-size: 11px; }
-    .pipeline-stage-params { margin-top: 8px; font-size: 12px; }
-    .pipeline-stage-params textarea {
-      width: 100%; min-height: 40px; font-family: monospace; font-size: 11px;
-      background: var(--pages-neutral-2); color: var(--pages-neutral-12);
-      border: 1px solid var(--pages-neutral-5); border-radius: 4px;
-      padding: 6px; resize: vertical;
+    .pipeline-stage-name {
+      flex: 1; color: var(--pages-accent-10, #8ec8ff);
     }
+    .pipeline-stage-header button {
+      padding: 2px 8px; font-size: 11px;
+      background: var(--pages-neutral-4, #333);
+      border: 1px solid var(--pages-neutral-5, #444);
+      border-radius: 3px; color: var(--pages-neutral-10, #aaa);
+      cursor: pointer;
+    }
+    .pipeline-stage-header button:hover {
+      background: var(--pages-neutral-5, #444);
+      color: var(--pages-neutral-12, #eee);
+    }
+    .pipeline-stage-params { margin-top: 8px; position: relative; }
+    .code-editor-wrap {
+      position: relative;
+      border: 1px solid var(--pages-neutral-5, #444);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--pages-neutral-2, #181825);
+    }
+    .code-editor-wrap:focus-within {
+      border-color: var(--pages-accent-8, #4a9eff);
+      box-shadow: 0 0 0 2px oklch(60% 0.15 245 / 0.2);
+    }
+    .code-highlight, .code-textarea {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px; line-height: 1.5;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      tab-size: 2;
+    }
+    .code-highlight {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      color: transparent;
+    }
+    .code-textarea {
+      position: relative;
+      width: 100%; min-height: 60px;
+      background: transparent;
+      color: oklch(85% 0 0 / 0.5);
+      caret-color: var(--pages-accent-9, #4a9eff);
+      border: none; outline: none;
+      resize: vertical;
+    }
+    .json-key { color: oklch(75% 0.12 210); }
+    .json-string { color: oklch(70% 0.14 145); }
+    .json-number { color: oklch(75% 0.14 55); }
+    .json-bool { color: oklch(70% 0.12 310); }
+    .json-null { color: oklch(60% 0.08 260); }
+    .json-bracket { color: oklch(65% 0 0); }
+    .json-colon { color: oklch(55% 0 0); }
+    .json-comma { color: oklch(55% 0 0); }
     .add-stage-btn { align-self: flex-start; }
 
     input[type="file"] { display: none; }
@@ -664,22 +713,38 @@ export class PagesThemeDesignerElement extends LitElement {
     return html`
       <div class="pipeline-editor">
         <div class="control-label">Pipeline Stages</div>
-        ${this._pipeline.map((stage, i) => html`
-          <div class="pipeline-stage">
-            <div class="pipeline-stage-header">
-              <span style="flex:1">${stage.transform}</span>
-              <button @click=${() => { this._movePipelineStage(i, -1); }} ?disabled=${i === 0}>↑</button>
-              <button @click=${() => { this._movePipelineStage(i, 1); }} ?disabled=${i === this._pipeline.length - 1}>↓</button>
-              <button @click=${() => { this._removePipelineStage(i); }}>✕</button>
-            </div>
-            ${stage.params ? html`
-              <div class="pipeline-stage-params">
-                <textarea .value=${JSON.stringify(stage.params, null, 2)}
-                  @change=${(e: Event) => { this._updateStageParams(i, (e.target as HTMLTextAreaElement).value); }}></textarea>
+        ${this._pipeline.map((stage, i) => {
+          const json = stage.params ? JSON.stringify(stage.params, null, 2) : '';
+          return html`
+            <div class="pipeline-stage">
+              <div class="pipeline-stage-header">
+                <span class="pipeline-stage-name">${stage.transform}</span>
+                <button @click=${() => { this._movePipelineStage(i, -1); }} ?disabled=${i === 0} title="Move up">↑</button>
+                <button @click=${() => { this._movePipelineStage(i, 1); }} ?disabled=${i === this._pipeline.length - 1} title="Move down">↓</button>
+                <button @click=${() => { this._removePipelineStage(i); }} title="Remove">✕</button>
               </div>
-            ` : nothing}
-          </div>
-        `)}
+              ${json ? html`
+                <div class="pipeline-stage-params">
+                  <div class="code-editor-wrap">
+                    <div class="code-highlight" .innerHTML=${this._highlightJSON(json) + '\n'}></div>
+                    <textarea class="code-textarea" .value=${json}
+                      @input=${(e: Event) => {
+                        const ta = e.target as HTMLTextAreaElement;
+                        const highlight = ta.previousElementSibling as HTMLElement;
+                        if (highlight) highlight.innerHTML = this._highlightJSON(ta.value) + '\n';
+                      }}
+                      @change=${(e: Event) => { this._updateStageParams(i, (e.target as HTMLTextAreaElement).value); }}
+                      @scroll=${(e: Event) => {
+                        const ta = e.target as HTMLTextAreaElement;
+                        const highlight = ta.previousElementSibling as HTMLElement;
+                        if (highlight) { highlight.scrollTop = ta.scrollTop; highlight.scrollLeft = ta.scrollLeft; }
+                      }}></textarea>
+                  </div>
+                </div>
+              ` : nothing}
+            </div>
+          `;
+        })}
         <button class="add-stage-btn" @click=${() => { this._addPipelineStage(); }}>+ Add Stage</button>
       </div>
     `;
@@ -879,6 +944,23 @@ export class PagesThemeDesignerElement extends LitElement {
       pipeline[index] = { ...pipeline[index]!, params };
       this._pipeline = pipeline;
     } catch { /* invalid JSON, ignore */ }
+  }
+
+  private _highlightJSON(json: string): string {
+    return json.replace(
+      /("(?:[^"\\]|\\.)*")\s*(:)|("(?:[^"\\]|\\.)*")|(-?\d+\.?\d*(?:[eE][+-]?\d+)?)|(\btrue\b|\bfalse\b)|(\bnull\b)|([{}[\]])|([,])|(:)/g,
+      (_match, key, colonAfterKey, str, num, bool, nul, bracket, comma, colon) => {
+        if (key) return `<span class="json-key">${key}</span><span class="json-colon">${colonAfterKey}</span>`;
+        if (str) return `<span class="json-string">${str}</span>`;
+        if (num) return `<span class="json-number">${num}</span>`;
+        if (bool) return `<span class="json-bool">${bool}</span>`;
+        if (nul) return `<span class="json-null">${nul}</span>`;
+        if (bracket) return `<span class="json-bracket">${bracket}</span>`;
+        if (comma) return `<span class="json-comma">${comma}</span>`;
+        if (colon) return `<span class="json-colon">${colon}</span>`;
+        return _match;
+      }
+    );
   }
 }
 
