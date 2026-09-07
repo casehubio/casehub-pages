@@ -4,6 +4,7 @@ import {
   buildYamlContext,
   navigateSchema,
   schemaToCompletions,
+  isArrayField,
 } from "./schema-completion.js";
 import { dashboardSchema } from "@casehubio/pages-schema";
 
@@ -214,6 +215,71 @@ describe("schemaToCompletions", () => {
     const labels = completions.map(c => c.label);
     expect(labels).toContain("x");
     expect(labels).toContain("y");
+  });
+});
+
+describe("isArrayField", () => {
+  const testSchema = z.object({
+    pages: z.array(z.object({
+      components: z.array(z.discriminatedUnion("type", [
+        z.object({ type: z.literal("metric"), text: z.string().optional() }),
+        z.object({ type: z.literal("chart"), title: z.string().optional() }),
+      ])),
+      name: z.string().optional(),
+    })),
+  });
+
+  it("detects array field in path", () => {
+    expect(isArrayField(testSchema, ["pages"])).toBe(true);
+    expect(isArrayField(testSchema, ["pages", "components"])).toBe(true);
+  });
+
+  it("returns false for non-array fields", () => {
+    expect(isArrayField(testSchema, ["pages", "name"])).toBe(false);
+  });
+
+  it("returns false for empty path", () => {
+    expect(isArrayField(testSchema, [])).toBe(false);
+  });
+});
+
+describe("array-item completions", () => {
+  it("prepends - to completions on empty line inside array context", () => {
+    const doc = "pages:\n- name: index\n  components:\n    ";
+    const ctx = buildYamlContext(doc, doc.length);
+    const result = navigateSchema(dashboardSchema, ctx.path, ctx.siblings);
+    expect(result).toBeDefined();
+    const inArray = isArrayField(dashboardSchema, ctx.path);
+    expect(inArray).toBe(true);
+  });
+
+  it("detects components as array in dashboard schema", () => {
+    expect(isArrayField(dashboardSchema, ["pages", "components"])).toBe(true);
+    expect(isArrayField(dashboardSchema, ["pages", "rows"])).toBe(true);
+  });
+
+  it("does not detect non-array fields as array", () => {
+    expect(isArrayField(dashboardSchema, ["pages", "name"])).toBe(false);
+    expect(isArrayField(dashboardSchema, ["properties"])).toBe(false);
+  });
+});
+
+describe("empty line after array key descends into array", () => {
+  it("cursor on empty line after components: resolves to component schema", () => {
+    const doc = "pages:\n- name: index\n  rows:\n  - columns:\n    - span: 4\n      components:\n      ";
+    const ctx = buildYamlContext(doc, doc.length);
+    expect(ctx.path).toContain("components");
+    const result = navigateSchema(dashboardSchema, ctx.path, ctx.siblings);
+    expect(result).toBeDefined();
+    const completions = schemaToCompletions(result!);
+    const labels = completions.map(c => c.label);
+    expect(labels).toContain("type");
+  });
+
+  it("cursor on empty line after rows: resolves to row schema", () => {
+    const doc = "pages:\n- name: index\n  rows:\n    ";
+    const ctx = buildYamlContext(doc, doc.length);
+    expect(ctx.path).toContain("rows");
   });
 });
 

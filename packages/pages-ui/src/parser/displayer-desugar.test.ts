@@ -512,6 +512,40 @@ describe("desugarDisplayer", () => {
     });
   });
 
+  describe("schema validation strips undeclared properties", () => {
+    it("strips undeclared properties from metric", () => {
+      const result = desugarDisplayer({
+        type: "metric",
+        undeclaredProp: "should be stripped",
+        lookup: { uuid: "ds-1" },
+      });
+      expect(result.props).toBeDefined();
+      expect((result.props as Record<string, unknown>).undeclaredProp).toBeUndefined();
+    });
+
+    it("strips undeclared properties from bar-chart", () => {
+      const result = desugarDisplayer({
+        type: "bar-chart",
+        bogus: 42,
+        lookup: { uuid: "ds-1" },
+      });
+      expect((result.props as Record<string, unknown>).bogus).toBeUndefined();
+    });
+
+    it("preserves declared properties after validation", () => {
+      const result = desugarDisplayer({
+        type: "timeline",
+        startColumn: "start",
+        endColumn: "end",
+        undeclared: "nope",
+        lookup: { uuid: "milestones" },
+      });
+      expect(result.props?.["startColumn"]).toBe("start");
+      expect(result.props?.["endColumn"]).toBe("end");
+      expect((result.props as Record<string, unknown>).undeclared).toBeUndefined();
+    });
+  });
+
   describe("prop passthrough for component-specific fields", () => {
     it("passes startColumn and endColumn through for timeline", () => {
       const result = desugarDisplayer({

@@ -22,7 +22,7 @@ import {
   schemaFormPropsSchema, actionButtonPropsSchema,
   formScopePropsSchema, submitButtonPropsSchema,
   iframePluginPropsSchema,
-} from "./component-schemas.js";
+} from "./component-schemas.generated.js";
 
 const componentBase = z.object({
   id: z.string().optional(),

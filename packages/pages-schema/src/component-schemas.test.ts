@@ -21,7 +21,7 @@ import {
   schemaFormPropsSchema, actionButtonPropsSchema,
   formScopePropsSchema, submitButtonPropsSchema,
   iframePluginPropsSchema,
-} from "./component-schemas.js";
+} from "./component-schemas.generated.js";
 
 describe("component schemas", () => {
   describe("chart data components", () => {
@@ -361,7 +361,7 @@ describe("component schemas", () => {
     it("groupedViewPropsSchema parses preset", () => {
       const result = groupedViewPropsSchema.parse({
         lookup: { uuid: "ds-1" },
-        groupBy: { sourceId: "region", columnId: "region", strategy: { mode: "distinct" } },
+        groupBy: { sourceId: "region", columnId: "region", strategy: { mode: "distinct" }, maxIntervals: 15, emptyIntervals: false, ascendingOrder: true },
         preset: "sectioned",
       });
       expect(result.preset).toBe("sectioned");

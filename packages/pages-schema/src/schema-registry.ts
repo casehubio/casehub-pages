@@ -21,7 +21,7 @@ import {
   schemaFormPropsSchema, actionButtonPropsSchema,
   formScopePropsSchema, submitButtonPropsSchema,
   iframePluginPropsSchema,
-} from "./component-schemas.js";
+} from "./component-schemas.generated.js";
 
 export const componentSchemaRegistry: ReadonlyMap<string, z.ZodType> = new Map([
   ["grid", gridPropsSchema],

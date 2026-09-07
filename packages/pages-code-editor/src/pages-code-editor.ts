@@ -53,6 +53,22 @@ const pagesTheme = EditorView.theme({
   '.cm-selectionBackground': {
     backgroundColor: 'var(--pages-accent-4, #e1ecff) !important',
   },
+  '& .cm-tooltip': {
+    backgroundColor: 'var(--pages-neutral-2, #f5f5f5) !important',
+    color: 'var(--pages-neutral-12, #1a1a1a) !important',
+    border: '1px solid var(--pages-neutral-6, #d0d0d0) !important',
+    borderRadius: 'var(--pages-radius-sm, 4px)',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+  },
+  '& .cm-tooltip-autocomplete ul li[aria-selected]': {
+    backgroundColor: 'var(--pages-accent-9, #3451b2) !important',
+    color: 'white !important',
+  },
+  '& .cm-completionDetail': {
+    color: 'var(--pages-neutral-9, #6f6f6f) !important',
+    fontStyle: 'italic',
+    marginLeft: '8px',
+  },
 });
 
 function languageExtension(lang: string): Extension[] {

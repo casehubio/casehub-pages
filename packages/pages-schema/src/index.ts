@@ -28,7 +28,7 @@ export {
   schemaFormPropsSchema, actionButtonPropsSchema,
   formScopePropsSchema, submitButtonPropsSchema,
   iframePluginPropsSchema,
-} from "./component-schemas.js";
+} from "./component-schemas.generated.js";
 
 export { componentSchema, dashboardSchema } from "./document-schema.js";
 export { componentSchemaRegistry } from "./schema-registry.js";
