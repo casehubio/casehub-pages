@@ -195,20 +195,39 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     UP: { src: 'right', tgt: 'left' },
   };
 
+  function angleToSide(a: number): string {
+    while (a >= Math.PI) a -= 2 * Math.PI;
+    while (a < -Math.PI) a += 2 * Math.PI;
+    if (a >= -Math.PI / 4 && a < Math.PI / 4) return 'right';
+    if (a >= Math.PI / 4 && a < 3 * Math.PI / 4) return 'bottom';
+    if (a >= -3 * Math.PI / 4 && a < -Math.PI / 4) return 'top';
+    return 'left';
+  }
+
+  const assignedPairs = new Set<string>();
+
   function buildCandidates(): HandleCandidate[][] {
     const result: HandleCandidate[][] = [];
+    assignedPairs.clear();
     for (const edge of validEdges) {
       const srcB = absBounds(nodeMap.get(edge.source)!);
       const tgtB = absBounds(nodeMap.get(edge.target)!);
+      const srcCx = srcB.x + srcB.w / 2, srcCy = srcB.y + srcB.h / 2;
+      const tgtCx = tgtB.x + tgtB.w / 2, tgtCy = tgtB.y + tgtB.h / 2;
       let edgePref = preferred;
       if (preferred && _direction) {
-        const srcCx = srcB.x + srcB.w / 2, srcCy = srcB.y + srcB.h / 2;
-        const tgtCx = tgtB.x + tgtB.w / 2, tgtCy = tgtB.y + tgtB.h / 2;
         const horiz = _direction === 'RIGHT' || _direction === 'LEFT';
         const flowsForward = horiz
           ? (_direction === 'RIGHT' ? tgtCx > srcCx : tgtCx < srcCx)
           : (_direction === 'DOWN' ? tgtCy > srcCy : tgtCy < srcCy);
         if (!flowsForward) edgePref = perpDefaults[_direction] ?? preferred;
+      }
+      if (!edgePref) {
+        const angle = Math.atan2(tgtCy - srcCy, tgtCx - srcCx);
+        const reverseKey = `${edge.target}:${edge.source}`;
+        const rot = assignedPairs.has(reverseKey) ? Math.PI / 2 : 0;
+        edgePref = { src: angleToSide(angle + rot), tgt: angleToSide(angle + Math.PI + rot) };
+        assignedPairs.add(`${edge.source}:${edge.target}`);
       }
       const candidates: HandleCandidate[] = [];
       for (const ss of SIDES) {
@@ -219,8 +238,9 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
           const crosses = lineCrossesNode(sp, tp, edge.source, edge.target);
           let penalty = 0;
           if (edgePref) {
-            if (ss !== edgePref.src) penalty += DIRECTION_PENALTY;
-            if (ts !== edgePref.tgt) penalty += DIRECTION_PENALTY;
+            const pen = preferred ? DIRECTION_PENALTY : 1000;
+            if (ss !== edgePref.src) penalty += pen;
+            if (ts !== edgePref.tgt) penalty += pen;
           }
           const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2) + penalty;
           candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist, crossesNode: crosses });
