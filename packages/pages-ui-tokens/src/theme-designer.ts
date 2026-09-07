@@ -8,6 +8,8 @@ import type { ThemeStorage } from './theme-storage.js';
 import { detectStorage } from './theme-storage.js';
 import type { PresetConfig, TransformDef } from './types.js';
 import { DESIGNER_PRESETS, type DesignerPreset } from './designer-presets.js';
+import { getBuiltinPreset, listBuiltinPresets } from './preset-loader.js';
+import { listThemes } from './runtime.js';
 
 const SEMANTIC_GROUPS: { name: string; hueFn: (a: number, n: number) => number; chromaScale: number }[] = [
   { name: 'accent', hueFn: (a) => a, chromaScale: 1 },
@@ -122,18 +124,26 @@ export class PagesThemeDesignerElement extends LitElement {
     }
     .advanced-toggle input { accent-color: var(--pages-accent-9, #4a9eff); }
 
-    .saved-themes { display: flex; flex-direction: column; gap: 4px; }
-    .saved-theme-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 4px 8px; border-radius: 4px; cursor: pointer;
-      font-size: 12px;
+    .theme-list { display: flex; flex-direction: column; gap: 2px; }
+    .theme-list-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 8px; border-radius: 4px;
+      font-size: 12px; color: var(--pages-neutral-11, #aaa);
     }
-    .saved-theme-item:hover { background: var(--pages-neutral-4, #333); }
-    .saved-theme-delete {
-      margin-left: auto; background: none; border: none;
-      color: var(--pages-danger-9, #e44); cursor: pointer;
-      font-size: 11px; padding: 2px 4px;
+    .theme-list-item:hover { background: var(--pages-neutral-4, #333); }
+    .theme-list-item .theme-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .theme-list-item .theme-tag {
+      font-size: 9px; padding: 1px 4px; border-radius: 3px;
+      background: var(--pages-neutral-5, #444); color: var(--pages-neutral-9, #888);
     }
+    .theme-list-actions { display: flex; gap: 2px; margin-left: auto; }
+    .theme-list-actions button {
+      background: none; border: none; cursor: pointer;
+      font-size: 11px; padding: 2px 6px; border-radius: 3px;
+      color: var(--pages-neutral-10, #aaa);
+    }
+    .theme-list-actions button:hover { background: var(--pages-neutral-5, #444); color: var(--pages-neutral-12, #eee); }
+    .theme-list-actions .delete-btn:hover { color: var(--pages-danger-9, #e44); }
 
     .preview-widgets { display: flex; flex-direction: column; gap: 16px; }
 
@@ -225,6 +235,15 @@ export class PagesThemeDesignerElement extends LitElement {
 
     input[type="file"] { display: none; }
 
+    .collapsible-header {
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+      user-select: none;
+    }
+    .collapsible-header .toggle-arrow {
+      font-size: 10px; transition: transform 0.15s; color: var(--pages-neutral-8, #666);
+    }
+    .collapsible-header .toggle-arrow.open { transform: rotate(90deg); }
+
     .preset-grid {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
     }
@@ -257,6 +276,7 @@ export class PagesThemeDesignerElement extends LitElement {
     _pipeline: { state: true },
     _savedThemes: { state: true },
     _previewMode: { state: true },
+    _presetsOpen: { state: true },
   };
 
   declare open: boolean;
@@ -272,6 +292,7 @@ export class PagesThemeDesignerElement extends LitElement {
   declare _pipeline: TransformDef[];
   declare _savedThemes: string[];
   declare _previewMode: 'light' | 'dark';
+  declare _presetsOpen: boolean;
 
   private _resolvedStorage: ThemeStorage | undefined;
   private _previewStyleEl: HTMLStyleElement | null = null;
@@ -289,6 +310,7 @@ export class PagesThemeDesignerElement extends LitElement {
     this._pipeline = [];
     this._savedThemes = [];
     this._previewMode = 'dark';
+    this._presetsOpen = true;
   }
 
   override connectedCallback(): void {
@@ -533,19 +555,7 @@ export class PagesThemeDesignerElement extends LitElement {
             <div class="controls-panel">
               ${this._advancedMode ? this._renderPipelineEditor() : this._renderSimpleControls(swatches)}
 
-              ${this._savedThemes.length > 0 ? html`
-                <div class="control-group">
-                  <div class="control-label">Saved Themes</div>
-                  <div class="saved-themes">
-                    ${this._deduplicateFamilies(this._savedThemes).map(name => html`
-                      <div class="saved-theme-item" @click=${() => { this._onLoad(name); }}>
-                        ${name}
-                        <button class="saved-theme-delete" @click=${(e: Event) => { e.stopPropagation(); this._onDelete(name); }}>✕</button>
-                      </div>
-                    `)}
-                  </div>
-                </div>
-              ` : nothing}
+              ${this._renderThemeList()}
 
               <label class="advanced-toggle">
                 <input type="checkbox" .checked=${this._advancedMode}
@@ -576,16 +586,21 @@ export class PagesThemeDesignerElement extends LitElement {
     return html`
       <div class="simple-controls">
         <div class="control-group">
-          <div class="control-label">Starting Point</div>
-          <div class="preset-grid">
-            ${DESIGNER_PRESETS.map(p => html`
-              <button class="preset-chip" @click=${() => { this._applyDesignerPreset(p); }}
-                title="${p.name}: hue ${p.accentHue}°, chroma ${p.chroma}">
-                <span class="preset-dot" style="background: oklch(55% ${Math.max(p.chroma, 0.02)} ${p.accentHue})"></span>
-                ${p.name}
-              </button>
-            `)}
+          <div class="collapsible-header control-label" @click=${() => { this._presetsOpen = !this._presetsOpen; }}>
+            <span class="toggle-arrow ${this._presetsOpen ? 'open' : ''}">▶</span>
+            Starting Point
           </div>
+          ${this._presetsOpen ? html`
+            <div class="preset-grid">
+              ${DESIGNER_PRESETS.map(p => html`
+                <button class="preset-chip" @click=${() => { this._applyDesignerPreset(p); }}
+                  title="${p.name}: hue ${p.accentHue}°, chroma ${p.chroma}">
+                  <span class="preset-dot" style="background: oklch(55% ${Math.max(p.chroma, 0.02)} ${p.accentHue})"></span>
+                  ${p.name}
+                </button>
+              `)}
+            </div>
+          ` : nothing}
         </div>
 
         <div class="control-group">
@@ -761,6 +776,76 @@ export class PagesThemeDesignerElement extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  private _renderThemeList() {
+    const builtinFamilies = this._deduplicateFamilies(listBuiltinPresets());
+    const customFamilies = this._deduplicateFamilies(this._savedThemes);
+    const allFamilies = [...new Set([...builtinFamilies, ...customFamilies])].sort();
+    if (allFamilies.length === 0) return nothing;
+
+    return html`
+      <div class="control-group">
+        <div class="control-label">Existing Themes</div>
+        <div class="theme-list">
+          ${allFamilies.map(name => {
+            const isBuiltin = builtinFamilies.includes(name);
+            const isCustom = customFamilies.includes(name);
+            return html`
+              <div class="theme-list-item">
+                <span class="theme-name">${name}</span>
+                ${isBuiltin ? html`<span class="theme-tag">builtin</span>` : nothing}
+                <div class="theme-list-actions">
+                  <button title="Edit" @click=${() => { this._onEditTheme(name, isBuiltin); }}>✎</button>
+                  <button title="Duplicate as new" @click=${() => { this._onDuplicateTheme(name, isBuiltin); }}>⧉</button>
+                  ${isCustom ? html`<button class="delete-btn" title="Delete" @click=${() => { this._onDelete(name); }}>✕</button>` : nothing}
+                </div>
+              </div>
+            `;
+          })}
+        </div>
+      </div>
+    `;
+  }
+
+  private async _onEditTheme(name: string, isBuiltin: boolean): Promise<void> {
+    if (isBuiltin) {
+      const config = getBuiltinPreset(`${name}-dark`) ?? getBuiltinPreset(`${name}-light`) ?? getBuiltinPreset(name);
+      if (!config) return;
+      this._loadFromPresetConfig(config, name);
+    } else {
+      await this._onLoad(name);
+    }
+  }
+
+  private async _onDuplicateTheme(name: string, isBuiltin: boolean): Promise<void> {
+    if (isBuiltin) {
+      const config = getBuiltinPreset(`${name}-dark`) ?? getBuiltinPreset(`${name}-light`) ?? getBuiltinPreset(name);
+      if (!config) return;
+      this._loadFromPresetConfig(config, `${name}-copy`);
+    } else {
+      await this._onLoad(name);
+      this._themeName = `${name}-copy`;
+    }
+  }
+
+  private _loadFromPresetConfig(config: PresetConfig, themeName: string): void {
+    this._themeName = themeName;
+    const modeTransforms = config.pipeline.filter(t => t.transform !== 'dark-mode' && t.transform !== 'light-mode');
+    this._pipeline = [...modeTransforms];
+
+    const oklchStage = config.pipeline.find(t => t.transform === 'oklch-scale');
+    if (oklchStage?.params) {
+      const hues = oklchStage.params['hues'] as Record<string, number | number[]> | undefined;
+      if (hues) {
+        const accent = hues['accent'];
+        this._accentHue = Array.isArray(accent) ? accent[0]! : (accent ?? this._accentHue);
+        const neutral = hues['neutral'];
+        this._neutralHue = Array.isArray(neutral) ? neutral[0]! : (neutral ?? this._neutralHue);
+      }
+      this._chroma = (oklchStage.params['chroma'] as number) ?? this._chroma;
+      this._contrast = (oklchStage.params['contrast'] as number) ?? this._contrast;
+    }
   }
 
   private _deduplicateFamilies(names: string[]): string[] {
