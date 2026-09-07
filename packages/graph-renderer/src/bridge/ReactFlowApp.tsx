@@ -22,18 +22,16 @@ import {
 import { SmartBezierEdge, SmartEdgeProvider } from '@tisoap/react-flow-smart-edge';
 import { type EdgeProps, Position } from '@xyflow/react';
 
-const MIN_DEPARTURE = 60;
-
 function DirectionalBezierEdge(props: EdgeProps) {
   const { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition } = props;
-  const dx = (pos: Position) => pos === Position.Left ? -MIN_DEPARTURE : pos === Position.Right ? MIN_DEPARTURE : 0;
-  const dy = (pos: Position) => pos === Position.Top ? -MIN_DEPARTURE : pos === Position.Bottom ? MIN_DEPARTURE : 0;
-  const dist = Math.max(Math.abs(sourceX - targetX), Math.abs(sourceY - targetY));
-  const offset = Math.max(MIN_DEPARTURE, dist * 0.25);
-  const scx = sourceX + (dx(sourcePosition) !== 0 ? (dx(sourcePosition) > 0 ? offset : -offset) : 0);
-  const scy = sourceY + (dy(sourcePosition) !== 0 ? (dy(sourcePosition) > 0 ? offset : -offset) : 0);
-  const tcx = targetX + (dx(targetPosition) !== 0 ? (dx(targetPosition) > 0 ? offset : -offset) : 0);
-  const tcy = targetY + (dy(targetPosition) !== 0 ? (dy(targetPosition) > 0 ? offset : -offset) : 0);
+  const dist = Math.sqrt((sourceX - targetX) ** 2 + (sourceY - targetY) ** 2);
+  const offset = Math.min(60, dist * 0.4);
+  const signX = (pos: Position) => pos === Position.Left ? -1 : pos === Position.Right ? 1 : 0;
+  const signY = (pos: Position) => pos === Position.Top ? -1 : pos === Position.Bottom ? 1 : 0;
+  const scx = sourceX + signX(sourcePosition) * offset;
+  const scy = sourceY + signY(sourcePosition) * offset;
+  const tcx = targetX + signX(targetPosition) * offset;
+  const tcy = targetY + signY(targetPosition) * offset;
   const path = `M${sourceX},${sourceY} C${scx},${scy} ${tcx},${tcy} ${targetX},${targetY}`;
   return (
     <g>
