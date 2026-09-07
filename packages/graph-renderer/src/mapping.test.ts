@@ -73,12 +73,13 @@ describe('toReactFlowEdge', () => {
     expect(result.target).toBe('n2');
   });
 
-  it('maps type directly', () => {
+  it('maps type to className for CSS styling', () => {
     const edge: GraphEdge = {
       id: 'e1', type: 'capability', source: 'n1', target: 'n2',
     };
     const result = toReactFlowEdge(edge);
-    expect(result.type).toBe('capability');
+    expect(result.type).toBeUndefined();
+    expect(result.className).toBe('capability');
   });
 
   it('maps properties to data when present', () => {
