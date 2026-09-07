@@ -9,7 +9,7 @@ import { detectStorage } from './theme-storage.js';
 import type { PresetConfig, TransformDef } from './types.js';
 import { DESIGNER_PRESETS, type DesignerPreset } from './designer-presets.js';
 import { getBuiltinPreset, listBuiltinPresets } from './preset-loader.js';
-import { listThemes } from './runtime.js';
+import { listThemes, applyTheme, getTheme } from './runtime.js';
 
 const SEMANTIC_GROUPS: { name: string; hueFn: (a: number, n: number) => number; chromaScale: number }[] = [
   { name: 'accent', hueFn: (a) => a, chromaScale: 1 },
@@ -46,7 +46,14 @@ export class PagesThemeDesignerElement extends LitElement {
       padding: 16px 20px; border-bottom: 1px solid var(--pages-neutral-4, #333);
     }
 
-    .designer-header h2 { margin: 0; font-size: 16px; font-weight: 600; flex: 1; }
+    .designer-header h2 { margin: 0; font-size: 16px; font-weight: 600; }
+    .header-spacer { flex: 1; }
+    .header-theme-select {
+      background: var(--pages-neutral-3, #222);
+      color: var(--pages-neutral-12, #eee);
+      border: 1px solid var(--pages-neutral-6, #444);
+      border-radius: 4px; padding: 4px 8px; font: inherit; font-size: 12px;
+    }
 
     .name-input {
       background: var(--pages-neutral-3, #222);
@@ -265,7 +272,7 @@ export class PagesThemeDesignerElement extends LitElement {
     }
     .code-textarea {
       position: relative;
-      width: 100%; min-height: 60px;
+      width: 100%; min-height: 140px;
       background: transparent;
       color: oklch(85% 0 0 / 0.5);
       caret-color: var(--pages-accent-9, #4a9eff);
@@ -326,6 +333,9 @@ export class PagesThemeDesignerElement extends LitElement {
     _savedThemes: { state: true },
     _previewMode: { state: true },
     _presetsOpen: { state: true },
+    _controlsOpen: { state: true },
+    _swatchesOpen: { state: true },
+    _existingOpen: { state: true },
   };
 
   declare open: boolean;
@@ -342,6 +352,9 @@ export class PagesThemeDesignerElement extends LitElement {
   declare _savedThemes: string[];
   declare _previewMode: 'light' | 'dark';
   declare _presetsOpen: boolean;
+  declare _controlsOpen: boolean;
+  declare _swatchesOpen: boolean;
+  declare _existingOpen: boolean;
 
   private _resolvedStorage: ThemeStorage | undefined;
   private _previewStyleEl: HTMLStyleElement | null = null;
@@ -360,6 +373,9 @@ export class PagesThemeDesignerElement extends LitElement {
     this._savedThemes = [];
     this._previewMode = 'dark';
     this._presetsOpen = true;
+    this._controlsOpen = true;
+    this._swatchesOpen = true;
+    this._existingOpen = false;
   }
 
   override connectedCallback(): void {
@@ -499,6 +515,7 @@ export class PagesThemeDesignerElement extends LitElement {
     }
 
     await this._loadSavedList();
+    this.requestUpdate();
     this.dispatchEvent(new CustomEvent(isNew ? 'pages-theme-created' : 'pages-theme-updated', {
       bubbles: true,
       detail: { name: this._themeName, config: this._buildPresetConfig(this._previewMode) },
@@ -591,6 +608,16 @@ export class PagesThemeDesignerElement extends LitElement {
         <div class="designer-panel">
           <div class="designer-header">
             <h2>Theme Designer</h2>
+            <select class="header-theme-select" @change=${(e: Event) => {
+              const name = (e.target as HTMLSelectElement).value;
+              if (name) applyTheme(name, this.target);
+            }}>
+              ${this._deduplicateFamilies(listThemes()).map(fam => html`
+                <option value="${fam}-${this._previewMode}"
+                  ?selected=${getTheme(this.target)?.replace(/-(?:light|dark)$/, '') === fam}>${fam}</option>
+              `)}
+            </select>
+            <div class="header-spacer"></div>
             <input class="name-input" type="text" placeholder="Theme name"
               .value=${this._themeName}
               @input=${(e: Event) => { this._themeName = (e.target as HTMLInputElement).value; }} />
@@ -653,57 +680,70 @@ export class PagesThemeDesignerElement extends LitElement {
         </div>
 
         <div class="control-group">
-          <div class="control-label">Accent Hue</div>
-          <div class="control-row">
-            <input type="range" min="0" max="360" step="1" .value=${String(this._accentHue)}
-              style="background: linear-gradient(to right, hsl(0,80%,50%),hsl(60,80%,50%),hsl(120,80%,50%),hsl(180,80%,50%),hsl(240,80%,50%),hsl(300,80%,50%),hsl(360,80%,50%))"
-              class="hue-slider"
-              @input=${(e: Event) => { this._accentHue = Number((e.target as HTMLInputElement).value); }} />
-            <span class="control-value">${this._accentHue}°</span>
+          <div class="collapsible-header control-label" @click=${() => { this._controlsOpen = !this._controlsOpen; }}>
+            <span class="toggle-arrow ${this._controlsOpen ? 'open' : ''}">▶</span>
+            Controls
           </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">Neutral Hue</div>
-          <div class="control-row">
-            <input type="range" min="0" max="360" step="1" .value=${String(this._neutralHue)}
-              style="background: linear-gradient(to right, hsl(0,20%,50%),hsl(60,20%,50%),hsl(120,20%,50%),hsl(180,20%,50%),hsl(240,20%,50%),hsl(300,20%,50%),hsl(360,20%,50%))"
-              class="hue-slider"
-              @input=${(e: Event) => { this._neutralHue = Number((e.target as HTMLInputElement).value); }} />
-            <span class="control-value">${this._neutralHue}°</span>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">Chroma</div>
-          <div class="control-row">
-            <input type="range" min="0" max="0.4" step="0.01" .value=${String(this._chroma)}
-              @input=${(e: Event) => { this._chroma = Number((e.target as HTMLInputElement).value); }} />
-            <span class="control-value">${this._chroma.toFixed(2)}</span>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">Contrast</div>
-          <div class="control-row">
-            <input type="range" min="0" max="1" step="0.01" .value=${String(this._contrast)}
-              @input=${(e: Event) => { this._contrast = Number((e.target as HTMLInputElement).value); }} />
-            <span class="control-value">${this._contrast.toFixed(2)}</span>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-label">Colour Scales</div>
-          ${swatches.map(s => html`
-            <div class="swatch-section">
-              <div class="swatch-label">${s.name}</div>
-              <div class="swatch-row">
-                ${s.colors.map((c, i) => html`
-                  <div class="swatch" style="background:${c}" title="${s.name}-${i + 1}">${i + 1}</div>
-                `)}
+          ${this._controlsOpen ? html`
+            <div class="control-group">
+              <div class="control-label" style="font-size:10px">Accent Hue</div>
+              <div class="control-row">
+                <input type="range" min="0" max="360" step="1" .value=${String(this._accentHue)}
+                  style="background: linear-gradient(to right, hsl(0,80%,50%),hsl(60,80%,50%),hsl(120,80%,50%),hsl(180,80%,50%),hsl(240,80%,50%),hsl(300,80%,50%),hsl(360,80%,50%))"
+                  class="hue-slider"
+                  @input=${(e: Event) => { this._accentHue = Number((e.target as HTMLInputElement).value); }} />
+                <span class="control-value">${this._accentHue}°</span>
               </div>
             </div>
-          `)}
+
+            <div class="control-group">
+              <div class="control-label" style="font-size:10px">Neutral Hue</div>
+              <div class="control-row">
+                <input type="range" min="0" max="360" step="1" .value=${String(this._neutralHue)}
+                  style="background: linear-gradient(to right, hsl(0,20%,50%),hsl(60,20%,50%),hsl(120,20%,50%),hsl(180,20%,50%),hsl(240,20%,50%),hsl(300,20%,50%),hsl(360,20%,50%))"
+                  class="hue-slider"
+                  @input=${(e: Event) => { this._neutralHue = Number((e.target as HTMLInputElement).value); }} />
+                <span class="control-value">${this._neutralHue}°</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label" style="font-size:10px">Chroma</div>
+              <div class="control-row">
+                <input type="range" min="0" max="0.4" step="0.01" .value=${String(this._chroma)}
+                  @input=${(e: Event) => { this._chroma = Number((e.target as HTMLInputElement).value); }} />
+                <span class="control-value">${this._chroma.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label" style="font-size:10px">Contrast</div>
+              <div class="control-row">
+                <input type="range" min="0" max="1" step="0.01" .value=${String(this._contrast)}
+                  @input=${(e: Event) => { this._contrast = Number((e.target as HTMLInputElement).value); }} />
+                <span class="control-value">${this._contrast.toFixed(2)}</span>
+              </div>
+            </div>
+          ` : nothing}
+        </div>
+
+        <div class="control-group">
+          <div class="collapsible-header control-label" @click=${() => { this._swatchesOpen = !this._swatchesOpen; }}>
+            <span class="toggle-arrow ${this._swatchesOpen ? 'open' : ''}">▶</span>
+            Colour Scales
+          </div>
+          ${this._swatchesOpen ? html`
+            ${swatches.map(s => html`
+              <div class="swatch-section">
+                <div class="swatch-label">${s.name}</div>
+                <div class="swatch-row">
+                  ${s.colors.map((c, i) => html`
+                    <div class="swatch" style="background:${c}" title="${s.name}-${i + 1}">${i + 1}</div>
+                  `)}
+                </div>
+              </div>
+            `)}
+          ` : nothing}
         </div>
       </div>
     `;
@@ -851,8 +891,11 @@ export class PagesThemeDesignerElement extends LitElement {
 
     return html`
       <div class="control-group">
-        <div class="control-label">Existing Themes</div>
-        <div class="theme-list">
+        <div class="collapsible-header control-label" @click=${() => { this._existingOpen = !this._existingOpen; }}>
+          <span class="toggle-arrow ${this._existingOpen ? 'open' : ''}">▶</span>
+          Existing Themes
+        </div>
+        ${this._existingOpen ? html`<div class="theme-list">
           ${allFamilies.map(name => {
             const isBuiltin = builtinFamilies.includes(name);
             const isCustom = customFamilies.includes(name);
@@ -868,7 +911,7 @@ export class PagesThemeDesignerElement extends LitElement {
               </div>
             `;
           })}
-        </div>
+        </div>` : nothing}
       </div>
     `;
   }
