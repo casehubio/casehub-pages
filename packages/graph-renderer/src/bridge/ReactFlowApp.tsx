@@ -21,10 +21,12 @@ import {
 } from '@xyflow/react';
 import { SmartBezierEdge, SmartEdgeProvider } from '@tisoap/react-flow-smart-edge';
 
-const smartEdgeTypes: EdgeTypes = {
-  default: SmartBezierEdge,
-  smart: SmartBezierEdge,
-};
+const smartEdgeTypes: EdgeTypes = new Proxy({ default: SmartBezierEdge } as EdgeTypes, {
+  get(target, prop) {
+    if (typeof prop === 'string') return SmartBezierEdge;
+    return Reflect.get(target, prop);
+  },
+});
 
 export interface ReactFlowAppProps {
   nodes: Node[];

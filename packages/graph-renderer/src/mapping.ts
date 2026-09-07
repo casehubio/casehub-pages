@@ -57,9 +57,9 @@ function toRfMarker(marker: EdgeMarker) {
 export function toReactFlowEdge(edge: GraphEdge): Edge {
   const rfEdge: Edge = {
     id: edge.id,
+    type: edge.type || undefined,
     source: edge.source,
     target: edge.target,
-    className: edge.type || undefined,
   };
 
   if (edge.properties) {
