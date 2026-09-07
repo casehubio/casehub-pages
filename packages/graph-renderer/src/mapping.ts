@@ -195,39 +195,20 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     UP: { src: 'right', tgt: 'left' },
   };
 
-  function angleToSide(a: number): string {
-    while (a >= Math.PI) a -= 2 * Math.PI;
-    while (a < -Math.PI) a += 2 * Math.PI;
-    if (a >= -Math.PI / 4 && a < Math.PI / 4) return 'right';
-    if (a >= Math.PI / 4 && a < 3 * Math.PI / 4) return 'bottom';
-    if (a >= -3 * Math.PI / 4 && a < -Math.PI / 4) return 'top';
-    return 'left';
-  }
-
-  const assignedPairs = new Set<string>();
-
   function buildCandidates(): HandleCandidate[][] {
     const result: HandleCandidate[][] = [];
-    assignedPairs.clear();
     for (const edge of validEdges) {
       const srcB = absBounds(nodeMap.get(edge.source)!);
       const tgtB = absBounds(nodeMap.get(edge.target)!);
-      const srcCx = srcB.x + srcB.w / 2, srcCy = srcB.y + srcB.h / 2;
-      const tgtCx = tgtB.x + tgtB.w / 2, tgtCy = tgtB.y + tgtB.h / 2;
       let edgePref = preferred;
       if (preferred && _direction) {
+        const srcCx = srcB.x + srcB.w / 2, srcCy = srcB.y + srcB.h / 2;
+        const tgtCx = tgtB.x + tgtB.w / 2, tgtCy = tgtB.y + tgtB.h / 2;
         const horiz = _direction === 'RIGHT' || _direction === 'LEFT';
         const flowsForward = horiz
           ? (_direction === 'RIGHT' ? tgtCx > srcCx : tgtCx < srcCx)
           : (_direction === 'DOWN' ? tgtCy > srcCy : tgtCy < srcCy);
         if (!flowsForward) edgePref = perpDefaults[_direction] ?? preferred;
-      }
-      if (!edgePref) {
-        const angle = Math.atan2(tgtCy - srcCy, tgtCx - srcCx);
-        const reverseKey = `${edge.target}:${edge.source}`;
-        const rot = assignedPairs.has(reverseKey) ? Math.PI / 2 : 0;
-        edgePref = { src: angleToSide(angle + rot), tgt: angleToSide(angle + Math.PI + rot) };
-        assignedPairs.add(`${edge.source}:${edge.target}`);
       }
       const candidates: HandleCandidate[] = [];
       for (const ss of SIDES) {
@@ -238,7 +219,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
           const crosses = lineCrossesNode(sp, tp, edge.source, edge.target);
           let penalty = 0;
           if (edgePref) {
-            const pen = preferred ? DIRECTION_PENALTY : 1000;
+            const pen = DIRECTION_PENALTY;
             if (ss !== edgePref.src) penalty += pen;
             if (ts !== edgePref.tgt) penalty += pen;
           }
@@ -416,51 +397,6 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     const candidate = result.assignment[i]!;
     edge.sourceHandle = `source-${candidate.srcSide}`;
     edge.targetHandle = `target-${candidate.tgtSide}`;
-  }
-
-  for (let i = 0; i < validEdges.length; i++) {
-    const ei = validEdges[i]!;
-    for (let j = i + 1; j < validEdges.length; j++) {
-      const ej = validEdges[j]!;
-      if (ei.source !== ej.target || ei.target !== ej.source) continue;
-      const sib = absBounds(nodeMap.get(ei.source)!), tib = absBounds(nodeMap.get(ei.target)!);
-      const pt = (s: string, b: { x: number; y: number; w: number; h: number }) => handlePosPoint(b, s);
-      const iSrc = ei.sourceHandle!.replace('source-', ''), iTgt = ei.targetHandle!.replace('target-', '');
-      const jSrc = ej.sourceHandle!.replace('source-', ''), jTgt = ej.targetHandle!.replace('target-', '');
-
-      function pairAngle(is: string, it: string, js: string, jt: string): number {
-        if (is === it || js === jt) return -Infinity;
-        const pis = pt(is, sib), pit = pt(it, tib), pjs = pt(js, tib), pjt = pt(jt, sib);
-        const a1s = Math.atan2(pit.y - pis.y, pit.x - pis.x);
-        const a2s = Math.atan2(pjt.y - pjs.y, pjt.x - pjs.x);
-        const a1t = Math.atan2(pis.y - pit.y, pis.x - pit.x);
-        const a2t = Math.atan2(pjt.y - pit.y, pjt.x - pit.x);
-        let dA = Math.abs(a1s - a2s); if (dA > Math.PI) dA = 2 * Math.PI - dA;
-        let dB = Math.abs(a1t - a2t); if (dB > Math.PI) dB = 2 * Math.PI - dB;
-        for (let k = 0; k < validEdges.length; k++) {
-          const ek = validEdges[k]!;
-          if (ek === ei || ek === ej) continue;
-          if (ek.source === ei.source || ek.target === ei.target || ek.source === ei.target || ek.target === ei.source) continue;
-          const ks = pt(ek.sourceHandle!.replace('source-', ''), absBounds(nodeMap.get(ek.source)!));
-          const kt = pt(ek.targetHandle!.replace('target-', ''), absBounds(nodeMap.get(ek.target)!));
-          if (segmentsIntersect(pis, pit, ks, kt) || segmentsIntersect(pjs, pjt, ks, kt)) return -Infinity;
-        }
-        if (segmentsIntersect(pis, pit, pjs, pjt)) return -Infinity;
-        return Math.min(dA, dB);
-      }
-
-      const curAngle = pairAngle(iSrc, iTgt, jSrc, jTgt);
-      let bestAngle = curAngle, bestIT = iTgt, bestJS = jSrc;
-      const tryNodeB = (it: string, js: string) => {
-        const a = pairAngle(iSrc, it, js, jTgt);
-        if (a > bestAngle) { bestAngle = a; bestIT = it; bestJS = js; }
-      };
-      tryNodeB(jSrc, iTgt);
-      if (bestAngle > curAngle) {
-        ei.targetHandle = `target-${bestIT}`;
-        ej.sourceHandle = `source-${bestJS}`;
-      }
-    }
   }
 
   const srcCounts = new Map<string, Record<string, number>>();
