@@ -20,7 +20,7 @@ import {
   type Connection,
 } from '@xyflow/react';
 import { SmartBezierEdge, SmartEdgeProvider } from '@tisoap/react-flow-smart-edge';
-import { type EdgeProps, Position } from '@xyflow/react';
+import { type EdgeProps, Position, BezierEdge } from '@xyflow/react';
 
 function DirectionalBezierEdge(props: EdgeProps) {
   const { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition } = props;
@@ -42,10 +42,15 @@ function DirectionalBezierEdge(props: EdgeProps) {
   );
 }
 
+function AutoBezierEdge(props: EdgeProps) {
+  if (props.sourcePosition === props.targetPosition) return DirectionalBezierEdge(props);
+  return React.createElement(BezierEdge, props);
+}
+
 const smartEdgeTypes: EdgeTypes = new Proxy({ default: SmartBezierEdge } as EdgeTypes, {
   get(target, prop) {
     if (prop === 'default' || prop === 'smart') return SmartBezierEdge;
-    if (typeof prop === 'string' && prop.startsWith('org-')) return DirectionalBezierEdge;
+    if (typeof prop === 'string') return AutoBezierEdge;
     return Reflect.get(target, prop);
   },
 });
