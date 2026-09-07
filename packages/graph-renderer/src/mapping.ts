@@ -179,17 +179,6 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
   }
   if (validEdges.length === 0) return;
 
-  const inversePairs = new Set<string>();
-  for (let i = 0; i < validEdges.length; i++) {
-    for (let j = i + 1; j < validEdges.length; j++) {
-      const a = validEdges[i]!, b = validEdges[j]!;
-      if (a.source === b.target && a.target === b.source) {
-        inversePairs.add(`${i}:${j}`);
-        inversePairs.add(`${j}:${i}`);
-      }
-    }
-  }
-
   const dirDefaults: Record<string, { src: string; tgt: string }> = {
     DOWN: { src: 'bottom', tgt: 'top' },
     RIGHT: { src: 'right', tgt: 'left' },
@@ -240,43 +229,37 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     const cur: HandleCandidate[] = new Array(validEdges.length);
     const MAX_ITER = maxIter;
     let iters = 0;
-    const nodeSrcSides = new Map<string, Set<string>>();
-    const nodeTgtSides = new Map<string, Set<string>>();
+    const nodeSrcCount = new Map<string, Map<string, number>>();
+    const nodeTgtCount = new Map<string, Map<string, number>>();
 
-    function sameConflicts(depth: number, cand: HandleCandidate): number {
-      let conflicts = 0;
-      const ae = validEdges[depth]!;
-      const tgtSidesOnSrc = nodeTgtSides.get(ae.source);
-      if (tgtSidesOnSrc && tgtSidesOnSrc.has(cand.srcSide)) {
-        let isInv = false;
-        for (let j = 0; j < depth; j++) {
-          if (inversePairs.has(`${depth}:${j}`) && cur[j]!.tgtSide === cand.srcSide) { isInv = true; break; }
-        }
-        if (!isInv) conflicts++;
-      }
-      const srcSidesOnTgt = nodeSrcSides.get(ae.target);
-      if (srcSidesOnTgt && srcSidesOnTgt.has(cand.tgtSide)) {
-        let isInv = false;
-        for (let j = 0; j < depth; j++) {
-          if (inversePairs.has(`${depth}:${j}`) && cur[j]!.srcSide === cand.tgtSide) { isInv = true; break; }
-        }
-        if (!isInv) conflicts++;
-      }
-      return conflicts;
+    function getCount(map: Map<string, Map<string, number>>, nodeId: string, side: string): number {
+      return map.get(nodeId)?.get(side) ?? 0;
     }
 
-    function addSides(depth: number, cand: HandleCandidate): void {
+    function handleOverlap(depth: number, cand: HandleCandidate): number {
       const ae = validEdges[depth]!;
-      if (!nodeSrcSides.has(ae.source)) nodeSrcSides.set(ae.source, new Set());
-      nodeSrcSides.get(ae.source)!.add(cand.srcSide);
-      if (!nodeTgtSides.has(ae.target)) nodeTgtSides.set(ae.target, new Set());
-      nodeTgtSides.get(ae.target)!.add(cand.tgtSide);
+      let overlap = 0;
+      if (getCount(nodeSrcCount, ae.source, cand.srcSide) > 0) overlap++;
+      if (getCount(nodeTgtCount, ae.target, cand.tgtSide) > 0) overlap++;
+      return overlap;
     }
 
-    function removeSides(depth: number, cand: HandleCandidate): void {
+    function addCounts(depth: number, cand: HandleCandidate): void {
       const ae = validEdges[depth]!;
-      nodeSrcSides.get(ae.source)?.delete(cand.srcSide);
-      nodeTgtSides.get(ae.target)?.delete(cand.tgtSide);
+      if (!nodeSrcCount.has(ae.source)) nodeSrcCount.set(ae.source, new Map());
+      const sc = nodeSrcCount.get(ae.source)!;
+      sc.set(cand.srcSide, (sc.get(cand.srcSide) ?? 0) + 1);
+      if (!nodeTgtCount.has(ae.target)) nodeTgtCount.set(ae.target, new Map());
+      const tc = nodeTgtCount.get(ae.target)!;
+      tc.set(cand.tgtSide, (tc.get(cand.tgtSide) ?? 0) + 1);
+    }
+
+    function removeCounts(depth: number, cand: HandleCandidate): void {
+      const ae = validEdges[depth]!;
+      const sc = nodeSrcCount.get(ae.source);
+      if (sc) { const v = sc.get(cand.srcSide) ?? 0; if (v <= 1) sc.delete(cand.srcSide); else sc.set(cand.srcSide, v - 1); }
+      const tc = nodeTgtCount.get(ae.target);
+      if (tc) { const v = tc.get(cand.tgtSide) ?? 0; if (v <= 1) tc.delete(cand.tgtSide); else tc.set(cand.tgtSide, v - 1); }
     }
 
     function countCrossings(depth: number, candidate: HandleCandidate): number {
@@ -308,13 +291,13 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
         const nc = countCrossings(depth, cand);
         const totalCr = crossSoFar + nc;
         if (totalCr > bestCross) continue;
-        const ss = sameConflicts(depth, cand);
-        const totalSS = ssSoFar + ss;
+        const ol = handleOverlap(depth, cand);
+        const totalSS = ssSoFar + ol;
         if (totalCr === bestCross && totalSS >= bestSS) continue;
         cur[depth] = cand;
-        addSides(depth, cand);
+        addCounts(depth, cand);
         srch(depth + 1, totalCr, totalSS);
-        removeSides(depth, cand);
+        removeCounts(depth, cand);
         if (bestCross === 0 && bestSS === 0) return;
       }
     }
