@@ -423,44 +423,42 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     for (let j = i + 1; j < validEdges.length; j++) {
       const ej = validEdges[j]!;
       if (ei.source !== ej.target || ei.target !== ej.source) continue;
-      const si = nodeMap.get(ei.source)!, ti = nodeMap.get(ei.target)!;
-      const sib = absBounds(si), tib = absBounds(ti);
+      const sib = absBounds(nodeMap.get(ei.source)!), tib = absBounds(nodeMap.get(ei.target)!);
+      const pt = (s: string, b: { x: number; y: number; w: number; h: number }) => handlePosPoint(b, s);
       const iSrc = ei.sourceHandle!.replace('source-', ''), iTgt = ei.targetHandle!.replace('target-', '');
       const jSrc = ej.sourceHandle!.replace('source-', ''), jTgt = ej.targetHandle!.replace('target-', '');
-      const ptA = (s: string, b: { x: number; y: number; w: number; h: number }) => handlePosPoint(b, s);
-      const curI = { s: ptA(iSrc, sib), t: ptA(iTgt, tib) };
-      const curJ = { s: ptA(jSrc, tib), t: ptA(jTgt, sib) };
-      let curCross = 0;
-      for (let k = 0; k < validEdges.length; k++) {
-        if (k === i || k === j) continue;
-        const ek = validEdges[k]!;
-        if (ek.source === ei.source || ek.target === ei.target || ek.source === ei.target || ek.target === ei.source) continue;
-        const sk = nodeMap.get(ek.source)!, tk = nodeMap.get(ek.target)!;
-        const ks = ptA(ek.sourceHandle!.replace('source-', ''), absBounds(sk));
-        const kt = ptA(ek.targetHandle!.replace('target-', ''), absBounds(tk));
-        if (segmentsIntersect(curI.s, curI.t, ks, kt)) curCross++;
-        if (segmentsIntersect(curJ.s, curJ.t, ks, kt)) curCross++;
+
+      function pairAngle(is: string, it: string, js: string, jt: string): number {
+        if (is === it || js === jt) return -Infinity;
+        const pis = pt(is, sib), pit = pt(it, tib), pjs = pt(js, tib), pjt = pt(jt, sib);
+        const a1s = Math.atan2(pit.y - pis.y, pit.x - pis.x);
+        const a2s = Math.atan2(pjt.y - pjs.y, pjt.x - pjs.x);
+        const a1t = Math.atan2(pis.y - pit.y, pis.x - pit.x);
+        const a2t = Math.atan2(pjt.y - pit.y, pjt.x - pit.x);
+        let dA = Math.abs(a1s - a2s); if (dA > Math.PI) dA = 2 * Math.PI - dA;
+        let dB = Math.abs(a1t - a2t); if (dB > Math.PI) dB = 2 * Math.PI - dB;
+        for (let k = 0; k < validEdges.length; k++) {
+          const ek = validEdges[k]!;
+          if (ek === ei || ek === ej) continue;
+          if (ek.source === ei.source || ek.target === ei.target || ek.source === ei.target || ek.target === ei.source) continue;
+          const ks = pt(ek.sourceHandle!.replace('source-', ''), absBounds(nodeMap.get(ek.source)!));
+          const kt = pt(ek.targetHandle!.replace('target-', ''), absBounds(nodeMap.get(ek.target)!));
+          if (segmentsIntersect(pis, pit, ks, kt) || segmentsIntersect(pjs, pjt, ks, kt)) return -Infinity;
+        }
+        if (segmentsIntersect(pis, pit, pjs, pjt)) return -Infinity;
+        return Math.min(dA, dB);
       }
-      if (segmentsIntersect(curI.s, curI.t, curJ.s, curJ.t)) curCross++;
-      const swpI = { s: ptA(jTgt, sib), t: ptA(jSrc, tib) };
-      const swpJ = { s: ptA(iTgt, tib), t: ptA(iSrc, sib) };
-      let swpCross = 0;
-      for (let k = 0; k < validEdges.length; k++) {
-        if (k === i || k === j) continue;
-        const ek = validEdges[k]!;
-        if (ek.source === ei.source || ek.target === ei.target || ek.source === ei.target || ek.target === ei.source) continue;
-        const sk = nodeMap.get(ek.source)!, tk = nodeMap.get(ek.target)!;
-        const ks = ptA(ek.sourceHandle!.replace('source-', ''), absBounds(sk));
-        const kt = ptA(ek.targetHandle!.replace('target-', ''), absBounds(tk));
-        if (segmentsIntersect(swpI.s, swpI.t, ks, kt)) swpCross++;
-        if (segmentsIntersect(swpJ.s, swpJ.t, ks, kt)) swpCross++;
-      }
-      if (segmentsIntersect(swpI.s, swpI.t, swpJ.s, swpJ.t)) swpCross++;
-      if (swpCross < curCross) {
-        ei.sourceHandle = `source-${jTgt}`;
-        ei.targetHandle = `target-${jSrc}`;
-        ej.sourceHandle = `source-${iTgt}`;
-        ej.targetHandle = `target-${iSrc}`;
+
+      const curAngle = pairAngle(iSrc, iTgt, jSrc, jTgt);
+      let bestAngle = curAngle, bestIT = iTgt, bestJS = jSrc;
+      const tryNodeB = (it: string, js: string) => {
+        const a = pairAngle(iSrc, it, js, jTgt);
+        if (a > bestAngle) { bestAngle = a; bestIT = it; bestJS = js; }
+      };
+      tryNodeB(jSrc, iTgt);
+      if (bestAngle > curAngle) {
+        ei.targetHandle = `target-${bestIT}`;
+        ej.sourceHandle = `source-${bestJS}`;
       }
     }
   }
