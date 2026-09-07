@@ -375,7 +375,7 @@ export class PagesThemeDesignerElement extends LitElement {
     this._presetsOpen = true;
     this._controlsOpen = true;
     this._swatchesOpen = true;
-    this._existingOpen = false;
+    this._existingOpen = true;
   }
 
   override connectedCallback(): void {
@@ -443,15 +443,15 @@ export class PagesThemeDesignerElement extends LitElement {
     const css = this._generatePreviewCSS();
     if (!css) return;
     const themeName = `${this._themeName}-${this._previewMode}`;
-    const previewPanel = this.shadowRoot?.querySelector('.preview-panel') as HTMLElement | null;
-    if (!previewPanel) return;
+    const panel = this.shadowRoot?.querySelector('.designer-panel') as HTMLElement | null;
+    if (!panel) return;
 
     if (!this._previewStyleEl) {
       this._previewStyleEl = document.createElement('style');
       this.shadowRoot?.prepend(this._previewStyleEl);
     }
     this._previewStyleEl.textContent = css;
-    previewPanel.className = `preview-panel pages-theme-${themeName}`;
+    panel.className = `designer-panel pages-theme-${themeName}`;
   }
 
   private _removePreviewStyle(): void {
@@ -631,8 +631,6 @@ export class PagesThemeDesignerElement extends LitElement {
             <div class="controls-panel">
               ${this._advancedMode ? this._renderPipelineEditor() : this._renderSimpleControls(swatches)}
 
-              ${this._renderThemeList()}
-
               <label class="advanced-toggle">
                 <input type="checkbox" .checked=${this._advancedMode}
                   @change=${(e: Event) => { this._advancedMode = (e.target as HTMLInputElement).checked; }} />
@@ -678,6 +676,8 @@ export class PagesThemeDesignerElement extends LitElement {
             </div>
           ` : nothing}
         </div>
+
+        ${this._renderThemeList()}
 
         <div class="control-group">
           <div class="collapsible-header control-label" @click=${() => { this._controlsOpen = !this._controlsOpen; }}>
@@ -752,6 +752,7 @@ export class PagesThemeDesignerElement extends LitElement {
   private _renderPipelineEditor() {
     return html`
       <div class="pipeline-editor">
+        ${this._renderThemeList()}
         <div class="control-label">Pipeline Stages</div>
         ${this._pipeline.map((stage, i) => {
           const json = stage.params ? JSON.stringify(stage.params, null, 2) : '';
@@ -763,25 +764,23 @@ export class PagesThemeDesignerElement extends LitElement {
                 <button @click=${() => { this._movePipelineStage(i, 1); }} ?disabled=${i === this._pipeline.length - 1} title="Move down">↓</button>
                 <button @click=${() => { this._removePipelineStage(i); }} title="Remove">✕</button>
               </div>
-              ${json ? html`
-                <div class="pipeline-stage-params">
-                  <div class="code-editor-wrap">
-                    <div class="code-highlight" .innerHTML=${this._highlightJSON(json) + '\n'}></div>
-                    <textarea class="code-textarea" .value=${json}
-                      @input=${(e: Event) => {
-                        const ta = e.target as HTMLTextAreaElement;
-                        const highlight = ta.previousElementSibling as HTMLElement;
-                        if (highlight) highlight.innerHTML = this._highlightJSON(ta.value) + '\n';
-                      }}
-                      @change=${(e: Event) => { this._updateStageParams(i, (e.target as HTMLTextAreaElement).value); }}
-                      @scroll=${(e: Event) => {
-                        const ta = e.target as HTMLTextAreaElement;
-                        const highlight = ta.previousElementSibling as HTMLElement;
-                        if (highlight) { highlight.scrollTop = ta.scrollTop; highlight.scrollLeft = ta.scrollLeft; }
-                      }}></textarea>
-                  </div>
+              <div class="pipeline-stage-params">
+                <div class="code-editor-wrap">
+                  <div class="code-highlight" .innerHTML=${this._highlightJSON(json || '{}') + '\n'}></div>
+                  <textarea class="code-textarea" .value=${json || '{}'}
+                    @input=${(e: Event) => {
+                      const ta = e.target as HTMLTextAreaElement;
+                      const highlight = ta.previousElementSibling as HTMLElement;
+                      if (highlight) highlight.innerHTML = this._highlightJSON(ta.value) + '\n';
+                    }}
+                    @change=${(e: Event) => { this._updateStageParams(i, (e.target as HTMLTextAreaElement).value); }}
+                    @scroll=${(e: Event) => {
+                      const ta = e.target as HTMLTextAreaElement;
+                      const highlight = ta.previousElementSibling as HTMLElement;
+                      if (highlight) { highlight.scrollTop = ta.scrollTop; highlight.scrollLeft = ta.scrollLeft; }
+                    }}></textarea>
                 </div>
-              ` : nothing}
+              </div>
             </div>
           `;
         })}
