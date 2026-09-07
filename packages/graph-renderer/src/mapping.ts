@@ -188,12 +188,12 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
   const preferred = dirDefaults[_direction ?? ''];
   const DIRECTION_PENALTY = 150;
 
-  function directionCost(ss: string, ts: string): number {
-    if (!preferred) return 0;
-    let penalty = 0;
-    if (ss !== preferred.src) penalty += DIRECTION_PENALTY;
-    if (ts !== preferred.tgt) penalty += DIRECTION_PENALTY;
-    return penalty;
+  function naturalSides(srcB: { x: number; y: number; w: number; h: number }, tgtB: { x: number; y: number; w: number; h: number }): { src: string; tgt: string } {
+    const dx = (tgtB.x + tgtB.w / 2) - (srcB.x + srcB.w / 2);
+    const dy = (tgtB.y + tgtB.h / 2) - (srcB.y + srcB.h / 2);
+    const src = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'bottom' : 'top');
+    const tgt = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'left' : 'right') : (dy > 0 ? 'top' : 'bottom');
+    return { src, tgt };
   }
 
   function buildCandidates(): HandleCandidate[][] {
@@ -201,6 +201,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     for (const edge of validEdges) {
       const srcB = absBounds(nodeMap.get(edge.source)!);
       const tgtB = absBounds(nodeMap.get(edge.target)!);
+      const pref = preferred ?? naturalSides(srcB, tgtB);
       const candidates: HandleCandidate[] = [];
       for (const ss of SIDES) {
         for (const ts of SIDES) {
@@ -208,7 +209,10 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
           const sp = handlePoint(srcB, ss);
           const tp = handlePoint(tgtB, ts);
           const crosses = lineCrossesNode(sp, tp, edge.source, edge.target);
-          const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2) + directionCost(ss, ts);
+          let penalty = 0;
+          if (ss !== pref.src) penalty += DIRECTION_PENALTY;
+          if (ts !== pref.tgt) penalty += DIRECTION_PENALTY;
+          const dist = Math.sqrt((sp.x - tp.x) ** 2 + (sp.y - tp.y) ** 2) + penalty;
           candidates.push({ srcSide: ss, tgtSide: ts, srcPt: sp, tgtPt: tp, dist, crossesNode: crosses });
         }
       }
@@ -229,37 +233,40 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     const cur: HandleCandidate[] = new Array(validEdges.length);
     const MAX_ITER = maxIter;
     let iters = 0;
-    const nodeSrcCount = new Map<string, Map<string, number>>();
-    const nodeTgtCount = new Map<string, Map<string, number>>();
+    const nodeSideCount = new Map<string, Map<string, number>>();
 
-    function getCount(map: Map<string, Map<string, number>>, nodeId: string, side: string): number {
-      return map.get(nodeId)?.get(side) ?? 0;
+    function sideKey(nodeId: string, side: string): string { return `${nodeId}:${side}`; }
+
+    function getSideCount(nodeId: string, side: string): number {
+      return nodeSideCount.get(nodeId)?.get(side) ?? 0;
     }
 
-    function handleOverlap(depth: number, cand: HandleCandidate): number {
+    function handleCongestion(depth: number, cand: HandleCandidate): number {
       const ae = validEdges[depth]!;
-      let overlap = 0;
-      if (getCount(nodeSrcCount, ae.source, cand.srcSide) > 0) overlap++;
-      if (getCount(nodeTgtCount, ae.target, cand.tgtSide) > 0) overlap++;
-      return overlap;
+      let congestion = 0;
+      const srcExisting = getSideCount(ae.source, cand.srcSide);
+      if (srcExisting > 0) congestion += srcExisting;
+      const tgtExisting = getSideCount(ae.target, cand.tgtSide);
+      if (tgtExisting > 0) congestion += tgtExisting;
+      return congestion;
     }
 
     function addCounts(depth: number, cand: HandleCandidate): void {
       const ae = validEdges[depth]!;
-      if (!nodeSrcCount.has(ae.source)) nodeSrcCount.set(ae.source, new Map());
-      const sc = nodeSrcCount.get(ae.source)!;
-      sc.set(cand.srcSide, (sc.get(cand.srcSide) ?? 0) + 1);
-      if (!nodeTgtCount.has(ae.target)) nodeTgtCount.set(ae.target, new Map());
-      const tc = nodeTgtCount.get(ae.target)!;
-      tc.set(cand.tgtSide, (tc.get(cand.tgtSide) ?? 0) + 1);
+      if (!nodeSideCount.has(ae.source)) nodeSideCount.set(ae.source, new Map());
+      const sm = nodeSideCount.get(ae.source)!;
+      sm.set(cand.srcSide, (sm.get(cand.srcSide) ?? 0) + 1);
+      if (!nodeSideCount.has(ae.target)) nodeSideCount.set(ae.target, new Map());
+      const tm = nodeSideCount.get(ae.target)!;
+      tm.set(cand.tgtSide, (tm.get(cand.tgtSide) ?? 0) + 1);
     }
 
     function removeCounts(depth: number, cand: HandleCandidate): void {
       const ae = validEdges[depth]!;
-      const sc = nodeSrcCount.get(ae.source);
-      if (sc) { const v = sc.get(cand.srcSide) ?? 0; if (v <= 1) sc.delete(cand.srcSide); else sc.set(cand.srcSide, v - 1); }
-      const tc = nodeTgtCount.get(ae.target);
-      if (tc) { const v = tc.get(cand.tgtSide) ?? 0; if (v <= 1) tc.delete(cand.tgtSide); else tc.set(cand.tgtSide, v - 1); }
+      const sm = nodeSideCount.get(ae.source);
+      if (sm) { const v = sm.get(cand.srcSide) ?? 0; if (v <= 1) sm.delete(cand.srcSide); else sm.set(cand.srcSide, v - 1); }
+      const tm = nodeSideCount.get(ae.target);
+      if (tm) { const v = tm.get(cand.tgtSide) ?? 0; if (v <= 1) tm.delete(cand.tgtSide); else tm.set(cand.tgtSide, v - 1); }
     }
 
     function countCrossings(depth: number, candidate: HandleCandidate): number {
@@ -291,7 +298,7 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
         const nc = countCrossings(depth, cand);
         const totalCr = crossSoFar + nc;
         if (totalCr > bestCross) continue;
-        const ol = handleOverlap(depth, cand);
+        const ol = handleCongestion(depth, cand);
         const totalSS = ssSoFar + ol;
         if (totalCr === bestCross && totalSS >= bestSS) continue;
         cur[depth] = cand;
