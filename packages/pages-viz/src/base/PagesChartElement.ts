@@ -6,14 +6,14 @@ import { TitleComponent } from "echarts/components";
 import { PagesElement } from "./PagesElement.js";
 import type { VizComponentProps } from "./types.js";
 import type { TypedDataSet, Column } from "@casehubio/pages-data";
-import type { ChartSettings } from "@casehubio/pages-component";
+import type { ChartSettingsBase } from "@casehubio/pages-component";
 import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset, ChartClickParams } from "./filter-types.js";
 import { cellToRaw } from "./cell-extract.js";
 
 use([CanvasRenderer, TitleComponent]);
 
 export abstract class PagesChartElement<
-  P extends VizComponentProps & ChartSettings,
+  P extends VizComponentProps & ChartSettingsBase,
 > extends PagesElement<P> {
   private _chartRef = createRef<HTMLDivElement>();
   private _chart: ECharts | undefined;
@@ -51,7 +51,7 @@ export abstract class PagesChartElement<
 
     const apply = (option: Record<string, unknown>): void => {
       if (this._renderGen !== gen) return;
-      option['backgroundColor'] = 'transparent';
+      option['backgroundColor'] ??= 'transparent';
       option['aria'] = { enabled: true, decal: { show: false } };
       chart.setOption(option, true);
       if (this._selectedValue !== undefined && this._selectedDataIndex !== undefined) {

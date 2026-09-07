@@ -11,7 +11,7 @@ import type { MeterProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { cellToRaw } from "../base/cell-extract.js";
 import { applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { customElement } from "lit/decorators.js";
 
 use([
@@ -95,8 +95,9 @@ export class PagesMeter extends PagesChartElement<MeterProps> {
           data: seriesData,
           min,
           max,
-          startAngle: 180,
-          endAngle: 0,
+          startAngle: props.startAngle ?? 180,
+          endAngle: props.endAngle ?? 0,
+          ...(props.clockwise !== undefined ? { clockwise: props.clockwise } : {}),
           radius,
           center: ["50%", centerY],
           splitNumber: 4,
@@ -133,11 +134,7 @@ export class PagesMeter extends PagesChartElement<MeterProps> {
       tooltip: { trigger: "item" },
     };
 
-    option = applyChartSettings(option, props, { cartesianAxes: false });
-
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
+    option = applyChartSettings(option, props);
 
     return option;
   }

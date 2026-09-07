@@ -11,7 +11,7 @@ import type { BubbleChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { cellToRaw } from "../base/cell-extract.js";
 import { customElement } from "lit/decorators.js";
 
@@ -76,13 +76,8 @@ export class PagesBubbleChart extends PagesChartElement<BubbleChartProps> {
       tooltip: { trigger: "item" },
     };
 
-    // Stage 3: Apply ChartSettings
+    // Stage 3: Apply ChartSettings + escape hatches
     option = applyChartSettings(option, props);
-
-    // Stage 4: Deep merge extra
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
 
     return option;
   }

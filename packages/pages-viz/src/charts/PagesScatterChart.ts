@@ -10,7 +10,7 @@ import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { ScatterChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
@@ -37,6 +37,8 @@ export class PagesScatterChart extends PagesChartElement<ScatterChartProps> {
         const v = value[2];
         return typeof v === "number" ? Math.sqrt(v) * 3 : 10;
       };
+    } else if (props.symbolSize !== undefined) {
+      series.symbolSize = props.symbolSize;
     }
 
     let option: Record<string, unknown> = {
@@ -47,13 +49,8 @@ export class PagesScatterChart extends PagesChartElement<ScatterChartProps> {
       tooltip: { trigger: "item" },
     };
 
-    // Stage 3: Apply ChartSettings
+    // Stage 3: Apply ChartSettings + escape hatches
     option = applyChartSettings(option, props);
-
-    // Stage 4: Deep merge extra
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
 
     return option;
   }

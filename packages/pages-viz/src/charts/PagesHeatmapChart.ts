@@ -9,7 +9,7 @@ import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { HeatmapChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { cellToRaw } from "../base/cell-extract.js";
 import { customElement } from "lit/decorators.js";
 
@@ -65,10 +65,15 @@ export class PagesHeatmapChart extends PagesChartElement<HeatmapChartProps> {
       bottom: 55,
     };
 
+    const inRange: Record<string, unknown> = {};
     if (props.minColor || props.maxColor) {
-      visualMap.inRange = {
-        color: [props.minColor ?? "#e0f3f8", props.maxColor ?? "#d73027"],
-      };
+      inRange.color = [props.minColor ?? "#e0f3f8", props.maxColor ?? "#d73027"];
+    }
+    if (props.minOpacity !== undefined || props.maxOpacity !== undefined) {
+      inRange.opacity = [props.minOpacity ?? 0, props.maxOpacity ?? 1];
+    }
+    if (Object.keys(inRange).length > 0) {
+      visualMap.inRange = inRange;
     }
 
     let option: Record<string, unknown> = {
@@ -76,15 +81,15 @@ export class PagesHeatmapChart extends PagesChartElement<HeatmapChartProps> {
       xAxis: { type: "category", data: xLabels },
       yAxis: { type: "category", data: yLabels },
       visualMap,
-      series: [{ type: "heatmap", data }],
+      series: [{
+        type: "heatmap",
+        data,
+        ...(props.blurSize !== undefined ? { blurSize: props.blurSize } : {}),
+      }],
       tooltip: { trigger: "item" },
     };
 
     option = applyChartSettings(option, props);
-
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
 
     return option;
   }

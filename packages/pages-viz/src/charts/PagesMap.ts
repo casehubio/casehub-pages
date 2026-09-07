@@ -11,7 +11,7 @@ import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { MapProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
@@ -81,11 +81,18 @@ export class PagesMap extends PagesChartElement<MapProps> {
         };
       }
 
+      const geo: Record<string, unknown> = {
+        map: mapName,
+        roam: props.roam ?? true,
+      };
+      if (props.center !== undefined) geo.center = props.center;
+      if (props.zoom !== undefined) geo.zoom = props.zoom;
+      if (props.scaleLimit !== undefined) geo.scaleLimit = props.scaleLimit;
+      if (props.showLabel !== undefined) geo.label = { show: props.showLabel };
+      if (props.selectedMode !== undefined) geo.selectedMode = props.selectedMode;
+
       option = {
-        geo: {
-          map: mapName,
-          roam: true,
-        },
+        geo,
         series: [series],
         tooltip: { trigger: "item" },
       };
@@ -105,12 +112,20 @@ export class PagesMap extends PagesChartElement<MapProps> {
         ? props.colorScheme.split(",").map(c => c.trim())
         : ["#e0f3f8", "#abd9e9", "#74add1", "#4575b4", "#313695"];
 
+      const mapSeries: Record<string, unknown> = {
+        type: "map",
+        map: mapName,
+        data,
+      };
+      if (props.roam !== undefined) mapSeries.roam = props.roam;
+      if (props.center !== undefined) mapSeries.center = props.center;
+      if (props.zoom !== undefined) mapSeries.zoom = props.zoom;
+      if (props.scaleLimit !== undefined) mapSeries.scaleLimit = props.scaleLimit;
+      if (props.showLabel !== undefined) mapSeries.label = { show: props.showLabel };
+      if (props.selectedMode !== undefined) mapSeries.selectedMode = props.selectedMode;
+
       option = {
-        series: [{
-          type: "map",
-          map: mapName,
-          data,
-        }],
+        series: [mapSeries],
         visualMap: {
           min: minValue,
           max: maxValue,
@@ -124,12 +139,7 @@ export class PagesMap extends PagesChartElement<MapProps> {
     }
 
     // Stage 3: Apply ChartSettings (skip xAxis/yAxis — map has no axes)
-    option = applyChartSettings(option, props, { cartesianAxes: false });
-
-    // Stage 4: Deep merge extra
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
+    option = applyChartSettings(option, props);
 
     return option;
   }

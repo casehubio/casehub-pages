@@ -2,12 +2,16 @@ import type { DataSetLookup, ColumnSettings, ColumnId, CellValue, TypedRow, Colu
 import type { FilterSettings, RefreshSettings } from "./component-props.js";
 import type { FieldSchema } from "./form-input-types.js";
 import type { RowAccentConfig } from "./grouped-view-types.js";
+import type { CasehubEChartsExtension } from "./echarts-extension.js";
+import type { CasehubHeatmapExtension } from "./heatmap-extension.js";
 
 export interface DataComponentCommon {
   readonly title?: string;
   readonly visible?: boolean;
   readonly width?: string;
   readonly height?: string;
+  readonly maxWidth?: number;
+  readonly maxHeight?: number;
   readonly csvExport?: boolean;
   readonly lookup: DataSetLookup;
   readonly rowCount?: number;
@@ -17,14 +21,20 @@ export interface DataComponentCommon {
   readonly refresh?: RefreshSettings;
 }
 
-export interface ChartSettings {
+export interface ChartSettingsBase {
   readonly resizable?: boolean;
-  readonly zoom?: boolean;
-  readonly maxWidth?: number;
-  readonly maxHeight?: number;
+  readonly tooltip?: {
+    readonly show?: boolean;
+    readonly trigger?: "item" | "axis" | "none";
+  };
+  readonly animation?: boolean;
+  readonly color?: readonly string[];
+  readonly backgroundColor?: string;
   readonly legend?: {
     readonly show?: boolean;
     readonly position?: "top" | "bottom" | "left" | "right";
+    readonly orient?: "horizontal" | "vertical";
+    readonly selectedMode?: boolean | "single" | "multiple";
   };
   readonly margin?: {
     readonly top?: number;
@@ -32,36 +42,73 @@ export interface ChartSettings {
     readonly bottom?: number;
     readonly left?: number;
   };
-  readonly xAxis?: { readonly title?: string; readonly showLabels?: boolean; readonly labelAngle?: number };
-  readonly yAxis?: { readonly title?: string; readonly showLabels?: boolean; readonly labelAngle?: number };
-  readonly grid?: { readonly x?: boolean; readonly y?: boolean };
   readonly extra?: Readonly<Record<string, unknown>>;
+  readonly echarts?: CasehubEChartsExtension;
+}
+
+export interface ChartSettings extends ChartSettingsBase {
+  readonly zoom?: boolean | {
+    readonly enabled?: boolean;
+    readonly start?: number;
+    readonly end?: number;
+  };
+  readonly xAxis?: {
+    readonly title?: string;
+    readonly showLabels?: boolean;
+    readonly labelAngle?: number;
+    readonly type?: "value" | "category" | "time" | "log";
+    readonly min?: number | "dataMin";
+    readonly max?: number | "dataMax";
+    readonly inverse?: boolean;
+  };
+  readonly yAxis?: {
+    readonly title?: string;
+    readonly showLabels?: boolean;
+    readonly labelAngle?: number;
+    readonly type?: "value" | "category" | "time" | "log";
+    readonly min?: number | "dataMin";
+    readonly max?: number | "dataMax";
+    readonly inverse?: boolean;
+  };
+  readonly grid?: { readonly x?: boolean; readonly y?: boolean };
 }
 
 export interface BarChartProps extends DataComponentCommon, ChartSettings {
   readonly subtype?: "column" | "column-stacked" | "bar" | "bar-stacked";
+  readonly barWidth?: string | number;
+  readonly barGap?: string;
 }
 
 export interface LineChartProps extends DataComponentCommon, ChartSettings {
   readonly subtype?: "line" | "smooth";
+  readonly step?: false | "start" | "end" | "middle";
+  readonly connectNulls?: boolean;
+  readonly showSymbol?: boolean;
 }
 
 export interface AreaChartProps extends DataComponentCommon, ChartSettings {
   readonly subtype?: "area" | "area-stacked";
 }
 
-export interface PieChartProps extends DataComponentCommon, ChartSettings {
+export interface PieChartProps extends DataComponentCommon, ChartSettingsBase {
   readonly subtype?: "pie" | "donut";
+  readonly roseType?: "radius" | "area";
+  readonly startAngle?: number;
+  readonly clockwise?: boolean;
 }
 
-export interface ScatterChartProps extends DataComponentCommon, ChartSettings {}
+export interface ScatterChartProps extends DataComponentCommon, ChartSettings {
+  readonly symbolSize?: number;
+}
 
 export interface BubbleChartProps extends DataComponentCommon, ChartSettings {
   readonly minRadius?: number;
   readonly maxRadius?: number;
 }
 
-export interface TimeseriesProps extends DataComponentCommon, ChartSettings {}
+export interface TimeseriesProps extends DataComponentCommon, ChartSettings {
+  readonly connectNulls?: boolean;
+}
 
 export interface RowStyleRule {
   readonly condition: string;
@@ -145,20 +192,29 @@ export interface MetricProps extends DataComponentCommon {
   readonly trend?: "up" | "down" | "flat";
 }
 
-export interface MeterProps extends DataComponentCommon, ChartSettings {
+export interface MeterProps extends DataComponentCommon, ChartSettingsBase {
   readonly end?: number;
   readonly warning?: number;
   readonly critical?: number;
+  readonly startAngle?: number;
+  readonly endAngle?: number;
+  readonly clockwise?: boolean;
 }
 
 export interface SelectorProps extends DataComponentCommon {
   readonly subtype?: "dropdown" | "slider" | "labels";
 }
 
-export interface MapProps extends DataComponentCommon, ChartSettings {
+export interface MapProps extends DataComponentCommon, ChartSettingsBase {
   readonly subtype?: "regions" | "markers";
   readonly colorScheme?: string;
   readonly mapName?: string;
+  readonly roam?: boolean | "pan" | "zoom";
+  readonly center?: readonly [number, number];
+  readonly zoom?: number;
+  readonly scaleLimit?: { readonly min?: number; readonly max?: number };
+  readonly showLabel?: boolean;
+  readonly selectedMode?: "single" | "multiple" | boolean;
 }
 
 export interface IframePluginProps {
@@ -195,11 +251,17 @@ export interface TimelineProps extends DataComponentCommon, ChartSettings {
 export interface HeatmapChartProps extends DataComponentCommon, ChartSettings {
   readonly minColor?: string;
   readonly maxColor?: string;
+  readonly blurSize?: number;
+  readonly minOpacity?: number;
+  readonly maxOpacity?: number;
 }
 
-export interface TreemapChartProps extends DataComponentCommon, ChartSettings {
+export interface TreemapChartProps extends DataComponentCommon, ChartSettingsBase {
   readonly parentColumn?: ColumnId;
   readonly colorColumn?: ColumnId;
+  readonly sort?: boolean | "asc" | "desc";
+  readonly leafDepth?: number;
+  readonly nodeClick?: "zoomToNode" | "link" | false;
 }
 
 export interface DensityHeatmapProps extends DataComponentCommon {
@@ -211,9 +273,17 @@ export interface DensityHeatmapProps extends DataComponentCommon {
   readonly aggregation?: "max" | "sum" | "mean" | "count";
   readonly showTooltip?: boolean;
   readonly showLegend?: boolean;
+  readonly blur?: number;
+  readonly maxOpacity?: number;
+  readonly minOpacity?: number;
+  readonly intensityExponent?: number;
+  readonly valueMin?: number;
+  readonly valueMax?: number;
+  readonly extra?: Readonly<Record<string, unknown>>;
+  readonly heatmapJs?: CasehubHeatmapExtension;
 }
 
-export interface GraphProps extends DataComponentCommon, ChartSettings {
+export interface GraphProps extends DataComponentCommon, ChartSettingsBase {
   readonly layout?: "force" | "circular" | "none";
   readonly sourceColumn?: ColumnId;
   readonly targetColumn?: ColumnId;
@@ -223,6 +293,10 @@ export interface GraphProps extends DataComponentCommon, ChartSettings {
   readonly nodeColorColumn?: ColumnId;
   readonly nodeColorMap?: Record<string, string>;
   readonly nodeSizeColumn?: ColumnId;
+  readonly repulsion?: number;
+  readonly edgeLabel?: boolean;
+  readonly roam?: boolean | "pan" | "zoom";
+  readonly symbol?: string;
 }
 
 export type {

@@ -8,7 +8,7 @@ import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { TreemapChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import { applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { cellToRaw } from "../base/cell-extract.js";
 import { customElement } from "lit/decorators.js";
 
@@ -50,6 +50,9 @@ export class PagesTreemapChart extends PagesChartElement<TreemapChartProps> {
     if (colorColIdx >= 0) {
       series.visibleMin = 300;
     }
+    if (props.sort !== undefined) series.sort = props.sort === true ? "asc" : props.sort;
+    if (props.leafDepth !== undefined) series.leafDepth = props.leafDepth;
+    if (props.nodeClick !== undefined) series.nodeClick = props.nodeClick;
 
     let option: Record<string, unknown> = {
       series: [series],
@@ -68,11 +71,7 @@ export class PagesTreemapChart extends PagesChartElement<TreemapChartProps> {
       };
     }
 
-    option = applyChartSettings(option, props, { cartesianAxes: false });
-
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
+    option = applyChartSettings(option, props);
 
     return option;
   }

@@ -12,7 +12,7 @@ import type { TimeseriesProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
@@ -33,10 +33,12 @@ export class PagesTimeseries extends PagesChartElement<TimeseriesProps> {
     const timeCol = col0Type === ColumnType.LABEL && dataset.columns.length > 2 ? 1 : 0;
     const series: Record<string, unknown>[] = [];
     for (let i = timeCol + 1; i < dataset.columns.length; i++) {
-      series.push({
+      const entry: Record<string, unknown> = {
         type: "line",
         encode: { x: timeCol, y: i },
-      });
+      };
+      if (props.connectNulls !== undefined) entry.connectNulls = props.connectNulls;
+      series.push(entry);
     }
 
     let option: Record<string, unknown> = {
@@ -47,13 +49,8 @@ export class PagesTimeseries extends PagesChartElement<TimeseriesProps> {
       tooltip: { trigger: "axis" },
     };
 
-    // Stage 3: Apply ChartSettings
+    // Stage 3: Apply ChartSettings + escape hatches
     option = applyChartSettings(option, props);
-
-    // Stage 4: Deep merge extra
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
 
     return option;
   }

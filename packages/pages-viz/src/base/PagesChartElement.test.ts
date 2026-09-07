@@ -41,7 +41,7 @@ const useCallCountAtLoad = (echartsUse as ReturnType<typeof vi.fn>).mock.calls.l
 // ── Test types ────────────────────────────────────────────────────────
 
 interface TestChartProps extends DataComponentCommon, ChartSettings {
-  readonly color?: string;
+  readonly testColor?: string;
 }
 
 // ── Concrete test subclass ────────────────────────────────────────────
@@ -555,7 +555,7 @@ describe("PagesChartElement", () => {
     it("passes props and dataset to buildOption", async () => {
       const props: TestChartProps = {
         lookup: mockLookup("sales"),
-        color: "red",
+        testColor: "red",
       };
       const ds = mockDataSet();
       el.props = props;

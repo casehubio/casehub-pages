@@ -99,11 +99,25 @@ export class PagesDensityHeatmap extends PagesElement<DensityHeatmapProps> {
   ): HeatmapInstance {
     const config: Record<string, unknown> = { container, data };
 
-    if (props.gradient) {
-      config.gradient = props.gradient;
+    if (props.gradient) config.gradient = props.gradient;
+    if (props.radius !== undefined) config.radius = props.radius;
+    if (props.aggregation) config.aggregationMode = props.aggregation;
+    if (props.blur !== undefined) config.blur = props.blur;
+    if (props.maxOpacity !== undefined) config.maxOpacity = props.maxOpacity;
+    if (props.minOpacity !== undefined) config.minOpacity = props.minOpacity;
+    if (props.intensityExponent !== undefined) config.intensityExponent = props.intensityExponent;
+    if (props.valueMin !== undefined) config.valueMin = props.valueMin;
+    if (props.valueMax !== undefined) config.valueMax = props.valueMax;
+
+    if (props.heatmapJs) {
+      for (const [k, v] of Object.entries(props.heatmapJs)) {
+        config[k] = v;
+      }
     }
-    if (props.aggregation) {
-      config.aggregationMode = props.aggregation;
+    if (props.extra) {
+      for (const [k, v] of Object.entries(props.extra)) {
+        config[k] = v;
+      }
     }
 
     const features: unknown[] = [];

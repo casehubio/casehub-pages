@@ -11,7 +11,7 @@ import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { BarChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
@@ -41,6 +41,8 @@ export class PagesBarChart extends PagesChartElement<BarChartProps> {
       if (isStacked) {
         seriesEntry.stack = "total";
       }
+      if (props.barWidth !== undefined) seriesEntry.barWidth = props.barWidth;
+      if (props.barGap !== undefined) seriesEntry.barGap = props.barGap;
       series.push(seriesEntry);
     }
 
@@ -52,13 +54,8 @@ export class PagesBarChart extends PagesChartElement<BarChartProps> {
       tooltip: { trigger: "axis" },
     };
 
-    // Stage 3: Apply ChartSettings
+    // Stage 3: Apply ChartSettings + escape hatches
     option = applyChartSettings(option, props);
-
-    // Stage 4: Deep merge extra
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
 
     return option;
   }

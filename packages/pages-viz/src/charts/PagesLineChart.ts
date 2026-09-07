@@ -11,7 +11,7 @@ import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { LineChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
@@ -40,6 +40,9 @@ export class PagesLineChart extends PagesChartElement<LineChartProps> {
       if (isSmooth) {
         seriesEntry.smooth = true;
       }
+      if (props.step !== undefined && props.step !== false) seriesEntry.step = props.step;
+      if (props.connectNulls !== undefined) seriesEntry.connectNulls = props.connectNulls;
+      if (props.showSymbol !== undefined) seriesEntry.showSymbol = props.showSymbol;
       series.push(seriesEntry);
     }
 
@@ -51,13 +54,8 @@ export class PagesLineChart extends PagesChartElement<LineChartProps> {
       tooltip: { trigger: "axis" },
     };
 
-    // Stage 3: Apply ChartSettings
+    // Stage 3: Apply ChartSettings + escape hatches
     option = applyChartSettings(option, props);
-
-    // Stage 4: Deep merge extra
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
 
     return option;
   }

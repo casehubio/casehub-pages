@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
+import type { ChartSettings } from "@casehubio/pages-component";
 import type { TypedDataSet, Column, ColumnSettings } from "@casehubio/pages-data";
 import { ColumnType, columnId } from "@casehubio/pages-data";
 import { createTypedRow } from "@casehubio/pages-data";
@@ -172,7 +173,7 @@ describe("applyChartSettings", () => {
 
   it("applies xAxis title", () => {
     const option = {};
-    const props = { xAxis: { title: "Month" } };
+    const props = { xAxis: { title: "Month" } } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -181,7 +182,7 @@ describe("applyChartSettings", () => {
 
   it("applies xAxis showLabels", () => {
     const option = {};
-    const props = { xAxis: { showLabels: false } };
+    const props = { xAxis: { showLabels: false } } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -190,7 +191,7 @@ describe("applyChartSettings", () => {
 
   it("applies yAxis title", () => {
     const option = {};
-    const props = { yAxis: { title: "Revenue" } };
+    const props = { yAxis: { title: "Revenue" } } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -199,7 +200,7 @@ describe("applyChartSettings", () => {
 
   it("applies yAxis showLabels", () => {
     const option = {};
-    const props = { yAxis: { showLabels: false } };
+    const props = { yAxis: { showLabels: false } } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -253,7 +254,7 @@ describe("applyChartSettings", () => {
 
   it("applies zoom enabled", () => {
     const option = {};
-    const props = { zoom: true };
+    const props = { zoom: true } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -288,7 +289,7 @@ describe("applyChartSettings", () => {
       yAxis: { title: "Y" },
       margin: { top: 10, left: 20 },
       zoom: true,
-    };
+    } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -311,7 +312,7 @@ describe("applyChartSettings", () => {
     const props = {
       xAxis: { title: "Category" },
       margin: { top: 20 },
-    };
+    } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -319,16 +320,14 @@ describe("applyChartSettings", () => {
     expect(result.grid).toEqual({ containLabel: true, top: 20 });
   });
 
-  it("skips xAxis and yAxis when cartesianAxes is false", () => {
+  it("skips xAxis and yAxis when props lack those fields (non-Cartesian)", () => {
     const option = {};
     const props = {
       title: "Pie Chart",
-      xAxis: { title: "Should be ignored" },
-      yAxis: { title: "Should be ignored" },
       legend: { show: true },
     };
 
-    const result = applyChartSettings(option, props, { cartesianAxes: false });
+    const result = applyChartSettings(option, props);
 
     expect(result.xAxis).toBeUndefined();
     expect(result.yAxis).toBeUndefined();
@@ -336,38 +335,36 @@ describe("applyChartSettings", () => {
     expect(result.legend).toEqual({ show: true });
   });
 
-  it("applies margin and zoom even when cartesianAxes is false", () => {
+  it("applies margin even when props lack Cartesian fields", () => {
     const option = {};
     const props = {
       margin: { top: 10, left: 20 },
-      zoom: true,
     };
 
-    const result = applyChartSettings(option, props, { cartesianAxes: false });
+    const result = applyChartSettings(option, props);
 
     expect(result.grid).toEqual({ top: 10, left: 20 });
-    expect(result.dataZoom).toEqual([{ type: "inside" }, { type: "slider" }]);
   });
 
-  it("applies xAxis and yAxis when cartesianAxes is explicitly true", () => {
+  it("applies xAxis and yAxis when props carry those fields", () => {
     const option = {};
     const props = {
       xAxis: { title: "X" },
       yAxis: { title: "Y" },
-    };
+    } as ChartSettings;
 
-    const result = applyChartSettings(option, props, { cartesianAxes: true });
+    const result = applyChartSettings(option, props);
 
     expect(result.xAxis).toEqual({ name: "X" });
     expect(result.yAxis).toEqual({ name: "Y" });
   });
 
-  it("applies xAxis and yAxis when cartesianAxes is omitted (default true)", () => {
+  it("applies xAxis and yAxis via structural access", () => {
     const option = {};
     const props = {
       xAxis: { title: "X" },
       yAxis: { title: "Y" },
-    };
+    } as ChartSettings;
 
     const result = applyChartSettings(option, props);
 
@@ -377,35 +374,35 @@ describe("applyChartSettings", () => {
 
   it("applies xAxis labelAngle as axisLabel.rotate", () => {
     const option = {};
-    const props = { xAxis: { labelAngle: 30 } };
+    const props = { xAxis: { labelAngle: 30 } } as ChartSettings;
     const result = applyChartSettings(option, props);
     expect(result.xAxis).toEqual({ axisLabel: { rotate: 30 } });
   });
 
   it("applies yAxis labelAngle as axisLabel.rotate", () => {
     const option = {};
-    const props = { yAxis: { labelAngle: -10 } };
+    const props = { yAxis: { labelAngle: -10 } } as ChartSettings;
     const result = applyChartSettings(option, props);
     expect(result.yAxis).toEqual({ axisLabel: { rotate: -10 } });
   });
 
   it("merges labelAngle with existing axisLabel settings", () => {
     const option = {};
-    const props = { xAxis: { showLabels: true, labelAngle: 30 } };
+    const props = { xAxis: { showLabels: true, labelAngle: 30 } } as ChartSettings;
     const result = applyChartSettings(option, props);
     expect(result.xAxis).toEqual({ axisLabel: { show: true, rotate: 30 } });
   });
 
   it("applies grid.x false as xAxis.splitLine.show false", () => {
     const option = {};
-    const props = { grid: { x: false } };
+    const props = { grid: { x: false } } as ChartSettings;
     const result = applyChartSettings(option, props);
     expect(result.xAxis).toEqual({ splitLine: { show: false } });
   });
 
   it("applies grid.y false as yAxis.splitLine.show false", () => {
     const option = {};
-    const props = { grid: { y: false } };
+    const props = { grid: { y: false } } as ChartSettings;
     const result = applyChartSettings(option, props);
     expect(result.yAxis).toEqual({ splitLine: { show: false } });
   });
@@ -415,7 +412,7 @@ describe("applyChartSettings", () => {
     const props = {
       xAxis: { title: "Month", labelAngle: 30 },
       grid: { x: false, y: false },
-    };
+    } as ChartSettings;
     const result = applyChartSettings(option, props);
     expect(result.xAxis).toEqual({
       name: "Month",
@@ -425,10 +422,10 @@ describe("applyChartSettings", () => {
     expect(result.yAxis).toEqual({ splitLine: { show: false } });
   });
 
-  it("skips grid settings when cartesianAxes is false", () => {
+  it("skips grid settings when props lack grid field", () => {
     const option = {};
-    const props = { grid: { x: false, y: false } };
-    const result = applyChartSettings(option, props, { cartesianAxes: false });
+    const props = { legend: { show: true } };
+    const result = applyChartSettings(option, props);
     expect(result.xAxis).toBeUndefined();
     expect(result.yAxis).toBeUndefined();
   });

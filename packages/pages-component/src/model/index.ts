@@ -53,6 +53,7 @@ export type { ConfigurablePanel, DataReceiver, VizTarget } from "./hosting.js";
 // Displayer types
 export type {
   DataComponentCommon,
+  ChartSettingsBase,
   ChartSettings,
   BarChartProps,
   LineChartProps,
@@ -95,6 +96,11 @@ export type {
   GroupNode,
   RowAccentConfig,
 } from "./displayer-types.js";
+
+export type { CasehubEChartsExtension } from "./echarts-extension.js";
+export type { CasehubReactFlowExtension } from "./reactflow-extension.js";
+export type { CasehubElkExtension } from "./elk-extension.js";
+export type { CasehubHeatmapExtension } from "./heatmap-extension.js";
 
 // Action types
 export type {

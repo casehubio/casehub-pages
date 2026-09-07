@@ -9,7 +9,7 @@ import { PagesChartElement } from "../base/PagesChartElement.js";
 import type { PieChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
+
 import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
@@ -34,6 +34,9 @@ export class PagesPieChart extends PagesChartElement<PieChartProps> {
     if (subtype === "donut") {
       series.radius = ["40%", "70%"];
     }
+    if (props.roseType !== undefined) series.roseType = props.roseType;
+    if (props.startAngle !== undefined) series.startAngle = props.startAngle;
+    if (props.clockwise !== undefined) series.clockwise = props.clockwise;
 
     let option: Record<string, unknown> = {
       dataset: { source },
@@ -41,13 +44,8 @@ export class PagesPieChart extends PagesChartElement<PieChartProps> {
       tooltip: { trigger: "item" },
     };
 
-    // Stage 3: Apply ChartSettings (skip xAxis/yAxis — pie has no axes)
-    option = applyChartSettings(option, props, { cartesianAxes: false });
-
-    // Stage 4: Deep merge extra
-    if (props.extra) {
-      option = deepMerge(option, props.extra);
-    }
+    // Stage 3: Apply ChartSettings + escape hatches
+    option = applyChartSettings(option, props);
 
     return option;
   }
