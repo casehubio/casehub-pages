@@ -179,6 +179,17 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
   }
   if (validEdges.length === 0) return;
 
+  const inversePairs = new Set<string>();
+  for (let i = 0; i < validEdges.length; i++) {
+    for (let j = i + 1; j < validEdges.length; j++) {
+      const a = validEdges[i]!, b = validEdges[j]!;
+      if (a.source === b.target && a.target === b.source) {
+        inversePairs.add(`${i}:${j}`);
+        inversePairs.add(`${j}:${i}`);
+      }
+    }
+  }
+
   const dirDefaults: Record<string, { src: string; tgt: string }> = {
     DOWN: { src: 'bottom', tgt: 'top' },
     RIGHT: { src: 'right', tgt: 'left' },
@@ -236,9 +247,21 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
       let conflicts = 0;
       const ae = validEdges[depth]!;
       const tgtSidesOnSrc = nodeTgtSides.get(ae.source);
-      if (tgtSidesOnSrc && tgtSidesOnSrc.has(cand.srcSide)) conflicts++;
+      if (tgtSidesOnSrc && tgtSidesOnSrc.has(cand.srcSide)) {
+        let isInv = false;
+        for (let j = 0; j < depth; j++) {
+          if (inversePairs.has(`${depth}:${j}`) && cur[j]!.tgtSide === cand.srcSide) { isInv = true; break; }
+        }
+        if (!isInv) conflicts++;
+      }
       const srcSidesOnTgt = nodeSrcSides.get(ae.target);
-      if (srcSidesOnTgt && srcSidesOnTgt.has(cand.tgtSide)) conflicts++;
+      if (srcSidesOnTgt && srcSidesOnTgt.has(cand.tgtSide)) {
+        let isInv = false;
+        for (let j = 0; j < depth; j++) {
+          if (inversePairs.has(`${depth}:${j}`) && cur[j]!.srcSide === cand.tgtSide) { isInv = true; break; }
+        }
+        if (!isInv) conflicts++;
+      }
       return conflicts;
     }
 
