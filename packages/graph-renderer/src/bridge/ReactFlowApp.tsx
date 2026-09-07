@@ -20,10 +20,34 @@ import {
   type Connection,
 } from '@xyflow/react';
 import { SmartBezierEdge, SmartEdgeProvider } from '@tisoap/react-flow-smart-edge';
+import { type EdgeProps, Position } from '@xyflow/react';
+
+const MIN_DEPARTURE = 60;
+
+function DirectionalBezierEdge(props: EdgeProps) {
+  const { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition } = props;
+  const dx = (pos: Position) => pos === Position.Left ? -MIN_DEPARTURE : pos === Position.Right ? MIN_DEPARTURE : 0;
+  const dy = (pos: Position) => pos === Position.Top ? -MIN_DEPARTURE : pos === Position.Bottom ? MIN_DEPARTURE : 0;
+  const dist = Math.max(Math.abs(sourceX - targetX), Math.abs(sourceY - targetY));
+  const offset = Math.max(MIN_DEPARTURE, dist * 0.25);
+  const scx = sourceX + (dx(sourcePosition) !== 0 ? (dx(sourcePosition) > 0 ? offset : -offset) : 0);
+  const scy = sourceY + (dy(sourcePosition) !== 0 ? (dy(sourcePosition) > 0 ? offset : -offset) : 0);
+  const tcx = targetX + (dx(targetPosition) !== 0 ? (dx(targetPosition) > 0 ? offset : -offset) : 0);
+  const tcy = targetY + (dy(targetPosition) !== 0 ? (dy(targetPosition) > 0 ? offset : -offset) : 0);
+  const path = `M${sourceX},${sourceY} C${scx},${scy} ${tcx},${tcy} ${targetX},${targetY}`;
+  return (
+    <g>
+      <path d={path} fill="none" className="react-flow__edge-path"
+        style={props.style}
+        markerEnd={props.markerEnd as string} markerStart={props.markerStart as string} />
+    </g>
+  );
+}
 
 const smartEdgeTypes: EdgeTypes = new Proxy({ default: SmartBezierEdge } as EdgeTypes, {
   get(target, prop) {
-    if (typeof prop === 'string') return SmartBezierEdge;
+    if (prop === 'default' || prop === 'smart') return SmartBezierEdge;
+    if (typeof prop === 'string') return DirectionalBezierEdge;
     return Reflect.get(target, prop);
   },
 });
