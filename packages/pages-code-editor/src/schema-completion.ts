@@ -42,10 +42,36 @@ export function buildYamlContext(doc: string, pos: number): YamlContext {
   const siblings: Record<string, string> = {};
   let targetEI = currentEI;
 
+  // If the current line is empty/whitespace and the line immediately above
+  // is a key with no value (e.g. "components:"), treat it as entering that
+  // key's block — the cursor is inside the key, not a sibling of it.
+  let descendedIntoEmptyKey = false;
+  if (currentLine.trim() === '' || currentLine.trim() === '-') {
+    for (let j = lines.length - 2; j >= 0; j--) {
+      const prev = lines[j] ?? '';
+      if (prev.trim() === '') continue;
+      const prevEI = effectiveIndent(prev);
+      if (prevEI <= currentEI) {
+        const kv = extractKeyValue(prev);
+        if (kv && kv.value === '') {
+          path.unshift(kv.key);
+          targetEI = prevEI;
+          descendedIntoEmptyKey = true;
+        }
+      }
+      break;
+    }
+  }
+
   for (let i = lines.length - 2; i >= 0; i--) {
     const rawLine = lines[i] ?? '';
     if (rawLine.trim() === '') continue;
     const lineEI = effectiveIndent(rawLine);
+
+    if (descendedIntoEmptyKey && lineEI >= targetEI && i === lines.length - 2) {
+      descendedIntoEmptyKey = false;
+      continue;
+    }
 
     if (lineEI === currentEI || lineEI === targetEI) {
       const kv = extractKeyValue(rawLine);
@@ -95,6 +121,23 @@ function navigateObjectKey(shape: Record<string, z.ZodType>, key: string): z.Zod
     field = unwrap((field._def as { type: z.ZodType }).type);
   }
   return field;
+}
+
+export function isArrayField(
+  schema: z.ZodType,
+  path: string[],
+  siblings?: Record<string, string>,
+): boolean {
+  if (path.length === 0) return false;
+  const parentPath = path.slice(0, -1);
+  const lastKey = path[path.length - 1]!;
+  const parent = navigateSchema(schema, parentPath, siblings);
+  if (!parent) return false;
+  const parentUnwrapped = unwrap(parent);
+  const shape = getShape(parentUnwrapped);
+  if (!shape || !(lastKey in shape)) return false;
+  const field = unwrap(shape[lastKey] as z.ZodType);
+  return typeName(field) === 'ZodArray';
 }
 
 export function navigateSchema(
@@ -289,17 +332,25 @@ function schemaCompletionSource(
     const completions = schemaToCompletions(resolved);
     if (completions.length === 0) return null;
 
+    const needsDash = isArrayField(schema, yamlCtx.path, yamlCtx.siblings)
+      && !textBefore.trimStart().startsWith('-');
+
+    function applyDash(c: CompletionEntry) {
+      const apply = needsDash ? '- ' + (c.apply || c.label) : c.apply;
+      return {
+        label: needsDash ? '- ' + c.label : c.label,
+        ...(c.detail ? { detail: c.detail } : {}),
+        type: c.type,
+        ...(apply ? { apply } : {}),
+      };
+    }
+
     if (keyMatch) {
       const prefix = keyMatch[1] ?? '';
       if (!prefix && !context.explicit) return null;
       return {
-        from: context.pos - prefix.length,
-        options: completions.map(c => ({
-          label: c.label,
-          ...(c.detail ? { detail: c.detail } : {}),
-          type: c.type,
-          ...(c.apply ? { apply: c.apply } : {}),
-        })),
+        from: needsDash ? context.pos - prefix.length : context.pos - prefix.length,
+        options: completions.map(applyDash),
       };
     }
 
@@ -307,12 +358,7 @@ function schemaCompletionSource(
     if (emptyMatch && context.explicit) {
       return {
         from: context.pos,
-        options: completions.map(c => ({
-          label: c.label,
-          ...(c.detail ? { detail: c.detail } : {}),
-          type: c.type,
-          ...(c.apply ? { apply: c.apply } : {}),
-        })),
+        options: completions.map(applyDash),
       };
     }
 
