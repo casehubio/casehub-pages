@@ -261,12 +261,6 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
       if (tgtOnSrcSide > 0) congestion++;
       const srcOnTgtSide = getSrcCount(ae.target, cand.tgtSide);
       if (srcOnTgtSide > 0) congestion++;
-      if (!preferred) {
-        const srcExisting = getSrcCount(ae.source, cand.srcSide);
-        if (srcExisting > 0) congestion += srcExisting;
-        const tgtExisting = getTgtCount(ae.target, cand.tgtSide);
-        if (tgtExisting > 0) congestion += tgtExisting;
-      }
       return congestion;
     }
 
