@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 91,
+  "totalSamples": 92,
   "categories": [
     {
       "category": "Charts",
@@ -424,6 +424,13 @@
           "path": "Theming/DarkMode.dash.yaml",
           "category": "Theming",
           "file": "DarkMode.dash.yaml"
+        },
+        {
+          "name": "Theme Designer",
+          "path": "Theming/Theme Designer.dash.yaml",
+          "category": "Theming",
+          "file": "Theme Designer.dash.yaml",
+          "tsPath": "Theming/Theme Designer.ts"
         },
         {
           "name": "Theme Picker",
