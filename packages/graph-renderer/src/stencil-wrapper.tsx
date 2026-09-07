@@ -152,7 +152,7 @@ function ensurePulseStyle(): void {
 export function createStencilNodeComponent(
   renderFn: StencilRenderFn,
 ): React.ComponentType<NodeProps> {
-  function StencilNode({ id, type, data, parentId, width, height: _height }: NodeProps): React.JSX.Element {
+  function StencilNode({ id, type, data, parentId, width, height }: NodeProps): React.JSX.Element {
     const containerRef = useRef<HTMLDivElement>(null);
     const grammar = type ? getGrammar(type) : undefined;
     const rawData = (data ?? {});
@@ -190,47 +190,59 @@ export function createStencilNodeComponent(
     if (width != null && width > 0) {
       sizeStyle.width = width;
     }
+    if (height != null && height > 0) {
+      sizeStyle.height = height;
+    }
 
     const hideHandles = rawData._hideHandles === true;
-    const positionMap: Record<string, Position> = { top: Position.Top, bottom: Position.Bottom, left: Position.Left, right: Position.Right };
     const hasTarget = rawData._targetHandlePosition !== undefined;
     const hasSource = rawData._sourceHandlePosition !== undefined;
-    const targetPos = positionMap[rawData._targetHandlePosition as string] ?? Position.Top;
-    const sourcePos = positionMap[rawData._sourceHandlePosition as string] ?? Position.Bottom;
+    const hiddenHandle: React.CSSProperties = { opacity: 0, width: 1, height: 1 };
     const fullNodeHandle: React.CSSProperties = {
       position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-      borderRadius: 'inherit', opacity: 0, transform: 'none', zIndex: 2,
+      borderRadius: 'inherit', opacity: 0, transform: 'none',
     };
-    const _allPositions = [
+    const allPositions = [
       { key: 'top', pos: Position.Top },
       { key: 'bottom', pos: Position.Bottom },
       { key: 'left', pos: Position.Left },
       { key: 'right', pos: Position.Right },
     ];
-    const _hiddenHandle: React.CSSProperties = { opacity: 0, width: 1, height: 1 };
 
     return (
       <>
         {!hideHandles && hasTarget && grammar?.connections.inbound.max !== 0 &&
-          <Handle key="target-full" id={`target-${targetPos === Position.Top ? 'top' : 'left'}`}
-            type="target" position={targetPos}
-            style={{ ...fullNodeHandle, zIndex: 1 }} />
+          <>
+            <Handle key="target-full" id="target-full"
+              type="target" position={Position.Top}
+              style={{ ...fullNodeHandle, zIndex: 1 }} />
+            {allPositions.map(({ key, pos }) =>
+              <Handle key={`target-${key}`} id={`target-${key}`}
+                type="target" position={pos} style={hiddenHandle} />
+            )}
+          </>
         }
         <div
           className="stencil-decoration-wrapper"
-          style={{ position: 'relative', ...borderStyle, ...sizeStyle }}
+          style={{ position: 'relative', ...borderStyle, ...sizeStyle, height: sizeStyle.height ? '100%' : undefined }}
           title={decoration?.tooltip}
         >
           {decoration?.badge && <DecorationBadge badge={decoration.badge} />}
           {decoration?.overlay && <DecorationOverlay overlay={decoration.overlay} />}
           {decoration?.pills && decoration.pills.length > 0 && <DecorationPills pills={decoration.pills} />}
-          <div ref={containerRef} />
+          <div ref={containerRef} style={sizeStyle.height ? { height: '100%' } : undefined} />
         </div>
         {!hideHandles && hasSource && grammar?.connections.outbound.max !== 0 &&
-          <Handle key="source-full" id={`source-${sourcePos === Position.Bottom ? 'bottom' : 'right'}`}
-            type="source" position={sourcePos}
-            className="stencil-source-handle"
-            style={fullNodeHandle} />
+          <>
+            <Handle key="source-full" id="source-full"
+              type="source" position={Position.Bottom}
+              className="stencil-source-handle"
+              style={{ ...fullNodeHandle, zIndex: 2 }} />
+            {allPositions.map(({ key, pos }) =>
+              <Handle key={`source-${key}`} id={`source-${key}`}
+                type="source" position={pos} style={hiddenHandle} />
+            )}
+          </>
         }
       </>
     );

@@ -20,10 +20,17 @@ export interface StencilDescriptor {
   readonly defaultStyle?: string;
 }
 
+export interface EdgeMarker {
+  readonly type: 'arrow' | 'arrowclosed';
+  readonly color?: string;
+}
+
 export interface EdgeDescriptor {
   readonly type: string;
   readonly label?: string;
   readonly defaultStyle?: string;
+  readonly markerEnd?: EdgeMarker;
+  readonly markerStart?: EdgeMarker;
 }
 
 type NodeComponent = NodeTypes[string];

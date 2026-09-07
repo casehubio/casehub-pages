@@ -75,12 +75,17 @@ export class PagesPropertyPalette extends LitElement {
 
   @state() private _showAdvanced = false;
   @state() private _errors: Map<string, string> = new Map();
+  private _elementCache: Map<string, HTMLElement> = new Map();
+  private _activeKeys: Set<string> = new Set();
 
   override render(): TemplateResult {
     if (!this.source?.schema?.properties) {
+      this._elementCache.clear();
+      this._activeKeys.clear();
       return html`<div class="palette"></div>`;
     }
 
+    this._activeKeys = new Set();
     const fields = this._buildFieldEntries(this.source.schema);
     const hasAdvanced = fields.some(f => f.advanced);
     const visibleFields = this._showAdvanced ? fields : fields.filter(f => !f.advanced);
@@ -101,7 +106,7 @@ export class PagesPropertyPalette extends LitElement {
       }
     }
 
-    return html`
+    const result = html`
       <div class="palette">
         ${hasAdvanced ? html`
           <label class="advanced-toggle">
@@ -132,6 +137,14 @@ export class PagesPropertyPalette extends LitElement {
         })}
       </div>
     `;
+
+    for (const key of this._elementCache.keys()) {
+      if (!this._activeKeys.has(key)) {
+        this._elementCache.delete(key);
+      }
+    }
+
+    return result;
   }
 
   private _buildFieldEntries(schema: FieldSchema): FieldEntry[] {
@@ -169,13 +182,14 @@ export class PagesPropertyPalette extends LitElement {
     const fieldPath = [...path, key].join('.');
     const error = this._errors.get(fieldPath);
 
-    const descriptor = this._resolveField(schema);
+    const customResult = this.resolver?.(schema);
+    const descriptor = customResult ?? resolveEditor(schema);
 
-    if (descriptor.kind === 'render' && schema.type === 'object' && schema.properties && depth < MAX_NESTING_DEPTH) {
+    if (!customResult && descriptor.kind === 'render' && schema.type === 'object' && schema.properties && depth < MAX_NESTING_DEPTH) {
       return this._renderNestedObject(key, schema, value as Record<string, unknown> | undefined, path, depth);
     }
 
-    if (descriptor.kind === 'render' && schema.type === 'object' && depth >= MAX_NESTING_DEPTH) {
+    if (!customResult && descriptor.kind === 'render' && schema.type === 'object' && depth >= MAX_NESTING_DEPTH) {
       return this._renderJsonFallback(key, schema, value);
     }
 
@@ -217,11 +231,18 @@ export class PagesPropertyPalette extends LitElement {
     const helpText = schema['x-help'] as string | undefined;
     const isCheckbox = tag === 'pages-checkbox';
 
-    const el = document.createElement(tag) as any;
+    const cacheKey = [...path, key].join('.');
+    this._activeKeys.add(cacheKey);
+    let el = this._elementCache.get(cacheKey) as any;
+    const isNew = !el || el.tagName.toLowerCase() !== tag;
+    if (isNew) {
+      el = document.createElement(tag);
+      this._elementCache.set(cacheKey, el);
+    }
 
+    el.label = label;
     if (isCheckbox) {
       el.checked = Boolean(value);
-      el.label = label;
     } else {
       el.value = value ?? (tag === 'pages-number-input' ? null : '');
     }
@@ -260,11 +281,13 @@ export class PagesPropertyPalette extends LitElement {
       }
     }
 
-    const fieldPath = [...path, key];
-    (el as HTMLElement).addEventListener('change', () => {
-      const newValue = isCheckbox ? el.checked : el.value;
-      this._handleChange(fieldPath, newValue, schema, required);
-    });
+    if (isNew) {
+      const fieldPath = [...path, key];
+      (el as HTMLElement).addEventListener('change', () => {
+        const newValue = isCheckbox ? el.checked : el.value;
+        this._handleChange(fieldPath, newValue, schema, required);
+      });
+    }
 
     return html`
       <div class="field-wrapper">
@@ -277,6 +300,21 @@ export class PagesPropertyPalette extends LitElement {
         ${el}
       </div>
     `;
+  }
+
+  getFieldElement(key: string): HTMLElement | undefined {
+    return this._elementCache.get(key);
+  }
+
+  setFieldErrors(errors: Map<string, string | undefined>): void {
+    for (const [key, error] of errors) {
+      const cached = this._elementCache.get(key) as any;
+      if (cached) {
+        cached.error = error;
+      }
+    }
+    this._errors = new Map([...errors].filter(([, v]) => v != null) as [string, string][]);
+    this.requestUpdate();
   }
 
   private _renderNestedObject(
@@ -312,14 +350,6 @@ export class PagesPropertyPalette extends LitElement {
         <pre style="font-size: 11px; margin: 0; white-space: pre-wrap; color: var(--pages-neutral-11, #374151);">${JSON.stringify(value, null, 2) ?? '—'}</pre>
       </div>
     `;
-  }
-
-  private _resolveField(schema: FieldSchema): EditorDescriptor {
-    if (this.resolver) {
-      const custom = this.resolver(schema);
-      if (custom) return custom;
-    }
-    return resolveEditor(schema);
   }
 
   private _handleChange(
