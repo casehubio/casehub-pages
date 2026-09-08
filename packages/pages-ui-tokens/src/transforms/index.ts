@@ -215,6 +215,130 @@ const EARTH_LIGHT: PresetConfig = {
   ],
 };
 
+const NEON_STEPS = [5, 8, 12, 16, 22, 30, 40, 50, 62, 75, 88, 95];
+const NEON_DARK: PresetConfig = {
+  $name: 'neon-dark',
+  $description: 'Cyberpunk — extreme chroma, hot pink on deep purple, sharp edges',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 320, neutral: [280, 300], success: 150, warning: 65, danger: 5, info: 200 },
+      chroma: 0.40, contrast: 0.70, steps: NEON_STEPS,
+      radius: 0, density: 'compact', shadow: 0.8, fontFamily: 'mono', fontSize: 13,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'bezier', neutral: 0.15, accent: 1.4 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const NEON_LIGHT: PresetConfig = {
+  $name: 'neon-light',
+  $description: 'Cyberpunk — light variant',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 320, neutral: [280, 300], success: 150, warning: 65, danger: 5, info: 200 },
+      chroma: 0.35, contrast: 0.65, steps: NEON_STEPS,
+      radius: 0, density: 'compact', shadow: 0.8, fontFamily: 'mono', fontSize: 13,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'bezier', neutral: 0.1, accent: 1.2 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
+const TERMINAL_DARK: PresetConfig = {
+  $name: 'terminal-dark',
+  $description: 'Green-on-black — single-hue monochrome terminal aesthetic',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 140, neutral: 140, success: 140, warning: 60, danger: 0, info: 140 },
+      chroma: 0.20, contrast: 0.60,
+      radius: 0, density: 'compact', shadow: 0.0, fontFamily: 'mono', fontSize: 13,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.08, warning: 0.4, danger: 0.5 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const TERMINAL_LIGHT: PresetConfig = {
+  $name: 'terminal-light',
+  $description: 'Green-on-white — terminal light variant',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 140, neutral: 140, success: 140, warning: 60, danger: 0, info: 140 },
+      chroma: 0.15, contrast: 0.55,
+      radius: 0, density: 'compact', shadow: 0.0, fontFamily: 'mono', fontSize: 13,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.05, warning: 0.35, danger: 0.45 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
+const PASTEL_STEPS = [25, 32, 38, 44, 50, 56, 62, 68, 74, 80, 86, 92];
+const PASTEL_DARK: PresetConfig = {
+  $name: 'pastel-dark',
+  $description: 'Watercolour — ultra-soft, minimal contrast, dreamy palette',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 280, neutral: 260, success: 160, warning: 45, danger: 350, info: 220 },
+      chroma: 0.08, contrast: 0.25, steps: PASTEL_STEPS,
+      radius: 20, density: 'spacious', shadow: 0.15, fontFamily: 'rounded', fontSize: 15,
+    }},
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const PASTEL_LIGHT: PresetConfig = {
+  $name: 'pastel-light',
+  $description: 'Watercolour — light variant, barely-there tints',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 280, neutral: 260, success: 160, warning: 45, danger: 350, info: 220 },
+      chroma: 0.06, contrast: 0.20, steps: PASTEL_STEPS,
+      radius: 20, density: 'spacious', shadow: 0.1, fontFamily: 'rounded', fontSize: 15,
+    }},
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
+const BRUTALIST_DARK: PresetConfig = {
+  $name: 'brutalist-dark',
+  $description: 'Brutalist — maximum contrast, zero decoration, raw and stark',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 55, neutral: 55, success: 145, warning: 55, danger: 25, info: 210 },
+      chroma: 0.02, contrast: 1.0,
+      radius: 0, density: 'compact', shadow: 0.0, fontFamily: 'system', fontSize: 16,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.0, accent: 3.0, success: 0.6, danger: 0.8 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const BRUTALIST_LIGHT: PresetConfig = {
+  $name: 'brutalist-light',
+  $description: 'Brutalist — light variant, stark black on white',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 55, neutral: 55, success: 145, warning: 55, danger: 25, info: 210 },
+      chroma: 0.02, contrast: 1.0,
+      radius: 0, density: 'compact', shadow: 0.0, fontFamily: 'system', fontSize: 16,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.0, accent: 3.0, success: 0.5, danger: 0.7 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
 export function initPresets(): void {
   registerCoreTransforms();
   registerBuiltinPreset(DEFAULT_LIGHT_PRESET);
@@ -237,6 +361,14 @@ export function initPresets(): void {
   registerBuiltinPreset(EDITORIAL_DARK);
   registerBuiltinPreset(EARTH_LIGHT);
   registerBuiltinPreset(EARTH_DARK);
+  registerBuiltinPreset(NEON_DARK);
+  registerBuiltinPreset(NEON_LIGHT);
+  registerBuiltinPreset(TERMINAL_DARK);
+  registerBuiltinPreset(TERMINAL_LIGHT);
+  registerBuiltinPreset(PASTEL_DARK);
+  registerBuiltinPreset(PASTEL_LIGHT);
+  registerBuiltinPreset(BRUTALIST_DARK);
+  registerBuiltinPreset(BRUTALIST_LIGHT);
 }
 
 export { oklchScale } from './oklch-scale.js';
