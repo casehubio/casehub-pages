@@ -86,12 +86,45 @@ const CASEHUB_LIGHT_PRESET: PresetConfig = {
   ],
 };
 
+const NORD_HUES = { hues: { accent: 210, neutral: 220, success: 145, warning: 40, danger: 355, info: 195 }, chroma: 0.08, contrast: 0.45 };
+const SOLARIZED_HUES = { hues: { accent: 175, neutral: 55, success: 105, warning: 45, danger: 18, info: 200 }, chroma: 0.10, contrast: 0.55 };
+const DRACULA_HUES = { hues: { accent: 270, neutral: 240, success: 115, warning: 60, danger: 0, info: 195 }, chroma: 0.18, contrast: 0.55 };
+const GITHUB_HUES = { hues: { accent: 215, neutral: 215, success: 140, warning: 40, danger: 5, info: 210 }, chroma: 0.04, contrast: 0.60 };
+const MONOKAI_HUES = { hues: { accent: 80, neutral: 50, success: 95, warning: 35, danger: 345, info: 190 }, chroma: 0.15, contrast: 0.50 };
+
+function makePresetPair(name: string, description: string, hues: Record<string, unknown>): [PresetConfig, PresetConfig] {
+  return [
+    { $name: `${name}-light`, $description: `${description} — light`, pipeline: [
+      { transform: 'light-mode' }, { transform: 'oklch-scale', params: hues }, { transform: 'semantic-map' }, { transform: 'gamut-clamp' },
+    ]},
+    { $name: `${name}-dark`, $description: `${description} — dark`, pipeline: [
+      { transform: 'dark-mode' }, { transform: 'oklch-scale', params: hues }, { transform: 'semantic-map' }, { transform: 'gamut-clamp' },
+    ]},
+  ];
+}
+
+const [NORD_LIGHT, NORD_DARK] = makePresetPair('nord', 'Arctic blue — muted frost palette', NORD_HUES);
+const [SOLARIZED_LIGHT, SOLARIZED_DARK] = makePresetPair('solarized', 'Precision colours for machines and people', SOLARIZED_HUES);
+const [DRACULA_LIGHT, DRACULA_DARK] = makePresetPair('dracula', 'Vivid purple with high contrast accents', DRACULA_HUES);
+const [GITHUB_LIGHT, GITHUB_DARK] = makePresetPair('github', 'Clean and neutral — familiar professional look', GITHUB_HUES);
+const [MONOKAI_LIGHT, MONOKAI_DARK] = makePresetPair('monokai', 'Warm tones with vibrant yellow-green accent', MONOKAI_HUES);
+
 export function initPresets(): void {
   registerCoreTransforms();
   registerBuiltinPreset(DEFAULT_LIGHT_PRESET);
   registerBuiltinPreset(DEFAULT_DARK_PRESET);
   registerBuiltinPreset(CASEHUB_DARK_PRESET);
   registerBuiltinPreset(CASEHUB_LIGHT_PRESET);
+  registerBuiltinPreset(NORD_LIGHT!);
+  registerBuiltinPreset(NORD_DARK!);
+  registerBuiltinPreset(SOLARIZED_LIGHT!);
+  registerBuiltinPreset(SOLARIZED_DARK!);
+  registerBuiltinPreset(DRACULA_LIGHT!);
+  registerBuiltinPreset(DRACULA_DARK!);
+  registerBuiltinPreset(GITHUB_LIGHT!);
+  registerBuiltinPreset(GITHUB_DARK!);
+  registerBuiltinPreset(MONOKAI_LIGHT!);
+  registerBuiltinPreset(MONOKAI_DARK!);
 }
 
 export { oklchScale } from './oklch-scale.js';

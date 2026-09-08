@@ -163,7 +163,18 @@ export class PagesThemeDesignerElement extends LitElement {
     }
     .advanced-toggle input { accent-color: var(--pages-accent-9, #4a9eff); }
 
-    .theme-list { display: flex; flex-direction: column; gap: 2px; }
+    .theme-list-wrap { position: relative; }
+    .theme-list-filter {
+      display: none; width: 100%; padding: 3px 6px; margin-bottom: 4px;
+      background: var(--pages-neutral-3, #222); color: var(--pages-neutral-12, #eee);
+      border: 1px solid var(--pages-neutral-6, #444); border-radius: 3px;
+      font: inherit; font-size: 11px; outline: none;
+    }
+    .theme-list-filter:focus { border-color: var(--pages-accent-8, #4a9eff); }
+    .theme-list-wrap.filterable:hover .theme-list-filter,
+    .theme-list-wrap.filterable .theme-list-filter:focus,
+    .theme-list-wrap.filterable .theme-list-filter.has-value { display: block; }
+    .theme-list { display: flex; flex-direction: column; gap: 2px; max-height: 150px; overflow-y: auto; }
     .theme-list-item {
       display: flex; align-items: center; gap: 6px;
       padding: 4px 8px; border-radius: 4px;
@@ -640,6 +651,7 @@ export class PagesThemeDesignerElement extends LitElement {
     _previewTab: { state: true },
     _switchOn: { state: true },
     _toasts: { state: true },
+    _themeFilter: { state: true },
   };
 
   declare open: boolean;
@@ -675,6 +687,7 @@ export class PagesThemeDesignerElement extends LitElement {
   declare _previewTab: string;
   declare _switchOn: boolean;
   declare _toasts: boolean[];
+  declare _themeFilter: string;
 
   private _resolvedStorage: ThemeStorage | undefined;
   private _previewStyleEl: HTMLStyleElement | null = null;
@@ -713,6 +726,7 @@ export class PagesThemeDesignerElement extends LitElement {
     this._previewTab = 'Overview';
     this._switchOn = true;
     this._toasts = [true, true];
+    this._themeFilter = '';
   }
 
   override connectedCallback(): void {
@@ -1697,8 +1711,14 @@ export class PagesThemeDesignerElement extends LitElement {
           <span class="toggle-arrow ${this._existingOpen ? 'open' : ''}">▶</span>
           Existing Themes
         </div>
-        ${this._existingOpen ? html`<div class="theme-list">
-          ${allFamilies.map(name => {
+        ${this._existingOpen ? html`<div class="theme-list-wrap ${allFamilies.length > 5 ? 'filterable' : ''}">
+          ${allFamilies.length > 5 ? html`
+            <input class="theme-list-filter ${this._themeFilter ? 'has-value' : ''}" type="text" placeholder="Filter themes..."
+              .value=${this._themeFilter}
+              @input=${(e: Event) => { this._themeFilter = (e.target as HTMLInputElement).value; }} />
+          ` : nothing}
+          <div class="theme-list">
+          ${allFamilies.filter(n => !this._themeFilter || n.toLowerCase().includes(this._themeFilter.toLowerCase())).map(name => {
             const isBuiltin = builtinFamilies.includes(name);
             const isCustom = customFamilies.includes(name);
             return html`
@@ -1713,6 +1733,7 @@ export class PagesThemeDesignerElement extends LitElement {
               </div>
             `;
           })}
+        </div>
         </div>` : nothing}
       </div>
     `;
