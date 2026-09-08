@@ -11,14 +11,7 @@ import { DESIGNER_PRESETS, type DesignerPreset } from './designer-presets.js';
 import { getBuiltinPreset, listBuiltinPresets } from './preset-loader.js';
 import { listThemes, applyTheme, getTheme } from './runtime.js';
 
-const SEMANTIC_GROUPS: { name: string; hueFn: (a: number, n: number) => number; chromaScale: number }[] = [
-  { name: 'accent', hueFn: (a) => a, chromaScale: 1 },
-  { name: 'neutral', hueFn: (_, n) => n, chromaScale: 0.15 },
-  { name: 'success', hueFn: () => 145, chromaScale: 1 },
-  { name: 'warning', hueFn: () => 55, chromaScale: 1 },
-  { name: 'danger', hueFn: () => 25, chromaScale: 1 },
-  { name: 'info', hueFn: () => 210, chromaScale: 1 },
-];
+const DEFAULT_SEMANTIC_HUES = { success: 145, warning: 55, danger: 25, info: 210 };
 
 export class PagesThemeDesignerElement extends LitElement {
   static override styles = css`
@@ -69,8 +62,29 @@ export class PagesThemeDesignerElement extends LitElement {
 
     .controls-panel {
       width: 320px; min-width: 280px;
-      padding: 16px; overflow-y: auto;
+      padding: 0; overflow-y: auto;
       border-right: 1px solid var(--pages-neutral-4, #333);
+      display: flex; flex-direction: column;
+    }
+
+    .tab-bar {
+      display: flex; border-bottom: 1px solid var(--pages-neutral-4, #333);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1; background: none; border: none; border-bottom: 2px solid transparent;
+      color: var(--pages-neutral-9, #888); padding: 10px 12px;
+      cursor: pointer; font: inherit; font-size: 12px; font-weight: 500;
+      text-align: center;
+    }
+    .tab-btn:hover { color: var(--pages-neutral-11, #bbb); background: var(--pages-neutral-3, #222); }
+    .tab-btn.active {
+      color: var(--pages-accent-9, #4a9eff);
+      border-bottom-color: var(--pages-accent-9, #4a9eff);
+    }
+
+    .tab-content {
+      flex: 1; overflow-y: auto; padding: 16px;
       display: flex; flex-direction: column; gap: 16px;
     }
 
@@ -128,6 +142,8 @@ export class PagesThemeDesignerElement extends LitElement {
     .advanced-toggle {
       display: flex; align-items: center; gap: 6px;
       font-size: 12px; cursor: pointer; color: var(--pages-neutral-10, #aaa);
+      padding: 8px 16px; border-top: 1px solid var(--pages-neutral-4, #333);
+      flex-shrink: 0;
     }
     .advanced-toggle input { accent-color: var(--pages-accent-9, #4a9eff); }
 
@@ -163,11 +179,12 @@ export class PagesThemeDesignerElement extends LitElement {
     .preview-card {
       background: var(--pages-neutral-2, #1a1a2e);
       border: 1px solid var(--pages-neutral-5, #444);
-      border-radius: 8px; padding: 16px;
+      border-radius: var(--pages-radius, 8px); padding: 16px;
+      box-shadow: var(--pages-shadow, 0 2px 8px oklch(0% 0 0 / 0.1));
     }
 
     .preview-btn {
-      padding: 6px 14px; border-radius: 4px;
+      padding: 6px 14px; border-radius: var(--pages-radius-sm, 4px);
       font-size: 13px; cursor: pointer; border: none;
     }
     .preview-btn-primary { background: var(--pages-accent-9); color: var(--pages-neutral-1); }
@@ -177,13 +194,19 @@ export class PagesThemeDesignerElement extends LitElement {
 
     .preview-input {
       background: var(--pages-neutral-3); color: var(--pages-neutral-12);
-      border: 1px solid var(--pages-neutral-6); border-radius: 4px;
+      border: 1px solid var(--pages-neutral-6); border-radius: var(--pages-radius-sm, 4px);
       padding: 6px 10px; font: inherit; font-size: 13px; width: 200px;
     }
     .preview-input:focus { border-color: var(--pages-accent-8); outline: none; box-shadow: 0 0 0 2px var(--pages-accent-8 / 0.3); }
 
+    .preview-select {
+      background: var(--pages-neutral-3); color: var(--pages-neutral-12);
+      border: 1px solid var(--pages-neutral-6); border-radius: var(--pages-radius-sm, 4px);
+      padding: 6px 10px; font: inherit; font-size: 13px;
+    }
+
     .preview-badge {
-      display: inline-flex; padding: 2px 8px; border-radius: 10px;
+      display: inline-flex; padding: 2px 8px; border-radius: var(--pages-radius-full, 9999px);
       font-size: 11px; font-weight: 500;
     }
     .badge-success { background: var(--pages-success-3); color: var(--pages-success-11); }
@@ -211,14 +234,95 @@ export class PagesThemeDesignerElement extends LitElement {
     .preview-table tr:hover td { background: var(--pages-neutral-3); }
 
     .preview-progress {
-      width: 100%; height: 6px; border-radius: 3px;
+      width: 100%; height: 6px; border-radius: var(--pages-radius-sm, 3px);
       background: var(--pages-neutral-4); overflow: hidden;
     }
     .preview-progress-fill {
-      height: 100%; border-radius: 3px; transition: width 0.3s;
+      height: 100%; border-radius: var(--pages-radius-sm, 3px); transition: width 0.3s;
     }
 
     .preview-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .preview-alert {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: var(--pages-radius, 8px);
+      font-size: 13px;
+    }
+    .alert-success { background: var(--pages-success-3); color: var(--pages-success-11); border: 1px solid var(--pages-success-6); }
+    .alert-warning { background: var(--pages-warning-3); color: var(--pages-warning-11); border: 1px solid var(--pages-warning-6); }
+    .alert-danger { background: var(--pages-danger-3); color: var(--pages-danger-11); border: 1px solid var(--pages-danger-6); }
+    .alert-info { background: var(--pages-info-3); color: var(--pages-info-11); border: 1px solid var(--pages-info-6); }
+
+    .preview-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: var(--pages-radius-full, 9999px);
+      font-size: 12px; font-weight: 500;
+    }
+    .chip-success { background: var(--pages-success-4); color: var(--pages-success-11); }
+    .chip-warning { background: var(--pages-warning-4); color: var(--pages-warning-11); }
+    .chip-danger { background: var(--pages-danger-4); color: var(--pages-danger-11); }
+    .chip-info { background: var(--pages-info-4); color: var(--pages-info-11); }
+    .chip-accent { background: var(--pages-accent-4); color: var(--pages-accent-11); }
+
+    .preview-switch {
+      position: relative; width: 36px; height: 20px;
+      background: var(--pages-neutral-5); border-radius: var(--pages-radius-full, 9999px);
+      cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+    }
+    .preview-switch.on { background: var(--pages-accent-9); }
+    .preview-switch-knob {
+      position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: white; transition: transform 0.2s;
+    }
+    .preview-switch.on .preview-switch-knob { transform: translateX(16px); }
+
+    .preview-tabs {
+      display: flex; border-bottom: 2px solid var(--pages-neutral-4);
+    }
+    .preview-tab {
+      padding: 8px 16px; font-size: 12px; cursor: pointer;
+      border: none; background: none;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      color: var(--pages-neutral-9);
+    }
+    .preview-tab.active {
+      color: var(--pages-accent-9);
+      border-bottom-color: var(--pages-accent-9);
+    }
+
+    .preview-checkbox-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--pages-neutral-12);
+    }
+    .preview-checkbox-row input { accent-color: var(--pages-accent-9); }
+
+    .segment-control {
+      display: flex; border: 1px solid var(--pages-neutral-6, #444);
+      border-radius: 4px; overflow: hidden;
+    }
+    .segment-btn {
+      flex: 1; padding: 6px 8px; font-size: 11px; text-align: center;
+      background: var(--pages-neutral-3, #222); color: var(--pages-neutral-10, #aaa);
+      border: none; border-right: 1px solid var(--pages-neutral-6, #444);
+      cursor: pointer; font: inherit;
+    }
+    .segment-btn:last-child { border-right: none; }
+    .segment-btn:hover { background: var(--pages-neutral-4, #333); }
+    .segment-btn.active {
+      background: var(--pages-accent-9, #4a9eff);
+      color: var(--pages-neutral-1, #111);
+    }
+
+    .radius-preview {
+      display: flex; gap: 8px; align-items: end;
+    }
+    .radius-sample {
+      width: 40px; height: 40px;
+      background: var(--pages-accent-9, #4a9eff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; color: var(--pages-neutral-1, #111);
+    }
 
     .pipeline-editor { display: flex; flex-direction: column; gap: 8px; }
     .pipeline-stage {
@@ -327,15 +431,24 @@ export class PagesThemeDesignerElement extends LitElement {
     _neutralHue: { state: true },
     _chroma: { state: true },
     _contrast: { state: true },
+    _successHue: { state: true },
+    _warningHue: { state: true },
+    _dangerHue: { state: true },
+    _infoHue: { state: true },
+    _borderRadius: { state: true },
+    _density: { state: true },
+    _shadowDepth: { state: true },
     _themeName: { state: true },
     _advancedMode: { state: true },
     _pipeline: { state: true },
     _savedThemes: { state: true },
     _previewMode: { state: true },
+    _activeTab: { state: true },
     _presetsOpen: { state: true },
     _controlsOpen: { state: true },
     _swatchesOpen: { state: true },
     _existingOpen: { state: true },
+    _semanticOpen: { state: true },
   };
 
   declare open: boolean;
@@ -346,18 +459,28 @@ export class PagesThemeDesignerElement extends LitElement {
   declare _neutralHue: number;
   declare _chroma: number;
   declare _contrast: number;
+  declare _successHue: number;
+  declare _warningHue: number;
+  declare _dangerHue: number;
+  declare _infoHue: number;
+  declare _borderRadius: number;
+  declare _density: 'compact' | 'normal' | 'spacious';
+  declare _shadowDepth: number;
   declare _themeName: string;
   declare _advancedMode: boolean;
   declare _pipeline: TransformDef[];
   declare _savedThemes: string[];
   declare _previewMode: 'light' | 'dark';
+  declare _activeTab: 'colour' | 'shape';
   declare _presetsOpen: boolean;
   declare _controlsOpen: boolean;
   declare _swatchesOpen: boolean;
   declare _existingOpen: boolean;
+  declare _semanticOpen: boolean;
 
   private _resolvedStorage: ThemeStorage | undefined;
   private _previewStyleEl: HTMLStyleElement | null = null;
+  private _prevAccentHue = 245;
 
   constructor() {
     super();
@@ -367,15 +490,24 @@ export class PagesThemeDesignerElement extends LitElement {
     this._neutralHue = 220;
     this._chroma = 0.12;
     this._contrast = 0.5;
+    this._successHue = DEFAULT_SEMANTIC_HUES.success;
+    this._warningHue = DEFAULT_SEMANTIC_HUES.warning;
+    this._dangerHue = DEFAULT_SEMANTIC_HUES.danger;
+    this._infoHue = DEFAULT_SEMANTIC_HUES.info;
+    this._borderRadius = 8;
+    this._density = 'normal';
+    this._shadowDepth = 0.4;
     this._themeName = 'custom';
     this._advancedMode = false;
     this._pipeline = [];
     this._savedThemes = [];
     this._previewMode = 'dark';
+    this._activeTab = 'colour';
     this._presetsOpen = true;
     this._controlsOpen = true;
     this._swatchesOpen = true;
     this._existingOpen = true;
+    this._semanticOpen = false;
   }
 
   override connectedCallback(): void {
@@ -404,6 +536,17 @@ export class PagesThemeDesignerElement extends LitElement {
     this._savedThemes = await this._resolvedStorage.list();
   }
 
+  private _getSemanticGroups() {
+    return [
+      { name: 'accent', hue: this._accentHue, chromaScale: 1 },
+      { name: 'neutral', hue: this._neutralHue, chromaScale: 0.15 },
+      { name: 'success', hue: this._successHue, chromaScale: 1 },
+      { name: 'warning', hue: this._warningHue, chromaScale: 1 },
+      { name: 'danger', hue: this._dangerHue, chromaScale: 1 },
+      { name: 'info', hue: this._infoHue, chromaScale: 1 },
+    ];
+  }
+
   private _buildPresetConfig(mode: 'light' | 'dark'): PresetConfig {
     if (this._advancedMode && this._pipeline.length > 0) {
       return {
@@ -419,8 +562,13 @@ export class PagesThemeDesignerElement extends LitElement {
       pipeline: [
         { transform: mode === 'dark' ? 'dark-mode' : 'light-mode' },
         { transform: 'oklch-scale', params: {
-          hues: { accent: this._accentHue, neutral: this._neutralHue },
+          hues: {
+            accent: this._accentHue, neutral: this._neutralHue,
+            success: this._successHue, warning: this._warningHue,
+            danger: this._dangerHue, info: this._infoHue,
+          },
           chroma: this._chroma, contrast: this._contrast,
+          radius: this._borderRadius, density: this._density, shadow: this._shadowDepth,
         }},
         { transform: 'semantic-map' },
         { transform: 'gamut-clamp' },
@@ -433,7 +581,29 @@ export class PagesThemeDesignerElement extends LitElement {
     const config = this._buildPresetConfig(this._previewMode);
     try {
       const tokens = runPipeline(config);
-      return generateCSS(tokens, config.$name) + '\n\n' + generateDensityCSS();
+      let themeCss = generateCSS(tokens, config.$name) + '\n\n' + generateDensityCSS();
+      const r = this._borderRadius;
+      const s = this._shadowDepth;
+      const dMap = { compact: 0.75, normal: 1, spacious: 1.25 } as const;
+      const d = dMap[this._density];
+      themeCss += `\n.pages-theme-${config.$name} {\n`;
+      themeCss += `  --pages-radius-sm: ${Math.round(r * 0.5)}px;\n`;
+      themeCss += `  --pages-radius: ${r}px;\n`;
+      themeCss += `  --pages-radius-md: ${Math.round(r * 1.5)}px;\n`;
+      themeCss += `  --pages-radius-lg: ${Math.round(r * 2)}px;\n`;
+      themeCss += `  --pages-radius-xl: ${Math.round(r * 3)}px;\n`;
+      themeCss += `  --pages-radius-full: 9999px;\n`;
+      themeCss += `  --pages-shadow-sm: 0 1px ${Math.round(2 + s * 4)}px oklch(0% 0 0 / ${(0.03 + s * 0.07).toFixed(2)});\n`;
+      themeCss += `  --pages-shadow: 0 2px ${Math.round(4 + s * 8)}px oklch(0% 0 0 / ${(0.05 + s * 0.1).toFixed(2)});\n`;
+      themeCss += `  --pages-shadow-md: 0 4px ${Math.round(8 + s * 16)}px oklch(0% 0 0 / ${(0.07 + s * 0.13).toFixed(2)});\n`;
+      themeCss += `  --pages-shadow-lg: 0 8px ${Math.round(16 + s * 32)}px oklch(0% 0 0 / ${(0.1 + s * 0.15).toFixed(2)});\n`;
+      themeCss += `  --pages-space-xs: ${Math.round(4 * d)}px;\n`;
+      themeCss += `  --pages-space-sm: ${Math.round(8 * d)}px;\n`;
+      themeCss += `  --pages-space-md: ${Math.round(16 * d)}px;\n`;
+      themeCss += `  --pages-space-lg: ${Math.round(24 * d)}px;\n`;
+      themeCss += `  --pages-space-xl: ${Math.round(32 * d)}px;\n`;
+      themeCss += `}\n`;
+      return themeCss;
     } catch {
       return '';
     }
@@ -460,7 +630,11 @@ export class PagesThemeDesignerElement extends LitElement {
   }
 
   override updated(changed: Map<string, unknown>): void {
-    const sliderProps = ['_accentHue', '_neutralHue', '_chroma', '_contrast', '_previewMode', '_pipeline'];
+    const sliderProps = [
+      '_accentHue', '_neutralHue', '_chroma', '_contrast', '_previewMode', '_pipeline',
+      '_successHue', '_warningHue', '_dangerHue', '_infoHue',
+      '_borderRadius', '_density', '_shadowDepth',
+    ];
     if (sliderProps.some(p => changed.has(p)) && this.open) {
       this._applyPreview();
     }
@@ -474,8 +648,13 @@ export class PagesThemeDesignerElement extends LitElement {
     if (!this._advancedMode) {
       this._pipeline = [
         { transform: 'oklch-scale', params: {
-          hues: { accent: this._accentHue, neutral: this._neutralHue },
+          hues: {
+            accent: this._accentHue, neutral: this._neutralHue,
+            success: this._successHue, warning: this._warningHue,
+            danger: this._dangerHue, info: this._infoHue,
+          },
           chroma: this._chroma, contrast: this._contrast,
+          radius: this._borderRadius, density: this._density, shadow: this._shadowDepth,
         }},
         { transform: 'semantic-map' },
         { transform: 'gamut-clamp' },
@@ -483,18 +662,32 @@ export class PagesThemeDesignerElement extends LitElement {
     }
   }
 
+  private _onAccentHueChange(newHue: number): void {
+    const delta = newHue - this._prevAccentHue;
+    this._successHue = ((this._successHue + delta) % 360 + 360) % 360;
+    this._warningHue = ((this._warningHue + delta) % 360 + 360) % 360;
+    this._dangerHue = ((this._dangerHue + delta) % 360 + 360) % 360;
+    this._infoHue = ((this._infoHue + delta) % 360 + 360) % 360;
+    this._prevAccentHue = newHue;
+    this._accentHue = newHue;
+  }
+
   private _applyDesignerPreset(preset: DesignerPreset): void {
     this._accentHue = preset.accentHue;
     this._neutralHue = preset.neutralHue;
     this._chroma = preset.chroma;
     this._contrast = preset.contrast;
+    this._successHue = DEFAULT_SEMANTIC_HUES.success;
+    this._warningHue = DEFAULT_SEMANTIC_HUES.warning;
+    this._dangerHue = DEFAULT_SEMANTIC_HUES.danger;
+    this._infoHue = DEFAULT_SEMANTIC_HUES.info;
+    this._prevAccentHue = preset.accentHue;
   }
 
   private _generateSwatches(isDark: boolean): { name: string; colors: string[] }[] {
-    return SEMANTIC_GROUPS.map(g => {
-      const hue = g.hueFn(this._accentHue, this._neutralHue);
+    return this._getSemanticGroups().map(g => {
       const chromaVal = this._chroma * g.chromaScale;
-      const scale = generateScale(hue, chromaVal, this._contrast, isDark);
+      const scale = generateScale(g.hue, chromaVal, this._contrast, isDark);
       return { name: g.name, colors: Object.values(scale) };
     });
   }
@@ -529,21 +722,29 @@ export class PagesThemeDesignerElement extends LitElement {
     const lightName = `${baseName}-light`;
     const config = await this._resolvedStorage.load(darkName) ?? await this._resolvedStorage.load(lightName);
     if (!config) return;
+    this._loadFromPresetConfig(config, baseName);
+  }
 
-    this._themeName = baseName;
-    const modeTransforms = config.pipeline.filter(t => t.transform !== 'dark-mode' && t.transform !== 'light-mode');
-    this._pipeline = [...modeTransforms];
-
+  private _extractDesignerParams(config: PresetConfig): void {
     const oklchStage = config.pipeline.find(t => t.transform === 'oklch-scale');
-    if (oklchStage?.params) {
-      const hues = oklchStage.params['hues'] as Record<string, number> | undefined;
-      if (hues) {
-        this._accentHue = hues['accent'] ?? this._accentHue;
-        this._neutralHue = hues['neutral'] ?? this._neutralHue;
-      }
-      this._chroma = (oklchStage.params['chroma'] as number) ?? this._chroma;
-      this._contrast = (oklchStage.params['contrast'] as number) ?? this._contrast;
+    if (!oklchStage?.params) return;
+
+    const hues = oklchStage.params['hues'] as Record<string, number | number[]> | undefined;
+    if (hues) {
+      const val = (k: string) => { const v = hues[k]; return Array.isArray(v) ? v[0]! : v; };
+      this._accentHue = val('accent') ?? this._accentHue;
+      this._neutralHue = val('neutral') ?? this._neutralHue;
+      this._successHue = val('success') ?? DEFAULT_SEMANTIC_HUES.success;
+      this._warningHue = val('warning') ?? DEFAULT_SEMANTIC_HUES.warning;
+      this._dangerHue = val('danger') ?? DEFAULT_SEMANTIC_HUES.danger;
+      this._infoHue = val('info') ?? DEFAULT_SEMANTIC_HUES.info;
+      this._prevAccentHue = this._accentHue;
     }
+    this._chroma = (oklchStage.params['chroma'] as number) ?? this._chroma;
+    this._contrast = (oklchStage.params['contrast'] as number) ?? this._contrast;
+    this._borderRadius = (oklchStage.params['radius'] as number) ?? this._borderRadius;
+    this._density = (oklchStage.params['density'] as 'compact' | 'normal' | 'spacious') ?? this._density;
+    this._shadowDepth = (oklchStage.params['shadow'] as number) ?? this._shadowDepth;
   }
 
   async _onDelete(name: string): Promise<void> {
@@ -565,19 +766,7 @@ export class PagesThemeDesignerElement extends LitElement {
     reader.onload = () => {
       try {
         const config = JSON.parse(reader.result as string) as PresetConfig;
-        this._themeName = config.$name.replace(/-(?:light|dark)$/, '');
-        const modeTransforms = config.pipeline.filter(t => t.transform !== 'dark-mode' && t.transform !== 'light-mode');
-        this._pipeline = [...modeTransforms];
-        const oklchStage = config.pipeline.find(t => t.transform === 'oklch-scale');
-        if (oklchStage?.params) {
-          const hues = oklchStage.params['hues'] as Record<string, number> | undefined;
-          if (hues) {
-            this._accentHue = hues['accent'] ?? this._accentHue;
-            this._neutralHue = hues['neutral'] ?? this._neutralHue;
-          }
-          this._chroma = (oklchStage.params['chroma'] as number) ?? this._chroma;
-          this._contrast = (oklchStage.params['contrast'] as number) ?? this._contrast;
-        }
+        this._loadFromPresetConfig(config, config.$name.replace(/-(?:light|dark)$/, ''));
       } catch { /* invalid JSON */ }
     };
     reader.readAsText(file);
@@ -629,7 +818,21 @@ export class PagesThemeDesignerElement extends LitElement {
 
           <div class="designer-body">
             <div class="controls-panel">
-              ${this._advancedMode ? this._renderPipelineEditor() : this._renderSimpleControls(swatches)}
+              ${this._advancedMode ? html`
+                <div class="tab-content">
+                  ${this._renderPipelineEditor()}
+                </div>
+              ` : html`
+                <div class="tab-bar">
+                  <button class="tab-btn ${this._activeTab === 'colour' ? 'active' : ''}"
+                    @click=${() => { this._activeTab = 'colour'; }}>Colour</button>
+                  <button class="tab-btn ${this._activeTab === 'shape' ? 'active' : ''}"
+                    @click=${() => { this._activeTab = 'shape'; }}>Shape</button>
+                </div>
+                <div class="tab-content">
+                  ${this._activeTab === 'colour' ? this._renderColourTab(swatches) : this._renderShapeTab()}
+                </div>
+              `}
 
               <label class="advanced-toggle">
                 <input type="checkbox" .checked=${this._advancedMode}
@@ -656,94 +859,164 @@ export class PagesThemeDesignerElement extends LitElement {
     `;
   }
 
-  private _renderSimpleControls(swatches: { name: string; colors: string[] }[]) {
+  private _renderColourTab(swatches: { name: string; colors: string[] }[]) {
+    const hueGradient = 'linear-gradient(to right, hsl(0,80%,50%),hsl(60,80%,50%),hsl(120,80%,50%),hsl(180,80%,50%),hsl(240,80%,50%),hsl(300,80%,50%),hsl(360,80%,50%))';
+    const neutralGradient = 'linear-gradient(to right, hsl(0,20%,50%),hsl(60,20%,50%),hsl(120,20%,50%),hsl(180,20%,50%),hsl(240,20%,50%),hsl(300,20%,50%),hsl(360,20%,50%))';
     return html`
-      <div class="simple-controls">
-        <div class="control-group">
-          <div class="collapsible-header control-label" @click=${() => { this._presetsOpen = !this._presetsOpen; }}>
-            <span class="toggle-arrow ${this._presetsOpen ? 'open' : ''}">▶</span>
-            Starting Point
-          </div>
-          ${this._presetsOpen ? html`
-            <div class="preset-grid">
-              ${DESIGNER_PRESETS.map(p => html`
-                <button class="preset-chip" @click=${() => { this._applyDesignerPreset(p); }}
-                  title="${p.name}: hue ${p.accentHue}°, chroma ${p.chroma}">
-                  <span class="preset-dot" style="background: oklch(55% ${Math.max(p.chroma, 0.02)} ${p.accentHue})"></span>
-                  ${p.name}
-                </button>
-              `)}
-            </div>
-          ` : nothing}
+      <div class="control-group">
+        <div class="collapsible-header control-label" @click=${() => { this._presetsOpen = !this._presetsOpen; }}>
+          <span class="toggle-arrow ${this._presetsOpen ? 'open' : ''}">▶</span>
+          Starting Point
         </div>
-
-        ${this._renderThemeList()}
-
-        <div class="control-group">
-          <div class="collapsible-header control-label" @click=${() => { this._controlsOpen = !this._controlsOpen; }}>
-            <span class="toggle-arrow ${this._controlsOpen ? 'open' : ''}">▶</span>
-            Controls
-          </div>
-          ${this._controlsOpen ? html`
-            <div class="control-group">
-              <div class="control-label" style="font-size:10px">Accent Hue</div>
-              <div class="control-row">
-                <input type="range" min="0" max="360" step="1" .value=${String(this._accentHue)}
-                  style="background: linear-gradient(to right, hsl(0,80%,50%),hsl(60,80%,50%),hsl(120,80%,50%),hsl(180,80%,50%),hsl(240,80%,50%),hsl(300,80%,50%),hsl(360,80%,50%))"
-                  class="hue-slider"
-                  @input=${(e: Event) => { this._accentHue = Number((e.target as HTMLInputElement).value); }} />
-                <span class="control-value">${this._accentHue}°</span>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <div class="control-label" style="font-size:10px">Neutral Hue</div>
-              <div class="control-row">
-                <input type="range" min="0" max="360" step="1" .value=${String(this._neutralHue)}
-                  style="background: linear-gradient(to right, hsl(0,20%,50%),hsl(60,20%,50%),hsl(120,20%,50%),hsl(180,20%,50%),hsl(240,20%,50%),hsl(300,20%,50%),hsl(360,20%,50%))"
-                  class="hue-slider"
-                  @input=${(e: Event) => { this._neutralHue = Number((e.target as HTMLInputElement).value); }} />
-                <span class="control-value">${this._neutralHue}°</span>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <div class="control-label" style="font-size:10px">Chroma</div>
-              <div class="control-row">
-                <input type="range" min="0" max="0.4" step="0.01" .value=${String(this._chroma)}
-                  @input=${(e: Event) => { this._chroma = Number((e.target as HTMLInputElement).value); }} />
-                <span class="control-value">${this._chroma.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <div class="control-label" style="font-size:10px">Contrast</div>
-              <div class="control-row">
-                <input type="range" min="0" max="1" step="0.01" .value=${String(this._contrast)}
-                  @input=${(e: Event) => { this._contrast = Number((e.target as HTMLInputElement).value); }} />
-                <span class="control-value">${this._contrast.toFixed(2)}</span>
-              </div>
-            </div>
-          ` : nothing}
-        </div>
-
-        <div class="control-group">
-          <div class="collapsible-header control-label" @click=${() => { this._swatchesOpen = !this._swatchesOpen; }}>
-            <span class="toggle-arrow ${this._swatchesOpen ? 'open' : ''}">▶</span>
-            Colour Scales
-          </div>
-          ${this._swatchesOpen ? html`
-            ${swatches.map(s => html`
-              <div class="swatch-section">
-                <div class="swatch-label">${s.name}</div>
-                <div class="swatch-row">
-                  ${s.colors.map((c, i) => html`
-                    <div class="swatch" style="background:${c}" title="${s.name}-${i + 1}">${i + 1}</div>
-                  `)}
-                </div>
-              </div>
+        ${this._presetsOpen ? html`
+          <div class="preset-grid">
+            ${DESIGNER_PRESETS.map(p => html`
+              <button class="preset-chip" @click=${() => { this._applyDesignerPreset(p); }}
+                title="${p.name}: hue ${p.accentHue}°, chroma ${p.chroma}">
+                <span class="preset-dot" style="background: oklch(55% ${Math.max(p.chroma, 0.02)} ${p.accentHue})"></span>
+                ${p.name}
+              </button>
             `)}
-          ` : nothing}
+          </div>
+        ` : nothing}
+      </div>
+
+      ${this._renderThemeList()}
+
+      <div class="control-group">
+        <div class="collapsible-header control-label" @click=${() => { this._controlsOpen = !this._controlsOpen; }}>
+          <span class="toggle-arrow ${this._controlsOpen ? 'open' : ''}">▶</span>
+          Core
+        </div>
+        ${this._controlsOpen ? html`
+          <div class="control-group">
+            <div class="control-label" style="font-size:10px">Accent Hue</div>
+            <div class="control-row">
+              <input type="range" min="0" max="360" step="1" .value=${String(this._accentHue)}
+                style="background: ${hueGradient}" class="hue-slider"
+                @input=${(e: Event) => { this._onAccentHueChange(Number((e.target as HTMLInputElement).value)); }} />
+              <span class="control-value">${this._accentHue}°</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label" style="font-size:10px">Neutral Hue</div>
+            <div class="control-row">
+              <input type="range" min="0" max="360" step="1" .value=${String(this._neutralHue)}
+                style="background: ${neutralGradient}" class="hue-slider"
+                @input=${(e: Event) => { this._neutralHue = Number((e.target as HTMLInputElement).value); }} />
+              <span class="control-value">${this._neutralHue}°</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label" style="font-size:10px">Chroma</div>
+            <div class="control-row">
+              <input type="range" min="0" max="0.4" step="0.01" .value=${String(this._chroma)}
+                @input=${(e: Event) => { this._chroma = Number((e.target as HTMLInputElement).value); }} />
+              <span class="control-value">${this._chroma.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label" style="font-size:10px">Contrast</div>
+            <div class="control-row">
+              <input type="range" min="0" max="1" step="0.01" .value=${String(this._contrast)}
+                @input=${(e: Event) => { this._contrast = Number((e.target as HTMLInputElement).value); }} />
+              <span class="control-value">${this._contrast.toFixed(2)}</span>
+            </div>
+          </div>
+        ` : nothing}
+      </div>
+
+      <div class="control-group">
+        <div class="collapsible-header control-label" @click=${() => { this._semanticOpen = !this._semanticOpen; }}>
+          <span class="toggle-arrow ${this._semanticOpen ? 'open' : ''}">▶</span>
+          Semantic Colours
+        </div>
+        ${this._semanticOpen ? html`
+          ${this._renderSemanticSlider('Success', this._successHue, (v: number) => { this._successHue = v; })}
+          ${this._renderSemanticSlider('Warning', this._warningHue, (v: number) => { this._warningHue = v; })}
+          ${this._renderSemanticSlider('Danger', this._dangerHue, (v: number) => { this._dangerHue = v; })}
+          ${this._renderSemanticSlider('Info', this._infoHue, (v: number) => { this._infoHue = v; })}
+        ` : nothing}
+      </div>
+
+      <div class="control-group">
+        <div class="collapsible-header control-label" @click=${() => { this._swatchesOpen = !this._swatchesOpen; }}>
+          <span class="toggle-arrow ${this._swatchesOpen ? 'open' : ''}">▶</span>
+          Colour Scales
+        </div>
+        ${this._swatchesOpen ? html`
+          ${swatches.map(s => html`
+            <div class="swatch-section">
+              <div class="swatch-label">${s.name}</div>
+              <div class="swatch-row">
+                ${s.colors.map((c, i) => html`
+                  <div class="swatch" style="background:${c}" title="${s.name}-${i + 1}">${i + 1}</div>
+                `)}
+              </div>
+            </div>
+          `)}
+        ` : nothing}
+      </div>
+    `;
+  }
+
+  private _renderSemanticSlider(label: string, value: number, onChange: (v: number) => void) {
+    const hueGradient = 'linear-gradient(to right, hsl(0,70%,50%),hsl(60,70%,50%),hsl(120,70%,50%),hsl(180,70%,50%),hsl(240,70%,50%),hsl(300,70%,50%),hsl(360,70%,50%))';
+    return html`
+      <div class="control-group">
+        <div class="control-label" style="font-size:10px">${label}</div>
+        <div class="control-row">
+          <input type="range" min="0" max="360" step="1" .value=${String(Math.round(value))}
+            style="background: ${hueGradient}" class="hue-slider"
+            @input=${(e: Event) => { onChange(Number((e.target as HTMLInputElement).value)); }} />
+          <span class="control-value">${Math.round(value)}°</span>
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderShapeTab() {
+    return html`
+      <div class="control-group">
+        <div class="control-label">Border Radius</div>
+        <div class="control-row">
+          <input type="range" min="0" max="24" step="1" .value=${String(this._borderRadius)}
+            @input=${(e: Event) => { this._borderRadius = Number((e.target as HTMLInputElement).value); }} />
+          <span class="control-value">${this._borderRadius}px</span>
+        </div>
+        <div class="radius-preview">
+          <div class="radius-sample" style="border-radius: ${Math.round(this._borderRadius * 0.5)}px">sm</div>
+          <div class="radius-sample" style="border-radius: ${this._borderRadius}px">md</div>
+          <div class="radius-sample" style="border-radius: ${Math.round(this._borderRadius * 1.5)}px">lg</div>
+          <div class="radius-sample" style="border-radius: ${Math.round(this._borderRadius * 2)}px">xl</div>
+          <div class="radius-sample" style="border-radius: 9999px">full</div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">Density</div>
+        <div class="segment-control">
+          ${(['compact', 'normal', 'spacious'] as const).map(d => html`
+            <button class="segment-btn ${this._density === d ? 'active' : ''}"
+              @click=${() => { this._density = d; }}>${d[0]!.toUpperCase() + d.slice(1)}</button>
+          `)}
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">Shadow Depth</div>
+        <div class="control-row">
+          <input type="range" min="0" max="1" step="0.05" .value=${String(this._shadowDepth)}
+            @input=${(e: Event) => { this._shadowDepth = Number((e.target as HTMLInputElement).value); }} />
+          <span class="control-value">${this._shadowDepth.toFixed(2)}</span>
+        </div>
+        <div class="preview-row" style="gap:12px;margin-top:4px">
+          <div style="width:50px;height:36px;background:var(--pages-neutral-3);border-radius:var(--pages-radius-sm, 4px);box-shadow:var(--pages-shadow-sm);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--pages-neutral-10)">sm</div>
+          <div style="width:50px;height:36px;background:var(--pages-neutral-3);border-radius:var(--pages-radius-sm, 4px);box-shadow:var(--pages-shadow);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--pages-neutral-10)">md</div>
+          <div style="width:50px;height:36px;background:var(--pages-neutral-3);border-radius:var(--pages-radius-sm, 4px);box-shadow:var(--pages-shadow-md);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--pages-neutral-10)">lg</div>
         </div>
       </div>
     `;
@@ -793,9 +1066,19 @@ export class PagesThemeDesignerElement extends LitElement {
     return html`
       <div class="preview-widgets">
         <div class="widget-section">
+          <div class="widget-section-title">Alerts</div>
+          <div class="preview-alert alert-success">Operation completed successfully.</div>
+          <div class="preview-alert alert-warning">Please review before proceeding.</div>
+          <div class="preview-alert alert-danger">Action failed — check the logs.</div>
+          <div class="preview-alert alert-info">A new version is available.</div>
+        </div>
+
+        <div class="widget-section">
           <div class="widget-section-title">Typography</div>
-          <p class="preview-text-primary" style="font-size:16px;margin:0">Primary text — the main content colour</p>
-          <p class="preview-text-secondary" style="font-size:14px;margin:0">Secondary text — supporting information</p>
+          <p class="preview-text-primary" style="font-size:20px;margin:0;font-weight:600">Heading 1</p>
+          <p class="preview-text-primary" style="font-size:16px;margin:0;font-weight:500">Heading 2</p>
+          <p class="preview-text-primary" style="font-size:14px;margin:0">Body text — the main content colour</p>
+          <p class="preview-text-secondary" style="font-size:13px;margin:0">Secondary text — supporting information</p>
           <p class="preview-text-muted" style="font-size:12px;margin:0">Muted text — hints and placeholders</p>
         </div>
 
@@ -810,19 +1093,42 @@ export class PagesThemeDesignerElement extends LitElement {
         </div>
 
         <div class="widget-section">
-          <div class="widget-section-title">Inputs</div>
+          <div class="widget-section-title">Inputs & Controls</div>
           <div class="preview-row">
             <input class="preview-input" type="text" placeholder="Text input..." />
+            <select class="preview-select">
+              <option>Select...</option>
+              <option>Option A</option>
+              <option>Option B</option>
+            </select>
+          </div>
+          <div class="preview-row" style="margin-top:4px">
+            <label class="preview-checkbox-row"><input type="checkbox" checked /> Checkbox</label>
+            <label class="preview-checkbox-row"><input type="radio" name="prev-radio" checked /> Option A</label>
+            <label class="preview-checkbox-row"><input type="radio" name="prev-radio" /> Option B</label>
+            <div class="preview-switch on"><div class="preview-switch-knob"></div></div>
+            <span class="preview-text-secondary" style="font-size:12px">Toggle</span>
+          </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Chips & Tags</div>
+          <div class="preview-row">
+            <span class="preview-chip chip-accent">Accent</span>
+            <span class="preview-chip chip-success">Success</span>
+            <span class="preview-chip chip-warning">Warning</span>
+            <span class="preview-chip chip-danger">Error</span>
+            <span class="preview-chip chip-info">Info</span>
           </div>
         </div>
 
         <div class="widget-section">
           <div class="widget-section-title">Badges</div>
           <div class="preview-row">
-            <span class="preview-badge badge-success">Success</span>
-            <span class="preview-badge badge-warning">Warning</span>
-            <span class="preview-badge badge-danger">Error</span>
-            <span class="preview-badge badge-info">Info</span>
+            <span class="preview-badge badge-success">Active</span>
+            <span class="preview-badge badge-warning">Pending</span>
+            <span class="preview-badge badge-danger">Failed</span>
+            <span class="preview-badge badge-info">Review</span>
           </div>
         </div>
 
@@ -830,11 +1136,20 @@ export class PagesThemeDesignerElement extends LitElement {
           <div class="widget-section-title">Cards</div>
           <div class="preview-card">
             <p style="margin:0 0 8px;font-weight:500;color:var(--pages-neutral-12)">Card Title</p>
-            <p style="margin:0 0 12px;font-size:13px;color:var(--pages-neutral-11)">Card content with secondary text showing how surfaces and borders look together.</p>
+            <p style="margin:0 0 12px;font-size:13px;color:var(--pages-neutral-11)">Card content with secondary text showing how surfaces, borders, and shadows look together.</p>
             <div class="preview-row">
               <button class="preview-btn preview-btn-primary" style="font-size:12px;padding:4px 10px">Action</button>
               <button class="preview-btn preview-btn-secondary" style="font-size:12px;padding:4px 10px">Cancel</button>
             </div>
+          </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Tabs</div>
+          <div class="preview-tabs">
+            <button class="preview-tab active">Overview</button>
+            <button class="preview-tab">Details</button>
+            <button class="preview-tab">Settings</button>
           </div>
         </div>
 
@@ -872,10 +1187,10 @@ export class PagesThemeDesignerElement extends LitElement {
         <div class="widget-section">
           <div class="widget-section-title">Surfaces & Borders</div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-            <div style="background:var(--pages-neutral-1);border:1px solid var(--pages-neutral-4);border-radius:6px;padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11)">Surface 1</div>
-            <div style="background:var(--pages-neutral-2);border:1px solid var(--pages-neutral-5);border-radius:6px;padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11)">Surface 2</div>
-            <div style="background:var(--pages-neutral-3);border:1px solid var(--pages-neutral-6);border-radius:6px;padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11)">Surface 3</div>
-            <div style="background:var(--pages-neutral-4);border:1px solid var(--pages-neutral-7);border-radius:6px;padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11)">Surface 4</div>
+            <div style="background:var(--pages-neutral-1);border:1px solid var(--pages-neutral-4);border-radius:var(--pages-radius, 6px);padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11);box-shadow:var(--pages-shadow-sm)">Surface 1</div>
+            <div style="background:var(--pages-neutral-2);border:1px solid var(--pages-neutral-5);border-radius:var(--pages-radius, 6px);padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11);box-shadow:var(--pages-shadow)">Surface 2</div>
+            <div style="background:var(--pages-neutral-3);border:1px solid var(--pages-neutral-6);border-radius:var(--pages-radius, 6px);padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11);box-shadow:var(--pages-shadow-md)">Surface 3</div>
+            <div style="background:var(--pages-neutral-4);border:1px solid var(--pages-neutral-7);border-radius:var(--pages-radius, 6px);padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11);box-shadow:var(--pages-shadow-lg)">Surface 4</div>
           </div>
         </div>
       </div>
@@ -940,19 +1255,7 @@ export class PagesThemeDesignerElement extends LitElement {
     this._themeName = themeName;
     const modeTransforms = config.pipeline.filter(t => t.transform !== 'dark-mode' && t.transform !== 'light-mode');
     this._pipeline = [...modeTransforms];
-
-    const oklchStage = config.pipeline.find(t => t.transform === 'oklch-scale');
-    if (oklchStage?.params) {
-      const hues = oklchStage.params['hues'] as Record<string, number | number[]> | undefined;
-      if (hues) {
-        const accent = hues['accent'];
-        this._accentHue = Array.isArray(accent) ? accent[0]! : (accent ?? this._accentHue);
-        const neutral = hues['neutral'];
-        this._neutralHue = Array.isArray(neutral) ? neutral[0]! : (neutral ?? this._neutralHue);
-      }
-      this._chroma = (oklchStage.params['chroma'] as number) ?? this._chroma;
-      this._contrast = (oklchStage.params['contrast'] as number) ?? this._contrast;
-    }
+    this._extractDesignerParams(config);
   }
 
   private _deduplicateFamilies(names: string[]): string[] {
