@@ -179,8 +179,13 @@ export class PagesThemeDesignerElement extends LitElement {
       display: flex; align-items: center; gap: 6px;
       padding: 4px 8px; border-radius: 4px;
       font-size: 12px; color: var(--pages-neutral-11, #aaa);
+      cursor: pointer;
     }
     .theme-list-item:hover { background: var(--pages-neutral-4, #333); }
+    .theme-list-item.previewing {
+      background: var(--pages-accent-3, #1a3050);
+      color: var(--pages-accent-11, #8ec8ff);
+    }
     .theme-list-item .theme-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .theme-list-item .theme-tag {
       font-size: 9px; padding: 1px 4px; border-radius: 3px;
@@ -652,6 +657,7 @@ export class PagesThemeDesignerElement extends LitElement {
     _switchOn: { state: true },
     _toasts: { state: true },
     _themeFilter: { state: true },
+    _previewThemeName: { state: true },
   };
 
   declare open: boolean;
@@ -688,6 +694,7 @@ export class PagesThemeDesignerElement extends LitElement {
   declare _switchOn: boolean;
   declare _toasts: boolean[];
   declare _themeFilter: string;
+  declare _previewThemeName: string | null;
 
   private _resolvedStorage: ThemeStorage | undefined;
   private _previewStyleEl: HTMLStyleElement | null = null;
@@ -727,6 +734,7 @@ export class PagesThemeDesignerElement extends LitElement {
     this._switchOn = true;
     this._toasts = [true, true];
     this._themeFilter = '';
+    this._previewThemeName = null;
   }
 
   override connectedCallback(): void {
@@ -847,11 +855,24 @@ export class PagesThemeDesignerElement extends LitElement {
   }
 
   private _applyPreview(): void {
+    const panel = this.shadowRoot?.querySelector('.designer-panel') as HTMLElement | null;
+    if (!panel) return;
+
+    if (this._previewThemeName) {
+      const previewCss = this._generateThemePreviewCSS(this._previewThemeName);
+      if (!previewCss) return;
+      if (!this._previewStyleEl) {
+        this._previewStyleEl = document.createElement('style');
+        this.shadowRoot?.prepend(this._previewStyleEl);
+      }
+      this._previewStyleEl.textContent = previewCss.css;
+      panel.className = `designer-panel pages-theme-${previewCss.name}`;
+      return;
+    }
+
     const css = this._generatePreviewCSS();
     if (!css) return;
     const themeName = `${this._themeName}-${this._previewMode}`;
-    const panel = this.shadowRoot?.querySelector('.designer-panel') as HTMLElement | null;
-    if (!panel) return;
 
     if (!this._previewStyleEl) {
       this._previewStyleEl = document.createElement('style');
@@ -859,6 +880,19 @@ export class PagesThemeDesignerElement extends LitElement {
     }
     this._previewStyleEl.textContent = css;
     panel.className = `designer-panel pages-theme-${themeName}`;
+  }
+
+  private _generateThemePreviewCSS(familyName: string): { css: string; name: string } | null {
+    initPresets();
+    const fullName = `${familyName}-${this._previewMode}`;
+    const config = getBuiltinPreset(fullName);
+    if (!config) return null;
+    try {
+      const tokens = runPipeline(config);
+      return { css: generateCSS(tokens, config.$name) + '\n\n' + generateDensityCSS(), name: config.$name };
+    } catch {
+      return null;
+    }
   }
 
   private _removePreviewStyle(): void {
@@ -873,6 +907,10 @@ export class PagesThemeDesignerElement extends LitElement {
       '_borderRadius', '_density', '_shadowDepth', '_fontFamily', '_baseFontSize',
     ];
     if (sliderProps.some(p => changed.has(p)) && this.open) {
+      if (!changed.has('_previewMode')) this._previewThemeName = null;
+      this._applyPreview();
+    }
+    if (changed.has('_previewThemeName') && this.open) {
       this._applyPreview();
     }
     if (changed.has('open') && this.open) {
@@ -1722,13 +1760,14 @@ export class PagesThemeDesignerElement extends LitElement {
             const isBuiltin = builtinFamilies.includes(name);
             const isCustom = customFamilies.includes(name);
             return html`
-              <div class="theme-list-item">
+              <div class="theme-list-item ${this._previewThemeName === name ? 'previewing' : ''}"
+                @click=${() => { this._previewThemeName = this._previewThemeName === name ? null : name; }}>
                 <span class="theme-name">${name}</span>
                 ${isBuiltin ? html`<span class="theme-tag">builtin</span>` : nothing}
                 <div class="theme-list-actions">
-                  <button title="Edit" @click=${() => { this._onEditTheme(name, isBuiltin); }}>✎</button>
-                  <button title="Duplicate as new" @click=${() => { this._onDuplicateTheme(name, isBuiltin); }}>⧉</button>
-                  ${isCustom ? html`<button class="delete-btn" title="Delete" @click=${() => { this._onDelete(name); }}>✕</button>` : nothing}
+                  <button title="Edit" @click=${(e: Event) => { e.stopPropagation(); this._previewThemeName = null; this._onEditTheme(name, isBuiltin); }}>✎</button>
+                  <button title="Duplicate as new" @click=${(e: Event) => { e.stopPropagation(); this._previewThemeName = null; this._onDuplicateTheme(name, isBuiltin); }}>⧉</button>
+                  ${isCustom ? html`<button class="delete-btn" title="Delete" @click=${(e: Event) => { e.stopPropagation(); this._onDelete(name); }}>✕</button>` : nothing}
                 </div>
               </div>
             `;
