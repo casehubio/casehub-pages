@@ -97,6 +97,8 @@ export class PagesThemeDesignerElement extends LitElement {
 
     .preview-panel {
       flex: 1; overflow-y: auto; padding: 20px;
+      font-family: var(--pages-font-family, 'Inter', system-ui, sans-serif);
+      font-size: var(--pages-font-size, 14px);
     }
 
     .control-group { display: flex; flex-direction: column; gap: 6px; }
@@ -442,18 +444,23 @@ export class PagesThemeDesignerElement extends LitElement {
     .avatar-sm:first-child { margin-left: 0; }
 
     .preview-accordion { border: 1px solid var(--pages-neutral-5); border-radius: var(--pages-radius, 8px); overflow: hidden; }
-    .accordion-item { border-bottom: 1px solid var(--pages-neutral-4); }
-    .accordion-item:last-child { border-bottom: none; }
-    .accordion-header {
+    .preview-accordion details { border-bottom: 1px solid var(--pages-neutral-4); }
+    .preview-accordion details:last-child { border-bottom: none; }
+    .preview-accordion summary {
       display: flex; align-items: center; gap: 8px;
       padding: var(--pages-space-sm, 8px) var(--pages-space-md, 16px);
       font-size: 13px; font-weight: 500; color: var(--pages-neutral-12);
-      cursor: pointer;
+      cursor: pointer; list-style: none;
     }
-    .accordion-header:hover { background: var(--pages-neutral-3); }
-    .accordion-arrow { font-size: 10px; color: var(--pages-neutral-8); }
-    .accordion-body {
-      padding: 0 var(--pages-space-md, 16px) var(--pages-space-sm, 8px);
+    .preview-accordion summary::-webkit-details-marker { display: none; }
+    .preview-accordion summary::before {
+      content: '▸'; font-size: 10px; color: var(--pages-neutral-8);
+      transition: transform 0.15s;
+    }
+    .preview-accordion details[open] summary::before { transform: rotate(90deg); }
+    .preview-accordion summary:hover { background: var(--pages-neutral-3); }
+    .preview-accordion .accordion-body {
+      padding: 0 var(--pages-space-md, 16px) var(--pages-space-sm, 8px) 34px;
       font-size: 12px; color: var(--pages-neutral-10);
     }
 
@@ -615,6 +622,8 @@ export class PagesThemeDesignerElement extends LitElement {
     _borderRadius: { state: true },
     _density: { state: true },
     _shadowDepth: { state: true },
+    _fontFamily: { state: true },
+    _baseFontSize: { state: true },
     _themeName: { state: true },
     _advancedMode: { state: true },
     _pipeline: { state: true },
@@ -626,6 +635,11 @@ export class PagesThemeDesignerElement extends LitElement {
     _swatchesOpen: { state: true },
     _existingOpen: { state: true },
     _semanticOpen: { state: true },
+    _dashNav: { state: true },
+    _dashPage: { state: true },
+    _previewTab: { state: true },
+    _switchOn: { state: true },
+    _toasts: { state: true },
   };
 
   declare open: boolean;
@@ -643,6 +657,8 @@ export class PagesThemeDesignerElement extends LitElement {
   declare _borderRadius: number;
   declare _density: 'compact' | 'normal' | 'spacious';
   declare _shadowDepth: number;
+  declare _fontFamily: string;
+  declare _baseFontSize: number;
   declare _themeName: string;
   declare _advancedMode: boolean;
   declare _pipeline: TransformDef[];
@@ -654,6 +670,11 @@ export class PagesThemeDesignerElement extends LitElement {
   declare _swatchesOpen: boolean;
   declare _existingOpen: boolean;
   declare _semanticOpen: boolean;
+  declare _dashNav: string;
+  declare _dashPage: number;
+  declare _previewTab: string;
+  declare _switchOn: boolean;
+  declare _toasts: boolean[];
 
   private _resolvedStorage: ThemeStorage | undefined;
   private _previewStyleEl: HTMLStyleElement | null = null;
@@ -674,6 +695,8 @@ export class PagesThemeDesignerElement extends LitElement {
     this._borderRadius = 8;
     this._density = 'normal';
     this._shadowDepth = 0.4;
+    this._fontFamily = 'system';
+    this._baseFontSize = 14;
     this._themeName = 'custom';
     this._advancedMode = false;
     this._pipeline = [];
@@ -685,6 +708,11 @@ export class PagesThemeDesignerElement extends LitElement {
     this._swatchesOpen = true;
     this._existingOpen = true;
     this._semanticOpen = false;
+    this._dashNav = 'Dashboard';
+    this._dashPage = 1;
+    this._previewTab = 'Overview';
+    this._switchOn = true;
+    this._toasts = [true, true];
   }
 
   override connectedCallback(): void {
@@ -746,6 +774,7 @@ export class PagesThemeDesignerElement extends LitElement {
           },
           chroma: this._chroma, contrast: this._contrast,
           radius: this._borderRadius, density: this._density, shadow: this._shadowDepth,
+          fontFamily: this._fontFamily, fontSize: this._baseFontSize,
         }},
         { transform: 'semantic-map' },
         { transform: 'gamut-clamp' },
@@ -779,6 +808,23 @@ export class PagesThemeDesignerElement extends LitElement {
       themeCss += `  --pages-space-md: ${Math.round(16 * d)}px;\n`;
       themeCss += `  --pages-space-lg: ${Math.round(24 * d)}px;\n`;
       themeCss += `  --pages-space-xl: ${Math.round(32 * d)}px;\n`;
+      const fontStacks: Record<string, string> = {
+        system: "'Inter', system-ui, -apple-system, sans-serif",
+        humanist: "'Atkinson Hyperlegible', Calibri, sans-serif",
+        geometric: "'DM Sans', Futura, sans-serif",
+        mono: "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace",
+        serif: "'Merriweather', Georgia, 'Times New Roman', serif",
+        rounded: "'Nunito', 'Varela Round', sans-serif",
+      };
+      const ff = fontStacks[this._fontFamily] ?? fontStacks['system'];
+      const fs = this._baseFontSize;
+      themeCss += `  --pages-font-family: ${ff};\n`;
+      themeCss += `  --pages-font-size-xs: ${Math.round(fs * 0.75)}px;\n`;
+      themeCss += `  --pages-font-size-sm: ${Math.round(fs * 0.875)}px;\n`;
+      themeCss += `  --pages-font-size: ${fs}px;\n`;
+      themeCss += `  --pages-font-size-md: ${Math.round(fs * 1.125)}px;\n`;
+      themeCss += `  --pages-font-size-lg: ${Math.round(fs * 1.5)}px;\n`;
+      themeCss += `  --pages-font-size-xl: ${Math.round(fs * 2)}px;\n`;
       themeCss += `}\n`;
       return themeCss;
     } catch {
@@ -810,7 +856,7 @@ export class PagesThemeDesignerElement extends LitElement {
     const sliderProps = [
       '_accentHue', '_neutralHue', '_chroma', '_contrast', '_previewMode', '_pipeline',
       '_successHue', '_warningHue', '_dangerHue', '_infoHue',
-      '_borderRadius', '_density', '_shadowDepth',
+      '_borderRadius', '_density', '_shadowDepth', '_fontFamily', '_baseFontSize',
     ];
     if (sliderProps.some(p => changed.has(p)) && this.open) {
       this._applyPreview();
@@ -832,6 +878,7 @@ export class PagesThemeDesignerElement extends LitElement {
           },
           chroma: this._chroma, contrast: this._contrast,
           radius: this._borderRadius, density: this._density, shadow: this._shadowDepth,
+          fontFamily: this._fontFamily, fontSize: this._baseFontSize,
         }},
         { transform: 'semantic-map' },
         { transform: 'gamut-clamp' },
@@ -922,6 +969,8 @@ export class PagesThemeDesignerElement extends LitElement {
     this._borderRadius = (oklchStage.params['radius'] as number) ?? this._borderRadius;
     this._density = (oklchStage.params['density'] as 'compact' | 'normal' | 'spacious') ?? this._density;
     this._shadowDepth = (oklchStage.params['shadow'] as number) ?? this._shadowDepth;
+    this._fontFamily = (oklchStage.params['fontFamily'] as string) ?? this._fontFamily;
+    this._baseFontSize = (oklchStage.params['fontSize'] as number) ?? this._baseFontSize;
   }
 
   async _onDelete(name: string): Promise<void> {
@@ -1190,6 +1239,29 @@ export class PagesThemeDesignerElement extends LitElement {
       </div>
 
       <div class="control-group">
+        <div class="control-label">Font Family</div>
+        <select class="header-theme-select" style="width:100%;padding:6px 8px;font-size:12px"
+          .value=${this._fontFamily}
+          @change=${(e: Event) => { this._fontFamily = (e.target as HTMLSelectElement).value; }}>
+          <option value="system">System (Inter, system-ui)</option>
+          <option value="humanist">Humanist (Atkinson Hyperlegible)</option>
+          <option value="geometric">Geometric (DM Sans)</option>
+          <option value="rounded">Rounded (Nunito)</option>
+          <option value="serif">Serif (Merriweather)</option>
+          <option value="mono">Monospace (JetBrains Mono)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">Base Font Size</div>
+        <div class="control-row">
+          <input type="range" min="12" max="20" step="1" .value=${String(this._baseFontSize)}
+            @input=${(e: Event) => { this._baseFontSize = Number((e.target as HTMLInputElement).value); }} />
+          <span class="control-value">${this._baseFontSize}px</span>
+        </div>
+      </div>
+
+      <div class="control-group">
         <div class="control-label">Shadow Depth</div>
         <div class="control-row">
           <input type="range" min="0" max="1" step="0.05" .value=${String(this._shadowDepth)}
@@ -1261,10 +1333,10 @@ export class PagesThemeDesignerElement extends LitElement {
             </div>
             <div class="dash-body">
               <div class="dash-sidebar">
-                <div class="dash-sidebar-item active">Dashboard</div>
-                <div class="dash-sidebar-item">Analytics</div>
-                <div class="dash-sidebar-item">Projects</div>
-                <div class="dash-sidebar-item">Settings</div>
+                ${['Dashboard', 'Analytics', 'Projects', 'Settings'].map(item => html`
+                  <div class="dash-sidebar-item ${this._dashNav === item ? 'active' : ''}"
+                    @click=${() => { this._dashNav = item; }}>${item}</div>
+                `)}
               </div>
               <div class="dash-main">
                 <div class="dash-breadcrumbs">
@@ -1311,13 +1383,15 @@ export class PagesThemeDesignerElement extends LitElement {
                   </div>
                 </div>
                 <div class="dash-pagination">
-                  <button class="page-btn">‹</button>
-                  <button class="page-btn active">1</button>
-                  <button class="page-btn">2</button>
-                  <button class="page-btn">3</button>
+                  <button class="page-btn" @click=${() => { if (this._dashPage > 1) this._dashPage--; }}>‹</button>
+                  ${[1, 2, 3].map(n => html`
+                    <button class="page-btn ${this._dashPage === n ? 'active' : ''}"
+                      @click=${() => { this._dashPage = n; }}>${n}</button>
+                  `)}
                   <button class="page-btn" style="color:var(--pages-neutral-7)">…</button>
-                  <button class="page-btn">10</button>
-                  <button class="page-btn">›</button>
+                  <button class="page-btn ${this._dashPage === 10 ? 'active' : ''}"
+                    @click=${() => { this._dashPage = 10; }}>10</button>
+                  <button class="page-btn" @click=${() => { if (this._dashPage < 10) this._dashPage++; }}>›</button>
                 </div>
               </div>
             </div>
@@ -1376,10 +1450,10 @@ export class PagesThemeDesignerElement extends LitElement {
         <div class="widget-section">
           <div class="widget-section-title">Navigation</div>
           <div class="preview-nav">
-            <div class="preview-nav-item active">Dashboard</div>
-            <div class="preview-nav-item" style="background:var(--pages-neutral-3)">Analytics</div>
-            <div class="preview-nav-item">Settings</div>
-            <div class="preview-nav-item">Help</div>
+            ${['Dashboard', 'Analytics', 'Settings', 'Help'].map(item => html`
+              <div class="preview-nav-item ${this._dashNav === item ? 'active' : ''}"
+                @click=${() => { this._dashNav = item; }}>${item}</div>
+            `)}
           </div>
           <div class="state-label" style="text-align:left">active = accent-3/11 &nbsp; hover = neutral-3 &nbsp; default = transparent</div>
         </div>
@@ -1421,8 +1495,8 @@ export class PagesThemeDesignerElement extends LitElement {
             <label class="preview-checkbox-row"><input type="checkbox" checked /> Checkbox</label>
             <label class="preview-checkbox-row"><input type="radio" name="prev-radio" checked /> Option A</label>
             <label class="preview-checkbox-row"><input type="radio" name="prev-radio" /> Option B</label>
-            <div class="preview-switch on"><div class="preview-switch-knob"></div></div>
-            <span class="preview-text-secondary" style="font-size:12px">Toggle</span>
+            <div class="preview-switch ${this._switchOn ? 'on' : ''}" @click=${() => { this._switchOn = !this._switchOn; }}><div class="preview-switch-knob"></div></div>
+            <span class="preview-text-secondary" style="font-size:12px">${this._switchOn ? 'On' : 'Off'}</span>
           </div>
         </div>
 
@@ -1462,9 +1536,10 @@ export class PagesThemeDesignerElement extends LitElement {
         <div class="widget-section">
           <div class="widget-section-title">Tabs</div>
           <div class="preview-tabs">
-            <button class="preview-tab active">Overview</button>
-            <button class="preview-tab">Details</button>
-            <button class="preview-tab">Settings</button>
+            ${['Overview', 'Details', 'Settings'].map(tab => html`
+              <button class="preview-tab ${this._previewTab === tab ? 'active' : ''}"
+                @click=${() => { this._previewTab = tab; }}>${tab}</button>
+            `)}
           </div>
         </div>
 
@@ -1512,16 +1587,18 @@ export class PagesThemeDesignerElement extends LitElement {
         <div class="widget-section">
           <div class="widget-section-title">Accordion</div>
           <div class="preview-accordion">
-            <div class="accordion-item">
-              <div class="accordion-header"><span class="accordion-arrow">▸</span> What is the OKLCH pipeline?</div>
-            </div>
-            <div class="accordion-item">
-              <div class="accordion-header"><span class="accordion-arrow" style="transform:rotate(90deg)">▸</span> How do semantic colours work?</div>
+            <details>
+              <summary>What is the OKLCH pipeline?</summary>
+              <div class="accordion-body">A perceptually uniform colour space that generates harmonious scales from seed values — hue, chroma, and contrast.</div>
+            </details>
+            <details open>
+              <summary>How do semantic colours work?</summary>
               <div class="accordion-body">Semantic hues rotate with the accent hue, keeping all colours harmonious. Each semantic group generates a 12-step scale through the same pipeline.</div>
-            </div>
-            <div class="accordion-item">
-              <div class="accordion-header"><span class="accordion-arrow">▸</span> Can I export my theme?</div>
-            </div>
+            </details>
+            <details>
+              <summary>Can I export my theme?</summary>
+              <div class="accordion-body">Click Export in the toolbar to download your theme as a JSON file. Import it later or share it with others.</div>
+            </details>
           </div>
         </div>
 
@@ -1540,16 +1617,23 @@ export class PagesThemeDesignerElement extends LitElement {
 
         <div class="widget-section">
           <div class="widget-section-title">Toast / Notification</div>
-          <div class="preview-toast">
-            <span class="toast-icon" style="color:var(--pages-success-9)">●</span>
-            <span>Changes saved successfully.</span>
-            <span class="toast-dismiss">✕</span>
-          </div>
-          <div class="preview-toast" style="margin-top:6px;border-left:3px solid var(--pages-warning-9)">
-            <span class="toast-icon" style="color:var(--pages-warning-9)">●</span>
-            <span>Your session expires in 5 minutes.</span>
-            <span class="toast-dismiss">✕</span>
-          </div>
+          ${this._toasts[0] ? html`
+            <div class="preview-toast">
+              <span class="toast-icon" style="color:var(--pages-success-9)">●</span>
+              <span>Changes saved successfully.</span>
+              <span class="toast-dismiss" @click=${() => { this._toasts = [false, this._toasts[1]!]; }}>✕</span>
+            </div>
+          ` : nothing}
+          ${this._toasts[1] ? html`
+            <div class="preview-toast" style="margin-top:6px;border-left:3px solid var(--pages-warning-9)">
+              <span class="toast-icon" style="color:var(--pages-warning-9)">●</span>
+              <span>Your session expires in 5 minutes.</span>
+              <span class="toast-dismiss" @click=${() => { this._toasts = [this._toasts[0]!, false]; }}>✕</span>
+            </div>
+          ` : nothing}
+          ${!this._toasts[0] && !this._toasts[1] ? html`
+            <button style="font-size:11px" @click=${() => { this._toasts = [true, true]; }}>Reset toasts</button>
+          ` : nothing}
         </div>
       </div>
     `;
