@@ -1862,8 +1862,12 @@ export class PagesThemeDesignerElement extends LitElement {
     } catch { /* invalid JSON, ignore */ }
   }
 
+  private _escapeHTML(text: string): string {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
   private _highlightJSON(json: string): string {
-    return json.replace(
+    return this._escapeHTML(json).replace(
       /("(?:[^"\\]|\\.)*")\s*(:)|("(?:[^"\\]|\\.)*")|(-?\d+\.?\d*(?:[eE][+-]?\d+)?)|(\btrue\b|\bfalse\b)|(\bnull\b)|([{}[\]])|([,])|(:)/g,
       (_match, key, colonAfterKey, str, num, bool, nul, bracket, comma, colon) => {
         if (key) return `<span class="json-key">${key}</span><span class="json-colon">${colonAfterKey}</span>`;
