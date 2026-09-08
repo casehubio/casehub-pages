@@ -344,6 +344,130 @@ export class PagesThemeDesignerElement extends LitElement {
     .preview-link { color: var(--pages-accent-9); text-decoration: underline; cursor: pointer; font-size: 13px; }
     .preview-link:hover { color: var(--pages-accent-10); }
 
+    .dashboard-mockup {
+      background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4);
+      border-radius: var(--pages-radius, 8px); overflow: hidden;
+    }
+    .dash-header {
+      display: flex; align-items: center; gap: var(--pages-space-sm, 8px);
+      padding: var(--pages-space-sm, 8px) var(--pages-space-md, 16px);
+      border-bottom: 1px solid var(--pages-neutral-4);
+      background: var(--pages-neutral-2);
+    }
+    .dash-logo {
+      width: 20px; height: 20px; border-radius: var(--pages-radius-sm, 4px);
+      background: var(--pages-accent-9); flex-shrink: 0;
+    }
+    .dash-title { font-size: 13px; font-weight: 600; color: var(--pages-neutral-12); }
+    .dash-spacer { flex: 1; }
+    .dash-search {
+      background: var(--pages-neutral-3); border: 1px solid var(--pages-neutral-5);
+      border-radius: var(--pages-radius-sm, 4px); padding: 3px 8px;
+      font-size: 11px; color: var(--pages-neutral-9); width: 120px;
+    }
+    .dash-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--pages-accent-4); color: var(--pages-accent-11);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 600; flex-shrink: 0;
+    }
+    .dash-notif {
+      position: relative; width: 20px; height: 20px; display: flex;
+      align-items: center; justify-content: center;
+      color: var(--pages-neutral-10); font-size: 14px; flex-shrink: 0;
+    }
+    .dash-notif-dot {
+      position: absolute; top: 0; right: 0; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--pages-danger-9);
+    }
+    .dash-body { display: flex; }
+    .dash-sidebar {
+      width: 100px; padding: var(--pages-space-sm, 8px);
+      border-right: 1px solid var(--pages-neutral-4); flex-shrink: 0;
+    }
+    .dash-sidebar-item {
+      padding: 4px 8px; font-size: 11px; border-radius: var(--pages-radius-sm, 4px);
+      color: var(--pages-neutral-10); cursor: pointer;
+    }
+    .dash-sidebar-item.active {
+      background: var(--pages-accent-3); color: var(--pages-accent-11); font-weight: 500;
+    }
+    .dash-main { flex: 1; padding: var(--pages-space-sm, 8px); display: flex; flex-direction: column; gap: var(--pages-space-sm, 8px); }
+    .dash-breadcrumbs {
+      font-size: 11px; color: var(--pages-neutral-9);
+      display: flex; gap: 4px; align-items: center;
+    }
+    .dash-breadcrumbs a { color: var(--pages-accent-9); text-decoration: none; }
+    .dash-breadcrumbs span { color: var(--pages-neutral-7); }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pages-space-xs, 4px); }
+    .stat-tile {
+      background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4);
+      border-radius: var(--pages-radius-sm, 4px); padding: var(--pages-space-sm, 8px);
+      box-shadow: var(--pages-shadow-sm);
+    }
+    .stat-value { font-size: 18px; font-weight: 700; color: var(--pages-neutral-12); }
+    .stat-label { font-size: 10px; color: var(--pages-neutral-9); margin-top: 2px; }
+    .stat-trend { font-size: 10px; margin-top: 2px; }
+    .trend-up { color: var(--pages-success-9); }
+    .trend-down { color: var(--pages-danger-9); }
+    .dash-activity { display: flex; flex-direction: column; gap: 6px; }
+    .dash-activity-title { font-size: 11px; font-weight: 600; color: var(--pages-neutral-11); text-transform: uppercase; letter-spacing: 0.3px; }
+    .activity-item {
+      display: flex; align-items: center; gap: 6px; font-size: 11px;
+    }
+    .activity-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .activity-text { color: var(--pages-neutral-11); flex: 1; }
+    .activity-time { color: var(--pages-neutral-8); font-size: 10px; white-space: nowrap; }
+    .dash-pagination {
+      display: flex; gap: 2px; align-items: center; justify-content: center;
+      padding-top: var(--pages-space-xs, 4px);
+      border-top: 1px solid var(--pages-neutral-4);
+    }
+    .page-btn {
+      width: 22px; height: 22px; border-radius: var(--pages-radius-sm, 4px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; border: none; cursor: pointer;
+      background: transparent; color: var(--pages-neutral-10);
+    }
+    .page-btn.active { background: var(--pages-accent-9); color: var(--pages-neutral-1); }
+    .page-btn:hover:not(.active) { background: var(--pages-neutral-3); }
+
+    .avatar-group { display: flex; }
+    .avatar-sm {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 600; margin-left: -8px;
+      border: 2px solid var(--pages-neutral-2);
+    }
+    .avatar-sm:first-child { margin-left: 0; }
+
+    .preview-accordion { border: 1px solid var(--pages-neutral-5); border-radius: var(--pages-radius, 8px); overflow: hidden; }
+    .accordion-item { border-bottom: 1px solid var(--pages-neutral-4); }
+    .accordion-item:last-child { border-bottom: none; }
+    .accordion-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: var(--pages-space-sm, 8px) var(--pages-space-md, 16px);
+      font-size: 13px; font-weight: 500; color: var(--pages-neutral-12);
+      cursor: pointer;
+    }
+    .accordion-header:hover { background: var(--pages-neutral-3); }
+    .accordion-arrow { font-size: 10px; color: var(--pages-neutral-8); }
+    .accordion-body {
+      padding: 0 var(--pages-space-md, 16px) var(--pages-space-sm, 8px);
+      font-size: 12px; color: var(--pages-neutral-10);
+    }
+
+    .preview-toast {
+      display: flex; align-items: center; gap: 8px;
+      padding: var(--pages-space-sm, 8px) var(--pages-space-md, 16px);
+      background: var(--pages-neutral-3); border: 1px solid var(--pages-neutral-5);
+      border-radius: var(--pages-radius, 8px); font-size: 12px;
+      color: var(--pages-neutral-12);
+      box-shadow: var(--pages-shadow-md);
+    }
+    .toast-icon { font-size: 16px; flex-shrink: 0; }
+    .toast-dismiss { margin-left: auto; color: var(--pages-neutral-8); cursor: pointer; font-size: 14px; }
+
     .preview-checkbox-row {
       display: flex; align-items: center; gap: 6px;
       font-size: 13px; color: var(--pages-neutral-12);
@@ -1125,6 +1249,82 @@ export class PagesThemeDesignerElement extends LitElement {
     return html`
       <div class="preview-widgets">
         <div class="widget-section">
+          <div class="widget-section-title">App Preview</div>
+          <div class="dashboard-mockup">
+            <div class="dash-header">
+              <div class="dash-logo"></div>
+              <span class="dash-title">Acme App</span>
+              <div class="dash-spacer"></div>
+              <input class="dash-search" placeholder="Search..." readonly />
+              <div class="dash-notif">&#x1f514;<div class="dash-notif-dot"></div></div>
+              <div class="dash-avatar">JP</div>
+            </div>
+            <div class="dash-body">
+              <div class="dash-sidebar">
+                <div class="dash-sidebar-item active">Dashboard</div>
+                <div class="dash-sidebar-item">Analytics</div>
+                <div class="dash-sidebar-item">Projects</div>
+                <div class="dash-sidebar-item">Settings</div>
+              </div>
+              <div class="dash-main">
+                <div class="dash-breadcrumbs">
+                  <a>Home</a><span>›</span><a>Projects</a><span>›</span>Design System
+                </div>
+                <div class="stat-grid">
+                  <div class="stat-tile">
+                    <div class="stat-value">$12.4k</div>
+                    <div class="stat-label">Revenue</div>
+                    <div class="stat-trend trend-up">↑ 12%</div>
+                  </div>
+                  <div class="stat-tile">
+                    <div class="stat-value">847</div>
+                    <div class="stat-label">Users</div>
+                    <div class="stat-trend trend-up">↑ 5%</div>
+                  </div>
+                  <div class="stat-tile">
+                    <div class="stat-value">94.2%</div>
+                    <div class="stat-label">Uptime</div>
+                    <div class="stat-trend trend-down">↓ 0.3%</div>
+                  </div>
+                </div>
+                <div class="dash-activity">
+                  <div class="dash-activity-title">Recent Activity</div>
+                  <div class="activity-item">
+                    <div class="activity-dot" style="background:var(--pages-success-9)"></div>
+                    <span class="activity-text">Alice deployed v2.3 to production</span>
+                    <span class="activity-time">2m ago</span>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-dot" style="background:var(--pages-accent-9)"></div>
+                    <span class="activity-text">Bob fixed issue #421</span>
+                    <span class="activity-time">15m ago</span>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-dot" style="background:var(--pages-info-9)"></div>
+                    <span class="activity-text">Carol reviewed PR #89</span>
+                    <span class="activity-time">1h ago</span>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-dot" style="background:var(--pages-warning-9)"></div>
+                    <span class="activity-text">Build queue at 85% capacity</span>
+                    <span class="activity-time">2h ago</span>
+                  </div>
+                </div>
+                <div class="dash-pagination">
+                  <button class="page-btn">‹</button>
+                  <button class="page-btn active">1</button>
+                  <button class="page-btn">2</button>
+                  <button class="page-btn">3</button>
+                  <button class="page-btn" style="color:var(--pages-neutral-7)">…</button>
+                  <button class="page-btn">10</button>
+                  <button class="page-btn">›</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-section">
           <div class="widget-section-title">Alerts</div>
           <div class="preview-alert alert-success">Operation completed successfully.</div>
           <div class="preview-alert alert-warning">Please review before proceeding.</div>
@@ -1306,6 +1506,49 @@ export class PagesThemeDesignerElement extends LitElement {
             <div style="background:var(--pages-neutral-2);border:1px solid var(--pages-neutral-5);border-radius:var(--pages-radius, 6px);padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11);box-shadow:var(--pages-shadow)">Surface 2</div>
             <div style="background:var(--pages-neutral-3);border:1px solid var(--pages-neutral-6);border-radius:var(--pages-radius, 6px);padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11);box-shadow:var(--pages-shadow-md)">Surface 3</div>
             <div style="background:var(--pages-neutral-4);border:1px solid var(--pages-neutral-7);border-radius:var(--pages-radius, 6px);padding:12px;text-align:center;font-size:11px;color:var(--pages-neutral-11);box-shadow:var(--pages-shadow-lg)">Surface 4</div>
+          </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Accordion</div>
+          <div class="preview-accordion">
+            <div class="accordion-item">
+              <div class="accordion-header"><span class="accordion-arrow">▸</span> What is the OKLCH pipeline?</div>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-header"><span class="accordion-arrow" style="transform:rotate(90deg)">▸</span> How do semantic colours work?</div>
+              <div class="accordion-body">Semantic hues rotate with the accent hue, keeping all colours harmonious. Each semantic group generates a 12-step scale through the same pipeline.</div>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-header"><span class="accordion-arrow">▸</span> Can I export my theme?</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Avatars</div>
+          <div class="preview-row">
+            <div class="avatar-group">
+              <div class="avatar-sm" style="background:var(--pages-accent-4);color:var(--pages-accent-11)">JP</div>
+              <div class="avatar-sm" style="background:var(--pages-success-4);color:var(--pages-success-11)">AK</div>
+              <div class="avatar-sm" style="background:var(--pages-warning-4);color:var(--pages-warning-11)">BL</div>
+              <div class="avatar-sm" style="background:var(--pages-danger-4);color:var(--pages-danger-11)">CM</div>
+              <div class="avatar-sm" style="background:var(--pages-neutral-5);color:var(--pages-neutral-11)">+3</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Toast / Notification</div>
+          <div class="preview-toast">
+            <span class="toast-icon" style="color:var(--pages-success-9)">●</span>
+            <span>Changes saved successfully.</span>
+            <span class="toast-dismiss">✕</span>
+          </div>
+          <div class="preview-toast" style="margin-top:6px;border-left:3px solid var(--pages-warning-9)">
+            <span class="toast-icon" style="color:var(--pages-warning-9)">●</span>
+            <span>Your session expires in 5 minutes.</span>
+            <span class="toast-dismiss">✕</span>
           </div>
         </div>
       </div>
