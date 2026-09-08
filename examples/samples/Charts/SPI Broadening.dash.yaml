@@ -1,0 +1,240 @@
+datasets:
+  - uuid: pipeline
+    content: >
+      [
+        ["API Gateway", "Auth Service"],
+        ["API Gateway", "Rate Limiter"],
+        ["Auth Service", "User Store"],
+        ["Auth Service", "Token Cache"],
+        ["User Store", "Database"],
+        ["Token Cache", "Redis"],
+        ["Rate Limiter", "Redis"],
+        ["Database", "Backup"]
+      ]
+    columns:
+      - id: from
+        type: TEXT
+      - id: to
+        type: TEXT
+
+  - uuid: products
+    content: >
+      [
+        ["Widgets", 120, 95],
+        ["Gadgets", 85, 110],
+        ["Sprockets", 200, 180],
+        ["Flanges", 60, 75],
+        ["Bearings", 150, 140]
+      ]
+    columns:
+      - id: product
+        type: LABEL
+      - id: q1
+        type: NUMBER
+      - id: q2
+        type: NUMBER
+
+  - uuid: monthly
+    content: >
+      [
+        ["Jan", 10], ["Feb", 25], ["Mar", 18], ["Apr", 35],
+        ["May", 28], ["Jun", 42], ["Jul", 38], ["Aug", 55],
+        ["Sep", 48], ["Oct", 62], ["Nov", 58], ["Dec", 72]
+      ]
+    columns:
+      - id: month
+        type: LABEL
+      - id: value
+        type: NUMBER
+
+  - uuid: pie-data
+    content: >
+      [
+        ["Engineering", 45],
+        ["Marketing", 20],
+        ["Sales", 25],
+        ["Support", 10]
+      ]
+    columns:
+      - id: department
+        type: LABEL
+      - id: headcount
+        type: NUMBER
+
+pages:
+  - name: SPI Broadening
+    components:
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Graph Canvas:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Graph Canvas** — YAML-driven graph using the new `graph-canvas`
+                    component type. Renders tabular edge data through the PagesGraphCanvas
+                    bridge into React Flow + ELK layout.
+              - type: graph-canvas
+                properties:
+                  height: 400px
+                  lookup:
+                    uuid: pipeline
+                  sourceColumn: from
+                  targetColumn: to
+                  directed: true
+                  direction: DOWN
+                  algorithm: layered
+                  spacing: 50
+
+          Shared Properties:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Shared SPI properties** — tooltip, animation, color palette,
+                    and backgroundColor applied via ChartSettingsBase.
+              - type: bar-chart
+                properties:
+                  lookup:
+                    uuid: products
+                    group:
+                      - columnGroup:
+                          source: product
+                        functions:
+                          - source: product
+                          - source: q1
+                          - source: q2
+                  tooltip:
+                    show: true
+                    trigger: axis
+                  animation: true
+                  color: ["#5470c6", "#91cc75"]
+                  legend:
+                    show: true
+                    position: top
+                    selectedMode: single
+
+          Per-Chart Series:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Per-chart series properties** — barWidth, step line,
+                    pie roseType, and meter angle customisation.
+              - type: bar-chart
+                properties:
+                  height: 250px
+                  lookup:
+                    uuid: products
+                    group:
+                      - columnGroup:
+                          source: product
+                        functions:
+                          - source: product
+                          - source: q1
+                  barWidth: 20
+                  barGap: "30%"
+              - type: line-chart
+                properties:
+                  height: 250px
+                  lookup:
+                    uuid: monthly
+                    group:
+                      - columnGroup:
+                          source: month
+                        functions:
+                          - source: month
+                          - source: value
+                  step: end
+                  showSymbol: false
+              - type: pie-chart
+                properties:
+                  height: 250px
+                  lookup:
+                    uuid: pie-data
+                    group:
+                      - columnGroup:
+                          source: department
+                        functions:
+                          - source: department
+                          - source: headcount
+                  roseType: radius
+                  startAngle: 135
+              - type: meter
+                properties:
+                  height: 250px
+                  lookup:
+                    uuid: pie-data
+                    group:
+                      - columnGroup:
+                          source: department
+                        functions:
+                          - source: headcount
+                  end: 100
+                  warning: 60
+                  critical: 80
+                  startAngle: 225
+                  endAngle: -45
+                  clockwise: true
+
+          Cartesian Axis:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Cartesian axis promotions** — axis type, min/max, inverse,
+                    and zoom with start/end range.
+              - type: bar-chart
+                properties:
+                  lookup:
+                    uuid: monthly
+                    group:
+                      - columnGroup:
+                          source: month
+                        functions:
+                          - source: month
+                          - source: value
+                  xAxis:
+                    title: Month
+                    labelAngle: -45
+                  yAxis:
+                    title: Revenue (k)
+                    min: 0
+                    max: 80
+                  zoom:
+                    enabled: true
+                    start: 0
+                    end: 100
+
+          Escape Hatches:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Typed escape hatches** — `echarts` property for ECharts-specific
+                    options beyond the SPI surface. Adds a toolbox with save-as-image
+                    and data-view features.
+              - type: line-chart
+                properties:
+                  lookup:
+                    uuid: monthly
+                    group:
+                      - columnGroup:
+                          source: month
+                        functions:
+                          - source: month
+                          - source: value
+                  connectNulls: true
+                  echarts:
+                    toolbox:
+                      show: true
+                      feature:
+                        saveAsImage:
+                          show: true
+                        dataView:
+                          show: true
+                          readOnly: true
+                    animationDuration: 1500
+                    animationEasing: elasticOut

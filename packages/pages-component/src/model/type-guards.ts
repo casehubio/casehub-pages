@@ -42,6 +42,7 @@ import type {
   CountdownProps,
   TimelineProps,
   GraphProps,
+  GraphCanvasProps,
   EventTimelineProps,
   MetricGridProps,
   IframePluginProps,
@@ -111,6 +112,7 @@ export interface ComponentTypeRegistry {
   countdown: CountdownProps;
   timeline: TimelineProps;
   graph: GraphProps;
+  "graph-canvas": GraphCanvasProps;
   "event-timeline": EventTimelineProps;
   // Grouped data components
   "grouped-view": GroupedViewProps;
@@ -322,6 +324,10 @@ export function isTimeline(c: Component): c is TypedComponent<"timeline"> {
 
 export function isGraph(c: Component): c is TypedComponent<"graph"> {
   return c.type === "graph";
+}
+
+export function isGraphCanvas(c: Component): c is TypedComponent<"graph-canvas"> {
+  return c.type === "graph-canvas";
 }
 
 export function isEventTimeline(c: Component): c is TypedComponent<"event-timeline"> {

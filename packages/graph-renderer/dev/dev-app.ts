@@ -2,6 +2,8 @@ import { createGraph } from '@casehubio/graph-core';
 import { registerStencil } from '../src/registry/stencil-registry.js';
 import { sampleDefaultRender, sampleGroupRender } from './sample-nodes.js';
 import '../src/bridge/GraphCanvas.js';
+import '../src/bridge/PagesGraphCanvas.js';
+import type { PagesGraphCanvas } from '../src/bridge/PagesGraphCanvas.js';
 
 registerStencil({
   type: 'sample-default',
@@ -30,6 +32,7 @@ registerStencil({
   render: sampleGroupRender,
 });
 
+// --- GraphCanvas core (direct model API) ---
 const model = createGraph(
   [
     { id: 'worker-1', type: 'sample-group', properties: { label: 'Worker: ReviewAgent' } },
@@ -45,9 +48,33 @@ const model = createGraph(
   ],
 );
 
-const canvas = document.querySelector('pages-graph-canvas');
-if (canvas) {
-  (canvas as unknown as { model: typeof model }).model = model;
+const coreCanvas = document.querySelector('graph-canvas-core');
+if (coreCanvas) {
+  (coreCanvas as unknown as { model: typeof model }).model = model;
+}
+
+// --- PagesGraphCanvas YAML bridge (tabular data API) ---
+const yamlCanvas = document.querySelector('pages-graph-canvas') as PagesGraphCanvas | null;
+if (yamlCanvas) {
+  yamlCanvas.props = {
+    sourceColumn: 'from',
+    targetColumn: 'to',
+    directed: true,
+    direction: 'RIGHT',
+    algorithm: 'layered',
+    spacing: 60,
+    fitView: true,
+  } as any;
+  yamlCanvas.dataSet = {
+    columns: [{ id: 'from' }, { id: 'to' }],
+    rows: [
+      { cells: [{ type: 'TEXT', value: 'Ingest' }, { type: 'TEXT', value: 'Validate' }] },
+      { cells: [{ type: 'TEXT', value: 'Validate' }, { type: 'TEXT', value: 'Transform' }] },
+      { cells: [{ type: 'TEXT', value: 'Transform' }, { type: 'TEXT', value: 'Enrich' }] },
+      { cells: [{ type: 'TEXT', value: 'Enrich' }, { type: 'TEXT', value: 'Store' }] },
+      { cells: [{ type: 'TEXT', value: 'Store' }, { type: 'TEXT', value: 'Notify' }] },
+    ],
+  };
 }
 
 const hostTestEl = document.getElementById('host-test');

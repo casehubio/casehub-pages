@@ -1476,6 +1476,7 @@ __metadata:
   dependencies:
     "@casehubio/graph-core": "workspace:*"
     "@casehubio/graph-work-registry": "workspace:*"
+    "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"

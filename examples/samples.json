@@ -49,6 +49,12 @@
           "file": "Histogram.dash.yaml"
         },
         {
+          "name": "SPI Broadening",
+          "path": "Charts/SPI Broadening.dash.yaml",
+          "category": "Charts",
+          "file": "SPI Broadening.dash.yaml"
+        },
+        {
           "name": "Timeline and Graph",
           "path": "Charts/Timeline and Graph.dash.yaml",
           "category": "Charts",

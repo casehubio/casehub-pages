@@ -40,6 +40,8 @@ const TYPE_MAP: Record<string, string> = {
   "TREEMAP-CHART": "treemap-chart",
   "DENSITY-HEATMAP": "density-heatmap",
   "EVENT-TIMELINE": "event-timeline",
+  GRAPH_CANVAS: "graph-canvas",
+  "GRAPH-CANVAS": "graph-canvas",
 };
 
 /**

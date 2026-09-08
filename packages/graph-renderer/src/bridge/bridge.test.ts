@@ -18,7 +18,7 @@ describe('GraphCanvas', () => {
   let element: HTMLElement;
 
   beforeEach(() => {
-    element = document.createElement('pages-graph-canvas');
+    element = document.createElement('graph-canvas-core');
   });
 
   afterEach(() => {
@@ -28,7 +28,7 @@ describe('GraphCanvas', () => {
   });
 
   it('registers as a custom element', () => {
-    expect(customElements.get('pages-graph-canvas')).toBeDefined();
+    expect(customElements.get('graph-canvas-core')).toBeDefined();
   });
 
   it('creates a .diagram-root container on connect', () => {

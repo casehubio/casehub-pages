@@ -92,6 +92,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "countdown",
   "timeline",
   "graph",
+  "graph-canvas",
   "event-timeline",
   "grouped-view",
   "schema-form",

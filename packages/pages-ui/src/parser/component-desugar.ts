@@ -34,7 +34,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "density-heatmap", "timeseries",
   "data-table", "grid-table", "metric", "meter", "selector", "map",
   "grouped-view", "iframe-plugin",
-  "badge", "countdown", "timeline", "graph", "event-timeline",
+  "badge", "countdown", "timeline", "graph", "graph-canvas", "event-timeline",
   "input", "number-input", "select", "checkbox", "date-picker", "textarea",
   "schema-form",
   "action-button", "alert", "submit-button",

@@ -16,7 +16,7 @@ pages:
             <div style="display: flex; gap: 12px; height: 520px;">
               <pages-diagram-palette id="edit-palette" paletteId="pipeline-editor" style="width: 160px; flex-shrink: 0; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; padding: 8px; overflow-y: auto;"></pages-diagram-palette>
               <div style="flex: 1; display: flex; flex-direction: column;">
-                <pages-graph-canvas id="edit-canvas" style="flex: 1; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></pages-graph-canvas>
+                <graph-canvas-core id="edit-canvas" style="flex: 1; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></pages-graph-canvas>
                 <div style="margin-top: 8px; font-family: var(--pages-font-family, system-ui);">
                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                     <strong style="font-size: 13px; color: var(--pages-neutral-11, #374151);">Mutation Log</strong>

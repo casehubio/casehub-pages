@@ -4,6 +4,8 @@ import type { FieldSchema } from "./form-input-types.js";
 import type { RowAccentConfig } from "./grouped-view-types.js";
 import type { CasehubEChartsExtension } from "./echarts-extension.js";
 import type { CasehubHeatmapExtension } from "./heatmap-extension.js";
+import type { CasehubReactFlowExtension } from "./reactflow-extension.js";
+import type { CasehubElkExtension } from "./elk-extension.js";
 
 export interface DataComponentCommon {
   readonly title?: string;
@@ -318,4 +320,27 @@ export interface EventTimelineProps extends DataComponentCommon {
   readonly strategyKey?: string;
 }
 
-
+export interface GraphCanvasProps extends DataComponentCommon {
+  readonly sourceColumn?: ColumnId;
+  readonly targetColumn?: ColumnId;
+  readonly nodeLabelColumn?: ColumnId;
+  readonly nodeColorColumn?: ColumnId;
+  readonly nodeColorMap?: Record<string, string>;
+  readonly nodeSizeColumn?: ColumnId;
+  readonly valueColumn?: ColumnId;
+  readonly directed?: boolean;
+  readonly direction?: "DOWN" | "RIGHT" | "LEFT" | "UP";
+  readonly spacing?: number;
+  readonly algorithm?: "layered" | "tree" | "radial" | "force" | "stress";
+  readonly containerPadding?: number;
+  readonly connectionsEnabled?: boolean;
+  readonly fitView?: boolean;
+  readonly nodesDraggable?: boolean;
+  readonly minZoom?: number;
+  readonly maxZoom?: number;
+  readonly edgeType?: "default" | "straight" | "step" | "smoothstep";
+  readonly edgeAnimated?: boolean;
+  readonly extra?: Readonly<Record<string, unknown>>;
+  readonly reactFlow?: CasehubReactFlowExtension;
+  readonly elk?: CasehubElkExtension;
+}

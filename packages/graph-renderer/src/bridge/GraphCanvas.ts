@@ -19,7 +19,7 @@ import { emitPagesEvent } from '@casehubio/pages-data';
 import { toReactFlowGraph } from '../mapping.js';
 import { computeElkLayout, type ElkLayoutOptions } from '../layout/elk-layout.js';
 
-@customElement('pages-graph-canvas')
+@customElement('graph-canvas-core')
 export class GraphCanvas extends LitElement {
   @property({ attribute: false }) model: GraphModel | undefined;
   @property({ attribute: false }) layoutOptions: ElkLayoutOptions | undefined;
