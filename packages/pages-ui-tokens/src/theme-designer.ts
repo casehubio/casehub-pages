@@ -1340,59 +1340,9 @@ export class PagesThemeDesignerElement extends LitElement {
               </div>
               <div class="dash-main">
                 <div class="dash-breadcrumbs">
-                  <a>Home</a><span>›</span><a>Projects</a><span>›</span>Design System
+                  <a>Home</a><span>›</span>${this._dashNav}
                 </div>
-                <div class="stat-grid">
-                  <div class="stat-tile">
-                    <div class="stat-value">$12.4k</div>
-                    <div class="stat-label">Revenue</div>
-                    <div class="stat-trend trend-up">↑ 12%</div>
-                  </div>
-                  <div class="stat-tile">
-                    <div class="stat-value">847</div>
-                    <div class="stat-label">Users</div>
-                    <div class="stat-trend trend-up">↑ 5%</div>
-                  </div>
-                  <div class="stat-tile">
-                    <div class="stat-value">94.2%</div>
-                    <div class="stat-label">Uptime</div>
-                    <div class="stat-trend trend-down">↓ 0.3%</div>
-                  </div>
-                </div>
-                <div class="dash-activity">
-                  <div class="dash-activity-title">Recent Activity</div>
-                  <div class="activity-item">
-                    <div class="activity-dot" style="background:var(--pages-success-9)"></div>
-                    <span class="activity-text">Alice deployed v2.3 to production</span>
-                    <span class="activity-time">2m ago</span>
-                  </div>
-                  <div class="activity-item">
-                    <div class="activity-dot" style="background:var(--pages-accent-9)"></div>
-                    <span class="activity-text">Bob fixed issue #421</span>
-                    <span class="activity-time">15m ago</span>
-                  </div>
-                  <div class="activity-item">
-                    <div class="activity-dot" style="background:var(--pages-info-9)"></div>
-                    <span class="activity-text">Carol reviewed PR #89</span>
-                    <span class="activity-time">1h ago</span>
-                  </div>
-                  <div class="activity-item">
-                    <div class="activity-dot" style="background:var(--pages-warning-9)"></div>
-                    <span class="activity-text">Build queue at 85% capacity</span>
-                    <span class="activity-time">2h ago</span>
-                  </div>
-                </div>
-                <div class="dash-pagination">
-                  <button class="page-btn" @click=${() => { if (this._dashPage > 1) this._dashPage--; }}>‹</button>
-                  ${[1, 2, 3].map(n => html`
-                    <button class="page-btn ${this._dashPage === n ? 'active' : ''}"
-                      @click=${() => { this._dashPage = n; }}>${n}</button>
-                  `)}
-                  <button class="page-btn" style="color:var(--pages-neutral-7)">…</button>
-                  <button class="page-btn ${this._dashPage === 10 ? 'active' : ''}"
-                    @click=${() => { this._dashPage = 10; }}>10</button>
-                  <button class="page-btn" @click=${() => { if (this._dashPage < 10) this._dashPage++; }}>›</button>
-                </div>
+                ${this._renderDashContent()}
               </div>
             </div>
           </div>
@@ -1408,11 +1358,12 @@ export class PagesThemeDesignerElement extends LitElement {
 
         <div class="widget-section">
           <div class="widget-section-title">Typography</div>
-          <p class="preview-text-primary" style="font-size:20px;margin:0;font-weight:600">Heading 1</p>
-          <p class="preview-text-primary" style="font-size:16px;margin:0;font-weight:500">Heading 2</p>
-          <p class="preview-text-primary" style="font-size:14px;margin:0">Body text — the main content colour</p>
-          <p class="preview-text-secondary" style="font-size:13px;margin:0">Secondary text — supporting information</p>
-          <p class="preview-text-muted" style="font-size:12px;margin:0">Muted text — hints and placeholders</p>
+          <p class="preview-text-primary" style="font-size:var(--pages-font-size-xl, 28px);margin:0;font-weight:600">Heading 1</p>
+          <p class="preview-text-primary" style="font-size:var(--pages-font-size-lg, 21px);margin:0;font-weight:500">Heading 2</p>
+          <p class="preview-text-primary" style="font-size:var(--pages-font-size-md, 16px);margin:0;font-weight:500">Heading 3</p>
+          <p class="preview-text-primary" style="font-size:var(--pages-font-size, 14px);margin:0">Body text — the main content colour</p>
+          <p class="preview-text-secondary" style="font-size:var(--pages-font-size-sm, 12px);margin:0">Secondary text — supporting information</p>
+          <p class="preview-text-muted" style="font-size:var(--pages-font-size-xs, 10px);margin:0">Small text — captions and fine print</p>
         </div>
 
         <div class="widget-section">
@@ -1635,6 +1586,101 @@ export class PagesThemeDesignerElement extends LitElement {
             <button style="font-size:11px" @click=${() => { this._toasts = [true, true]; }}>Reset toasts</button>
           ` : nothing}
         </div>
+      </div>
+    `;
+  }
+
+  private _renderDashContent() {
+    const activities = [
+      ['Alice deployed v2.3 to production', '2m ago', 'success'],
+      ['Bob fixed issue #421', '15m ago', 'accent'],
+      ['Carol reviewed PR #89', '1h ago', 'info'],
+      ['Build queue at 85% capacity', '2h ago', 'warning'],
+      ['Dan merged feature/auth', '3h ago', 'success'],
+      ['Eve opened issue #435', '4h ago', 'danger'],
+      ['Frank updated docs', '5h ago', 'accent'],
+      ['Grace ran benchmark suite', '6h ago', 'info'],
+    ] as const;
+    const pageSize = 4;
+    const pageItems = activities.slice((this._dashPage - 1) * pageSize, this._dashPage * pageSize);
+
+    if (this._dashNav === 'Analytics') {
+      return html`
+        <div style="font-size:12px;font-weight:600;color:var(--pages-neutral-11);text-transform:uppercase;letter-spacing:0.3px">Metrics</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${[['Conversion', 68, 'accent'], ['Performance', 92, 'success'], ['Error rate', 12, 'danger'], ['Satisfaction', 81, 'info']].map(([label, val, color]) => html`
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px">
+              <span style="width:70px;color:var(--pages-neutral-10)">${label}</span>
+              <div style="flex:1;height:6px;background:var(--pages-neutral-4);border-radius:var(--pages-radius-sm, 3px);overflow:hidden">
+                <div style="width:${val}%;height:100%;background:var(--pages-${color}-9);border-radius:var(--pages-radius-sm, 3px)"></div>
+              </div>
+              <span style="width:30px;text-align:right;color:var(--pages-neutral-11);font-weight:500">${val}%</span>
+            </div>
+          `)}
+        </div>
+      `;
+    }
+
+    if (this._dashNav === 'Projects') {
+      return html`
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${[['Design System', 'Active', 'success'], ['Mobile App', 'In Review', 'info'], ['API Gateway', 'Blocked', 'danger'], ['Docs Site', 'Planning', 'warning']].map(([name, status, color]) => html`
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--pages-radius-sm, 4px);border:1px solid var(--pages-neutral-4);background:var(--pages-neutral-2)">
+              <span style="flex:1;font-size:12px;font-weight:500;color:var(--pages-neutral-12)">${name}</span>
+              <span class="preview-badge badge-${color}" style="font-size:10px">${status}</span>
+            </div>
+          `)}
+        </div>
+      `;
+    }
+
+    if (this._dashNav === 'Settings') {
+      return html`
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px">
+            <span style="color:var(--pages-neutral-12)">Email notifications</span>
+            <div class="preview-switch ${this._switchOn ? 'on' : ''}" @click=${() => { this._switchOn = !this._switchOn; }}><div class="preview-switch-knob"></div></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px">
+            <span style="color:var(--pages-neutral-12)">Language</span>
+            <select class="preview-select" style="width:100px;font-size:11px;padding:3px 6px"><option>English</option><option>French</option></select>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px">
+            <span style="color:var(--pages-neutral-12)">Theme</span>
+            <div class="segment-control" style="width:120px">
+              <button class="segment-btn active" style="font-size:10px;padding:3px">Light</button>
+              <button class="segment-btn" style="font-size:10px;padding:3px">Dark</button>
+            </div>
+          </div>
+          <div style="padding-top:6px;border-top:1px solid var(--pages-neutral-4)">
+            <button class="preview-btn preview-btn-danger" style="font-size:11px;padding:4px 10px">Delete Account</button>
+          </div>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="stat-value">$12.4k</div><div class="stat-label">Revenue</div><div class="stat-trend trend-up">↑ 12%</div></div>
+        <div class="stat-tile"><div class="stat-value">847</div><div class="stat-label">Users</div><div class="stat-trend trend-up">↑ 5%</div></div>
+        <div class="stat-tile"><div class="stat-value">94.2%</div><div class="stat-label">Uptime</div><div class="stat-trend trend-down">↓ 0.3%</div></div>
+      </div>
+      <div class="dash-activity">
+        <div class="dash-activity-title">Recent Activity — Page ${this._dashPage}</div>
+        ${pageItems.map(([text, time, color]) => html`
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--pages-${color}-9)"></div>
+            <span class="activity-text">${text}</span>
+            <span class="activity-time">${time}</span>
+          </div>
+        `)}
+      </div>
+      <div class="dash-pagination">
+        <button class="page-btn" @click=${() => { if (this._dashPage > 1) this._dashPage--; }}>‹</button>
+        ${[1, 2].map(n => html`
+          <button class="page-btn ${this._dashPage === n ? 'active' : ''}" @click=${() => { this._dashPage = n; }}>${n}</button>
+        `)}
+        <button class="page-btn" @click=${() => { if (this._dashPage < 2) this._dashPage++; }}>›</button>
       </div>
     `;
   }
