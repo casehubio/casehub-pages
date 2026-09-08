@@ -339,15 +339,15 @@ const BRUTALIST_LIGHT: PresetConfig = {
   ],
 };
 
-const PERMUPLATE_STEPS = [6, 10, 14, 18, 24, 32, 42, 54, 68, 80, 90, 96];
-const PERMUPLATE_DARK: PresetConfig = {
-  $name: 'permuplate-dark',
+const FORGE_STEPS = [6, 10, 14, 18, 24, 32, 42, 54, 68, 80, 90, 96];
+const FORGE_DARK: PresetConfig = {
+  $name: 'forge-dark',
   $description: 'Industrial dark — bright orange on near-black, sharp and bold',
   pipeline: [
     { transform: 'dark-mode' },
     { transform: 'oklch-scale', params: {
       hues: { accent: 28, neutral: [25, 20], success: 145, warning: 50, danger: 5, info: 210 },
-      chroma: 0.25, contrast: 0.70, steps: PERMUPLATE_STEPS,
+      chroma: 0.25, contrast: 0.70, steps: FORGE_STEPS,
       radius: 0, density: 'compact', shadow: 0.3, fontFamily: 'geometric', fontSize: 14,
     }},
     { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.08, accent: 1.3 } },
@@ -355,14 +355,14 @@ const PERMUPLATE_DARK: PresetConfig = {
     { transform: 'gamut-clamp' },
   ],
 };
-const PERMUPLATE_LIGHT: PresetConfig = {
-  $name: 'permuplate-light',
+const FORGE_LIGHT: PresetConfig = {
+  $name: 'forge-light',
   $description: 'Industrial — light variant with warm greys',
   pipeline: [
     { transform: 'light-mode' },
     { transform: 'oklch-scale', params: {
       hues: { accent: 28, neutral: [25, 20], success: 145, warning: 50, danger: 5, info: 210 },
-      chroma: 0.20, contrast: 0.65, steps: PERMUPLATE_STEPS,
+      chroma: 0.20, contrast: 0.65, steps: FORGE_STEPS,
       radius: 0, density: 'compact', shadow: 0.3, fontFamily: 'geometric', fontSize: 14,
     }},
     { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.05, accent: 1.2 } },
@@ -371,15 +371,15 @@ const PERMUPLATE_LIGHT: PresetConfig = {
   ],
 };
 
-const SPARGE_STEPS = [22, 28, 34, 40, 46, 52, 58, 64, 72, 80, 88, 94];
-const SPARGE_DARK: PresetConfig = {
-  $name: 'sparge-dark',
-  $description: 'Warm parchment — dark variant, rich amber tones',
+const SIENNA_STEPS = [22, 28, 34, 40, 46, 52, 58, 64, 72, 80, 88, 94];
+const SIENNA_DARK: PresetConfig = {
+  $name: 'sienna-dark',
+  $description: 'Warm earth — dark variant, rich amber tones',
   pipeline: [
     { transform: 'dark-mode' },
     { transform: 'oklch-scale', params: {
       hues: { accent: 35, neutral: [40, 30], success: 130, warning: 50, danger: 15, info: 200 },
-      chroma: 0.07, contrast: 0.40, steps: SPARGE_STEPS,
+      chroma: 0.07, contrast: 0.40, steps: SIENNA_STEPS,
       radius: 6, density: 'normal', shadow: 0.25, fontFamily: 'serif', fontSize: 15,
     }},
     { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.8, accent: 1.0 } },
@@ -388,17 +388,49 @@ const SPARGE_DARK: PresetConfig = {
     { transform: 'gamut-clamp' },
   ],
 };
-const SPARGE_LIGHT: PresetConfig = {
-  $name: 'sparge-light',
-  $description: 'Warm parchment — cream backgrounds, warm brown text, organic feel',
+const SIENNA_LIGHT: PresetConfig = {
+  $name: 'sienna-light',
+  $description: 'Warm earth — cream backgrounds, warm brown text, organic feel',
   pipeline: [
     { transform: 'light-mode' },
     { transform: 'oklch-scale', params: {
       hues: { accent: 35, neutral: [40, 30], success: 130, warning: 50, danger: 15, info: 200 },
-      chroma: 0.06, contrast: 0.35, steps: SPARGE_STEPS,
+      chroma: 0.06, contrast: 0.35, steps: SIENNA_STEPS,
       radius: 6, density: 'normal', shadow: 0.15, fontFamily: 'serif', fontSize: 15,
     }},
     { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.9, accent: 0.8 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
+const PARCHMENT_STEPS = [15, 22, 30, 38, 46, 54, 62, 70, 78, 86, 92, 96];
+const PARCHMENT_LIGHT: PresetConfig = {
+  $name: 'parchment-light',
+  $description: 'Aged paper — warm cream backgrounds with cool blue-ink text and gold accent',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 70, neutral: [70, 260], success: 145, warning: 55, danger: 15, info: 220 },
+      chroma: 0.04, contrast: 0.30, steps: PARCHMENT_STEPS,
+      radius: 4, density: 'normal', shadow: 0.15, fontFamily: 'serif', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.6, accent: 1.8 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const PARCHMENT_DARK: PresetConfig = {
+  $name: 'parchment-dark',
+  $description: 'Aged paper — dark variant with deep ink surfaces and gold accent',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 70, neutral: [260, 70], success: 145, warning: 55, danger: 15, info: 220 },
+      chroma: 0.05, contrast: 0.35, steps: PARCHMENT_STEPS,
+      radius: 4, density: 'normal', shadow: 0.2, fontFamily: 'serif', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.4, accent: 1.6 } },
     { transform: 'semantic-map' },
     { transform: 'gamut-clamp' },
   ],
@@ -434,10 +466,12 @@ export function initPresets(): void {
   registerBuiltinPreset(PASTEL_LIGHT);
   registerBuiltinPreset(BRUTALIST_DARK);
   registerBuiltinPreset(BRUTALIST_LIGHT);
-  registerBuiltinPreset(PERMUPLATE_DARK);
-  registerBuiltinPreset(PERMUPLATE_LIGHT);
-  registerBuiltinPreset(SPARGE_DARK);
-  registerBuiltinPreset(SPARGE_LIGHT);
+  registerBuiltinPreset(FORGE_DARK);
+  registerBuiltinPreset(FORGE_LIGHT);
+  registerBuiltinPreset(SIENNA_DARK);
+  registerBuiltinPreset(SIENNA_LIGHT);
+  registerBuiltinPreset(PARCHMENT_DARK);
+  registerBuiltinPreset(PARCHMENT_LIGHT);
 }
 
 export { oklchScale } from './oklch-scale.js';
