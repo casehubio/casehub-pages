@@ -117,7 +117,7 @@ export class PagesThemeDesignerElement extends LitElement {
     .swatch-section { margin-bottom: 12px; }
     .swatch-label { font-size: 11px; font-weight: 500; color: var(--pages-neutral-9, #888); margin-bottom: 4px; text-transform: capitalize; }
     .swatch-row-grouped { display: flex; gap: 6px; }
-    .swatch-group { display: flex; flex-direction: column; flex: 1; gap: 1px; }
+    .swatch-group { display: flex; flex-direction: column; flex: 1; gap: 1px; min-width: 0; }
     .swatch-pair { display: flex; gap: 1px; }
     .swatch {
       width: 100%; aspect-ratio: 1; border-radius: 3px;
@@ -127,6 +127,7 @@ export class PagesThemeDesignerElement extends LitElement {
     .swatch-group-label {
       font-size: 7px; text-align: center; color: var(--pages-neutral-8, #666);
       text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
     .toolbar {
