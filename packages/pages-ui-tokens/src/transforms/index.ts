@@ -339,6 +339,71 @@ const BRUTALIST_LIGHT: PresetConfig = {
   ],
 };
 
+const PERMUPLATE_STEPS = [6, 10, 14, 18, 24, 32, 42, 54, 68, 80, 90, 96];
+const PERMUPLATE_DARK: PresetConfig = {
+  $name: 'permuplate-dark',
+  $description: 'Industrial dark — bright orange on near-black, sharp and bold',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 28, neutral: [25, 20], success: 145, warning: 50, danger: 5, info: 210 },
+      chroma: 0.25, contrast: 0.70, steps: PERMUPLATE_STEPS,
+      radius: 0, density: 'compact', shadow: 0.3, fontFamily: 'geometric', fontSize: 14,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.08, accent: 1.3 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const PERMUPLATE_LIGHT: PresetConfig = {
+  $name: 'permuplate-light',
+  $description: 'Industrial — light variant with warm greys',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 28, neutral: [25, 20], success: 145, warning: 50, danger: 5, info: 210 },
+      chroma: 0.20, contrast: 0.65, steps: PERMUPLATE_STEPS,
+      radius: 0, density: 'compact', shadow: 0.3, fontFamily: 'geometric', fontSize: 14,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.05, accent: 1.2 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
+const SPARGE_STEPS = [22, 28, 34, 40, 46, 52, 58, 64, 72, 80, 88, 94];
+const SPARGE_DARK: PresetConfig = {
+  $name: 'sparge-dark',
+  $description: 'Warm parchment — dark variant, rich amber tones',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 35, neutral: [40, 30], success: 130, warning: 50, danger: 15, info: 200 },
+      chroma: 0.07, contrast: 0.40, steps: SPARGE_STEPS,
+      radius: 6, density: 'normal', shadow: 0.25, fontFamily: 'serif', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.8, accent: 1.0 } },
+    { transform: 'lightness-shift', params: { offset: 2 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const SPARGE_LIGHT: PresetConfig = {
+  $name: 'sparge-light',
+  $description: 'Warm parchment — cream backgrounds, warm brown text, organic feel',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 35, neutral: [40, 30], success: 130, warning: 50, danger: 15, info: 200 },
+      chroma: 0.06, contrast: 0.35, steps: SPARGE_STEPS,
+      radius: 6, density: 'normal', shadow: 0.15, fontFamily: 'serif', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.9, accent: 0.8 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
 export function initPresets(): void {
   registerCoreTransforms();
   registerBuiltinPreset(DEFAULT_LIGHT_PRESET);
@@ -369,6 +434,10 @@ export function initPresets(): void {
   registerBuiltinPreset(PASTEL_LIGHT);
   registerBuiltinPreset(BRUTALIST_DARK);
   registerBuiltinPreset(BRUTALIST_LIGHT);
+  registerBuiltinPreset(PERMUPLATE_DARK);
+  registerBuiltinPreset(PERMUPLATE_LIGHT);
+  registerBuiltinPreset(SPARGE_DARK);
+  registerBuiltinPreset(SPARGE_LIGHT);
 }
 
 export { oklchScale } from './oklch-scale.js';
