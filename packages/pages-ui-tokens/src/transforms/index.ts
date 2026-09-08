@@ -404,33 +404,44 @@ const SIENNA_LIGHT: PresetConfig = {
   ],
 };
 
-const PARCHMENT_STEPS = [15, 22, 30, 38, 46, 54, 62, 70, 78, 86, 92, 96];
 const PARCHMENT_LIGHT: PresetConfig = {
   $name: 'parchment-light',
-  $description: 'Aged paper — warm cream backgrounds with cool blue-ink text and gold accent',
+  $description: 'Aged paper — warm cream backgrounds, golden amber accent, warm brown text',
   pipeline: [
     { transform: 'light-mode' },
     { transform: 'oklch-scale', params: {
-      hues: { accent: 70, neutral: [70, 260], success: 145, warning: 55, danger: 15, info: 220 },
-      chroma: 0.07, contrast: 0.35, steps: PARCHMENT_STEPS,
+      hues: { accent: 50, neutral: 50, success: 155, warning: 50, danger: 15, info: 200 },
+      chroma: 0.06, contrast: 0.45,
       radius: 4, density: 'normal', shadow: 0.15, fontFamily: 'serif', fontSize: 15,
     }},
-    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 1.2, accent: 2.0 } },
+    { transform: 'override', params: {
+      'neutral.1': 'oklch(96% 0.03 70)',
+      'neutral.2': 'oklch(93% 0.035 65)',
+      'neutral.3': 'oklch(90% 0.04 60)',
+      'neutral.4': 'oklch(85% 0.04 55)',
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', accent: 2.0 } },
     { transform: 'semantic-map' },
     { transform: 'gamut-clamp' },
   ],
 };
 const PARCHMENT_DARK: PresetConfig = {
   $name: 'parchment-dark',
-  $description: 'Aged paper — dark variant with deep ink surfaces and gold accent',
+  $description: 'Aged paper — dark variant with warm brown surfaces and golden accent',
   pipeline: [
     { transform: 'dark-mode' },
     { transform: 'oklch-scale', params: {
-      hues: { accent: 70, neutral: [260, 70], success: 145, warning: 55, danger: 15, info: 220 },
-      chroma: 0.06, contrast: 0.40, steps: PARCHMENT_STEPS,
-      radius: 4, density: 'normal', shadow: 0.2, fontFamily: 'serif', fontSize: 15,
+      hues: { accent: 50, neutral: [50, 40], success: 155, warning: 50, danger: 15, info: 200 },
+      chroma: 0.06, contrast: 0.45,
+      radius: 4, density: 'normal', shadow: 0.25, fontFamily: 'serif', fontSize: 15,
     }},
-    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.6, accent: 1.8 } },
+    { transform: 'override', params: {
+      'neutral.1': 'oklch(18% 0.02 50)',
+      'neutral.2': 'oklch(22% 0.025 50)',
+      'neutral.3': 'oklch(28% 0.03 50)',
+      'neutral.4': 'oklch(34% 0.03 50)',
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', accent: 1.8 } },
     { transform: 'semantic-map' },
     { transform: 'gamut-clamp' },
   ],
