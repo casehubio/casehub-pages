@@ -168,9 +168,9 @@ export class PagesThemeDesignerElement extends LitElement {
     .theme-list-actions button:hover { background: var(--pages-neutral-5, #444); color: var(--pages-neutral-12, #eee); }
     .theme-list-actions .delete-btn:hover { color: var(--pages-danger-9, #e44); }
 
-    .preview-widgets { display: flex; flex-direction: column; gap: 16px; }
+    .preview-widgets { display: flex; flex-direction: column; gap: var(--pages-space-md, 16px); }
 
-    .widget-section { display: flex; flex-direction: column; gap: 8px; }
+    .widget-section { display: flex; flex-direction: column; gap: var(--pages-space-sm, 8px); }
     .widget-section-title {
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       color: var(--pages-neutral-9, #888); letter-spacing: 0.5px;
@@ -179,12 +179,12 @@ export class PagesThemeDesignerElement extends LitElement {
     .preview-card {
       background: var(--pages-neutral-2, #1a1a2e);
       border: 1px solid var(--pages-neutral-5, #444);
-      border-radius: var(--pages-radius, 8px); padding: 16px;
+      border-radius: var(--pages-radius, 8px); padding: var(--pages-space-md, 16px);
       box-shadow: var(--pages-shadow, 0 2px 8px oklch(0% 0 0 / 0.1));
     }
 
     .preview-btn {
-      padding: 6px 14px; border-radius: var(--pages-radius-sm, 4px);
+      padding: var(--pages-space-xs, 4px) var(--pages-space-sm, 8px); border-radius: var(--pages-radius-sm, 4px);
       font-size: 13px; cursor: pointer; border: none;
     }
     .preview-btn-primary { background: var(--pages-accent-9); color: var(--pages-neutral-1); }
@@ -206,7 +206,7 @@ export class PagesThemeDesignerElement extends LitElement {
     }
 
     .preview-badge {
-      display: inline-flex; padding: 2px 8px; border-radius: var(--pages-radius-full, 9999px);
+      display: inline-flex; padding: var(--pages-space-xs, 4px) var(--pages-space-sm, 8px); border-radius: var(--pages-radius-full, 9999px);
       font-size: 11px; font-weight: 500;
     }
     .badge-success { background: var(--pages-success-3); color: var(--pages-success-11); }
@@ -222,12 +222,12 @@ export class PagesThemeDesignerElement extends LitElement {
       width: 100%; border-collapse: collapse; font-size: 13px;
     }
     .preview-table th {
-      text-align: left; padding: 6px 10px; font-weight: 500;
+      text-align: left; padding: var(--pages-space-xs, 4px) var(--pages-space-sm, 8px); font-weight: 500;
       border-bottom: 1px solid var(--pages-neutral-6);
       color: var(--pages-neutral-11);
     }
     .preview-table td {
-      padding: 6px 10px;
+      padding: var(--pages-space-xs, 4px) var(--pages-space-sm, 8px);
       border-bottom: 1px solid var(--pages-neutral-4);
       color: var(--pages-neutral-12);
     }
@@ -241,11 +241,11 @@ export class PagesThemeDesignerElement extends LitElement {
       height: 100%; border-radius: var(--pages-radius-sm, 3px); transition: width 0.3s;
     }
 
-    .preview-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .preview-row { display: flex; gap: var(--pages-space-sm, 8px); align-items: center; flex-wrap: wrap; }
 
     .preview-alert {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 14px; border-radius: var(--pages-radius, 8px);
+      display: flex; align-items: center; gap: var(--pages-space-sm, 8px);
+      padding: var(--pages-space-sm, 8px) var(--pages-space-md, 16px); border-radius: var(--pages-radius, 8px);
       font-size: 13px;
     }
     .alert-success { background: var(--pages-success-3); color: var(--pages-success-11); border: 1px solid var(--pages-success-6); }
@@ -254,8 +254,8 @@ export class PagesThemeDesignerElement extends LitElement {
     .alert-info { background: var(--pages-info-3); color: var(--pages-info-11); border: 1px solid var(--pages-info-6); }
 
     .preview-chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border-radius: var(--pages-radius-full, 9999px);
+      display: inline-flex; align-items: center; gap: var(--pages-space-xs, 4px);
+      padding: var(--pages-space-xs, 4px) var(--pages-space-sm, 8px); border-radius: var(--pages-radius-full, 9999px);
       font-size: 12px; font-weight: 500;
     }
     .chip-success { background: var(--pages-success-4); color: var(--pages-success-11); }
@@ -593,10 +593,10 @@ export class PagesThemeDesignerElement extends LitElement {
       themeCss += `  --pages-radius-lg: ${Math.round(r * 2)}px;\n`;
       themeCss += `  --pages-radius-xl: ${Math.round(r * 3)}px;\n`;
       themeCss += `  --pages-radius-full: 9999px;\n`;
-      themeCss += `  --pages-shadow-sm: 0 1px ${Math.round(2 + s * 4)}px oklch(0% 0 0 / ${(0.03 + s * 0.07).toFixed(2)});\n`;
-      themeCss += `  --pages-shadow: 0 2px ${Math.round(4 + s * 8)}px oklch(0% 0 0 / ${(0.05 + s * 0.1).toFixed(2)});\n`;
-      themeCss += `  --pages-shadow-md: 0 4px ${Math.round(8 + s * 16)}px oklch(0% 0 0 / ${(0.07 + s * 0.13).toFixed(2)});\n`;
-      themeCss += `  --pages-shadow-lg: 0 8px ${Math.round(16 + s * 32)}px oklch(0% 0 0 / ${(0.1 + s * 0.15).toFixed(2)});\n`;
+      themeCss += `  --pages-shadow-sm: 0 1px ${Math.round(2 + s * 6)}px oklch(0% 0 0 / ${(0.08 + s * 0.2).toFixed(2)});\n`;
+      themeCss += `  --pages-shadow: 0 2px ${Math.round(4 + s * 12)}px oklch(0% 0 0 / ${(0.12 + s * 0.25).toFixed(2)});\n`;
+      themeCss += `  --pages-shadow-md: 0 4px ${Math.round(8 + s * 20)}px oklch(0% 0 0 / ${(0.15 + s * 0.3).toFixed(2)});\n`;
+      themeCss += `  --pages-shadow-lg: 0 8px ${Math.round(16 + s * 36)}px oklch(0% 0 0 / ${(0.2 + s * 0.35).toFixed(2)});\n`;
       themeCss += `  --pages-space-xs: ${Math.round(4 * d)}px;\n`;
       themeCss += `  --pages-space-sm: ${Math.round(8 * d)}px;\n`;
       themeCss += `  --pages-space-md: ${Math.round(16 * d)}px;\n`;
