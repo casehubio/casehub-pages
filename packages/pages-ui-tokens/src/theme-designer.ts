@@ -889,7 +889,30 @@ export class PagesThemeDesignerElement extends LitElement {
     if (!config) return null;
     try {
       const tokens = runPipeline(config);
-      return { css: generateCSS(tokens, config.$name) + '\n\n' + generateDensityCSS(), name: config.$name };
+      let themeCss = generateCSS(tokens, config.$name) + '\n\n' + generateDensityCSS();
+      const oklch = config.pipeline.find(t => t.transform === 'oklch-scale');
+      const p = oklch?.params ?? {};
+      const r = (p['radius'] as number) ?? 8;
+      const s = (p['shadow'] as number) ?? 0.4;
+      const dMap: Record<string, number> = { compact: 0.75, normal: 1, spacious: 1.25 };
+      const d = dMap[(p['density'] as string) ?? 'normal'] ?? 1;
+      const fontStacks: Record<string, string> = {
+        system: "'Inter', system-ui, -apple-system, sans-serif",
+        humanist: "'Atkinson Hyperlegible', Calibri, sans-serif",
+        geometric: "'DM Sans', Futura, sans-serif",
+        mono: "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace",
+        serif: "'Merriweather', Georgia, 'Times New Roman', serif",
+        rounded: "'Nunito', 'Varela Round', sans-serif",
+      };
+      const ff = fontStacks[(p['fontFamily'] as string) ?? 'system'] ?? fontStacks['system'];
+      const fs = (p['fontSize'] as number) ?? 14;
+      themeCss += `\n.pages-theme-${config.$name} {\n`;
+      themeCss += `  --pages-radius-sm: ${Math.round(r * 0.5)}px; --pages-radius: ${r}px; --pages-radius-md: ${Math.round(r * 1.5)}px; --pages-radius-lg: ${Math.round(r * 2)}px; --pages-radius-xl: ${Math.round(r * 3)}px; --pages-radius-full: 9999px;\n`;
+      themeCss += `  --pages-shadow-sm: 0 1px ${Math.round(2 + s * 6)}px oklch(0% 0 0 / ${(0.08 + s * 0.2).toFixed(2)}); --pages-shadow: 0 2px ${Math.round(4 + s * 12)}px oklch(0% 0 0 / ${(0.12 + s * 0.25).toFixed(2)}); --pages-shadow-md: 0 4px ${Math.round(8 + s * 20)}px oklch(0% 0 0 / ${(0.15 + s * 0.3).toFixed(2)}); --pages-shadow-lg: 0 8px ${Math.round(16 + s * 36)}px oklch(0% 0 0 / ${(0.2 + s * 0.35).toFixed(2)});\n`;
+      themeCss += `  --pages-space-xs: ${Math.round(4 * d)}px; --pages-space-sm: ${Math.round(8 * d)}px; --pages-space-md: ${Math.round(16 * d)}px; --pages-space-lg: ${Math.round(24 * d)}px; --pages-space-xl: ${Math.round(32 * d)}px;\n`;
+      themeCss += `  --pages-font-family: ${ff}; --pages-font-size-xs: ${Math.round(fs * 0.75)}px; --pages-font-size-sm: ${Math.round(fs * 0.875)}px; --pages-font-size: ${fs}px; --pages-font-size-md: ${Math.round(fs * 1.125)}px; --pages-font-size-lg: ${Math.round(fs * 1.5)}px; --pages-font-size-xl: ${Math.round(fs * 2)}px;\n`;
+      themeCss += `}\n`;
+      return { css: themeCss, name: config.$name };
     } catch {
       return null;
     }

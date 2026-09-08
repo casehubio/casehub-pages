@@ -86,11 +86,11 @@ const CASEHUB_LIGHT_PRESET: PresetConfig = {
   ],
 };
 
-const NORD_HUES = { hues: { accent: 210, neutral: 220, success: 145, warning: 40, danger: 355, info: 195 }, chroma: 0.08, contrast: 0.45 };
-const SOLARIZED_HUES = { hues: { accent: 175, neutral: 55, success: 105, warning: 45, danger: 18, info: 200 }, chroma: 0.10, contrast: 0.55 };
-const DRACULA_HUES = { hues: { accent: 270, neutral: 240, success: 115, warning: 60, danger: 0, info: 195 }, chroma: 0.18, contrast: 0.55 };
-const GITHUB_HUES = { hues: { accent: 215, neutral: 215, success: 140, warning: 40, danger: 5, info: 210 }, chroma: 0.04, contrast: 0.60 };
-const MONOKAI_HUES = { hues: { accent: 80, neutral: 50, success: 95, warning: 35, danger: 345, info: 190 }, chroma: 0.15, contrast: 0.50 };
+const NORD_HUES = { hues: { accent: 210, neutral: 220, success: 145, warning: 40, danger: 355, info: 195 }, chroma: 0.08, contrast: 0.45, radius: 8, density: 'normal', shadow: 0.3, fontFamily: 'humanist', fontSize: 14 };
+const SOLARIZED_HUES = { hues: { accent: 175, neutral: 55, success: 105, warning: 45, danger: 18, info: 200 }, chroma: 0.10, contrast: 0.55, radius: 4, density: 'normal', shadow: 0.2, fontFamily: 'system', fontSize: 14 };
+const DRACULA_HUES = { hues: { accent: 270, neutral: 240, success: 115, warning: 60, danger: 0, info: 195 }, chroma: 0.18, contrast: 0.55, radius: 10, density: 'normal', shadow: 0.5, fontFamily: 'mono', fontSize: 13 };
+const GITHUB_HUES = { hues: { accent: 215, neutral: 215, success: 140, warning: 40, danger: 5, info: 210 }, chroma: 0.04, contrast: 0.60, radius: 6, density: 'normal', shadow: 0.15, fontFamily: 'system', fontSize: 14 };
+const MONOKAI_HUES = { hues: { accent: 80, neutral: 50, success: 95, warning: 35, danger: 345, info: 190 }, chroma: 0.15, contrast: 0.50, radius: 4, density: 'compact', shadow: 0.35, fontFamily: 'geometric', fontSize: 13 };
 
 function makePresetPair(name: string, description: string, hues: Record<string, unknown>): [PresetConfig, PresetConfig] {
   return [
@@ -109,6 +109,112 @@ const [DRACULA_LIGHT, DRACULA_DARK] = makePresetPair('dracula', 'Vivid purple wi
 const [GITHUB_LIGHT, GITHUB_DARK] = makePresetPair('github', 'Clean and neutral — familiar professional look', GITHUB_HUES);
 const [MONOKAI_LIGHT, MONOKAI_DARK] = makePresetPair('monokai', 'Warm tones with vibrant yellow-green accent', MONOKAI_HUES);
 
+const VIVID_STEPS = [10, 15, 20, 26, 33, 42, 52, 62, 72, 82, 90, 96];
+const VIVID_DARK: PresetConfig = {
+  $name: 'vivid-dark',
+  $description: 'Maximum saturation — pushes chroma, custom lightness spread, gaussian curve',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 290, neutral: [280, 260], success: 160, warning: 70, danger: 15, info: 225 },
+      chroma: 0.35, contrast: 0.65, steps: VIVID_STEPS,
+      radius: 16, density: 'spacious', shadow: 0.6, fontFamily: 'geometric', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'bezier', neutral: 0.4, accent: 1.2 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const VIVID_LIGHT: PresetConfig = {
+  $name: 'vivid-light',
+  $description: 'Maximum saturation — light variant',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 290, neutral: [280, 260], success: 160, warning: 70, danger: 15, info: 225 },
+      chroma: 0.35, contrast: 0.65, steps: VIVID_STEPS,
+      radius: 16, density: 'spacious', shadow: 0.6, fontFamily: 'geometric', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'bezier', neutral: 0.3, accent: 1.0 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
+const EDITORIAL_DARK: PresetConfig = {
+  $name: 'editorial-dark',
+  $description: 'Monochrome base with single accent pop — chroma-curve suppresses all but accent',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 30, neutral: 30, success: 145, warning: 55, danger: 25, info: 210 },
+      chroma: 0.15, contrast: 0.55,
+      radius: 0, density: 'compact', shadow: 0.1, fontFamily: 'serif', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.05, success: 0.3, warning: 0.3, danger: 0.4, info: 0.2 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const EDITORIAL_LIGHT: PresetConfig = {
+  $name: 'editorial-light',
+  $description: 'Monochrome base with single accent pop — light variant',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 30, neutral: 30, success: 145, warning: 55, danger: 25, info: 210 },
+      chroma: 0.15, contrast: 0.55,
+      radius: 0, density: 'compact', shadow: 0.1, fontFamily: 'serif', fontSize: 15,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.02, success: 0.25, warning: 0.25, danger: 0.35, info: 0.15 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
+const EARTH_STEPS = [18, 24, 30, 36, 42, 48, 54, 60, 66, 74, 82, 90];
+const EARTH_DARK: PresetConfig = {
+  $name: 'earth-dark',
+  $description: 'Warm natural tones — custom steps, dual-hue neutrals, brand overlays, shifted semantics',
+  pipeline: [
+    { transform: 'dark-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 45, neutral: [35, 25], success: 120, warning: 60, danger: 10, info: 195 },
+      chroma: 0.10, contrast: 0.40, steps: EARTH_STEPS,
+      radius: 12, density: 'normal', shadow: 0.5, fontFamily: 'rounded', fontSize: 14,
+    }},
+    { transform: 'oklch-scale', params: {
+      hues: { terracotta: 28, sage: 130, clay: 50 },
+      chroma: 0.08, steps: EARTH_STEPS,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.6, accent: 0.8, sage: 0.5 } },
+    { transform: 'lightness-shift', params: { offset: 3 } },
+    { transform: 'semantic-hues', params: { success: 130, warning: 50 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+const EARTH_LIGHT: PresetConfig = {
+  $name: 'earth-light',
+  $description: 'Warm natural tones — light variant',
+  pipeline: [
+    { transform: 'light-mode' },
+    { transform: 'oklch-scale', params: {
+      hues: { accent: 45, neutral: [35, 25], success: 120, warning: 60, danger: 10, info: 195 },
+      chroma: 0.10, contrast: 0.40, steps: EARTH_STEPS,
+      radius: 12, density: 'normal', shadow: 0.5, fontFamily: 'rounded', fontSize: 14,
+    }},
+    { transform: 'oklch-scale', params: {
+      hues: { terracotta: 28, sage: 130, clay: 50 },
+      chroma: 0.06, steps: EARTH_STEPS,
+    }},
+    { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 0.3, accent: 0.7, sage: 0.4 } },
+    { transform: 'semantic-hues', params: { success: 130, warning: 50 } },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
+  ],
+};
+
 export function initPresets(): void {
   registerCoreTransforms();
   registerBuiltinPreset(DEFAULT_LIGHT_PRESET);
@@ -125,6 +231,12 @@ export function initPresets(): void {
   registerBuiltinPreset(GITHUB_DARK!);
   registerBuiltinPreset(MONOKAI_LIGHT!);
   registerBuiltinPreset(MONOKAI_DARK!);
+  registerBuiltinPreset(VIVID_LIGHT);
+  registerBuiltinPreset(VIVID_DARK);
+  registerBuiltinPreset(EDITORIAL_LIGHT);
+  registerBuiltinPreset(EDITORIAL_DARK);
+  registerBuiltinPreset(EARTH_LIGHT);
+  registerBuiltinPreset(EARTH_DARK);
 }
 
 export { oklchScale } from './oklch-scale.js';
