@@ -13,6 +13,13 @@ import { listThemes, applyTheme, getTheme } from './runtime.js';
 
 const DEFAULT_SEMANTIC_HUES = { success: 145, warning: 55, danger: 25, info: 210 };
 
+const STEP_ROLES = [
+  'app bg', 'subtle bg', 'element bg', 'hover bg',
+  'border', 'strong border', 'hover border', 'focus ring',
+  'solid fill', 'solid hover', 'lo-contrast text', 'hi-contrast text',
+];
+const GROUP_LABELS = ['backgrounds', 'subtle', 'borders', 'interactive', 'solids', 'text'];
+
 export class PagesThemeDesignerElement extends LitElement {
   static override styles = css`
     :host { display: contents; }
@@ -109,11 +116,17 @@ export class PagesThemeDesignerElement extends LitElement {
 
     .swatch-section { margin-bottom: 12px; }
     .swatch-label { font-size: 11px; font-weight: 500; color: var(--pages-neutral-9, #888); margin-bottom: 4px; text-transform: capitalize; }
-    .swatch-row { display: flex; gap: 2px; }
+    .swatch-row-grouped { display: flex; gap: 6px; }
+    .swatch-group { display: flex; flex-direction: column; flex: 1; gap: 1px; }
+    .swatch-pair { display: flex; gap: 1px; }
     .swatch {
       width: 100%; aspect-ratio: 1; border-radius: 3px;
       display: flex; align-items: center; justify-content: center;
       font-size: 8px; color: white; text-shadow: 0 0 2px black;
+    }
+    .swatch-group-label {
+      font-size: 7px; text-align: center; color: var(--pages-neutral-8, #666);
+      text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px;
     }
 
     .toolbar {
@@ -290,6 +303,45 @@ export class PagesThemeDesignerElement extends LitElement {
       color: var(--pages-accent-9);
       border-bottom-color: var(--pages-accent-9);
     }
+
+    .preview-nav { display: flex; flex-direction: column; gap: 1px; }
+    .preview-nav-item {
+      padding: 6px 12px; border-radius: var(--pages-radius-sm, 4px);
+      font-size: 13px; color: var(--pages-neutral-11); cursor: pointer;
+    }
+    .preview-nav-item:hover { background: var(--pages-neutral-3); }
+    .preview-nav-item.active { background: var(--pages-accent-3); color: var(--pages-accent-11); }
+
+    .preview-input-error {
+      background: var(--pages-neutral-3); color: var(--pages-neutral-12);
+      border: 1px solid var(--pages-danger-6); border-radius: var(--pages-radius-sm, 4px);
+      padding: 6px 10px; font: inherit; font-size: 13px; width: 200px;
+    }
+    .preview-input-success {
+      background: var(--pages-neutral-3); color: var(--pages-neutral-12);
+      border: 1px solid var(--pages-success-6); border-radius: var(--pages-radius-sm, 4px);
+      padding: 6px 10px; font: inherit; font-size: 13px; width: 200px;
+    }
+    .preview-input-focused {
+      background: var(--pages-neutral-3); color: var(--pages-neutral-12);
+      border: 1px solid var(--pages-accent-8); border-radius: var(--pages-radius-sm, 4px);
+      padding: 6px 10px; font: inherit; font-size: 13px; width: 200px;
+      box-shadow: 0 0 0 2px var(--pages-accent-5);
+    }
+    .field-hint { font-size: 11px; margin-top: 2px; }
+    .hint-error { color: var(--pages-danger-9); }
+    .hint-success { color: var(--pages-success-9); }
+
+    .state-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--pages-neutral-8); text-align: center; margin-top: 2px;
+    }
+    .preview-btn-hover { background: var(--pages-accent-10); color: var(--pages-neutral-1); }
+    .preview-btn-active { background: var(--pages-accent-8); color: var(--pages-neutral-1); }
+    .preview-btn-disabled { background: var(--pages-neutral-5); color: var(--pages-neutral-8); cursor: not-allowed; opacity: 0.7; }
+
+    .preview-link { color: var(--pages-accent-9); text-decoration: underline; cursor: pointer; font-size: 13px; }
+    .preview-link:hover { color: var(--pages-accent-10); }
 
     .preview-checkbox-row {
       display: flex; align-items: center; gap: 6px;
@@ -951,9 +1003,15 @@ export class PagesThemeDesignerElement extends LitElement {
           ${swatches.map(s => html`
             <div class="swatch-section">
               <div class="swatch-label">${s.name}</div>
-              <div class="swatch-row">
-                ${s.colors.map((c, i) => html`
-                  <div class="swatch" style="background:${c}" title="${s.name}-${i + 1}">${i + 1}</div>
+              <div class="swatch-row-grouped">
+                ${[0, 1, 2, 3, 4, 5].map(gi => html`
+                  <div class="swatch-group">
+                    <div class="swatch-pair">
+                      <div class="swatch" style="background:${s.colors[gi * 2]}" title="${s.name}-${gi * 2 + 1}: ${STEP_ROLES[gi * 2]}">${gi * 2 + 1}</div>
+                      <div class="swatch" style="background:${s.colors[gi * 2 + 1]}" title="${s.name}-${gi * 2 + 2}: ${STEP_ROLES[gi * 2 + 1]}">${gi * 2 + 2}</div>
+                    </div>
+                    <div class="swatch-group-label">${GROUP_LABELS[gi]}</div>
+                  </div>
                 `)}
               </div>
             </div>
@@ -1090,6 +1148,62 @@ export class PagesThemeDesignerElement extends LitElement {
             <button class="preview-btn preview-btn-danger">Danger</button>
             <button class="preview-btn preview-btn-success">Success</button>
           </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Button States</div>
+          <div class="preview-row">
+            <div style="text-align:center">
+              <button class="preview-btn preview-btn-primary">Default</button>
+              <div class="state-label">step 9</div>
+            </div>
+            <div style="text-align:center">
+              <button class="preview-btn preview-btn-hover">Hover</button>
+              <div class="state-label">step 10</div>
+            </div>
+            <div style="text-align:center">
+              <button class="preview-btn preview-btn-active">Active</button>
+              <div class="state-label">step 8</div>
+            </div>
+            <div style="text-align:center">
+              <button class="preview-btn preview-btn-disabled" disabled>Disabled</button>
+              <div class="state-label">step 5</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Navigation</div>
+          <div class="preview-nav">
+            <div class="preview-nav-item active">Dashboard</div>
+            <div class="preview-nav-item" style="background:var(--pages-neutral-3)">Analytics</div>
+            <div class="preview-nav-item">Settings</div>
+            <div class="preview-nav-item">Help</div>
+          </div>
+          <div class="state-label" style="text-align:left">active = accent-3/11 &nbsp; hover = neutral-3 &nbsp; default = transparent</div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Form Validation</div>
+          <div class="preview-row" style="align-items:start">
+            <div>
+              <input class="preview-input-focused" type="text" value="Focused" readonly />
+              <div class="field-hint" style="color:var(--pages-neutral-9)">accent-8 border, accent-5 ring</div>
+            </div>
+            <div>
+              <input class="preview-input-error" type="text" value="Invalid email" readonly />
+              <div class="field-hint hint-error">danger-6 border, danger-9 text</div>
+            </div>
+            <div>
+              <input class="preview-input-success" type="text" value="Confirmed" readonly />
+              <div class="field-hint hint-success">success-6 border, success-9 text</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-section">
+          <div class="widget-section-title">Links & Text</div>
+          <p style="margin:0;font-size:13px;color:var(--pages-neutral-12)">Body text with an <span class="preview-link">inline link</span> and <span style="color:var(--pages-accent-11)">accent-coloured emphasis</span> alongside <span style="color:var(--pages-neutral-10)">secondary text</span>.</p>
         </div>
 
         <div class="widget-section">
