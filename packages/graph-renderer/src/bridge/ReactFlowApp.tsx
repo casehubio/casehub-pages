@@ -72,6 +72,8 @@ export interface ReactFlowAppProps {
   onPaneContextMenu?: (event: React.MouseEvent) => void;
   onNodeContextMenu?: (event: React.MouseEvent, node: Node) => void;
   onEdgeContextMenu?: (event: React.MouseEvent, edge: Edge) => void;
+  onEdgeMouseEnter?: (event: React.MouseEvent, edge: Edge) => void;
+  onEdgeMouseLeave?: (event: React.MouseEvent, edge: Edge) => void;
   onReactFlowReady?: (instance: ReactFlowInstance) => void;
   onConnectEnd?: (event: MouseEvent | TouchEvent) => void;
   onConnectStart?: (event: MouseEvent | TouchEvent, params: { nodeId: string | null }) => void;
@@ -190,6 +192,8 @@ export function ReactFlowApp({
   onPaneContextMenu,
   onNodeContextMenu,
   onEdgeContextMenu,
+  onEdgeMouseEnter,
+  onEdgeMouseLeave,
   onReactFlowReady,
   onConnectEnd,
   onConnectStart,
@@ -224,6 +228,7 @@ export function ReactFlowApp({
     Object.entries({
       onConnect, isValidConnection, onReconnect, onPaneClick, onConnectEnd, onConnectStart,
       onNodeDragStop, onPaneContextMenu, onNodeContextMenu, onEdgeContextMenu,
+      onEdgeMouseEnter, onEdgeMouseLeave,
     }).filter(([, v]) => v !== undefined),
   );
 

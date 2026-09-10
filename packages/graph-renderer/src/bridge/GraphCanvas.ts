@@ -453,6 +453,16 @@ export class GraphCanvas extends LitElement {
         onEdgeContextMenu: (_event, edge: Edge) => {
           emitPagesEvent(this, 'graph:edge:contextmenu', { edgeId: edge.id, edgeType: edge.type ?? '' });
         },
+        onEdgeMouseEnter: (event: React.MouseEvent, edge: Edge) => {
+          emitPagesEvent(this, 'graph:edge:mouseenter', {
+            edgeId: edge.id, edgeType: edge.type ?? '',
+            label: edge.label ?? '', data: edge.data ?? {},
+            clientX: event.clientX, clientY: event.clientY,
+          });
+        },
+        onEdgeMouseLeave: (_event: React.MouseEvent, edge: Edge) => {
+          emitPagesEvent(this, 'graph:edge:mouseleave', { edgeId: edge.id });
+        },
         nodesConnectable: this.connectionsEnabled,
         miniMapNodeColor: this.miniMapNodeColor,
       }),
