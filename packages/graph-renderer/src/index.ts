@@ -15,6 +15,23 @@ export { GraphCanvas } from './bridge/GraphCanvas.js';
 export { PagesGraphCanvas } from './bridge/PagesGraphCanvas.js';
 export { computeElkLayout } from './layout/elk-layout.js';
 export type { ElkLayoutOptions, ElkLayoutResult, NodeLayout } from './layout/elk-layout.js';
+
+// ─── Layout Rule Engine ─────────────────────────────────────────────
+export { LayoutEngine } from './layout/engine.js';
+export type { PreLayoutResult, PostLayoutResult } from './layout/engine.js';
+export { createFactBase } from './layout/fact-base.js';
+export { defaultClassifiers } from './layout/classifiers.js';
+export {
+  horizontalInternalRule, verticalStackingRule, positionAwareHandlesRule,
+  noContainerOverlapConstraint, childContainmentConstraint, noSiblingOverlapConstraint,
+  nodeWidth, nodeHeight, INTERNAL_PAD, HEADER_HEIGHT,
+} from './layout/layout-rules.js';
+export type {
+  Phase, Fact, FactBase, ClassificationRule, LayoutRule, HardConstraint,
+  CompositionReport, CompositionError, LayoutExplanation, RuleSelection,
+  LayoutNode, LayoutEdge, LayoutViolation,
+  LayoutStrategy, ArchetypeName, ArchetypeHint,
+} from './layout/types.js';
 export { toReactFlowNode, toReactFlowEdge, toReactFlowGraph } from './mapping.js';
 export {
   createStencilNodeComponent,
