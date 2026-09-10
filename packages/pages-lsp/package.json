@@ -1,0 +1,41 @@
+{
+  "name": "@casehubio/pages-lsp",
+  "version": "0.1.0",
+  "description": "CaseHub LSP server — schema-driven completion, diagnostics, and hover for CaseHub YAML formats",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./node": "./dist/server-node.js",
+    "./browser": "./dist/server-browser.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@casehubio/pages-schema": "workspace:*",
+    "vscode-languageserver": "^10.0.0",
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "yaml": "^2.7.1",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.1"
+  },
+  "license": "Apache-2.0"
+}

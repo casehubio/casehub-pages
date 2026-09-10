@@ -1527,6 +1527,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-code-editor@workspace:packages/pages-code-editor"
   dependencies:
+    "@casehubio/pages-lsp": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@codemirror/autocomplete": "npm:^6.18.0"
     "@codemirror/commands": "npm:^6.8.0"
@@ -1791,6 +1792,22 @@ __metadata:
     rimraf: "npm:^6.1.2"
     ts-jest: "npm:^29.1.2"
     typescript: "npm:^5.6.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehubio/pages-lsp@workspace:*, @casehubio/pages-lsp@workspace:packages/pages-lsp":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-lsp@workspace:packages/pages-lsp"
+  dependencies:
+    "@casehubio/pages-schema": "workspace:*"
+    "@casehubio/pages-tsconfig": "workspace:*"
+    rimraf: "npm:^6.0.1"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.2.1"
+    vscode-languageserver: "npm:^10.0.0"
+    vscode-languageserver-textdocument: "npm:^1.0.12"
+    yaml: "npm:^2.7.1"
+    zod: "npm:^3.24.4"
   languageName: unknown
   linkType: soft
 
@@ -13434,7 +13451,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rimraf@npm:^6.1.0, rimraf@npm:^6.1.2":
+"rimraf@npm:^6.0.1, rimraf@npm:^6.1.0, rimraf@npm:^6.1.2":
   version: 6.1.3
   resolution: "rimraf@npm:6.1.3"
   dependencies:
@@ -15441,6 +15458,48 @@ __metadata:
   languageName: node
   linkType: hard
 
+"vscode-jsonrpc@npm:9.0.2":
+  version: 9.0.2
+  resolution: "vscode-jsonrpc@npm:9.0.2"
+  checksum: 10c0/5eb4a902a4aa5b13655ea997dfdad6d5760df6acfd0388d7fccb641dff719af3ee1b9d99dc7548e21fe62e356f6b196c0bd37590f813137c7d9b6670fa22b237
+  languageName: node
+  linkType: hard
+
+"vscode-languageserver-protocol@npm:3.18.3":
+  version: 3.18.3
+  resolution: "vscode-languageserver-protocol@npm:3.18.3"
+  dependencies:
+    vscode-jsonrpc: "npm:9.0.2"
+    vscode-languageserver-types: "npm:3.18.3"
+  checksum: 10c0/4bff493ec34caf16eebdbfbc2baa4f35e909340344ff22d5165277b4d2a2221d821eec3bd1edb12403cdbb6f8c5af7eae0fbc9865f21ff93445f54a90e558306
+  languageName: node
+  linkType: hard
+
+"vscode-languageserver-textdocument@npm:^1.0.12":
+  version: 1.0.14
+  resolution: "vscode-languageserver-textdocument@npm:1.0.14"
+  checksum: 10c0/06a4c6cc82d1f84be6240fcbd48d50c536dfecb1c60e9e7eadcf6bad40c5a4de288f4f1262e09f2be007ec2c96f4acbf3ce3eb139bc0e7c28c16571d1e382f2f
+  languageName: node
+  linkType: hard
+
+"vscode-languageserver-types@npm:3.18.3":
+  version: 3.18.3
+  resolution: "vscode-languageserver-types@npm:3.18.3"
+  checksum: 10c0/a750da5edbfb08a009b9fcfd780accff17c6312658eab7fcd29baf1bf8318578fdcd4de87a1e25754af7aec72aa5ee9218712614763f27e93313c85768ea17bf
+  languageName: node
+  linkType: hard
+
+"vscode-languageserver@npm:^10.0.0":
+  version: 10.1.1
+  resolution: "vscode-languageserver@npm:10.1.1"
+  dependencies:
+    vscode-languageserver-protocol: "npm:3.18.3"
+  bin:
+    installServerIntoExtension: bin/installServerIntoExtension
+  checksum: 10c0/b8b73ce7c6ee6d80cc4d61e4bd28c45cbb0756f48f1e618ab10d7ff25286c869cf2d2ad8cc61cccf04d997b5f996bbd829ef26203adb200be1baedbab20c2a8a
+  languageName: node
+  linkType: hard
+
 "w3c-keyname@npm:^2.2.4":
   version: 2.2.8
   resolution: "w3c-keyname@npm:2.2.8"
@@ -15988,7 +16047,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.7.0, yaml@npm:^2.9.0":
+"yaml@npm:^2.7.0, yaml@npm:^2.7.1, yaml@npm:^2.9.0":
   version: 2.9.0
   resolution: "yaml@npm:2.9.0"
   bin:
@@ -16070,7 +16129,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.23.0":
+"zod@npm:^3.23.0, zod@npm:^3.24.4":
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: 10c0/5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c

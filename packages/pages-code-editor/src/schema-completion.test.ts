@@ -5,7 +5,7 @@ import {
   navigateSchema,
   schemaToCompletions,
   isArrayField,
-} from "./schema-completion.js";
+} from "@casehubio/pages-lsp";
 import { dashboardSchema } from "@casehubio/pages-schema";
 
 describe("buildYamlContext", () => {

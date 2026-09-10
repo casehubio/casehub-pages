@@ -1,0 +1,73 @@
+import {
+  createConnection,
+  ProposedFeatures,
+  TextDocumentSyncKind,
+  DiagnosticSeverity,
+  CompletionItemKind,
+  MarkupKind,
+  type PublishDiagnosticsParams,
+  type CompletionItem,
+  type Hover,
+} from 'vscode-languageserver/node';
+import { createSchemaRegistry } from './schema-registry.js';
+import { createServerHandler } from './server.js';
+import { pageFormat } from './formats/page.js';
+
+const connection = createConnection(ProposedFeatures.all);
+const registry = createSchemaRegistry();
+registry.register(pageFormat);
+const handler = createServerHandler(registry);
+
+connection.onInitialize(() => ({
+  capabilities: {
+    textDocumentSync: TextDocumentSyncKind.Full,
+    completionProvider: handler.capabilities.completionProvider,
+    hoverProvider: handler.capabilities.hoverProvider,
+  },
+}));
+
+function toLspDiagnostics(notification: ReturnType<typeof handler.onDidOpen>): PublishDiagnosticsParams {
+  return {
+    uri: notification.uri,
+    diagnostics: notification.diagnostics.map(d => ({
+      range: d.range,
+      severity: d.severity as DiagnosticSeverity,
+      message: d.message,
+      source: d.source,
+    })),
+  };
+}
+
+connection.onDidOpenTextDocument((params) => {
+  connection.sendDiagnostics(toLspDiagnostics(handler.onDidOpen(params.textDocument.uri, params.textDocument.text)));
+});
+
+connection.onDidChangeTextDocument((params) => {
+  const content = params.contentChanges[0]?.text;
+  if (content === undefined) return;
+  connection.sendDiagnostics(toLspDiagnostics(handler.onDidChange(params.textDocument.uri, content)));
+});
+
+connection.onDidCloseTextDocument((params) => {
+  handler.onDidClose(params.textDocument.uri);
+});
+
+connection.onCompletion((params): CompletionItem[] => {
+  return handler.onCompletion(params.textDocument.uri, params.position).map(c => ({
+    label: c.label,
+    kind: c.kind as CompletionItemKind,
+    ...(c.insertText ? { insertText: c.insertText } : {}),
+    ...(c.detail ? { detail: c.detail } : {}),
+  }));
+});
+
+connection.onHover((params): Hover | null => {
+  const result = handler.onHover(params.textDocument.uri, params.position);
+  if (!result) return null;
+  return {
+    contents: { kind: MarkupKind.Markdown, value: result.contents.value },
+    ...(result.range ? { range: result.range } : {}),
+  };
+});
+
+connection.listen();
