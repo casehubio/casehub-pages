@@ -12,7 +12,7 @@ pages:
                 <strong>Delete:</strong> Select {Clean, Lookup}, press Delete &mdash; auto-joins Source2&rarr;Format. &bull; <strong>Splice:</strong> hold-drag (~300ms) onto a Chain 1 edge.
               </div>
               <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-                <graph-canvas-core id="ms-canvas" style="flex: 1; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden; min-height: 200px;"></pages-graph-canvas>
+                <graph-canvas-core id="ms-canvas" style="flex: 1; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden; min-height: 200px;"></graph-canvas-core>
               </div>
               <div style="font-family: var(--pages-font-family, system-ui);">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">

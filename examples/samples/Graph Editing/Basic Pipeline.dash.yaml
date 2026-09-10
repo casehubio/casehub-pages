@@ -10,4 +10,4 @@ pages:
       - type: html
         properties:
           content: |
-            <graph-canvas-core id="pipeline-canvas" style="width: 100%; height: 500px; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></pages-graph-canvas>
+            <graph-canvas-core id="pipeline-canvas" style="width: 100%; height: 500px; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></graph-canvas-core>
