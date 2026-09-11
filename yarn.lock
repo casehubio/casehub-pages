@@ -1801,6 +1801,7 @@ __metadata:
   dependencies:
     "@casehubio/pages-schema": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
+    esbuild: "npm:^0.28.1"
     rimraf: "npm:^6.0.1"
     typescript: "npm:^5.6.0"
     vitest: "npm:^3.2.1"
@@ -1808,6 +1809,8 @@ __metadata:
     vscode-languageserver-textdocument: "npm:^1.0.12"
     yaml: "npm:^2.7.1"
     zod: "npm:^3.24.4"
+  bin:
+    casehub-lsp: ./dist/server-node.bundle.cjs
   languageName: unknown
   linkType: soft
 
