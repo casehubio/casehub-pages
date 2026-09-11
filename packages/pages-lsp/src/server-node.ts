@@ -8,6 +8,11 @@ import {
   type PublishDiagnosticsParams,
   type CompletionItem,
   type Hover,
+  type HoverParams,
+  type PrepareRenameParams,
+  type RenameParams,
+  type DefinitionParams,
+  type ReferenceParams,
 } from 'vscode-languageserver/node';
 import { createSchemaRegistry } from './schema-registry.js';
 import { createServerHandler } from './server.js';
@@ -64,7 +69,7 @@ connection.onCompletion((params): CompletionItem[] => {
   }));
 });
 
-connection.onHover((params): Hover | null => {
+connection.onHover((params: HoverParams): Hover | null => {
   const result = handler.onHover(params.textDocument.uri, params.position);
   if (!result) return null;
   return {
@@ -73,26 +78,26 @@ connection.onHover((params): Hover | null => {
   };
 });
 
-connection.onPrepareRename((params) => {
+connection.onPrepareRename((params: PrepareRenameParams) => {
   const result = handler.onPrepareRename(params.textDocument.uri, params.position);
   if (!result) return null;
   return { range: result.range, placeholder: result.placeholder };
 });
 
-connection.onRenameRequest((params) => {
+connection.onRenameRequest((params: RenameParams) => {
   const result = handler.onRename(params.textDocument.uri, params.position, params.newName);
   if (!result) return null;
   return { changes: result.changes };
 });
 
-connection.onDefinition((params) => {
+connection.onDefinition((params: DefinitionParams) => {
   return handler.onDefinition(params.textDocument.uri, params.position).map(d => ({
     uri: d.uri,
     range: d.range,
   }));
 });
 
-connection.onReferences((params) => {
+connection.onReferences((params: ReferenceParams) => {
   return handler.onReferences(params.textDocument.uri, params.position).map(r => ({
     uri: r.uri,
     range: r.range,

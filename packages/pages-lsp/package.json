@@ -15,7 +15,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./node": "./dist/server-node.js",
-    "./browser": "./dist/server-browser.js"
+    "./browser": "./dist/server-browser.js",
+    "./page-format": "./dist/page-format.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
