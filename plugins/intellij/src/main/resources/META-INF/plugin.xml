@@ -1,0 +1,55 @@
+<idea-plugin>
+    <id>io.casehub.yaml</id>
+    <name>CaseHub YAML</name>
+    <vendor url="https://github.com/casehubio">CaseHub</vendor>
+    <description><![CDATA[
+    <p>Language intelligence for CaseHub YAML formats — completion, diagnostics, hover,
+    rename, find references — powered by the pages-lsp server.</p>
+
+    <h3>Supported formats</h3>
+    <ul>
+        <li><b>*.page.yaml</b> — Page definitions</li>
+        <li><b>*.case.yaml</b> — Case definitions</li>
+        <li><b>*.swf.yaml</b> — Serverless Workflow</li>
+        <li><b>*.htn.yaml</b> — HTN task networks</li>
+        <li><b>*.org.yaml</b> — Org structure</li>
+    </ul>
+
+    <h3>Requirements</h3>
+    <ul>
+        <li>Node.js 18+ on PATH</li>
+        <li><a href="https://plugins.jetbrains.com/plugin/23257-lsp4ij">LSP4IJ</a> plugin</li>
+    </ul>
+    ]]></description>
+
+    <change-notes><![CDATA[
+    <h3>0.1.0</h3>
+    <ul>
+        <li>Initial release — LSP client via LSP4IJ</li>
+        <li>Schema-driven completion, diagnostics, hover for all five CaseHub YAML formats</li>
+        <li>Rename, find references, go to definition</li>
+        <li>jq expression intelligence</li>
+    </ul>
+    ]]></change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.redhat.devtools.lsp4ij</depends>
+
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server id="casehub-yaml"
+                name="CaseHub YAML"
+                factoryClass="io.casehub.intellij.lsp.CaseHubLanguageServerFactory">
+            <description><![CDATA[
+            LSP server for CaseHub YAML formats — Page, CaseDefinition, SWF, HTN, Org Structure.
+            Provides schema-driven completion, diagnostics, hover, rename, and cross-file references.
+            ]]></description>
+        </server>
+
+        <fileNamePatternMapping patterns="*.page.yaml;*.dash.yaml"
+                                serverId="casehub-yaml"
+                                languageId="yaml"/>
+        <fileNamePatternMapping patterns="*.case.yaml;*.swf.yaml;*.htn.yaml;*.org.yaml"
+                                serverId="casehub-yaml"
+                                languageId="yaml"/>
+    </extensions>
+</idea-plugin>
