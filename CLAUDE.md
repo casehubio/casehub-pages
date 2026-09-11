@@ -16,6 +16,18 @@ Web application framework for the CaseHub platform — TypeScript runtime for co
 
 **Tier:** Integration (UI layer consumed by application-tier repos)
 
+## IntelliJ Plugin
+
+`plugins/intellij/` — Kotlin/Gradle project (not managed by Yarn). Requires JDK 21 and LSP4IJ plugin dependency.
+
+```bash
+# Build (requires pages-lsp bundle to exist first)
+JAVA_HOME=/path/to/jdk21 plugins/intellij/gradlew -p plugins/intellij buildPlugin
+
+# Verify compatibility
+JAVA_HOME=/path/to/jdk21 plugins/intellij/gradlew -p plugins/intellij verifyPlugin
+```
+
 ## Documentation
 
 This repo owns its own documentation, synced to parent via subtree:
