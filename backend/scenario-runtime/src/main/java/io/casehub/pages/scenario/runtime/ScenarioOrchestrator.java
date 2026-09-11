@@ -7,12 +7,10 @@ import io.casehub.pages.push.PushMessage;
 import io.casehub.pages.push.PushRequest;
 import io.casehub.pages.push.SessionSender;
 import io.casehub.pages.scenario.HierarchicalParser;
-import io.casehub.pages.scenario.OutlineNode;
-import io.casehub.pages.scenario.NarrativeContent;
 import io.casehub.pages.scenario.HierarchicalScenario;
 import io.casehub.pages.scenario.HierarchicalStep;
-import io.casehub.pages.scenario.ScenarioCommand;
-
+import io.casehub.pages.scenario.NarrativeContent;
+import io.casehub.pages.scenario.OutlineNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -38,6 +36,11 @@ public class ScenarioOrchestrator {
     private volatile boolean                            paused;
     private volatile double                             speed          = 1.0;
     private volatile String                             runToTarget;
+    private volatile String                             callbackUrl;
+    private volatile String                             dispatchId;
+    private volatile String                             callbackToken;
+    private final    ConcurrentHashMap<String, Map<String, Object>> stepResults = new ConcurrentHashMap<>();
+
 
     @Inject
     public ScenarioOrchestrator(SessionSender sender, EventBroadcaster broadcaster) {
@@ -63,6 +66,16 @@ public class ScenarioOrchestrator {
         broadcastState();
     }
 
+    public void start(String yaml, boolean startPaused,
+                      String callbackUrl, String dispatchId, String callbackToken) {
+        this.callbackUrl   = callbackUrl;
+        this.dispatchId    = dispatchId;
+        this.callbackToken = callbackToken;
+        this.stepResults.clear();
+        start(yaml, startPaused);
+    }
+
+
     public void stop() {
         if (this.sessionId == null) {return;}
         broadcastControl("stop", null);
@@ -70,6 +83,10 @@ public class ScenarioOrchestrator {
         this.scenario  = null;
         this.allSteps  = List.of();
         this.completedSteps.clear();
+        this.stepResults.clear();
+        this.callbackUrl   = null;
+        this.dispatchId    = null;
+        this.callbackToken = null;
         this.paused      = false;
         this.speed       = 1.0;
         this.runToTarget = null;
@@ -187,6 +204,16 @@ public class ScenarioOrchestrator {
     public void onStepResult(PushRequest.StepResult result) {
         if (sessionId == null || !sessionId.equals(result.sessionId())) {return;}
         completedSteps.put(result.stepName(), result.ok());
+        if (result.result() != null) {
+            stepResults.put(result.stepName(), result.result());
+        }
+
+        if (!result.ok() && scenario != null && "stop".equals(scenario.onError())) {
+            broadcastControl("stop", null);
+            fireCallback(true, "Step '" + result.stepName() + "' failed: " + result.error());
+            broadcastState();
+            return;
+        }
 
         String stepLabel = resolveLabel(result.stepName());
         if (runToTarget != null && (runToTarget.equals(result.stepName()) || runToTarget.equals(stepLabel))) {
@@ -200,11 +227,45 @@ public class ScenarioOrchestrator {
         if (result.ok()) {
             dispatchTriggeredSteps(result.stepName());
         }
+
+        if (completedSteps.size() == allSteps.size()) {
+            boolean anyFailed = completedSteps.values().stream().anyMatch(ok -> !ok);
+            fireCallback(anyFailed, anyFailed ? "One or more steps failed" : null);
+        }
     }
 
     private void broadcastState() {
         broadcaster.broadcast("scenario:state", state());
     }
+
+    record WorkerCompletionPayload(Map<String, Object> output, boolean faulted, String errorMessage) {}
+
+    private void fireCallback(boolean faulted, String errorMessage) {
+        if (callbackUrl == null) {return;}
+
+        Map<String, Object> output  = new java.util.LinkedHashMap<>(stepResults);
+        var                 payload = new WorkerCompletionPayload(output, faulted, errorMessage);
+
+        Thread.ofVirtual().start(() -> {
+            try {
+                var client = java.net.http.HttpClient.newHttpClient();
+                var body   = JSON.writeValueAsString(payload);
+                var request = java.net.http.HttpRequest.newBuilder()
+                                                       .uri(java.net.URI.create(callbackUrl + "/" + dispatchId))
+                                                       .header("Content-Type", "application/json")
+                                                       .header("X-Casehub-Callback-Token", callbackToken != null ? callbackToken : "")
+                                                       .POST(java.net.http.HttpRequest.BodyPublishers.ofString(body))
+                                                       .build();
+                var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding());
+                if (response.statusCode() >= 400) {
+                    System.err.println("Callback to " + callbackUrl + " returned " + response.statusCode());
+                }
+            } catch (Exception e) {
+                System.err.println("Callback to " + callbackUrl + " failed: " + e.getMessage());
+            }
+        });
+    }
+
 
     private void validateExecutors() {
         var missingExecutors = allSteps.stream()

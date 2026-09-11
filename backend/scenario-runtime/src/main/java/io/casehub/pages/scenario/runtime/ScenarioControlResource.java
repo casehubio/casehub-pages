@@ -13,14 +13,21 @@ public class ScenarioControlResource {
     @Inject
     ScenarioOrchestrator orchestrator;
 
-    public record StartRequest(String yaml, boolean paused) {}
+    public record StartRequest(String yaml, boolean paused,
+                               String callbackUrl, String dispatchId,
+                               String callbackToken) {}
     public record RunToRequest(String label) {}
     public record SpeedRequest(double speed) {}
 
     @POST
     @Path("/start")
     public ScenarioState start(StartRequest req) {
-        orchestrator.start(req.yaml(), req.paused());
+        if (req.callbackUrl() != null) {
+            orchestrator.start(req.yaml(), req.paused(),
+                req.callbackUrl(), req.dispatchId(), req.callbackToken());
+        } else {
+            orchestrator.start(req.yaml(), req.paused());
+        }
         return orchestrator.state();
     }
 

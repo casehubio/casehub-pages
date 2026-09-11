@@ -1,16 +1,19 @@
 package io.casehub.pages.scenario.runtime;
 
+import com.sun.net.httpserver.HttpServer;
 import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.InMemoryEventStore;
 import io.casehub.pages.push.PushRequest;
 import io.casehub.pages.push.TopicRegistry;
 import org.junit.jupiter.api.Test;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ScenarioOrchestratorTest {
 
@@ -493,4 +496,192 @@ class ScenarioOrchestratorTest {
         assertThat(dispatches).as("step-3 should be dispatched after runTo target completes")
             .hasSize(1);
     }
+
+    @Test
+    void callbackFiresOnCompletion() throws Exception {
+        var sent = createCapture();
+        var orchestrator = new ScenarioOrchestrator(
+                (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+                                        new PushRequest.ExecutorRegister("1", "helpdesk",
+                                                                         List.of("create-ticket", "verify-ticket")));
+
+        var yaml = """
+                   scenario: callback-test
+                   steps:
+                     - label: "Create"
+                       target: helpdesk
+                       commands:
+                         - action: create-ticket
+                     - label: "Verify"
+                       target: helpdesk
+                       commands:
+                         - action: verify-ticket
+                   """;
+
+        var server           = HttpServer.create(new InetSocketAddress(0), 0);
+        var receivedPayloads = new ArrayList<String>();
+        var receivedHeaders  = new ArrayList<String>();
+        server.createContext("/workers/complete/", exchange -> {
+            receivedPayloads.add(new String(exchange.getRequestBody().readAllBytes()));
+            receivedHeaders.add(exchange.getRequestHeaders().getFirst("X-Casehub-Callback-Token"));
+            exchange.sendResponseHeaders(200, 0);
+            exchange.close();
+        });
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            orchestrator.start(yaml, false,
+                               "http://localhost:" + port + "/workers/complete", "dispatch-123", "tok-abc");
+
+            String sessionId = orchestrator.sessionId();
+            orchestrator.onStepResult(new PushRequest.StepResult(
+                    "r1", sessionId, "Create", true, null, Map.of("ticketId", "T-001")));
+            orchestrator.onStepResult(new PushRequest.StepResult(
+                    "r2", sessionId, "Verify", true, null, Map.of("status", "TRIAGED")));
+
+            Thread.sleep(500);
+
+            assertThat(receivedPayloads).hasSize(1);
+            assertThat(receivedPayloads.getFirst()).contains("\"faulted\":false");
+            assertThat(receivedPayloads.getFirst()).contains("Create");
+            assertThat(receivedPayloads.getFirst()).contains("Verify");
+            assertThat(receivedHeaders.getFirst()).isEqualTo("tok-abc");
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void noCallbackWhenUrlIsNull() {
+        var orchestrator = new ScenarioOrchestrator((c, m) -> {}, noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+                                        new PushRequest.ExecutorRegister("1", "helpdesk",
+                                                                         List.of("create-ticket")));
+
+        var yaml = """
+                   scenario: no-callback-test
+                   steps:
+                     - label: "Create"
+                       target: helpdesk
+                       commands:
+                         - action: create-ticket
+                   """;
+        orchestrator.start(yaml);
+
+        String sessionId = orchestrator.sessionId();
+        orchestrator.onStepResult(new PushRequest.StepResult(
+                "r1", sessionId, "Create", true, null, Map.of()));
+
+        assertThat(orchestrator.state().progress()).isEqualTo(1.0);
+    }
+
+    @Test
+    void callbackFiresWithFaultedOnErrorStop() throws Exception {
+        var sent = createCapture();
+        var orchestrator = new ScenarioOrchestrator(
+                (connId, msg) -> sent.add(new SentMessage(connId, msg)), noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+                                        new PushRequest.ExecutorRegister("1", "helpdesk",
+                                                                         List.of("create-ticket", "verify-ticket")));
+
+        var yaml = """
+                   scenario: fault-test
+                   on-error: stop
+                   steps:
+                     - label: "Create"
+                       target: helpdesk
+                       commands:
+                         - action: create-ticket
+                     - label: "Verify"
+                       target: helpdesk
+                       commands:
+                         - action: verify-ticket
+                   """;
+
+        var server           = HttpServer.create(new InetSocketAddress(0), 0);
+        var receivedPayloads = new ArrayList<String>();
+        server.createContext("/workers/complete/", exchange -> {
+            receivedPayloads.add(new String(exchange.getRequestBody().readAllBytes()));
+            exchange.sendResponseHeaders(200, 0);
+            exchange.close();
+        });
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            orchestrator.start(yaml, false,
+                               "http://localhost:" + port + "/workers/complete", "dispatch-456", "tok-xyz");
+
+            String sessionId = orchestrator.sessionId();
+            orchestrator.onStepResult(new PushRequest.StepResult(
+                    "r1", sessionId, "Create", false, "ticket creation failed", Map.of()));
+
+            Thread.sleep(500);
+
+            assertThat(receivedPayloads).hasSize(1);
+            assertThat(receivedPayloads.getFirst()).contains("\"faulted\":true");
+            assertThat(receivedPayloads.getFirst()).contains("ticket creation failed");
+
+            assertThat(sent.stream().anyMatch(s -> s.message().contains("\"command\":\"stop\""))).isTrue();
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void naturalCompletionWithFailedStepSetsFaulted() throws Exception {
+        var orchestrator = new ScenarioOrchestrator((c, m) -> {}, noopBroadcaster());
+
+        orchestrator.onExecutorRegister("conn-1",
+                                        new PushRequest.ExecutorRegister("1", "helpdesk",
+                                                                         List.of("create-ticket", "verify-ticket")));
+
+        var yaml = """
+                   scenario: mixed-result-test
+                   steps:
+                     - label: "Create"
+                       target: helpdesk
+                       commands:
+                         - action: create-ticket
+                     - label: "Verify"
+                       target: helpdesk
+                       commands:
+                         - action: verify-ticket
+                   """;
+
+        var server           = HttpServer.create(new InetSocketAddress(0), 0);
+        var receivedPayloads = new ArrayList<String>();
+        server.createContext("/workers/complete/", exchange -> {
+            receivedPayloads.add(new String(exchange.getRequestBody().readAllBytes()));
+            exchange.sendResponseHeaders(200, 0);
+            exchange.close();
+        });
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            orchestrator.start(yaml, false,
+                               "http://localhost:" + port + "/workers/complete", "d-789", "tok");
+
+            String sessionId = orchestrator.sessionId();
+            orchestrator.onStepResult(new PushRequest.StepResult(
+                    "r1", sessionId, "Create", false, "failed", Map.of()));
+            orchestrator.onStepResult(new PushRequest.StepResult(
+                    "r2", sessionId, "Verify", true, null, Map.of()));
+
+            Thread.sleep(500);
+
+            assertThat(receivedPayloads).hasSize(1);
+            assertThat(receivedPayloads.getFirst()).contains("\"faulted\":true");
+        } finally {
+            server.stop(0);
+        }
+    }
+
+
 }

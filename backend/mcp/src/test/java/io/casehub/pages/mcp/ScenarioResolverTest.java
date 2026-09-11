@@ -54,7 +54,7 @@ class ScenarioResolverTest {
                 commands:
                   - action: click
             """;
-        var state = resolver.submit(yaml);
+        var state = resolver.submit(yaml, null, null, null);
         assertThat(state.scenario()).isEqualTo("mcp-test");
         assertThat(state.progress()).isEqualTo(0.0);
     }
@@ -71,7 +71,7 @@ class ScenarioResolverTest {
                 target: browser
                 commands:
                   - action: ready
-            """);
+            """, null, null, null);
 
         state = resolver.status();
         assertThat(state.scenario()).isEqualTo("status-test");
@@ -86,7 +86,7 @@ class ScenarioResolverTest {
                 target: browser
                 commands:
                   - action: ready
-            """);
+            """, null, null, null);
 
         var paused = resolver.pause();
         assertThat(paused.paused()).isTrue();
@@ -104,7 +104,7 @@ class ScenarioResolverTest {
                 target: browser
                 commands:
                   - action: ready
-            """);
+            """, null, null, null);
 
         var state = resolver.speed(2.0);
         assertThat(state.speed()).isEqualTo(2.0);
@@ -119,7 +119,7 @@ class ScenarioResolverTest {
                 target: browser
                 commands:
                   - action: ready
-            """);
+            """, null, null, null);
 
         assertThatThrownBy(() -> resolver.runTo("nonexistent"))
             .isInstanceOf(IllegalArgumentException.class)
@@ -139,7 +139,7 @@ class ScenarioResolverTest {
                 target: browser
                 commands:
                   - action: ready
-            """);
+            """, null, null, null);
 
         resolver.pause();
         var state = resolver.step();

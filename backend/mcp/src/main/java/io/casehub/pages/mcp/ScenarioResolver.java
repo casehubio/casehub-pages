@@ -19,8 +19,13 @@ public class ScenarioResolver {
     ScenarioOrchestrator orchestrator;
 
     @Mutation("scenarioSubmit")
-    public ScenarioState submit(String yaml) {
-        orchestrator.start(yaml);
+    public ScenarioState submit(String yaml, String callbackUrl,
+                                String dispatchId, String callbackToken) {
+        if (callbackUrl != null) {
+            orchestrator.start(yaml, false, callbackUrl, dispatchId, callbackToken);
+        } else {
+            orchestrator.start(yaml);
+        }
         return orchestrator.state();
     }
 
