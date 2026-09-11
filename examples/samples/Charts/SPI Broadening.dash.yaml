@@ -121,10 +121,24 @@ pages:
               - type: markdown
                 properties:
                   content: >
-                    **Step line** (`step: end`, `showSymbol: false`) and
-                    **rose pie** (`roseType: radius`, `startAngle: 135`).
+                    **Per-chart series properties** — barWidth, step line,
+                    pie roseType, and meter angle customisation.
+              - type: bar-chart
+                properties:
+                  height: 250px
+                  lookup:
+                    uuid: products
+                    group:
+                      - columnGroup:
+                          source: product
+                        functions:
+                          - source: product
+                          - source: q1
+                  barWidth: 20
+                  barGap: "30%"
               - type: line-chart
                 properties:
+                  height: 250px
                   lookup:
                     uuid: monthly
                     group:
@@ -137,6 +151,7 @@ pages:
                   showSymbol: false
               - type: pie-chart
                 properties:
+                  height: 250px
                   lookup:
                     uuid: pie-data
                     group:
@@ -147,6 +162,22 @@ pages:
                           - source: headcount
                   roseType: radius
                   startAngle: 135
+              - type: meter
+                properties:
+                  height: 250px
+                  lookup:
+                    uuid: pie-data
+                    group:
+                      - columnGroup:
+                          source: department
+                        functions:
+                          - source: headcount
+                  end: 100
+                  warning: 60
+                  critical: 80
+                  startAngle: 225
+                  endAngle: -45
+                  clockwise: true
 
           Cartesian Axis:
             components:
