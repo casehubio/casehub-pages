@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { SymbolOccurrence } from './refactoring/types.js';
 
 export interface DocumentInspector {
   hasKey(path: string[]): boolean;
@@ -25,6 +26,7 @@ export interface FormatRegistration {
   documentSchema: z.ZodType;
   variantDispatchers?: Map<string, VariantDispatch>;
   refactoringCapabilities?: RefactoringCaps;
+  symbolExtractor?: (content: string) => SymbolOccurrence[];
 }
 
 export interface SchemaRegistry {

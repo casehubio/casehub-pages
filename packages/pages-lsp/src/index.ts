@@ -19,3 +19,5 @@ export { handleCompletion, type CompletionItem } from './completion.js';
 export { computeDiagnostics, type Diagnostic } from './diagnostics.js';
 export { handleHover, type HoverResult } from './hover.js';
 export { initializeServer, createServerHandler, type ServerCapabilities, type ServerHandler } from './server.js';
+export type { SymbolOccurrence, SymbolExtractor, TextEdit, WorkspaceEdit, LocatedSymbol } from './refactoring/index.js';
+export { pageSymbolExtractor, prepareRename, computeRename, createWorkspaceIndex, type WorkspaceSymbolIndex } from './refactoring/index.js';

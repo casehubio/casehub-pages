@@ -1,5 +1,6 @@
 import { parseDocument } from 'yaml';
 import type { SchemaRegistry } from './types.js';
+import { offsetToPosition } from './utils.js';
 
 export interface Diagnostic {
   range: {
@@ -9,18 +10,6 @@ export interface Diagnostic {
   severity: 1 | 2 | 3 | 4;
   message: string;
   source: string;
-}
-
-function offsetToPosition(content: string, offset: number): { line: number; character: number } {
-  let line = 0;
-  let lastNewline = -1;
-  for (let i = 0; i < offset && i < content.length; i++) {
-    if (content[i] === '\n') {
-      line++;
-      lastNewline = i;
-    }
-  }
-  return { line, character: offset - lastNewline - 1 };
 }
 
 export function computeDiagnostics(

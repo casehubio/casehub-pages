@@ -26,6 +26,9 @@ connection.onInitialize(() => ({
     textDocumentSync: TextDocumentSyncKind.Full,
     completionProvider: handler.capabilities.completionProvider,
     hoverProvider: handler.capabilities.hoverProvider,
+    renameProvider: { prepareProvider: true },
+    definitionProvider: true,
+    referencesProvider: true,
   },
 }));
 
@@ -71,6 +74,32 @@ connection.onHover((params): Hover | null => {
     contents: { kind: MarkupKind.Markdown, value: result.contents.value },
     ...(result.range ? { range: result.range } : {}),
   };
+});
+
+connection.onPrepareRename((params) => {
+  const result = handler.onPrepareRename(params.textDocument.uri, params.position);
+  if (!result) return null;
+  return { range: result.range, placeholder: result.placeholder };
+});
+
+connection.onRenameRequest((params) => {
+  const result = handler.onRename(params.textDocument.uri, params.position, params.newName);
+  if (!result) return null;
+  return { changes: result.changes };
+});
+
+connection.onDefinition((params) => {
+  return handler.onDefinition(params.textDocument.uri, params.position).map(d => ({
+    uri: d.uri,
+    range: d.range,
+  }));
+});
+
+connection.onReferences((params) => {
+  return handler.onReferences(params.textDocument.uri, params.position).map(r => ({
+    uri: r.uri,
+    range: r.range,
+  }));
 });
 
 connection.listen();
