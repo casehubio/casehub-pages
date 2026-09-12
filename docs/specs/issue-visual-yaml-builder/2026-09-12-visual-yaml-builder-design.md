@@ -154,12 +154,40 @@ tree shows partial structure, and the property panel still works for valid nodes
 This is critical for bidirectional sync: a user typing mid-expression produces
 temporarily invalid YAML that must not blow up the visual side.
 
-**Undo/redo strategy:** String snapshots. Each mutation pushes the pre-mutation
-`toString()` result onto the undo stack. Undo replaces the held `Document` by
+**Undo/redo strategy:** String snapshots with mode-aware dispatch.
+
+*Snapshot mechanism:* Each visual mutation pushes the pre-mutation `toString()`
+result onto the facade's undo stack. Undo replaces the held `Document` by
 re-parsing the snapshot string. For typical page YAML (5-50KB), `parseDocument()`
 completes in <1ms. Stack limit: 50 entries. This is the simplest correct approach —
 operational transform patches add implementation complexity without meaningful
 performance benefit at page-document scale.
+
+*Mode-aware undo:* Two independent undo stacks operate on the same document:
+
+1. **Facade stack** — string snapshots pushed on each visual mutation (tree,
+   palette, property panel). Operation-level granularity: "add component",
+   "set property", "move node".
+2. **CodeMirror history** — built-in `history()` extension recording text edits.
+   Character-level granularity with automatic grouping by typing session.
+
+`Ctrl+Z` / `Ctrl+Shift+Z` dispatch to whichever stack owns the focused panel:
+- YAML pane focused → CodeMirror handles undo/redo (character-level text undo)
+- Tree, palette, or property panel focused → facade handles undo/redo (operation-level)
+
+*Cross-mode synchronization:* When focus moves from the YAML pane to a visual panel
+(tree, palette, property panel), the facade captures the current document state as
+a synchronization snapshot. This ensures the facade stack stays coherent with any
+text changes the user made — visual undo starts from the current document, not from
+a stale pre-text-edit state. Conversely, when the facade pushes updated text to
+CodeMirror (after a visual mutation), CodeMirror records it in its own history.
+
+*Cross-mode limitation:* Visual undo cannot undo text edits, and text undo cannot
+undo visual mutations. This matches how multi-panel editors (VS Code, IntelliJ)
+handle undo across independent editing surfaces. The user's mental model is
+"undo my last action in this panel." The spec intentionally does not attempt a
+unified undo stack — the granularity mismatch (operation-level vs character-level)
+makes unification both complex and confusing to the user.
 
 ```typescript
 type LayoutMode = 'rows' | 'columns' | 'flat'
