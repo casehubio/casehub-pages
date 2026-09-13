@@ -216,7 +216,7 @@ function describeType(schema: z.ZodType): string | undefined {
   return undefined;
 }
 
-export function schemaToCompletions(schema: z.ZodType): CompletionEntry[] {
+export function schemaToCompletions(schema: z.ZodType, siblings?: Record<string, string>): CompletionEntry[] {
   const unwrapped = unwrap(schema);
   const tn = typeName(unwrapped);
 
@@ -283,9 +283,21 @@ export function schemaToCompletions(schema: z.ZodType): CompletionEntry[] {
   }
 
   if (tn === 'ZodUnion') {
+    const options = (unwrapped._def as { options: z.ZodType[] }).options;
+    if (siblings && Object.keys(siblings).length > 0) {
+      const siblingKeys = new Set(Object.keys(siblings));
+      const matching = options.filter(opt => {
+        const optShape = getShape(unwrap(opt));
+        if (!optShape) return false;
+        return [...siblingKeys].some(k => k in optShape);
+      });
+      if (matching.length === 1) {
+        return schemaToCompletions(matching[0]!, siblings);
+      }
+    }
     const allCompletions: CompletionEntry[] = [];
-    for (const option of (unwrapped._def as { options: z.ZodType[] }).options) {
-      allCompletions.push(...schemaToCompletions(option));
+    for (const option of options) {
+      allCompletions.push(...schemaToCompletions(option, siblings));
     }
     const seen = new Set<string>();
     return allCompletions.filter((c) => {
@@ -297,7 +309,7 @@ export function schemaToCompletions(schema: z.ZodType): CompletionEntry[] {
 
   if (tn === 'ZodRecord') {
     const valueType = unwrap((unwrapped._def as { valueType: z.ZodType }).valueType);
-    return schemaToCompletions(valueType);
+    return schemaToCompletions(valueType, siblings);
   }
 
   if (tn === 'ZodIntersection') {

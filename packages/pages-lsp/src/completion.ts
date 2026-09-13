@@ -55,14 +55,17 @@ export function handleCompletion(
   const resolved = navigateSchema(format.documentSchema, yamlCtx.path, yamlCtx.siblings);
   if (!resolved) return [];
 
-  const completions = schemaToCompletions(resolved);
+  const completions = schemaToCompletions(resolved, yamlCtx.siblings);
   const needsDash = isArrayField(format.documentSchema, yamlCtx.path, yamlCtx.siblings)
     && !textBefore.trimStart().startsWith('-');
 
-  return completions.map(c => ({
-    label: needsDash ? '- ' + c.label : c.label,
-    kind: c.type === 'property' ? PROPERTY_KIND : ENUM_MEMBER_KIND,
-    insertText: needsDash ? '- ' + (c.apply || c.label) : c.apply || c.label,
-    ...(c.detail ? { detail: c.detail } : {}),
-  }));
+  const siblingKeys = new Set(Object.keys(yamlCtx.siblings));
+  return completions
+    .filter(c => c.type !== 'property' || !siblingKeys.has(c.label))
+    .map(c => ({
+      label: needsDash ? '- ' + c.label : c.label,
+      kind: c.type === 'property' ? PROPERTY_KIND : ENUM_MEMBER_KIND,
+      insertText: needsDash ? '- ' + (c.apply || c.label) : c.apply || c.label,
+      ...(c.detail ? { detail: c.detail } : {}),
+    }));
 }
