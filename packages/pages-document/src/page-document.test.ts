@@ -398,4 +398,87 @@ describe('PageDocument', () => {
       expect(yaml).toContain('type: metric');
     });
   });
+
+  describe('transaction API', () => {
+    it('compound operation is a single undo step', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart
+      - type: line-chart`);
+      const page = doc.getPages()[0]!;
+      expect(page.getComponents()).toHaveLength(2);
+
+      doc.beginTransaction();
+      page.removeChild(1);
+      page.removeChild(0);
+      page.addComponent('pie-chart');
+      doc.commitTransaction();
+
+      expect(page.getComponents()).toHaveLength(1);
+      expect(doc.getPages()[0]!.getComponents()[0]!.type).toBe('pie-chart');
+
+      doc.undo();
+      const restored = doc.getPages()[0]!.getComponents();
+      expect(restored).toHaveLength(2);
+      expect(restored[0]!.type).toBe('bar-chart');
+      expect(restored[1]!.type).toBe('line-chart');
+    });
+
+    it('suppresses notifications during transaction, fires one on commit', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart`);
+      const notifications: string[] = [];
+      doc.onChange(() => notifications.push('changed'));
+
+      doc.beginTransaction();
+      doc.getPages()[0]!.addComponent('line-chart');
+      doc.getPages()[0]!.addComponent('pie-chart');
+      expect(notifications).toHaveLength(0);
+
+      doc.commitTransaction();
+      expect(notifications).toHaveLength(1);
+    });
+
+    it('abortTransaction restores pre-transaction state', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart`);
+      const original = doc.toString();
+
+      doc.beginTransaction();
+      doc.getPages()[0]!.removeChild(0);
+      expect(doc.getPages()[0]!.getComponents()).toHaveLength(0);
+
+      doc.abortTransaction();
+      expect(doc.toString()).toBe(original);
+      expect(doc.getPages()[0]!.getComponents()).toHaveLength(1);
+      expect(doc.canUndo()).toBe(false);
+    });
+
+    it('beginTransaction throws if already in transaction', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1`);
+      doc.beginTransaction();
+      expect(() => doc.beginTransaction()).toThrow();
+      doc.commitTransaction();
+    });
+
+    it('abortTransaction fires no notification', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart`);
+      const notifications: string[] = [];
+      doc.onChange(() => notifications.push('changed'));
+
+      doc.beginTransaction();
+      doc.getPages()[0]!.removeChild(0);
+      doc.abortTransaction();
+      expect(notifications).toHaveLength(0);
+    });
+  });
 });

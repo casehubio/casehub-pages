@@ -24,6 +24,8 @@ export class PageDocument {
   private _undoStack: string[] = [];
   private _redoStack: string[] = [];
   private _listeners: Array<(yaml: string) => void> = [];
+  private _inTransaction = false;
+  private _transactionSnapshot: string | null = null;
 
   private constructor(doc: Document, diagnostics: Diagnostic[]) {
     this._doc = doc;
@@ -79,6 +81,7 @@ export class PageDocument {
   }
 
   private _notify(): void {
+    if (this._inTransaction) return;
     const yaml = this.toString();
     for (const l of this._listeners) l(yaml);
   }
@@ -86,10 +89,39 @@ export class PageDocument {
   // --- Undo/Redo ---
 
   private _pushUndo(): void {
+    if (this._inTransaction) return;
     this._undoStack.push(this.toString());
     if (this._undoStack.length > MAX_UNDO_STACK) {
       this._undoStack.shift();
     }
+    this._redoStack.length = 0;
+  }
+
+  // --- Transaction API ---
+
+  beginTransaction(): void {
+    if (this._inTransaction) throw new Error('Already in transaction');
+    this._inTransaction = true;
+    this._transactionSnapshot = this.toString();
+    this._undoStack.push(this._transactionSnapshot);
+    if (this._undoStack.length > MAX_UNDO_STACK) {
+      this._undoStack.shift();
+    }
+    this._redoStack.length = 0;
+  }
+
+  commitTransaction(): void {
+    this._inTransaction = false;
+    this._transactionSnapshot = null;
+    this._notify();
+  }
+
+  abortTransaction(): void {
+    if (!this._inTransaction) return;
+    this._inTransaction = false;
+    this._doc = parseDocument(this._transactionSnapshot!, { keepSourceTokens: true });
+    this._transactionSnapshot = null;
+    this._undoStack.pop();
     this._redoStack.length = 0;
   }
 
