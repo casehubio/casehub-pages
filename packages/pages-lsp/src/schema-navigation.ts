@@ -295,6 +295,11 @@ export function schemaToCompletions(schema: z.ZodType): CompletionEntry[] {
     });
   }
 
+  if (tn === 'ZodRecord') {
+    const valueType = unwrap((unwrapped._def as { valueType: z.ZodType }).valueType);
+    return schemaToCompletions(valueType);
+  }
+
   if (tn === 'ZodIntersection') {
     const def = unwrapped._def as { left: z.ZodType; right: z.ZodType };
     const left = schemaToCompletions(def.left);

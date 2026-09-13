@@ -143,3 +143,39 @@ describe('isArrayField', () => {
     expect(isArrayField(pageSchema, ['pages', 'name'])).toBe(false);
   });
 });
+
+describe('ZodRecord support', () => {
+  const taskDef = z.object({
+    call: z.string().optional(),
+    set: z.record(z.unknown()).optional(),
+    switch: z.array(z.unknown()).optional(),
+  });
+  const workflowSchema = z.object({
+    do: z.array(z.record(taskDef)),
+  });
+
+  it('navigateSchema walks through ZodRecord value type', () => {
+    const result = navigateSchema(workflowSchema, ['do', 'myTask']);
+    expect(result).not.toBeNull();
+    const completions = schemaToCompletions(result!);
+    const labels = completions.map(c => c.label);
+    expect(labels).toContain('call');
+    expect(labels).toContain('set');
+    expect(labels).toContain('switch');
+  });
+
+  it('schemaToCompletions returns value type properties for ZodRecord', () => {
+    const recordSchema = z.record(taskDef);
+    const completions = schemaToCompletions(recordSchema);
+    const labels = completions.map(c => c.label);
+    expect(labels).toContain('call');
+    expect(labels).toContain('set');
+    expect(labels).toContain('switch');
+  });
+
+  it('returns empty completions for ZodRecord with z.unknown() value', () => {
+    const emptyRecord = z.record(z.unknown());
+    const completions = schemaToCompletions(emptyRecord);
+    expect(completions).toEqual([]);
+  });
+});
