@@ -141,6 +141,8 @@ export interface SiteOptions {
   readonly devAuth?: DevAuthConfig;
   readonly themeName?: string;
   readonly zoneEngine?: ZoneLayoutEngine;
+  readonly editMode?: boolean;
+  readonly onYamlChange?: (yaml: string) => void;
 }
 
 export async function loadSite(
@@ -148,6 +150,10 @@ export async function loadSite(
   source: string | Component,
   options?: SiteOptions,
 ): Promise<LiveSite> {
+  if (options?.editMode && typeof source === "string") {
+    return mountBuilderShell(target, source, options);
+  }
+
   let root: Component;
   try {
     root = typeof source === "string" ? parsePage(yamlLoad(source)) : source;
@@ -1501,4 +1507,37 @@ function showErrorBanner(container: HTMLElement, message: string): void {
   container.insertBefore(banner, container.firstChild);
 
   setTimeout(() => { if (banner.isConnected) banner.remove(); }, 5000);
+}
+
+async function mountBuilderShell(
+  target: HTMLElement,
+  yaml: string,
+  options: SiteOptions,
+): Promise<LiveSite> {
+  const shell = document.createElement("pages-builder-shell");
+  (shell as any).yaml = yaml;
+  target.appendChild(shell);
+
+  if (options.onYamlChange) {
+    shell.addEventListener("builder-change", ((e: CustomEvent<{yaml: string}>) => {
+      options.onYamlChange!(e.detail.yaml);
+    }) as EventListener);
+  }
+
+  const layout: LayoutState = options.layout ?? { panels: [], floatingFrames: [] };
+  const emptyRoot: Component = { type: "panel", props: {} };
+  return {
+    root: emptyRoot,
+    page() { return null; },
+    dataset() { return null; },
+    state: { currentPage: "", activeFilters: {}, sort: {}, pagination: {}, textFilter: {} },
+    navigate() {},
+    setTheme(mode: "light" | "dark") {
+      const themeBaseName = options.themeName ?? "default";
+      applyTheme(`${themeBaseName}-${mode}`, target);
+    },
+    dispose() { shell.remove(); },
+    layout,
+    activateDockPanel() { return false; },
+  };
 }
