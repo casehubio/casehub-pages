@@ -18,7 +18,12 @@ import { createSchemaRegistry } from './schema-registry.js';
 import { createServerHandler } from './server.js';
 import { pageFormat } from './formats/page.js';
 
-const log = (msg: string) => process.stderr.write(`[casehub-lsp] ${msg}\n`);
+import { appendFileSync } from 'node:fs';
+const log = (msg: string) => {
+  const line = `[${new Date().toISOString()}] ${msg}\n`;
+  process.stderr.write(`[casehub-lsp] ${msg}\n`);
+  try { appendFileSync('/tmp/casehub-lsp.log', line); } catch {}
+};
 
 const connection = createConnection(ProposedFeatures.all);
 const registry = createSchemaRegistry();
