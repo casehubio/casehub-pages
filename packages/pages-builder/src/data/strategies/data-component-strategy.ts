@@ -12,7 +12,9 @@ const CITIES = [
 
 export class DataComponentStrategy implements PreviewDataStrategy {
   generate(props: Record<string, unknown>, datasets: DatasetNode[]): DatasetSnapshot[] {
-    const lookup = props['lookup'] as Record<string, unknown> | undefined;
+    const lookupRaw = props['lookup'];
+    if (!lookupRaw) return [];
+    const lookup = typeof (lookupRaw as any).toJSON === 'function' ? (lookupRaw as any).toJSON() : lookupRaw as Record<string, unknown>;
     if (!lookup?.['uuid']) return [];
     const uuid = String(lookup['uuid']);
     const ds = datasets.find(d => d.uuid === uuid);
