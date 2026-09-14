@@ -125,6 +125,8 @@ module.exports = (env = {}) => {
         "@casehubio/graph-core": path.resolve(__dirname, "../packages/graph-core"),
         "@casehubio/graph-renderer": path.resolve(__dirname, "../packages/graph-renderer"),
         "@casehubio/pages-property-palette": path.resolve(__dirname, "../packages/pages-property-palette"),
+        "@casehubio/pages-builder": path.resolve(__dirname, "../packages/pages-builder"),
+        "@casehubio/pages-document": path.resolve(__dirname, "../packages/pages-document"),
         "@xyflow/react/dist/style.css": path.resolve(__dirname, "../packages/graph-renderer/node_modules/@xyflow/react/dist/style.css"),
       },
     },

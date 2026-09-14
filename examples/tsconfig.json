@@ -20,6 +20,12 @@
     },
     {
       "path": "../packages/pages-ui"
+    },
+    {
+      "path": "../packages/pages-builder"
+    },
+    {
+      "path": "../packages/pages-document"
     }
   ]
 }
