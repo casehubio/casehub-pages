@@ -632,10 +632,11 @@ export class ComponentNode {
     if (props && Object.keys(props).length > 0) entry['properties'] = props;
     const compNode = doc.createNode(entry);
 
-    const slotDesc = desc.slots.find(s => {
-      if (s.kind === 'named-record') return true;
-      return s.yamlKey === slot;
-    });
+    let slotDesc = desc.slots.find(s => s.yamlKey === slot);
+    const isNamedEntry = !slotDesc && desc.slots.some(s => s.kind === 'named-record');
+    if (!slotDesc && isNamedEntry) {
+      slotDesc = desc.slots.find(s => s.kind === 'named-record');
+    }
     if (!slotDesc) throw new Error(`Invalid slot "${slot}" for ${this.type}`);
 
     if (slotDesc.kind === 'named-record') {
@@ -696,10 +697,16 @@ export class ComponentNode {
       const parentPath = this.path.slice(0, -1);
       const currentIndex = this.path[this.path.length - 1] as number;
       const oldProps = this.getProperties();
+      const targetSchema = componentSchemaRegistry.get(newType);
       const entry: Record<string, unknown> = { type: newType };
       const compatible: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(oldProps)) {
-        compatible[key] = value;
+        const jsVal = typeof (value as any)?.toJSON === 'function' ? (value as any).toJSON() : value;
+        if (targetSchema) {
+          const shape = targetSchema.shape as Record<string, unknown> | undefined;
+          if (shape && !(key in shape)) continue;
+        }
+        compatible[key] = jsVal;
       }
       if (Object.keys(compatible).length > 0) entry['properties'] = compatible;
       doc.deleteIn(this.path as (string | number)[]);

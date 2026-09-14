@@ -26,6 +26,11 @@ export class PagesDockWorkbench extends LitElement {
     this._loadPersisted();
   }
 
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this._persistDebounceTimer);
+  }
+
   private _loadPersisted(): void {
     if (!this.persistKey || typeof localStorage === 'undefined') return;
     try {
