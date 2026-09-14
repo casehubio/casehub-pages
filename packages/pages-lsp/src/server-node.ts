@@ -31,7 +31,10 @@ connection.onInitialize((params) => {
   log(`initialize: rootUri=${params.rootUri ?? 'none'}`);
   return {
     capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Full,
+      textDocumentSync: {
+        openClose: true,
+        change: TextDocumentSyncKind.Full,
+      },
       completionProvider: handler.capabilities.completionProvider,
       hoverProvider: handler.capabilities.hoverProvider,
       renameProvider: { prepareProvider: true },
