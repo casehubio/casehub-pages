@@ -4,7 +4,9 @@ import type { PagesDockWorkbench } from '@casehubio/pages-primitives/dock';
 import { customElement, property, state } from 'lit/decorators.js';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
 import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
+import { expand } from '@casehubio/yaml-core/expand';
 import { EditorView } from '@codemirror/view';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import type { PropertyPaletteSource } from '@casehubio/pages-property-palette/types';
 import type { PaletteContext } from '../catalog/palette-context.js';
 import type { ComponentCatalogEntry } from '../catalog/component-catalog.js';
@@ -157,13 +159,28 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
   }
 
+  private _expandYamlForPreview(yamlText: string): string {
+    try {
+      const parsed = parseYaml(yamlText) as Record<string, unknown> | null;
+      if (!parsed || typeof parsed !== 'object') return yamlText;
+      const hasYamlCore = ['variables', 'modules', 'imports', 'iterations', 'data']
+        .some(k => k in parsed);
+      if (!hasYamlCore) return yamlText;
+      const result = expand(parsed, { strict: false });
+      return stringifyYaml(result.map);
+    } catch {
+      return yamlText;
+    }
+  }
+
   private _refreshPreview(): void {
     if (this._viewMode === 'source') return;
     requestAnimationFrame(() => {
       const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
       if (!container) return;
       if (this.renderPreview) {
-        this.renderPreview(container, this._document.toString());
+        const yamlText = this._document.toString();
+        this.renderPreview(container, this._expandYamlForPreview(yamlText));
       } else {
         container.innerHTML = '<div class="preview-placeholder">Visual preview — provide renderPreview callback to enable live rendering</div>';
       }

@@ -1534,6 +1534,7 @@ __metadata:
     "@casehubio/pages-property-palette": "workspace:*"
     "@casehubio/pages-schema": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/yaml-core": "workspace:*"
     "@codemirror/state": "npm:^6.5.2"
     "@codemirror/view": "npm:^6.36.5"
     lit: "npm:^3.3.3"

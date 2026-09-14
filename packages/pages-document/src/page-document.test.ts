@@ -853,4 +853,43 @@ describe('PageDocument', () => {
       expect(doc.getPages()[0]!.getComponents()[1]!.type).toBe('pie-chart');
     });
   });
+
+  describe('yaml-core accessors', () => {
+    it('returns modules from document', () => {
+      const doc = PageDocument.parse('modules:\n  greeting:\n    parameters:\n      name:\n        type: STRING\n');
+      const modules = doc.getModules();
+      expect(modules).toBeDefined();
+      expect(modules!['greeting']).toBeDefined();
+    });
+
+    it('returns undefined when no modules', () => {
+      const doc = PageDocument.parse(MINIMAL_PAGE);
+      expect(doc.getModules()).toBeUndefined();
+    });
+
+    it('returns imports from document', () => {
+      const doc = PageDocument.parse('imports:\n  - module: greeting\n    as: hi\n');
+      const imports = doc.getImports();
+      expect(imports).toBeDefined();
+      expect(imports).toHaveLength(1);
+      expect((imports![0] as any).module).toBe('greeting');
+    });
+
+    it('returns undefined when no imports', () => {
+      const doc = PageDocument.parse(MINIMAL_PAGE);
+      expect(doc.getImports()).toBeUndefined();
+    });
+
+    it('returns variables from document', () => {
+      const doc = PageDocument.parse('variables:\n  theme:\n    color: blue\n');
+      const vars = doc.getVariables();
+      expect(vars).toBeDefined();
+      expect((vars!['theme'] as any).color).toBe('blue');
+    });
+
+    it('returns undefined when no variables', () => {
+      const doc = PageDocument.parse(MINIMAL_PAGE);
+      expect(doc.getVariables()).toBeUndefined();
+    });
+  });
 });

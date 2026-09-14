@@ -161,6 +161,39 @@ describe('buildTreeModel', () => {
     const comp = model[0]!.children[0]!.children[0]!;
     expect(comp.label).toBe('Bar Chart');
   });
+
+  it('builds Modules section when modules present', () => {
+    const doc = PageDocument.parse(`modules:\n  greeting:\n    parameters:\n      name:\n        type: STRING\npages:\n- name: P\n  components:\n  - type: title\n`);
+    const model = buildTreeModel(doc);
+    const modulesSection = model.find(s => s.label === 'Modules');
+    expect(modulesSection).toBeDefined();
+    expect(modulesSection!.nodeType).toBe('section');
+    expect(modulesSection!.children).toHaveLength(1);
+    expect(modulesSection!.children[0]!.label).toBe('greeting');
+    expect(modulesSection!.children[0]!.nodeType).toBe('module');
+  });
+
+  it('builds Imports section when imports present', () => {
+    const doc = PageDocument.parse(`imports:\n  - module: greeting\n    as: hi\npages:\n- name: P\n  components:\n  - type: title\n`);
+    const model = buildTreeModel(doc);
+    const importsSection = model.find(s => s.label === 'Imports');
+    expect(importsSection).toBeDefined();
+    expect(importsSection!.nodeType).toBe('section');
+    expect(importsSection!.children).toHaveLength(1);
+    expect(importsSection!.children[0]!.label).toBe('hi');
+    expect(importsSection!.children[0]!.nodeType).toBe('import');
+  });
+
+  it('builds Variables section when variables present', () => {
+    const doc = PageDocument.parse(`variables:\n  theme:\n    color: blue\npages:\n- name: P\n  components:\n  - type: title\n`);
+    const model = buildTreeModel(doc);
+    const varsSection = model.find(s => s.label === 'Variables');
+    expect(varsSection).toBeDefined();
+    expect(varsSection!.nodeType).toBe('section');
+    expect(varsSection!.children).toHaveLength(1);
+    expect(varsSection!.children[0]!.label).toBe('theme');
+    expect(varsSection!.children[0]!.nodeType).toBe('variable');
+  });
 });
 
 describe('computeMenuItems', () => {

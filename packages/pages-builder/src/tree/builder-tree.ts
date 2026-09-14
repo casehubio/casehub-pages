@@ -7,7 +7,7 @@ import { computeMenuItems } from './tree-context-menu.js';
 import { computeDropPosition, computeDropTarget, isValidDrop, type DropTarget } from './tree-dnd.js';
 import '@casehubio/pages-primitives/context-menu';
 
-export type TreeNodeType = 'page' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'section';
+export type TreeNodeType = 'page' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section';
 
 export interface TreeNodeInfo {
   readonly label: string;
@@ -118,8 +118,71 @@ function buildNavItemNode(nav: NavTreeNode): TreeNodeInfo {
   };
 }
 
+function buildModuleNode(name: string): TreeNodeInfo {
+  return {
+    label: name,
+    icon: 'extension',
+    nodeType: 'module',
+    path: ['modules', name],
+    children: [],
+  };
+}
+
+function buildImportNode(imp: Record<string, unknown>): TreeNodeInfo {
+  return {
+    label: (imp['as'] as string) ?? (imp['module'] as string) ?? 'Import',
+    icon: 'link',
+    nodeType: 'import',
+    path: ['imports'],
+    children: [],
+  };
+}
+
+function buildVariableNode(prefix: string): TreeNodeInfo {
+  return {
+    label: prefix,
+    icon: 'data_object',
+    nodeType: 'variable',
+    path: ['variables', prefix],
+    children: [],
+  };
+}
+
 export function buildTreeModel(doc: PageDocument): TreeNodeInfo[] {
   const sections: TreeNodeInfo[] = [];
+
+  const modules = doc.getModules();
+  if (modules) {
+    sections.push({
+      label: 'Modules',
+      icon: 'library_books',
+      nodeType: 'section',
+      path: ['modules'],
+      children: Object.keys(modules).map(buildModuleNode),
+    });
+  }
+
+  const imports = doc.getImports();
+  if (imports && imports.length > 0) {
+    sections.push({
+      label: 'Imports',
+      icon: 'input',
+      nodeType: 'section',
+      path: ['imports'],
+      children: imports.map(buildImportNode),
+    });
+  }
+
+  const variables = doc.getVariables();
+  if (variables) {
+    sections.push({
+      label: 'Variables',
+      icon: 'data_object',
+      nodeType: 'section',
+      path: ['variables'],
+      children: Object.keys(variables).map(buildVariableNode),
+    });
+  }
 
   const datasets = doc.getDatasets();
   if (datasets.length > 0) {

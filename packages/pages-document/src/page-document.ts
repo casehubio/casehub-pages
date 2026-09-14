@@ -232,6 +232,26 @@ export class PageDocument {
     return new NavTreeNode(this, ['navTree']);
   }
 
+  // --- yaml-core accessors (read-only) ---
+
+  getModules(): Record<string, Record<string, unknown>> | undefined {
+    const node = this._doc.getIn(['modules']);
+    if (!isMap(node)) return undefined;
+    return (node as YAMLMap).toJSON() as Record<string, Record<string, unknown>>;
+  }
+
+  getImports(): Record<string, unknown>[] | undefined {
+    const node = this._doc.getIn(['imports']);
+    if (!isSeq(node)) return undefined;
+    return (node as YAMLSeq).toJSON() as Record<string, unknown>[];
+  }
+
+  getVariables(): Record<string, unknown> | undefined {
+    const node = this._doc.getIn(['variables']);
+    if (!isMap(node)) return undefined;
+    return (node as YAMLMap).toJSON() as Record<string, unknown>;
+  }
+
   // --- Internal ---
 
   /** @internal */
