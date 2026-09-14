@@ -349,6 +349,45 @@ export class PageNode {
     return new ComponentNode(this._doc, [...seqPath, index]);
   }
 
+  wrapInRow(componentIndices: number[]): RowNode {
+    const mode = this.getLayoutMode();
+    if (mode === 'columns') throw new Error('Cannot wrap in row when page uses column layout');
+    this._doc.beginTransaction();
+    try {
+      const doc = this._doc._getDoc();
+      const sorted = [...componentIndices].sort((a, b) => a - b);
+      const compsPath = [...this.path, 'components'];
+      const compsSeq = doc.getIn(compsPath);
+      if (!isSeq(compsSeq)) throw new Error('No components to wrap');
+      const items = (compsSeq as YAMLSeq).items;
+      const collected = sorted.map(i => JSON.parse(JSON.stringify(items[i])));
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        items.splice(sorted[i]!, 1);
+      }
+      const rowData = { columns: [{ span: 12, components: collected }] };
+      if (mode === 'flat') {
+        const remaining = items.splice(0, items.length);
+        doc.deleteIn(compsPath);
+        const rowsPath = [...this.path, 'rows'];
+        const allRows: Record<string, unknown>[] = [rowData];
+        if (remaining.length > 0) {
+          allRows.push({ columns: [{ span: 12, components: remaining.map(r => JSON.parse(JSON.stringify(r))) }] });
+        }
+        doc.setIn(rowsPath, doc.createNode(allRows));
+      } else {
+        const rowsPath = [...this.path, 'rows'];
+        const rowsSeq = doc.getIn(rowsPath) as YAMLSeq;
+        const rowNode = doc.createNode(rowData);
+        rowsSeq.items.splice(sorted[0]!, 0, rowNode);
+      }
+      this._doc.commitTransaction();
+      return this.getRows()[mode === 'flat' ? 0 : sorted[0]!]!;
+    } catch (e) {
+      this._doc.abortTransaction();
+      throw e;
+    }
+  }
+
   removeChild(index: number): void {
     this._doc._pushUndoInternal();
     const mode = this.getLayoutMode();
@@ -647,6 +686,39 @@ export class ComponentNode {
       const idx = (seq as YAMLSeq).items.length - 1;
       this._doc._notifyInternal();
       return new ComponentNode(this._doc, [...childPath, idx]);
+    }
+  }
+
+  wrapIn(containerType: string): ComponentNode {
+    const desc = getContainerDescriptor(containerType);
+    if (!desc) throw new Error(`${containerType} is not a container type`);
+    this._doc.beginTransaction();
+    try {
+      const doc = this._doc._getDoc();
+      const parentPath = this.path.slice(0, -1);
+      const currentIndex = this.path[this.path.length - 1] as number;
+      const sourceJson = JSON.parse(JSON.stringify(doc.getIn(this.path as (string | number)[])));
+      doc.deleteIn(this.path as (string | number)[]);
+      const defaultSlot = desc.defaultContentSlot;
+      const slotDesc = desc.slots.find(s => s.yamlKey === defaultSlot)!;
+      let containerYaml: Record<string, unknown>;
+      if (slotDesc.kind === 'named-record') {
+        containerYaml = { type: containerType, [slotDesc.yamlKey]: { 'Tab 1': { [slotDesc.childKey]: [sourceJson] } } };
+      } else if (slotDesc.kind === 'array') {
+        containerYaml = { type: containerType, [slotDesc.yamlKey]: [sourceJson] };
+      } else {
+        containerYaml = { type: containerType, [slotDesc.yamlKey]: { [slotDesc.childKey]: [sourceJson] } };
+      }
+      const containerNode = doc.createNode(containerYaml);
+      const parentSeq = doc.getIn(parentPath as (string | number)[]);
+      if (isSeq(parentSeq)) {
+        (parentSeq as YAMLSeq).items.splice(currentIndex, 0, containerNode);
+      }
+      this._doc.commitTransaction();
+      return new ComponentNode(this._doc, [...parentPath, currentIndex]);
+    } catch (e) {
+      this._doc.abortTransaction();
+      throw e;
     }
   }
 

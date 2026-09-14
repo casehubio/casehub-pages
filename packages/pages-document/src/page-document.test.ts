@@ -644,4 +644,101 @@ describe('PageDocument', () => {
       expect(added.getProperties()['title']).toBe('Revenue');
     });
   });
+
+  describe('wrapIn', () => {
+    it('wraps component in tabs container', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    rows:
+      - columns:
+          - components:
+              - type: bar-chart
+              - type: line-chart`);
+      const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
+      const barChart = col.getComponents()[0]!;
+
+      const tabsContainer = barChart.wrapIn('tabs');
+
+      expect(tabsContainer.type).toBe('tabs');
+      const children = tabsContainer.getChildren();
+      expect(children.slots['Tab 1']![0]!.type).toBe('bar-chart');
+      const colComps = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents();
+      expect(colComps).toHaveLength(2);
+      expect(colComps[0]!.type).toBe('tabs');
+      expect(colComps[1]!.type).toBe('line-chart');
+    });
+
+    it('uses defaultContentSlot for sidebar', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart`);
+      const comp = doc.getPages()[0]!.getComponents()[0]!;
+
+      const sidebar = comp.wrapIn('sidebar');
+
+      expect(sidebar.type).toBe('sidebar');
+      const children = sidebar.getChildren();
+      expect(children.slots['content']![0]!.type).toBe('bar-chart');
+    });
+
+    it('is atomic — single undo restores original', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart
+      - type: line-chart`);
+      doc.getPages()[0]!.getComponents()[0]!.wrapIn('tabs');
+
+      doc.undo();
+      const comps = doc.getPages()[0]!.getComponents();
+      expect(comps).toHaveLength(2);
+      expect(comps[0]!.type).toBe('bar-chart');
+    });
+  });
+
+  describe('wrapInRow', () => {
+    it('wraps flat-mode components into a row', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart
+      - type: line-chart
+      - type: pie-chart`);
+      const page = doc.getPages()[0]!;
+      expect(page.getLayoutMode()).toBe('flat');
+
+      page.wrapInRow([0, 1]);
+
+      expect(page.getLayoutMode()).toBe('rows');
+      const rows = page.getRows();
+      expect(rows).toHaveLength(2);
+      const wrappedComps = rows[0]!.getColumns()[0]!.getComponents();
+      expect(wrappedComps).toHaveLength(2);
+      expect(wrappedComps[0]!.type).toBe('bar-chart');
+      expect(wrappedComps[1]!.type).toBe('line-chart');
+      const remainingComps = rows[1]!.getColumns()[0]!.getComponents();
+      expect(remainingComps).toHaveLength(1);
+      expect(remainingComps[0]!.type).toBe('pie-chart');
+    });
+
+    it('throws in columns mode', () => {
+      const doc = PageDocument.parse(COLUMNS_PAGE);
+      const page = doc.getPages()[0]!;
+      expect(() => page.wrapInRow([0])).toThrow();
+    });
+
+    it('is atomic — single undo restores original', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart
+      - type: line-chart`);
+      doc.getPages()[0]!.wrapInRow([0, 1]);
+
+      doc.undo();
+      expect(doc.getPages()[0]!.getLayoutMode()).toBe('flat');
+      expect(doc.getPages()[0]!.getComponents()).toHaveLength(2);
+    });
+  });
 });
