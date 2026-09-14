@@ -741,4 +741,116 @@ describe('PageDocument', () => {
       expect(doc.getPages()[0]!.getComponents()).toHaveLength(2);
     });
   });
+
+  describe('replaceWith', () => {
+    it('replaces type and preserves compatible properties', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart
+        properties:
+          title: Revenue`);
+      const comp = doc.getPages()[0]!.getComponents()[0]!;
+
+      const newComp = comp.replaceWith('line-chart');
+
+      expect(newComp.type).toBe('line-chart');
+      expect(newComp.getProperties()['title']).toBe('Revenue');
+    });
+
+    it('preserves position among siblings', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: title
+      - type: bar-chart
+        properties:
+          title: Revenue
+      - type: metric`);
+      doc.getPages()[0]!.getComponents()[1]!.replaceWith('line-chart');
+
+      const comps = doc.getPages()[0]!.getComponents();
+      expect(comps).toHaveLength(3);
+      expect(comps[0]!.type).toBe('title');
+      expect(comps[1]!.type).toBe('line-chart');
+      expect(comps[2]!.type).toBe('metric');
+    });
+
+    it('is atomic — single undo restores original', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart
+        properties:
+          title: Test`);
+      doc.getPages()[0]!.getComponents()[0]!.replaceWith('line-chart');
+
+      doc.undo();
+      expect(doc.getPages()[0]!.getComponents()[0]!.type).toBe('bar-chart');
+      expect(doc.getPages()[0]!.getComponents()[0]!.getProperties()['title']).toBe('Test');
+    });
+  });
+
+  describe('moveToSlot', () => {
+    it('moves component into existing named slot', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: tabs
+        tabs:
+          "Tab 1":
+            components:
+              - type: bar-chart
+      - type: pie-chart`);
+      const page = doc.getPages()[0]!;
+      const pie = page.getComponents()[1]!;
+      const tabsPath = page.getComponents()[0]!.path;
+
+      pie.moveToSlot({ path: [...tabsPath], slotName: 'Tab 1' }, 1);
+
+      const tabs = doc.getPages()[0]!.getComponents()[0]!;
+      expect(tabs.getChildren().slots['Tab 1']).toHaveLength(2);
+      expect(tabs.getChildren().slots['Tab 1']![1]!.type).toBe('pie-chart');
+      expect(doc.getPages()[0]!.getComponents()).toHaveLength(1);
+    });
+
+    it('creates new named slot when it does not exist', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: tabs
+        tabs:
+          "Tab 1":
+            components:
+              - type: bar-chart
+      - type: pie-chart`);
+      const pie = doc.getPages()[0]!.getComponents()[1]!;
+      const tabsPath = [...doc.getPages()[0]!.getComponents()[0]!.path];
+
+      pie.moveToSlot({ path: tabsPath, slotName: 'Tab 2' }, 0);
+
+      const tabs = doc.getPages()[0]!.getComponents()[0]!;
+      expect(tabs.getChildren().slots['Tab 2']).toHaveLength(1);
+      expect(tabs.getChildren().slots['Tab 2']![0]!.type).toBe('pie-chart');
+    });
+
+    it('is atomic — single undo restores original', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: tabs
+        tabs:
+          "Tab 1":
+            components:
+              - type: bar-chart
+      - type: pie-chart`);
+      const pie = doc.getPages()[0]!.getComponents()[1]!;
+      const tabsPath = [...doc.getPages()[0]!.getComponents()[0]!.path];
+      pie.moveToSlot({ path: tabsPath, slotName: 'Tab 1' }, 0);
+
+      doc.undo();
+      expect(doc.getPages()[0]!.getComponents()).toHaveLength(2);
+      expect(doc.getPages()[0]!.getComponents()[1]!.type).toBe('pie-chart');
+    });
+  });
 });

@@ -689,6 +689,69 @@ export class ComponentNode {
     }
   }
 
+  replaceWith(newType: string): ComponentNode {
+    this._doc.beginTransaction();
+    try {
+      const doc = this._doc._getDoc();
+      const parentPath = this.path.slice(0, -1);
+      const currentIndex = this.path[this.path.length - 1] as number;
+      const oldProps = this.getProperties();
+      const entry: Record<string, unknown> = { type: newType };
+      const compatible: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(oldProps)) {
+        compatible[key] = value;
+      }
+      if (Object.keys(compatible).length > 0) entry['properties'] = compatible;
+      doc.deleteIn(this.path as (string | number)[]);
+      const newNode = doc.createNode(entry);
+      const parentSeq = doc.getIn(parentPath as (string | number)[]);
+      if (isSeq(parentSeq)) {
+        (parentSeq as YAMLSeq).items.splice(currentIndex, 0, newNode);
+      }
+      this._doc.commitTransaction();
+      return new ComponentNode(this._doc, [...parentPath, currentIndex]);
+    } catch (e) {
+      this._doc.abortTransaction();
+      throw e;
+    }
+  }
+
+  moveToSlot(target: { path: readonly (string | number)[]; slotName: string }, index: number): void {
+    this._doc.beginTransaction();
+    try {
+      const doc = this._doc._getDoc();
+      const sourceJson = JSON.parse(JSON.stringify(doc.getIn(this.path as (string | number)[])));
+      doc.deleteIn(this.path as (string | number)[]);
+      const targetComp = doc.getIn(target.path as (string | number)[]);
+      if (!isMap(targetComp)) throw new Error('Target is not a map');
+      const targetType = String((targetComp as YAMLMap).get('type'));
+      const desc = getContainerDescriptor(targetType);
+      if (!desc) throw new Error(`${targetType} is not a container`);
+      const slotDesc = desc.slots.find(s => s.kind === 'named-record');
+      if (!slotDesc || slotDesc.kind !== 'named-record') throw new Error('Target has no named-record slots');
+      const mapPath = [...target.path, slotDesc.yamlKey] as (string | number)[];
+      let mapNode = doc.getIn(mapPath);
+      if (!isMap(mapNode)) {
+        doc.setIn(mapPath, doc.createNode({}));
+        mapNode = doc.getIn(mapPath);
+      }
+      let entryNode = (mapNode as YAMLMap).get(target.slotName, true);
+      if (!isMap(entryNode)) {
+        const newEntry = doc.createNode({ [slotDesc.childKey]: [] });
+        (mapNode as YAMLMap).set(doc.createNode(target.slotName), newEntry);
+        entryNode = (mapNode as YAMLMap).get(target.slotName, true);
+      }
+      const compsSeq = (entryNode as YAMLMap).get(slotDesc.childKey, true);
+      if (!isSeq(compsSeq)) throw new Error('Slot child array not found');
+      const compNode = doc.createNode(sourceJson);
+      (compsSeq as YAMLSeq).items.splice(index, 0, compNode);
+      this._doc.commitTransaction();
+    } catch (e) {
+      this._doc.abortTransaction();
+      throw e;
+    }
+  }
+
   wrapIn(containerType: string): ComponentNode {
     const desc = getContainerDescriptor(containerType);
     if (!desc) throw new Error(`${containerType} is not a container type`);
