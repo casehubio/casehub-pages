@@ -91,9 +91,10 @@ export abstract class PagesElement<
 
   override render(): TemplateResult {
     if (this.controller.error) return this.renderError(this.controller.error);
-    const showContent = !!this.props && !this.controller.loading && !!this.controller.dataSet;
+    const hasLookup = !!this.props?.lookup;
+    const showContent = !!this.props && !this.controller.loading && (!!this.controller.dataSet || !hasLookup);
     return html`${cache(showContent
-      ? this.renderContent(this.props!, this.controller.dataSet as TypedDataSet)
+      ? this.renderContent(this.props!, (this.controller.dataSet ?? { columns: [], rows: [] }) as TypedDataSet)
       : this.renderLoading()
     )}`;
   }

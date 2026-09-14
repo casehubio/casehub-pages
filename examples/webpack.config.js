@@ -17,7 +17,10 @@ module.exports = (env = {}) => {
               ...loader,
               options: {
                 ...loader.options,
-                compilerOptions: restCompilerOptions,
+                compilerOptions: {
+                  ...restCompilerOptions,
+                  rootDir: path.resolve(__dirname, ".."),
+                },
               },
             };
           }
@@ -68,6 +71,7 @@ module.exports = (env = {}) => {
     },
     entry: {
       "casehub-bundle": path.resolve(__dirname, "src/casehub-entry.ts"),
+      "dock-test-bundle": path.resolve(__dirname, "src/dock-test-entry.ts"),
       "diagram-export-tool": path.resolve(__dirname, "src/diagram-export-tool.ts"),
     },
     output: {
@@ -93,12 +97,15 @@ module.exports = (env = {}) => {
     },
     resolve: {
       ...common.resolve,
+      extensionAlias: { '.js': ['.ts', '.tsx', '.js'] },
       alias: {
         "@casehubio/pages-runtime": path.resolve(__dirname, "../packages/pages-runtime"),
         "@casehubio/pages-viz": path.resolve(__dirname, "../packages/pages-viz"),
         "@casehubio/pages-ui": path.resolve(__dirname, "../packages/pages-ui"),
         "@casehubio/pages-component": path.resolve(__dirname, "../packages/pages-component"),
         "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
+        "@casehubio/pages-primitives/dock": path.resolve(__dirname, "../packages/pages-primitives/dist/dock"),
+        "@casehubio/pages-primitives/a11y": path.resolve(__dirname, "../packages/pages-primitives/dist/a11y"),
         "@casehubio/pages-primitives": path.resolve(__dirname, "../packages/pages-primitives"),
         "@casehubio/pages-ui-tokens": path.resolve(__dirname, "../packages/pages-ui-tokens"),
         "@casehubio/pages-aria/dist/controller": path.resolve(__dirname, "../packages/pages-aria/dist/controller.js"),

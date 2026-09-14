@@ -1,281 +1,503 @@
-import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
+import type { DockItem, DockZone, LayoutStore, LayoutState } from '@casehubio/pages-component';
+
+const DOCK_STYLES = `
+  pages-dock-workbench { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+  pages-dock-workbench .dock-layout { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  pages-dock-workbench .dock-main { display: flex; flex: 1; overflow: hidden; }
+  pages-dock-workbench .dock-zone { overflow: auto; }
+  pages-dock-workbench .dock-zone-left, pages-dock-workbench .dock-zone-right { flex-shrink: 0; }
+  pages-dock-workbench .dock-zone-centre { flex: 1; min-width: 0; }
+  pages-dock-workbench .dock-zone-bottom { flex-shrink: 0; border-top: 1px solid var(--pages-neutral-5, #555); display: flex; }
+  pages-dock-workbench .resize-handle { flex-shrink: 0; background: transparent; transition: background 0.15s; touch-action: none; }
+  pages-dock-workbench .resize-handle:hover, pages-dock-workbench .resize-handle:active { background: var(--pages-primary, #1967d2); }
+  pages-dock-workbench .resize-left, pages-dock-workbench .resize-right { width: 4px; cursor: col-resize; }
+  pages-dock-workbench .resize-bottom { height: 4px; cursor: row-resize; }
+  pages-dock-workbench .dock-bar { display: flex; gap: 0; padding: 4px; flex-shrink: 0; }
+  pages-dock-workbench .dock-bar-left, pages-dock-workbench .dock-bar-right { flex-direction: column; }
+  pages-dock-workbench .dock-bar-bottom { flex-direction: row; border-top: 1px solid var(--pages-border-color, #dadce0); }
+  pages-dock-workbench .dock-bar [data-dock-zone] { display: flex; flex-direction: inherit; gap: 2px; min-width: 24px; min-height: 24px; }
+  pages-dock-workbench .dock-bar [data-dock-spacer] { flex: 1; }
+  pages-dock-workbench .dock-bar button { border: none; background: transparent; cursor: pointer; padding: 6px; border-radius: var(--pages-radius-sm, 4px); font-size: 16px; color: var(--pages-text-secondary, #5f6368); }
+  pages-dock-workbench .dock-bar button:hover { background: var(--pages-hover-bg, rgba(0, 0, 0, 0.04)); }
+  pages-dock-workbench .dock-bar button[data-active] { color: var(--pages-primary, #1967d2); background: rgba(25, 103, 210, 0.08); }
+`;
 
 export class PagesDockWorkbench extends LitElement {
-  @property({ type: Number, attribute: 'left-width' }) leftWidth = 260;
-  @property({ type: Number, attribute: 'right-width' }) rightWidth = 320;
-  @property({ type: Number, attribute: 'bottom-height' }) bottomHeight = 200;
-  @property({ type: Number, attribute: 'min-panel-size' }) minPanelSize = 120;
-  @property({ type: Number, attribute: 'max-panel-size' }) maxPanelSize = 600;
+  override createRenderRoot() { return this; }
 
-  @property({ type: Boolean, attribute: 'left-collapsed' }) leftCollapsed = false;
-  @property({ type: Boolean, attribute: 'right-collapsed' }) rightCollapsed = false;
-  @property({ type: Boolean, attribute: 'bottom-collapsed' }) bottomCollapsed = true;
+  @property({ attribute: false }) leftPanels?: DockItem[];
+  @property({ attribute: false }) rightPanels?: DockItem[];
+  @property({ attribute: false }) bottomPanels?: DockItem[];
 
-  @property({ type: Boolean, attribute: 'left-enabled' }) leftEnabled = true;
-  @property({ type: Boolean, attribute: 'right-enabled' }) rightEnabled = true;
-  @property({ type: Boolean, attribute: 'bottom-enabled' }) bottomEnabled = true;
-
-  @property({ type: Boolean, attribute: 'show-toggle-bar' }) showToggleBar = true;
+  @property({ attribute: false }) layoutStore?: LayoutStore;
   @property({ attribute: 'persist-key' }) persistKey?: string;
 
+  @property({ attribute: false }) renderContent?: (container: HTMLElement, panelId: string) => void;
+  @property({ attribute: false }) renderCentre?: (container: HTMLElement) => void;
+
+  @property({ attribute: false }) zoneMap?: ReadonlyMap<string, DockZone>;
+
+  @property({ type: Number, attribute: 'min-panel-pct' }) minPanelPct = 5;
+  @property({ type: Number, attribute: 'max-panel-pct' }) maxPanelPct = 50;
+
+  @state() private _dockState: Record<string, boolean> = {};
+  @state() private _splitSizes: Record<string, number> = { left: 20, right: 20, bottom: 30 };
+  @state() private _zoneSplitRatios: Record<string, number> = {};
   @state() private _resizing: string | null = null;
+  private _saveTimer: ReturnType<typeof setTimeout> | undefined;
+  private _centreRendered = false;
+  private _initComplete: Promise<void> | undefined;
+  private _renderedPanels = new Set<string>();
+
+  get dockState(): Readonly<Record<string, boolean>> {
+    return this._dockState;
+  }
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this._loadPersisted();
+    const root = this.getRootNode() as Document | ShadowRoot;
+    if (!root.querySelector('style[data-pages-dock]')) {
+      const style = document.createElement('style');
+      style.setAttribute('data-pages-dock', '');
+      style.textContent = DOCK_STYLES;
+      if (root === document) {
+        document.head.appendChild(style);
+      } else {
+        (root as ShadowRoot).prepend(style);
+      }
+    }
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    clearTimeout(this._persistDebounceTimer);
+    clearTimeout(this._saveTimer);
   }
 
-  private _loadPersisted(): void {
-    if (!this.persistKey || typeof localStorage === 'undefined') return;
-    try {
-      const data = JSON.parse(localStorage.getItem(this.persistKey) ?? '{}');
-      if (data.leftWidth) this.leftWidth = data.leftWidth;
-      if (data.rightWidth) this.rightWidth = data.rightWidth;
-      if (data.bottomHeight) this.bottomHeight = data.bottomHeight;
-      if (data.leftCollapsed != null) this.leftCollapsed = data.leftCollapsed;
-      if (data.rightCollapsed != null) this.rightCollapsed = data.rightCollapsed;
-      if (data.bottomCollapsed != null) this.bottomCollapsed = data.bottomCollapsed;
-    } catch { /* ignore */ }
+  override firstUpdated(): void {
+    this._initComplete = this._doInit();
   }
 
-  private _persistDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+  private async _doInit(): Promise<void> {
+    await this._loadState();
+    this._computeInitialDockState();
+    this.requestUpdate();
+    await new Promise<void>(r => { setTimeout(r, 0); });
+    if (this.renderCentre && !this._centreRendered) {
+      const centreEl = this.querySelector<HTMLElement>('.dock-zone-centre');
+      if (centreEl) {
+        this.renderCentre(centreEl);
+        this._centreRendered = true;
+      }
+    }
+    this._activateInitialPanels();
+  }
 
-  private _persist(): void {
-    if (!this.persistKey || typeof localStorage === 'undefined') return;
-    clearTimeout(this._persistDebounceTimer);
-    this._persistDebounceTimer = setTimeout(() => {
-      localStorage.setItem(this.persistKey!, JSON.stringify({
-        leftWidth: this.leftWidth,
-        rightWidth: this.rightWidth,
-        bottomHeight: this.bottomHeight,
-        leftCollapsed: this.leftCollapsed,
-        rightCollapsed: this.rightCollapsed,
-        bottomCollapsed: this.bottomCollapsed,
-      }));
+  protected override async getUpdateComplete(): Promise<boolean> {
+    const result = await super.getUpdateComplete();
+    if (this._initComplete) await this._initComplete;
+    return result;
+  }
+
+  private async _loadState(): Promise<void> {
+    if (this.layoutStore && this.persistKey) {
+      const saved = await this.layoutStore.load(this.persistKey);
+      if (saved) {
+        if (saved.docks) this._dockState = { ...saved.docks };
+        if (saved.splits) {
+          const s = saved.splits as unknown as Record<string, number>;
+          this._splitSizes = { ...this._splitSizes, ...s };
+        }
+        const zs = (saved as Record<string, unknown>).zoneSplits as Record<string, number> | undefined;
+        if (zs) this._zoneSplitRatios = { ...zs };
+      }
+    } else if (this.persistKey && typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(this.persistKey);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.docks) this._dockState = { ...data.docks };
+          if (data.splits) this._splitSizes = { ...this._splitSizes, ...data.splits };
+          if (data.zoneSplits) this._zoneSplitRatios = { ...data.zoneSplits };
+        }
+      } catch { /* ignore */ }
+    }
+  }
+
+  private _computeInitialDockState(): void {
+    const allPanels = this._getAllPanels();
+    const newState = { ...this._dockState };
+    const activatedPerZoneKey = new Set<string>();
+
+    for (const item of allPanels) {
+      const side = this._findPanelSide(item.panelId);
+      const zone = item.zone ?? 'top';
+      const zoneKey = `${side}:${zone}`;
+      const panelId = item.panelId;
+
+      if (newState[panelId] === true && !activatedPerZoneKey.has(zoneKey)) {
+        activatedPerZoneKey.add(zoneKey);
+      } else if (newState[panelId] === true && activatedPerZoneKey.has(zoneKey)) {
+        newState[panelId] = false;
+      } else if (newState[panelId] === undefined && item.defaultOpen && !activatedPerZoneKey.has(zoneKey)) {
+        newState[panelId] = true;
+        activatedPerZoneKey.add(zoneKey);
+      } else {
+        newState[panelId] = newState[panelId] ?? false;
+      }
+    }
+    this._dockState = newState;
+  }
+
+  private _activateInitialPanels(): void {
+    for (const item of this._getAllPanels()) {
+      if (!this._dockState[item.panelId]) continue;
+      const panelEl = this.querySelector<HTMLElement>(`[data-component-id="${item.panelId}"]`);
+      if (!panelEl) continue;
+      if (panelEl.dataset.deferred === 'pending' || panelEl.hasAttribute('data-deferred')) {
+        if (this.renderContent) {
+          this.renderContent(panelEl, item.panelId);
+        } else {
+          panelEl.dispatchEvent(new Event('pages-deferred-render'));
+        }
+        panelEl.removeAttribute('data-deferred');
+        this._renderedPanels.add(item.panelId);
+      }
+      panelEl.style.display = '';
+      const btn = this.querySelector<HTMLElement>(`button[data-dock-panel-id="${item.panelId}"]`);
+      if (btn) {
+        btn.dataset.active = '';
+        btn.setAttribute('aria-pressed', 'true');
+      }
+    }
+  }
+
+  togglePanel(panelId: string): void {
+    if (this._dockState[panelId]) {
+      this.hidePanel(panelId);
+    } else {
+      this.showPanel(panelId);
+    }
+  }
+
+  showPanel(panelId: string): void {
+    const panelEl = this.querySelector<HTMLElement>(`[data-component-id="${panelId}"]`);
+    if (!panelEl) return;
+
+    const btn = this.querySelector<HTMLElement>(`button[data-dock-panel-id="${panelId}"]`);
+    const zone = btn?.dataset.dockZone;
+    const newState = { ...this._dockState };
+
+    if (zone) {
+      const side = this._findPanelSide(panelId);
+      const allPanels = this._getAllPanels();
+      for (const item of allPanels) {
+        const itemZone = item.zone ?? 'top';
+        const itemSide = this._findPanelSide(item.panelId);
+        if (itemSide === side && itemZone === zone && item.panelId !== panelId && newState[item.panelId]) {
+          newState[item.panelId] = false;
+          this._hidePanelDom(item.panelId);
+        }
+      }
+    }
+
+    if ((panelEl.dataset.deferred === 'pending' || panelEl.hasAttribute('data-deferred')) && !this._renderedPanels.has(panelId)) {
+      if (this.renderContent) {
+        this.renderContent(panelEl, panelId);
+      } else {
+        panelEl.dispatchEvent(new Event('pages-deferred-render'));
+      }
+      panelEl.removeAttribute('data-deferred');
+      this._renderedPanels.add(panelId);
+    }
+
+    panelEl.style.display = '';
+    if (btn) btn.dataset.active = '';
+
+    newState[panelId] = true;
+    this._dockState = newState;
+    this._scheduleSave();
+
+    this.dispatchEvent(new CustomEvent('pages-dock-toggle', {
+      bubbles: true, composed: true,
+      detail: { panelId, visible: true },
+    }));
+  }
+
+  hidePanel(panelId: string): void {
+    this._hidePanelDom(panelId);
+    this._dockState = { ...this._dockState, [panelId]: false };
+    this._scheduleSave();
+
+    this.dispatchEvent(new CustomEvent('pages-dock-toggle', {
+      bubbles: true, composed: true,
+      detail: { panelId, visible: false },
+    }));
+  }
+
+  private _hidePanelDom(panelId: string): void {
+    const panelEl = this.querySelector<HTMLElement>(`[data-component-id="${panelId}"]`);
+    if (panelEl) panelEl.style.display = 'none';
+    const btn = this.querySelector<HTMLElement>(`button[data-dock-panel-id="${panelId}"]`);
+    if (btn) delete btn.dataset.active;
+    this._dockState = { ...this._dockState, [panelId]: false };
+  }
+
+  private _getAllPanels(): DockItem[] {
+    return [...(this.leftPanels ?? []), ...(this.rightPanels ?? []), ...(this.bottomPanels ?? [])];
+  }
+
+  private _findPanelSide(panelId: string): 'left' | 'right' | 'bottom' | undefined {
+    if (this.leftPanels?.some(p => p.panelId === panelId)) return 'left';
+    if (this.rightPanels?.some(p => p.panelId === panelId)) return 'right';
+    if (this.bottomPanels?.some(p => p.panelId === panelId)) return 'bottom';
+    return undefined;
+  }
+
+  private _scheduleSave(): void {
+    if (!this.persistKey) return;
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => {
+      const state = {
+        docks: this._dockState,
+        splits: this._splitSizes,
+        ...(Object.keys(this._zoneSplitRatios).length > 0 ? { zoneSplits: this._zoneSplitRatios } : {}),
+        ...(this.zoneMap ? { zones: Object.fromEntries(this.zoneMap) } : {}),
+      };
+      if (this.layoutStore) {
+        this.layoutStore.save(this.persistKey!, state as unknown as LayoutState);
+      } else if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(this.persistKey!, JSON.stringify(state));
+      }
     }, 300);
   }
 
-  toggleZone(zone: string): void {
-    if (zone === 'left') this.leftCollapsed = !this.leftCollapsed;
-    else if (zone === 'right') this.rightCollapsed = !this.rightCollapsed;
-    else if (zone === 'bottom') this.bottomCollapsed = !this.bottomCollapsed;
-    this._persist();
-    this.dispatchEvent(new CustomEvent('dock-panel-toggle', {
-      bubbles: true, composed: true,
-      detail: { zone, collapsed: zone === 'left' ? this.leftCollapsed : zone === 'right' ? this.rightCollapsed : this.bottomCollapsed },
-    }));
+  private _renderDockBar(items: DockItem[], orientation: 'vertical' | 'horizontal', side: string, bottomItems?: DockItem[]): TemplateResult {
+    const groups = new Map<string, DockItem[]>();
+    for (const item of items) {
+      const rawZone = item.zone ?? 'top';
+      const zone = rawZone === 'bottom' ? 'top-second' : rawZone;
+      const list = groups.get(zone) ?? [];
+      list.push(item);
+      groups.set(zone, list);
+    }
+    if (bottomItems && bottomItems.length > 0) {
+      groups.set('bottom', [...bottomItems]);
+    }
+
+    const zoneEntries = [...groups.entries()];
+    const topGroup = zoneEntries.filter(([z]) => z === 'top');
+    const midGroup = zoneEntries.filter(([z]) => z === 'top-second');
+    const bottomGroup = zoneEntries.filter(([z]) => z === 'bottom');
+    const renderGroup = ([zone, zoneItems]: [string, DockItem[]]) => html`
+      <div data-dock-zone="${zone}">
+        ${zoneItems.map(item => html`
+          <button
+            data-dock-panel-id="${item.panelId}"
+            data-dock-zone="${zone}"
+            title="${item.label}"
+            aria-label="${item.label}"
+            aria-pressed="${this._dockState[item.panelId] ? 'true' : 'false'}"
+            ?data-active="${this._dockState[item.panelId]}"
+            @click="${() => this.togglePanel(item.panelId)}"
+          >${item.icon}</button>
+        `)}
+      </div>
+    `;
+
+    return html`
+      <div class="dock-bar dock-bar-${side}"
+           role="toolbar"
+           aria-label="${side.charAt(0).toUpperCase() + side.slice(1)} dock bar"
+           aria-orientation="${orientation}">
+        ${topGroup.map(renderGroup)}
+        ${midGroup.length > 0 ? html`<div style="border-top: 1px solid var(--pages-neutral-5, #555); margin: 4px 0; align-self: stretch;"></div>${midGroup.map(renderGroup)}` : nothing}
+        ${bottomGroup.length > 0 ? html`<div data-dock-spacer style="flex: 1; min-height: 8px;"></div>${bottomGroup.map(renderGroup)}` : nothing}
+      </div>
+    `;
+  }
+
+  private _renderPanelContainers(items: DockItem[]): TemplateResult {
+    return html`${items.map(item => html`
+      <div data-component-id="${item.panelId}"
+           ?data-deferred="${!this._renderedPanels.has(item.panelId)}"
+           style="display: ${this._dockState[item.panelId] ? '' : 'none'}; flex: 1; min-height: 0;"></div>
+    `)}`;
+  }
+
+  private _getZoneSplitRatio(side: string): number {
+    return this._zoneSplitRatios[side] ?? 50;
+  }
+
+  private _handleZoneSplitStart(side: string, e: PointerEvent): void {
+    e.preventDefault();
+    this._resizing = `zone:${side}`;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }
+
+  private _handleZoneSplitMove(side: string, e: PointerEvent): void {
+    if (this._resizing !== `zone:${side}`) return;
+    const zone = this.querySelector(`.dock-zone-${side}`) as HTMLElement;
+    if (!zone) return;
+    const rect = zone.getBoundingClientRect();
+    const pct = ((e.clientY - rect.top) / rect.height) * 100;
+    this._zoneSplitRatios = { ...this._zoneSplitRatios, [side]: Math.max(10, Math.min(90, pct)) };
+  }
+
+  private _handleZoneSplitEnd(e: PointerEvent): void {
+    if (!this._resizing?.startsWith('zone:')) return;
+    this._resizing = null;
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    this._scheduleSave();
+  }
+
+  private _renderSideZonePanels(items: DockItem[], side: string): TemplateResult {
+    const topItems = items.filter(i => (i.zone ?? 'top') === 'top');
+    const secondItems = items.filter(i => (i.zone ?? 'top') !== 'top');
+    if (secondItems.length === 0) {
+      return this._renderPanelContainers(items);
+    }
+    const topActive = this._anySideActive(topItems);
+    const secondActive = this._anySideActive(secondItems);
+    const ratio = this._getZoneSplitRatio(side);
+    const bothActive = topActive && secondActive;
+    const topFlex = bothActive ? `flex: 0 0 ${ratio}%` : 'flex: 1';
+    const botFlex = bothActive ? `flex: 0 0 ${100 - ratio}%` : 'flex: 1';
+    return html`
+      <div style="${topFlex}; min-height: 0; overflow: auto; display: ${secondActive && !topActive ? 'none' : 'flex'}; flex-direction: column;">
+        ${this._renderPanelContainers(topItems)}
+      </div>
+      <div data-zone-separator style="height: 4px; background: transparent; flex-shrink: 0; cursor: row-resize; touch-action: none; display: ${bothActive ? '' : 'none'};"
+           @pointerdown="${(e: PointerEvent) => this._handleZoneSplitStart(side, e)}"
+           @pointermove="${(e: PointerEvent) => this._handleZoneSplitMove(side, e)}"
+           @pointerup="${(e: PointerEvent) => this._handleZoneSplitEnd(e)}"></div>
+      <div style="${botFlex}; min-height: 0; overflow: auto; display: ${topActive && !secondActive ? 'none' : 'flex'}; flex-direction: column;">
+        ${this._renderPanelContainers(secondItems)}
+      </div>
+    `;
   }
 
   private _handleResizeStart(zone: string, e: PointerEvent): void {
     e.preventDefault();
     this._resizing = zone;
-    const handle = e.currentTarget as HTMLElement;
-    handle.setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
 
   private _handleResizeMove(zone: string, e: PointerEvent): void {
     if (this._resizing !== zone) return;
     const rect = this.getBoundingClientRect();
-    if (zone === 'left') {
-      this.leftWidth = Math.max(this.minPanelSize, Math.min(this.maxPanelSize, e.clientX - rect.left));
-    } else if (zone === 'right') {
-      this.rightWidth = Math.max(this.minPanelSize, Math.min(this.maxPanelSize, rect.right - e.clientX));
-    } else if (zone === 'bottom') {
-      this.bottomHeight = Math.max(this.minPanelSize, Math.min(this.maxPanelSize, rect.bottom - e.clientY));
-    }
+    let pct: number;
+    if (zone === 'left') pct = ((e.clientX - rect.left) / rect.width) * 100;
+    else if (zone === 'right') pct = ((rect.right - e.clientX) / rect.width) * 100;
+    else pct = ((rect.bottom - e.clientY) / rect.height) * 100;
+    pct = Math.max(5, Math.min(50, pct));
+    this._splitSizes = { ...this._splitSizes, [zone]: pct };
   }
 
   private _handleResizeEnd(e: PointerEvent): void {
     if (!this._resizing) return;
-    const zone = this._resizing;
     this._resizing = null;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    this._persist();
-    this.dispatchEvent(new CustomEvent('dock-panel-resize', {
-      bubbles: true, composed: true,
-      detail: { zone, size: zone === 'left' ? this.leftWidth : zone === 'right' ? this.rightWidth : this.bottomHeight },
-    }));
+    this._scheduleSave();
+  }
+
+  private _anySideActive(panels: DockItem[] | undefined): boolean {
+    if (!panels) return false;
+    return panels.some(p => this._dockState[p.panelId]);
+  }
+
+  private _partitionBottomPanels(): { leftBottom: DockItem[]; rightBottom: DockItem[] } {
+    if (!this.bottomPanels || this.bottomPanels.length === 0) return { leftBottom: [], rightBottom: [] };
+    const leftBottom: DockItem[] = [];
+    const rightBottom: DockItem[] = [];
+    for (const item of this.bottomPanels) {
+      const zone = this.zoneMap?.get(item.panelId);
+      if (zone && zone.startsWith('bottom-right')) {
+        rightBottom.push(item);
+      } else {
+        leftBottom.push(item);
+      }
+    }
+    return { leftBottom, rightBottom };
   }
 
   override render(): TemplateResult {
-    const showLeft = this.leftEnabled && !this.leftCollapsed;
-    const showRight = this.rightEnabled && !this.rightCollapsed;
-    const showBottom = this.bottomEnabled && !this.bottomCollapsed;
+    const hasLeft = this.leftPanels && this.leftPanels.length > 0;
+    const hasRight = this.rightPanels && this.rightPanels.length > 0;
+    const hasBottom = this.bottomPanels && this.bottomPanels.length > 0;
+    const leftActive = this._anySideActive(this.leftPanels);
+    const rightActive = this._anySideActive(this.rightPanels);
+    const bottomActive = this._anySideActive(this.bottomPanels);
+
+    const { leftBottom, rightBottom } = this._partitionBottomPanels();
+    const hasLeftBar = hasLeft || leftBottom.length > 0;
+    const hasRightBar = hasRight || rightBottom.length > 0;
 
     return html`
       <div class="dock-layout">
         <div class="dock-main">
-          ${this.leftEnabled ? html`
-            ${!showLeft && this.showToggleBar ? html`
-              <div class="toggle-bar toggle-bar-left" role="toolbar" aria-label="Left panel toggle">
-                <button class="toggle-btn" aria-label="Toggle left panel" @click=${() => this.toggleZone('left')}>◧</button>
-                <slot name="toggle-bar-left"></slot>
-              </div>
-            ` : nothing}
-            ${showLeft ? html`
-              <div class="zone zone-left" role="region" aria-label="Left panel" style="width: ${this.leftWidth}px">
-                <slot name="left"></slot>
-              </div>
-              ${this.showToggleBar ? html`
-                <div class="toggle-bar toggle-bar-left" role="toolbar" aria-label="Left panel toggle">
-                  <button class="toggle-btn active" aria-label="Toggle left panel" @click=${() => this.toggleZone('left')}>◧</button>
-                  <slot name="toggle-bar-left"></slot>
-                </div>
-              ` : nothing}
+          ${hasLeftBar ? html`
+            ${this._renderDockBar(this.leftPanels ?? [], 'vertical', 'left', leftBottom.length > 0 ? leftBottom : undefined)}
+            ${hasLeft ? html`
               <div class="resize-handle resize-left"
-                role="separator" aria-orientation="vertical" aria-label="Resize left panel"
-                aria-valuenow="${this.leftWidth}"
-                @pointerdown=${(e: PointerEvent) => this._handleResizeStart('left', e)}
-                @pointermove=${(e: PointerEvent) => this._handleResizeMove('left', e)}
-                @pointerup=${(e: PointerEvent) => this._handleResizeEnd(e)}
-              ></div>
+                   role="separator" aria-orientation="vertical"
+                   aria-valuenow="${this._splitSizes.left}"
+                   style="display: ${leftActive ? '' : 'none'}"
+                   @pointerdown="${(e: PointerEvent) => this._handleResizeStart('left', e)}"
+                   @pointermove="${(e: PointerEvent) => this._handleResizeMove('left', e)}"
+                   @pointerup="${(e: PointerEvent) => this._handleResizeEnd(e)}"></div>
+              <div class="dock-zone dock-zone-left" role="region" aria-label="Left panel"
+                   style="width: ${this._splitSizes.left}%; display: ${leftActive ? 'flex' : 'none'}; flex-direction: column;">
+                ${this._renderSideZonePanels(this.leftPanels!, 'left')}
+              </div>
             ` : nothing}
           ` : nothing}
 
-          <div class="zone zone-centre" role="region" aria-label="Centre panel">
-            <slot name="centre"></slot>
-          </div>
+          <div class="dock-zone dock-zone-centre" role="main"></div>
 
-          ${this.rightEnabled ? html`
-            ${showRight ? html`
+          ${hasRightBar ? html`
+            ${hasRight ? html`
               <div class="resize-handle resize-right"
-                role="separator" aria-orientation="vertical" aria-label="Resize right panel"
-                aria-valuenow="${this.rightWidth}"
-                @pointerdown=${(e: PointerEvent) => this._handleResizeStart('right', e)}
-                @pointermove=${(e: PointerEvent) => this._handleResizeMove('right', e)}
-                @pointerup=${(e: PointerEvent) => this._handleResizeEnd(e)}
-              ></div>
-              <div class="zone zone-right" role="region" aria-label="Right panel" style="width: ${this.rightWidth}px">
-                <slot name="right"></slot>
+                   role="separator" aria-orientation="vertical"
+                   aria-valuenow="${this._splitSizes.right}"
+                   style="display: ${rightActive ? '' : 'none'}"
+                   @pointerdown="${(e: PointerEvent) => this._handleResizeStart('right', e)}"
+                   @pointermove="${(e: PointerEvent) => this._handleResizeMove('right', e)}"
+                   @pointerup="${(e: PointerEvent) => this._handleResizeEnd(e)}"></div>
+              <div class="dock-zone dock-zone-right" role="region" aria-label="Right panel"
+                   style="width: ${this._splitSizes.right}%; display: ${rightActive ? 'flex' : 'none'}; flex-direction: column;">
+                ${this._renderSideZonePanels(this.rightPanels!, 'right')}
               </div>
             ` : nothing}
-            ${this.showToggleBar && this.rightEnabled ? html`
-              <div class="toggle-bar toggle-bar-right" role="toolbar" aria-label="Right panel toggle">
-                <slot name="toggle-bar-right"></slot>
-              </div>
-            ` : nothing}
+            ${this._renderDockBar(this.rightPanels ?? [], 'vertical', 'right', rightBottom.length > 0 ? rightBottom : undefined)}
           ` : nothing}
         </div>
 
-        ${this.bottomEnabled ? html`
-          ${showBottom ? html`
-            <div class="resize-handle resize-bottom"
-              role="separator" aria-orientation="horizontal" aria-label="Resize bottom panel"
-              aria-valuenow="${this.bottomHeight}"
-              @pointerdown=${(e: PointerEvent) => this._handleResizeStart('bottom', e)}
-              @pointermove=${(e: PointerEvent) => this._handleResizeMove('bottom', e)}
-              @pointerup=${(e: PointerEvent) => this._handleResizeEnd(e)}
-            ></div>
-            <div class="zone zone-bottom" role="region" aria-label="Bottom panel" style="height: ${this.bottomHeight}px">
-              <slot name="bottom"></slot>
-            </div>
-          ` : nothing}
+        ${hasBottom ? html`
+          <div class="resize-handle resize-bottom"
+               role="separator" aria-orientation="horizontal"
+               aria-valuenow="${this._splitSizes.bottom}"
+               style="display: ${bottomActive ? '' : 'none'}"
+               @pointerdown="${(e: PointerEvent) => this._handleResizeStart('bottom', e)}"
+               @pointermove="${(e: PointerEvent) => this._handleResizeMove('bottom', e)}"
+               @pointerup="${(e: PointerEvent) => this._handleResizeEnd(e)}"></div>
+          <div class="dock-zone dock-zone-bottom" role="region" aria-label="Bottom panel"
+               style="height: ${this._splitSizes.bottom}%; display: ${bottomActive ? '' : 'none'}; flex-direction: row;">
+            ${leftBottom.length > 0 && rightBottom.length > 0 ? html`
+              <div style="flex: 1; min-width: 0; display: ${this._anySideActive(rightBottom) && !this._anySideActive(leftBottom) ? 'none' : 'flex'}; flex-direction: column;">
+                ${this._renderPanelContainers(leftBottom)}
+              </div>
+              <div data-bottom-separator style="width: 1px; background: var(--pages-neutral-5, #555); flex-shrink: 0; display: ${this._anySideActive(leftBottom) && this._anySideActive(rightBottom) ? '' : 'none'};"></div>
+              <div style="flex: 1; min-width: 0; display: ${this._anySideActive(leftBottom) && !this._anySideActive(rightBottom) ? 'none' : 'flex'}; flex-direction: column;">
+                ${this._renderPanelContainers(rightBottom)}
+              </div>
+            ` : html`${this._renderPanelContainers(this.bottomPanels!)}`}
+          </div>
         ` : nothing}
-
-        <slot name="status-bar"></slot>
       </div>
     `;
   }
-
-  static override styles = css`
-    :host {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-      font-family: var(--pages-font-family, sans-serif);
-    }
-
-    .dock-layout {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .dock-main {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .zone {
-      overflow: auto;
-    }
-
-    .zone-left, .zone-right {
-      flex-shrink: 0;
-    }
-
-    .zone-centre {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .zone-bottom {
-      flex-shrink: 0;
-      border-top: 1px solid var(--pages-border-color, #dadce0);
-    }
-
-    .resize-handle {
-      flex-shrink: 0;
-      background: transparent;
-      transition: background 0.15s;
-      touch-action: none;
-    }
-
-    .resize-handle:hover, .resize-handle:active {
-      background: var(--pages-primary, #1967d2);
-    }
-
-    .resize-left, .resize-right {
-      width: 4px;
-      cursor: col-resize;
-    }
-
-    .resize-bottom {
-      height: 4px;
-      cursor: row-resize;
-    }
-
-    .toggle-bar {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 8px 4px;
-      border-left: 1px solid var(--pages-border-color, #dadce0);
-      flex-shrink: 0;
-    }
-
-    .toggle-btn {
-      width: 28px;
-      height: 28px;
-      border: none;
-      border-radius: var(--pages-radius-sm, 4px);
-      background: none;
-      cursor: pointer;
-      font-size: 16px;
-      color: var(--pages-text-secondary, #5f6368);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .toggle-btn:hover {
-      background: var(--pages-hover-bg, rgba(0, 0, 0, 0.04));
-    }
-
-    .toggle-btn.active {
-      color: var(--pages-primary, #1967d2);
-      background: rgba(25, 103, 210, 0.08);
-    }
-  `;
 }
 
 if (!customElements.get('pages-dock-workbench')) {

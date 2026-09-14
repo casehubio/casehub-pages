@@ -408,6 +408,17 @@ export async function loadSite(
   }
 
   function deriveDockState(): Readonly<Record<string, "open" | "closed">> | undefined {
+    const dockEl = target.querySelector<HTMLElement & { dockState: Record<string, boolean> }>("pages-dock-workbench");
+    if (dockEl) {
+      const ds = dockEl.dockState;
+      const keys = Object.keys(ds);
+      if (keys.length === 0) return undefined;
+      const result: Record<string, "open" | "closed"> = {};
+      for (const id of keys) {
+        result[id] = ds[id] ? "open" : "closed";
+      }
+      return result;
+    }
     if (dockState.size === 0) return undefined;
     const result: Record<string, "open" | "closed"> = {};
     for (const [id, visible] of dockState) {
@@ -915,6 +926,7 @@ export async function loadSite(
   }), { signal: abortController.signal });
 
   target.addEventListener("pages-dock-toggle", ((e: Event) => {
+    if ((e.target as HTMLElement)?.closest?.("pages-dock-workbench")) return;
     const { panelId, visible } = (e as CustomEvent<{ panelId: string; visible: boolean }>).detail;
     dockState.set(panelId, visible);
 
@@ -1175,14 +1187,21 @@ export async function loadSite(
   }
 
   function captureLayout(): LayoutState {
+    const dockEl = target.querySelector<HTMLElement & { dockState: Record<string, boolean>; zoneMap?: ReadonlyMap<string, DockZone> }>("pages-dock-workbench");
+    const capturedDocks = dockEl
+      ? Object.freeze({ ...dockEl.dockState })
+      : Object.freeze(Object.fromEntries(dockState));
     const capturedState = floatingWorkspaceRef.rootContainer
       ? captureContainerState(floatingWorkspaceRef.rootContainer)
       : containerStateStash;
+    const capturedZones: Readonly<Record<string, DockZone>> | undefined = dockEl?.zoneMap
+      ? Object.freeze(Object.fromEntries(dockEl.zoneMap))
+      : zoneEngine ? Object.freeze(Object.fromEntries(zoneEngine.zoneMap)) : undefined;
     return Object.freeze({
       splits: Object.freeze(Object.fromEntries(splitRatios)),
-      docks: Object.freeze(Object.fromEntries(dockState)),
+      docks: capturedDocks,
       panels: captureHostPanels(),
-      ...(zoneEngine ? { zones: Object.freeze(Object.fromEntries(zoneEngine.zoneMap)) } : {}),
+      ...(capturedZones ? { zones: capturedZones } : {}),
       ...(capturedState ? { containerState: capturedState } : {}),
     });
   }
@@ -1216,40 +1235,6 @@ export async function loadSite(
     }
   }
 
-  // --- Auto-detect dock-workbench and create zone engine ---
-
-  function findDockConfig(node: Component): DockWorkbenchConfig | undefined {
-    const cfg = node.props?.["__dockConfig"] as DockWorkbenchConfig | undefined;
-    if (cfg) return cfg;
-    if (node.slots) {
-      for (const children of Object.values(node.slots)) {
-        for (const child of children) {
-          const found = findDockConfig(child);
-          if (found) return found;
-        }
-      }
-    }
-    if (node.items) {
-      for (const item of node.items) {
-        const found = findDockConfig(item.component);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  }
-
-  if (!zoneEngine) {
-    const dockConfig = findDockConfig(root);
-    if (dockConfig) {
-      zoneEngine = createZoneLayoutEngine(dockConfig, seedLayout?.zones);
-      root = zoneEngine.buildTree();
-      target.style.overflow = "hidden";
-      target.style.padding = "0";
-      target.style.background = "var(--pages-neutral-3)";
-      target.style.color = "var(--pages-neutral-12)";
-    }
-  }
-
   // --- Render (AFTER event listeners and layout seed) ---
 
   const onNode = createActivationCallback(registry, pagePathMap, {
@@ -1265,6 +1250,9 @@ export async function loadSite(
     zoneEngine,
     siteTarget: target,
     floatingWorkspaceRef,
+    layoutStore: options?.layoutStore,
+    layoutKey: options?.layoutKey,
+    seedLayout,
   }, contextManager);
   renderComponent(target, root, { permissions, onNode });
 
@@ -1286,7 +1274,7 @@ export async function loadSite(
   // Apply saved split ratios to rendered DOM
   applySavedSplitRatios(target);
 
-  // Initialize dock panel visibility — one active panel per zone group
+  // Initialize dock panel visibility for standalone dock-bars (not inside <pages-dock-workbench>)
   function initDockZoneGroup(
     buttons: NodeListOf<HTMLElement> | HTMLElement[],
   ): void {
@@ -1397,6 +1385,11 @@ export async function loadSite(
   });
 
   function activateDockPanel(key: string): boolean {
+    const dockEl = target.querySelector<HTMLElement & { showPanel: (id: string) => void }>("pages-dock-workbench");
+    if (dockEl) {
+      dockEl.showPanel(key);
+      return true;
+    }
     const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(key) : key;
     const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
     if (!panelEl) return false;

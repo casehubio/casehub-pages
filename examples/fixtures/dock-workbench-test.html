@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" class="pages-theme-casehub-dark">
+<head>
+  <meta charset="utf-8" />
+  <title>Dock Workbench — Lit Component Test (#436)</title>
+  <script src="/dock-test-bundle.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+    h3 { margin: 0.5rem 1rem; font-size: 0.85rem; color: var(--pages-neutral-10, #888); }
+    #target { flex: 1; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <h3>Issue #436 — Dock Workbench Lit Component</h3>
+  <div id="target"></div>
+  <script>
+    var P = window.casehubPages;
+    var h = function(c) { return P.html(c); };
+    var comp = P.dockWorkbench({
+      storageKey: "dock-wb-test",
+      centre: h("<div style='padding:2rem'><h2>Centre</h2><p>Main workspace</p></div>"),
+      left: {
+        zones: 2,
+        panels: [
+          {key:"nav", label:"Nav", icon:"N", zone:"top", defaultOpen:true, content: h("<div style='padding:1rem'><h3>Navigator</h3><p>File tree</p></div>")},
+          {key:"files", label:"Files", icon:"F", zone:"top", content: h("<div style='padding:1rem'><h3>Files</h3><p>Open files</p></div>")},
+          {key:"marks", label:"Marks", icon:"B", zone:"bottom", content: h("<div style='padding:1rem'><h3>Bookmarks</h3><p>Saved items</p></div>")}
+        ]
+      },
+      right: [
+        {key:"props", label:"Props", icon:"P", zone:"top", defaultOpen:true, content: h("<div style='padding:1rem'><h3>Properties</h3><p>Select a node</p></div>")},
+        {key:"comps", label:"Comps", icon:"C", zone:"top", content: h("<div style='padding:1rem'><h3>Components</h3><p>Palette</p></div>")}
+      ],
+      bottom: {
+        zones: 2,
+        panels: [
+          {key:"console", label:"Console", icon:"T", zone:"left", content: h("<div style='padding:1rem;font-family:monospace'>Ready</div>")},
+          {key:"output", label:"Output", icon:"O", zone:"right", content: h("<div style='padding:1rem;font-family:monospace'>No output</div>")}
+        ]
+      }
+    });
+    P.loadSite(document.getElementById("target"), comp).then(function(site) {
+      console.log("Loaded");
+      window._site = site;
+    });
+  </script>
+</body>
+</html>

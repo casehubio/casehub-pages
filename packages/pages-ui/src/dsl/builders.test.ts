@@ -42,6 +42,7 @@ import {
   dockWorkbench,
   floatingWorkspace,
   serverPaginated,
+  type DockWorkbenchConfig,
   heatmapChart,
   treemapChart,
   densityHeatmap,
@@ -788,131 +789,24 @@ describe("deferred builder", () => {
 });
 
 describe("dockWorkbench builder", () => {
-  function findById(c: Component, id: string): Component | undefined {
-    if (c.id === id) return c;
-    for (const children of Object.values(c.slots ?? {})) {
-      for (const child of children) {
-        const found = findById(child, id);
-        if (found) return found;
-      }
-    }
-    if (c.items) {
-      for (const item of c.items) {
-        const found = findById(item.component, id);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  }
-
-  function collectTypes(c: Component): string[] {
-    const types = [c.type];
-    for (const children of Object.values(c.slots ?? {})) {
-      for (const child of children) types.push(...collectTypes(child));
-    }
-    if (c.items) {
-      for (const item of c.items) types.push(...collectTypes(item.component));
-    }
-    return types;
-  }
-
-  it("generates zone-aware tree for left + centre + bottom config", () => {
-    const result = dockWorkbench({
-      storageKey: "test-wb",
+  it("returns opaque dock-workbench component with config", () => {
+    const config: DockWorkbenchConfig = {
       centre: html("centre"),
       left: [
         { key: "inbox", label: "Inbox", icon: "📥", defaultOpen: true, content: hostPanel("inbox-panel") },
         { key: "cases", label: "Cases", icon: "📋", content: hostPanel("cases-panel") },
       ],
-      bottom: [
-        { key: "chat", label: "Chat", icon: "💬", content: hostPanel("chat-panel") },
-      ],
-    });
-
-    const inbox = findById(result, "inbox");
-    expect(inbox).toBeTruthy();
-    expect(inbox!.style?.display).toBe("none");
-    expect(inbox!.type).toBe("deferred");
-
-    const cases = findById(result, "cases");
-    expect(cases).toBeTruthy();
-    expect(cases!.style?.display).toBe("none");
-
-    // Zone containers have __zone: IDs
-    expect(findById(result, "__zone:left-top")).toBeTruthy();
-    expect(findById(result, "__zone:bottom-left")).toBeTruthy();
-
-    const types = collectTypes(result);
-    // Side stripe dock-bar for left (includes bottom-zone buttons)
-    expect(types.filter(t => t === "dock-bar").length).toBe(1);
-    expect(types.filter(t => t === "split").length).toBeGreaterThanOrEqual(1);
-
-    // Config is attached for auto-detection in loadSite
-    expect((result.props as Record<string, unknown>).__dockConfig).toBeTruthy();
+    };
+    const result = dockWorkbench(config);
+    expect(result.type).toBe("dock-workbench");
+    expect((result.props as Record<string, unknown>).__dockConfig).toBe(config);
   });
 
-  it("generates simple tree for centre-only config", () => {
-    const result = dockWorkbench({
-      centre: html("just centre"),
-    });
-    // Centre-only wraps with flex styling but keeps the html type
-    expect(result.type).toBe("html");
-  });
-
-  function findSplit(c: Component, direction: "horizontal" | "vertical"): Component | undefined {
-    if (c.type === "split" && (c.props as { direction?: string })?.direction === direction) return c;
-    for (const children of Object.values(c.slots ?? {})) {
-      for (const child of children) {
-        const found = findSplit(child, direction);
-        if (found) return found;
-      }
-    }
-    if (c.items) {
-      for (const item of c.items) {
-        const found = findSplit(item.component, direction);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  }
-
-  it("horizontal split gives centre more flex than side panels (left + centre + right)", () => {
+  it("result is frozen", () => {
     const result = dockWorkbench({
       centre: html("centre"),
-      left: [{ key: "explorer", label: "Explorer", icon: "📁", content: html("left") }],
-      right: [{ key: "props", label: "Properties", icon: "⚙", content: html("right") }],
     });
-
-    const hSplit = findSplit(result, "horizontal");
-    expect(hSplit).toBeTruthy();
-    const ratio = (hSplit!.props as { ratio?: number[] }).ratio;
-    expect(ratio).toBeDefined();
-    expect(ratio).toHaveLength(3);
-    expect(ratio![1]).toBeGreaterThan(ratio![0]!);
-    expect(ratio![1]).toBeGreaterThan(ratio![2]!);
-  });
-
-  it("horizontal split gives centre more flex than side panel (left + centre only)", () => {
-    const result = dockWorkbench({
-      centre: html("centre"),
-      left: [{ key: "explorer", label: "Explorer", icon: "📁", content: html("left") }],
-    });
-
-    const hSplit = findSplit(result, "horizontal");
-    expect(hSplit).toBeTruthy();
-    const ratio = (hSplit!.props as { ratio?: number[] }).ratio;
-    expect(ratio).toBeDefined();
-    expect(ratio).toHaveLength(2);
-    expect(ratio![1]).toBeGreaterThan(ratio![0]!);
-  });
-
-  it("omits right dock bar when no right panels", () => {
-    const result = dockWorkbench({
-      centre: html("c"),
-      left: [{ key: "a", label: "A", icon: "a", content: html("a") }],
-    });
-    const barCount = collectTypes(result).filter(t => t === "dock-bar").length;
-    expect(barCount).toBe(1);
+    expect(Object.isFrozen(result)).toBe(true);
   });
 
   describe("serverPaginated()", () => {

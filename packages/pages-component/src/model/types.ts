@@ -60,6 +60,55 @@ export interface LayoutState {
   readonly containerState?: ContainerState;
 }
 
+export interface LayoutStore {
+  load(key: string): Promise<LayoutState | null>;
+  save(key: string, state: LayoutState): Promise<void>;
+  delete(key: string): Promise<void>;
+}
+
+export interface DockPanelConfig {
+  readonly key: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly defaultOpen?: boolean;
+  readonly content: Component;
+  readonly minSize?: number;
+  readonly zone?: "top" | "bottom" | "left" | "right";
+  readonly allowedZones?: readonly DockZone[];
+  readonly fixed?: boolean;
+}
+
+export interface DockSideConfig {
+  readonly zones?: 1 | 2;
+  readonly buttonPosition?: "start" | "end";
+  readonly panels: readonly DockPanelConfig[];
+}
+
+export interface DockWorkbenchConfig {
+  readonly storageKey?: string;
+  readonly centre: Component | Component[];
+  readonly left?: readonly DockPanelConfig[] | DockSideConfig;
+  readonly right?: readonly DockPanelConfig[] | DockSideConfig;
+  readonly bottom?: readonly DockPanelConfig[] | DockSideConfig;
+  readonly statusBar?: Component;
+}
+
+export interface NormalizedSide {
+  readonly zones: 1 | 2;
+  readonly buttonPosition: "start" | "end";
+  readonly panels: readonly DockPanelConfig[];
+  readonly side: DockSide;
+}
+
+export interface NormalizedConfig {
+  readonly centre: Component | Component[];
+  readonly storageKey?: string | undefined;
+  readonly left?: NormalizedSide | undefined;
+  readonly right?: NormalizedSide | undefined;
+  readonly bottom?: NormalizedSide | undefined;
+  readonly statusBar?: Component | undefined;
+}
+
 export type Layout = "free" | "tabbed" | "accordion" | "splith" | "splitv" | "content";
 
 export interface ContainerState {

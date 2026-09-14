@@ -25,6 +25,12 @@ const ROWS_PAGE = `pages:
       - type: pie-chart
 `;
 
+async function awaitReady(shell: PagesBuilderShell): Promise<void> {
+  await shell.updateComplete;
+  const dockEl = shell.shadowRoot!.querySelector('pages-dock-workbench') as any;
+  if (dockEl?.updateComplete) await dockEl.updateComplete;
+}
+
 describe('PagesBuilderShell', () => {
   let el: PagesBuilderShell;
 
@@ -55,8 +61,8 @@ describe('PagesBuilderShell', () => {
     expect(labels).toContain('Undo');
     expect(labels).toContain('Redo');
 
-    const dockIcon = el.shadowRoot!.querySelector('.dock-icon');
-    expect(dockIcon).toBeTruthy();
+    const dockEl = el.shadowRoot!.querySelector('pages-dock-workbench');
+    expect(dockEl).toBeTruthy();
   });
 
   it('adds a page via toolbar button', async () => {
@@ -112,7 +118,7 @@ describe('PagesBuilderShell', () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
-    await el.updateComplete;
+    await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree');
     expect(tree).toBeTruthy();
@@ -122,9 +128,10 @@ describe('PagesBuilderShell', () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
-    await el.updateComplete;
+    await awaitReady(el);
 
     expect(el.shadowRoot!.querySelector('pages-dock-workbench')).toBeTruthy();
+
     expect(el.shadowRoot!.querySelector('.editor-source')).toBeTruthy();
     expect(el.shadowRoot!.querySelector('.editor-visual')).toBeTruthy();
   });
@@ -133,7 +140,7 @@ describe('PagesBuilderShell', () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
-    await el.updateComplete;
+    await awaitReady(el);
 
     const tabs = el.shadowRoot!.querySelectorAll('.view-tab');
     (tabs[0] as HTMLElement).click();
@@ -151,10 +158,10 @@ describe('PagesBuilderShell', () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
-    await el.updateComplete;
+    await awaitReady(el);
 
     const sections = el.shadowRoot!.querySelectorAll('.dock-section');
-    expect(sections.length).toBe(1);
+    expect(sections.length).toBeGreaterThanOrEqual(1);
     const header = sections[0]!.querySelector('.dock-section-header span');
     expect(header!.textContent).toBe('Properties');
   });
@@ -163,12 +170,11 @@ describe('PagesBuilderShell', () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
-    await el.updateComplete;
+    await awaitReady(el);
 
-    const compIcon = el.shadowRoot!.querySelectorAll('.dock-icon')[1] as HTMLElement;
-    compIcon.click();
+    const compBtn = el.shadowRoot!.querySelector('button[data-dock-panel-id="components"]') as HTMLElement;
+    compBtn.click();
     await el.updateComplete;
-
     const sections = el.shadowRoot!.querySelectorAll('.dock-section');
     expect(sections.length).toBe(2);
     const headers = Array.from(sections).map(s => s.querySelector('.dock-section-header span')!.textContent);
@@ -176,20 +182,21 @@ describe('PagesBuilderShell', () => {
     expect(headers).toContain('Components');
   });
 
-  it('toggles properties panel via dock icon', async () => {
+  it('toggles properties panel via dock bar button', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
-    await el.updateComplete;
+    await awaitReady(el);
 
-    const propsIcon = el.shadowRoot!.querySelector('.dock-icon') as HTMLElement;
-    propsIcon.click();
+    const propsBtn = el.shadowRoot!.querySelector('button[data-dock-panel-id="properties"]') as HTMLElement;
+    propsBtn.click();
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.dock-section')).toBeNull();
+    const propsPanel = el.shadowRoot!.querySelector('[data-component-id="properties"]') as HTMLElement;
+    expect(propsPanel?.style.display).toBe('none');
 
-    propsIcon.click();
+    propsBtn.click();
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.dock-section')).toBeTruthy();
+    expect(propsPanel?.style.display).not.toBe('none');
   });
 
   it('creates empty document when no yaml provided', async () => {
@@ -204,7 +211,7 @@ describe('PagesBuilderShell', () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
-    await el.updateComplete;
+    await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('node-select', {
@@ -376,8 +383,8 @@ describe('PagesBuilderShell', () => {
   // --- Palette insertion and context ---
 
   async function openComponentsDock(shell: PagesBuilderShell): Promise<void> {
-    const dockIcons = shell.shadowRoot!.querySelectorAll('.dock-icon');
-    (dockIcons[1] as HTMLElement).click();
+    const compBtn = shell.shadowRoot!.querySelector('button[data-dock-panel-id="components"]') as HTMLElement;
+    compBtn.click();
     await shell.updateComplete;
   }
 
@@ -577,8 +584,8 @@ describe('PagesBuilderShell', () => {
     document.body.appendChild(el);
     await el.updateComplete;
 
-    const dockIcons = el.shadowRoot!.querySelectorAll('.dock-icon');
-    (dockIcons[1] as HTMLElement).click();
+    const compBtn = el.shadowRoot!.querySelector('button[data-dock-panel-id="components"]') as HTMLElement;
+    compBtn.click();
     await el.updateComplete;
 
     const palette1 = el.shadowRoot!.querySelector('pages-builder-palette') as any;

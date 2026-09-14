@@ -111,17 +111,36 @@ describe("schema-form runtime integration", () => {
     if (!condition()) throw new Error(`Timeout: ${msg}`);
   }
 
+  function queryFormFields(schemaForm: Element, selector: string): NodeListOf<Element> {
+    const palette = schemaForm.shadowRoot?.querySelector("pages-property-palette");
+    const fromPalette = palette?.shadowRoot?.querySelectorAll(selector);
+    if (fromPalette && fromPalette.length > 0) return fromPalette;
+    return schemaForm.shadowRoot!.querySelectorAll(selector);
+  }
+
+  function queryFormField(schemaForm: Element, selector: string): Element | null {
+    const palette = schemaForm.shadowRoot?.querySelector("pages-property-palette");
+    return palette?.shadowRoot?.querySelector(selector) ?? schemaForm.shadowRoot!.querySelector(selector);
+  }
+
+  async function waitForFormFields(schemaForm: Element): Promise<void> {
+    await waitFor(
+      () => !!(schemaForm as any).dataSet,
+      "schema-form receives data",
+    );
+    await (schemaForm as any).updateComplete;
+    const palette = schemaForm.shadowRoot?.querySelector("pages-property-palette") as any;
+    if (palette?.updateComplete) await palette.updateComplete;
+  }
+
   it("loadSite activates schema-form with auto-derived schema", async () => {
     site = await loadSite(target, SCHEMA_FORM_YAML);
     const schemaForm = target.querySelector("pages-schema-form");
     expect(schemaForm).not.toBeNull();
 
-    await waitFor(
-      () => !!(schemaForm as any).dataSet,
-      "schema-form receives data",
-    );
+    await waitForFormFields(schemaForm!);
 
-    const children = schemaForm!.shadowRoot!.querySelectorAll(
+    const children = queryFormFields(schemaForm!,
       "pages-input, pages-number-input, pages-select",
     );
     expect(children.length).toBeGreaterThan(0);
@@ -140,12 +159,9 @@ describe("schema-form runtime integration", () => {
   it("field change from schema-form child is handled without crash", async () => {
     site = await loadSite(target, SCHEMA_FORM_YAML);
     const schemaForm = target.querySelector("pages-schema-form");
-    await waitFor(
-      () => !!(schemaForm as any).dataSet,
-      "schema-form receives data",
-    );
+    await waitForFormFields(schemaForm!);
 
-    const textInput = schemaForm!.shadowRoot!.querySelector("pages-input");
+    const textInput = queryFormField(schemaForm!, "pages-input");
     expect(textInput).not.toBeNull();
 
     textInput!.dispatchEvent(
@@ -161,14 +177,11 @@ describe("schema-form runtime integration", () => {
   it("explicit schema renders correct component types", async () => {
     site = await loadSite(target, SCHEMA_FORM_EXPLICIT_YAML);
     const schemaForm = target.querySelector("pages-schema-form");
-    await waitFor(
-      () => !!(schemaForm as any).dataSet,
-      "schema-form receives data",
-    );
+    await waitForFormFields(schemaForm!);
 
-    expect(schemaForm!.shadowRoot!.querySelector("pages-input")).not.toBeNull();
-    expect(schemaForm!.shadowRoot!.querySelector("pages-number-input")).not.toBeNull();
-    expect(schemaForm!.shadowRoot!.querySelector("pages-checkbox")).not.toBeNull();
+    expect(queryFormField(schemaForm!, "pages-input")).not.toBeNull();
+    expect(queryFormField(schemaForm!, "pages-number-input")).not.toBeNull();
+    expect(queryFormField(schemaForm!, "pages-checkbox")).not.toBeNull();
   });
 
   it("schema-form without save config is not editable", async () => {

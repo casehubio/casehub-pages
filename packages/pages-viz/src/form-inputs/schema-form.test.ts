@@ -498,6 +498,7 @@ describe("PagesSchemaForm — fieldsOnly mode", () => {
     const form = document.createElement("pages-schema-form") as PagesSchemaForm;
     form.props = {
       fieldsOnly: true,
+      lookup: { dataSetId: "test", operations: [] } as unknown as DataSetLookup,
       schema: { properties: { name: { type: "string" }, age: { type: "number" } } },
     };
     form.editable = true;

@@ -17,6 +17,12 @@ export type {
   SnapZone,
   ContentFactoryResult,
   ContentFactory,
+  LayoutStore,
+  DockPanelConfig,
+  DockSideConfig,
+  DockWorkbenchConfig,
+  NormalizedSide,
+  NormalizedConfig,
 } from "./types.js";
 export { ALLOW_ALL } from "./types.js";
 
@@ -45,6 +51,7 @@ export type {
   DrillDown,
   RefreshSettings,
   FloatingWorkspaceProps,
+  DockWorkbenchComponentProps,
 } from "./component-props.js";
 
 // Hosting contracts

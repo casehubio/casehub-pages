@@ -1,0 +1,81 @@
+pages:
+  - name: Dock Workbench Test
+    components:
+      - type: dock-workbench
+        storageKey: dock-wb-test
+        centre:
+          - type: html
+            properties:
+              content: |
+                <div style="padding: 2rem; height: 100%;">
+                  <h2>Centre Content</h2>
+                  <p>Main workspace area rendered by the Lit component.</p>
+                </div>
+        left:
+          - key: navigator
+            label: Navigator
+            icon: "\U0001F4C1"
+            defaultOpen: true
+            content:
+              type: html
+              properties:
+                content: |
+                  <div style="padding: 1rem;">
+                    <h3>Navigator</h3>
+                    <ul style="list-style: none; padding: 0;">
+                      <li>📄 index.page.yaml</li>
+                      <li>📄 dashboard.page.yaml</li>
+                      <li>📄 settings.page.yaml</li>
+                    </ul>
+                  </div>
+          - key: search
+            label: Search
+            icon: "\U0001F50D"
+            content:
+              type: html
+              properties:
+                content: |
+                  <div style="padding: 1rem;">
+                    <h3>Search</h3>
+                    <input type="text" placeholder="Search..." style="width: 100%; padding: 4px 8px; border: 1px solid #555; border-radius: 4px; background: transparent; color: inherit;" />
+                  </div>
+        right:
+          - key: properties
+            label: Properties
+            icon: "⚙"
+            zone: top
+            defaultOpen: true
+            content:
+              type: html
+              properties:
+                content: |
+                  <div style="padding: 1rem;">
+                    <h3>Properties</h3>
+                    <p style="color: #888;">Select an element to view its properties.</p>
+                  </div>
+          - key: components
+            label: Components
+            icon: "🧩"
+            zone: bottom
+            content:
+              type: html
+              properties:
+                content: |
+                  <div style="padding: 1rem;">
+                    <h3>Components</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                      <div style="padding: 8px; border: 1px solid #444; border-radius: 4px;">📊 Chart</div>
+                      <div style="padding: 8px; border: 1px solid #444; border-radius: 4px;">📋 Table</div>
+                    </div>
+                  </div>
+        bottom:
+          - key: console
+            label: Console
+            icon: "⌨️"
+            content:
+              type: html
+              properties:
+                content: |
+                  <div style="padding: 1rem; font-family: monospace; font-size: 12px;">
+                    <div style="color: #4ec9b0;">▶ Page loaded</div>
+                  </div>

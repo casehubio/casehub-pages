@@ -1,4 +1,6 @@
-import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, css, nothing, render as litRender, type TemplateResult } from 'lit';
+import type { DockItem } from '@casehubio/pages-component';
+import type { PagesDockWorkbench } from '@casehubio/pages-primitives/dock';
 import { customElement, property, state } from 'lit/decorators.js';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
 import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
@@ -42,11 +44,19 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   @state() private _selectedPath: readonly (string | number)[] | undefined;
   @state() private _selectedNodeType: TreeNodeType | undefined;
   @state() private _viewMode: 'source' | 'visual' | 'split' = 'split';
-  @state() private _treeOpen = true;
-  @state() private _propsOpen = true;
-  @state() private _compsOpen = false;
-  @state() private _dockWidth = 320;
   @state() private _paletteContext: PaletteContext | undefined;
+
+  private _leftPanels: DockItem[] = [
+    { icon: '☰', label: 'Tree', panelId: 'tree', defaultOpen: true },
+  ];
+  private _rightPanels: DockItem[] = [
+    { icon: '☰', label: 'Props', panelId: 'properties', zone: 'top', defaultOpen: true },
+    { icon: '▦', label: 'Comps', panelId: 'components', zone: 'bottom' },
+  ];
+  private _treeContainer?: HTMLElement;
+  private _propsContainer?: HTMLElement;
+  private _compsContainer?: HTMLElement;
+  private _centreContainer?: HTMLElement;
   @state() private _propertySource: PropertyPaletteSource | undefined;
 
   private _yamlSync: YamlSync | undefined;
@@ -110,20 +120,40 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   override firstUpdated(): void {
-    this._pushYamlToEditor();
-    this._connectYamlSync();
-    this._connectEditorCursorSync();
-    this._refreshPreview();
+    this.updateComplete.then(() => {
+      this._pushYamlToEditor();
+      this._connectYamlSync();
+      this._connectEditorCursorSync();
+      this._refreshPreview();
+    });
+  }
+
+  protected override async getUpdateComplete(): Promise<boolean> {
+    const result = await super.getUpdateComplete();
+    const dockEl = this.renderRoot.querySelector('pages-dock-workbench') as any;
+    if (dockEl?.updateComplete) await dockEl.updateComplete;
+    return result;
   }
 
   override updated(changed: Map<PropertyKey, unknown>): void {
     if (changed.has('_viewMode')) {
+      this._syncCentre();
       if (this._viewMode !== 'source') this._refreshPreview();
       this.updateComplete.then(() => {
         this._pushYamlToEditor();
         this._connectYamlSync();
         this._connectEditorCursorSync();
       });
+    }
+    if (changed.has('_selectedPath') || changed.has('_document')) {
+      this._syncTree();
+      if (this._compsContainer) this._refreshPaletteContext();
+    }
+    if (changed.has('_propertySource')) {
+      this._syncProperties();
+    }
+    if (changed.has('_paletteContext')) {
+      this._syncComponents();
     }
   }
 
@@ -503,16 +533,90 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   // --- Right dock panel ---
 
-  private _toggleDock(panel: 'properties' | 'components'): void {
-    if (panel === 'properties') this._propsOpen = !this._propsOpen;
-    if (panel === 'components') {
-      this._compsOpen = !this._compsOpen;
-      if (this._compsOpen) this._refreshPaletteContext();
-    }
+  private _toggleTree(): void {
+    const dockEl = this.renderRoot.querySelector('pages-dock-workbench') as PagesDockWorkbench | null;
+    if (dockEl) dockEl.togglePanel('tree');
   }
 
-  private get _anyDockOpen(): boolean {
-    return this._propsOpen || this._compsOpen;
+  private _renderDockContent = (container: HTMLElement, panelId: string): void => {
+    if (panelId === 'tree') {
+      this._treeContainer = container;
+      container.classList.add('panel-tree');
+      this._syncTree();
+    } else if (panelId === 'properties') {
+      this._propsContainer = container;
+      this._syncProperties();
+    } else if (panelId === 'components') {
+      this._compsContainer = container;
+      this._refreshPaletteContext();
+      this._syncComponents();
+    }
+  };
+
+  private _renderEditorContent = (container: HTMLElement): void => {
+    this._centreContainer = container;
+    container.classList.add('panel-editor');
+    this._syncCentre();
+  };
+
+  private _syncTree(): void {
+    if (!this._treeContainer) return;
+    litRender(html`
+      <pages-builder-tree
+        .document="${this._document}"
+        .selectedPath="${this._selectedPath}"
+        @node-select="${(e: CustomEvent) => this._handleNodeSelect(e)}"
+      ></pages-builder-tree>
+    `, this._treeContainer);
+  }
+
+  private _syncProperties(): void {
+    if (!this._propsContainer) return;
+    litRender(html`
+      <div class="dock-section">
+        <div class="dock-section-header"><span>Properties</span></div>
+        <div class="dock-section-content">
+          ${this._propertySource ? html`
+            <pages-property-palette .source="${this._propertySource}"></pages-property-palette>
+          ` : html`
+            <div class="empty-panel">Select a node to edit its properties.</div>
+          `}
+        </div>
+      </div>
+    `, this._propsContainer);
+  }
+
+  private _syncComponents(): void {
+    if (!this._compsContainer) return;
+    litRender(html`
+      <div class="dock-section">
+        <div class="dock-section-header"><span>Components</span></div>
+        <div class="dock-section-content">
+          <pages-builder-palette
+            .context="${this._paletteContext}"
+            @component-select="${(e: CustomEvent) => this._handleComponentSelect(e)}"
+          ></pages-builder-palette>
+        </div>
+      </div>
+    `, this._compsContainer);
+  }
+
+  private _syncCentre(): void {
+    if (!this._centreContainer) return;
+    const showSource = this._viewMode === 'source' || this._viewMode === 'split';
+    const showVisual = this._viewMode === 'visual' || this._viewMode === 'split';
+    litRender(html`
+      <div class="editor-source${showSource ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
+        <pages-code-editor
+          .extensions="${builderHighlightExtension}"
+          language="yaml"
+          label="Page YAML source"
+        ></pages-code-editor>
+      </div>
+      <div class="editor-visual${showVisual ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
+        <div class="preview-container"></div>
+      </div>
+    `, this._centreContainer);
   }
 
   private _refreshPaletteContext(): void {
@@ -721,44 +825,10 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   // --- Render ---
 
-  private _renderRightPanel(): TemplateResult {
-    const bothOpen = this._propsOpen && this._compsOpen;
-    return html`
-      ${this._propsOpen ? html`
-        <div class="dock-section${bothOpen ? ' half' : ''}">
-          <div class="dock-section-header"><span>Properties</span></div>
-          <div class="dock-section-content">
-            ${this._propertySource ? html`
-              <pages-property-palette .source="${this._propertySource}"></pages-property-palette>
-            ` : html`
-              <div class="empty-panel">Select a node to edit its properties.</div>
-            `}
-          </div>
-        </div>
-      ` : nothing}
-      ${this._compsOpen ? html`
-        <div class="dock-section${bothOpen ? ' half' : ''}">
-          <div class="dock-section-header"><span>Components</span></div>
-          <div class="dock-section-content">
-            <pages-builder-palette
-              .context="${this._paletteContext}"
-              @component-select="${this._handleComponentSelect}"
-            ></pages-builder-palette>
-          </div>
-        </div>
-      ` : nothing}
-    `;
-  }
-
   override render(): TemplateResult {
-    const showSource = this._viewMode === 'source' || this._viewMode === 'split';
-    const showVisual = this._viewMode === 'visual' || this._viewMode === 'split';
-
     return html`
       <div class="shell">
         <div class="toolbar">
-          <button class="toolbar-btn tree-toggle${this._treeOpen ? ' active' : ''}"
-            @click="${() => { this._treeOpen = !this._treeOpen; }}" title="Toggle tree panel">☰</button>
           <button class="toolbar-btn" @click="${this._addPage}" title="Add page">+ Page</button>
           <button class="toolbar-btn" @click="${this._addDataset}" title="Add dataset">+ Dataset</button>
           <div class="toolbar-spacer"></div>
@@ -776,50 +846,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         </div>
 
         <pages-dock-workbench
-          left-width="260"
-          right-width="${this._dockWidth}"
           persist-key="pages-builder"
-          .leftCollapsed="${!this._treeOpen}"
-          .rightCollapsed="${!this._anyDockOpen}"
-          .bottomEnabled="${false}"
+          .leftPanels="${this._leftPanels}"
+          .rightPanels="${this._rightPanels}"
+          .renderContent="${this._renderDockContent}"
+          .renderCentre="${this._renderEditorContent}"
         >
-          <div slot="left" class="panel-tree">
-            <pages-builder-tree
-              .document="${this._document}"
-              .selectedPath="${this._selectedPath}"
-              @node-select="${this._handleNodeSelect}"
-            ></pages-builder-tree>
-          </div>
-
-          <div slot="centre" class="panel-editor">
-            <div class="editor-source${showSource ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
-              <pages-code-editor
-                .extensions="${builderHighlightExtension}"
-                language="yaml"
-                label="Page YAML source"
-              ></pages-code-editor>
-            </div>
-            <div class="editor-visual${showVisual ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
-              <div class="preview-container"></div>
-            </div>
-          </div>
-
-          <div slot="right">
-            ${this._renderRightPanel()}
-          </div>
-
-          <div slot="toggle-bar-right">
-            <button class="dock-icon${this._propsOpen ? ' active' : ''}"
-              @click="${() => this._toggleDock('properties')}" title="Properties">
-              <span class="dock-icon-glyph">&#x2630;</span>
-              <span class="dock-icon-label">Props</span>
-            </button>
-            <button class="dock-icon${this._compsOpen ? ' active' : ''}"
-              @click="${() => this._toggleDock('components')}" title="Components">
-              <span class="dock-icon-glyph">&#x25A6;</span>
-              <span class="dock-icon-label">Comps</span>
-            </button>
-          </div>
         </pages-dock-workbench>
       </div>
     `;

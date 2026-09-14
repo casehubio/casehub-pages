@@ -1,20 +1,6 @@
 import { attachDockDrag } from "./dock-drag.js";
 import type { ZoneLayoutEngine } from "./zone-layout-engine.js";
-
-export interface DockBarItem {
-  readonly icon: string;
-  readonly label: string;
-  readonly panelId: string;
-  readonly defaultOpen?: boolean | undefined;
-  readonly zone?: string | undefined;
-}
-
-export interface DockBarProps {
-  readonly orientation?: string | undefined;
-  readonly exclusive?: boolean | undefined;
-  readonly side?: string | undefined;
-  readonly items?: readonly DockBarItem[] | undefined;
-}
+import type { DockItem, DockBarProps } from "@casehubio/pages-component";
 
 export interface DockBarOptions {
   readonly zoneEngine?: ZoneLayoutEngine | undefined;
@@ -23,7 +9,7 @@ export interface DockBarOptions {
 
 function renderDockButtons(
   container: HTMLElement,
-  items: readonly DockBarItem[],
+  items: readonly DockItem[],
   eventTarget: HTMLElement,
   exclusive: boolean,
   zoneName: string | undefined,
@@ -78,7 +64,7 @@ export function renderDockBar(el: HTMLElement, props: DockBarProps, options?: Do
     const bottomItems = items.filter(i => i.zone === "bottom");
     const flexDir = orientation === "horizontal" ? "row" : "column";
 
-    function makeGroup(zoneName: string, groupItems: readonly DockBarItem[]): HTMLElement {
+    function makeGroup(zoneName: string, groupItems: readonly DockItem[]): HTMLElement {
       const group = document.createElement("div");
       group.dataset.dockZone = zoneName;
       group.style.display = "flex";

@@ -1,5 +1,4 @@
-import type { Component, DockZone, DockSide } from "@casehubio/pages-component";
-import type { DockPanelConfig, DockWorkbenchConfig } from "@casehubio/pages-ui/dist/dsl/builders.js";
+import type { Component, DockZone, DockSide, DockPanelConfig, DockWorkbenchConfig } from "@casehubio/pages-component";
 import { normalizeConfig, buildInitialZoneMap, buildTreeFromZones } from "@casehubio/pages-ui/dist/dsl/builders.js";
 
 const ALL_ZONES: readonly DockZone[] = [

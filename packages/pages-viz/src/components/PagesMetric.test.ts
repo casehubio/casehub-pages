@@ -491,4 +491,23 @@ describe("PagesMetric", () => {
       expect(el.shadowRoot!.querySelector(".sparkline-container")).toBeNull();
     });
   });
+
+  describe("static metric (no lookup)", () => {
+    it("renders without a dataSet when no lookup is provided", async () => {
+      const props: MetricProps = {
+        label: "Total Users",
+        value: "1,247",
+      };
+
+      el.props = props;
+      document.body.appendChild(el);
+      await el.updateComplete;
+
+      const loading = el.shadowRoot!.querySelector("[data-pages-loading]");
+      expect(loading).toBeNull();
+
+      const content = el.shadowRoot!.textContent;
+      expect(content).toContain("1,247");
+    });
+  });
 });

@@ -1,5 +1,5 @@
 import type { DataSetLookup } from "@casehubio/pages-data";
-import type { Component, DockZone, DockSide, FrameConfig } from "./types.js";
+import type { Component, DockZone, DockSide, DockWorkbenchConfig, FrameConfig } from "./types.js";
 
 export interface GridProps {
   readonly columns: number;
@@ -95,4 +95,8 @@ export interface FloatingWorkspaceProps {
   readonly centre: Component | Component[];
   readonly frames?: readonly FrameConfig[];
   readonly organisers?: boolean;
+}
+
+export interface DockWorkbenchComponentProps {
+  readonly __dockConfig: DockWorkbenchConfig;
 }

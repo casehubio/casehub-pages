@@ -1854,6 +1854,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-primitives@workspace:packages/pages-primitives"
   dependencies:
+    "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@open-wc/testing": "npm:^4.0.0"
     jsdom: "npm:^26.0.0"
@@ -1885,6 +1886,7 @@ __metadata:
   dependencies:
     "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-primitives": "workspace:*"
     "@casehubio/pages-table": "workspace:*"
     "@casehubio/pages-ui": "workspace:*"
     "@casehubio/pages-ui-components": "workspace:*"

@@ -21,6 +21,11 @@ import type {
   DockSide,
   FloatingWorkspaceConfig,
   FloatingWorkspaceProps,
+  DockPanelConfig,
+  DockSideConfig,
+  DockWorkbenchConfig,
+  NormalizedSide,
+  NormalizedConfig,
 } from "@casehubio/pages-component";
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data";
@@ -601,50 +606,9 @@ export function deferred(child: Component): Component {
   return freeze({ type: "deferred" as const, slots: freeze({ default: [child] }) });
 }
 
-export interface DockPanelConfig {
-  readonly key: string;
-  readonly label: string;
-  readonly icon: string;
-  readonly defaultOpen?: boolean;
-  readonly content: Component;
-  readonly minSize?: number;
-  readonly zone?: "top" | "bottom" | "left" | "right";
-  readonly allowedZones?: readonly DockZone[];
-  readonly fixed?: boolean;
-}
-
-export interface DockSideConfig {
-  readonly zones?: 1 | 2;
-  readonly buttonPosition?: "start" | "end";
-  readonly panels: readonly DockPanelConfig[];
-}
-
-export interface DockWorkbenchConfig {
-  readonly storageKey?: string;
-  readonly centre: Component | Component[];
-  readonly left?: readonly DockPanelConfig[] | DockSideConfig;
-  readonly right?: readonly DockPanelConfig[] | DockSideConfig;
-  readonly bottom?: readonly DockPanelConfig[] | DockSideConfig;
-  readonly statusBar?: Component;
-}
+export type { DockPanelConfig, DockSideConfig, DockWorkbenchConfig, NormalizedSide, NormalizedConfig };
 
 // --- Zone-aware tree generation (used by dockWorkbench and ZoneLayoutEngine) ---
-
-export interface NormalizedSide {
-  readonly zones: 1 | 2;
-  readonly buttonPosition: "start" | "end";
-  readonly panels: readonly DockPanelConfig[];
-  readonly side: DockSide;
-}
-
-export interface NormalizedConfig {
-  readonly centre: Component | Component[];
-  readonly storageKey?: string | undefined;
-  readonly left?: NormalizedSide | undefined;
-  readonly right?: NormalizedSide | undefined;
-  readonly bottom?: NormalizedSide | undefined;
-  readonly statusBar?: Component | undefined;
-}
 
 function normalizeSide(
   input: readonly DockPanelConfig[] | DockSideConfig,
@@ -889,14 +853,8 @@ export function buildTreeFromZones(
   return withStyle({ height: "100%" }, mainArea);
 }
 
-export function dockWorkbench(config: DockWorkbenchConfig): Component {
-  const normalized = normalizeConfig(config);
-  const zoneMap = buildInitialZoneMap(normalized);
-  const tree = buildTreeFromZones(normalized, zoneMap);
-  return freeze({
-    ...tree,
-    props: freeze({ ...(tree.props ?? {}), __dockConfig: config }),
-  });
+export function dockWorkbench(config: DockWorkbenchConfig): TypedComponent<"dock-workbench"> {
+  return Object.freeze({ type: "dock-workbench" as const, props: { __dockConfig: config } });
 }
 
 export interface ServerPaginationOptions {

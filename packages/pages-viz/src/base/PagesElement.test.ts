@@ -141,11 +141,18 @@ describe("PagesElement", () => {
       expect(el.renderContentCalls).toHaveLength(0);
     });
 
-    it("does not call renderContent when no dataset", async () => {
-      el.props = { label: "test" };
+    it("does not call renderContent when no dataset and lookup present", async () => {
+      el.props = { label: "test", lookup: mockLookup("pending") };
       document.body.appendChild(el);
       await el.updateComplete;
       expect(el.renderContentCalls).toHaveLength(0);
+    });
+
+    it("calls renderContent immediately when no lookup", async () => {
+      el.props = { label: "static" };
+      document.body.appendChild(el);
+      await el.updateComplete;
+      expect(el.renderContentCalls.length).toBeGreaterThanOrEqual(1);
     });
 
     it("calls renderContent when both props and dataset are present", async () => {
@@ -224,13 +231,22 @@ describe("PagesElement", () => {
   });
 
   describe("loading state", () => {
-    it("shows loading skeleton when props set but no dataset", async () => {
-      el.props = { label: "test" };
+    it("shows loading skeleton when props with lookup set but no dataset", async () => {
+      el.props = { label: "test", lookup: mockLookup("pending") };
       document.body.appendChild(el);
       await el.updateComplete;
 
       const skeleton = el.shadowRoot!.querySelector("[data-pages-loading]");
       expect(skeleton).not.toBeNull();
+    });
+
+    it("no loading skeleton when props without lookup", async () => {
+      el.props = { label: "static" };
+      document.body.appendChild(el);
+      await el.updateComplete;
+
+      const skeleton = el.shadowRoot!.querySelector("[data-pages-loading]");
+      expect(skeleton).toBeNull();
     });
   });
 

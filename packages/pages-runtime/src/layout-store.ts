@@ -1,10 +1,6 @@
-import type { LayoutState } from "@casehubio/pages-component";
+import type { LayoutState, LayoutStore } from "@casehubio/pages-component";
 
-export interface LayoutStore {
-  load(key: string): Promise<LayoutState | null>;
-  save(key: string, state: LayoutState): Promise<void>;
-  delete(key: string): Promise<void>;
-}
+export type { LayoutStore };
 
 export function createLocalLayoutStore(prefix = "pages-layout:"): LayoutStore {
   return {

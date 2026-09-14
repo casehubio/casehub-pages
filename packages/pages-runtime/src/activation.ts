@@ -1,5 +1,8 @@
-import type {Component, PermissionContext} from "@casehubio/pages-component";
+import type {Component, PermissionContext, DockWorkbenchConfig, DockPanelConfig, DockSideConfig, DockItem, DockZone, LayoutStore, LayoutState} from "@casehubio/pages-component";
 import {ALLOW_ALL} from "@casehubio/pages-component";
+import "@casehubio/pages-primitives/dock";
+import type {PagesDockWorkbench} from "@casehubio/pages-primitives/dock";
+import {createZoneLayoutEngine} from "./zone-layout-engine.js";
 import type {DataSetLookup} from "@casehubio/pages-data";
 import type {ColumnId, DataSetId, TypedRow} from "@casehubio/pages-data";
 import {ColumnType} from "@casehubio/pages-data";
@@ -50,7 +53,8 @@ function validateFormField(
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
 import {renderDockBar} from "./dock-bar-renderer.js";
-import type {DockBarProps, DockBarOptions} from "./dock-bar-renderer.js";
+import type {DockBarOptions} from "./dock-bar-renderer.js";
+import type {DockBarProps} from "@casehubio/pages-component";
 import type {FloatingWorkspaceProps, ContentFactory, ContainerState} from "@casehubio/pages-component";
 import {wireFloatingWorkspace} from "./wire-floating-workspace.js";
 import {createContainer} from "./frame-sandbox/index.js";
@@ -116,6 +120,9 @@ export interface LazyPageOptions {
     stash: ContainerState | undefined;
   };
   readonly nestingDepth?: number;
+  readonly layoutStore?: LayoutStore | undefined;
+  readonly layoutKey?: string | undefined;
+  readonly seedLayout?: LayoutState | null | undefined;
 }
 
 
@@ -556,7 +563,72 @@ export function createActivationCallback(
       const dockBarOpts: DockBarOptions | undefined = options?.zoneEngine && options?.siteTarget
         ? { zoneEngine: options.zoneEngine, siteTarget: options.siteTarget }
         : undefined;
-      renderDockBar(el, component.props as DockBarProps, dockBarOpts);
+      renderDockBar(el, component.props as unknown as DockBarProps, dockBarOpts);
+      return;
+    }
+
+    if (component.type === "dock-workbench" && component.props) {
+      const config = (component.props as Record<string, unknown>).__dockConfig as DockWorkbenchConfig;
+      const dwZoneEngine = createZoneLayoutEngine(config, options?.seedLayout?.zones);
+
+      const panelMap = new Map<string, DockPanelConfig>();
+      function extractPanels(side: readonly DockPanelConfig[] | DockSideConfig | undefined): DockItem[] | undefined {
+        if (!side) return undefined;
+        const panels: readonly DockPanelConfig[] = Array.isArray(side) ? side : (side as DockSideConfig).panels;
+        return panels.map(p => {
+          panelMap.set(p.key, p);
+          const base: { icon: string; label: string; panelId: string; defaultOpen?: boolean; zone?: "top" | "bottom" | "left" | "right"; allowedZones?: readonly DockZone[]; fixed?: boolean } = { icon: p.icon, label: p.label, panelId: p.key };
+          if (p.defaultOpen !== undefined) base.defaultOpen = p.defaultOpen;
+          if (p.zone !== undefined) base.zone = p.zone;
+          if (p.allowedZones !== undefined) base.allowedZones = p.allowedZones;
+          if (p.fixed !== undefined) base.fixed = p.fixed;
+          return base as DockItem;
+        });
+      }
+
+      const dockEl = document.createElement("pages-dock-workbench") as PagesDockWorkbench;
+      const leftItems = extractPanels(config.left);
+      const rightItems = extractPanels(config.right);
+      const bottomItems = extractPanels(config.bottom);
+      if (leftItems) dockEl.leftPanels = leftItems;
+      if (rightItems) dockEl.rightPanels = rightItems;
+      if (bottomItems) dockEl.bottomPanels = bottomItems;
+      if (options?.layoutStore) dockEl.layoutStore = options.layoutStore;
+      if (options?.layoutKey) dockEl.persistKey = options.layoutKey;
+      dockEl.zoneMap = dwZoneEngine.zoneMap;
+      dockEl.renderContent = (container: HTMLElement, panelId: string) => {
+        const panel = panelMap.get(panelId);
+        if (panel) {
+          renderComponent(container, panel.content, {
+            permissions: options?.permissions ?? ALLOW_ALL,
+            onNode: callback,
+          });
+        }
+      };
+      dockEl.renderCentre = (container: HTMLElement) => {
+        const centreComponents = Array.isArray(config.centre) ? config.centre : [config.centre];
+        const centreRoot = centreComponents.length === 1
+          ? centreComponents[0]!
+          : { type: "rows" as const, slots: { default: [...centreComponents] } };
+        renderComponent(container, centreRoot, {
+          permissions: options?.permissions ?? ALLOW_ALL,
+          onNode: callback,
+        });
+      };
+
+      if (options?.siteTarget) {
+        options.siteTarget.style.overflow = "hidden";
+        options.siteTarget.style.padding = "0";
+        options.siteTarget.style.background = "var(--pages-neutral-3)";
+        options.siteTarget.style.color = "var(--pages-neutral-12)";
+      }
+
+      el.style.flex = "1";
+      el.style.minHeight = "0";
+      el.style.height = "100%";
+      el.style.display = "flex";
+      el.style.flexDirection = "column";
+      el.appendChild(dockEl);
       return;
     }
 
