@@ -8,6 +8,9 @@ import { json } from '@codemirror/lang-json';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { tags } from '@lezer/highlight';
 import { yamlLinter } from './yaml-lint.js';
+import { CodeEditorBridge } from './code-editor-bridge.js';
+
+const EDITABLE_TEXT = Symbol.for('scenario-editable-text');
 
 const pagesHighlightStyle = HighlightStyle.define([
   { tag: tags.propertyName, color: 'var(--pages-accent-11, #3451b2)' },
@@ -200,6 +203,7 @@ export class PagesCodeEditor extends LitElement {
       }),
       parent: container,
     });
+    (this as any)[EDITABLE_TEXT] = new CodeEditorBridge(this._editorView);
   }
 
   private _syncProperties(changed: PropertyValues) {
