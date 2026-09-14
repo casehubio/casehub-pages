@@ -28,18 +28,18 @@ export interface YamlModule {
 export interface YamlImport {
   module: string;
   as: string;
-  when?: string;
+  when?: string | undefined;
   parameters: Record<string, string>;
 }
 
 export interface IterationGroup {
-  as?: string;
+  as?: string | undefined;
   in: unknown[];
 }
 
 export type ForEachDirective =
   | { type: 'inline'; as: string; in: unknown[] }
-  | { type: 'group-ref'; groupName: string; as?: string };
+  | { type: 'group-ref'; groupName: string; as?: string | undefined };
 
 export type VariableSource = (key: string) => string | undefined;
 
