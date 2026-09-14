@@ -135,34 +135,8 @@ async function waitIfPaused(rs: RunnerState): Promise<void> {
   }
 }
 
-function executeAriaStep(step: { action?: string; target?: unknown; value?: string }): void {
-  // Dynamic import would create circular deps — inline the essential ARIA ops
-  const target = step.target as { role?: string; name?: string; index?: string; within?: unknown } | undefined;
-  if (!target) return;
-
-  const selector = `[role="${target.role}"][aria-label="${target.name}"]`;
-  const el = document.querySelector(selector);
-  if (!el) return;
-
-  switch (step.action) {
-    case 'click':
-      (el as HTMLElement).click();
-      break;
-    case 'fill': {
-      const input = el as HTMLInputElement;
-      input.value = step.value ?? '';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-      break;
-    }
-    case 'select': {
-      const select = el as HTMLSelectElement;
-      select.value = step.value ?? '';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      break;
-    }
-  }
-}
+// executeAriaStep replaced by executeStep from command-executor
+import { executeStep } from '../executor/command-executor.js';
 
 export function runSectionedScenario(
   scenario: SectionedScenario,
@@ -247,9 +221,8 @@ export function runSectionedScenario(
         const step = section.steps[sti];
         if (step.delivery === 'aria') {
           try {
-            executeAriaStep(step as { action?: string; target?: unknown; value?: string });
+            await executeStep(step as any, eventTarget, rs.speed);
           } catch {
-            // Step execution error — pause
             rs.paused = true;
             fireState(eventTarget, scenario, rs, undefined, content, templates);
             await waitIfPaused(rs);

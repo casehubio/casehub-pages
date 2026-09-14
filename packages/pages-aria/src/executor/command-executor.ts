@@ -69,6 +69,27 @@ export function assertState(target: AriaTarget, expected: Partial<AriaState>): v
   }
 }
 
+export async function executeStep(
+  step: { delivery?: string; action?: string; target?: AriaTarget; [key: string]: unknown },
+  _eventTarget?: EventTarget,
+  _speed = 1.0,
+): Promise<void> {
+  if (step.delivery && step.delivery !== 'aria') return;
+  if (!step.action) return;
+
+  switch (step.action) {
+    case 'click': return click(step.target!);
+    case 'fill': return fill(step.target!, step['value'] as string);
+    case 'select': return select(step.target!, step['value'] as string);
+    case 'expand': return expand(step.target!);
+    case 'collapse': return collapse(step.target!);
+    case 'assert': return assertState(step.target!, step['state'] as Partial<AriaState>);
+    case 'wait': return waitFor(step.target!, step['state'] as Partial<AriaState>, (step['timeout'] as number) ?? 5000);
+    case 'navigate': window.location.href = step['value'] as string; return;
+    default: throw new Error(`Unknown action: ${step.action}`);
+  }
+}
+
 export async function waitFor(
   target: AriaTarget,
   expected: Partial<AriaState>,
