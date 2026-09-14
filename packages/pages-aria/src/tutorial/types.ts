@@ -11,6 +11,7 @@ export interface TutorialDescriptor {
   prerequisites: string[];
   path: string;
   contentType: 'slides-only' | 'hands-on' | 'yaml-editor';
+  target?: 'builder-shell';
   hero?: { title: string; subtitle?: string; icon?: string };
 }
 

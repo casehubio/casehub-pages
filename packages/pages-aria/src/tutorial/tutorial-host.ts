@@ -24,6 +24,8 @@ export class PagesTutorialHost extends LitElement {
     }
     .tutorial-main { flex: 1; min-width: 0; }
     .tutorial-sidebar { width: 280px; flex-shrink: 0; }
+    .tutorial-target { flex: 3; min-width: 0; min-height: 500px; }
+    .tutorial-layout--with-target .tutorial-main { flex: 2; }
     .tutorial-header {
       margin-bottom: 16px;
     }
@@ -213,6 +215,8 @@ export class PagesTutorialHost extends LitElement {
       return this._renderYamlEditorTutorial(desc);
     }
 
+    const hasTarget = desc?.target === 'builder-shell';
+
     return html`
       <button class="back-btn" @click=${() => { this._onBack(); }}>← Back to Tutorials</button>
       ${desc ? html`
@@ -221,7 +225,12 @@ export class PagesTutorialHost extends LitElement {
           <p>${desc.description}</p>
         </div>
       ` : nothing}
-      <div class="tutorial-layout">
+      <div class="tutorial-layout ${hasTarget ? 'tutorial-layout--with-target' : ''}">
+        ${hasTarget ? html`
+          <div class="tutorial-target">
+            <pages-builder-shell></pages-builder-shell>
+          </div>
+        ` : nothing}
         <div class="tutorial-main">
           <pages-scenario-narrative
             .eventTarget=${this._eventTarget}
@@ -234,12 +243,19 @@ export class PagesTutorialHost extends LitElement {
             <button ?disabled=${this._currentSection >= this._totalSections - 1}
                     @click=${() => { this._onNext(); }}>Next →</button>
           </div>
+          ${hasTarget ? html`
+            <pages-scenario-controller
+              .eventTarget=${this._eventTarget}
+            ></pages-scenario-controller>
+          ` : nothing}
         </div>
-        <div class="tutorial-sidebar">
-          <pages-scenario-controller
-            .eventTarget=${this._eventTarget}
-          ></pages-scenario-controller>
-        </div>
+        ${hasTarget ? nothing : html`
+          <div class="tutorial-sidebar">
+            <pages-scenario-controller
+              .eventTarget=${this._eventTarget}
+            ></pages-scenario-controller>
+          </div>
+        `}
       </div>
     `;
   }
