@@ -59,7 +59,8 @@ export function detectFormat(
 
   if (inspector.hasKey(['organization'])) return 'org';
   if (inspector.hasKey(['do'])) return 'swf';
-  if (inspector.hasKey(['pages']) || inspector.hasKey(['datasets'])) return 'page';
+  if (inspector.hasKey(['pages']) || inspector.hasKey(['datasets'])
+    || inspector.hasKey(['modules']) || inspector.hasKey(['imports'])) return 'page';
   if (inspector.hasKey(['dsl']) && inspector.hasKey(['spec'])) {
     if (
       inspector.hasKey(['spec', 'bindings']) ||

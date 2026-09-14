@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { externalDataSetDefSchema } from "@casehubio/pages-data";
+import { yamlCoreElementMixin } from "@casehubio/yaml-core/schema";
 import {
   barChartPropsSchema, lineChartPropsSchema, areaChartPropsSchema,
   pieChartPropsSchema, scatterChartPropsSchema, bubbleChartPropsSchema,
@@ -28,6 +29,7 @@ const componentBase = z.object({
   id: z.string().optional(),
   style: z.record(z.string()).optional(),
   visibleWhen: z.string().optional(),
+  ...yamlCoreElementMixin,
 });
 
 export const componentSchema: z.ZodType = z.discriminatedUnion("type", [

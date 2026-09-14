@@ -33,6 +33,14 @@ describe('detectFormat', () => {
     expect(detectFormat('org.yaml', yaml)).toBe('org');
   });
 
+  it('detects Page by content (modules key)', () => {
+    expect(detectFormat('template.yaml', 'modules:\n  greeting:\n    parameters: {}\n')).toBe('page');
+  });
+
+  it('detects Page by content (imports key)', () => {
+    expect(detectFormat('template.yaml', 'imports:\n  - module: greeting\n    as: hi\n')).toBe('page');
+  });
+
   it('returns undefined for unrecognised YAML', () => {
     expect(detectFormat('random.yaml', 'foo: bar\n')).toBeUndefined();
   });

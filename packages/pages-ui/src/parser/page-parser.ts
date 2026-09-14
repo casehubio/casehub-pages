@@ -1,4 +1,5 @@
 import type { Component, GridItem } from "../model/types.js";
+import { expand } from "@casehubio/yaml-core/expand";
 import { substituteProperties } from "./property-substitution.js";
 import { desugarComponent } from "./component-desugar.js";
 import { resolveNavigation, collectNavTreePageNames, collectNavTreeGroupIds } from "./nav-desugar.js";
@@ -21,7 +22,13 @@ export function parsePage(raw: unknown): Component {
     throw new Error("Invalid input: expected an object");
   }
 
-  const input = raw as Record<string, unknown>;
+  let input = raw as Record<string, unknown>;
+
+  // 0. yaml-core expansion (variables, modules, forEach, conditionals)
+  const YAML_CORE_KEYS = ['variables', 'modules', 'imports', 'iterations', 'data'];
+  if (YAML_CORE_KEYS.some(k => k in input)) {
+    input = expand(input, { strict: false }).map;
+  }
 
   // 1. Extract properties for substitution
   const properties = (input["properties"] ?? {}) as Record<string, string>;

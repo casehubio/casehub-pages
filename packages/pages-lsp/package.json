@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@casehubio/pages-schema": "workspace:*",
+    "@casehubio/yaml-core": "workspace:*",
     "vscode-languageserver": "^10.0.0",
     "vscode-languageserver-textdocument": "^1.0.12",
     "yaml": "^2.7.1",

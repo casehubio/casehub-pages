@@ -121,6 +121,52 @@ describe('integration: Page YAML', () => {
     expect(Object.keys(result!.changes)).toHaveLength(2);
   });
 
+  it('offers yaml-core keys at document root', () => {
+    const registry = createSchemaRegistry();
+    registry.register(pageFormat);
+    const items = handleCompletion(
+      'file:///test.page.yaml', '', { line: 0, character: 0 }, registry,
+    );
+    const labels = items.map(i => i.label);
+    expect(labels).toContain('modules');
+    expect(labels).toContain('imports');
+    expect(labels).toContain('variables');
+    expect(labels).toContain('iterations');
+    expect(labels).toContain('data');
+  });
+
+  it('offers forEach and when on component elements', () => {
+    const registry = createSchemaRegistry();
+    registry.register(pageFormat);
+    const doc = 'pages:\n  - name: Home\n    components:\n      - type: title\n        ';
+    const lines = doc.split('\n');
+    const lastLine = lines[lines.length - 1]!;
+    const items = handleCompletion(
+      'file:///test.page.yaml', doc,
+      { line: lines.length - 1, character: lastLine.length },
+      registry,
+    );
+    const labels = items.map(i => i.label);
+    expect(labels).toContain('- forEach');
+    expect(labels).toContain('- when');
+  });
+
+  it('detects page format by modules key in content', () => {
+    const registry = createSchemaRegistry();
+    registry.register(pageFormat);
+    const content = 'modules:\n  greeting:\n    parameters: {}\n';
+    const detected = registry.detect('file:///app/template.yaml', content);
+    expect(detected?.formatId).toBe('page');
+  });
+
+  it('detects page format by imports key in content', () => {
+    const registry = createSchemaRegistry();
+    registry.register(pageFormat);
+    const content = 'imports:\n  - module: greeting\n    as: hi\n';
+    const detected = registry.detect('file:///app/template.yaml', content);
+    expect(detected?.formatId).toBe('page');
+  });
+
   it('produces no syntax errors for a real example', () => {
     const registry = createSchemaRegistry();
     registry.register(pageFormat);

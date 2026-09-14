@@ -665,4 +665,55 @@ describe("parsePage", () => {
       expect(panelItem.props?.["title"]).toBe("Charts");
     });
   });
+
+  describe("yaml-core expansion", () => {
+    it("passes through plain page YAML unchanged", () => {
+      const root = parsePage({
+        pages: [{ name: "test", components: [{ html: "Hello" }] }],
+      });
+      expect(root.slots!["content"]![0]!.props!["name"]).toBe("test");
+    });
+
+    it("resolves yaml-core variables before parsing", () => {
+      const root = parsePage({
+        variables: { app: { title: "My Dashboard" } },
+        pages: [
+          {
+            name: "${app.title}",
+            components: [{ title: "${app.title}" }],
+          },
+        ],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.props!["name"]).toBe("My Dashboard");
+    });
+
+    it("coexists with page-level properties substitution", () => {
+      const root = parsePage({
+        variables: { app: { env: "production" } },
+        properties: { title: "Dashboard" },
+        pages: [
+          {
+            name: "${title}",
+            components: [{ html: "${app.env}" }],
+          },
+        ],
+      });
+      const page = root.slots!["content"]![0]!;
+      // ${title} resolved by page properties (no dot separator)
+      expect(page.props!["name"]).toBe("Dashboard");
+      // ${app.env} resolved by yaml-core (dot-separated prefix)
+      const comp = page.items![0]!.component;
+      expect(comp.props!["content"]).toBe("production");
+    });
+
+    it("strips yaml-core keys from output", () => {
+      const root = parsePage({
+        variables: { app: { name: "test" } },
+        pages: [{ name: "test", components: [{ html: "Hi" }] }],
+      });
+      // The root should not contain yaml-core keys
+      expect(root.props!["variables"]).toBeUndefined();
+    });
+  });
 });

@@ -1837,6 +1837,7 @@ __metadata:
   dependencies:
     "@casehubio/pages-schema": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/yaml-core": "workspace:*"
     esbuild: "npm:^0.28.1"
     rimraf: "npm:^6.0.1"
     typescript: "npm:^5.6.0"
@@ -1909,6 +1910,7 @@ __metadata:
     "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/yaml-core": "workspace:*"
     rimraf: "npm:^6.1.0"
     ts-morph: "npm:^24.0.0"
     tsx: "npm:^4.19.0"
@@ -1983,6 +1985,7 @@ __metadata:
     "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-schema": "workspace:*"
+    "@casehubio/yaml-core": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
     glob: "npm:^11.0.0"
     happy-dom: "npm:^20.10.6"
@@ -2041,7 +2044,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/yaml-core@workspace:packages/yaml-core":
+"@casehubio/yaml-core@workspace:*, @casehubio/yaml-core@workspace:packages/yaml-core":
   version: 0.0.0-use.local
   resolution: "@casehubio/yaml-core@workspace:packages/yaml-core"
   dependencies:

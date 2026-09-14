@@ -107,10 +107,7 @@ export class VariableResolver {
   private lookupVariable(key: string, elementContext: string): string | null {
     const dot = key.indexOf('.');
     if (dot < 0) {
-      throw new UnresolvedVariableError(key, elementContext,
-        `Bare variable references are not supported. ` +
-        `Use \${var.${key}} instead of \${${key}}. ` +
-        `Available prefixes: ${this.availablePrefixes()}.`);
+      return null;
     }
 
     const prefix = key.substring(0, dot);

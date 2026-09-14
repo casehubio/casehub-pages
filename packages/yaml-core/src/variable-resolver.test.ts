@@ -78,11 +78,10 @@ describe('VariableResolver', () => {
     expect(resolver.resolve(3.14)).toBe(3.14);
   });
 
-  it('bare name throws with guidance', () => {
+  it('bare name passes through as literal', () => {
     const resolver = new VariableResolver(
       { var: mapSource({ x: '1' }) }, new Set());
-    expect(() => resolver.resolveString('${x}', 'test'))
-      .toThrow('${var.x}');
+    expect(resolver.resolveString('${x}', 'test')).toBe('${x}');
   });
 
   it('unknown prefix throws listing available', () => {
