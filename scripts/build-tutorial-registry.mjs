@@ -63,9 +63,14 @@ function scanTutorials() {
 
     let contentType = 'slides-only';
     if (sections) {
-      for (const sec of sections) {
-        const steps = sec.steps;
-        if (steps && steps.length > 0) { contentType = 'hands-on'; break; }
+      const hasInitialYaml = sections.some(sec => sec.initialYaml);
+      if (hasInitialYaml) {
+        contentType = 'yaml-editor';
+      } else {
+        for (const sec of sections) {
+          const steps = sec.steps;
+          if (steps && steps.length > 0) { contentType = 'hands-on'; break; }
+        }
       }
     }
 

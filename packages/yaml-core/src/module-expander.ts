@@ -280,6 +280,7 @@ export class ModuleExpander {
     imports: YamlImport[],
     availableModules: Record<string, YamlModule>,
     existingSections: Record<string, Record<string, unknown>>,
+    deferredPrefixes?: Set<string>,
   ): ExpandedModule {
     validateImports(imports, availableModules);
     validateModuleRefs(imports, availableModules);
@@ -292,6 +293,8 @@ export class ModuleExpander {
     for (const [key, value] of Object.entries(existingSections)) {
       mergedSections[key] = { ...value };
     }
+
+    const deferred = deferredPrefixes ?? new Set<string>();
 
     for (const imp of imports) {
       const module = availableModules[imp.module]!;
@@ -307,6 +310,9 @@ export class ModuleExpander {
       const resolvedOutputs = resolveOutputs(module, paramScope);
       allOutputs[imp.as] = resolvedOutputs;
 
+      const sectionResolver = VariableResolver.forParams(
+        module.parameters, paramScope, deferred);
+
       for (const [sectionName, sectionContent] of Object.entries(module.sections)) {
         if (!mergedSections[sectionName]) {
           mergedSections[sectionName] = {};
@@ -314,8 +320,11 @@ export class ModuleExpander {
         const targetSection = mergedSections[sectionName]!;
 
         for (const [contentKey, value] of Object.entries(sectionContent)) {
-          const prefixedKey = `${imp.as}.${contentKey}`;
-          targetSection[prefixedKey] = value;
+          const resolvedContentKey = contentKey.includes('${')
+            ? sectionResolver.resolveString(contentKey, `${imp.as}.${sectionName}`)
+            : contentKey;
+          const prefixedKey = `${imp.as}.${resolvedContentKey}`;
+          targetSection[prefixedKey] = sectionResolver.resolve(value);
         }
       }
     }

@@ -43,13 +43,14 @@
 </head>
 <body>
   <div class="page-header">
-    <h1>Scenario Automation Tutorials</h1>
-    <p>Learn the automation platform step by step</p>
+    <h1>CaseHub Tutorials</h1>
+    <p>Learn the platform step by step</p>
   </div>
   <div id="host-container"></div>
 
   <script type="module">
-    import '../packages/pages-aria/dist/tutorial.js';
+    import '../packages/pages-aria/src/tutorial/tutorial-host.js';
+    import '../packages/pages-builder/src/shell/builder-shell.js';
 
     const REGISTRY = [
       {
@@ -77,6 +78,19 @@
         path: 'form-automation/tutorial.yaml',
         contentType: 'hands-on',
         hero: { title: 'Form Automation Basics', subtitle: 'Your first steps with ARIA-based browser automation', icon: '✎' },
+      },
+      {
+        scenario: 'yaml-composition',
+        title: 'CaseHub YAML Composition',
+        description: 'Learn variables, modules, forEach, and conditionals by building progressively complex pages',
+        area: 'yaml-composition',
+        labels: ['concept:variables', 'concept:modules', 'concept:forEach', 'concept:conditionals', 'difficulty:beginner'],
+        tags: ['yaml', 'composition', 'getting-started'],
+        estimated: '45 min',
+        prerequisites: [],
+        path: 'yaml-composition/tutorial.yaml',
+        contentType: 'yaml-editor',
+        hero: { title: 'CaseHub YAML Composition', subtitle: 'Build complex pages from reusable, parameterized modules', icon: '🧩' },
       },
     ];
 

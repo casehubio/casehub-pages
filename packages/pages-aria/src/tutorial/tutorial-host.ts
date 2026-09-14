@@ -1,9 +1,10 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import type { TutorialDescriptor, LearningPath } from './types.js';
+import type { TutorialDescriptor, LearningPath, YamlEditorSection } from './types.js';
 import { isSectioned } from '../scenario/types.js';
 import { parseScenario as parse } from '../scenario/parser.js';
 import { runSectionedScenario, type TutorialRunner } from '../scenario/sectioned-runner.js';
+import { validateYamlStep } from './yaml-editor-runner.js';
 import './tutorial-catalog.js';
 import '../controller/scenario-controller.js';
 import '../controller/scenario-narrative.js';
@@ -61,6 +62,8 @@ export class PagesTutorialHost extends LitElement {
   @state() private _error: string | null = null;
   @state() private _currentSection = 0;
   @state() private _totalSections = 0;
+  @state() private _yamlEditorSections: YamlEditorSection[] = [];
+  @state() private _yamlEditorValid = false;
 
   private _runner: TutorialRunner | null = null;
   private _eventTarget: EventTarget | null = null;
@@ -130,6 +133,18 @@ export class PagesTutorialHost extends LitElement {
       const yamlText = await resp.text();
       const parsed = parse(yamlText);
 
+      if (desc.contentType === 'yaml-editor') {
+        const yamlParsed = (await import('yaml')).parse(yamlText);
+        const yamlSections = (yamlParsed.sections ?? []) as YamlEditorSection[];
+        this._yamlEditorSections = yamlSections;
+        this._sectionTitles = yamlSections.map(s => s.title);
+        this._totalSections = yamlSections.length;
+        this._currentSection = 0;
+        this._yamlEditorValid = false;
+        this._view = 'tutorial';
+        return;
+      }
+
       if (!isSectioned(parsed)) {
         throw new Error('Tutorial must use sectioned format');
       }
@@ -194,6 +209,10 @@ export class PagesTutorialHost extends LitElement {
     }
 
     const desc = this._activeTutorial;
+    if (desc?.contentType === 'yaml-editor') {
+      return this._renderYamlEditorTutorial(desc);
+    }
+
     return html`
       <button class="back-btn" @click=${() => { this._onBack(); }}>← Back to Tutorials</button>
       ${desc ? html`
@@ -223,6 +242,59 @@ export class PagesTutorialHost extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  private _renderYamlEditorTutorial(desc: TutorialDescriptor): TemplateResult {
+    const section = this._yamlEditorSections[this._currentSection];
+    const initialYaml = section?.initialYaml ?? '';
+    return html`
+      <button class="back-btn" @click=${() => { this._onBack(); }}>← Back to Tutorials</button>
+      <div class="tutorial-header">
+        <h2>${desc.hero?.icon ?? ''} ${desc.title}</h2>
+        <p>${section?.title ?? desc.description}</p>
+      </div>
+      <div class="tutorial-layout">
+        <div class="tutorial-main">
+          <pages-builder-shell
+            .yaml=${initialYaml}
+            @builder-change=${(e: CustomEvent) => { this._onYamlEditorChange(e); }}
+          ></pages-builder-shell>
+        </div>
+      </div>
+      <div class="slide-nav">
+        <button ?disabled=${this._currentSection <= 0}
+                @click=${() => { this._onYamlEditorPrev(); }}>← Previous</button>
+        <span class="slide-counter">${this._currentSection + 1} / ${this._totalSections}</span>
+        <button ?disabled=${!this._yamlEditorValid || this._currentSection >= this._totalSections - 1}
+                @click=${() => { this._onYamlEditorNext(); }}>Next →</button>
+      </div>
+      ${section?.hint ? html`<div class="hint">${section.hint}</div>` : nothing}
+    `;
+  }
+
+  private _onYamlEditorChange(e: CustomEvent): void {
+    const yaml = e.detail?.yaml as string;
+    const section = this._yamlEditorSections[this._currentSection];
+    if (!section || !yaml) return;
+    const result = validateYamlStep(yaml, {
+      expectedKeys: section.expectedKeys,
+      expectedStructure: section.expectedStructure,
+    });
+    this._yamlEditorValid = result.valid;
+  }
+
+  private _onYamlEditorPrev(): void {
+    if (this._currentSection > 0) {
+      this._currentSection--;
+      this._yamlEditorValid = false;
+    }
+  }
+
+  private _onYamlEditorNext(): void {
+    if (this._yamlEditorValid && this._currentSection < this._totalSections - 1) {
+      this._currentSection++;
+      this._yamlEditorValid = false;
+    }
   }
 }
 

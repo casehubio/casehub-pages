@@ -1,0 +1,20 @@
+# Datasets
+
+Components that display data need a data source. The `datasets` section defines named data sources that components can reference.
+
+```yaml
+datasets:
+  sales:
+    type: rest
+    url: /api/sales
+pages:
+  - name: Dashboard
+    components:
+      - type: bar-chart
+        properties:
+          dataset: sales
+```
+
+The chart references `sales` by name — it doesn't need to know the URL or data format. Multiple components can share the same dataset.
+
+**Your task:** Add a `datasets` section with a named data source, then add `dataset` properties to your chart and table components.

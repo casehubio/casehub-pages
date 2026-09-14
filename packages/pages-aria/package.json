@@ -19,6 +19,7 @@
   "dependencies": {
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-primitives": "workspace:*",
+    "@casehubio/yaml-core": "workspace:*",
     "lit": "^3.3.3",
     "yaml": "^2.9.0"
   },

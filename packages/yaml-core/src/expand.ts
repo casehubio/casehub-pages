@@ -190,7 +190,8 @@ export function expand(
         }
       }
 
-      const expanded = ModuleExpander.expand(imports, modules, existingSections);
+      const moduleDeferredPrefixes = new Set(['each', 'module', ...Object.keys(rawVariables)]);
+      const expanded = ModuleExpander.expand(imports, modules, existingSections, moduleDeferredPrefixes);
 
       for (const [sectionName, sectionContent] of Object.entries(expanded.sections)) {
         workingMap[sectionName] = sectionContent;

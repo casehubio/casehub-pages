@@ -32,6 +32,51 @@ describe('ModuleExpander', () => {
     expect(result.moduleScopes['mon']).toEqual({ threshold: '90' });
   });
 
+  it('resolves ${params.*} in section content', () => {
+    const module: YamlModule = {
+      name: 'dashboard',
+      parameters: { label: param({ required: true }), dataset: param({ required: true }) },
+      outputs: {},
+      sections: { pages: { view: { name: '${params.label} Dashboard', config: { ds: '${params.dataset}' } } } },
+    };
+    const imp: YamlImport = {
+      module: 'dashboard', as: 'sales', parameters: { label: 'Sales', dataset: 'sales-data' },
+    };
+    const result = ModuleExpander.expand([imp], { dashboard: module }, {}, new Set(['each']));
+    const view = result.sections['pages']!['sales.view'] as Record<string, unknown>;
+    expect(view['name']).toBe('Sales Dashboard');
+    expect((view['config'] as Record<string, unknown>)['ds']).toBe('sales-data');
+  });
+
+  it('resolves ${params.*} in section content keys', () => {
+    const module: YamlModule = {
+      name: 'm',
+      parameters: { name: param({ required: true }) },
+      outputs: {},
+      sections: { pages: { '${params.name}-page': { title: '${params.name}' } } },
+    };
+    const result = ModuleExpander.expand(
+      [{ module: 'm', as: 'a', parameters: { name: 'hello' } }],
+      { m: module }, {}, new Set(['each']));
+    expect(result.sections['pages']!['a.hello-page']).toBeDefined();
+    expect((result.sections['pages']!['a.hello-page'] as Record<string, unknown>)['title']).toBe('hello');
+  });
+
+  it('defers non-params prefixes in section content', () => {
+    const module: YamlModule = {
+      name: 'm',
+      parameters: { label: param({ required: true }) },
+      outputs: {},
+      sections: { pages: { view: { name: '${params.label}', iter: '${each.item}' } } },
+    };
+    const result = ModuleExpander.expand(
+      [{ module: 'm', as: 'a', parameters: { label: 'Test' } }],
+      { m: module }, {}, new Set(['each']));
+    const view = result.sections['pages']!['a.view'] as Record<string, unknown>;
+    expect(view['name']).toBe('Test');
+    expect(view['iter']).toBe('${each.item}');
+  });
+
   it('default parameter used when not provided', () => {
     const module: YamlModule = {
       name: 'm',

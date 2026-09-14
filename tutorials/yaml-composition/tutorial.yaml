@@ -1,0 +1,872 @@
+scenario: yaml-composition
+meta:
+  title: "CaseHub YAML Composition"
+  description: "Learn variables, modules, forEach, and conditionals by building progressively complex pages"
+  area: yaml-composition
+  labels:
+    - concept:variables
+    - concept:modules
+    - concept:forEach
+    - concept:conditionals
+    - difficulty:beginner
+  tags:
+    - yaml
+    - composition
+    - getting-started
+  estimated: "45 min"
+  prerequisites: []
+  hero:
+    title: "CaseHub YAML Composition"
+    subtitle: "Build complex pages from reusable, parameterized modules"
+    icon: "🧩"
+
+sections:
+  - title: "YAML Basics"
+    content:
+      type: template
+      path: content/01-yaml-basics.md
+    initialYaml: |
+      pages:
+        - name: My First Page
+    expectedKeys:
+      - pages
+    expectedStructure:
+      pages:
+        - components:
+            - type: title
+    hint: "Add a components list under the page with a single component of type: title"
+    solutionYaml: |
+      pages:
+        - name: My First Page
+          components:
+            - type: title
+              properties:
+                text: Hello World
+
+  - title: "Multi-Component Pages"
+    content:
+      type: template
+      path: content/02-structure.md
+    initialYaml: |
+      pages:
+        - name: Sales Overview
+          components:
+            - type: title
+              properties:
+                text: Sales Overview
+    expectedKeys:
+      - pages
+    expectedStructure:
+      pages:
+        - components:
+            - type: title
+            - type: bar-chart
+            - type: data-table
+    hint: "Add bar-chart and data-table components after the title"
+    solutionYaml: |
+      pages:
+        - name: Sales Overview
+          components:
+            - type: title
+              properties:
+                text: Sales Overview
+            - type: bar-chart
+              properties:
+                title: Revenue by Region
+            - type: data-table
+              properties:
+                title: Transaction Log
+    buildOnPrevious: true
+
+  - title: "Datasets"
+    content:
+      type: template
+      path: content/03-datasets.md
+    initialYaml: |
+      pages:
+        - name: Sales Overview
+          components:
+            - type: title
+              properties:
+                text: Sales Overview
+            - type: bar-chart
+              properties:
+                title: Revenue by Region
+            - type: data-table
+              properties:
+                title: Transaction Log
+    expectedKeys:
+      - datasets
+      - pages
+    expectedStructure:
+      datasets: {}
+      pages:
+        - components:
+            - type: bar-chart
+    hint: "Add a datasets section at the top level with a named data source, then reference it in your chart's properties"
+    solutionYaml: |
+      datasets:
+        sales:
+          type: rest
+          url: /api/sales
+      pages:
+        - name: Sales Overview
+          components:
+            - type: title
+              properties:
+                text: Sales Overview
+            - type: bar-chart
+              properties:
+                title: Revenue by Region
+                dataset: sales
+            - type: data-table
+              properties:
+                title: Transaction Log
+                dataset: sales
+
+  - title: "Variables"
+    content:
+      type: template
+      path: content/04-variables.md
+    initialYaml: |
+      pages:
+        - name: Sales Dashboard
+          components:
+            - type: title
+              properties:
+                text: Sales Dashboard
+            - type: bar-chart
+              properties:
+                title: Sales by Region
+            - type: data-table
+              properties:
+                title: Sales Details
+    expectedKeys:
+      - variables
+      - pages
+    expectedStructure:
+      pages:
+        - components:
+            - type: title
+            - type: bar-chart
+    hint: "Add a variables section with a prefix (e.g. app) containing shared values, then reference them with ${app.name} syntax"
+    solutionYaml: |
+      variables:
+        app:
+          name: Sales Dashboard
+          dataset: sales-data
+      pages:
+        - name: ${app.name}
+          components:
+            - type: title
+              properties:
+                text: ${app.name}
+            - type: bar-chart
+              properties:
+                title: ${app.name} by Region
+            - type: data-table
+              properties:
+                title: ${app.name} Details
+
+  - title: "Variable Defaults"
+    content:
+      type: template
+      path: content/05-variable-defaults.md
+    initialYaml: |
+      variables:
+        app:
+          name: Sales Dashboard
+      pages:
+        - name: ${app.name}
+          components:
+            - type: title
+              properties:
+                text: ${app.name}
+            - type: bar-chart
+              properties:
+                title: ${app.name} Trends
+    expectedKeys:
+      - variables
+      - pages
+    expectedStructure:
+      pages:
+        - components:
+            - type: title
+            - type: bar-chart
+    hint: "Use ${app.subtitle:-default value} syntax to provide a fallback when a variable is not defined"
+    solutionYaml: |
+      variables:
+        app:
+          name: Sales Dashboard
+      pages:
+        - name: ${app.name}
+          components:
+            - type: title
+              properties:
+                text: ${app.name}
+            - type: bar-chart
+              properties:
+                title: ${app.subtitle:-Revenue Trends}
+    buildOnPrevious: true
+
+  - title: "ForEach Basics"
+    content:
+      type: template
+      path: content/06-foreach-basics.md
+    initialYaml: |
+      pages:
+        - name: Metrics Dashboard
+          components:
+            cpu-metric:
+              type: metric
+              properties:
+                field: cpu
+            memory-metric:
+              type: metric
+              properties:
+                field: memory
+            disk-metric:
+              type: metric
+              properties:
+                field: disk
+    expectedKeys:
+      - pages
+    expectedStructure:
+      pages:
+        - name: Metrics Dashboard
+          components:
+            metric.cpu:
+              type: metric
+    hint: "Replace all three components with a single 'metric' template that uses forEach: {as: field, in: [cpu, memory, disk]} and ${each.field} for the field property"
+    solutionYaml: |
+      pages:
+        - name: Metrics Dashboard
+          components:
+            metric:
+              type: metric
+              forEach:
+                as: field
+                in: [cpu, memory, disk]
+              properties:
+                field: ${each.field}
+
+  - title: "ForEach with Data"
+    content:
+      type: template
+      path: content/07-foreach-data.md
+    initialYaml: |
+      pages:
+        - name: Deployment Status
+          components:
+            deploy-step:
+              type: metric
+              properties:
+                field: status
+    expectedKeys:
+      - data
+      - pages
+    expectedStructure:
+      pages:
+        - name: Deployment Status
+          components:
+            deploy-step.staging:
+              type: metric
+    hint: "Add a data section with an inline CSV (columns: name:STRING,port:INTEGER), an iterations section referencing it, and change the forEach to reference the data source name"
+    solutionYaml: |
+      data:
+        envs:
+          inline: "name:STRING,port:INTEGER\nstaging,8080\nprod,443"
+      iterations:
+        envs:
+          as: env
+          in: []
+      pages:
+        - name: Deployment Status
+          components:
+            deploy-step:
+              type: metric
+              forEach: envs
+              properties:
+                field: ${each.env.name}
+                port: ${each.env.port}
+
+  - title: "Modules"
+    content:
+      type: template
+      path: content/08-modules-intro.md
+    initialYaml: |
+      pages:
+        sales-dashboard:
+          name: Sales Dashboard
+          components:
+            chart:
+              type: bar-chart
+              properties:
+                title: Sales by Region
+                dataset: sales
+        ops-dashboard:
+          name: Ops Dashboard
+          components:
+            chart:
+              type: bar-chart
+              properties:
+                title: Ops by Region
+                dataset: ops
+    expectedKeys:
+      - modules
+      - imports
+    expectedStructure:
+      pages:
+        sales.dashboard:
+          name: Sales Dashboard
+    hint: "Extract the repeated dashboard pattern into a module with a 'label' and 'dataset' parameter, then import it twice with different values"
+    solutionYaml: |
+      modules:
+        dashboard:
+          parameters:
+            label:
+              type: STRING
+              required: true
+            dataset:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              dashboard:
+                name: ${params.label} Dashboard
+                components:
+                  chart:
+                    type: bar-chart
+                    properties:
+                      title: ${params.label} by Region
+                      dataset: ${params.dataset}
+      imports:
+        - module: dashboard
+          as: sales
+          parameters:
+            label: Sales
+            dataset: sales
+        - module: dashboard
+          as: ops
+          parameters:
+            label: Ops
+            dataset: ops
+      pages: {}
+
+  - title: "Module Parameters"
+    content:
+      type: template
+      path: content/09-module-parameters.md
+    initialYaml: |
+      modules:
+        card:
+          parameters:
+            title:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              card-page:
+                name: ${params.title}
+                components:
+                  heading:
+                    type: title
+                    properties:
+                      text: ${params.title}
+      imports:
+        - module: card
+          as: welcome
+          parameters:
+            title: Welcome
+      pages: {}
+    expectedKeys:
+      - modules
+      - imports
+    expectedStructure:
+      pages:
+        welcome.card-page:
+          name: Welcome
+    hint: "Add a 'subtitle' parameter with a defaultValue so the import doesn't need to provide it, and use it in a second component"
+    solutionYaml: |
+      modules:
+        card:
+          parameters:
+            title:
+              type: STRING
+              required: true
+            subtitle:
+              type: STRING
+              required: false
+              defaultValue: Overview
+          sections:
+            pages:
+              card-page:
+                name: ${params.title}
+                components:
+                  heading:
+                    type: title
+                    properties:
+                      text: ${params.title}
+                  subheading:
+                    type: title
+                    properties:
+                      text: ${params.subtitle}
+      imports:
+        - module: card
+          as: welcome
+          parameters:
+            title: Welcome
+      pages: {}
+
+  - title: "Multiple Imports"
+    content:
+      type: template
+      path: content/10-module-imports.md
+    initialYaml: |
+      modules:
+        dashboard-page:
+          parameters:
+            label:
+              type: STRING
+              required: true
+            dataset:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              page:
+                name: ${params.label} Dashboard
+                components:
+                  chart:
+                    type: bar-chart
+                    properties:
+                      title: ${params.label} Trends
+                      dataset: ${params.dataset}
+                  table:
+                    type: data-table
+                    properties:
+                      title: ${params.label} Details
+                      dataset: ${params.dataset}
+      imports:
+        - module: dashboard-page
+          as: sales
+          parameters:
+            label: Sales
+            dataset: sales-data
+      pages: {}
+    expectedKeys:
+      - modules
+      - imports
+    expectedStructure:
+      pages:
+        sales.page:
+          name: Sales Dashboard
+        ops.page:
+          name: Ops Dashboard
+    hint: "Add a second import of the same module with as: ops and different label/dataset parameters"
+    solutionYaml: |
+      modules:
+        dashboard-page:
+          parameters:
+            label:
+              type: STRING
+              required: true
+            dataset:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              page:
+                name: ${params.label} Dashboard
+                components:
+                  chart:
+                    type: bar-chart
+                    properties:
+                      title: ${params.label} Trends
+                      dataset: ${params.dataset}
+                  table:
+                    type: data-table
+                    properties:
+                      title: ${params.label} Details
+                      dataset: ${params.dataset}
+      imports:
+        - module: dashboard-page
+          as: sales
+          parameters:
+            label: Sales
+            dataset: sales-data
+        - module: dashboard-page
+          as: ops
+          parameters:
+            label: Ops
+            dataset: ops-data
+      pages: {}
+
+  - title: "Module Outputs"
+    content:
+      type: template
+      path: content/11-module-outputs.md
+    initialYaml: |
+      modules:
+        data-source:
+          parameters:
+            name:
+              type: STRING
+              required: true
+          outputs:
+            id:
+              type: STRING
+              value: ${var.name}-dataset
+          sections:
+            datasets:
+              source:
+                type: rest
+                url: /api/${params.name}
+        viewer:
+          parameters:
+            title:
+              type: STRING
+              required: true
+            dataset:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              view:
+                name: ${params.title}
+                components:
+                  table:
+                    type: data-table
+                    properties:
+                      dataset: ${params.dataset}
+      imports:
+        - module: data-source
+          as: sales-src
+          parameters:
+            name: sales
+        - module: viewer
+          as: sales-view
+          parameters:
+            title: Sales View
+            dataset: hardcoded-id
+      datasets: {}
+      pages: {}
+    expectedKeys:
+      - modules
+      - imports
+    expectedStructure:
+      pages:
+        sales-view.view:
+          name: Sales View
+    hint: "Replace the hardcoded 'hardcoded-id' with ${module.sales-src.id} to wire the viewer to the data source output"
+    solutionYaml: |
+      modules:
+        data-source:
+          parameters:
+            name:
+              type: STRING
+              required: true
+          outputs:
+            id:
+              type: STRING
+              value: ${var.name}-dataset
+          sections:
+            datasets:
+              source:
+                type: rest
+                url: /api/${params.name}
+        viewer:
+          parameters:
+            title:
+              type: STRING
+              required: true
+            dataset:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              view:
+                name: ${params.title}
+                components:
+                  table:
+                    type: data-table
+                    properties:
+                      dataset: ${params.dataset}
+      imports:
+        - module: data-source
+          as: sales-src
+          parameters:
+            name: sales
+        - module: viewer
+          as: sales-view
+          parameters:
+            title: Sales View
+            dataset: ${module.sales-src.id}
+      datasets: {}
+      pages: {}
+
+  - title: "Conditionals"
+    content:
+      type: template
+      path: content/12-conditionals.md
+    initialYaml: |
+      variables:
+        features:
+          showMetrics: "true"
+          showTable: "false"
+      pages:
+        - name: Dashboard
+          components:
+            metrics:
+              type: metric
+              properties:
+                field: revenue
+            details:
+              type: data-table
+              properties:
+                dataset: sales
+    expectedKeys:
+      - variables
+      - pages
+    expectedStructure:
+      pages:
+        - name: Dashboard
+          components:
+            metrics:
+              type: metric
+    hint: "Add when: \"${features.showMetrics}\" to the metrics component and when: \"${features.showTable}\" to the table — the table should disappear from the expanded result"
+    solutionYaml: |
+      variables:
+        features:
+          showMetrics: "true"
+          showTable: "false"
+      pages:
+        - name: Dashboard
+          components:
+            metrics:
+              type: metric
+              when: "${features.showMetrics}"
+              properties:
+                field: revenue
+            details:
+              type: data-table
+              when: "${features.showTable}"
+              properties:
+                dataset: sales
+
+  - title: "Composition"
+    content:
+      type: template
+      path: content/13-composition.md
+    initialYaml: |
+      variables:
+        config:
+          team: Engineering
+      modules:
+        header:
+          parameters:
+            title:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              banner:
+                name: ${params.title}
+                components:
+                  heading:
+                    type: title
+                    properties:
+                      text: ${params.title}
+      imports:
+        - module: header
+          as: top
+          parameters:
+            title: ${config.team} Portal
+      pages: {}
+    expectedKeys:
+      - modules
+      - imports
+    expectedStructure:
+      pages:
+        top.banner:
+          name: Engineering Portal
+        stats.panel:
+          name: Engineering Data
+    hint: "Add a second module called 'data-panel' with label and dataset parameters, import it as 'stats', and pass the team variable as the label"
+    solutionYaml: |
+      variables:
+        config:
+          team: Engineering
+      modules:
+        header:
+          parameters:
+            title:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              banner:
+                name: ${params.title}
+                components:
+                  heading:
+                    type: title
+                    properties:
+                      text: ${params.title}
+        data-panel:
+          parameters:
+            label:
+              type: STRING
+              required: true
+            dataset:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              panel:
+                name: ${params.label} Data
+                components:
+                  chart:
+                    type: bar-chart
+                    properties:
+                      title: ${params.label} Trends
+                      dataset: ${params.dataset}
+                  table:
+                    type: data-table
+                    properties:
+                      title: ${params.label} Details
+                      dataset: ${params.dataset}
+      imports:
+        - module: header
+          as: top
+          parameters:
+            title: ${config.team} Portal
+        - module: data-panel
+          as: stats
+          parameters:
+            label: ${config.team}
+            dataset: team-metrics
+      pages: {}
+
+  - title: "Iteration Groups"
+    content:
+      type: template
+      path: content/14-iteration-groups.md
+    initialYaml: |
+      iterations:
+        regions:
+          as: region
+          in: [us, eu, ap]
+      pages:
+        - name: Regional Overview
+          components:
+            chart:
+              type: bar-chart
+              forEach: regions
+              properties:
+                title: ${each.region} Sales
+    expectedKeys:
+      - iterations
+      - pages
+    expectedStructure:
+      pages:
+        - name: Regional Overview
+          components:
+            chart.us:
+              type: bar-chart
+            chart.eu:
+              type: bar-chart
+            table.us:
+              type: data-table
+    hint: "Add a second component (data-table) that also uses forEach: regions — both components expand over the same set of values"
+    solutionYaml: |
+      iterations:
+        regions:
+          as: region
+          in: [us, eu, ap]
+      pages:
+        - name: Regional Overview
+          components:
+            chart:
+              type: bar-chart
+              forEach: regions
+              properties:
+                title: ${each.region} Sales
+            table:
+              type: data-table
+              forEach: regions
+              properties:
+                title: ${each.region} Details
+
+  - title: "Full Application"
+    content:
+      type: template
+      path: content/15-full-application.md
+    initialYaml: |
+      variables:
+        app:
+          title: Operations Center
+      pages:
+        - name: placeholder
+    expectedKeys:
+      - variables
+      - modules
+      - imports
+      - pages
+    expectedStructure:
+      pages:
+        header.banner:
+          name: Operations Center
+    hint: "Build a full application: define variables for the app title, a header module with a title parameter, a data-panel module with label and dataset parameters, import both, and pass the app title variable to the header"
+    solutionYaml: |
+      variables:
+        app:
+          title: Operations Center
+      modules:
+        header:
+          parameters:
+            title:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              banner:
+                name: ${params.title}
+                components:
+                  heading:
+                    type: title
+                    properties:
+                      text: ${params.title}
+        data-panel:
+          parameters:
+            label:
+              type: STRING
+              required: true
+            dataset:
+              type: STRING
+              required: true
+          sections:
+            pages:
+              panel:
+                name: ${params.label}
+                components:
+                  chart:
+                    type: bar-chart
+                    properties:
+                      title: ${params.label} Overview
+                      dataset: ${params.dataset}
+                  table:
+                    type: data-table
+                    properties:
+                      title: ${params.label} Details
+                      dataset: ${params.dataset}
+      imports:
+        - module: header
+          as: header
+          parameters:
+            title: ${app.title}
+        - module: data-panel
+          as: infra
+          parameters:
+            label: Infrastructure
+            dataset: infra-metrics
+      pages: {}

@@ -1,3 +1,5 @@
+import type { SectionContent, ScenarioBase } from '../scenario/types.js';
+
 export interface TutorialDescriptor {
   scenario: string;
   title: string;
@@ -8,7 +10,7 @@ export interface TutorialDescriptor {
   estimated?: string;
   prerequisites: string[];
   path: string;
-  contentType: 'slides-only' | 'hands-on';
+  contentType: 'slides-only' | 'hands-on' | 'yaml-editor';
   hero?: { title: string; subtitle?: string; icon?: string };
 }
 
@@ -18,4 +20,19 @@ export interface LearningPath {
   description: string;
   labels: string[];
   tutorials: string[];
+}
+
+export interface YamlEditorSection {
+  title: string;
+  content?: SectionContent;
+  initialYaml: string;
+  expectedKeys?: string[];
+  expectedStructure?: Record<string, unknown>;
+  hint?: string;
+  solutionYaml?: string;
+  buildOnPrevious?: boolean;
+}
+
+export interface YamlEditorScenario extends ScenarioBase {
+  sections: YamlEditorSection[];
 }

@@ -1,0 +1,7 @@
+path: yaml-composition
+title: "CaseHub YAML Composition Language"
+description: "Master variables, modules, forEach, and conditionals"
+labels:
+  - difficulty:beginner
+tutorials:
+  - yaml-composition
