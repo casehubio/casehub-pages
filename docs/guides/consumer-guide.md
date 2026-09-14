@@ -29,6 +29,7 @@ UI foundation for CaseHub applications. Enables non-developers to author interac
 | `@casehubio/pages-runtime` | Site orchestrator: `loadSite()` API, navigation (`PageIndex`, `buildPageIndex`), data pipeline (`createDataPipeline`), cross-filter state (`FilterState`), component view state, dataset scope resolution, layout serialization (`LayoutStore`, `createLocalLayoutStore`, `createRestLayoutStore`), panel registry (`registerPanel`), dev auth support. URL serialization/deserialization. |
 | `@casehubio/pages-ui-components` | Standalone Lit web components styled with design tokens: `PagesInput`, `PagesSelect`, `PagesTextarea`, `PagesCheckbox`, `PagesButton` (with xs size variant), `PagesBadge` (semantic status pill/tag), `PagesStatusDot` (coloured indicator). Each component available as a separate import path (e.g. `@casehubio/pages-ui-components/input`). Consumed by `pages-viz` schema-form and available for direct use. |
 | `@casehubio/pages-code-editor` | Code editor web component (`<pages-code-editor>`) wrapping CodeMirror 6 with syntax highlighting for YAML and JSON. Supports editable/readonly modes, line numbers, configurable tab size, pluggable CodeMirror extensions (for future LSP integration). Styled with `--pages-*` design tokens. |
+| `@casehubio/yaml-core` | YAML composition layer: variables (`${prefix.key}`), modules (parameterized reusable templates), forEach (iteration with stamped IDs), conditionals (`when:`), CSV data sources. Format-agnostic preprocessing — any YAML format gains composition via schema composition with `z.intersection()`. Exports `expand()` (lenient/strict modes), Zod schemas (`yamlCoreDocumentSchema`, `yamlCoreElementMixin`). |
 | `@casehubio/pages-tsconfig` | Shared TypeScript config base (project references, maximum strict mode: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `verbatimModuleSyntax`). |
 | `@casehubio/pages-webpack-base` | Shared Webpack config presets for iframe components. |
 
@@ -121,6 +122,30 @@ YAML -> @casehubio/pages-ui (parse) -> @casehubio/pages-data (resolve)
 2. Calls `renderLayout()` via `renderComponent()` from `@casehubio/pages-component` -- creates CSS grid layout
 3. For each panel, calls `createDataPipeline()` -- wires dataset resolution, operations, and delivery to the component via `DataReceiver`
 4. Components emit `pages-event` on user interaction (filter, sort) -- pipeline re-evaluates -- fresh data delivered
+
+### YAML Composition (yaml-core)
+
+A format-agnostic preprocessing layer that adds variables, modules, forEach, and conditionals to any CaseHub YAML format. Integrated into the page parser pipeline as step 0.
+
+```
+YAML text → js-yaml parse → yaml-core.expand() → page parser → component tree
+```
+
+| Feature | Syntax | Purpose |
+|---------|--------|---------|
+| Variables | `${prefix.key}` | Parameterize values across the document |
+| Defaults | `${prefix.key:-fallback}` | Provide fallback when a variable is not defined |
+| ForEach | `forEach: {as: x, in: [...]}` | Generate repeated components from a template |
+| Modules | `modules:` + `imports:` | Define and reuse parameterized templates with `${params.name}` |
+| Module outputs | `${module.alias.output}` | Wire modules together via exposed outputs |
+| Conditionals | `when: "${prefix.flag}"` | Include/exclude components based on boolean variables |
+| CSV data | `data:` + `iterations:` | Drive forEach from typed CSV data sources |
+
+Schema composition via `z.intersection(yamlCoreDocumentSchema, formatSchema)` gives every format yaml-core key completions and diagnostics in the LSP automatically.
+
+The builder workbench shows pre-expansion YAML in the editor and post-expansion results in the visual preview. The tree view displays modules, imports, and variables as collapsible sections.
+
+An interactive tutorial (`tutorials/yaml-composition/`) teaches the full composition language in 15 progressive steps.
 
 ### Layout Serialization
 
