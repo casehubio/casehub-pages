@@ -8,7 +8,10 @@ import type {
 const ARIA_ACTIONS = new Set([
   'navigate', 'click', 'fill', 'select',
   'expand', 'collapse', 'assert', 'wait',
-  'show-markdown',
+  'show-markdown', 'spotlight',
+  'editor-insert', 'editor-replace', 'editor-delete',
+  'editor-set-content', 'editor-cursor',
+  'editor-highlight', 'editor-completion',
 ]);
 
 function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
@@ -36,6 +39,28 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
     return step;
   }
 
+  if (action === 'spotlight') {
+    const body = raw[action] as Record<string, unknown>;
+    const tgt = body.target as Record<string, unknown> | undefined;
+    const target: AriaTarget | undefined = tgt
+      ? { role: tgt.role as string, name: tgt.name as string,
+          ...(tgt.index != null ? { index: tgt.index as string } : {}),
+          ...(tgt.within != null ? { within: tgt.within as AriaTarget } : {}) }
+      : undefined;
+    const step: ScenarioStep = {
+      delivery: 'aria',
+      name: `spotlight-${target?.role ?? 'unknown'}-${target?.name ?? 'unknown'}`,
+      action: 'spotlight',
+      ...(target ? { target } : {}),
+    };
+    for (const [key, val] of Object.entries(body)) {
+      if (key !== 'target' && val != null) {
+        (step as Record<string, unknown>)[key] = val;
+      }
+    }
+    return step;
+  }
+
   const body = raw[action] as Record<string, unknown>;
   const role = (body.role as string) ?? 'unknown';
   const name = (body.name as string) ?? 'unknown';
@@ -45,10 +70,13 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
   if (body.index != null) target.index = body.index as string;
   if (body.within != null) target.within = body.within as AriaTarget;
 
+  const targetKeys = new Set(['role', 'name', 'index', 'within']);
   const step: ScenarioStep = { delivery: 'aria', name: autoName, action, target };
-  if (body.value != null) (step as Record<string, unknown>).value = body.value;
-  if (body.state != null) (step as Record<string, unknown>).state = body.state;
-  if (body.timeout != null) (step as Record<string, unknown>).timeout = body.timeout;
+  for (const [key, val] of Object.entries(body)) {
+    if (!targetKeys.has(key) && val != null) {
+      (step as Record<string, unknown>)[key] = val;
+    }
+  }
   return step;
 }
 

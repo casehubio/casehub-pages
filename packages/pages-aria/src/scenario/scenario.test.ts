@@ -407,3 +407,107 @@ describe('isSectioned type guard', () => {
     expect(sectioned.meta).toEqual(meta);
   });
 });
+
+describe('editor actions', () => {
+  it('parses editor-insert shorthand', () => {
+    const yaml = `scenario: test
+sections:
+  - title: Test
+    steps:
+      - editor-insert:
+          role: textbox
+          name: "YAML editor"
+          value: "hello"
+          typing: progressive`;
+    const parsed = parseScenario(yaml) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
+    expect(step.action).toBe('editor-insert');
+    expect((step.target as any).role).toBe('textbox');
+    expect(step.value).toBe('hello');
+    expect(step.typing).toBe('progressive');
+  });
+
+  it('parses spotlight with nested target', () => {
+    const yaml = `scenario: test
+sections:
+  - title: Test
+    steps:
+      - spotlight:
+          target:
+            role: tree
+            name: "Document outline"
+          content: "This is the tree view"`;
+    const parsed = parseScenario(yaml) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
+    expect(step.action).toBe('spotlight');
+    expect((step.target as any).role).toBe('tree');
+    expect(step.content).toBe('This is the tree view');
+  });
+
+  it('parses editor-highlight with from/to positions', () => {
+    const yaml = `scenario: test
+sections:
+  - title: Test
+    steps:
+      - editor-highlight:
+          role: textbox
+          name: "YAML editor"
+          from: {line: 1, col: 0}
+          to: {line: 3, col: 10}
+          style: pulse`;
+    const parsed = parseScenario(yaml) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
+    expect(step.action).toBe('editor-highlight');
+    expect(step.from).toEqual({ line: 1, col: 0 });
+    expect(step.to).toEqual({ line: 3, col: 10 });
+    expect(step.style).toBe('pulse');
+  });
+
+  it('parses editor-set-content', () => {
+    const yaml = `scenario: test
+sections:
+  - title: Test
+    steps:
+      - editor-set-content:
+          role: textbox
+          name: "YAML editor"
+          value: "pages:\\n  - name: test"
+          typing: instant`;
+    const parsed = parseScenario(yaml) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
+    expect(step.action).toBe('editor-set-content');
+    expect(step.typing).toBe('instant');
+  });
+
+  it('parses editor-cursor', () => {
+    const yaml = `scenario: test
+sections:
+  - title: Test
+    steps:
+      - editor-cursor:
+          role: textbox
+          name: "YAML editor"
+          line: 5
+          col: 10`;
+    const parsed = parseScenario(yaml) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
+    expect(step.action).toBe('editor-cursor');
+    expect(step.line).toBe(5);
+    expect(step.col).toBe(10);
+  });
+
+  it('parses editor-completion', () => {
+    const yaml = `scenario: test
+sections:
+  - title: Test
+    steps:
+      - editor-completion:
+          role: textbox
+          name: "YAML editor"
+          label: forEach`;
+    const parsed = parseScenario(yaml) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
+    expect(step.action).toBe('editor-completion');
+    expect(step.label).toBe('forEach');
+  });
+});

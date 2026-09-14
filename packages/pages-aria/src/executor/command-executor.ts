@@ -1,5 +1,9 @@
 import { findAllByRole, getAriaState } from '../walker/index.js';
 import type { AriaTarget, AriaState } from '@casehubio/pages-primitives';
+import { findEditableText } from './editable-text.js';
+import type { Position } from './editable-text.js';
+import { showSpotlight } from './spotlight.js';
+import type { SpotlightConfig } from './spotlight.js';
 
 export function resolveTarget(target: AriaTarget): Element {
   let scope: Element | undefined;
@@ -86,8 +90,146 @@ export async function executeStep(
     case 'assert': return assertState(step.target!, step['state'] as Partial<AriaState>);
     case 'wait': return waitFor(step.target!, step['state'] as Partial<AriaState>, (step['timeout'] as number) ?? 5000);
     case 'navigate': window.location.href = step['value'] as string; return;
+    case 'spotlight': return spotlightStep(step, _speed);
+    case 'show-markdown': return showMarkdownStep(step, _eventTarget);
+    case 'editor-insert': return editorInsert(step.target!, step['value'] as string, step['typing'] as string ?? 'progressive', _speed, step['line'] as number, step['col'] as number);
+    case 'editor-set-content': return editorSetContent(step.target!, step['value'] as string, step['typing'] as string ?? 'progressive', _speed);
+    case 'editor-replace': return editorReplace(step.target!, step['from'] as Position, step['to'] as Position, step['value'] as string, step['typing'] as string ?? 'progressive', _speed);
+    case 'editor-delete': return editorDelete(step.target!, step['from'] as Position, step['to'] as Position);
+    case 'editor-cursor': return editorCursor(step.target!, step['line'] as number, step['col'] as number);
+    case 'editor-highlight': return editorHighlight(step.target!, step['from'] as Position, step['to'] as Position, step['style'] as string);
+    case 'editor-completion': return editorCompletion(step.target!, step['label'] as string);
     default: throw new Error(`Unknown action: ${step.action}`);
   }
+}
+
+function resolveEditor(target: AriaTarget) {
+  const el = resolveTarget(target);
+  const editor = findEditableText(el);
+  if (!editor) throw new Error(`Target ${target.role} "${target.name}" is not an editable text element`);
+  return editor;
+}
+
+async function progressiveInsert(
+  editor: ReturnType<typeof resolveEditor>,
+  text: string,
+  speed: number,
+  finishFn: (remaining: string) => void,
+): Promise<void> {
+  const chars = [...text];
+  const charDelay = Math.max(10, 40 / speed);
+  const wordDelay = Math.max(20, 60 / speed);
+  const words = text.split(/(\s+)/);
+  let charIndex = 0;
+
+  const phase0End = Math.min(5, words.length);
+  for (let w = 0; w < phase0End; w++) {
+    const word = words[w]!;
+    for (const ch of word) {
+      editor.insertText(ch);
+      charIndex++;
+      await new Promise(r => setTimeout(r, charDelay));
+    }
+  }
+
+  let wordIndex = phase0End;
+  const chunkSizes = [1, 2, 4, 5];
+  const phaseLengths = [5, 6, 7, Infinity];
+  for (let phase = 0; phase < chunkSizes.length; phase++) {
+    const chunk = chunkSizes[phase]!;
+    const len = phaseLengths[phase]!;
+    let count = 0;
+    while (wordIndex < words.length && count < len) {
+      let batch = '';
+      for (let c = 0; c < chunk && wordIndex < words.length; c++, wordIndex++) {
+        batch += words[wordIndex]!;
+      }
+      editor.insertText(batch);
+      charIndex += batch.length;
+      count++;
+      await new Promise(r => setTimeout(r, wordDelay));
+    }
+  }
+}
+
+async function editorInsert(target: AriaTarget, value: string, typing: string, speed: number, line?: number, col?: number): Promise<void> {
+  const editor = resolveEditor(target);
+  if (line !== undefined && col !== undefined) {
+    editor.setCursor(line, col);
+  }
+  if (typing === 'instant') {
+    editor.insertText(value);
+  } else {
+    await progressiveInsert(editor, value, speed, (r) => editor.insertText(r));
+  }
+}
+
+async function editorSetContent(target: AriaTarget, value: string, typing: string, speed: number): Promise<void> {
+  const editor = resolveEditor(target);
+  if (typing === 'instant') {
+    editor.setContent(value);
+  } else {
+    editor.setContent('');
+    await progressiveInsert(editor, value, speed, (r) => editor.setContent(r));
+  }
+}
+
+async function editorReplace(target: AriaTarget, from: Position, to: Position, value: string, typing: string, speed: number): Promise<void> {
+  const editor = resolveEditor(target);
+  editor.deleteRange(from, to);
+  if (typing === 'instant') {
+    editor.insertText(value);
+  } else {
+    await progressiveInsert(editor, value, speed, (r) => editor.insertText(r));
+  }
+}
+
+function editorDelete(target: AriaTarget, from: Position, to: Position): void {
+  resolveEditor(target).deleteRange(from, to);
+}
+
+function editorCursor(target: AriaTarget, line: number, col: number): void {
+  resolveEditor(target).setCursor(line, col);
+}
+
+function editorHighlight(target: AriaTarget, from: Position, to: Position, style?: string): void {
+  resolveEditor(target).highlight(from, to, style as 'pulse' | 'underline' | 'glow');
+}
+
+async function editorCompletion(target: AriaTarget, label?: string): Promise<void> {
+  const editor = resolveEditor(target);
+  if (!editor.triggerCompletion) return;
+  editor.triggerCompletion();
+  if (label && editor.selectCompletion) {
+    const deadline = Date.now() + 2000;
+    while (Date.now() < deadline) {
+      if (editor.selectCompletion(label)) return;
+      await new Promise(r => setTimeout(r, 50));
+    }
+  }
+}
+
+async function spotlightStep(step: Record<string, unknown>, speed: number): Promise<void> {
+  const target = step.target as AriaTarget | undefined;
+  if (!target) return;
+  const content = step['content'] as string ?? '';
+  const wordCount = content.split(/\s+/).length;
+  const duration = step['duration'] as number ?? Math.max(2000, wordCount * 250 / speed);
+  const config: SpotlightConfig = {
+    target,
+    content,
+    position: step['position'] as any,
+    duration,
+    also: step['also'] as any,
+  };
+  await showSpotlight(config);
+}
+
+function showMarkdownStep(step: Record<string, unknown>, eventTarget?: EventTarget): void {
+  if (!eventTarget) return;
+  eventTarget.dispatchEvent(new CustomEvent('scenario-narrative', {
+    detail: { markdown: step['value'] ?? (step['state'] as any)?.content },
+  }));
 }
 
 export async function waitFor(
