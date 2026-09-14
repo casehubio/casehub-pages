@@ -3,6 +3,8 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { RovingTabindexMixin, KeyboardShortcutMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
 import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
 import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
+import { computeMenuItems } from './tree-context-menu.js';
+import '@casehubio/pages-primitives/context-menu';
 
 export type TreeNodeType = 'page' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'section';
 
@@ -170,6 +172,11 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
 
   @state() private _expandedPaths = new Set<string>();
   @state() private _treeModel: TreeNodeInfo[] = [];
+  @state() private _contextMenuOpen = false;
+  @state() private _contextMenuItems: import('@casehubio/pages-primitives').MenuItem[] = [];
+  @state() private _contextMenuNode: TreeNodeInfo | undefined;
+  @state() private _contextMenuX = 0;
+  @state() private _contextMenuY = 0;
 
   private _unsub: (() => void) | undefined;
 
@@ -281,6 +288,98 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     }
   }
 
+  private _isContainerNode(node: TreeNodeInfo): boolean {
+    return node.nodeType === 'page' || node.nodeType === 'row' || node.nodeType === 'column' ||
+      (node.nodeType === 'component' && node.children.length > 0);
+  }
+
+  private _handleContextMenu(node: TreeNodeInfo, e: MouseEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    if (node.nodeType === 'section') return;
+    this._selectNode(node.path, node.nodeType);
+    const isContainer = node.nodeType === 'component' && node.children.length > 0;
+    this._contextMenuItems = computeMenuItems(node.nodeType, isContainer);
+    this._contextMenuNode = node;
+    this._contextMenuX = e.clientX;
+    this._contextMenuY = e.clientY;
+    this._contextMenuOpen = true;
+  }
+
+  private _handleMenuAction(e: CustomEvent): void {
+    const action = e.detail.action as string;
+    this._contextMenuOpen = false;
+    if (!this._contextMenuNode) return;
+    this.dispatchEvent(new CustomEvent('tree-action', {
+      bubbles: true, composed: true,
+      detail: { action, path: this._contextMenuNode.path, nodeType: this._contextMenuNode.nodeType },
+    }));
+  }
+
+  private _handleMenuClose(): void {
+    this._contextMenuOpen = false;
+  }
+
+  private _handleAddClick(node: TreeNodeInfo, e: Event): void {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: node.path, nodeType: node.nodeType },
+    }));
+  }
+
+  private _handleTreeKeydown(e: KeyboardEvent): void {
+    if (!this.selectedPath || !this._contextMenuNode && !this.selectedPath) return;
+    const path = this.selectedPath;
+    const nodeType = this._treeModel.length > 0 ? this._findNodeType(path) : undefined;
+    if (!nodeType) return;
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      this.dispatchEvent(new CustomEvent('tree-action', {
+        bubbles: true, composed: true,
+        detail: { action: 'delete', path, nodeType },
+      }));
+    } else if (e.ctrlKey && e.key === 'd') {
+      e.preventDefault();
+      this.dispatchEvent(new CustomEvent('tree-action', {
+        bubbles: true, composed: true,
+        detail: { action: 'duplicate', path, nodeType },
+      }));
+    } else if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+      e.preventDefault();
+      this.dispatchEvent(new CustomEvent('tree-add', {
+        bubbles: true, composed: true,
+        detail: { path, nodeType },
+      }));
+    } else if (e.ctrlKey && e.shiftKey && e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.dispatchEvent(new CustomEvent('tree-action', {
+        bubbles: true, composed: true,
+        detail: { action: 'move-up', path, nodeType },
+      }));
+    } else if (e.ctrlKey && e.shiftKey && e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.dispatchEvent(new CustomEvent('tree-action', {
+        bubbles: true, composed: true,
+        detail: { action: 'move-down', path, nodeType },
+      }));
+    }
+  }
+
+  private _findNodeType(path: readonly (string | number)[]): TreeNodeType | undefined {
+    const key = pathKey(path);
+    const search = (nodes: readonly TreeNodeInfo[]): TreeNodeType | undefined => {
+      for (const node of nodes) {
+        if (pathKey(node.path) === key) return node.nodeType;
+        const found = search(node.children);
+        if (found) return found;
+      }
+      return undefined;
+    };
+    return search(this._treeModel);
+  }
+
   private _renderNode(node: TreeNodeInfo, level: number): TemplateResult {
     const hasChildren = node.children.length > 0;
     const expanded = hasChildren && this._isExpanded(node.path);
@@ -300,10 +399,14 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
           data-node-type="${node.nodeType}"
           @click="${(e: Event) => this._handleItemClick(node, e)}"
           @keydown="${(e: KeyboardEvent) => this._handleItemKeydown(node, e)}"
+          @contextmenu="${(e: MouseEvent) => this._handleContextMenu(node, e)}"
         >
           ${hasChildren ? html`<span class="toggle">${expanded ? '▼' : '▸'}</span>`
             : html`<span class="toggle-spacer"></span>`}
           <span class="label">${node.label}</span>
+          ${this._isContainerNode(node) ? html`
+            <button class="add-btn" aria-label="Add to ${node.label}" @click="${(e: Event) => this._handleAddClick(node, e)}">+</button>
+          ` : nothing}
         </div>
         ${expanded ? html`
           <div role="group">
@@ -316,9 +419,16 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
 
   override render(): TemplateResult {
     return html`
-      <div role="tree" aria-label="Document outline">
+      <div role="tree" aria-label="Document outline" @keydown="${(e: KeyboardEvent) => this._handleTreeKeydown(e)}">
         ${this._treeModel.map(section => this._renderNode(section, 1))}
       </div>
+      <pages-context-menu
+        .items="${this._contextMenuItems}"
+        ?open="${this._contextMenuOpen}"
+        style="left: ${this._contextMenuX}px; top: ${this._contextMenuY}px"
+        @menu-action="${this._handleMenuAction}"
+        @menu-close="${this._handleMenuClose}"
+      ></pages-context-menu>
     `;
   }
 
@@ -378,6 +488,34 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     .label {
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .add-btn {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--pages-border-color, #dadce0);
+      border-radius: 4px;
+      background: var(--pages-surface-bg, #fff);
+      color: var(--pages-text-secondary, #5f6368);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .tree-item:hover .add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .add-btn:hover {
+      background: var(--pages-primary, #1967d2);
+      color: #fff;
+      border-color: var(--pages-primary, #1967d2);
     }
   `;
 }

@@ -1,8 +1,9 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { PageDocument } from '@casehubio/pages-document';
 import { buildTreeModel, type TreeNodeInfo } from './builder-tree.js';
 import './builder-tree.js';
 import type { PagesBuilderTree } from './builder-tree.js';
+import { computeMenuItems } from './tree-context-menu.js';
 
 const MINIMAL_PAGE = `pages:
 - name: Overview
@@ -159,6 +160,136 @@ describe('buildTreeModel', () => {
     const model = buildTreeModel(doc);
     const comp = model[0]!.children[0]!.children[0]!;
     expect(comp.label).toBe('Bar Chart');
+  });
+});
+
+describe('computeMenuItems', () => {
+  it('returns component actions for component nodes', () => {
+    const items = computeMenuItems('component', false);
+    const actions = items.filter(i => !i.separator).map(i => i.action ?? i.label);
+    expect(actions).toContain('delete');
+    expect(actions).toContain('duplicate');
+    expect(actions).toContain('move-up');
+    expect(actions).toContain('move-down');
+  });
+
+  it('includes add-child for container components', () => {
+    const items = computeMenuItems('component', true);
+    expect(items.find(i => i.action === 'add-child')).toBeDefined();
+  });
+
+  it('does not include add-child for non-container components', () => {
+    const items = computeMenuItems('component', false);
+    expect(items.find(i => i.action === 'add-child')).toBeUndefined();
+  });
+
+  it('returns wrap submenu for components', () => {
+    const items = computeMenuItems('component', false);
+    const wrapItem = items.find(i => i.label === 'Wrap in…');
+    expect(wrapItem).toBeDefined();
+    expect(wrapItem!.children).toBeDefined();
+    expect(wrapItem!.children!.find(c => c.action === 'wrap-tabs')).toBeDefined();
+  });
+
+  it('returns row actions for row nodes', () => {
+    const items = computeMenuItems('row', false);
+    const actions = items.filter(i => !i.separator).map(i => i.action);
+    expect(actions).toContain('move-up');
+    expect(actions).toContain('add-column');
+    expect(actions).toContain('delete');
+  });
+
+  it('returns page actions for page nodes', () => {
+    const items = computeMenuItems('page', false);
+    const actions = items.filter(i => !i.separator).map(i => i.action);
+    expect(actions).toContain('add-row');
+    expect(actions).toContain('add-child');
+    expect(actions).toContain('delete');
+  });
+
+  it('returns dataset actions for dataset nodes', () => {
+    const items = computeMenuItems('dataset', false);
+    const actions = items.filter(i => !i.separator).map(i => i.action);
+    expect(actions).toContain('duplicate');
+    expect(actions).toContain('delete');
+    expect(actions).not.toContain('move-up');
+  });
+
+  it('returns empty for section nodes', () => {
+    expect(computeMenuItems('section', false)).toHaveLength(0);
+  });
+});
+
+describe('PagesBuilderTree interactions', () => {
+  let el: PagesBuilderTree;
+
+  afterEach(() => {
+    el?.remove();
+  });
+
+  it('shows + button on container nodes on hover', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const addBtns = el.shadowRoot!.querySelectorAll('.add-btn');
+    expect(addBtns.length).toBeGreaterThan(0);
+  });
+
+  it('fires tree-action with delete on Delete key', async () => {
+    const doc = PageDocument.parse(MINIMAL_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const compPath = buildTreeModel(doc)[0]!.children[0]!.children[0]!.path;
+    el.selectedPath = compPath;
+    await el.updateComplete;
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('tree-action', ((e: CustomEvent) => events.push(e)) as EventListener);
+
+    const tree = el.shadowRoot!.querySelector('[role="tree"]')!;
+    tree.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.action).toBe('delete');
+  });
+
+  it('fires tree-add on + button click', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('tree-add', ((e: CustomEvent) => events.push(e)) as EventListener);
+
+    const addBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.add-btn')!;
+    addBtn.click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.path).toBeDefined();
+  });
+
+  it('opens context menu on right-click', async () => {
+    const doc = PageDocument.parse(MINIMAL_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const treeItem = el.shadowRoot!.querySelector('[data-node-type="page"]')!;
+    treeItem.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 100, clientY: 200 }));
+    await el.updateComplete;
+
+    const menu = el.shadowRoot!.querySelector('pages-context-menu');
+    expect(menu).toBeTruthy();
+    expect((menu as any).open).toBe(true);
   });
 });
 
