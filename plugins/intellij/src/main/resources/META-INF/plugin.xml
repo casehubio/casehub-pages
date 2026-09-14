@@ -44,7 +44,7 @@
             ]]></description>
         </server>
 
-        <fileNamePatternMapping patterns="*.page.yaml"
+        <fileNamePatternMapping patterns="*.page.yaml;*.dash.yaml"
                                 serverId="casehub-pages"
                                 languageId="yaml"/>
     </extensions>

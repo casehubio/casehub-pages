@@ -51,8 +51,6 @@ class CaseHubLanguageServer(private val project: Project) : OSProcessStreamConne
         val targetDir = Path.of(System.getProperty("java.io.tmpdir"), "casehub-lsp")
         val targetFile = targetDir.resolve("server-node.bundle.cjs")
 
-        if (Files.exists(targetFile)) return targetFile
-
         val resource = javaClass.getResourceAsStream("/server/server-node.bundle.cjs")
             ?: throw IllegalStateException("CaseHub LSP server bundle not found in plugin resources.")
 

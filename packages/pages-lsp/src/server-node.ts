@@ -18,21 +18,29 @@ import { createSchemaRegistry } from './schema-registry.js';
 import { createServerHandler } from './server.js';
 import { pageFormat } from './formats/page.js';
 
+const log = (msg: string) => process.stderr.write(`[casehub-lsp] ${msg}\n`);
+
 const connection = createConnection(ProposedFeatures.all);
 const registry = createSchemaRegistry();
 registry.register(pageFormat);
 const handler = createServerHandler(registry);
 
-connection.onInitialize(() => ({
-  capabilities: {
-    textDocumentSync: TextDocumentSyncKind.Full,
-    completionProvider: handler.capabilities.completionProvider,
-    hoverProvider: handler.capabilities.hoverProvider,
-    renameProvider: { prepareProvider: true },
-    definitionProvider: true,
-    referencesProvider: true,
-  },
-}));
+log('server starting');
+
+connection.onInitialize((params) => {
+  log(`initialize: rootUri=${params.rootUri ?? 'none'}`);
+  return {
+    capabilities: {
+      textDocumentSync: TextDocumentSyncKind.Full,
+      completionProvider: handler.capabilities.completionProvider,
+      hoverProvider: handler.capabilities.hoverProvider,
+      renameProvider: { prepareProvider: true },
+      definitionProvider: true,
+      referencesProvider: true,
+    },
+    serverInfo: { name: 'CaseHub Pages LSP' },
+  };
+});
 
 function toLspDiagnostics(notification: ReturnType<typeof handler.onDidOpen>): PublishDiagnosticsParams {
   return {
@@ -47,6 +55,7 @@ function toLspDiagnostics(notification: ReturnType<typeof handler.onDidOpen>): P
 }
 
 connection.onDidOpenTextDocument((params) => {
+  log(`didOpen: ${params.textDocument.uri} (lang=${params.textDocument.languageId})`);
   connection.sendDiagnostics(toLspDiagnostics(handler.onDidOpen(params.textDocument.uri, params.textDocument.text)));
 });
 
@@ -61,6 +70,7 @@ connection.onDidCloseTextDocument((params) => {
 });
 
 connection.onCompletion((params): CompletionItem[] => {
+  log(`completion: ${params.textDocument.uri} at ${params.position.line}:${params.position.character}`);
   return handler.onCompletion(params.textDocument.uri, params.position).map(c => ({
     label: c.label,
     kind: c.kind as CompletionItemKind,
