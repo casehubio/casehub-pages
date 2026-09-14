@@ -328,7 +328,7 @@ describe('VariableResolver — withChainedScope', () => {
 describe('VariableResolver — forParams factory', () => {
   it('resolves caller param', () => {
     const resolver = VariableResolver.forParams(
-      { name: { type: 'STRING', required: true } },
+      { name: {} },
       { name: 'Alice' },
       new Set());
     expect(resolver.resolveString('${params.name}', 'test')).toBe('Alice');
@@ -336,7 +336,7 @@ describe('VariableResolver — forParams factory', () => {
 
   it('resolves default', () => {
     const resolver = VariableResolver.forParams(
-      { env: { type: 'STRING', required: false, defaultValue: 'prod' } },
+      { env: { defaultValue: 'prod' } },
       {},
       new Set());
     expect(resolver.resolveString('${params.env}', 'test')).toBe('prod');
@@ -344,7 +344,7 @@ describe('VariableResolver — forParams factory', () => {
 
   it('caller overrides default', () => {
     const resolver = VariableResolver.forParams(
-      { env: { type: 'STRING', required: false, defaultValue: 'prod' } },
+      { env: { defaultValue: 'prod' } },
       { env: 'staging' },
       new Set());
     expect(resolver.resolveString('${params.env}', 'test')).toBe('staging');
@@ -352,7 +352,7 @@ describe('VariableResolver — forParams factory', () => {
 
   it('var prefix aliases params', () => {
     const resolver = VariableResolver.forParams(
-      { x: { type: 'STRING', required: true } },
+      { x: {} },
       { x: 'val' },
       new Set());
     expect(resolver.resolveString('${var.x}', 'test')).toBe('val');
@@ -360,7 +360,7 @@ describe('VariableResolver — forParams factory', () => {
 
   it('deferred prefixes preserved', () => {
     const resolver = VariableResolver.forParams(
-      { x: { type: 'STRING', required: true } },
+      { x: {} },
       { x: 'val' },
       new Set(['step']));
     expect(resolver.resolveString('${step.something}', 'test'))
