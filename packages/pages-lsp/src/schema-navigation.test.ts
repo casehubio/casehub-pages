@@ -164,13 +164,10 @@ describe('ZodRecord support', () => {
     expect(labels).toContain('switch');
   });
 
-  it('schemaToCompletions returns value type properties for ZodRecord', () => {
+  it('schemaToCompletions returns empty for ZodRecord (keys are user-defined)', () => {
     const recordSchema = z.record(taskDef);
     const completions = schemaToCompletions(recordSchema);
-    const labels = completions.map(c => c.label);
-    expect(labels).toContain('call');
-    expect(labels).toContain('set');
-    expect(labels).toContain('switch');
+    expect(completions).toEqual([]);
   });
 
   it('returns empty completions for ZodRecord with z.unknown() value', () => {

@@ -308,8 +308,7 @@ export function schemaToCompletions(schema: z.ZodType, siblings?: Record<string,
   }
 
   if (tn === 'ZodRecord') {
-    const valueType = unwrap((unwrapped._def as { valueType: z.ZodType }).valueType);
-    return schemaToCompletions(valueType, siblings);
+    return [];
   }
 
   if (tn === 'ZodIntersection') {
