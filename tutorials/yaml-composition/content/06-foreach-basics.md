@@ -35,4 +35,4 @@ components:
 
 **Format note:** ForEach requires components in map format (keyed by ID) rather than the array format used in earlier steps. This is because forEach stamps unique IDs on each generated copy.
 
-**Your task:** Replace the three repeated metric components with a single template that uses `forEach`. Name the template `metric` and iterate over `[cpu, memory, disk]`.
+**Watch:** The three repeated components are replaced with a single `forEach` template that generates all three from one definition.

@@ -18,4 +18,4 @@ pages:
 
 This is useful for optional configuration — modules can define parameters with sensible defaults that consumers can override when needed.
 
-**Your task:** Add a variable reference with a `:-` default value to one of the component properties. Use a variable key that is NOT defined in the variables section — the default should provide the displayed value.
+**Watch:** A variable reference uses `:-` default syntax — since `app.subtitle` is not defined, the fallback value appears.

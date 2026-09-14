@@ -21,4 +21,4 @@ pages:
 
 The variable system is part of yaml-core, a composition layer that works across all CaseHub YAML formats. Page-level `${name}` (no dot) is a different, older system — yaml-core uses `${prefix.key}` (with a dot) to avoid collisions.
 
-**Your task:** Add a `variables` section with shared values, then replace the hardcoded strings with variable references.
+**Watch:** A `variables` section centralizes shared values, and `${app.name}` references replace the hardcoded strings.

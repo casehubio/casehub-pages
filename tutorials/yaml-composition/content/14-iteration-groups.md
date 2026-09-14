@@ -28,4 +28,4 @@ pages:
 - Both components expand over the same three values, producing `chart.us`, `chart.eu`, `chart.ap` and `table.us`, `table.eu`, `table.ap`
 - All components using the same group stay coordinated — adding a region to the list expands all of them
 
-**Your task:** Add a second component (`data-table`) that also uses `forEach: regions` to expand over the same iteration group.
+**Watch:** Both chart and table components reference `forEach: regions` — they expand over the same values, staying coordinated.

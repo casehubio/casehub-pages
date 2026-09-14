@@ -23,4 +23,4 @@ imports:
 - **Multiple modules contribute to the same section** — both header and data-panel add entries to `pages`
 - **Single point of change** — updating `team: Engineering` to `team: Design` updates the header title, panel label, and all content
 
-**Your task:** The header module is already imported. Add a `data-panel` module with `label` and `dataset` parameters that produces a page with a chart and table, then import it as `stats` using the team variable.
+**Watch:** Variables, a header module, and a data-panel module combine — the team variable flows through import parameters into both modules.

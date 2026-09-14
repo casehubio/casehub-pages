@@ -31,4 +31,4 @@ imports:
 
 The viewer's `dataset` parameter receives the data source's resolved output. Import order matters — a module can only reference outputs from imports that appear before it.
 
-**Your task:** Replace the hardcoded dataset ID with a `${module.sales-src.id}` reference to wire the viewer to the data source's output.
+**Watch:** The `${module.sales-src.id}` reference wires the viewer to the data source's resolved output.

@@ -26,4 +26,4 @@ pages:
 
 **`when` vs `visibleWhen`:** `when` removes the component from the document entirely. `visibleWhen` keeps it in the DOM but toggles CSS visibility at runtime. Use `when` for composition-time decisions, `visibleWhen` for runtime UI state.
 
-**Your task:** Add `when` conditions to both components using the feature flag variables. After expansion, only the metrics component should remain.
+**Watch:** `when` conditions use feature flag variables — the metrics component stays, but the table is removed because `showTable` is `"false"`.

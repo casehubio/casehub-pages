@@ -17,4 +17,4 @@ pages:
 
 The chart references `sales` by name — it doesn't need to know the URL or data format. Multiple components can share the same dataset.
 
-**Your task:** Add a `datasets` section with a named data source, then add `dataset` properties to your chart and table components.
+**Watch:** A `datasets` section defines a named data source, then `dataset` properties wire the chart and table to it.

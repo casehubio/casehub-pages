@@ -20,4 +20,4 @@ iterations:
 
 Each row becomes one expansion. With two CSV rows, the template produces two components: `deploy-step.staging` and `deploy-step.prod`.
 
-**Your task:** Add a `data` section with an inline CSV defining environments, an `iterations` section that references it, and update the component's forEach to use the named group.
+**Watch:** A `data` section provides inline CSV, an `iterations` section maps it to a group, and `forEach: envs` drives the component expansion.

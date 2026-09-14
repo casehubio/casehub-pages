@@ -16,4 +16,4 @@ pages:
 - Each page has a `name` and a `components` list
 - Each component has a `type` (e.g. `title`, `bar-chart`, `data-table`) and optional `properties`
 
-**Your task:** Add a `components` list to the page with a single `title` component. Set its `text` property to any value you like.
+**Watch:** The editor builds a page with a `components` list containing a `title` component.

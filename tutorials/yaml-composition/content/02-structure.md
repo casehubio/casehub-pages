@@ -17,4 +17,4 @@ components:
 
 Components render in order — the title appears first, then the chart, then the table. Each component type has its own set of properties.
 
-**Your task:** Add a `bar-chart` and a `data-table` component after the existing title.
+**Watch:** The editor adds `bar-chart` and `data-table` components after the title.

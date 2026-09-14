@@ -27,4 +27,4 @@ pages: {}
 
 **Format note:** Module sections use map-format pages (keyed by name) rather than array format. The target section (`pages: {}`) must also be a map. After expansion, each module entry appears with its alias prefix: `sales.view`, `ops.view`.
 
-**Your task:** Extract the repeated dashboard pattern into a module, then import it twice with different parameters.
+**Watch:** The repeated dashboard pattern is extracted into a module, then imported twice with different parameters.

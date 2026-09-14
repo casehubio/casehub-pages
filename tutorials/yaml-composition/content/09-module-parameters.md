@@ -24,4 +24,4 @@ parameters:
 
 When `required: false` and `defaultValue` is set, the import can omit the parameter — the default kicks in. This lets modules define sensible defaults that consumers override only when needed.
 
-**Your task:** Add a second parameter with `required: false` and a `defaultValue`, then use it in a new component inside the module's sections.
+**Watch:** A second parameter with `defaultValue: Overview` is added — the import omits it, so the default kicks in.

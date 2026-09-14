@@ -16,4 +16,4 @@ This produces `sales.page` and `ops.page` in the pages section — two distinct 
 
 **Alias as namespace:** The alias serves as a namespace prefix for all section entries. `sales.page` and `ops.page` never collide because their aliases are different. You can import the same module as many times as you need — just give each import a unique alias.
 
-**Your task:** Add a second import of the `dashboard-page` module with `as: ops` and different label and dataset parameter values.
+**Watch:** A second import of the same module with `as: ops` produces a separate dashboard alongside the first.
