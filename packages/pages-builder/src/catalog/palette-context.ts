@@ -1,5 +1,6 @@
 export interface PaletteContext {
   parentType: string | undefined;
+  parentSlot?: string | undefined;
   acceptsComponents: boolean;
   availableDatasets: string[];
   siblingTypes: string[];

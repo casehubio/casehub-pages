@@ -1,8 +1,9 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { RovingTabindexMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
-import { COMPONENT_CATALOG, getFilteredCatalog, getCatalogCategories, type ComponentCatalogEntry, type FilteredCatalogEntry } from '../catalog/component-catalog.js';
+import { type ComponentCatalogEntry, type FilteredCatalogEntry } from '../catalog/component-catalog.js';
 import type { PaletteContext } from '../catalog/palette-context.js';
+import { filterCatalog, getCatalogCategories } from './palette-filter.js';
 
 @customElement('pages-builder-palette')
 export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
@@ -31,28 +32,10 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       siblingTypes: [],
     };
 
-    let entries = getFilteredCatalog(ctx);
-
-    if (this._search) {
-      const q = this._search.toLowerCase();
-      entries = entries.filter(e =>
-        e.entry.label.toLowerCase().includes(q) ||
-        e.entry.type.toLowerCase().includes(q) ||
-        e.entry.description.toLowerCase().includes(q)
-      );
-    }
-
-    if (this._activeCategory) {
-      entries = entries.filter(e => e.entry.category === this._activeCategory);
-    }
-
-    // Sort: promoted first, needs-prereq last
-    entries = [...entries].sort((a, b) => {
-      const order = { promoted: 0, normal: 1, 'needs-prereq': 2, hidden: 3 };
-      return (order[a.relevance] ?? 1) - (order[b.relevance] ?? 1);
+    this._filtered = filterCatalog(ctx, {
+      search: this._search || undefined,
+      category: this._activeCategory,
     });
-
-    this._filtered = entries;
     this._categories = getCatalogCategories();
   }
 
