@@ -109,7 +109,7 @@ export class PagesDockWorkbench extends LitElement {
           const s = saved.splits as unknown as Record<string, number>;
           this._splitSizes = { ...this._splitSizes, ...s };
         }
-        const zs = (saved as Record<string, unknown>).zoneSplits as Record<string, number> | undefined;
+        const zs = (saved as unknown as Record<string, unknown>).zoneSplits as Record<string, number> | undefined;
         if (zs) this._zoneSplitRatios = { ...zs };
       }
     } else if (this.persistKey && typeof localStorage !== 'undefined') {
