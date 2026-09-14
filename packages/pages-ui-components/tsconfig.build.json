@@ -5,5 +5,5 @@
     "emitDeclarationOnly": false,
     "composite": false
   },
-  "exclude": ["**/*.test.ts", "src/form-inputs/PagesSchemaForm.ts"]
+  "exclude": ["**/*.test.ts", "src/form-inputs/**"]
 }
