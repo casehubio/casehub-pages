@@ -24,6 +24,10 @@
     "./modal": {
       "types": "./dist/modal/index.d.ts",
       "default": "./dist/modal/index.js"
+    },
+    "./context-menu": {
+      "types": "./dist/context-menu/index.d.ts",
+      "default": "./dist/context-menu/index.js"
     }
   },
   "sideEffects": [
