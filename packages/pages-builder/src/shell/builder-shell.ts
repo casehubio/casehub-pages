@@ -41,7 +41,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   @state() private _document: PageDocument = PageDocument.empty();
   @state() private _selectedPath: readonly (string | number)[] | undefined;
   @state() private _selectedNodeType: TreeNodeType | undefined;
-  @state() private _yamlExpanded = false;
+  @state() private _viewMode: 'source' | 'visual' | 'split' = 'split';
   @state() private _propsOpen = true;
   @state() private _compsOpen = false;
   @state() private _dockWidth = 320;
@@ -116,9 +116,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   override updated(changed: Map<PropertyKey, unknown>): void {
-    if (changed.has('_yamlExpanded')) {
-      this._refreshPreview();
-      if (this._yamlExpanded) {
+    if (changed.has('_viewMode')) {
+      if (this._viewMode !== 'source') this._refreshPreview();
+      if (this._viewMode !== 'visual') {
         this.updateComplete.then(() => {
           this._connectYamlSync();
           this._connectEditorCursorSync();
@@ -128,7 +128,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _refreshPreview(): void {
-    /* preview always active */
+    if (this._viewMode === 'source') return;
     requestAnimationFrame(() => {
       const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
       if (!container) return;
@@ -181,7 +181,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   // --- Visual click → Tree sync ---
 
   private _highlightPreviewNode(path: readonly (string | number)[], nodeType: TreeNodeType): void {
-    /* preview always active */
+    if (this._viewMode === 'source') return;
     requestAnimationFrame(() => {
       const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
       if (!container) return;
@@ -751,14 +751,23 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   override render(): TemplateResult {
+    const showSource = this._viewMode === 'source' || this._viewMode === 'split';
+    const showVisual = this._viewMode === 'visual' || this._viewMode === 'split';
+
     return html`
       <div class="shell">
         <div class="toolbar">
           <button class="toolbar-btn" @click="${this._addPage}" title="Add page">+ Page</button>
           <button class="toolbar-btn" @click="${this._addDataset}" title="Add dataset">+ Dataset</button>
           <div class="toolbar-spacer"></div>
-          <button class="toolbar-btn yaml-toggle${this._yamlExpanded ? ' active' : ''}"
-            @click="${() => { this._yamlExpanded = !this._yamlExpanded; }}" title="Toggle YAML">YAML</button>
+          <div class="view-tabs">
+            <button class="view-tab${this._viewMode === 'source' ? ' active' : ''}"
+              @click="${() => { this._viewMode = 'source'; }}">Source</button>
+            <button class="view-tab${this._viewMode === 'split' ? ' active' : ''}"
+              @click="${() => { this._viewMode = 'split'; }}">Split</button>
+            <button class="view-tab${this._viewMode === 'visual' ? ' active' : ''}"
+              @click="${() => { this._viewMode = 'visual'; }}">Visual</button>
+          </div>
           <div class="toolbar-spacer"></div>
           <button class="toolbar-btn" @click="${this._undo}" ?disabled="${!this._document.canUndo()}" title="Undo">Undo</button>
           <button class="toolbar-btn" @click="${this._redo}" ?disabled="${!this._document.canRedo()}" title="Redo">Redo</button>
@@ -767,10 +776,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         <pages-dock-workbench
           left-width="260"
           right-width="${this._dockWidth}"
-          bottom-height="200"
           persist-key="pages-builder"
           .rightCollapsed="${!this._anyDockOpen}"
-          .bottomCollapsed="${!this._yamlExpanded}"
+          .bottomEnabled="${false}"
         >
           <div slot="left" class="panel-tree">
             <pages-builder-tree
@@ -781,24 +789,27 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           </div>
 
           <div slot="centre" class="panel-editor">
-            <div class="editor-visual">
-              <div class="preview-container"></div>
-            </div>
+            ${showSource ? html`
+              <div class="editor-source${this._viewMode === 'split' ? ' split' : ''}">
+                <pages-code-editor
+                  .extensions="${builderHighlightExtension}"
+                  language="yaml"
+                  label="Page YAML source"
+                ></pages-code-editor>
+              </div>
+            ` : nothing}
+            ${showVisual ? html`
+              <div class="editor-visual${this._viewMode === 'split' ? ' split' : ''}">
+                <div class="preview-container"></div>
+              </div>
+            ` : nothing}
           </div>
 
           <div slot="right">
             ${this._renderRightPanel()}
           </div>
 
-          <div slot="bottom">
-            <pages-code-editor
-              .extensions="${builderHighlightExtension}"
-              language="yaml"
-              label="Page YAML source"
-            ></pages-code-editor>
-          </div>
-
-          <div slot="toggle-bar">
+          <div slot="toggle-bar-right">
             <button class="dock-icon${this._propsOpen ? ' active' : ''}"
               @click="${() => this._toggleDock('properties')}" title="Properties">
               <span class="dock-icon-glyph">&#x2630;</span>
@@ -871,7 +882,27 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       padding: 8px 0;
     }
 
-    .yaml-toggle.active {
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--pages-border-color, #dadce0);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .view-tab {
+      padding: 3px 10px;
+      border: none;
+      border-right: 1px solid var(--pages-border-color, #dadce0);
+      background: var(--pages-surface-bg, #fff);
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .view-tab:last-child { border-right: none; }
+    .view-tab:hover { background: var(--pages-hover-bg, #e8eaed); }
+
+    .view-tab.active {
       background: var(--pages-primary, #1967d2);
       color: #fff;
     }
@@ -882,9 +913,26 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       overflow: hidden;
     }
 
-    .editor-visual {
+    .editor-source, .editor-visual {
       flex: 1;
       overflow: hidden;
+    }
+
+    .editor-source.split, .editor-visual.split {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .editor-source.split {
+      border-right: 1px solid var(--pages-border-color, #dadce0);
+    }
+
+    .editor-source > pages-code-editor {
+      display: block;
+      height: 100%;
+    }
+
+    .editor-visual {
       background: var(--pages-surface-bg, #fff);
     }
 

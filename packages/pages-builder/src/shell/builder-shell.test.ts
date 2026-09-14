@@ -118,30 +118,33 @@ describe('PagesBuilderShell', () => {
     expect(tree).toBeTruthy();
   });
 
-  it('uses dock-workbench for layout', async () => {
+  it('uses dock-workbench for layout with source and preview in split mode', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
     await el.updateComplete;
 
     expect(el.shadowRoot!.querySelector('pages-dock-workbench')).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('.editor-source')).toBeTruthy();
     expect(el.shadowRoot!.querySelector('.editor-visual')).toBeTruthy();
   });
 
-  it('toggles YAML pane via button', async () => {
+  it('switches view modes via tabs', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
     await el.updateComplete;
 
-    const dock = el.shadowRoot!.querySelector('pages-dock-workbench') as any;
-    expect(dock.bottomCollapsed).toBe(true);
-
-    const yamlBtn = el.shadowRoot!.querySelector('.yaml-toggle') as HTMLElement;
-    yamlBtn.click();
+    const tabs = el.shadowRoot!.querySelectorAll('.view-tab');
+    (tabs[0] as HTMLElement).click();
     await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('.editor-source')).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('.editor-visual')).toBeNull();
 
-    expect(dock.bottomCollapsed).toBe(false);
+    (tabs[2] as HTMLElement).click();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('.editor-source')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.editor-visual')).toBeTruthy();
   });
 
   it('properties dock starts open', async () => {

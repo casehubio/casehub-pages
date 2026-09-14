@@ -98,24 +98,6 @@ export class PagesDockWorkbench extends LitElement {
     }));
   }
 
-  private _renderToggleBar(): TemplateResult {
-    if (!this.showToggleBar) return html``;
-    return html`
-      <div class="toggle-bar" role="toolbar" aria-label="Panel toggles">
-        ${this.leftEnabled ? html`
-          <button class="toggle-btn${this.leftCollapsed ? '' : ' active'}" aria-label="Toggle left panel" @click=${() => this.toggleZone('left')}>◧</button>
-        ` : nothing}
-        ${this.rightEnabled ? html`
-          <button class="toggle-btn${this.rightCollapsed ? '' : ' active'}" aria-label="Toggle right panel" @click=${() => this.toggleZone('right')}>◨</button>
-        ` : nothing}
-        ${this.bottomEnabled ? html`
-          <button class="toggle-btn${this.bottomCollapsed ? '' : ' active'}" aria-label="Toggle bottom panel" @click=${() => this.toggleZone('bottom')}>⬓</button>
-        ` : nothing}
-        <slot name="toggle-bar"></slot>
-      </div>
-    `;
-  }
-
   override render(): TemplateResult {
     const showLeft = this.leftEnabled && !this.leftCollapsed;
     const showRight = this.rightEnabled && !this.rightCollapsed;
@@ -125,10 +107,22 @@ export class PagesDockWorkbench extends LitElement {
       <div class="dock-layout">
         <div class="dock-main">
           ${this.leftEnabled ? html`
+            ${!showLeft && this.showToggleBar ? html`
+              <div class="toggle-bar toggle-bar-left" role="toolbar" aria-label="Left panel toggle">
+                <button class="toggle-btn" aria-label="Toggle left panel" @click=${() => this.toggleZone('left')}>◧</button>
+                <slot name="toggle-bar-left"></slot>
+              </div>
+            ` : nothing}
             ${showLeft ? html`
               <div class="zone zone-left" role="region" aria-label="Left panel" style="width: ${this.leftWidth}px">
                 <slot name="left"></slot>
               </div>
+              ${this.showToggleBar ? html`
+                <div class="toggle-bar toggle-bar-left" role="toolbar" aria-label="Left panel toggle">
+                  <button class="toggle-btn active" aria-label="Toggle left panel" @click=${() => this.toggleZone('left')}>◧</button>
+                  <slot name="toggle-bar-left"></slot>
+                </div>
+              ` : nothing}
               <div class="resize-handle resize-left"
                 role="separator" aria-orientation="vertical" aria-label="Resize left panel"
                 aria-valuenow="${this.leftWidth}"
@@ -155,10 +149,20 @@ export class PagesDockWorkbench extends LitElement {
               <div class="zone zone-right" role="region" aria-label="Right panel" style="width: ${this.rightWidth}px">
                 <slot name="right"></slot>
               </div>
-            ` : nothing}
+              ${this.showToggleBar ? html`
+                <div class="toggle-bar toggle-bar-right" role="toolbar" aria-label="Right panel toggle">
+                  <slot name="toggle-bar-right"></slot>
+                </div>
+              ` : nothing}
+            ` : html`
+              ${this.showToggleBar ? html`
+                <div class="toggle-bar toggle-bar-right" role="toolbar" aria-label="Right panel toggle">
+                  <button class="toggle-btn" aria-label="Toggle right panel" @click=${() => this.toggleZone('right')}>◨</button>
+                  <slot name="toggle-bar-right"></slot>
+                </div>
+              ` : nothing}
+            `}
           ` : nothing}
-
-          ${this._renderToggleBar()}
         </div>
 
         ${this.bottomEnabled ? html`
