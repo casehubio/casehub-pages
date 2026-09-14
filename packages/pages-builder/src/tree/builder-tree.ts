@@ -4,6 +4,7 @@ import { RovingTabindexMixin, KeyboardShortcutMixin, type RovingDirection } from
 import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
 import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
 import { computeMenuItems } from './tree-context-menu.js';
+import { computeDropPosition, computeDropTarget, isValidDrop, type DropTarget } from './tree-dnd.js';
 import '@casehubio/pages-primitives/context-menu';
 
 export type TreeNodeType = 'page' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'section';
@@ -177,6 +178,8 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   @state() private _contextMenuNode: TreeNodeInfo | undefined;
   @state() private _contextMenuX = 0;
   @state() private _contextMenuY = 0;
+  @state() private _draggedPath: readonly (string | number)[] | undefined;
+  @state() private _dropTarget: DropTarget | undefined;
 
   private _unsub: (() => void) | undefined;
 
@@ -380,26 +383,94 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     return search(this._treeModel);
   }
 
+  private _handleDragStart(node: TreeNodeInfo, e: DragEvent): void {
+    if (node.nodeType === 'section') { e.preventDefault(); return; }
+    this._draggedPath = node.path;
+    e.dataTransfer!.effectAllowed = 'move';
+    e.dataTransfer!.setData('text/plain', pathKey(node.path));
+  }
+
+  private _handleDragOver(node: TreeNodeInfo, e: DragEvent): void {
+    if (!this._draggedPath || node.nodeType === 'section') return;
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = 'move';
+    const position = computeDropPosition(e, e.currentTarget as HTMLElement);
+    const target = computeDropTarget(this._draggedPath, node.path, node.nodeType, position);
+    if (isValidDrop('component', target)) {
+      this._dropTarget = target;
+    } else {
+      this._dropTarget = undefined;
+    }
+  }
+
+  private _handleDragLeave(): void {
+    this._dropTarget = undefined;
+  }
+
+  private _handleDrop(node: TreeNodeInfo, e: DragEvent): void {
+    e.preventDefault();
+    if (!this._draggedPath || !this._dropTarget || this._dropTarget.type === 'invalid') return;
+    this.dispatchEvent(new CustomEvent('tree-drop', {
+      bubbles: true, composed: true,
+      detail: {
+        sourcePath: this._draggedPath,
+        target: this._dropTarget,
+      },
+    }));
+    this._draggedPath = undefined;
+    this._dropTarget = undefined;
+  }
+
+  private _handleDragEnd(): void {
+    this._draggedPath = undefined;
+    this._dropTarget = undefined;
+  }
+
+  private _isDropIndicator(node: TreeNodeInfo): 'before' | 'after' | 'on' | undefined {
+    if (!this._dropTarget || this._dropTarget.type === 'invalid') return undefined;
+    const nodePk = pathKey(node.path);
+    if (this._dropTarget.type === 'on-container' && pathKey(this._dropTarget.parentPath) === nodePk) return 'on';
+    if (this._dropTarget.type === 'between') {
+      const parentPk = pathKey(this._dropTarget.parentPath);
+      const nodeParentPk = pathKey(node.path.slice(0, -1));
+      const nodeIdx = node.path[node.path.length - 1] as number;
+      if (parentPk === nodeParentPk) {
+        if (this._dropTarget.index === nodeIdx) return 'before';
+        if (this._dropTarget.index === nodeIdx + 1) return 'after';
+      }
+    }
+    return undefined;
+  }
+
   private _renderNode(node: TreeNodeInfo, level: number): TemplateResult {
     const hasChildren = node.children.length > 0;
     const expanded = hasChildren && this._isExpanded(node.path);
     const selected = this._isSelected(node.path);
+    const dropIndicator = this._isDropIndicator(node);
+    const isDragging = this._draggedPath && pathKey(this._draggedPath) === pathKey(node.path);
 
     return html`
       <div class="tree-node">
+        ${dropIndicator === 'before' ? html`<div class="drop-line"></div>` : nothing}
         <div
           role="treeitem"
           aria-level="${level}"
           aria-expanded="${hasChildren ? String(expanded) : nothing}"
           aria-selected="${selected}"
-          class="tree-item${selected ? ' selected' : ''}${node.nodeType === 'section' ? ' section' : ''}"
+          class="tree-item${selected ? ' selected' : ''}${node.nodeType === 'section' ? ' section' : ''}${dropIndicator === 'on' ? ' drop-target' : ''}${isDragging ? ' dragging' : ''}"
           style="padding-left: ${level * 16}px"
           tabindex="-1"
+          draggable="${node.nodeType !== 'section' ? 'true' : 'false'}"
           data-path="${pathKey(node.path)}"
           data-node-type="${node.nodeType}"
           @click="${(e: Event) => this._handleItemClick(node, e)}"
           @keydown="${(e: KeyboardEvent) => this._handleItemKeydown(node, e)}"
           @contextmenu="${(e: MouseEvent) => this._handleContextMenu(node, e)}"
+          @dragstart="${(e: DragEvent) => this._handleDragStart(node, e)}"
+          @dragover="${(e: DragEvent) => this._handleDragOver(node, e)}"
+          @dragleave="${() => this._handleDragLeave()}"
+          @drop="${(e: DragEvent) => this._handleDrop(node, e)}"
+          @dragend="${() => this._handleDragEnd()}"
         >
           ${hasChildren ? html`<span class="toggle">${expanded ? '▼' : '▸'}</span>`
             : html`<span class="toggle-spacer"></span>`}
@@ -413,6 +484,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
             ${node.children.map(child => this._renderNode(child, level + 1))}
           </div>
         ` : nothing}
+        ${dropIndicator === 'after' ? html`<div class="drop-line"></div>` : nothing}
       </div>
     `;
   }
@@ -516,6 +588,23 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       background: var(--pages-primary, #1967d2);
       color: #fff;
       border-color: var(--pages-primary, #1967d2);
+    }
+
+    .tree-item.dragging {
+      opacity: 0.4;
+    }
+
+    .tree-item.drop-target {
+      outline: 2px solid var(--pages-primary, #1967d2);
+      outline-offset: -2px;
+      border-radius: 4px;
+    }
+
+    .drop-line {
+      height: 2px;
+      background: var(--pages-primary, #1967d2);
+      margin: 0 8px;
+      border-radius: 1px;
     }
   `;
 }
