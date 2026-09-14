@@ -1,5 +1,11 @@
 import type { PaletteContext, ContextRelevance } from './palette-context.js';
 
+export interface PreviewHints {
+  readonly placeholderText?: string;
+  readonly sampleChildren?: number;
+  readonly displayDefaults?: Record<string, unknown>;
+}
+
 export interface ComponentCatalogEntry {
   readonly type: string;
   readonly label: string;
@@ -8,6 +14,7 @@ export interface ComponentCatalogEntry {
   readonly description: string;
   readonly defaultProps: Record<string, unknown>;
   readonly prereqHint?: string;
+  readonly previewHints?: PreviewHints;
   contextRelevance(ctx: PaletteContext): ContextRelevance;
 }
 
@@ -73,9 +80,10 @@ function entry(
   icon: string, description: string,
   defaultProps: Record<string, unknown> = {},
   prereqHint?: string,
+  previewHints?: PreviewHints,
 ): ComponentCatalogEntry {
   return {
-    type, label, category, icon, description, defaultProps, prereqHint,
+    type, label, category, icon, description, defaultProps, prereqHint, previewHints,
     contextRelevance: relevanceFor(type),
   };
 }
@@ -87,14 +95,14 @@ export const COMPONENT_CATALOG: readonly ComponentCatalogEntry[] = [
   entry('grid', 'Grid', 'Layout', 'grid_view', 'CSS grid container'),
   entry('columns', 'Columns', 'Layout', 'view_column', 'Multi-column layout'),
   entry('rows', 'Rows', 'Layout', 'table_rows', 'Stacked row layout'),
-  entry('stack', 'Stack', 'Layout', 'layers', 'Vertical stack of sections'),
-  entry('tabs', 'Tabs', 'Layout', 'tab', 'Tabbed container'),
-  entry('pills', 'Pills', 'Layout', 'toggle_on', 'Pill-style tabbed container'),
-  entry('sidebar', 'Sidebar', 'Layout', 'vertical_split', 'Side navigation with content'),
-  entry('tree', 'Tree', 'Layout', 'account_tree', 'Expandable tree navigation'),
-  entry('menu', 'Menu', 'Layout', 'menu', 'Menu with sections'),
-  entry('accordion', 'Accordion', 'Layout', 'expand_more', 'Collapsible sections'),
-  entry('carousel', 'Carousel', 'Layout', 'view_carousel', 'Scrollable section carousel'),
+  entry('stack', 'Stack', 'Layout', 'layers', 'Vertical stack of sections', {}, undefined, { sampleChildren: 2 }),
+  entry('tabs', 'Tabs', 'Layout', 'tab', 'Tabbed container', {}, undefined, { sampleChildren: 2 }),
+  entry('pills', 'Pills', 'Layout', 'toggle_on', 'Pill-style tabbed container', {}, undefined, { sampleChildren: 2 }),
+  entry('sidebar', 'Sidebar', 'Layout', 'vertical_split', 'Side navigation with content', {}, undefined, { sampleChildren: 2 }),
+  entry('tree', 'Tree', 'Layout', 'account_tree', 'Expandable tree navigation', {}, undefined, { sampleChildren: 2 }),
+  entry('menu', 'Menu', 'Layout', 'menu', 'Menu with sections', {}, undefined, { sampleChildren: 2 }),
+  entry('accordion', 'Accordion', 'Layout', 'expand_more', 'Collapsible sections', {}, undefined, { sampleChildren: 2 }),
+  entry('carousel', 'Carousel', 'Layout', 'view_carousel', 'Scrollable section carousel', {}, undefined, { sampleChildren: 2 }),
 
   // Charts
   entry('bar-chart', 'Bar Chart', 'Charts', 'bar_chart', 'Bar or column chart', { subtype: 'column' }, dp),
@@ -133,9 +141,9 @@ export const COMPONENT_CATALOG: readonly ComponentCatalogEntry[] = [
   entry('submit-button', 'Submit Button', 'Forms', 'send', 'Form submission button'),
 
   // Content
-  entry('panel', 'Panel', 'Content', 'web_asset', 'Styled container panel'),
-  entry('html', 'HTML', 'Content', 'code', 'Raw HTML block'),
-  entry('markdown', 'Markdown', 'Content', 'article', 'Markdown-rendered content'),
+  entry('panel', 'Panel', 'Content', 'web_asset', 'Styled container panel', {}, undefined, { placeholderText: 'Panel content' }),
+  entry('html', 'HTML', 'Content', 'code', 'Raw HTML block', {}, undefined, { placeholderText: '<p>Sample HTML content</p>' }),
+  entry('markdown', 'Markdown', 'Content', 'article', 'Markdown-rendered content', {}, undefined, { placeholderText: '## Sample Heading\n\nSample paragraph text.' }),
   entry('title', 'Title', 'Content', 'title', 'Heading text', { text: 'New Title' }),
   entry('lazy-page', 'Lazy Page', 'Content', 'dynamic_feed', 'Lazily loaded sub-page'),
   entry('page', 'Page', 'Content', 'insert_drive_file', 'Embedded page reference'),
