@@ -2041,6 +2041,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/yaml-core@workspace:packages/yaml-core":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/yaml-core@workspace:packages/yaml-core"
+  dependencies:
+    "@casehubio/pages-tsconfig": "workspace:*"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.2.1"
+    zod: "npm:^3.23.0"
+  languageName: unknown
+  linkType: soft
+
 "@codemirror/autocomplete@npm:^6.0.0, @codemirror/autocomplete@npm:^6.18.0":
   version: 6.20.3
   resolution: "@codemirror/autocomplete@npm:6.20.3"
