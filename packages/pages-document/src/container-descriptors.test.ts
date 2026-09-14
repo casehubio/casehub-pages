@@ -41,4 +41,32 @@ describe('container descriptors', () => {
     expect(types).toContain('menu');
     expect(types).toContain('tree');
   });
+
+  describe('defaultContentSlot', () => {
+    it('sidebar defaults to content slot, not sidebar slot', () => {
+      const desc = getContainerDescriptor('sidebar')!;
+      expect(desc.defaultContentSlot).toBe('content');
+    });
+
+    it('tabs defaults to first slot', () => {
+      const desc = getContainerDescriptor('tabs')!;
+      expect(desc.defaultContentSlot).toBe('tabs');
+    });
+
+    it('split defaults to split slot', () => {
+      const desc = getContainerDescriptor('split')!;
+      expect(desc.defaultContentSlot).toBe('split');
+    });
+
+    it('form-scope defaults to form-scope slot', () => {
+      const desc = getContainerDescriptor('form-scope')!;
+      expect(desc.defaultContentSlot).toBe('form-scope');
+    });
+
+    it('every descriptor has a defaultContentSlot', () => {
+      for (const desc of CONTAINER_DESCRIPTORS) {
+        expect(desc.defaultContentSlot, `${desc.type} missing defaultContentSlot`).toBeDefined();
+      }
+    });
+  });
 });

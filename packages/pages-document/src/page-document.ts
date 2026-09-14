@@ -329,6 +329,26 @@ export class PageNode {
     return comps[comps.length - 1]!;
   }
 
+  insertChildAt(index: number, type: string, props?: Record<string, unknown>): ComponentNode {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const mode = this.getLayoutMode();
+    const key = mode === 'rows' ? 'rows' : mode === 'columns' ? 'columns' : 'components';
+    const seqPath = [...this.path, key];
+    const entry: Record<string, unknown> = { type };
+    if (props && Object.keys(props).length > 0) entry['properties'] = props;
+    const node = doc.createNode(entry);
+    const seq = doc.getIn(seqPath);
+    if (!isSeq(seq)) {
+      doc.setIn(seqPath, []);
+      (doc.getIn(seqPath) as YAMLSeq).add(node);
+    } else {
+      (seq as YAMLSeq).items.splice(index, 0, node);
+    }
+    this._doc._notifyInternal();
+    return new ComponentNode(this._doc, [...seqPath, index]);
+  }
+
   removeChild(index: number): void {
     this._doc._pushUndoInternal();
     const mode = this.getLayoutMode();
@@ -365,6 +385,22 @@ export class RowNode {
     this._doc._notifyInternal();
     const cols = this.getColumns();
     return cols[cols.length - 1]!;
+  }
+
+  insertColumnAt(index: number, span = 12): ColumnNode {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const colsPath = [...this.path, 'columns'];
+    const newCol = doc.createNode({ span, components: [] });
+    const seq = doc.getIn(colsPath);
+    if (!isSeq(seq)) {
+      doc.setIn(colsPath, []);
+      (doc.getIn(colsPath) as YAMLSeq).add(newCol);
+    } else {
+      (seq as YAMLSeq).items.splice(index, 0, newCol);
+    }
+    this._doc._notifyInternal();
+    return new ColumnNode(this._doc, [...colsPath, index]);
   }
 
   removeColumn(index: number): void {
@@ -416,6 +452,24 @@ export class ColumnNode {
     this._doc._notifyInternal();
     const comps = this.getComponents();
     return comps[comps.length - 1]!;
+  }
+
+  insertComponentAt(index: number, type: string, props?: Record<string, unknown>): ComponentNode {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const compsPath = [...this.path, 'components'];
+    const entry: Record<string, unknown> = { type };
+    if (props && Object.keys(props).length > 0) entry['properties'] = props;
+    const node = doc.createNode(entry);
+    const seq = doc.getIn(compsPath);
+    if (!isSeq(seq)) {
+      doc.setIn(compsPath, []);
+      (doc.getIn(compsPath) as YAMLSeq).add(node);
+    } else {
+      (seq as YAMLSeq).items.splice(index, 0, node);
+    }
+    this._doc._notifyInternal();
+    return new ComponentNode(this._doc, [...compsPath, index]);
   }
 
   removeComponent(index: number): void {

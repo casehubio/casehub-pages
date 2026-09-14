@@ -399,6 +399,66 @@ describe('PageDocument', () => {
     });
   });
 
+  describe('positional insert', () => {
+    it('insertComponentAt inserts at specific index in column', () => {
+      const doc = PageDocument.parse(ROWS_PAGE);
+      const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
+      const before = col.getComponents().length;
+
+      col.insertComponentAt(0, 'title', { text: 'Header' });
+
+      const comps = col.getComponents();
+      expect(comps).toHaveLength(before + 1);
+      expect(comps[0]!.type).toBe('title');
+    });
+
+    it('insertChildAt inserts component at index in flat page', () => {
+      const doc = PageDocument.parse(MINIMAL_PAGE);
+      const page = doc.getPages()[0]!;
+
+      page.insertChildAt(0, 'metric');
+
+      const comps = page.getComponents();
+      expect(comps).toHaveLength(2);
+      expect(comps[0]!.type).toBe('metric');
+      expect(comps[1]!.type).toBe('title');
+    });
+
+    it('insertColumnAt inserts column at specific index in row', () => {
+      const doc = PageDocument.parse(ROWS_PAGE);
+      const row = doc.getPages()[0]!.getRows()[0]!;
+      const before = row.getColumns().length;
+
+      row.insertColumnAt(1, 4);
+
+      const cols = row.getColumns();
+      expect(cols).toHaveLength(before + 1);
+      expect(cols[1]!.span).toBe(4);
+    });
+
+    it('insertComponentAt supports undo', () => {
+      const doc = PageDocument.parse(ROWS_PAGE);
+      const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
+      const before = col.getComponents().length;
+
+      col.insertComponentAt(0, 'title');
+      expect(col.getComponents()).toHaveLength(before + 1);
+
+      doc.undo();
+      expect(doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents()).toHaveLength(before);
+    });
+
+    it('insertChildAt appends at end when index equals length', () => {
+      const doc = PageDocument.parse(MINIMAL_PAGE);
+      const page = doc.getPages()[0]!;
+
+      page.insertChildAt(page.getComponents().length, 'metric');
+
+      const comps = page.getComponents();
+      expect(comps[comps.length - 1]!.type).toBe('metric');
+    });
+  });
+
   describe('transaction API', () => {
     it('compound operation is a single undo step', () => {
       const doc = PageDocument.parse(`pages:
