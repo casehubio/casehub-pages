@@ -584,6 +584,72 @@ export class ComponentNode {
     return { slots, descriptor: desc };
   }
 
+  addChild(slot: string, type: string, props?: Record<string, unknown>): ComponentNode {
+    const desc = getContainerDescriptor(this.type);
+    if (!desc) throw new Error(`${this.type} is not a container`);
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const entry: Record<string, unknown> = { type };
+    if (props && Object.keys(props).length > 0) entry['properties'] = props;
+    const compNode = doc.createNode(entry);
+
+    const slotDesc = desc.slots.find(s => {
+      if (s.kind === 'named-record') return true;
+      return s.yamlKey === slot;
+    });
+    if (!slotDesc) throw new Error(`Invalid slot "${slot}" for ${this.type}`);
+
+    if (slotDesc.kind === 'named-record') {
+      const mapPath = [...this.path, slotDesc.yamlKey];
+      let mapNode = doc.getIn(mapPath);
+      if (!isMap(mapNode)) {
+        doc.setIn(mapPath, doc.createNode({}));
+        mapNode = doc.getIn(mapPath);
+      }
+      const entryPath = [...mapPath, slot];
+      let entryNode = doc.getIn(entryPath);
+      if (!isMap(entryNode)) {
+        const newEntry = doc.createNode({ [slotDesc.childKey]: [] });
+        (mapNode as YAMLMap).set(doc.createNode(slot), newEntry);
+        entryNode = (mapNode as YAMLMap).get(slot, true);
+      }
+      const compsSeq = (entryNode as YAMLMap).get(slotDesc.childKey, true) as YAMLSeq;
+      compsSeq.add(compNode);
+      const idx = compsSeq.items.length - 1;
+      const compsPath = [...entryPath, slotDesc.childKey];
+      this._doc._notifyInternal();
+      return new ComponentNode(this._doc, [...compsPath, idx]);
+    } else if (slotDesc.kind === 'array') {
+      const arrPath = [...this.path, slotDesc.yamlKey];
+      let seq = doc.getIn(arrPath);
+      if (!isSeq(seq)) {
+        doc.setIn(arrPath, []);
+        seq = doc.getIn(arrPath);
+      }
+      (seq as YAMLSeq).add(compNode);
+      const idx = (seq as YAMLSeq).items.length - 1;
+      this._doc._notifyInternal();
+      return new ComponentNode(this._doc, [...arrPath, idx]);
+    } else {
+      const containerPath = [...this.path, slotDesc.yamlKey];
+      let container = doc.getIn(containerPath);
+      if (!isMap(container)) {
+        doc.setIn(containerPath, { [slotDesc.childKey]: [] });
+        container = doc.getIn(containerPath);
+      }
+      const childPath = [...containerPath, slotDesc.childKey];
+      let seq = doc.getIn(childPath);
+      if (!isSeq(seq)) {
+        doc.setIn(childPath, []);
+        seq = doc.getIn(childPath);
+      }
+      (seq as YAMLSeq).add(compNode);
+      const idx = (seq as YAMLSeq).items.length - 1;
+      this._doc._notifyInternal();
+      return new ComponentNode(this._doc, [...childPath, idx]);
+    }
+  }
+
   moveToIndex(parent: { path: readonly (string | number)[]; slot?: string }, index: number): void {
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();

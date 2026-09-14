@@ -541,4 +541,107 @@ describe('PageDocument', () => {
       expect(notifications).toHaveLength(0);
     });
   });
+
+  describe('addChild', () => {
+    const TABS_DOC = `pages:
+  - name: p1
+    components:
+      - type: tabs
+        tabs:
+          "Tab 1":
+            components:
+              - type: bar-chart`;
+
+    const SIDEBAR_DOC = `pages:
+  - name: p1
+    components:
+      - type: sidebar
+        content:
+          - type: bar-chart`;
+
+    const SPLIT_DOC = `pages:
+  - name: p1
+    components:
+      - type: split
+        split:
+          direction: horizontal
+          children:
+            - type: bar-chart`;
+
+    it('adds child to tabs named-record slot', () => {
+      const doc = PageDocument.parse(TABS_DOC);
+      const tabs = doc.getPages()[0]!.getComponents()[0]!;
+      expect(tabs.isContainer()).toBe(true);
+
+      tabs.addChild('Tab 1', 'line-chart');
+
+      const children = tabs.getChildren();
+      expect(children.slots['Tab 1']).toHaveLength(2);
+      expect(children.slots['Tab 1']![1]!.type).toBe('line-chart');
+    });
+
+    it('adds child to sidebar array slot', () => {
+      const doc = PageDocument.parse(SIDEBAR_DOC);
+      const sidebar = doc.getPages()[0]!.getComponents()[0]!;
+
+      sidebar.addChild('content', 'line-chart');
+
+      const children = sidebar.getChildren();
+      expect(children.slots['content']).toHaveLength(2);
+    });
+
+    it('adds child to split nested-array slot', () => {
+      const doc = PageDocument.parse(SPLIT_DOC);
+      const split = doc.getPages()[0]!.getComponents()[0]!;
+
+      split.addChild('split', 'line-chart');
+
+      const children = split.getChildren();
+      expect(children.slots['split']).toHaveLength(2);
+      expect(children.slots['split']![1]!.type).toBe('line-chart');
+    });
+
+    it('creates new named slot if it does not exist', () => {
+      const doc = PageDocument.parse(TABS_DOC);
+      const tabs = doc.getPages()[0]!.getComponents()[0]!;
+
+      tabs.addChild('Tab 2', 'pie-chart');
+
+      const children = tabs.getChildren();
+      expect(Object.keys(children.slots)).toContain('Tab 2');
+      expect(children.slots['Tab 2']![0]!.type).toBe('pie-chart');
+    });
+
+    it('throws for non-container component', () => {
+      const doc = PageDocument.parse(`pages:
+  - name: p1
+    components:
+      - type: bar-chart`);
+      const comp = doc.getPages()[0]!.getComponents()[0]!;
+      expect(() => comp.addChild('slot', 'line-chart')).toThrow();
+    });
+
+    it('supports undo', () => {
+      const doc = PageDocument.parse(TABS_DOC);
+      const tabs = doc.getPages()[0]!.getComponents()[0]!;
+      tabs.addChild('Tab 1', 'line-chart');
+      expect(tabs.getChildren().slots['Tab 1']).toHaveLength(2);
+
+      doc.undo();
+      const restored = doc.getPages()[0]!.getComponents()[0]!;
+      expect(restored.getChildren().slots['Tab 1']).toHaveLength(1);
+    });
+
+    it('adds child with properties', () => {
+      const doc = PageDocument.parse(TABS_DOC);
+      const tabs = doc.getPages()[0]!.getComponents()[0]!;
+
+      tabs.addChild('Tab 1', 'metric', { title: 'Revenue' });
+
+      const children = tabs.getChildren();
+      const added = children.slots['Tab 1']![1]!;
+      expect(added.type).toBe('metric');
+      expect(added.getProperties()['title']).toBe('Revenue');
+    });
+  });
 });
