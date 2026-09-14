@@ -62,7 +62,9 @@ connection.onCompletion((params): CompletionItem[] => {
   return handler.onCompletion(params.textDocument.uri, params.position).map(c => ({
     label: c.label,
     kind: c.kind as CompletionItemKind,
-    ...(c.insertText ? { insertText: c.insertText } : {}),
+    ...(c.textEdit
+      ? { textEdit: { range: c.textEdit.range, newText: c.textEdit.newText } }
+      : c.insertText ? { insertText: c.insertText } : {}),
     ...(c.detail ? { detail: c.detail } : {}),
   }));
 });

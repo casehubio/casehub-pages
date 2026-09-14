@@ -73,4 +73,66 @@ describe('handleCompletion', () => {
     expect(labels).not.toContain('- columns');
     expect(labels).not.toContain('columns');
   });
+
+  it('includes textEdit at root level (col 0)', () => {
+    const registry = setup();
+    const doc = '';
+    const items = handleCompletion(
+      'file:///app/test.page.yaml', doc, { line: 0, character: 0 }, registry,
+    );
+    const pagesItem = items.find(i => i.label === 'pages');
+    expect(pagesItem?.textEdit).toEqual({
+      range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+      newText: 'pages: ',
+    });
+  });
+
+  it('includes textEdit at indented position', () => {
+    const registry = setup();
+    const doc = 'pages:\n  - name: Home\n    components:\n      - type: bar-chart\n        ';
+    const lines = doc.split('\n');
+    const lastLine = lines[lines.length - 1]!;
+    const items = handleCompletion(
+      'file:///app/test.page.yaml', doc,
+      { line: lines.length - 1, character: lastLine.length },
+      registry,
+    );
+    const widthItem = items.find(i => i.label === '- width');
+    expect(widthItem?.textEdit).toBeDefined();
+    expect(widthItem!.textEdit!.range.start.line).toBe(lines.length - 1);
+    expect(widthItem!.textEdit!.range.start.character).toBe(lastLine.length);
+    expect(widthItem!.textEdit!.range.end.character).toBe(lastLine.length);
+  });
+
+  it('textEdit replaces partial text when user has typed a prefix', () => {
+    const registry = setup();
+    const doc = 'pages:\n  - name: Home\n    components:\n      - type: bar-chart\n        wi';
+    const lines = doc.split('\n');
+    const lastLine = lines[lines.length - 1]!;
+    const items = handleCompletion(
+      'file:///app/test.page.yaml', doc,
+      { line: lines.length - 1, character: lastLine.length },
+      registry,
+    );
+    const widthItem = items.find(i => i.label === '- width');
+    expect(widthItem?.textEdit).toBeDefined();
+    expect(widthItem!.textEdit!.range.start.character).toBe(lastLine.length - 2);
+    expect(widthItem!.textEdit!.range.end.character).toBe(lastLine.length);
+  });
+
+  it('textEdit for value completion replaces partial value', () => {
+    const registry = setup();
+    const doc = 'pages:\n  - name: Home\n    components:\n      - type: bar';
+    const lines = doc.split('\n');
+    const lastLine = lines[lines.length - 1]!;
+    const items = handleCompletion(
+      'file:///app/test.page.yaml', doc,
+      { line: lines.length - 1, character: lastLine.length },
+      registry,
+    );
+    const barItem = items.find(i => i.label === 'bar-chart');
+    expect(barItem?.textEdit).toBeDefined();
+    expect(barItem!.textEdit!.range.start.character).toBe(lastLine.indexOf('bar'));
+    expect(barItem!.textEdit!.newText).toBe('bar-chart');
+  });
 });

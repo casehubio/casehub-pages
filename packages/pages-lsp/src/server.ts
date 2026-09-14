@@ -47,6 +47,10 @@ export interface ServerHandler {
     kind: number;
     insertText?: string;
     detail?: string;
+    textEdit?: {
+      range: { start: Position; end: Position };
+      newText: string;
+    };
   }>;
   onHover(uri: string, position: Position): {
     contents: { kind: string; value: string };
