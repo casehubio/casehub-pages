@@ -94,7 +94,7 @@ describe('server-node.bundle.cjs', () => {
     const items = (comp as { result: Array<{ label: string }> }).result;
     expect(items.length).toBeGreaterThan(0);
     const labels = items.map(i => i.label);
-    expect(labels).toContain('- type');
+    expect(labels).toContain('- id');
   });
 
   it('publishes diagnostics on didOpen', async () => {
