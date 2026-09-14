@@ -118,34 +118,30 @@ describe('PagesBuilderShell', () => {
     expect(tree).toBeTruthy();
   });
 
-  it('starts in split view with source and preview', async () => {
+  it('uses dock-workbench for layout', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
     await el.updateComplete;
 
-    const source = el.shadowRoot!.querySelector('.editor-source');
-    const visual = el.shadowRoot!.querySelector('.editor-visual');
-    expect(source).toBeTruthy();
-    expect(visual).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('pages-dock-workbench')).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('.editor-visual')).toBeTruthy();
   });
 
-  it('switches view modes via tabs', async () => {
+  it('toggles YAML pane via button', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
     await el.updateComplete;
 
-    const tabs = el.shadowRoot!.querySelectorAll('.view-tab');
-    (tabs[0] as HTMLElement).click();
-    await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.editor-source')).toBeTruthy();
-    expect(el.shadowRoot!.querySelector('.editor-visual')).toBeNull();
+    const dock = el.shadowRoot!.querySelector('pages-dock-workbench') as any;
+    expect(dock.bottomCollapsed).toBe(true);
 
-    (tabs[2] as HTMLElement).click();
+    const yamlBtn = el.shadowRoot!.querySelector('.yaml-toggle') as HTMLElement;
+    yamlBtn.click();
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.editor-source')).toBeNull();
-    expect(el.shadowRoot!.querySelector('.editor-visual')).toBeTruthy();
+
+    expect(dock.bottomCollapsed).toBe(false);
   });
 
   it('properties dock starts open', async () => {
@@ -177,7 +173,7 @@ describe('PagesBuilderShell', () => {
     expect(headers).toContain('Components');
   });
 
-  it('toggles individual dock panel closed', async () => {
+  it('toggles properties panel via dock icon', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     document.body.appendChild(el);
@@ -186,11 +182,11 @@ describe('PagesBuilderShell', () => {
     const propsIcon = el.shadowRoot!.querySelector('.dock-icon') as HTMLElement;
     propsIcon.click();
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.dock-panel')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.dock-section')).toBeNull();
 
     propsIcon.click();
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.dock-panel')).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('.dock-section')).toBeTruthy();
   });
 
   it('creates empty document when no yaml provided', async () => {
