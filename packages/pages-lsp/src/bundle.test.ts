@@ -76,6 +76,22 @@ describe('server-node.bundle.cjs', () => {
     await startServer();
   });
 
+  it('initialize response has LSP4IJ-compatible structure', async () => {
+    proc = spawn('node', [BUNDLE_PATH, '--stdio'], { stdio: ['pipe', 'pipe', 'pipe'] });
+    sendMessage(proc, {
+      jsonrpc: '2.0', id: 1, method: 'initialize',
+      params: { processId: null, capabilities: {}, rootUri: null },
+    });
+    const init = await readMessage(proc) as { result: Record<string, unknown> };
+    const caps = init.result.capabilities as Record<string, unknown>;
+    const sync = caps.textDocumentSync as Record<string, unknown>;
+    expect(sync).toHaveProperty('openClose', true);
+    expect(sync).toHaveProperty('change');
+    expect(caps).toHaveProperty('completionProvider');
+    expect(caps).toHaveProperty('hoverProvider', true);
+    expect(init.result).toHaveProperty('serverInfo');
+  });
+
   it('returns completions for page YAML', async () => {
     const server = await startServer();
     const yaml = 'pages:\n  - components:\n      - type: bar-chart\n        ';
