@@ -28,6 +28,10 @@
     "./context-menu": {
       "types": "./dist/context-menu/index.d.ts",
       "default": "./dist/context-menu/index.js"
+    },
+    "./dock": {
+      "types": "./dist/dock/index.d.ts",
+      "default": "./dist/dock/index.js"
     }
   },
   "sideEffects": [
