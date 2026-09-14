@@ -149,19 +149,12 @@ export class PagesDockWorkbench extends LitElement {
               <div class="zone zone-right" role="region" aria-label="Right panel" style="width: ${this.rightWidth}px">
                 <slot name="right"></slot>
               </div>
-              ${this.showToggleBar ? html`
-                <div class="toggle-bar toggle-bar-right" role="toolbar" aria-label="Right panel toggle">
-                  <slot name="toggle-bar-right"></slot>
-                </div>
-              ` : nothing}
-            ` : html`
-              ${this.showToggleBar ? html`
-                <div class="toggle-bar toggle-bar-right" role="toolbar" aria-label="Right panel toggle">
-                  <button class="toggle-btn" aria-label="Toggle right panel" @click=${() => this.toggleZone('right')}>◨</button>
-                  <slot name="toggle-bar-right"></slot>
-                </div>
-              ` : nothing}
-            `}
+            ` : nothing}
+            ${this.showToggleBar && this.rightEnabled ? html`
+              <div class="toggle-bar toggle-bar-right" role="toolbar" aria-label="Right panel toggle">
+                <slot name="toggle-bar-right"></slot>
+              </div>
+            ` : nothing}
           ` : nothing}
         </div>
 

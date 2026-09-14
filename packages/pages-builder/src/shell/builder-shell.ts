@@ -42,6 +42,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   @state() private _selectedPath: readonly (string | number)[] | undefined;
   @state() private _selectedNodeType: TreeNodeType | undefined;
   @state() private _viewMode: 'source' | 'visual' | 'split' = 'split';
+  @state() private _treeOpen = true;
   @state() private _propsOpen = true;
   @state() private _compsOpen = false;
   @state() private _dockWidth = 320;
@@ -118,12 +119,11 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   override updated(changed: Map<PropertyKey, unknown>): void {
     if (changed.has('_viewMode')) {
       if (this._viewMode !== 'source') this._refreshPreview();
-      if (this._viewMode !== 'visual') {
-        this.updateComplete.then(() => {
-          this._connectYamlSync();
-          this._connectEditorCursorSync();
-        });
-      }
+      this.updateComplete.then(() => {
+        this._pushYamlToEditor();
+        this._connectYamlSync();
+        this._connectEditorCursorSync();
+      });
     }
   }
 
@@ -757,6 +757,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     return html`
       <div class="shell">
         <div class="toolbar">
+          <button class="toolbar-btn tree-toggle${this._treeOpen ? ' active' : ''}"
+            @click="${() => { this._treeOpen = !this._treeOpen; }}" title="Toggle tree panel">☰</button>
           <button class="toolbar-btn" @click="${this._addPage}" title="Add page">+ Page</button>
           <button class="toolbar-btn" @click="${this._addDataset}" title="Add dataset">+ Dataset</button>
           <div class="toolbar-spacer"></div>
@@ -777,6 +779,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           left-width="260"
           right-width="${this._dockWidth}"
           persist-key="pages-builder"
+          .leftCollapsed="${!this._treeOpen}"
           .rightCollapsed="${!this._anyDockOpen}"
           .bottomEnabled="${false}"
         >
@@ -789,20 +792,16 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           </div>
 
           <div slot="centre" class="panel-editor">
-            ${showSource ? html`
-              <div class="editor-source${this._viewMode === 'split' ? ' split' : ''}">
-                <pages-code-editor
-                  .extensions="${builderHighlightExtension}"
-                  language="yaml"
-                  label="Page YAML source"
-                ></pages-code-editor>
-              </div>
-            ` : nothing}
-            ${showVisual ? html`
-              <div class="editor-visual${this._viewMode === 'split' ? ' split' : ''}">
-                <div class="preview-container"></div>
-              </div>
-            ` : nothing}
+            <div class="editor-source${showSource ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
+              <pages-code-editor
+                .extensions="${builderHighlightExtension}"
+                language="yaml"
+                label="Page YAML source"
+              ></pages-code-editor>
+            </div>
+            <div class="editor-visual${showVisual ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
+              <div class="preview-container"></div>
+            </div>
           </div>
 
           <div slot="right">
@@ -882,6 +881,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       padding: 8px 0;
     }
 
+    .tree-toggle.active {
+      background: var(--pages-selected-bg, rgba(66, 133, 244, 0.12));
+      color: var(--pages-primary, #1967d2);
+      border-color: var(--pages-primary, #1967d2);
+    }
+
     .view-tabs {
       display: flex;
       gap: 0;
@@ -934,6 +939,10 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
     .editor-visual {
       background: var(--pages-surface-bg, #fff);
+    }
+
+    .editor-source.hidden, .editor-visual.hidden {
+      display: none;
     }
 
     .preview-container {

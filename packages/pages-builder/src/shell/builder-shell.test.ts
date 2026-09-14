@@ -138,13 +138,13 @@ describe('PagesBuilderShell', () => {
     const tabs = el.shadowRoot!.querySelectorAll('.view-tab');
     (tabs[0] as HTMLElement).click();
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.editor-source')).toBeTruthy();
-    expect(el.shadowRoot!.querySelector('.editor-visual')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.editor-source')!.classList.contains('hidden')).toBe(false);
+    expect(el.shadowRoot!.querySelector('.editor-visual')!.classList.contains('hidden')).toBe(true);
 
     (tabs[2] as HTMLElement).click();
     await el.updateComplete;
-    expect(el.shadowRoot!.querySelector('.editor-source')).toBeNull();
-    expect(el.shadowRoot!.querySelector('.editor-visual')).toBeTruthy();
+    expect(el.shadowRoot!.querySelector('.editor-source')!.classList.contains('hidden')).toBe(true);
+    expect(el.shadowRoot!.querySelector('.editor-visual')!.classList.contains('hidden')).toBe(false);
   });
 
   it('properties dock starts open', async () => {
