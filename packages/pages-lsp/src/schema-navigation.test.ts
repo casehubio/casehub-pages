@@ -6,6 +6,10 @@ import {
   schemaToCompletions,
   isArrayField,
 } from './schema-navigation.js';
+import { dashboardSchema } from '@casehubio/pages-schema';
+import { yamlCoreDocumentSchema } from '@casehubio/yaml-core/schema';
+
+const realPageSchema = z.intersection(yamlCoreDocumentSchema, dashboardSchema);
 
 const componentBase = z.object({
   type: z.string(),
@@ -55,6 +59,43 @@ describe('buildYamlContext', () => {
     const doc = 'pages:\n  ';
     const ctx = buildYamlContext(doc, doc.length);
     expect(ctx.path).toEqual(['pages']);
+  });
+
+  it('descends into components: after Enter with trailing content', () => {
+    const doc = '    - span: 4\n      components:\n        \n  - columns:\n    - span: 8\n';
+    const cursorLine = 2;
+    const lines = doc.split('\n');
+    let pos = 0;
+    for (let i = 0; i < cursorLine; i++) pos += lines[i]!.length + 1;
+    pos += 8;
+    const ctx = buildYamlContext(doc, pos);
+    expect(ctx.path).toContain('components');
+  });
+
+  it('descends into components: on indented blank line', () => {
+    const doc = 'pages:\n- name: Dashboard\n  rows:\n  - columns:\n    - span: 4\n      components:\n        \n      - type: metric\n';
+    const cursorLine = 6;
+    const lines = doc.split('\n');
+    let pos = 0;
+    for (let i = 0; i < cursorLine; i++) pos += lines[i]!.length + 1;
+    pos += 8;
+    const ctx = buildYamlContext(doc, pos);
+    expect(ctx.path).toContain('components');
+  });
+
+  it('full path after Enter on components: resolves to component schema', () => {
+    const doc = 'pages:\n- name: Dashboard\n  rows:\n  - columns:\n    - span: 4\n      components:\n        \n    - span: 8\n';
+    const cursorLine = 6;
+    const lines = doc.split('\n');
+    let pos = 0;
+    for (let i = 0; i < cursorLine; i++) pos += lines[i]!.length + 1;
+    pos += 8;
+    const ctx = buildYamlContext(doc, pos);
+    const result = navigateSchema(realPageSchema, ctx.path, ctx.siblings);
+    expect(result).not.toBeNull();
+    const completions = schemaToCompletions(result!);
+    const labels = completions.map(c => c.label);
+    expect(labels).toContain('type');
   });
 });
 

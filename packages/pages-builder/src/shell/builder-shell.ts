@@ -97,7 +97,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       const completions = schemaToCompletions(resolved);
       if (completions.length === 0) return null;
 
-      const needsDash = isArrayField(schema, yamlCtx.path, yamlCtx.siblings) && !textBefore.trimStart().startsWith('-');
+      const hasSiblings = Object.keys(yamlCtx.siblings).length > 0;
+      const needsDash = isArrayField(schema, yamlCtx.path, yamlCtx.siblings) && !textBefore.trimStart().startsWith('-') && !hasSiblings;
       function applyDash(c: CompletionEntry) {
         const apply = needsDash ? '- ' + (c.apply || c.label) : c.apply;
         return { label: needsDash ? '- ' + c.label : c.label, ...(c.detail ? { detail: c.detail } : {}), type: c.type, ...(apply ? { apply } : {}) };

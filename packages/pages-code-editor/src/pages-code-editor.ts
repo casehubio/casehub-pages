@@ -8,6 +8,7 @@ import { json } from '@codemirror/lang-json';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { tags } from '@lezer/highlight';
 import { yamlLinter } from './yaml-lint.js';
+import { yamlIndentBindings } from './yaml-indent.js';
 import { CodeEditorBridge } from './code-editor-bridge.js';
 
 const EDITABLE_TEXT = Symbol.for('scenario-editable-text');
@@ -179,7 +180,7 @@ export class PagesCodeEditor extends LitElement {
             )
           ),
           drawSelection(),
-          keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+          keymap.of([...yamlIndentBindings(this.tabSize), ...defaultKeymap, ...historyKeymap, indentWithTab]),
           history(),
           pagesTheme,
           syntaxHighlighting(pagesHighlightStyle),
