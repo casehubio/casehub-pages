@@ -23,9 +23,6 @@ function getWordStart(textBefore: string): number {
   return match ? textBefore.length - match[0].length : textBefore.length;
 }
 
-import { appendFileSync } from 'node:fs';
-const clog = (msg: string) => { try { appendFileSync('/tmp/casehub-lsp-completion.log', `[${new Date().toISOString()}] ${msg}\n`); } catch {} };
-
 export function handleCompletion(
   uri: string,
   content: string,
@@ -33,7 +30,6 @@ export function handleCompletion(
   registry: SchemaRegistry,
 ): CompletionItem[] {
   const format = registry.detect(uri, content);
-  clog(`format=${format?.formatId ?? 'NONE'} uri=${uri}`);
   if (!format) return [];
 
   const lines = content.split('\n');
@@ -46,7 +42,6 @@ export function handleCompletion(
   const yamlCtx = buildYamlContext(content, offset);
   const line = lines[position.line] ?? '';
   const textBefore = line.substring(0, position.character);
-  clog(`path=${JSON.stringify(yamlCtx.path)} siblings=${JSON.stringify(Object.keys(yamlCtx.siblings))} textBefore="${textBefore}"`);
 
   const afterValueColon = textBefore.match(/(?:^|\s)-?\s*(\w[\w-]*):\s*(\S*)$/);
   if (afterValueColon) {
@@ -79,7 +74,6 @@ export function handleCompletion(
   }
 
   const resolved = navigateSchema(format.documentSchema, yamlCtx.path, yamlCtx.siblings);
-  clog(`resolved=${resolved ? 'YES' : 'NO'} path=${JSON.stringify(yamlCtx.path)}`);
   if (!resolved) return [];
 
   const completions = schemaToCompletions(resolved, yamlCtx.siblings);
