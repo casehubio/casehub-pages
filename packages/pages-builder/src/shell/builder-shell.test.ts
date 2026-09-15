@@ -605,4 +605,89 @@ describe('PagesBuilderShell', () => {
     const palette2 = el.shadowRoot!.querySelector('pages-builder-palette') as any;
     expect(palette2.context.availableDatasets).toContain('ds2');
   });
+
+  // --- schema completions in text editor ---
+
+  it('code editor receives schema completion extension', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const codeEditor = el.shadowRoot!.querySelector('pages-code-editor') as any;
+    expect(codeEditor).toBeTruthy();
+    expect(codeEditor.extensions.length).toBeGreaterThan(0);
+  });
+
+  // --- tree-add handler (inline picker) ---
+
+  it('tree-add opens inline picker', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0], nodeType: 'page' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    expect(picker).toBeTruthy();
+    expect(picker.open).toBe(true);
+    expect(picker.context).toBeDefined();
+    expect(picker.context.acceptsComponents).toBe(true);
+  });
+
+  it('tree-add picker inserts component into target node', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = ROWS_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0], nodeType: 'column' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    picker.dispatchEvent(new CustomEvent('component-select', {
+      bubbles: true, composed: true,
+      detail: { type: 'metric', label: 'Metric', defaultProps: {} },
+    }));
+    await el.updateComplete;
+
+    const col = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
+    expect(col.getComponents()).toHaveLength(2);
+    expect(col.getComponents()[1]!.type).toBe('metric');
+  });
+
+  it('tree-add picker closes after selection', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0], nodeType: 'page' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    expect(picker.open).toBe(true);
+
+    picker.dispatchEvent(new CustomEvent('component-select', {
+      bubbles: true, composed: true,
+      detail: { type: 'metric', label: 'Metric', defaultProps: {} },
+    }));
+    await el.updateComplete;
+
+    expect(picker.open).toBe(false);
+  });
 });

@@ -6,6 +6,12 @@ import { KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
 import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
 import { expand } from '@casehubio/yaml-core/expand';
 import { EditorView } from '@codemirror/view';
+import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { type Extension } from '@codemirror/state';
+import { buildYamlContext, navigateSchema, schemaToCompletions, isArrayField, type CompletionEntry } from '@casehubio/pages-lsp';
+import { dashboardSchema } from '@casehubio/pages-schema';
+import { yamlCoreDocumentSchema } from '@casehubio/yaml-core/schema';
+import { z } from 'zod';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import type { PropertyPaletteSource } from '@casehubio/pages-property-palette/types';
 import type { PaletteContext } from '../catalog/palette-context.js';
@@ -60,6 +66,58 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _compsContainer?: HTMLElement;
   private _centreContainer?: HTMLElement;
   @state() private _propertySource: PropertyPaletteSource | undefined;
+
+  private _pageSchema = z.intersection(yamlCoreDocumentSchema, dashboardSchema);
+
+  private _schemaExtensions: Extension[] = (() => {
+    const schema = this._pageSchema;
+    const source = (context: CompletionContext): CompletionResult | null => {
+      const line = context.state.doc.lineAt(context.pos);
+      const textBefore = line.text.substring(0, context.pos - line.from);
+      const doc = context.state.doc.toString();
+      const yamlCtx = buildYamlContext(doc, context.pos);
+
+      const afterValueColon = textBefore.match(/(?:^|\s)-?\s*(\w[\w-]*):\s*(\S*)$/);
+      if (afterValueColon) {
+        const key = afterValueColon[1] ?? '';
+        const prefix = afterValueColon[2] ?? '';
+        const resolved = navigateSchema(schema, [...yamlCtx.path, key], yamlCtx.siblings);
+        if (resolved) {
+          const completions = schemaToCompletions(resolved);
+          if (completions.length > 0 && completions[0]?.type === 'enum') {
+            return { from: context.pos - prefix.length, options: completions.map(c => ({ ...c, type: 'enum' as const })) };
+          }
+        }
+        return null;
+      }
+
+      const keyMatch = textBefore.match(/(?:^|\s)-?\s*(\w[\w-]*)$/);
+      const resolved = navigateSchema(schema, yamlCtx.path, yamlCtx.siblings);
+      if (!resolved) return null;
+      const completions = schemaToCompletions(resolved);
+      if (completions.length === 0) return null;
+
+      const needsDash = isArrayField(schema, yamlCtx.path, yamlCtx.siblings) && !textBefore.trimStart().startsWith('-');
+      function applyDash(c: CompletionEntry) {
+        const apply = needsDash ? '- ' + (c.apply || c.label) : c.apply;
+        return { label: needsDash ? '- ' + c.label : c.label, ...(c.detail ? { detail: c.detail } : {}), type: c.type, ...(apply ? { apply } : {}) };
+      }
+
+      if (keyMatch) {
+        const prefix = keyMatch[1] ?? '';
+        if (!prefix && !context.explicit) return null;
+        return { from: context.pos - prefix.length, options: completions.map(applyDash) };
+      }
+
+      const emptyMatch = textBefore.match(/(?:^|\s)-?\s*$/);
+      if (emptyMatch && context.explicit) {
+        return { from: context.pos, options: completions.map(applyDash) };
+      }
+
+      return null;
+    };
+    return [autocompletion({ override: [source], activateOnTyping: true })];
+  })();
 
   private _yamlSync: YamlSync | undefined;
   private _docUnsub: (() => void) | undefined;
@@ -415,6 +473,21 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._updatePropertySource();
   }
 
+  private _handleTreeAdd(e: CustomEvent<{ path: readonly (string | number)[]; nodeType: TreeNodeType }>): void {
+    this._syncSource = 'tree';
+    this._selectedPath = e.detail.path;
+    this._selectedNodeType = e.detail.nodeType;
+    this._updatePropertySource();
+    this._refreshPaletteContext();
+    const dockEl = this.renderRoot.querySelector('pages-dock-workbench') as PagesDockWorkbench | null;
+    if (dockEl) {
+      const compsPanel = this.renderRoot.querySelector('[data-component-id="components"]') as HTMLElement | null;
+      if (!compsPanel || compsPanel.style.display === 'none') {
+        dockEl.togglePanel('components');
+      }
+    }
+  }
+
   private _updatePropertySource(): void {
     if (!this._selectedPath || !this._selectedNodeType) {
       this._propertySource = undefined;
@@ -583,6 +656,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         .document="${this._document}"
         .selectedPath="${this._selectedPath}"
         @node-select="${(e: CustomEvent) => this._handleNodeSelect(e)}"
+        @tree-add="${(e: CustomEvent) => this._handleTreeAdd(e)}"
       ></pages-builder-tree>
     `, this._treeContainer);
   }
@@ -625,7 +699,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     litRender(html`
       <div class="editor-source${showSource ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
         <pages-code-editor
-          .extensions="${builderHighlightExtension}"
+          .extensions="${[...builderHighlightExtension, ...this._schemaExtensions]}"
           language="yaml"
           label="Page YAML source"
         ></pages-code-editor>
