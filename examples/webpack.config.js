@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 const commonConfig = require("@casehubio/pages-webpack-base/webpack.common.config");
 
 module.exports = (env = {}) => {
@@ -106,7 +107,11 @@ module.exports = (env = {}) => {
         "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
         "@casehubio/pages-primitives/dock": path.resolve(__dirname, "../packages/pages-primitives/dist/dock"),
         "@casehubio/pages-primitives/a11y": path.resolve(__dirname, "../packages/pages-primitives/dist/a11y"),
+        "@casehubio/pages-primitives/context-menu": path.resolve(__dirname, "../packages/pages-primitives/dist/context-menu"),
         "@casehubio/pages-primitives": path.resolve(__dirname, "../packages/pages-primitives"),
+        "@casehubio/yaml-core/expand": path.resolve(__dirname, "../packages/yaml-core/src/expand"),
+        "@casehubio/yaml-core/schema": path.resolve(__dirname, "../packages/yaml-core/src/schema"),
+        "@casehubio/yaml-core": path.resolve(__dirname, "../packages/yaml-core"),
         "@casehubio/pages-ui-tokens": path.resolve(__dirname, "../packages/pages-ui-tokens"),
         "@casehubio/pages-aria/dist/controller": path.resolve(__dirname, "../packages/pages-aria/dist/controller.js"),
         "@casehubio/pages-table": path.resolve(__dirname, "../packages/pages-table"),
@@ -137,5 +142,11 @@ module.exports = (env = {}) => {
         "@xyflow/react/dist/style.css": path.resolve(__dirname, "../packages/graph-renderer/node_modules/@xyflow/react/dist/style.css"),
       },
     },
+    plugins: [
+      ...(common.plugins || []),
+      new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+        resource.request = resource.request.replace(/^node:/, '');
+      }),
+    ],
   };
 };
