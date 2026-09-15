@@ -6,7 +6,6 @@
     "composite": false
   },
   "exclude": [
-    "**/*.test.ts",
-    "src/form-inputs/**"
+    "**/*.test.ts"
   ]
 }
