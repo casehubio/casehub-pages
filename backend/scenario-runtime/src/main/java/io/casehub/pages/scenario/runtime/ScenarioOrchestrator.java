@@ -11,7 +11,14 @@ import io.casehub.pages.scenario.HierarchicalScenario;
 import io.casehub.pages.scenario.HierarchicalStep;
 import io.casehub.pages.scenario.NarrativeContent;
 import io.casehub.pages.scenario.OutlineNode;
+import io.casehub.pages.scenario.SimulationSpec;
+import io.casehub.platform.simulation.MapSimulationConfig;
+import io.casehub.platform.simulation.SimulationOverlay;
+import io.casehub.platform.simulation.SimulationRuntime;
+import io.casehub.platform.simulation.config.YamlCorpusLoader;
+import io.casehub.platform.simulation.inmem.InMemorySimulationCorpus;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import java.util.ArrayList;
@@ -19,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ScenarioOrchestrator {
@@ -28,6 +36,9 @@ public class ScenarioOrchestrator {
     private final SessionSender    sender;
     private final EventBroadcaster broadcaster;
     private final ExecutorRegistry executorRegistry = new ExecutorRegistry();
+
+    @Inject Instance<SimulationRuntime> simulationRuntimeInstance;
+    private volatile SimulationOverlay activeOverlay;
 
     private volatile String                             sessionId;
     private volatile HierarchicalScenario               scenario;
@@ -61,6 +72,7 @@ public class ScenarioOrchestrator {
         this.speed       = scenario.speed();
         this.runToTarget = null;
 
+        activateSimulation(this.scenario.simulation());
         validateExecutors();
         dispatchAllSequences();
         broadcastState();
@@ -78,6 +90,7 @@ public class ScenarioOrchestrator {
 
     public void stop() {
         if (this.sessionId == null) {return;}
+        deactivateSimulation();
         broadcastControl("stop", null);
         this.sessionId = null;
         this.scenario  = null;
@@ -475,6 +488,29 @@ public class ScenarioOrchestrator {
             }
         }
         return null;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void activateSimulation(SimulationSpec spec) {
+        if (spec == null || !simulationRuntimeInstance.isResolvable()) return;
+        var runtime = simulationRuntimeInstance.get();
+        var config = MapSimulationConfig.of(spec.strategies(),
+                spec.capture().stream().collect(Collectors.toMap(c -> c, c -> true)));
+        var corpus = new InMemorySimulationCorpus<>();
+
+        if (!spec.corpus().isEmpty()) {
+            var loader = new YamlCorpusLoader();
+            var loaded = loader.loadFromPaths(spec.corpus());
+            loaded.forEach(corpus::seed);
+        }
+
+        this.activeOverlay = runtime.pushOverlay(config, corpus);
+    }
+
+    private void deactivateSimulation() {
+        if (activeOverlay == null || !simulationRuntimeInstance.isResolvable()) return;
+        simulationRuntimeInstance.get().popOverlay(activeOverlay);
+        activeOverlay = null;
     }
 
     private void requireSession() {

@@ -39,6 +39,17 @@ variable interpolation, event-driven await.</description>
             <artifactId>quarkus-smallrye-graphql</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.casehub</groupId>
+            <artifactId>casehub-platform-simulation-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.casehub</groupId>
+            <artifactId>casehub-platform-simulation-config-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
