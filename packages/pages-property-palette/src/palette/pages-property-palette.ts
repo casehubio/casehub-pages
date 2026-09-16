@@ -28,21 +28,28 @@ export class PagesPropertyPalette extends LitElement {
     }
     .advanced-toggle input { accent-color: var(--pages-accent-9, #5470c6); }
     details.group {
-      border: 1px solid var(--pages-neutral-4, #e5e7eb);
-      border-radius: var(--pages-radius-sm, 4px);
+      margin-top: var(--pages-space-2, 8px);
+      border-top: 1px solid var(--pages-neutral-3, #f0f0f0);
+      padding-top: var(--pages-space-1, 4px);
     }
     details.group summary {
-      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
-      font-size: var(--pages-font-size-base, 14px);
+      padding: var(--pages-space-1, 4px) 0;
+      font-size: var(--pages-font-size-xs, 11px);
       font-weight: var(--pages-font-weight-semibold, 600);
-      color: var(--pages-neutral-11, #374151);
+      color: var(--pages-neutral-8, #9ca3af);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       cursor: pointer;
       user-select: none;
     }
-    .group-fields, .ungrouped-fields {
+    .group-fields {
       display: flex; flex-direction: column;
       gap: var(--pages-space-2, 8px);
-      padding: var(--pages-space-2, 8px);
+      padding: var(--pages-space-1, 4px) 0 0;
+    }
+    .ungrouped-fields {
+      display: flex; flex-direction: column;
+      gap: var(--pages-space-2, 8px);
     }
     .nested-group {
       padding-left: var(--pages-space-3, 12px);
@@ -240,8 +247,8 @@ export class PagesPropertyPalette extends LitElement {
       this._elementCache.set(cacheKey, el);
     }
 
-    el.label = label;
     if (isCheckbox) {
+      el.label = label;
       el.checked = Boolean(value);
     } else {
       el.value = value ?? (tag === 'pages-number-input' ? null : '');
