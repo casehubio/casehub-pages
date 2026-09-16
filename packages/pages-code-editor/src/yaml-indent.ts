@@ -11,7 +11,9 @@ export function computeNewlineIndent(line: string, tabSize: number): string {
     return contentIndent + ' '.repeat(tabSize);
   }
   if (dashPrefix) {
-    return contentIndent;
+    const afterDash = trimmed.slice(2);
+    if (afterDash.includes(': ')) return contentIndent;
+    return baseIndent;
   }
   return baseIndent;
 }

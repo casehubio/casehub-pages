@@ -109,4 +109,51 @@ describe('PagesBuilderInlinePicker', () => {
 
     expect(el.open).toBe(false);
   });
+
+  it('hides category pills with no matching entries', async () => {
+    el = createPicker({ acceptsComponents: false });
+    el.open = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const chips = Array.from(el.shadowRoot!.querySelectorAll<HTMLButtonElement>('.cat-chip'));
+    const chipLabels = chips.map(c => c.textContent?.trim());
+
+    expect(chipLabels).toEqual(['All']);
+  });
+
+  it('only shows categories that have entries for context', async () => {
+    el = createPicker({ availableDatasets: [] });
+    el.open = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const chips = Array.from(el.shadowRoot!.querySelectorAll<HTMLButtonElement>('.cat-chip'));
+    const chipLabels = chips.map(c => c.textContent?.trim());
+
+    expect(chipLabels).toContain('All');
+    expect(chipLabels).toContain('Layout');
+    expect(chipLabels).toContain('Content');
+  });
+
+  it('positions itself near anchor element when opened', async () => {
+    const anchor = document.createElement('button');
+    anchor.style.position = 'absolute';
+    anchor.style.top = '100px';
+    anchor.style.left = '50px';
+    document.body.appendChild(anchor);
+
+    el = createPicker();
+    el.anchor = anchor;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el.open = true;
+    await el.updateComplete;
+
+    expect(el.style.top).toBeTruthy();
+    expect(el.style.left).toBeTruthy();
+
+    anchor.remove();
+  });
 });

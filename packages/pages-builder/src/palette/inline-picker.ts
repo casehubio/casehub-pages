@@ -35,10 +35,19 @@ export class PagesBuilderInlinePicker extends LitElement {
       this._search = '';
       this._activeCategory = undefined;
       this._recompute();
+      this._positionNearAnchor();
       this.updateComplete.then(() => {
         this.shadowRoot?.querySelector<HTMLInputElement>('.picker-search')?.focus();
       });
     }
+  }
+
+  private _positionNearAnchor(): void {
+    if (!this.anchor) return;
+    const anchorRect = this.anchor.getBoundingClientRect();
+    const parentRect = this.offsetParent?.getBoundingClientRect() ?? { top: 0, left: 0 };
+    this.style.top = `${anchorRect.bottom - parentRect.top}px`;
+    this.style.left = `${anchorRect.left - parentRect.left}px`;
   }
 
   private _recompute(): void {
@@ -48,11 +57,16 @@ export class PagesBuilderInlinePicker extends LitElement {
       availableDatasets: [],
       siblingTypes: [],
     };
+    const allForContext = filterCatalog(ctx);
+    const populatedCategories = new Set(allForContext.map(e => e.entry.category));
+    this._categories = getCatalogCategories().filter(c => populatedCategories.has(c));
+    if (this._activeCategory && !populatedCategories.has(this._activeCategory)) {
+      this._activeCategory = undefined;
+    }
     this._filtered = filterCatalog(ctx, {
       search: this._search || undefined,
       category: this._activeCategory,
     });
-    this._categories = getCatalogCategories();
   }
 
   private _handleOutsideClick(e: MouseEvent): void {

@@ -26,6 +26,14 @@ describe('computeNewlineIndent', () => {
     expect(computeNewlineIndent('          - type: metric', 2)).toBe('            ');
   });
 
+  it('stays at dash level after bare dash value (no key:value)', () => {
+    expect(computeNewlineIndent('    - column', 2)).toBe('    ');
+  });
+
+  it('stays at dash level after bare dash value (deep)', () => {
+    expect(computeNewlineIndent('          - item', 2)).toBe('          ');
+  });
+
   it('returns empty string for unindented non-colon line', () => {
     expect(computeNewlineIndent('foo: bar', 2)).toBe('');
   });

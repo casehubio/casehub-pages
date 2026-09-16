@@ -390,7 +390,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     e.stopPropagation();
     this.dispatchEvent(new CustomEvent('tree-add', {
       bubbles: true, composed: true,
-      detail: { path: node.path, nodeType: node.nodeType },
+      detail: { path: node.path, nodeType: node.nodeType, target: e.currentTarget as HTMLElement },
     }));
   }
 
@@ -627,7 +627,9 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     }
 
     .add-btn {
-      display: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 20px;
       height: 20px;
       border: 1px solid var(--pages-border-color, #dadce0);
@@ -639,12 +641,11 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       line-height: 1;
       padding: 0;
       flex-shrink: 0;
+      opacity: 0;
     }
 
     .tree-item:hover .add-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      opacity: 1;
     }
 
     .add-btn:hover {

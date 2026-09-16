@@ -273,6 +273,26 @@ describe('getNodeRange', () => {
       const text = doc.toString().slice(range!.from, range!.to);
       expect(text).not.toContain('bar-chart');
     });
+
+    it('component range ends on the last content line, not the next line', () => {
+      const doc = PageDocument.parse(ROWS_PAGE);
+      const range = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
+      expect(range).toBeDefined();
+      const yaml = doc.toString();
+      const lastLine = yaml.slice(0, range!.to).split('\n').pop()!;
+      expect(lastLine.trim()).not.toBe('');
+      expect(lastLine).toContain('uuid: sales_tx');
+    });
+
+    it('range from starts on the same line as the node content', () => {
+      const doc = PageDocument.parse(ROWS_PAGE);
+      const range = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
+      expect(range).toBeDefined();
+      const yaml = doc.toString();
+      const startLine = yaml.slice(0, range!.from).split('\n').length;
+      const textFromStart = yaml.split('\n')[startLine - 1]!;
+      expect(textFromStart.trim()).toMatch(/^-?\s*type:/);
+    });
   });
 
   describe('page and dataset ranges', () => {

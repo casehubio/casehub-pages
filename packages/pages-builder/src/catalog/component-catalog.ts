@@ -38,9 +38,17 @@ const NEEDS_DATASET_TYPES = new Set([
 ]);
 
 const PAGE_LEVEL_ONLY = new Set(['page', 'lazy-page']);
+const LAYOUT_TYPES = new Set(['rows', 'columns', 'grid']);
+const LAYOUT_BLOCKED_PARENTS = new Set(['column', 'row']);
 
 function defaultRelevance(ctx: PaletteContext): ContextRelevance {
   return ctx.acceptsComponents ? 'normal' : 'hidden';
+}
+
+function layoutRelevance(ctx: PaletteContext): ContextRelevance {
+  if (!ctx.acceptsComponents) return 'hidden';
+  if (ctx.parentType && LAYOUT_BLOCKED_PARENTS.has(ctx.parentType)) return 'hidden';
+  return 'normal';
 }
 
 function dataRelevance(ctx: PaletteContext): ContextRelevance {
@@ -56,6 +64,7 @@ function formRelevance(ctx: PaletteContext): ContextRelevance {
 }
 
 function pageLevelRelevance(ctx: PaletteContext): ContextRelevance {
+  if (!ctx.acceptsComponents) return 'hidden';
   if (ctx.parentType !== undefined) return 'hidden';
   return 'normal';
 }
@@ -69,6 +78,7 @@ function metricInGridRelevance(ctx: PaletteContext): ContextRelevance {
 
 function relevanceFor(type: string): (ctx: PaletteContext) => ContextRelevance {
   if (PAGE_LEVEL_ONLY.has(type)) return pageLevelRelevance;
+  if (LAYOUT_TYPES.has(type)) return layoutRelevance;
   if (FORM_TYPES.has(type)) return formRelevance;
   if (type === 'metric') return metricInGridRelevance;
   if (NEEDS_DATASET_TYPES.has(type)) return dataRelevance;

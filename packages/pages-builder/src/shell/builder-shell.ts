@@ -131,6 +131,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _inlinePickerOpen = false;
   private _inlinePickerPath: readonly (string | number)[] | undefined;
   private _inlinePickerNodeType: TreeNodeType | undefined;
+  private _inlinePickerAnchor: HTMLElement | undefined;
 
   get document(): PageDocument {
     return this._document;
@@ -508,7 +509,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._updatePropertySource();
   }
 
-  private _handleTreeAdd(e: CustomEvent<{ path: readonly (string | number)[]; nodeType: TreeNodeType }>): void {
+  private _handleTreeAdd(e: CustomEvent<{ path: readonly (string | number)[]; nodeType: TreeNodeType; target?: HTMLElement }>): void {
     this._syncSource = 'tree';
     this._selectedPath = e.detail.path;
     this._selectedNodeType = e.detail.nodeType;
@@ -517,8 +518,11 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._inlinePickerOpen = true;
     this._inlinePickerPath = e.detail.path;
     this._inlinePickerNodeType = e.detail.nodeType;
+    this._inlinePickerAnchor = e.detail.target;
     this._syncTree();
   }
+
+  private static _LAYOUT_TYPES = new Set(['rows', 'columns', 'grid']);
 
   private _handleInlinePickerSelect(e: CustomEvent<ComponentCatalogEntry>): void {
     const entry = e.detail;
@@ -530,7 +534,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (path && nt) {
       this._applyEdit('tree', () => {
         if (nt === 'page') {
-          this._findPageAtPath(path)?.addComponent(entry.type, props);
+          const page = this._findPageAtPath(path);
+          if (page && PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
+            page.addRow();
+          } else {
+            page?.addComponent(entry.type, props);
+          }
         } else if (nt === 'column') {
           this._findColumnAtPath(path)?.addComponent(entry.type, props);
         } else if (nt === 'row') {
@@ -795,6 +804,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       <pages-builder-inline-picker
         .context="${this._paletteContext}"
         .open="${this._inlinePickerOpen}"
+        .anchor="${this._inlinePickerAnchor}"
         @component-select="${(e: CustomEvent) => this._handleInlinePickerSelect(e)}"
         @picker-close="${() => { this._inlinePickerOpen = false; this._syncTree(); }}"
       ></pages-builder-inline-picker>
@@ -853,9 +863,11 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _refreshPaletteContext(): void {
     const datasets = this._document.getDatasets();
+    const nt = this._selectedNodeType;
+    const parentType = this._getParentType();
     this._paletteContext = {
-      parentType: this._getParentType(),
-      acceptsComponents: true,
+      parentType,
+      acceptsComponents: nt !== 'row',
       availableDatasets: datasets.map(d => d.uuid),
       siblingTypes: [],
     };
@@ -863,7 +875,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _getParentType(): string | undefined {
     if (!this._selectedPath || !this._selectedNodeType) return undefined;
-    if (this._selectedNodeType === 'component') {
+    const nt = this._selectedNodeType;
+    if (nt === 'column' || nt === 'row') return nt;
+    if (nt === 'component') {
       const node = this._findComponentAtPath(this._selectedPath);
       if (node?.isContainer()) return node.type;
     }

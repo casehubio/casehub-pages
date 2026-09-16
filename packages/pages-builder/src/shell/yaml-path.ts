@@ -86,7 +86,10 @@ export function getNodeRange(doc: PageDocument, path: readonly (string | number)
   const range = (node as any)?.range as [number, number, number] | undefined;
   if (!range) return null;
 
-  return { from: range[0], to: range[2] };
+  const yaml = fresh.toString();
+  let to = range[1];
+  while (to > range[0] && (yaml[to - 1] === '\n' || yaml[to - 1] === '\r')) to--;
+  return { from: range[0], to };
 }
 
 export function classifyPath(path: readonly (string | number)[]): TreeNodeType | undefined {

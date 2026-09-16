@@ -912,6 +912,66 @@ describe('PagesBuilderShell', () => {
     expect(col.getComponents()[1]!.type).toBe('metric');
   });
 
+  it('tree-add on column sets acceptsComponents and hides layout types', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = ROWS_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0], nodeType: 'column' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    expect(picker.context.acceptsComponents).toBe(true);
+    expect(picker.context.parentType).toBe('column');
+  });
+
+  it('tree-add on row sets acceptsComponents false', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = ROWS_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0, 'rows', 0], nodeType: 'row' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    expect(picker.context.acceptsComponents).toBe(false);
+  });
+
+  it('tree-add picker adds row when layout type selected on page', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = ROWS_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const rowsBefore = el.document.getPages()[0]!.getRows().length;
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0], nodeType: 'page' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    picker.dispatchEvent(new CustomEvent('component-select', {
+      bubbles: true, composed: true,
+      detail: { type: 'rows', label: 'Rows', category: 'Layout', defaultProps: {} },
+    }));
+    await el.updateComplete;
+
+    expect(el.document.getPages()[0]!.getRows().length).toBe(rowsBefore + 1);
+  });
+
   it('tree-add picker closes after selection', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;

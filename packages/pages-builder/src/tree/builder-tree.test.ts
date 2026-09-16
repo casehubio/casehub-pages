@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { PageDocument } from '@casehubio/pages-document';
-import { buildTreeModel, type TreeNodeInfo } from './builder-tree.js';
-import './builder-tree.js';
-import type { PagesBuilderTree } from './builder-tree.js';
+import { buildTreeModel, PagesBuilderTree, type TreeNodeInfo } from './builder-tree.js';
 import { computeMenuItems } from './tree-context-menu.js';
 
 const MINIMAL_PAGE = `pages:
@@ -271,6 +269,12 @@ describe('PagesBuilderTree interactions', () => {
     expect(addBtns.length).toBeGreaterThan(0);
   });
 
+  it('add-btn stays in layout flow to prevent hover shift', () => {
+    const cssText = (PagesBuilderTree as unknown as { styles: { cssText: string } }).styles.cssText;
+    expect(cssText).not.toMatch(/\.add-btn\s*\{[^}]*display:\s*none/);
+    expect(cssText).toMatch(/\.add-btn\s*\{[^}]*opacity:\s*0/);
+  });
+
   it('fires tree-action with delete on Delete key', async () => {
     const doc = PageDocument.parse(MINIMAL_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
@@ -307,6 +311,23 @@ describe('PagesBuilderTree interactions', () => {
 
     expect(events).toHaveLength(1);
     expect(events[0]!.detail.path).toBeDefined();
+  });
+
+  it('tree-add event includes target element for picker positioning', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('tree-add', ((e: CustomEvent) => events.push(e)) as EventListener);
+
+    const addBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.add-btn')!;
+    addBtn.click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.target).toBeInstanceOf(HTMLElement);
   });
 
   it('opens context menu on right-click', async () => {

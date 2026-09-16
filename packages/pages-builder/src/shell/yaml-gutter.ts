@@ -46,7 +46,8 @@ const builderGutter = gutter({
   lineMarker(view, line) {
     const range = view.state.field(highlightRangeField);
     if (!range) return null;
-    if (line.from >= range.from && line.from <= range.to) return marker;
+    const startLine = view.state.doc.lineAt(range.from).from;
+    if (line.from >= startLine && line.from <= range.to) return marker;
     return null;
   },
   lineMarkerChange(update) {

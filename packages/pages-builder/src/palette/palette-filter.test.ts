@@ -79,4 +79,25 @@ describe('filterCatalog', () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results.every(r => r.entry.category === 'Charts')).toBe(true);
   });
+
+  it('hides layout types when parentType is column', () => {
+    const ctx: PaletteContext = {
+      ...BASE_CTX,
+      parentType: 'column',
+    };
+    const results = filterCatalog(ctx);
+    expect(results.find(r => r.entry.type === 'rows')).toBeUndefined();
+    expect(results.find(r => r.entry.type === 'columns')).toBeUndefined();
+    expect(results.find(r => r.entry.type === 'grid')).toBeUndefined();
+    expect(results.find(r => r.entry.type === 'bar-chart')).toBeDefined();
+  });
+
+  it('hides all components when acceptsComponents is false', () => {
+    const ctx: PaletteContext = {
+      ...BASE_CTX,
+      acceptsComponents: false,
+    };
+    const results = filterCatalog(ctx);
+    expect(results).toHaveLength(0);
+  });
 });
