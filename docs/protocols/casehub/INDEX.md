@@ -17,3 +17,8 @@
 | [per-instance-spi-registration.md](per-instance-spi-registration.md) | Rendering-tier SPIs use per-instance registration, not singletons | SPI interfaces in graph-renderer |
 | [yaml-properties-require-interface-declaration.md](yaml-properties-require-interface-declaration.md) | YAML properties must be declared in TypeScript interfaces — undeclared properties are silently dropped | All component types in ComponentTypeRegistry |
 | [generated-schemas-not-hand-written.md](generated-schemas-not-hand-written.md) | Zod schemas are generated from TS interfaces, never hand-written | pages-schema package |
+| [all-mutations-through-applyedit.md](all-mutations-through-applyedit.md) | All document mutations must go through `_applyEdit` coordinator | pages-builder shell — any PageDocument mutation |
+| [pages-code-editor-requires-rebuild.md](pages-code-editor-requires-rebuild.md) | Source changes require `yarn build` before Vite picks them up | pages-code-editor package |
+| [codemirror-extensions-inline-imports.md](codemirror-extensions-inline-imports.md) | CodeMirror extensions must use the consumer's own `@codemirror/*` imports | Cross-package CodeMirror extension creation |
+| [shell-uses-parsedocument-for-coordinated-mode.md](shell-uses-parsedocument-for-coordinated-mode.md) | Shell must use `_parseDocument` for coordinated mode — never `PageDocument.parse()` directly | pages-builder shell — all document creation paths |
+| [property-source-lazy-resolve.md](property-source-lazy-resolve.md) | Property source closures must use lazy `resolve()` functions, not captured node references | pages-builder — _resolvePropertySource and PropertyPaletteSource creation |

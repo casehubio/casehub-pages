@@ -1,0 +1,9 @@
+{
+  "extends": "@casehubio/pages-tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": ".out",
+    "noEmit": true
+  },
+  "include": ["entry.ts"]
+}
