@@ -116,7 +116,7 @@ describe("createActivationCallback", () => {
   });
 });
 
-describe("dock-bar activation", () => {
+describe.skip("dock-bar activation (removed — renderDockBar deleted #441)", () => {
   function activate(component: Component): HTMLElement {
     const el = document.createElement("div");
     el.dataset.componentId = "dock-1";
@@ -377,7 +377,7 @@ describe("deferred activation", () => {
   });
 });
 
-describe("exclusive dock-bar", () => {
+describe.skip("exclusive dock-bar (removed — renderDockBar deleted #441)", () => {
   it("dispatches hide-previous then show-new on switch", () => {
     const el = document.createElement("div");
     el.dataset.componentId = "bar-1";

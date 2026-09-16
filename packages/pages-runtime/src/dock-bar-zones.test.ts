@@ -3,7 +3,7 @@ import { loadSite } from "./site.js";
 import type { LiveSite } from "./site.js";
 import type { Component } from "@casehubio/pages-component";
 
-describe("dock-bar zone grouping", () => {
+describe.skip("dock-bar zone grouping (removed — renderDockBar deleted #441)", () => {
   afterEach(() => {
     history.replaceState(null, "", location.pathname);
   });
@@ -313,7 +313,7 @@ describe("dock-bar zone grouping", () => {
   });
 });
 
-describe("dock-toggle handler exclusivity", () => {
+describe.skip("dock-toggle handler exclusivity (removed — renderDockBar deleted #441)", () => {
   let target: HTMLElement;
   let site: LiveSite;
 

@@ -52,9 +52,6 @@ function validateFormField(
 }
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
-import {renderDockBar} from "./dock-bar-renderer.js";
-import type {DockBarOptions} from "./dock-bar-renderer.js";
-import type {DockBarProps} from "@casehubio/pages-component";
 import type {FloatingWorkspaceProps, ContentFactory, ContainerState} from "@casehubio/pages-component";
 import {wireFloatingWorkspace} from "./wire-floating-workspace.js";
 import {createContainer} from "./frame-sandbox/index.js";
@@ -556,14 +553,6 @@ export function createActivationCallback(
       }
 
       el.appendChild(panel);
-      return;
-    }
-
-    if (component.type === "dock-bar" && component.props) {
-      const dockBarOpts: DockBarOptions | undefined = options?.zoneEngine && options?.siteTarget
-        ? { zoneEngine: options.zoneEngine, siteTarget: options.siteTarget }
-        : undefined;
-      renderDockBar(el, component.props as unknown as DockBarProps, dockBarOpts);
       return;
     }
 

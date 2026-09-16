@@ -104,7 +104,7 @@ describe("workbench integration", () => {
 });
 
 
-describe("applyDockState integration", () => {
+describe.skip("applyDockState integration (uses standalone dock-bar — removed #441)", () => {
   it("shows defaultOpen panels and hides others after render", async () => {
     const target = document.createElement("div");
     document.body.appendChild(target);

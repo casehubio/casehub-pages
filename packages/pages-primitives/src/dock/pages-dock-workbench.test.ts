@@ -525,3 +525,108 @@ describe('Bottom zone split', () => {
     expect(el.querySelector('[data-component-id="console"]')!.style.display).not.toBe('none');
   });
 });
+
+describe('Slide animation', () => {
+  let el: PagesDockWorkbench;
+
+  afterEach(() => {
+    el?.remove();
+  });
+
+  it('dock styles include transition for zone containers', async () => {
+    el = createDock({
+      leftPanels: [{ icon: 'N', label: 'Nav', panelId: 'nav', defaultOpen: true }],
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const styleEl = document.querySelector('style[data-pages-dock]');
+    expect(styleEl).toBeTruthy();
+    const css = styleEl!.textContent ?? '';
+    expect(css).toContain('transition');
+    expect(css).toMatch(/dock-zone-left.*transition.*width/s);
+  });
+
+  it('dock styles include transition for resize handles', async () => {
+    el = createDock({
+      leftPanels: [{ icon: 'N', label: 'Nav', panelId: 'nav', defaultOpen: true }],
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const styleEl = document.querySelector('style[data-pages-dock]');
+    const css = styleEl!.textContent ?? '';
+    expect(css).toMatch(/resize-handle.*transition.*opacity/s);
+  });
+});
+
+describe('Keyboard shortcuts', () => {
+  let el: PagesDockWorkbench;
+
+  afterEach(() => {
+    el?.remove();
+  });
+
+  function pressAlt(key: string): void {
+    el.dispatchEvent(new KeyboardEvent('keydown', { key, altKey: true, bubbles: true }));
+  }
+
+  it('Alt+1 toggles the first panel (left-top)', async () => {
+    el = createDock({
+      leftPanels: [
+        { icon: 'N', label: 'Nav', panelId: 'nav', defaultOpen: true },
+        { icon: 'S', label: 'Search', panelId: 'search' },
+      ],
+      rightPanels: [
+        { icon: 'P', label: 'Props', panelId: 'props' },
+      ],
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(el.dockState['nav']).toBe(true);
+    pressAlt('1');
+    expect(el.dockState['nav']).toBe(false);
+    pressAlt('1');
+    expect(el.dockState['nav']).toBe(true);
+  });
+
+  it('Alt+2 toggles the second panel', async () => {
+    el = createDock({
+      leftPanels: [
+        { icon: 'N', label: 'Nav', panelId: 'nav' },
+        { icon: 'S', label: 'Search', panelId: 'search' },
+      ],
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    pressAlt('2');
+    expect(el.dockState['search']).toBe(true);
+  });
+
+  it('numbering spans across left then right panels', async () => {
+    el = createDock({
+      leftPanels: [{ icon: 'N', label: 'Nav', panelId: 'nav' }],
+      rightPanels: [{ icon: 'P', label: 'Props', panelId: 'props' }],
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    pressAlt('1');
+    expect(el.dockState['nav']).toBe(true);
+    pressAlt('2');
+    expect(el.dockState['props']).toBe(true);
+  });
+
+  it('ignores Alt+N beyond panel count', async () => {
+    el = createDock({
+      leftPanels: [{ icon: 'N', label: 'Nav', panelId: 'nav' }],
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    pressAlt('9');
+    expect(Object.values(el.dockState).filter(v => v).length).toBe(0);
+  });
+});

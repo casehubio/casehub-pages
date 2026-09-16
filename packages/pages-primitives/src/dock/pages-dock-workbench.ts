@@ -7,10 +7,10 @@ const DOCK_STYLES = `
   pages-dock-workbench .dock-layout { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
   pages-dock-workbench .dock-main { display: flex; flex: 1; overflow: hidden; }
   pages-dock-workbench .dock-zone { overflow: auto; }
-  pages-dock-workbench .dock-zone-left, pages-dock-workbench .dock-zone-right { flex-shrink: 0; }
+  pages-dock-workbench .dock-zone-left, pages-dock-workbench .dock-zone-right { flex-shrink: 0; transition: width 0.15s ease-out; }
   pages-dock-workbench .dock-zone-centre { flex: 1; min-width: 0; }
-  pages-dock-workbench .dock-zone-bottom { flex-shrink: 0; border-top: 1px solid var(--pages-neutral-5, #555); display: flex; }
-  pages-dock-workbench .resize-handle { flex-shrink: 0; background: transparent; transition: background 0.15s; touch-action: none; }
+  pages-dock-workbench .dock-zone-bottom { flex-shrink: 0; border-top: 1px solid var(--pages-neutral-5, #555); display: flex; transition: height 0.15s ease-out; }
+  pages-dock-workbench .resize-handle { flex-shrink: 0; background: transparent; transition: background 0.15s, opacity 0.15s; touch-action: none; }
   pages-dock-workbench .resize-handle:hover, pages-dock-workbench .resize-handle:active { background: var(--pages-primary, #1967d2); }
   pages-dock-workbench .resize-left, pages-dock-workbench .resize-right { width: 4px; cursor: col-resize; }
   pages-dock-workbench .resize-bottom { height: 4px; cursor: row-resize; }
@@ -55,6 +55,17 @@ export class PagesDockWorkbench extends LitElement {
     return this._dockState;
   }
 
+  private _keyHandler = (e: KeyboardEvent): void => {
+    if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const n = parseInt(e.key, 10);
+    if (isNaN(n) || n < 1) return;
+    const allPanels = this._getAllPanels();
+    const idx = n - 1;
+    if (idx >= allPanels.length) return;
+    e.preventDefault();
+    this.togglePanel(allPanels[idx]!.panelId);
+  };
+
   override connectedCallback(): void {
     super.connectedCallback();
     const root = this.getRootNode() as Document | ShadowRoot;
@@ -68,9 +79,12 @@ export class PagesDockWorkbench extends LitElement {
         (root as ShadowRoot).prepend(style);
       }
     }
+    this.addEventListener('keydown', this._keyHandler);
+    this.setAttribute('tabindex', '0');
   }
 
   override disconnectedCallback(): void {
+    this.removeEventListener('keydown', this._keyHandler);
     super.disconnectedCallback();
     clearTimeout(this._saveTimer);
   }
