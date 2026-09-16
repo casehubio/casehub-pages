@@ -22,7 +22,7 @@ module.exports = function webpackLoader(content, map, meta) {
 
 
 
-  const ast = parser.parse(content, { sourceType: "module", plugins: ["typescript", "jsx", "classProperties"] });
+  const ast = parser.parse(content, { sourceType: "module", plugins: ["typescript", "jsx", "classProperties", "decorators-legacy"] });
   traverse(ast, {
     ImportDeclaration: (path) => {
       const value = path.node.source.value;
