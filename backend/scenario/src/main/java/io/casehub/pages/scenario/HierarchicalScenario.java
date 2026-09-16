@@ -11,6 +11,7 @@ public record HierarchicalScenario(
         List<ParamDescriptor> params, ScriptMeta meta,
         Map<String, Object> data, Map<String, Object> iterations,
         String slides,
+        SimulationSpec simulation,
         List<ScenarioChapter> chapters,
         List<ScenarioSection> sections,
         List<HierarchicalStep> steps) {

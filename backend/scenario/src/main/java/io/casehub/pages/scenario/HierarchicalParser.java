@@ -64,12 +64,29 @@ public final class HierarchicalParser {
             String slides = root.has("content") && root.get("content").has("slides")
                             ? root.get("content").get("slides").asText() : null;
 
+            SimulationSpec simulation = root.has("simulation")
+                                        ? parseSimulation(root.get("simulation")) : null;
+
             return new HierarchicalScenario(scenario, description, speed,
                                             onError, params, meta, data, iterations, slides,
-                                            chapters, sections, steps);
+                                            simulation, chapters, sections, steps);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to parse scenario YAML", e);
         }}
+
+    @SuppressWarnings("unchecked")
+    private static SimulationSpec parseSimulation(JsonNode node) {
+        Map<String, String> strategies = node.has("strategies")
+                ? YAML.convertValue(node.get("strategies"), Map.class)
+                : Map.of();
+        List<String> corpus = node.has("corpus")
+                ? YAML.convertValue(node.get("corpus"), List.class)
+                : List.of();
+        List<String> capture = node.has("capture")
+                ? YAML.convertValue(node.get("capture"), List.class)
+                : List.of();
+        return new SimulationSpec(strategies, corpus, capture);
+    }
 
     private static List<ScenarioChapter> parseChapters(JsonNode node) {
         List<ScenarioChapter> chapters = new ArrayList<>();
