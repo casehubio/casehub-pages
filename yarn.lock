@@ -1531,11 +1531,13 @@ __metadata:
     "@casehubio/pages-code-editor": "workspace:*"
     "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-document": "workspace:*"
+    "@casehubio/pages-lsp": "workspace:*"
     "@casehubio/pages-primitives": "workspace:*"
     "@casehubio/pages-property-palette": "workspace:*"
     "@casehubio/pages-schema": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@casehubio/yaml-core": "workspace:*"
+    "@codemirror/autocomplete": "npm:^6.18.6"
     "@codemirror/state": "npm:^6.5.2"
     "@codemirror/view": "npm:^6.36.5"
     lit: "npm:^3.3.3"
@@ -1543,6 +1545,7 @@ __metadata:
     vite: "npm:^6.3.5"
     vitest: "npm:^3.2.1"
     yaml: "npm:^2.7.0"
+    zod: "npm:^3.24.2"
   languageName: unknown
   linkType: soft
 
@@ -2057,7 +2060,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@codemirror/autocomplete@npm:^6.0.0, @codemirror/autocomplete@npm:^6.18.0":
+"@codemirror/autocomplete@npm:^6.0.0, @codemirror/autocomplete@npm:^6.18.0, @codemirror/autocomplete@npm:^6.18.6":
   version: 6.20.3
   resolution: "@codemirror/autocomplete@npm:6.20.3"
   dependencies:
@@ -16195,7 +16198,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.23.0, zod@npm:^3.24.4":
+"zod@npm:^3.23.0, zod@npm:^3.24.2, zod@npm:^3.24.4":
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: 10c0/5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c

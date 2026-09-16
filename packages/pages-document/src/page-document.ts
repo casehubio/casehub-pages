@@ -26,6 +26,7 @@ export class PageDocument {
   private _listeners: Array<(yaml: string) => void> = [];
   private _inTransaction = false;
   private _transactionSnapshot: string | null = null;
+  private _coordinated = false;
 
   private constructor(doc: Document, diagnostics: Diagnostic[]) {
     this._doc = doc;
@@ -62,6 +63,12 @@ export class PageDocument {
     return PageDocument.parse('');
   }
 
+  static parseCoordinated(yaml: string): PageDocument {
+    const doc = PageDocument.parse(yaml);
+    doc._coordinated = true;
+    return doc;
+  }
+
   get diagnostics(): readonly Diagnostic[] {
     return this._diagnostics;
   }
@@ -81,6 +88,7 @@ export class PageDocument {
   }
 
   private _notify(): void {
+    if (this._coordinated) return;
     if (this._inTransaction) return;
     const yaml = this.toString();
     for (const l of this._listeners) l(yaml);
@@ -89,6 +97,7 @@ export class PageDocument {
   // --- Undo/Redo ---
 
   private _pushUndo(): void {
+    if (this._coordinated) return;
     if (this._inTransaction) return;
     this._undoStack.push(this.toString());
     if (this._undoStack.length > MAX_UNDO_STACK) {
@@ -103,11 +112,13 @@ export class PageDocument {
     if (this._inTransaction) throw new Error('Already in transaction');
     this._inTransaction = true;
     this._transactionSnapshot = this.toString();
-    this._undoStack.push(this._transactionSnapshot);
-    if (this._undoStack.length > MAX_UNDO_STACK) {
-      this._undoStack.shift();
+    if (!this._coordinated) {
+      this._undoStack.push(this._transactionSnapshot);
+      if (this._undoStack.length > MAX_UNDO_STACK) {
+        this._undoStack.shift();
+      }
+      this._redoStack.length = 0;
     }
-    this._redoStack.length = 0;
   }
 
   commitTransaction(): void {
@@ -121,8 +132,10 @@ export class PageDocument {
     this._inTransaction = false;
     this._doc = parseDocument(this._transactionSnapshot!, { keepSourceTokens: true });
     this._transactionSnapshot = null;
-    this._undoStack.pop();
-    this._redoStack.length = 0;
+    if (!this._coordinated) {
+      this._undoStack.pop();
+      this._redoStack.length = 0;
+    }
   }
 
   undo(): boolean {

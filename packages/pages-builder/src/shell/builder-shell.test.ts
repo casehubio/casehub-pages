@@ -605,4 +605,335 @@ describe('PagesBuilderShell', () => {
     const palette2 = el.shadowRoot!.querySelector('pages-builder-palette') as any;
     expect(palette2.context.availableDatasets).toContain('ds2');
   });
+
+  // --- Edit pipeline coordinator ---
+
+  it('mutations use coordinated mode (no PageDocument onChange)', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const onChangeCalls: string[] = [];
+    el.document.onChange(() => onChangeCalls.push('fired'));
+
+    const addPageBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === '+ Page') as HTMLElement;
+    addPageBtn.click();
+    await el.updateComplete;
+
+    expect(el.document.getPages()).toHaveLength(2);
+    expect(onChangeCalls).toHaveLength(0);
+  });
+
+  it('_applyEdit emits builder-change via _syncViews', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('builder-change', (e) => events.push(e as CustomEvent));
+
+    const addPageBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === '+ Page') as HTMLElement;
+    addPageBtn.click();
+    await el.updateComplete;
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.yaml).toContain('New Page');
+  });
+
+  it('shell undo works in coordinated mode', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const addPageBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === '+ Page') as HTMLElement;
+    addPageBtn.click();
+    await el.updateComplete;
+    expect(el.document.getPages()).toHaveLength(2);
+
+    expect(el.document.canUndo()).toBe(false);
+
+    const undoBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === 'Undo') as HTMLElement;
+    expect(undoBtn.disabled).toBe(false);
+    undoBtn.click();
+    await el.updateComplete;
+    expect(el.document.getPages()).toHaveLength(1);
+  });
+
+  it('shell redo restores state after undo', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const addPageBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === '+ Page') as HTMLElement;
+    addPageBtn.click();
+    expect(el.document.getPages()).toHaveLength(2);
+    await el.updateComplete;
+
+    const undoBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === 'Undo') as HTMLElement;
+    undoBtn.click();
+    expect(el.document.getPages()).toHaveLength(1);
+    await el.updateComplete;
+
+    const redoBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === 'Redo') as HTMLElement;
+    redoBtn.click();
+    await el.updateComplete;
+    expect(el.document.getPages()).toHaveLength(2);
+  });
+
+  it('property change through _applyEdit emits builder-change', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('builder-change', (e) => events.push(e as CustomEvent));
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('node-select', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0, 'components', 0], nodeType: 'component' },
+    }));
+    await el.updateComplete;
+
+    const source = (el.shadowRoot!.querySelector('pages-property-palette') as any).source;
+    source.onChange(['text'], 'Modified');
+    await el.updateComplete;
+
+    expect(el.document.toString()).toContain('Modified');
+    expect(events.length).toBeGreaterThan(0);
+  });
+
+  // --- Lazy property source ---
+
+  it('property source stays fresh after document swap via undo', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('node-select', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0, 'components', 0], nodeType: 'component' },
+    }));
+    await el.updateComplete;
+
+    const source1 = (el.shadowRoot!.querySelector('pages-property-palette') as any).source;
+    source1.onChange(['text'], 'Modified');
+    await el.updateComplete;
+    expect(source1.data['text']).toBe('Modified');
+
+    const undoBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
+      .find(b => b.textContent?.trim() === 'Undo') as HTMLElement;
+    await el.updateComplete;
+    undoBtn.click();
+    await el.updateComplete;
+
+    const source2 = (el.shadowRoot!.querySelector('pages-property-palette') as any).source;
+    expect(source2.data['text']).toBe('Hello');
+  });
+
+  // --- Tree actions ---
+
+  it('tree-action delete removes component', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = `pages:\n- name: P\n  components:\n  - type: title\n  - type: metric\n`;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-action', {
+      bubbles: true, composed: true,
+      detail: { action: 'delete', path: ['pages', 0, 'components', 1], nodeType: 'component' },
+    }));
+    await el.updateComplete;
+
+    expect(el.document.getPages()[0]!.getComponents()).toHaveLength(1);
+    expect(el.document.getPages()[0]!.getComponents()[0]!.type).toBe('title');
+  });
+
+  it('tree-action duplicate copies component', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = `pages:\n- name: P\n  components:\n  - type: title\n`;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-action', {
+      bubbles: true, composed: true,
+      detail: { action: 'duplicate', path: ['pages', 0, 'components', 0], nodeType: 'component' },
+    }));
+    await el.updateComplete;
+
+    expect(el.document.getPages()[0]!.getComponents()).toHaveLength(2);
+  });
+
+  it('tree-action add-row adds row to page', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = ROWS_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const rowsBefore = el.document.getPages()[0]!.getRows().length;
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-action', {
+      bubbles: true, composed: true,
+      detail: { action: 'add-row', path: ['pages', 0], nodeType: 'page' },
+    }));
+    await el.updateComplete;
+
+    expect(el.document.getPages()[0]!.getRows()).toHaveLength(rowsBefore + 1);
+  });
+
+  it('tree-action delete removes page', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = `pages:\n- name: P1\n  components:\n  - type: title\n- name: P2\n  components:\n  - type: metric\n`;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    expect(el.document.getPages()).toHaveLength(2);
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-action', {
+      bubbles: true, composed: true,
+      detail: { action: 'delete', path: ['pages', 1], nodeType: 'page' },
+    }));
+    await el.updateComplete;
+
+    expect(el.document.getPages()).toHaveLength(1);
+    expect(el.document.getPages()[0]!.name).toBe('P1');
+  });
+
+  // --- Editor→model sync ---
+
+  it('editor text change flows through _applyEdit after debounce', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const newYaml = MINIMAL_PAGE.replace('Overview', 'Renamed');
+    const codeEditor = el.shadowRoot!.querySelector('pages-code-editor') as any;
+    codeEditor.value = newYaml;
+    codeEditor.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+    expect(el.document.getPages()[0]!.name).toBe('Overview');
+
+    await new Promise(r => setTimeout(r, 400));
+    await el.updateComplete;
+
+    expect(el.document.getPages()[0]!.name).toBe('Renamed');
+  });
+
+  it('invalid YAML does not update model', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const codeEditor = el.shadowRoot!.querySelector('pages-code-editor') as any;
+    codeEditor.value = 'invalid: [yaml: {broken';
+    codeEditor.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+
+    await new Promise(r => setTimeout(r, 400));
+    await el.updateComplete;
+
+    expect(el.document.getPages()[0]!.name).toBe('Overview');
+  });
+
+  // --- schema completions in text editor ---
+
+  it('code editor receives schema completion extension', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const codeEditor = el.shadowRoot!.querySelector('pages-code-editor') as any;
+    expect(codeEditor).toBeTruthy();
+    expect(codeEditor.extensions.length).toBeGreaterThan(0);
+  });
+
+  // --- tree-add handler (inline picker) ---
+
+  it('tree-add opens inline picker', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0], nodeType: 'page' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    expect(picker).toBeTruthy();
+    expect(picker.open).toBe(true);
+    expect(picker.context).toBeDefined();
+    expect(picker.context.acceptsComponents).toBe(true);
+  });
+
+  it('tree-add picker inserts component into target node', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = ROWS_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0], nodeType: 'column' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    picker.dispatchEvent(new CustomEvent('component-select', {
+      bubbles: true, composed: true,
+      detail: { type: 'metric', label: 'Metric', defaultProps: {} },
+    }));
+    await el.updateComplete;
+
+    const col = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
+    expect(col.getComponents()).toHaveLength(2);
+    expect(col.getComponents()[1]!.type).toBe('metric');
+  });
+
+  it('tree-add picker closes after selection', async () => {
+    el = document.createElement('pages-builder-shell') as PagesBuilderShell;
+    el.yaml = MINIMAL_PAGE;
+    document.body.appendChild(el);
+    await awaitReady(el);
+
+    const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
+    tree.dispatchEvent(new CustomEvent('tree-add', {
+      bubbles: true, composed: true,
+      detail: { path: ['pages', 0], nodeType: 'page' },
+    }));
+    await el.updateComplete;
+
+    const picker = el.shadowRoot!.querySelector('pages-builder-inline-picker') as any;
+    expect(picker.open).toBe(true);
+
+    picker.dispatchEvent(new CustomEvent('component-select', {
+      bubbles: true, composed: true,
+      detail: { type: 'metric', label: 'Metric', defaultProps: {} },
+    }));
+    await el.updateComplete;
+
+    expect(picker.open).toBe(false);
+  });
 });
