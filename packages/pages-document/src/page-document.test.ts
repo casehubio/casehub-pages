@@ -892,4 +892,58 @@ describe('PageDocument', () => {
       expect(doc.getVariables()).toBeUndefined();
     });
   });
+
+  describe('coordinated mode', () => {
+    it('parseCoordinated returns functional instance', () => {
+      const doc = PageDocument.parseCoordinated(MINIMAL_PAGE);
+      expect(doc.getPages()).toHaveLength(1);
+      expect(doc.getPages()[0]!.name).toBe('Overview');
+    });
+
+    it('suppresses onChange notifications', () => {
+      const doc = PageDocument.parseCoordinated(MINIMAL_PAGE);
+      const calls: string[] = [];
+      doc.onChange(() => calls.push('notified'));
+      doc.getPages()[0]!.name = 'Changed';
+      expect(calls).toHaveLength(0);
+    });
+
+    it('suppresses internal undo recording', () => {
+      const doc = PageDocument.parseCoordinated(MINIMAL_PAGE);
+      doc.getPages()[0]!.name = 'Changed';
+      expect(doc.canUndo()).toBe(false);
+    });
+
+    it('standalone mode still fires notifications', () => {
+      const doc = PageDocument.parse(MINIMAL_PAGE);
+      const calls: string[] = [];
+      doc.onChange(() => calls.push('notified'));
+      doc.getPages()[0]!.name = 'Changed';
+      expect(calls).toHaveLength(1);
+    });
+
+    it('standalone mode still records undo', () => {
+      const doc = PageDocument.parse(MINIMAL_PAGE);
+      doc.getPages()[0]!.name = 'Changed';
+      expect(doc.canUndo()).toBe(true);
+    });
+
+    it('coordinated transaction preserves atomicity', () => {
+      const doc = PageDocument.parseCoordinated(MINIMAL_PAGE);
+      const page = doc.getPages()[0]!;
+      expect(page.getLayoutMode()).toBe('flat');
+      page.wrapInRow([0]);
+      expect(page.getLayoutMode()).toBe('rows');
+      expect(doc.canUndo()).toBe(false);
+    });
+
+    it('coordinated abortTransaction does not pop undo stack', () => {
+      const doc = PageDocument.parseCoordinated(MINIMAL_PAGE);
+      doc.beginTransaction();
+      doc.getPages()[0]!.name = 'temp';
+      doc.abortTransaction();
+      expect(doc.getPages()[0]!.name).toBe('Overview');
+      expect(doc.canUndo()).toBe(false);
+    });
+  });
 });

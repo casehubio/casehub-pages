@@ -5,5 +5,3 @@ export { PagesBuilderTree, buildTreeModel } from './tree/builder-tree.js';
 export type { TreeNodeInfo, TreeNodeType } from './tree/builder-tree.js';
 export { PagesBuilderPalette } from './palette/builder-palette.js';
 export { PagesBuilderShell } from './shell/builder-shell.js';
-export { YamlSync } from './shell/yaml-sync.js';
-export type { EditorAdapter } from './shell/yaml-sync.js';

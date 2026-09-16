@@ -17,7 +17,7 @@ import type { PropertyPaletteSource } from '@casehubio/pages-property-palette/ty
 import type { PaletteContext } from '../catalog/palette-context.js';
 import type { ComponentCatalogEntry } from '../catalog/component-catalog.js';
 import type { TreeNodeType } from '../tree/builder-tree.js';
-import { YamlSync, type EditorAdapter } from './yaml-sync.js';
+import { computeMinimalChanges } from './diff-patch.js';
 import { findPathAtOffset, getNodeRange, classifyPath, getParentPath } from './yaml-path.js';
 import { builderHighlightExtension, setHighlightRange } from './yaml-gutter.js';
 import { collectComponentsInScope } from './scope-collector.js';
@@ -25,6 +25,7 @@ import type { FieldSchema } from '@casehubio/pages-component';
 
 import '../tree/builder-tree.js';
 import '../palette/builder-palette.js';
+import '../palette/inline-picker.js';
 import '@casehubio/pages-primitives/dock';
 
 function addBlankEnumOptions(schema: FieldSchema): FieldSchema {
@@ -41,6 +42,8 @@ function addBlankEnumOptions(schema: FieldSchema): FieldSchema {
   }
   return { ...schema, properties };
 }
+
+type EditOrigin = 'editor' | 'tree' | 'properties' | 'palette' | 'toolbar';
 
 @customElement('pages-builder-shell')
 export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
@@ -66,6 +69,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _compsContainer?: HTMLElement;
   private _centreContainer?: HTMLElement;
   @state() private _propertySource: PropertyPaletteSource | undefined;
+
+  private _undoStack: string[] = [];
+  private _redoStack: string[] = [];
 
   private _pageSchema = z.intersection(yamlCoreDocumentSchema, dashboardSchema);
 
@@ -120,25 +126,69 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     return [autocompletion({ override: [source], activateOnTyping: true })];
   })();
 
-  private _yamlSync: YamlSync | undefined;
-  private _docUnsub: (() => void) | undefined;
+  private _pendingEditorSync: number | undefined;
+  private _editorDirty = false;
+  private _inlinePickerOpen = false;
+  private _inlinePickerPath: readonly (string | number)[] | undefined;
+  private _inlinePickerNodeType: TreeNodeType | undefined;
 
   get document(): PageDocument {
     return this._document;
   }
 
+  private _parseDocument(yaml: string): PageDocument {
+    return PageDocument.parseCoordinated(yaml);
+  }
+
+  private _applyEdit(origin: EditOrigin, fn: () => void): void {
+    if (origin !== 'editor' && this._pendingEditorSync) {
+      this._flushEditorSync();
+    }
+    this._undoStack.push(this._document.toString());
+    if (this._undoStack.length > 50) this._undoStack.shift();
+    this._redoStack.length = 0;
+    fn();
+    this._syncViews(origin);
+  }
+
+  private _syncViews(origin: EditOrigin): void {
+    if (origin !== 'editor') {
+      this._diffPatchEditor();
+    }
+    this._syncTree();
+    this._resolvePropertySource();
+    this._refreshPreview();
+    this._emitChange();
+    this.requestUpdate();
+  }
+
+  private _diffPatchEditor(): void {
+    const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
+    if (!editorEl) return;
+    const editorText = editorEl.value ?? '';
+    const modelText = this._document.toString();
+    if (editorText === modelText) return;
+    editorEl.value = modelText;
+    const view = editorEl._editorView;
+    if (!view) return;
+    const changes = computeMinimalChanges(editorText, modelText);
+    if (changes.length > 0) {
+      editorEl._suppressUpdate = true;
+      view.dispatch({ changes });
+      editorEl._suppressUpdate = false;
+    }
+  }
+
   override connectedCallback(): void {
     super.connectedCallback();
-    this._document = this.yaml ? PageDocument.parse(this.yaml) : PageDocument.empty();
-    this._subscribeToDocument();
+    this._document = this.yaml ? this._parseDocument(this.yaml) : PageDocument.empty();
     this.registerShortcut('z', () => this._undo(), { description: 'Undo', requiresModifier: true });
     this.registerShortcut('Z', () => this._redo(), { description: 'Redo', requiresModifier: true });
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._yamlSync?.disconnect();
-    this._docUnsub?.();
+    clearTimeout(this._pendingEditorSync);
     this._editorClickCleanup?.();
     this._previewClickCleanup?.();
     if (this._previewClickTimer) clearTimeout(this._previewClickTimer);
@@ -146,44 +196,21 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
     if (changed.has('yaml') && changed.get('yaml') !== undefined) {
-      this._docUnsub?.();
-      this._document = PageDocument.parse(this.yaml);
-      this._subscribeToDocument();
+      this._document = this._parseDocument(this.yaml);
+      this._undoStack.length = 0;
+      this._redoStack.length = 0;
+      clearTimeout(this._pendingEditorSync);
+      this._pendingEditorSync = undefined;
+      this._editorDirty = false;
     }
     if (changed.has('_selectedPath')) {
       if (this._compsOpen) this._refreshPaletteContext();
     }
   }
 
-  private _subscribeToDocument(): void {
-    this._docUnsub = this._document.onChange(() => {
-      this._pushYamlToEditor();
-      this._emitChange();
-      this.requestUpdate();
-      this._refreshPreview();
-    });
-  }
-
-  private _pushYamlToEditor(): void {
-    const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
-    if (!editorEl) return;
-    const newText = this._document.toString();
-    editorEl.value = newText;
-    const view = editorEl._editorView;
-    if (view) {
-      const currentText = view.state.doc.toString();
-      if (currentText !== newText) {
-        editorEl._suppressUpdate = true;
-        view.dispatch({ changes: { from: 0, to: currentText.length, insert: newText } });
-        editorEl._suppressUpdate = false;
-      }
-    }
-  }
-
   override firstUpdated(): void {
     this.updateComplete.then(() => {
-      this._pushYamlToEditor();
-      this._connectYamlSync();
+      this._diffPatchEditor();
       this._connectEditorCursorSync();
       this._refreshPreview();
     });
@@ -201,8 +228,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       this._syncCentre();
       if (this._viewMode !== 'source') this._refreshPreview();
       this.updateComplete.then(() => {
-        this._pushYamlToEditor();
-        this._connectYamlSync();
+        this._diffPatchEditor();
         this._connectEditorCursorSync();
       });
     }
@@ -450,19 +476,27 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   // --- Toolbar actions ---
 
   private _addPage(): void {
-    this._document.addPage('New Page');
+    this._applyEdit('toolbar', () => this._document.addPage('New Page'));
   }
 
   private _addDataset(): void {
-    this._document.addDataset('new_dataset');
+    this._applyEdit('toolbar', () => this._document.addDataset('new_dataset'));
   }
 
   private _undo(): void {
-    this._document.undo();
+    if (this._undoStack.length === 0) return;
+    this._redoStack.push(this._document.toString());
+    const prev = this._undoStack.pop()!;
+    this._document = this._parseDocument(prev);
+    this._syncViews('toolbar');
   }
 
   private _redo(): void {
-    this._document.redo();
+    if (this._redoStack.length === 0) return;
+    this._undoStack.push(this._document.toString());
+    const next = this._redoStack.pop()!;
+    this._document = this._parseDocument(next);
+    this._syncViews('toolbar');
   }
 
   // --- Selection ---
@@ -480,13 +514,88 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._selectedNodeType = e.detail.nodeType;
     this._updatePropertySource();
     this._refreshPaletteContext();
-    const dockEl = this.renderRoot.querySelector('pages-dock-workbench') as PagesDockWorkbench | null;
-    if (dockEl) {
-      const compsPanel = this.renderRoot.querySelector('[data-component-id="components"]') as HTMLElement | null;
-      if (!compsPanel || compsPanel.style.display === 'none') {
-        dockEl.togglePanel('components');
-      }
+    this._inlinePickerOpen = true;
+    this._inlinePickerPath = e.detail.path;
+    this._inlinePickerNodeType = e.detail.nodeType;
+    this._syncTree();
+  }
+
+  private _handleInlinePickerSelect(e: CustomEvent<ComponentCatalogEntry>): void {
+    const entry = e.detail;
+    const props = entry.defaultProps && Object.keys(entry.defaultProps).length > 0
+      ? entry.defaultProps : undefined;
+    const path = this._inlinePickerPath;
+    const nt = this._inlinePickerNodeType;
+    this._inlinePickerOpen = false;
+    if (path && nt) {
+      this._applyEdit('tree', () => {
+        if (nt === 'page') {
+          this._findPageAtPath(path)?.addComponent(entry.type, props);
+        } else if (nt === 'column') {
+          this._findColumnAtPath(path)?.addComponent(entry.type, props);
+        } else if (nt === 'row') {
+          const row = this._findRowAtPath(path);
+          if (row) {
+            const cols = row.getColumns();
+            if (cols.length > 0) cols[0]!.addComponent(entry.type, props);
+          }
+        } else if (nt === 'component') {
+          const page = this._findPageAtPath(['pages', path[1] as number]);
+          if (page) page.addComponent(entry.type, props);
+        }
+      });
+    } else {
+      this._syncTree();
     }
+  }
+
+  private _handleTreeAction(e: CustomEvent<{ action: string; path: readonly (string | number)[]; nodeType: TreeNodeType }>): void {
+    const { action, path, nodeType } = e.detail;
+    this._applyEdit('tree', () => {
+      switch (action) {
+        case 'delete': this._deleteAtPath(path, nodeType); break;
+        case 'duplicate': if (nodeType === 'component') this._findComponentAtPath(path)?.duplicate(); break;
+        case 'add-row': this._findPageAtPath(path)?.addRow(); break;
+        case 'add-column': this._findRowAtPath(path)?.addColumn(); break;
+        case 'move-up': this._moveAtPath(path, -1); break;
+        case 'move-down': this._moveAtPath(path, 1); break;
+        case 'wrap-row': {
+          const page = this._findPageAtPath(['pages', path[1] as number]);
+          if (page && path[2] === 'components') page.wrapInRow([path[3] as number]);
+          break;
+        }
+      }
+    });
+  }
+
+  private _deleteAtPath(path: readonly (string | number)[], nodeType: TreeNodeType): void {
+    const idx = path[path.length - 1] as number;
+    if (nodeType === 'page') { this._document.removePage(idx); return; }
+    if (nodeType === 'dataset') { this._document.removeDataset(idx); return; }
+    if (nodeType === 'row') { this._findPageAtPath(['pages', path[1] as number])?.removeChild(path[3] as number); return; }
+    if (nodeType === 'column') { this._findRowAtPath(path.slice(0, 4))?.removeColumn(idx); return; }
+    if (nodeType === 'component') {
+      if (path[2] === 'components') this._findPageAtPath(['pages', path[1] as number])?.removeChild(idx);
+      else if (path.length >= 8 && path[6] === 'components') this._findColumnAtPath(path.slice(0, 6))?.removeComponent(idx);
+      else if (path.length >= 6 && path[4] === 'components') this._findColumnAtPath(path.slice(0, 4))?.removeComponent(idx);
+    }
+  }
+
+  private _moveAtPath(path: readonly (string | number)[], direction: number): void {
+    const comp = this._findComponentAtPath(path);
+    if (!comp) return;
+    const idx = (path[path.length - 1] as number) + direction;
+    if (idx < 0) return;
+    comp.moveToIndex({ path: path.slice(0, -2) }, idx);
+  }
+
+  private _handleTreeDrop(e: CustomEvent<{ sourcePath: readonly (string | number)[]; dropTarget: { parent: { path: readonly (string | number)[] }; index: number } }>): void {
+    const { sourcePath, dropTarget } = e.detail;
+    this._applyEdit('tree', () => {
+      const component = this._findComponentAtPath(sourcePath);
+      if (!component) return;
+      component.moveToIndex(dropTarget.parent, dropTarget.index);
+    });
   }
 
   private _updatePropertySource(): void {
@@ -495,128 +604,150 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       this._scrollYamlToPath(undefined);
       return;
     }
-
-    const nt = this._selectedNodeType;
     if (this._syncSource !== 'yaml') {
       this._scrollYamlToPath(this._selectedPath);
     } else {
       this._highlightYamlRange(this._selectedPath);
     }
-    this._highlightPreviewNode(this._selectedPath, nt);
+    this._highlightPreviewNode(this._selectedPath, this._selectedNodeType);
+    this._resolvePropertySource();
+  }
+
+  private _resolvePropertySource(): void {
+    if (!this._selectedPath || !this._selectedNodeType) {
+      this._propertySource = undefined;
+      return;
+    }
+    const nt = this._selectedNodeType;
+    const path = this._selectedPath;
 
     if (nt === 'section') {
-      const key = this._selectedPath[0] as string;
-      const count = key === 'pages' ? this._document.getPages().length
-        : key === 'datasets' ? this._document.getDatasets().length : 0;
+      const key = path[0] as string;
+      const getDoc = () => this._document;
       this._propertySource = {
         schema: { type: 'object', properties: {
           section: { type: 'string', title: 'Section', readOnly: true },
           count: { type: 'number', title: 'Items', readOnly: true },
         }},
-        get data() { return { section: key, count }; },
+        get data() {
+          const d = getDoc();
+          const c = key === 'pages' ? d.getPages().length : key === 'datasets' ? d.getDatasets().length : 0;
+          return { section: key, count: c };
+        },
         onChange: () => {},
       };
       return;
     }
 
     if (nt === 'page') {
-      const page = this._findPageAtPath(this._selectedPath);
-      if (page) {
-        this._propertySource = {
-          schema: { type: 'object', properties: {
-            name: { type: 'string', title: 'Page Name' },
-          }},
-          get data() { return { name: page.name }; },
-          onChange: (field, value) => {
-            if (String(field[0]) === 'name') page.name = String(value);
-          },
-        };
-        return;
-      }
+      const resolve = () => this._findPageAtPath(path);
+      if (!resolve()) { this._propertySource = undefined; return; }
+      this._propertySource = {
+        schema: { type: 'object', properties: {
+          name: { type: 'string', title: 'Page Name' },
+        }},
+        get data() { return { name: resolve()?.name ?? '' }; },
+        onChange: (field, value) => {
+          this._applyEdit('properties', () => {
+            const n = resolve();
+            if (n && String(field[0]) === 'name') n.name = String(value);
+          });
+        },
+      };
+      return;
     }
 
     if (nt === 'row') {
-      const row = this._findRowAtPath(this._selectedPath);
-      if (row) {
-        this._propertySource = {
-          schema: { type: 'object', properties: {
-            columns: { type: 'number', title: 'Column Count', readOnly: true },
-          }},
-          get data() { return { columns: row.getColumns().length }; },
-          onChange: () => {},
-        };
-        return;
-      }
+      const resolve = () => this._findRowAtPath(path);
+      if (!resolve()) { this._propertySource = undefined; return; }
+      this._propertySource = {
+        schema: { type: 'object', properties: {
+          columns: { type: 'number', title: 'Column Count', readOnly: true },
+        }},
+        get data() { return { columns: resolve()?.getColumns().length ?? 0 }; },
+        onChange: () => {},
+      };
+      return;
     }
 
     if (nt === 'column') {
-      const col = this._findColumnAtPath(this._selectedPath);
-      if (col) {
-        this._propertySource = {
-          schema: { type: 'object', properties: {
-            span: { type: 'number', title: 'Column Span', minimum: 1, maximum: 12 },
-          }},
-          get data() { return { span: col.span }; },
-          onChange: (field, value) => {
-            if (String(field[0]) === 'span') col.span = Number(value);
-          },
-        };
-        return;
-      }
+      const resolve = () => this._findColumnAtPath(path);
+      if (!resolve()) { this._propertySource = undefined; return; }
+      this._propertySource = {
+        schema: { type: 'object', properties: {
+          span: { type: 'number', title: 'Column Span', minimum: 1, maximum: 12 },
+        }},
+        get data() { return { span: resolve()?.span ?? 0 }; },
+        onChange: (field, value) => {
+          this._applyEdit('properties', () => {
+            const n = resolve();
+            if (n && String(field[0]) === 'span') n.span = Number(value);
+          });
+        },
+      };
+      return;
     }
 
     if (nt === 'component') {
-      const node = this._findComponentAtPath(this._selectedPath);
-      if (node) {
-        this._propertySource = {
-          schema: addBlankEnumOptions(node.getSchema()),
-          get data() { return node.getProperties(); },
-          onChange: (field, value) => {
+      const resolve = () => this._findComponentAtPath(path);
+      const node = resolve();
+      if (!node) { this._propertySource = undefined; return; }
+      this._propertySource = {
+        schema: addBlankEnumOptions(node.getSchema()),
+        get data() { return resolve()?.getProperties() ?? {}; },
+        onChange: (field, value) => {
+          this._applyEdit('properties', () => {
+            const n = resolve();
+            if (!n) return;
             const v = value === '' ? undefined : value;
-            if (v === undefined) node.removeProperty(String(field[0]));
-            else node.setProperty(String(field[0]), v);
-          },
-        };
-        return;
-      }
+            if (v === undefined) n.removeProperty(String(field[0]));
+            else n.setProperty(String(field[0]), v);
+          });
+        },
+      };
+      return;
     }
 
     if (nt === 'dataset') {
-      const dsNode = this._findDatasetAtPath(this._selectedPath);
-      if (dsNode) {
-        this._propertySource = {
-          schema: { type: 'object', properties: {
-            uuid: { type: 'string', title: 'UUID' },
-            name: { type: 'string', title: 'Name' },
-            url: { type: 'string', title: 'URL', format: 'uri' },
-          }},
-          get data() { return dsNode.getProperties() as Record<string, unknown>; },
-          onChange: (field, value) => {
-            dsNode.setProperty(String(field[0]), value);
-          },
-        };
-        return;
-      }
+      const resolve = () => this._findDatasetAtPath(path);
+      if (!resolve()) { this._propertySource = undefined; return; }
+      this._propertySource = {
+        schema: { type: 'object', properties: {
+          uuid: { type: 'string', title: 'UUID' },
+          name: { type: 'string', title: 'Name' },
+          url: { type: 'string', title: 'URL', format: 'uri' },
+        }},
+        get data() { return (resolve()?.getProperties() ?? {}) as Record<string, unknown>; },
+        onChange: (field, value) => {
+          this._applyEdit('properties', () => {
+            resolve()?.setProperty(String(field[0]), value);
+          });
+        },
+      };
+      return;
     }
 
     if (nt === 'nav-item') {
-      const nav = this._findNavAtPath(this._selectedPath);
-      if (nav) {
-        this._propertySource = {
-          schema: { type: 'object', properties: {
-            type: { type: 'string', title: 'Type', enum: ['GROUP', 'ITEM'] },
-            id: { type: 'string', title: 'ID' },
-            page: { type: 'string', title: 'Page' },
-          }},
-          get data() { return { type: nav.type ?? '', id: nav.id ?? '', page: nav.page ?? '' }; },
-          onChange: (field, value) => {
+      const resolve = () => this._findNavAtPath(path);
+      if (!resolve()) { this._propertySource = undefined; return; }
+      this._propertySource = {
+        schema: { type: 'object', properties: {
+          type: { type: 'string', title: 'Type', enum: ['GROUP', 'ITEM'] },
+          id: { type: 'string', title: 'ID' },
+          page: { type: 'string', title: 'Page' },
+        }},
+        get data() { const n = resolve(); return { type: n?.type ?? '', id: n?.id ?? '', page: n?.page ?? '' }; },
+        onChange: (field, value) => {
+          this._applyEdit('properties', () => {
+            const n = resolve();
+            if (!n) return;
             const key = String(field[0]);
-            if (key === 'page') nav.setPage(String(value));
-            if (key === 'id') nav.setId(String(value));
-          },
-        };
-        return;
-      }
+            if (key === 'page') n.setPage(String(value));
+            if (key === 'id') n.setId(String(value));
+          });
+        },
+      };
+      return;
     }
 
     this._propertySource = undefined;
@@ -658,7 +789,15 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         .selectedPath="${this._selectedPath}"
         @node-select="${(e: CustomEvent) => this._handleNodeSelect(e)}"
         @tree-add="${(e: CustomEvent) => this._handleTreeAdd(e)}"
+        @tree-action="${(e: CustomEvent) => this._handleTreeAction(e)}"
+        @tree-drop="${(e: CustomEvent) => this._handleTreeDrop(e)}"
       ></pages-builder-tree>
+      <pages-builder-inline-picker
+        .context="${this._paletteContext}"
+        .open="${this._inlinePickerOpen}"
+        @component-select="${(e: CustomEvent) => this._handleInlinePickerSelect(e)}"
+        @picker-close="${() => { this._inlinePickerOpen = false; this._syncTree(); }}"
+      ></pages-builder-inline-picker>
     `, this._treeContainer);
   }
 
@@ -703,6 +842,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           .extensions="${[...builderHighlightExtension, ...this._schemaExtensions]}"
           language="yaml"
           label="Page YAML source"
+          @input="${() => this._handleEditorInput()}"
         ></pages-code-editor>
       </div>
       <div class="editor-visual${showVisual ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
@@ -735,41 +875,43 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const props = entry.defaultProps && Object.keys(entry.defaultProps).length > 0
       ? entry.defaultProps : undefined;
 
-    if (!this._selectedPath || !this._selectedNodeType) {
-      const pages = this._document.getPages();
-      if (pages.length > 0) pages[0]!.addComponent(entry.type, props);
-      return;
-    }
-
-    const nt = this._selectedNodeType;
-    const path = this._selectedPath;
-
-    if (nt === 'page') {
-      const page = this._findPageAtPath(path);
-      page?.addComponent(entry.type, props);
-    } else if (nt === 'row') {
-      const row = this._findRowAtPath(path);
-      if (row) {
-        const cols = row.getColumns();
-        if (cols.length > 0) cols[0]!.addComponent(entry.type, props);
+    this._applyEdit('palette', () => {
+      if (!this._selectedPath || !this._selectedNodeType) {
+        const pages = this._document.getPages();
+        if (pages.length > 0) pages[0]!.addComponent(entry.type, props);
+        return;
       }
-    } else if (nt === 'column') {
-      const col = this._findColumnAtPath(path);
-      col?.addComponent(entry.type, props);
-    } else if (nt === 'component') {
-      const page = this._findPageAtPath(['pages', path[1] as number]);
-      if (!page) return;
-      if (path[2] === 'components') {
-        page.addComponent(entry.type, props);
-      } else if (path[2] === 'rows' && path.length >= 6) {
-        const row = page.getRows()[path[3] as number];
-        const col = row?.getColumns()[path[5] as number];
+
+      const nt = this._selectedNodeType;
+      const path = this._selectedPath;
+
+      if (nt === 'page') {
+        const page = this._findPageAtPath(path);
+        page?.addComponent(entry.type, props);
+      } else if (nt === 'row') {
+        const row = this._findRowAtPath(path);
+        if (row) {
+          const cols = row.getColumns();
+          if (cols.length > 0) cols[0]!.addComponent(entry.type, props);
+        }
+      } else if (nt === 'column') {
+        const col = this._findColumnAtPath(path);
         col?.addComponent(entry.type, props);
-      } else if (path[2] === 'columns' && path.length >= 4) {
-        const col = page.getColumns()[path[3] as number];
-        col?.addComponent(entry.type, props);
+      } else if (nt === 'component') {
+        const page = this._findPageAtPath(['pages', path[1] as number]);
+        if (!page) return;
+        if (path[2] === 'components') {
+          page.addComponent(entry.type, props);
+        } else if (path[2] === 'rows' && path.length >= 6) {
+          const row = page.getRows()[path[3] as number];
+          const col = row?.getColumns()[path[5] as number];
+          col?.addComponent(entry.type, props);
+        } else if (path[2] === 'columns' && path.length >= 4) {
+          const col = page.getColumns()[path[3] as number];
+          col?.addComponent(entry.type, props);
+        }
       }
-    }
+    });
   }
 
   // --- YAML scroll ---
@@ -879,31 +1021,33 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     return current === nav ? undefined : current;
   }
 
-  private _connectYamlSync(): void {
+  private _handleEditorInput(): void {
+    this._editorDirty = true;
+    clearTimeout(this._pendingEditorSync);
+    this._pendingEditorSync = window.setTimeout(() => {
+      this._pendingEditorSync = undefined;
+      const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
+      const text = editorEl?.value ?? '';
+      const newDoc = this._parseDocument(text);
+      if (newDoc.diagnostics.some(d => d.severity === 'error')) return;
+      this._applyEdit('editor', () => { this._document = newDoc; });
+      this._editorDirty = false;
+    }, 300);
+  }
+
+  private _flushEditorSync(): void {
+    clearTimeout(this._pendingEditorSync);
+    this._pendingEditorSync = undefined;
+    if (!this._editorDirty) return;
     const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
-    if (!editorEl) return;
-
-    this._yamlSync?.disconnect();
-
-    const adapter: EditorAdapter = {
-      getValue: () => editorEl.value ?? '',
-      setValue: (v: string) => { editorEl.value = v; },
-      onInput: (handler: (v: string) => void) => {
-        const listener = () => handler(editorEl.value);
-        editorEl.addEventListener('input', listener);
-        return () => editorEl.removeEventListener('input', listener);
-      },
-    };
-
-    this._yamlSync = new YamlSync(this._document, adapter);
-    this._yamlSync.onDocumentChange((doc) => {
-      if (doc.toString() === this._document.toString()) return;
-      this._docUnsub?.();
-      this._document = doc;
-      this._subscribeToDocument();
-      this._updatePropertySource();
-    });
-    this._yamlSync.connect();
+    const text = editorEl?.value ?? '';
+    const newDoc = this._parseDocument(text);
+    if (newDoc.diagnostics.some(d => d.severity === 'error')) return;
+    this._undoStack.push(this._document.toString());
+    if (this._undoStack.length > 50) this._undoStack.shift();
+    this._redoStack.length = 0;
+    this._document = newDoc;
+    this._editorDirty = false;
   }
 
   // --- onChange emission ---
@@ -933,8 +1077,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
               @click="${() => { this._viewMode = 'visual'; }}">Visual</button>
           </div>
           <div class="toolbar-spacer"></div>
-          <button class="toolbar-btn" @click="${this._undo}" ?disabled="${!this._document.canUndo()}" title="Undo">Undo</button>
-          <button class="toolbar-btn" @click="${this._redo}" ?disabled="${!this._document.canRedo()}" title="Redo">Redo</button>
+          <button class="toolbar-btn" @click="${this._undo}" ?disabled="${this._undoStack.length === 0}" title="Undo">Undo</button>
+          <button class="toolbar-btn" @click="${this._redo}" ?disabled="${this._redoStack.length === 0}" title="Redo">Redo</button>
         </div>
 
         <pages-dock-workbench
