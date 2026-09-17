@@ -15,7 +15,7 @@ export interface HoverResult {
 }
 
 function typeName(schema: z.ZodType): string {
-  return (schema._def as Record<string, unknown>).typeName as string ?? '';
+  return ((schema as any)._zod?.def?.type as string) ?? '';
 }
 
 function describeSchema(schema: z.ZodType): string {
@@ -24,15 +24,18 @@ function describeSchema(schema: z.ZodType): string {
   const desc = schema.description;
   const parts: string[] = [];
   if (desc) parts.push(desc);
-  if (tn === 'ZodString') parts.push('Type: `string`');
-  else if (tn === 'ZodNumber') parts.push('Type: `number`');
-  else if (tn === 'ZodBoolean') parts.push('Type: `boolean`');
-  else if (tn === 'ZodEnum') {
-    const values = (unwrapped._def as { values: string[] }).values;
-    parts.push('Values: ' + values.map(v => '`' + v + '`').join(', '));
+  if (tn === 'string') parts.push('Type: `string`');
+  else if (tn === 'number') parts.push('Type: `number`');
+  else if (tn === 'boolean') parts.push('Type: `boolean`');
+  else if (tn === 'enum') {
+    const entries = (unwrapped as any)._zod.def.entries;
+    const values = Array.isArray(entries)
+      ? entries
+      : Object.values(entries).filter((v: unknown) => typeof v === 'string') as string[];
+    parts.push('Values: ' + values.map((v: string) => '`' + v + '`').join(', '));
   }
-  else if (tn === 'ZodArray') parts.push('Type: `array`');
-  else if (tn === 'ZodObject') parts.push('Type: `object`');
+  else if (tn === 'array') parts.push('Type: `array`');
+  else if (tn === 'object') parts.push('Type: `object`');
   return parts.join('\n\n') || 'No description available';
 }
 
