@@ -45,7 +45,7 @@ const filterNodeSchema = z.lazy(() =>
 type AggregationFnType = Aggregation["fn"];
 
 // Group strategy schemas
-const groupStrategySchema = z.string().default("distinct");
+const groupStrategySchema = z.string();
 
 const dateIntervalTypeSchema = z.enum([
   "MILLISECOND", "HUNDRETH", "TENTH",
@@ -114,7 +114,7 @@ const groupEntrySchema = groupEntrySchemaRaw.transform((entry) => ({
   columns: entry.columns ?? entry.functions ?? [],
 }));
 
-const sortOrderSchema = z.enum(["ASCENDING", "DESCENDING"]).default("ASCENDING");
+const sortOrderSchema = z.enum(["ASCENDING", "DESCENDING"]);
 
 const sortColumnSchema = z.object({
   column: z.string(),

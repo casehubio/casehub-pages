@@ -64,7 +64,7 @@ describe("navigateSchema", () => {
         visible: z.boolean().optional(),
       })),
     })),
-    properties: z.record(z.string()),
+    properties: z.record(z.string(), z.string()),
   });
 
   it("returns root schema for empty path", () => {

@@ -18,7 +18,7 @@ const formInputCommonSchema = z.object({
   submit: submitConfigSchema.optional(),
 });
 
-const chartDataBase = dataComponentCommonSchema.merge(chartSettingsSchema);
+const chartDataBase = dataComponentCommonSchema.extend(chartSettingsSchema.shape);
 
 // --- Chart data components ---
 
@@ -103,7 +103,7 @@ export const metricPropsSchema = dataComponentCommonSchema.extend({
   trend: z.enum(["up", "down", "flat"]).optional(),
 });
 
-export const meterPropsSchema = dataComponentCommonSchema.merge(chartSettingsSchema).extend({
+export const meterPropsSchema = dataComponentCommonSchema.extend(chartSettingsSchema.shape).extend({
   end: z.number().optional(),
   warning: z.number().optional(),
   critical: z.number().optional(),
@@ -113,7 +113,7 @@ export const selectorPropsSchema = dataComponentCommonSchema.extend({
   subtype: z.enum(["dropdown", "slider", "labels"]).optional(),
 });
 
-export const mapPropsSchema = dataComponentCommonSchema.merge(chartSettingsSchema).extend({
+export const mapPropsSchema = dataComponentCommonSchema.extend(chartSettingsSchema.shape).extend({
   subtype: z.enum(["regions", "markers"]).optional(),
   colorScheme: z.string().optional(),
   mapName: z.string().optional(),
@@ -131,14 +131,14 @@ export const countdownPropsSchema = dataComponentCommonSchema.extend({
   criticalThreshold: z.string().optional(),
 });
 
-export const timelinePropsSchema = dataComponentCommonSchema.merge(chartSettingsSchema).extend({
+export const timelinePropsSchema = dataComponentCommonSchema.extend(chartSettingsSchema.shape).extend({
   startColumn: z.string().optional(),
   endColumn: z.string().optional(),
   labelColumn: z.string().optional(),
   categoryColumn: z.string().optional(),
 });
 
-export const graphPropsSchema = dataComponentCommonSchema.merge(chartSettingsSchema).extend({
+export const graphPropsSchema = dataComponentCommonSchema.extend(chartSettingsSchema.shape).extend({
   layout: z.enum(["force", "circular", "none"]).optional(),
   sourceColumn: z.string().optional(),
   targetColumn: z.string().optional(),
@@ -161,7 +161,7 @@ export const eventTimelinePropsSchema = dataComponentCommonSchema.extend({
 const groupingKeySchema = z.object({
   sourceId: z.string(),
   columnId: z.string(),
-  strategy: z.object({ mode: z.string() }).passthrough(),
+  strategy: z.looseObject({ mode: z.string() }),
   maxIntervals: z.number().optional(),
   emptyIntervals: z.boolean().optional(),
   ascendingOrder: z.boolean().optional(),
@@ -169,7 +169,7 @@ const groupingKeySchema = z.object({
 
 const aggregationBindingSchema = z.object({
   column: z.string(),
-  fn: z.object({ fn: z.string() }).passthrough(),
+  fn: z.looseObject({ fn: z.string() }),
 });
 
 const rowAccentConfigSchema = z.object({
@@ -282,7 +282,7 @@ export const pagePropsSchema = z.object({
   settings: z.object({
     mode: z.enum(["light", "dark"]).optional(),
     allowUrlProperties: z.boolean().optional(),
-  }).passthrough().optional(),
+  }).optional(),
   properties: z.record(z.string(), z.string()).optional(),
 });
 
@@ -327,7 +327,7 @@ export const textareaPropsSchema = formInputCommonSchema.extend({
 // --- Other components ---
 
 const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
-  z.object({
+  z.looseObject({
     type: z.union([z.string(), z.array(z.string())]).optional(),
     format: z.string().optional(),
     title: z.string().optional(),
@@ -339,7 +339,7 @@ const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
     oneOf: z.array(fieldSchemaZod).optional(),
     $ref: z.string().optional(),
     $defs: z.record(z.string(), fieldSchemaZod).optional(),
-  }).passthrough()
+  })
 );
 
 export const schemaFormPropsSchema = z.object({

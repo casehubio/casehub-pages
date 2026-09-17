@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { z } from "zod";
 import { readFileSync, existsSync } from "fs";
 import { execSync } from "child_process";
 import { resolve } from "path";
@@ -66,7 +67,8 @@ describe("schema generator", () => {
 
   it("generated schemas reject unknown properties in strict mode", async () => {
     const { metricPropsSchema } = await import("./component-schemas.generated.js");
-    const result = metricPropsSchema.strict().safeParse({
+    const strict = z.strictObject(metricPropsSchema.shape);
+    const result = strict.safeParse({
       lookup: { uuid: "ds-1" },
       unknownProp: "should fail",
     });

@@ -50,12 +50,12 @@ export const dataSourceSchema = z.object({
 export const moduleDefinitionSchema = z.object({
   parameters: z.record(z.string(), parameterSchema).optional(),
   outputs: z.record(z.string(), outputSchema).optional(),
-  sections: z.record(z.record(z.string(), z.unknown())).optional(),
+  sections: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
   extends: z.string().optional(),
 });
 
 export const yamlCoreDocumentSchema = z.object({
-  variables: z.record(z.record(z.string(), z.string())).optional(),
+  variables: z.record(z.string(), z.record(z.string(), z.string())).optional(),
   modules: z.record(z.string(), moduleDefinitionSchema).optional(),
   imports: z.array(importSchema).optional(),
   iterations: z.record(z.string(), iterationGroupSchema).optional(),
