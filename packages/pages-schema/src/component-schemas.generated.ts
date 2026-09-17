@@ -5,7 +5,7 @@ import { z } from "zod";
 import { lookupSchema } from "@casehubio/pages-data";
 
 const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
-  z.object({
+  z.looseObject({
     type: z.union([z.string(), z.array(z.string())]).optional(),
     format: z.string().optional(),
     title: z.string().optional(),
@@ -23,15 +23,15 @@ const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
     uniqueItems: z.boolean().optional(),
     multipleOf: z.number().optional(),
     readOnly: z.boolean().optional(),
-    properties: z.record(fieldSchemaZod).optional(),
+    properties: z.record(z.string(), fieldSchemaZod).optional(),
     required: z.array(z.string()).optional(),
     items: fieldSchemaZod.optional(),
     const: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),
     oneOf: z.array(fieldSchemaZod).optional(),
     $ref: z.string().optional(),
-    $defs: z.record(fieldSchemaZod).optional(),
-    definitions: z.record(fieldSchemaZod).optional(),
-  }).passthrough(),
+    $defs: z.record(z.string(), fieldSchemaZod).optional(),
+    definitions: z.record(z.string(), fieldSchemaZod).optional(),
+  }),
 );
 
 export const gridPropsSchema = z.object({
@@ -83,20 +83,20 @@ export const dockBarPropsSchema = z.object({
 
 export const hostPanelPropsSchema = z.object({
   typeName: z.string(),
-  panelProps: z.record(z.unknown()).optional(),
+  panelProps: z.record(z.string(), z.unknown()).optional(),
   lookup: lookupSchema.optional(),
   selectionSource: z.string().optional(),
 });
 
 export const floatingWorkspacePropsSchema = z.object({
-  centre: z.union([z.record(z.unknown()), z.array(z.record(z.unknown()))]),
+  centre: z.union([z.record(z.string(), z.unknown()), z.array(z.record(z.string(), z.unknown()))]),
   frames: z.array(z.object({
       key: z.string(),
       tabs: z.array(z.object({
           key: z.string(),
           label: z.string(),
           icon: z.string().optional(),
-          content: z.union([z.null(), z.record(z.unknown())]),
+          content: z.union([z.null(), z.record(z.string(), z.unknown())]),
           children: z.object({
             layout: z.enum(["free", "tabbed", "accordion", "splith", "splitv", "content"]),
             tabs: z.array(z.object({
@@ -129,13 +129,13 @@ export const floatingWorkspacePropsSchema = z.object({
 export const dockWorkbenchComponentPropsSchema = z.object({
   __dockConfig: z.object({
     storageKey: z.string().optional(),
-    centre: z.union([z.record(z.unknown()), z.array(z.record(z.unknown()))]),
+    centre: z.union([z.record(z.string(), z.unknown()), z.array(z.record(z.string(), z.unknown()))]),
     left: z.union([z.array(z.object({
           key: z.string(),
           label: z.string(),
           icon: z.string(),
           defaultOpen: z.boolean().optional(),
-          content: z.record(z.unknown()),
+          content: z.record(z.string(), z.unknown()),
           minSize: z.number().optional(),
           zone: z.enum(["left", "right", "bottom", "top"]).optional(),
           allowedZones: z.array(z.enum(["left-top", "left-bottom", "right-top", "right-bottom", "bottom-left", "bottom-right"])).optional(),
@@ -148,7 +148,7 @@ export const dockWorkbenchComponentPropsSchema = z.object({
             label: z.string(),
             icon: z.string(),
             defaultOpen: z.boolean().optional(),
-            content: z.record(z.unknown()),
+            content: z.record(z.string(), z.unknown()),
             minSize: z.number().optional(),
             zone: z.enum(["left", "right", "bottom", "top"]).optional(),
             allowedZones: z.array(z.enum(["left-top", "left-bottom", "right-top", "right-bottom", "bottom-left", "bottom-right"])).optional(),
@@ -160,7 +160,7 @@ export const dockWorkbenchComponentPropsSchema = z.object({
           label: z.string(),
           icon: z.string(),
           defaultOpen: z.boolean().optional(),
-          content: z.record(z.unknown()),
+          content: z.record(z.string(), z.unknown()),
           minSize: z.number().optional(),
           zone: z.enum(["left", "right", "bottom", "top"]).optional(),
           allowedZones: z.array(z.enum(["left-top", "left-bottom", "right-top", "right-bottom", "bottom-left", "bottom-right"])).optional(),
@@ -173,7 +173,7 @@ export const dockWorkbenchComponentPropsSchema = z.object({
             label: z.string(),
             icon: z.string(),
             defaultOpen: z.boolean().optional(),
-            content: z.record(z.unknown()),
+            content: z.record(z.string(), z.unknown()),
             minSize: z.number().optional(),
             zone: z.enum(["left", "right", "bottom", "top"]).optional(),
             allowedZones: z.array(z.enum(["left-top", "left-bottom", "right-top", "right-bottom", "bottom-left", "bottom-right"])).optional(),
@@ -185,7 +185,7 @@ export const dockWorkbenchComponentPropsSchema = z.object({
           label: z.string(),
           icon: z.string(),
           defaultOpen: z.boolean().optional(),
-          content: z.record(z.unknown()),
+          content: z.record(z.string(), z.unknown()),
           minSize: z.number().optional(),
           zone: z.enum(["left", "right", "bottom", "top"]).optional(),
           allowedZones: z.array(z.enum(["left-top", "left-bottom", "right-top", "right-bottom", "bottom-left", "bottom-right"])).optional(),
@@ -198,14 +198,14 @@ export const dockWorkbenchComponentPropsSchema = z.object({
             label: z.string(),
             icon: z.string(),
             defaultOpen: z.boolean().optional(),
-            content: z.record(z.unknown()),
+            content: z.record(z.string(), z.unknown()),
             minSize: z.number().optional(),
             zone: z.enum(["left", "right", "bottom", "top"]).optional(),
             allowedZones: z.array(z.enum(["left-top", "left-bottom", "right-top", "right-bottom", "bottom-left", "bottom-right"])).optional(),
             fixed: z.boolean().optional(),
           })),
       })]).optional(),
-    statusBar: z.record(z.unknown()).optional(),
+    statusBar: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 
@@ -249,9 +249,9 @@ export const pagePropsSchema = z.object({
           totalPath: z.string().optional(),
         }).optional(),
         method: z.enum(["GET", "POST", "PUT", "DELETE"]).optional(),
-        headers: z.record(z.string()).optional(),
-        query: z.record(z.string()).optional(),
-        form: z.record(z.string()).optional(),
+        headers: z.record(z.string(), z.string()).optional(),
+        query: z.record(z.string(), z.string()).optional(),
+        form: z.record(z.string(), z.string()).optional(),
         body: z.string().optional(),
         cacheEnabled: z.boolean().optional(),
         cacheMaxRows: z.number().optional(),
@@ -314,7 +314,7 @@ export const pagePropsSchema = z.object({
       url: z.string().optional(),
       content: z.string().optional(),
       method: z.enum(["GET", "POST", "PUT", "DELETE"]).optional(),
-      headers: z.record(z.string()).optional(),
+      headers: z.record(z.string(), z.string()).optional(),
       columns: z.array(z.object({
           id: z.string(),
           name: z.string().optional(),
@@ -324,11 +324,11 @@ export const pagePropsSchema = z.object({
       refreshTime: z.string().optional(),
     }).optional(),
   }).optional(),
-  properties: z.record(z.string()).optional(),
+  properties: z.record(z.string(), z.string()).optional(),
   dataScope: z.object({
     dataset: z.string(),
     idColumn: z.string(),
-    filter: z.record(z.union([z.string(), z.object({
+    filter: z.record(z.string(), z.union([z.string(), z.object({
           $ref: z.string(),
         })])).optional(),
   }).optional(),
@@ -336,7 +336,7 @@ export const pagePropsSchema = z.object({
     trigger: z.enum(["auto", "field", "button", "manual"]).optional(),
     delay: z.number().optional(),
     adapter: z.string(),
-    adapterConfig: z.record(z.unknown()).optional(),
+    adapterConfig: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -364,7 +364,7 @@ export const barChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -374,7 +374,7 @@ export const barChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -428,7 +428,7 @@ export const barChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -461,7 +461,7 @@ export const barChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -490,7 +490,7 @@ export const lineChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -500,7 +500,7 @@ export const lineChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -554,7 +554,7 @@ export const lineChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -587,7 +587,7 @@ export const lineChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -613,7 +613,7 @@ export const areaChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -623,7 +623,7 @@ export const areaChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -677,7 +677,7 @@ export const areaChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -710,7 +710,7 @@ export const areaChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -739,7 +739,7 @@ export const pieChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -749,7 +749,7 @@ export const pieChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -776,7 +776,7 @@ export const pieChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -809,7 +809,7 @@ export const pieChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -835,7 +835,7 @@ export const scatterChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -845,7 +845,7 @@ export const scatterChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -899,7 +899,7 @@ export const scatterChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -932,7 +932,7 @@ export const scatterChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -959,7 +959,7 @@ export const bubbleChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -969,7 +969,7 @@ export const bubbleChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1023,7 +1023,7 @@ export const bubbleChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -1056,7 +1056,7 @@ export const bubbleChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -1082,7 +1082,7 @@ export const timeseriesPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1092,7 +1092,7 @@ export const timeseriesPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1146,7 +1146,7 @@ export const timeseriesPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -1179,7 +1179,7 @@ export const timeseriesPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -1209,7 +1209,7 @@ export const heatmapChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1219,7 +1219,7 @@ export const heatmapChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1273,7 +1273,7 @@ export const heatmapChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -1306,7 +1306,7 @@ export const heatmapChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -1336,7 +1336,7 @@ export const treemapChartPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1346,7 +1346,7 @@ export const treemapChartPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1373,7 +1373,7 @@ export const treemapChartPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -1406,7 +1406,7 @@ export const treemapChartPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -1428,7 +1428,7 @@ export const densityHeatmapPropsSchema = z.object({
   intensityExponent: z.number().optional(),
   valueMin: z.number().optional(),
   valueMax: z.number().optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   heatmapJs: z.object({
     blendMode: z.string().optional(),
   }).optional(),
@@ -1452,7 +1452,7 @@ export const densityHeatmapPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1462,7 +1462,7 @@ export const densityHeatmapPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1483,11 +1483,11 @@ export const dataTablePropsSchema = z.object({
   rowStyle: z.array(z.object({
       condition: z.string(),
       className: z.string().optional(),
-      style: z.record(z.string()).optional(),
+      style: z.record(z.string(), z.string()).optional(),
     })).optional(),
   rowAccent: z.object({
     column: z.string(),
-    colorMap: z.record(z.string()),
+    colorMap: z.record(z.string(), z.string()),
     default: z.string().optional(),
     columns: z.union([z.array(z.string()), z.string()]).optional(),
   }).optional(),
@@ -1526,7 +1526,7 @@ export const dataTablePropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1536,7 +1536,7 @@ export const dataTablePropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1548,7 +1548,7 @@ export const dataTablePropsSchema = z.object({
 export const gridTablePropsSchema = z.object({
   columnHeaders: z.boolean().optional(),
   rowHeaders: z.boolean().optional(),
-  cellDisplay: z.record(z.enum(["number", "boolean", "color", "text", "badge"])).optional(),
+  cellDisplay: z.record(z.string(), z.enum(["number", "boolean", "color", "text", "badge"])).optional(),
   compact: z.boolean().optional(),
   stripe: z.enum(["rows", "columns", "both"]).optional(),
   verticalLines: z.boolean().optional(),
@@ -1573,7 +1573,7 @@ export const gridTablePropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1583,7 +1583,7 @@ export const gridTablePropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1623,7 +1623,7 @@ export const metricPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1633,7 +1633,7 @@ export const metricPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1669,7 +1669,7 @@ export const meterPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1679,7 +1679,7 @@ export const meterPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1706,7 +1706,7 @@ export const meterPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -1739,7 +1739,7 @@ export const meterPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -1765,7 +1765,7 @@ export const selectorPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1775,7 +1775,7 @@ export const selectorPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1819,7 +1819,7 @@ export const mapPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1829,7 +1829,7 @@ export const mapPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1856,7 +1856,7 @@ export const mapPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -1889,13 +1889,13 @@ export const mapPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
 export const badgePropsSchema = z.object({
   column: z.string().optional(),
-  colorMap: z.record(z.string()).optional(),
+  colorMap: z.record(z.string(), z.string()).optional(),
   title: z.string().optional(),
   visible: z.boolean().optional(),
   width: z.string().optional(),
@@ -1916,7 +1916,7 @@ export const badgePropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1926,7 +1926,7 @@ export const badgePropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -1960,7 +1960,7 @@ export const countdownPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -1970,7 +1970,7 @@ export const countdownPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -2004,7 +2004,7 @@ export const timelinePropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -2014,7 +2014,7 @@ export const timelinePropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -2068,7 +2068,7 @@ export const timelinePropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -2101,7 +2101,7 @@ export const timelinePropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -2113,7 +2113,7 @@ export const graphPropsSchema = z.object({
   directed: z.boolean().optional(),
   nodeLabelColumn: z.string().optional(),
   nodeColorColumn: z.string().optional(),
-  nodeColorMap: z.record(z.string()).optional(),
+  nodeColorMap: z.record(z.string(), z.string()).optional(),
   nodeSizeColumn: z.string().optional(),
   repulsion: z.number().optional(),
   edgeLabel: z.boolean().optional(),
@@ -2139,7 +2139,7 @@ export const graphPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -2149,7 +2149,7 @@ export const graphPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -2176,7 +2176,7 @@ export const graphPropsSchema = z.object({
     bottom: z.number().optional(),
     left: z.number().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   echarts: z.object({
     toolbox: z.object({
       show: z.boolean().optional(),
@@ -2209,7 +2209,7 @@ export const graphPropsSchema = z.object({
     animationDurationUpdate: z.number().optional(),
     animationThreshold: z.number().optional(),
     darkMode: z.boolean().optional(),
-    series: z.record(z.unknown()).optional(),
+    series: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
 });
 
@@ -2218,7 +2218,7 @@ export const graphCanvasPropsSchema = z.object({
   targetColumn: z.string().optional(),
   nodeLabelColumn: z.string().optional(),
   nodeColorColumn: z.string().optional(),
-  nodeColorMap: z.record(z.string()).optional(),
+  nodeColorMap: z.record(z.string(), z.string()).optional(),
   nodeSizeColumn: z.string().optional(),
   valueColumn: z.string().optional(),
   directed: z.boolean().optional(),
@@ -2233,7 +2233,7 @@ export const graphCanvasPropsSchema = z.object({
   maxZoom: z.number().optional(),
   edgeType: z.enum(["default", "straight", "step", "smoothstep"]).optional(),
   edgeAnimated: z.boolean().optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
   reactFlow: z.object({
     panOnDrag: z.boolean().optional(),
     zoomOnScroll: z.boolean().optional(),
@@ -2250,7 +2250,7 @@ export const graphCanvasPropsSchema = z.object({
   elk: z.object({
     wrapping: z.boolean().optional(),
     headerHeight: z.number().optional(),
-    elkOptions: z.record(z.string()).optional(),
+    elkOptions: z.record(z.string(), z.string()).optional(),
   }).optional(),
   title: z.string().optional(),
   visible: z.boolean().optional(),
@@ -2272,7 +2272,7 @@ export const graphCanvasPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -2282,7 +2282,7 @@ export const graphCanvasPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -2315,7 +2315,7 @@ export const eventTimelinePropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -2325,7 +2325,7 @@ export const eventTimelinePropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -2420,11 +2420,11 @@ export const groupedViewPropsSchema = z.object({
   rowStyle: z.array(z.object({
       condition: z.string(),
       className: z.string().optional(),
-      style: z.record(z.string()).optional(),
+      style: z.record(z.string(), z.string()).optional(),
     })).optional(),
   rowAccent: z.object({
     column: z.string(),
-    colorMap: z.record(z.string()),
+    colorMap: z.record(z.string(), z.string()),
     default: z.string().optional(),
     columns: z.union([z.array(z.string()), z.string()]).optional(),
   }).optional(),
@@ -2451,7 +2451,7 @@ export const groupedViewPropsSchema = z.object({
       align: z.enum(["start", "end", "center"]).optional(),
       sortable: z.boolean().optional(),
       minWidth: z.string().optional(),
-      pill: z.record(z.string()).optional(),
+      pill: z.record(z.string(), z.string()).optional(),
     })).optional(),
   filter: z.object({
     enabled: z.boolean().optional(),
@@ -2461,7 +2461,7 @@ export const groupedViewPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -2472,7 +2472,7 @@ export const groupedViewPropsSchema = z.object({
 
 export const iframePluginPropsSchema = z.object({
   componentId: z.string(),
-  settings: z.record(z.unknown()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
   lookup: lookupSchema.optional(),
   title: z.string().optional(),
   visible: z.boolean().optional(),
@@ -2486,7 +2486,7 @@ export const iframePluginPropsSchema = z.object({
     group: z.string().optional(),
     drillDown: z.object({
       target: z.string(),
-      parameters: z.record(z.string()).optional(),
+      parameters: z.record(z.string(), z.string()).optional(),
     }).optional(),
   }).optional(),
   refresh: z.object({
@@ -2641,7 +2641,7 @@ export const schemaFormPropsSchema = z.object({
   excludeFields: z.array(z.string()).optional(),
   fieldOrder: z.array(z.string()).optional(),
   fields: z.array(z.string()).optional(),
-  labels: z.record(z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
   fieldsOnly: z.boolean().optional(),
 });
 
@@ -2649,8 +2649,8 @@ export const actionButtonPropsSchema = z.object({
   label: z.string(),
   url: z.string(),
   method: z.enum(["POST", "PUT", "DELETE"]).optional(),
-  body: z.record(z.unknown()).optional(),
-  headers: z.record(z.string()).optional(),
+  body: z.record(z.string(), z.unknown()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   confirm: z.string().optional(),
   style: z.enum(["primary", "danger", "secondary", "ghost", "outline"]).optional(),
   disabled: z.boolean().optional(),

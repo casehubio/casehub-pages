@@ -68,11 +68,11 @@ function typeToZod(type: Type, depth: number): string {
       || text.includes("Record<string,")) {
     const typeArgs = type.getAliasTypeArguments();
     if (typeArgs.length === 2) {
-      return `z.record(${typeToZod(typeArgs[1], depth + 1)})`;
+      return `z.record(z.string(), ${typeToZod(typeArgs[1], depth + 1)})`;
     }
     const apparentProps = type.getStringIndexType();
-    if (apparentProps) return `z.record(${typeToZod(apparentProps, depth + 1)})`;
-    return "z.record(z.unknown())";
+    if (apparentProps) return `z.record(z.string(), ${typeToZod(apparentProps, depth + 1)})`;
+    return "z.record(z.string(), z.unknown())";
   }
 
   if (type.isObject() && !type.isArray()) {
@@ -128,7 +128,7 @@ const registry = typeGuardsFile.getInterfaceOrThrow("ComponentTypeRegistry");
 const registryType = registry.getType();
 
 const fieldSchemaBlock = `const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
-  z.object({
+  z.looseObject({
     type: z.union([z.string(), z.array(z.string())]).optional(),
     format: z.string().optional(),
     title: z.string().optional(),
@@ -146,15 +146,15 @@ const fieldSchemaBlock = `const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =
     uniqueItems: z.boolean().optional(),
     multipleOf: z.number().optional(),
     readOnly: z.boolean().optional(),
-    properties: z.record(fieldSchemaZod).optional(),
+    properties: z.record(z.string(), fieldSchemaZod).optional(),
     required: z.array(z.string()).optional(),
     items: fieldSchemaZod.optional(),
     const: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),
     oneOf: z.array(fieldSchemaZod).optional(),
     $ref: z.string().optional(),
-    $defs: z.record(fieldSchemaZod).optional(),
-    definitions: z.record(fieldSchemaZod).optional(),
-  }).passthrough(),
+    $defs: z.record(z.string(), fieldSchemaZod).optional(),
+    definitions: z.record(z.string(), fieldSchemaZod).optional(),
+  }),
 );
 `;
 

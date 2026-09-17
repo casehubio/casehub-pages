@@ -23,7 +23,7 @@
   "dependencies": {
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/yaml-core": "workspace:*",
-    "zod": "^3.23.0"
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@casehubio/pages-component": "workspace:*",
