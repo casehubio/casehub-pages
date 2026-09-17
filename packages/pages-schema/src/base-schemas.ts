@@ -3,7 +3,7 @@ import { lookupSchema } from "@casehubio/pages-data";
 
 const drillDownSchema = z.object({
   target: z.string(),
-  parameters: z.record(z.string()).optional(),
+  parameters: z.record(z.string(), z.string()).optional(),
 });
 
 export const filterSettingsSchema = z.object({
@@ -61,7 +61,7 @@ export const chartSettingsSchema = z.object({
     x: z.boolean().optional(),
     y: z.boolean().optional(),
   }).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const dataComponentCommonSchema = z.object({

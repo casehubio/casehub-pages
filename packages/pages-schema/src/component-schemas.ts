@@ -85,7 +85,7 @@ export const dataTablePropsSchema = dataComponentCommonSchema.extend({
 export const gridTablePropsSchema = dataComponentCommonSchema.extend({
   columnHeaders: z.boolean().optional(),
   rowHeaders: z.boolean().optional(),
-  cellDisplay: z.record(z.enum(["text", "boolean", "color", "badge", "number"])).optional(),
+  cellDisplay: z.record(z.string(), z.enum(["text", "boolean", "color", "badge", "number"])).optional(),
   compact: z.boolean().optional(),
   stripe: z.enum(["rows", "columns", "both"]).optional(),
   verticalLines: z.boolean().optional(),
@@ -121,7 +121,7 @@ export const mapPropsSchema = dataComponentCommonSchema.merge(chartSettingsSchem
 
 export const badgePropsSchema = dataComponentCommonSchema.extend({
   column: z.string().optional(),
-  colorMap: z.record(z.string()).optional(),
+  colorMap: z.record(z.string(), z.string()).optional(),
 });
 
 export const countdownPropsSchema = dataComponentCommonSchema.extend({
@@ -146,7 +146,7 @@ export const graphPropsSchema = dataComponentCommonSchema.merge(chartSettingsSch
   directed: z.boolean().optional(),
   nodeLabelColumn: z.string().optional(),
   nodeColorColumn: z.string().optional(),
-  nodeColorMap: z.record(z.string()).optional(),
+  nodeColorMap: z.record(z.string(), z.string()).optional(),
   nodeSizeColumn: z.string().optional(),
 });
 
@@ -174,7 +174,7 @@ const aggregationBindingSchema = z.object({
 
 const rowAccentConfigSchema = z.object({
   column: z.string(),
-  colorMap: z.record(z.string()),
+  colorMap: z.record(z.string(), z.string()),
   default: z.string().optional(),
   columns: z.union([z.literal("all"), z.array(z.string())]).optional(),
 });
@@ -241,7 +241,7 @@ export const dockBarPropsSchema = z.object({
 
 export const hostPanelPropsSchema = z.object({
   typeName: z.string(),
-  panelProps: z.record(z.unknown()).optional(),
+  panelProps: z.record(z.string(), z.unknown()).optional(),
   lookup: z.any().optional(),
   selectionSource: z.string().optional(),
 });
@@ -283,7 +283,7 @@ export const pagePropsSchema = z.object({
     mode: z.enum(["light", "dark"]).optional(),
     allowUrlProperties: z.boolean().optional(),
   }).passthrough().optional(),
-  properties: z.record(z.string()).optional(),
+  properties: z.record(z.string(), z.string()).optional(),
 });
 
 // --- Form components ---
@@ -333,12 +333,12 @@ const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
     title: z.string().optional(),
     description: z.string().optional(),
     enum: z.array(z.string()).optional(),
-    properties: z.record(fieldSchemaZod).optional(),
+    properties: z.record(z.string(), fieldSchemaZod).optional(),
     required: z.array(z.string()).optional(),
     items: fieldSchemaZod.optional(),
     oneOf: z.array(fieldSchemaZod).optional(),
     $ref: z.string().optional(),
-    $defs: z.record(fieldSchemaZod).optional(),
+    $defs: z.record(z.string(), fieldSchemaZod).optional(),
   }).passthrough()
 );
 
@@ -350,7 +350,7 @@ export const schemaFormPropsSchema = z.object({
   excludeFields: z.array(z.string()).optional(),
   fieldOrder: z.array(z.string()).optional(),
   fields: z.array(z.string()).optional(),
-  labels: z.record(z.string()).optional(),
+  labels: z.record(z.string(), z.string()).optional(),
   fieldsOnly: z.boolean().optional(),
 });
 
@@ -358,8 +358,8 @@ export const actionButtonPropsSchema = z.object({
   label: z.string(),
   url: z.string(),
   method: z.enum(["POST", "PUT", "DELETE"]).optional(),
-  body: z.record(z.unknown()).optional(),
-  headers: z.record(z.string()).optional(),
+  body: z.record(z.string(), z.unknown()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   confirm: z.string().optional(),
   style: z.enum(["primary", "danger", "secondary", "ghost", "outline"]).optional(),
   disabled: z.boolean().optional(),
@@ -382,7 +382,7 @@ export const submitButtonPropsSchema = z.object({
 
 export const iframePluginPropsSchema = z.object({
   componentId: z.string(),
-  settings: z.record(z.unknown()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
   lookup: z.any().optional(),
   title: z.string().optional(),
   visible: z.boolean().optional(),

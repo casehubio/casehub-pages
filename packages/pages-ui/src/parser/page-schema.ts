@@ -11,8 +11,8 @@ export const yamlRootPageSchema = z
     pages: z.array(z.unknown()).min(1).optional(),
     layoutTemplates: z.array(z.unknown()).min(1).optional(),
     datasets: z.array(z.unknown()).optional(),
-    global: z.record(z.unknown()).optional(),
-    properties: z.record(z.string()).optional(),
+    global: z.record(z.string(), z.unknown()).optional(),
+    properties: z.record(z.string(), z.string()).optional(),
     navTree: z.unknown().optional(),
   })
   .refine(

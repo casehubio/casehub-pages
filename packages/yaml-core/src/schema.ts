@@ -24,7 +24,7 @@ export const importSchema = z.object({
   module: z.string(),
   as: z.string(),
   when: z.string().optional(),
-  parameters: z.record(z.string()).optional(),
+  parameters: z.record(z.string(), z.string()).optional(),
 });
 
 export const forEachSchema = z.union([
@@ -48,18 +48,18 @@ export const dataSourceSchema = z.object({
 });
 
 export const moduleDefinitionSchema = z.object({
-  parameters: z.record(parameterSchema).optional(),
-  outputs: z.record(outputSchema).optional(),
-  sections: z.record(z.record(z.unknown())).optional(),
+  parameters: z.record(z.string(), parameterSchema).optional(),
+  outputs: z.record(z.string(), outputSchema).optional(),
+  sections: z.record(z.record(z.string(), z.unknown())).optional(),
   extends: z.string().optional(),
 });
 
 export const yamlCoreDocumentSchema = z.object({
-  variables: z.record(z.record(z.string())).optional(),
-  modules: z.record(moduleDefinitionSchema).optional(),
+  variables: z.record(z.record(z.string(), z.string())).optional(),
+  modules: z.record(z.string(), moduleDefinitionSchema).optional(),
   imports: z.array(importSchema).optional(),
-  iterations: z.record(iterationGroupSchema).optional(),
-  data: z.record(dataSourceSchema).optional(),
+  iterations: z.record(z.string(), iterationGroupSchema).optional(),
+  data: z.record(z.string(), dataSourceSchema).optional(),
 });
 
 export const yamlCoreElementMixin = {

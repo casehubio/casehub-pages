@@ -30,9 +30,9 @@ export const externalDataSetDefSchema = z.object({
   serverPagination: serverPaginationConfigSchema.optional(),
 
   method: z.nativeEnum(HttpMethod).optional(),
-  headers: z.record(z.string()).optional(),
-  query: z.record(z.string()).optional(),
-  form: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  query: z.record(z.string(), z.string()).optional(),
+  form: z.record(z.string(), z.string()).optional(),
   body: z.string().optional(),
 
   dataPath: z.string().optional(),

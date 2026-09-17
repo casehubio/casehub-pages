@@ -27,7 +27,7 @@ import {
 
 const componentBase = z.object({
   id: z.string().optional(),
-  style: z.record(z.string()).optional(),
+  style: z.record(z.string(), z.string()).optional(),
   visibleWhen: z.string().optional(),
   ...yamlCoreElementMixin,
 });
@@ -106,12 +106,12 @@ const navTreeSchema = z.object({
 const columnSchema = z.object({
   span: z.number().optional(),
   components: z.array(componentSchema).optional(),
-  properties: z.record(z.unknown()).optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
 });
 
 const rowSchema = z.object({
   columns: z.array(columnSchema).optional(),
-  properties: z.record(z.unknown()).optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
 });
 
 const pageEntrySchema = z.object({
@@ -119,12 +119,12 @@ const pageEntrySchema = z.object({
   components: z.array(componentSchema).optional(),
   rows: z.array(rowSchema).optional(),
   columns: z.array(columnSchema).optional(),
-  properties: z.record(z.string()).optional(),
+  properties: z.record(z.string(), z.string()).optional(),
 });
 
 export const dashboardSchema: z.ZodType = z.object({
   pages: z.array(pageEntrySchema).optional(),
   datasets: z.array(externalDataSetDefSchema).optional(),
   navTree: navTreeSchema.optional(),
-  properties: z.record(z.string()).optional(),
+  properties: z.record(z.string(), z.string()).optional(),
 });
