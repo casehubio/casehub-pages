@@ -5,24 +5,25 @@ const cache = new WeakMap<z.ZodType, FieldSchema>();
 const visiting = new WeakSet<z.ZodType>();
 
 function typeName(schema: z.ZodType): string {
-  return (schema._def as Record<string, unknown>).typeName as string ?? '';
+  return ((schema as any)._zod?.def?.type as string) ?? '';
 }
 
 function unwrap(schema: z.ZodType, seen = new WeakSet<z.ZodType>()): z.ZodType {
   if (seen.has(schema)) return schema;
   seen.add(schema);
   const tn = typeName(schema);
-  if (tn === 'ZodOptional' || tn === 'ZodDefault' || tn === 'ZodNullable') {
-    return unwrap((schema._def as { innerType: z.ZodType }).innerType, seen);
+  if (tn === 'optional' || tn === 'default' || tn === 'nullable') {
+    return unwrap((schema as any)._zod.def.innerType, seen);
   }
-  if (tn === 'ZodLazy') {
-    return unwrap((schema._def as { getter: () => z.ZodType }).getter(), seen);
+  if (tn === 'lazy') {
+    return unwrap((schema as any)._zod.def.getter(), seen);
   }
   return schema;
 }
 
 function getShape(schema: z.ZodType): Record<string, z.ZodType> | null {
-  const def = schema._def as Record<string, unknown>;
+  const def = (schema as any)._zod?.def;
+  if (!def) return null;
   if (typeof def.shape === 'function') return (def.shape as () => Record<string, z.ZodType>)();
   if (typeof def.shape === 'object' && def.shape) return def.shape as Record<string, z.ZodType>;
   return null;
@@ -30,7 +31,7 @@ function getShape(schema: z.ZodType): Record<string, z.ZodType> | null {
 
 function isOptional(schema: z.ZodType): boolean {
   const tn = typeName(schema);
-  return tn === 'ZodOptional' || tn === 'ZodDefault' || tn === 'ZodNullable';
+  return tn === 'optional' || tn === 'default' || tn === 'nullable';
 }
 
 function convertInner(schema: z.ZodType): FieldSchema {
@@ -44,12 +45,12 @@ function convertInner(schema: z.ZodType): FieldSchema {
   try {
   const tn = typeName(unwrapped);
 
-  if (tn === 'ZodString') {
+  if (tn === 'string') {
     return { type: 'string' };
   }
 
-  if (tn === 'ZodNumber') {
-    const checks = (unwrapped._def as { checks?: Array<{ kind: string; value: number }> }).checks ?? [];
+  if (tn === 'number') {
+    const checks = ((unwrapped as any)._zod.def.checks ?? []) as Array<{ kind: string; value: number }>;
     const result: FieldSchema = { type: 'number' };
     const mutable = result as Record<string, unknown>;
     for (const check of checks) {
@@ -59,57 +60,53 @@ function convertInner(schema: z.ZodType): FieldSchema {
     return result;
   }
 
-  if (tn === 'ZodBoolean') {
+  if (tn === 'boolean') {
     return { type: 'boolean' };
   }
 
-  if (tn === 'ZodEnum') {
-    const values = (unwrapped._def as { values: string[] }).values;
+  if (tn === 'enum') {
+    const entries = (unwrapped as any)._zod.def.entries;
+    if (Array.isArray(entries)) return { type: 'string', enum: entries };
+    const values = Object.values(entries).filter((v: unknown): v is string => typeof v === 'string');
     return { type: 'string', enum: values };
   }
 
-  if (tn === 'ZodLiteral') {
-    const value = (unwrapped._def as { value: unknown }).value;
+  if (tn === 'literal') {
+    const values = (unwrapped as any)._zod.def.values as unknown[];
+    const value = values[0];
     if (typeof value === 'string') return { type: 'string', enum: [value] };
     if (typeof value === 'number') return { type: 'number' };
     if (typeof value === 'boolean') return { type: 'boolean' };
     return { type: 'string' };
   }
 
-  if (tn === 'ZodArray') {
-    const itemType = (unwrapped._def as { type: z.ZodType }).type;
+  if (tn === 'array') {
+    const itemType = (unwrapped as any)._zod.def.element as z.ZodType;
     return { type: 'array', items: convertInner(itemType) };
   }
 
-  if (tn === 'ZodRecord') {
+  if (tn === 'record') {
     return { type: 'object' };
   }
 
-  if (tn === 'ZodObject') {
+  if (tn === 'object') {
     return convertObject(unwrapped);
   }
 
-  if (tn === 'ZodUnion') {
-    const options = (unwrapped._def as { options: z.ZodType[] }).options;
-    const converted = options.map(o => convertInner(o));
+  if (tn === 'union') {
+    const options = (unwrapped as any)._zod.def.options as z.ZodType[];
+    const converted = options.map((o: z.ZodType) => convertInner(o));
     return { oneOf: converted };
   }
 
-  if (tn === 'ZodIntersection') {
-    const def = unwrapped._def as { left: z.ZodType; right: z.ZodType };
-    const left = convertInner(def.left);
-    const right = convertInner(def.right);
+  if (tn === 'intersection') {
+    const def = (unwrapped as any)._zod.def;
+    const left = convertInner(def.left as z.ZodType);
+    const right = convertInner(def.right as z.ZodType);
     return mergeFieldSchemas(left, right);
   }
 
-  if (tn === 'ZodNativeEnum') {
-    const values = Object.values(
-      (unwrapped._def as { values: Record<string, string | number> }).values,
-    ).filter((v): v is string => typeof v === 'string');
-    return { type: 'string', enum: values };
-  }
-
-  if (tn === 'ZodAny' || tn === 'ZodUnknown') return {};
+  if (tn === 'any' || tn === 'unknown') return {};
   return {};
   } finally {
     visiting.delete(schema);

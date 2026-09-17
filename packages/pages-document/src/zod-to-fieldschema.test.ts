@@ -68,7 +68,7 @@ describe('zodToFieldSchema', () => {
   });
 
   it('converts record to object', () => {
-    const fs = zodToFieldSchema(z.record(z.string()));
+    const fs = zodToFieldSchema(z.record(z.string(), z.string()));
     expect(fs.type).toBe('object');
   });
 
