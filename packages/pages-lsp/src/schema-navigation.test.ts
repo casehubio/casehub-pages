@@ -143,7 +143,7 @@ describe('navigateSchema', () => {
 
   it('handles ZodRecord by returning value schema', () => {
     const recordSchema = z.object({
-      properties: z.record(z.string()),
+      properties: z.record(z.string(), z.string()),
     });
     const result = navigateSchema(recordSchema, ['properties', 'anyKey']);
     expect(result).toBeTruthy();
@@ -188,11 +188,11 @@ describe('isArrayField', () => {
 describe('ZodRecord support', () => {
   const taskDef = z.object({
     call: z.string().optional(),
-    set: z.record(z.unknown()).optional(),
+    set: z.record(z.string(), z.unknown()).optional(),
     switch: z.array(z.unknown()).optional(),
   });
   const workflowSchema = z.object({
-    do: z.array(z.record(taskDef)),
+    do: z.array(z.record(z.string(), taskDef)),
   });
 
   it('navigateSchema walks through ZodRecord value type', () => {
@@ -206,7 +206,7 @@ describe('ZodRecord support', () => {
   });
 
   it('schemaToCompletions descends into ZodRecord value type', () => {
-    const recordSchema = z.record(taskDef);
+    const recordSchema = z.record(z.string(), taskDef);
     const completions = schemaToCompletions(recordSchema);
     const labels = completions.map(c => c.label);
     expect(labels).toContain('call');
@@ -215,7 +215,7 @@ describe('ZodRecord support', () => {
   });
 
   it('returns empty completions for ZodRecord with z.unknown() value', () => {
-    const emptyRecord = z.record(z.unknown());
+    const emptyRecord = z.record(z.string(), z.unknown());
     const completions = schemaToCompletions(emptyRecord);
     expect(completions).toEqual([]);
   });
