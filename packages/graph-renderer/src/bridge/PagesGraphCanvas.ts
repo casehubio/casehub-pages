@@ -1,10 +1,13 @@
-import { LitElement, html, type TemplateResult } from 'lit';
+import { LitElement, html, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { GraphCanvasProps, DataComponentCommon } from '@casehubio/pages-component';
 import { DataSourceController } from '@casehubio/pages-component';
 import type { DataSetLookup, TypedDataSet, ColumnId } from '@casehubio/pages-data';
 import type { GraphModel, GraphNode, GraphEdge } from '@casehubio/graph-core';
+import type { EditPolicy, GraphEdit } from '../editing/types.js';
 import type { ElkLayoutOptions } from '../layout/elk-layout.js';
+import type { ReactFlowAppProps } from './ReactFlowApp.js';
+import type { Node, Edge } from '@xyflow/react';
 import './GraphCanvas.js';
 
 type VizProps = GraphCanvasProps & DataComponentCommon;
@@ -33,6 +36,15 @@ export class PagesGraphCanvas extends LitElement {
   });
 
   @property({ attribute: false }) props: VizProps | undefined;
+
+  @property({ attribute: false }) nodes: Node[] | undefined;
+  @property({ attribute: false }) edges: Edge[] | undefined;
+  @property({ attribute: false }) model: GraphModel | undefined;
+  @property({ attribute: false }) editPolicy: EditPolicy | undefined;
+  @property({ attribute: false }) onMutation: ((edit: GraphEdit) => void) | undefined;
+  @property({ attribute: false }) miniMapNodeColor: ReactFlowAppProps['miniMapNodeColor'];
+  @property({ attribute: false }) connectionsEnabled: boolean | undefined;
+
   private _dataRequested = false;
   private _prevProps: VizProps | undefined;
 
@@ -146,6 +158,19 @@ export class PagesGraphCanvas extends LitElement {
   override render(): TemplateResult {
     if (this.controller.error) {
       return html`<div style="padding:12px;color:var(--pages-danger-9,red)">${this.controller.error}</div>`;
+    }
+    if (this.nodes) {
+      return html`
+        <graph-canvas-core
+          .nodes=${this.nodes}
+          .edges=${this.edges}
+          .model=${this.model}
+          .editPolicy=${this.editPolicy}
+          .onMutation=${this.onMutation}
+          .miniMapNodeColor=${this.miniMapNodeColor}
+          .connectionsEnabled=${this.connectionsEnabled ?? false}
+        ></graph-canvas-core>
+      `;
     }
     if (!this.props || this.controller.loading || !this.dataSet) {
       return html`<div style="padding:12px;opacity:0.5">Loading…</div>`;
