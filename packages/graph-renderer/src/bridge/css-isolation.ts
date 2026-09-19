@@ -71,9 +71,13 @@ ${pluginStyles}
 }
 .stencil-decoration-wrapper {
   position: relative;
-  z-index: 1;
   transition: box-shadow 0.15s;
   border-radius: 8px;
+}
+.stencil-decoration-wrapper button,
+.stencil-decoration-wrapper [role="button"] {
+  position: relative;
+  z-index: 3;
 }
 .react-flow__node.selected .stencil-decoration-wrapper {
   outline: 3px solid var(--pages-accent-9, #5470c6);

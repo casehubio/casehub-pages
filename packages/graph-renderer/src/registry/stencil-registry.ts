@@ -50,11 +50,13 @@ export function registerStencil(descriptor: StencilDescriptor): void {
   registerGrammar(descriptor.grammar);
   const component = createStencilNodeComponent(descriptor.render);
   stencilRegistry.set(descriptor.type, { descriptor, component });
+  cachedNodeTypes = null;
 }
 
 export function deregisterStencil(type: string): void {
   if (!stencilRegistry.has(type)) return;
   stencilRegistry.delete(type);
+  cachedNodeTypes = null;
   deregisterGrammar(type);
 }
 
@@ -81,11 +83,15 @@ export function getEdgeDescriptor(type: string): EdgeDescriptor | undefined {
   return edgeRegistry.get(type);
 }
 
+let cachedNodeTypes: NodeTypes | null = null;
+
 export function getNodeTypes(): NodeTypes {
+  if (cachedNodeTypes) return cachedNodeTypes;
   const result: NodeTypes = {};
   for (const [type, entry] of stencilRegistry) {
     result[type] = entry.component;
   }
+  cachedNodeTypes = result;
   return result;
 }
 

@@ -49,7 +49,10 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
   function isEligible(nodeId: string, model: GraphModel): boolean {
     const node = nodeById(model, nodeId);
     if (!node) return false;
-    if (node.parentId) return false;
+    if (node.parentId) {
+      const parent = nodeById(model, node.parentId);
+      if (parent?.parentId) return false;
+    }
     if (childrenOf(model, nodeId).length > 0) return false;
     return true;
   }

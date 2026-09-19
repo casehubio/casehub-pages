@@ -417,9 +417,9 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     const tc = tgtCounts.get(node.id);
     const updates: Record<string, unknown> = {};
     if (sc) updates._sourceHandlePosition = Object.entries(sc).sort((a, b) => b[1] - a[1])[0]![0];
-    else if (!hasOutgoing.has(node.id)) updates._sourceHandlePosition = undefined;
+    else updates._sourceHandlePosition = 'bottom';
     if (tc) updates._targetHandlePosition = Object.entries(tc).sort((a, b) => b[1] - a[1])[0]![0];
-    else if (!hasIncoming.has(node.id)) updates._targetHandlePosition = undefined;
+    else updates._targetHandlePosition = 'top';
     if (Object.keys(updates).length > 0) node.data = { ...node.data, ...updates };
   }
 }
