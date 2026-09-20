@@ -51,7 +51,8 @@ function findSamples(dir, baseDir = dir) {
         file: file
       };
 
-      const tsCompanion = path.join(dir, name + '.ts');
+      const baseName = name.replace(/\.page$/, '');
+      const tsCompanion = path.join(dir, baseName + '.ts');
       if (fs.existsSync(tsCompanion)) {
         entry.tsPath = path.relative(baseDir, tsCompanion).split(path.sep).join('/');
       }

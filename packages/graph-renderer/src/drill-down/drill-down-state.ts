@@ -1,3 +1,4 @@
+import type { GraphModel } from '@casehubio/graph-core';
 import type { Node, Edge } from '@xyflow/react';
 import type { DrillDownTarget, StackLevel } from './types.js';
 
@@ -28,11 +29,12 @@ export class DrillDownState {
     layoutNodes: Node[],
     layoutEdges: Edge[],
     layoutGeneration: number,
+    currentModel?: GraphModel,
   ): void {
     const level: StackLevel = {
       name: target.name,
       nodeId,
-      model: target.model,
+      model: currentModel ?? target.model,
       viewport,
       layoutNodes,
       layoutEdges,

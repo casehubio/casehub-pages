@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 93,
+  "totalSamples": 94,
   "categories": [
     {
       "category": "Charts",
@@ -141,7 +141,8 @@
           "name": "Master Detail.page",
           "path": "Tables/Master Detail.page.yaml",
           "category": "Tables",
-          "file": "Master Detail.page.yaml"
+          "file": "Master Detail.page.yaml",
+          "tsPath": "Tables/Master Detail.ts"
         },
         {
           "name": "Project Roadmap.page",
@@ -153,7 +154,8 @@
           "name": "Row Detail.page",
           "path": "Tables/Row Detail.page.yaml",
           "category": "Tables",
-          "file": "Row Detail.page.yaml"
+          "file": "Row Detail.page.yaml",
+          "tsPath": "Tables/Row Detail.ts"
         },
         {
           "name": "Row Styles.page",
@@ -165,7 +167,8 @@
           "name": "Spanning.page",
           "path": "Tables/Spanning.page.yaml",
           "category": "Tables",
-          "file": "Spanning.page.yaml"
+          "file": "Spanning.page.yaml",
+          "tsPath": "Tables/Spanning.ts"
         },
         {
           "name": "Tabbed Table.page",
@@ -183,7 +186,8 @@
           "name": "Variable Heights.page",
           "path": "Tables/Variable Heights.page.yaml",
           "category": "Tables",
-          "file": "Variable Heights.page.yaml"
+          "file": "Variable Heights.page.yaml",
+          "tsPath": "Tables/Variable Heights.ts"
         }
       ]
     },
@@ -246,7 +250,8 @@
           "name": "Schema Form.page",
           "path": "Forms/Schema Form.page.yaml",
           "category": "Forms",
-          "file": "Schema Form.page.yaml"
+          "file": "Schema Form.page.yaml",
+          "tsPath": "Forms/Schema Form.ts"
         }
       ]
     },
@@ -345,19 +350,29 @@
           "name": "Basic Pipeline.page",
           "path": "Graph Editing/Basic Pipeline.page.yaml",
           "category": "Graph Editing",
-          "file": "Basic Pipeline.page.yaml"
+          "file": "Basic Pipeline.page.yaml",
+          "tsPath": "Graph Editing/Basic Pipeline.ts"
         },
         {
           "name": "Interactive Editing.page",
           "path": "Graph Editing/Interactive Editing.page.yaml",
           "category": "Graph Editing",
-          "file": "Interactive Editing.page.yaml"
+          "file": "Interactive Editing.page.yaml",
+          "tsPath": "Graph Editing/Interactive Editing.ts"
         },
         {
           "name": "Multi Select.page",
           "path": "Graph Editing/Multi Select.page.yaml",
           "category": "Graph Editing",
-          "file": "Multi Select.page.yaml"
+          "file": "Multi Select.page.yaml",
+          "tsPath": "Graph Editing/Multi Select.ts"
+        },
+        {
+          "name": "Nested Pipeline.page",
+          "path": "Graph Editing/Nested Pipeline.page.yaml",
+          "category": "Graph Editing",
+          "file": "Nested Pipeline.page.yaml",
+          "tsPath": "Graph Editing/Nested Pipeline.ts"
         }
       ]
     },
@@ -396,13 +411,15 @@
           "name": "Case Definition Editor.page",
           "path": "Custom Components/Case Definition Editor.page.yaml",
           "category": "Custom Components",
-          "file": "Case Definition Editor.page.yaml"
+          "file": "Case Definition Editor.page.yaml",
+          "tsPath": "Custom Components/Case Definition Editor.ts"
         },
         {
           "name": "Code Editor.page",
           "path": "Custom Components/Code Editor.page.yaml",
           "category": "Custom Components",
-          "file": "Code Editor.page.yaml"
+          "file": "Code Editor.page.yaml",
+          "tsPath": "Custom Components/Code Editor.ts"
         },
         {
           "name": "Iframe Components.page",
@@ -425,13 +442,15 @@
           "name": "Theme Designer.page",
           "path": "Theming/Theme Designer.page.yaml",
           "category": "Theming",
-          "file": "Theme Designer.page.yaml"
+          "file": "Theme Designer.page.yaml",
+          "tsPath": "Theming/Theme Designer.ts"
         },
         {
           "name": "Theme Picker.page",
           "path": "Theming/Theme Picker.page.yaml",
           "category": "Theming",
-          "file": "Theme Picker.page.yaml"
+          "file": "Theme Picker.page.yaml",
+          "tsPath": "Theming/Theme Picker.ts"
         },
         {
           "name": "Token Showcase.page",
@@ -531,37 +550,43 @@
           "name": "Composable Workflow.page",
           "path": "Scenario Automation/Composable Workflow.page.yaml",
           "category": "Scenario Automation",
-          "file": "Composable Workflow.page.yaml"
+          "file": "Composable Workflow.page.yaml",
+          "tsPath": "Scenario Automation/Composable Workflow.ts"
         },
         {
           "name": "Form Automation.page",
           "path": "Scenario Automation/Form Automation.page.yaml",
           "category": "Scenario Automation",
-          "file": "Form Automation.page.yaml"
+          "file": "Form Automation.page.yaml",
+          "tsPath": "Scenario Automation/Form Automation.ts"
         },
         {
           "name": "Parameterized Script.page",
           "path": "Scenario Automation/Parameterized Script.page.yaml",
           "category": "Scenario Automation",
-          "file": "Parameterized Script.page.yaml"
+          "file": "Parameterized Script.page.yaml",
+          "tsPath": "Scenario Automation/Parameterized Script.ts"
         },
         {
           "name": "Scenario Controller.page",
           "path": "Scenario Automation/Scenario Controller.page.yaml",
           "category": "Scenario Automation",
-          "file": "Scenario Controller.page.yaml"
+          "file": "Scenario Controller.page.yaml",
+          "tsPath": "Scenario Automation/Scenario Controller.ts"
         },
         {
           "name": "Script Library.page",
           "path": "Scenario Automation/Script Library.page.yaml",
           "category": "Scenario Automation",
-          "file": "Script Library.page.yaml"
+          "file": "Script Library.page.yaml",
+          "tsPath": "Scenario Automation/Script Library.ts"
         },
         {
           "name": "Table Population.page",
           "path": "Scenario Automation/Table Population.page.yaml",
           "category": "Scenario Automation",
-          "file": "Table Population.page.yaml"
+          "file": "Table Population.page.yaml",
+          "tsPath": "Scenario Automation/Table Population.ts"
         }
       ]
     },
@@ -637,7 +662,8 @@
           "name": "Reconnect Replay.page",
           "path": "Server/Reconnect Replay.page.yaml",
           "category": "Server",
-          "file": "Reconnect Replay.page.yaml"
+          "file": "Reconnect Replay.page.yaml",
+          "tsPath": "Server/Reconnect Replay.ts"
         }
       ],
       "requiresServer": true

@@ -116,4 +116,34 @@ describe('DrillDownState', () => {
     state.push({ name: 'L1', model: MODEL_A, diagramType: 'swf' }, 'n1', VP, [], [], 0);
     expect(state.levels[0]!.diagramType).toBe('swf');
   });
+
+  it('push saves the current model (not the target) for restoration on pop', () => {
+    const ROOT = { nodes: [{ id: 'root' }], edges: [] } as unknown as GraphModel;
+    const SUB = { nodes: [{ id: 'sub' }], edges: [] } as unknown as GraphModel;
+    const state = new DrillDownState();
+
+    state.push(makeTarget('Sub', SUB), 'root-node', VP, [], [], 0, ROOT);
+    const saved = state.levels[0]!;
+    expect(saved.model).toBe(ROOT);
+    expect(saved.name).toBe('Sub');
+
+    const popped = state.pop()!;
+    expect(popped.model).toBe(ROOT);
+  });
+
+  it('round-trip: pop restores model that was active before push', () => {
+    const ROOT = { nodes: [{ id: 'root' }], edges: [] } as unknown as GraphModel;
+    const L1 = { nodes: [{ id: 'l1' }], edges: [] } as unknown as GraphModel;
+    const L2 = { nodes: [{ id: 'l2' }], edges: [] } as unknown as GraphModel;
+    const state = new DrillDownState();
+
+    state.push(makeTarget('L1', L1), 'n1', VP, [], [], 0, ROOT);
+    state.push(makeTarget('L2', L2), 'n2', VP, [], [], 1, L1);
+
+    const popped2 = state.pop()!;
+    expect(popped2.model).toBe(L1);
+
+    const popped1 = state.pop()!;
+    expect(popped1.model).toBe(ROOT);
+  });
 });

@@ -285,4 +285,40 @@ describe('toReactFlowGraph with isDrillable', () => {
     const result = toReactFlowGraph(model);
     expect('_drillable' in result.nodes[0]!.data).toBe(false);
   });
+
+  it('model-aware isDrillable re-injects _drillable after model swap (drill-down round-trip)', () => {
+    const rootModel: GraphModel = {
+      nodes: [
+        { id: 'ingest', type: 'source', properties: {} },
+        { id: 'export', type: 'sink', properties: {} },
+      ],
+      edges: [],
+    };
+    const subModel: GraphModel = {
+      nodes: [
+        { id: 'fetch', type: 'source', properties: {} },
+        { id: 'parse', type: 'transform', properties: {} },
+      ],
+      edges: [],
+    };
+
+    const drillableByModel = new Map<GraphModel, Set<string>>();
+    drillableByModel.set(rootModel, new Set(['ingest']));
+    drillableByModel.set(subModel, new Set([]));
+
+    const isDrillable = (nodeId: string, model: GraphModel) =>
+      drillableByModel.get(model)?.has(nodeId) ?? false;
+
+    // Initial render — ingest is drillable
+    const r1 = toReactFlowGraph(rootModel, undefined, undefined, undefined, isDrillable);
+    expect(r1.nodes[0]!.data._drillable).toBe(true);
+
+    // Drill down — sub-model has no drillable nodes
+    const r2 = toReactFlowGraph(subModel, undefined, undefined, undefined, isDrillable);
+    expect('_drillable' in r2.nodes[0]!.data).toBe(false);
+
+    // Navigate back — root model should have ingest drillable again
+    const r3 = toReactFlowGraph(rootModel, undefined, undefined, undefined, isDrillable);
+    expect(r3.nodes[0]!.data._drillable).toBe(true);
+  });
 });

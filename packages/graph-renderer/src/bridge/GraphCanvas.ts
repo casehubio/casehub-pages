@@ -121,7 +121,7 @@ export class GraphCanvas extends LitElement {
     this._clearMultiSelect();
 
     const viewport = this._reactFlowInstance?.getViewport() ?? { x: 0, y: 0, zoom: 1 };
-    state.push(target, nodeId, viewport, [...this._nodes], [...this._edges], this._layoutGeneration);
+    state.push(target, nodeId, viewport, [...this._nodes], [...this._edges], this._layoutGeneration, model);
     this._layoutGeneration++;
 
     this.model = target.model;
