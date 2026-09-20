@@ -197,6 +197,64 @@ describe('defaultEditPolicy', () => {
     });
   });
 
+  describe('getAddPlacement', () => {
+    it('default policy returns detached', () => {
+      const m: GraphModel = {
+        nodes: [{ id: 'a', type: 'x', properties: {} }],
+        edges: [],
+      };
+      const policy = defaultEditPolicy();
+      expect(policy.getAddPlacement!('x', m)).toEqual({ type: 'detached' });
+    });
+
+    it('custom policy can return splitEdge with target edge', () => {
+      const m: GraphModel = {
+        nodes: [
+          { id: 'a', type: 'x', properties: {} },
+          { id: 'b', type: 'x', properties: {} },
+        ],
+        edges: [{ id: 'e1', type: 'default', source: 'a', target: 'b' }],
+      };
+      const policy = defaultEditPolicy();
+      policy.getAddPlacement = (_nodeType, model) => {
+        const lastEdge = model.edges[model.edges.length - 1];
+        return lastEdge ? { type: 'splitEdge', edgeId: lastEdge.id } : { type: 'detached' };
+      };
+      const placement = policy.getAddPlacement('x', m);
+      expect(placement).toEqual({ type: 'splitEdge', edgeId: 'e1' });
+    });
+
+    it('palette add uses splitEdge placement via applyGraphEdit', () => {
+      registerStencil({
+        type: 'worker', label: 'Worker', icon: 'w',
+        grammar: { type: 'worker', connections: { inbound: { min: 0, max: 10, allowedFrom: [] }, outbound: { min: 0, max: 10, allowedTo: [] } } },
+        render: dummyRender,
+      });
+
+      const m: GraphModel = {
+        nodes: [
+          { id: 'a', type: 'worker', properties: {} },
+          { id: 'b', type: 'worker', properties: {} },
+        ],
+        edges: [{ id: 'e1', type: 'flow', source: 'a', target: 'b' }],
+      };
+      const policy = defaultEditPolicy();
+      policy.getAddPlacement = () => ({ type: 'splitEdge', edgeId: 'e1' });
+
+      const placement = policy.getAddPlacement('worker', m);
+      expect(placement.type).toBe('splitEdge');
+
+      const result = applyGraphEdit(m, {
+        type: 'splitEdge',
+        edgeId: (placement as { edgeId: string }).edgeId,
+        insertNodeType: 'worker',
+      });
+      expect(result.model.nodes).toHaveLength(3);
+      expect(result.model.edges).toHaveLength(2);
+      expect(result.model.edges.find(e => e.id === 'e1')).toBeUndefined();
+    });
+  });
+
   describe('getCreatableTypes', () => {
     it('includes child types when nearNode is a container', () => {
       registerGrammar({

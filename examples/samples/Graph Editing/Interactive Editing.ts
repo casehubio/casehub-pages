@@ -86,7 +86,14 @@ if (editCanvas) {
   if (editPalette) {
     editPalette.addEventListener('pages-palette-select', function(e) {
       var nodeType = (e as CustomEvent).detail.item.type;
-      (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
+      var policy = (editCanvas as any).editPolicy;
+      var model = (editCanvas as any).model;
+      var placement = policy && policy.getAddPlacement ? policy.getAddPlacement(nodeType, model) : { type: 'detached' };
+      if (placement.type === 'splitEdge') {
+        (editCanvas as any).onMutation({ type: 'splitEdge', edgeId: placement.edgeId, insertNodeType: nodeType });
+      } else {
+        (editCanvas as any).onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
+      }
     });
   }
 

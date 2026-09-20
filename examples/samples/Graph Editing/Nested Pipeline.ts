@@ -157,11 +157,18 @@ if (canvas) {
     canvas.model = result.model;
   };
 
-  // --- Palette click → add node ---
+  // --- Palette click → add node (respects EditPolicy.getAddPlacement) ---
   if (palette) {
     palette.addEventListener('pages-palette-select', function(e) {
       var nodeType = e.detail.item.type;
-      canvas.onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
+      var policy = canvas.editPolicy;
+      var model = canvas.model;
+      var placement = policy && policy.getAddPlacement ? policy.getAddPlacement(nodeType, model) : { type: 'detached' };
+      if (placement.type === 'splitEdge') {
+        canvas.onMutation({ type: 'splitEdge', edgeId: placement.edgeId, insertNodeType: nodeType });
+      } else {
+        canvas.onMutation({ type: 'addNode', nodeType: nodeType, properties: { name: labels[nodeType] || nodeType } });
+      }
     });
   }
 

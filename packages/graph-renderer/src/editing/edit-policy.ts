@@ -1,7 +1,7 @@
 import type { GraphModel, GraphNode, GraphEdge } from '@casehubio/graph-core';
 import { getGrammar, inboundEdges, outboundEdges, childrenOf, nodeById } from '@casehubio/graph-core';
 import { getAllStencils } from '../registry/stencil-registry.js';
-import type { EditPolicy, StencilTypeInfo, DeleteStrategy } from './types.js';
+import type { EditPolicy, StencilTypeInfo, DeleteStrategy, AddPlacement } from './types.js';
 import { defaultCanSpliceOntoEdge } from './splice-validation.js';
 
 export function defaultEditPolicy(): EditPolicy {
@@ -107,6 +107,10 @@ export function defaultEditPolicy(): EditPolicy {
 
     canSpliceOntoEdge(edge: GraphEdge, node: GraphNode, model: GraphModel): boolean {
       return defaultCanSpliceOntoEdge(policy, edge, node, model);
+    },
+
+    getAddPlacement(_nodeType: string, _model: GraphModel): AddPlacement {
+      return { type: 'detached' };
     },
   };
   return policy;

@@ -24,7 +24,12 @@ export interface EditPolicy {
   canDelete(node: GraphNode, model: GraphModel): boolean;
   getDeleteStrategy(node: GraphNode, model: GraphModel, deletionSet?: ReadonlySet<string>): DeleteStrategy;
   canSpliceOntoEdge?(edge: GraphEdge, node: GraphNode, model: GraphModel): boolean;
+  getAddPlacement?(nodeType: string, model: GraphModel): AddPlacement;
 }
+
+export type AddPlacement =
+  | { readonly type: 'detached' }
+  | { readonly type: 'splitEdge'; readonly edgeId: string };
 
 export type SourceCleanupStrategy = 'auto-join' | 'disconnect';
 
