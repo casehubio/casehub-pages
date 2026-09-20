@@ -29,7 +29,7 @@ export class DrillDownState {
     layoutEdges: Edge[],
     layoutGeneration: number,
   ): void {
-    this._levels.push({
+    const level: StackLevel = {
       name: target.name,
       nodeId,
       model: target.model,
@@ -37,8 +37,11 @@ export class DrillDownState {
       layoutNodes,
       layoutEdges,
       layoutGeneration,
-      diagramType: target.diagramType,
-    });
+    };
+    if (target.diagramType !== undefined) {
+      level.diagramType = target.diagramType;
+    }
+    this._levels.push(level);
     this._resolveGeneration++;
   }
 

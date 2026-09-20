@@ -230,6 +230,30 @@ export function createStencilNodeComponent(
           {decoration?.badge && <DecorationBadge badge={decoration.badge} />}
           {decoration?.overlay && <DecorationOverlay overlay={decoration.overlay} />}
           {decoration?.pills && decoration.pills.length > 0 && <DecorationPills pills={decoration.pills} />}
+          {!!(rawData._drillable) && (
+            <button
+              className="stencil-action"
+              aria-label={`Drill into ${rawData.name || rawData.label || id}`}
+              style={{
+                position: 'absolute', top: 4, right: 4, zIndex: 3,
+                width: 20, height: 20, border: '1px solid #dadce0',
+                borderRadius: 4, background: '#fff', cursor: 'pointer',
+                fontSize: 12, display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: '#5f6368', padding: 0,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const target = e.currentTarget as HTMLElement;
+                target.dispatchEvent(new CustomEvent('graph:drill-down', {
+                  detail: { nodeId: id },
+                  bubbles: true,
+                  composed: true,
+                }));
+              }}
+            >
+              {'⤢'}
+            </button>
+          )}
           <div ref={containerRef} style={sizeStyle.height ? { height: '100%' } : undefined} />
         </div>
         {!hideHandles && hasSource && grammar?.connections.outbound.max !== 0 &&

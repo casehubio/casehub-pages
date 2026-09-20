@@ -12,7 +12,7 @@ module.exports = (env = {}) => {
       return {
         ...rule,
         use: (rule.use || []).map((loader) => {
-          if (loader && loader.loader && loader.options?.compilerOptions?.importsNotUsedAsValues !== undefined) {
+          if (loader && loader.loader && loader.options?.compilerOptions) {
             const { importsNotUsedAsValues, ...restCompilerOptions } = loader.options.compilerOptions;
             return {
               ...loader,
@@ -21,6 +21,8 @@ module.exports = (env = {}) => {
                 compilerOptions: {
                   ...restCompilerOptions,
                   rootDir: path.resolve(__dirname, ".."),
+                  experimentalDecorators: true,
+                  useDefineForClassFields: false,
                 },
               },
             };

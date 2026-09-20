@@ -261,3 +261,28 @@ describe('toReactFlowGraph with decorations', () => {
     expect('_decoration' in (result.nodes[0]!.data)).toBe(false);
   });
 });
+
+describe('toReactFlowGraph with isDrillable', () => {
+  it('injects _drillable: true when isDrillable returns true', () => {
+    const model: GraphModel = {
+      nodes: [
+        { id: 'n1', type: 'a', properties: { label: 'A' } },
+        { id: 'n2', type: 'b', properties: { label: 'B' } },
+      ],
+      edges: [],
+    };
+    const isDrillable = (nodeId: string) => nodeId === 'n1';
+    const result = toReactFlowGraph(model, undefined, undefined, undefined, isDrillable);
+    expect(result.nodes[0]!.data._drillable).toBe(true);
+    expect('_drillable' in result.nodes[1]!.data).toBe(false);
+  });
+
+  it('does not inject _drillable when no predicate provided', () => {
+    const model: GraphModel = {
+      nodes: [{ id: 'n1', type: 'a', properties: {} }],
+      edges: [],
+    };
+    const result = toReactFlowGraph(model);
+    expect('_drillable' in result.nodes[0]!.data).toBe(false);
+  });
+});

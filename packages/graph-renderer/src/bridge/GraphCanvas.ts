@@ -19,6 +19,9 @@ import { injectIsolationStyles, releaseIsolationStyles, DIAGRAM_ROOT_CLASS } fro
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { toReactFlowGraph } from '../mapping.js';
 import { computeElkLayout, type ElkLayoutOptions } from '../layout/elk-layout.js';
+import { DrillDownState } from '../drill-down/drill-down-state.js';
+import { DrillDownBars } from '../drill-down/drill-down-bars.js';
+import type { DrillDownConfig } from '../drill-down/types.js';
 
 @customElement('graph-canvas-core')
 export class GraphCanvas extends LitElement {
@@ -30,6 +33,7 @@ export class GraphCanvas extends LitElement {
   @property({ attribute: false }) onMutation: ((edit: GraphEdit) => void) | undefined;
   @property({ attribute: false }) connectionsEnabled = true;
   @property({ attribute: false }) miniMapNodeColor: ReactFlowAppProps['miniMapNodeColor'];
+  @property({ attribute: false }) drillDown?: DrillDownConfig;
 
   @state() private _nodes: Node[] = [];
   @state() private _edges: Edge[] = [];
@@ -47,6 +51,9 @@ export class GraphCanvas extends LitElement {
   private _rubberBand: RubberBandSelect | null = null;
   private _keyDownHandler: ((e: KeyboardEvent) => void) | undefined;
   private _multiSelect: MultiSelectState = { selectedNodeIds: new Set(), mode: 'none', boundaryInput: null, boundaryOutput: null };
+  private _drillDownState: DrillDownState | null = null;
+  private _drillDownBars: DrillDownBars | null = null;
+  private _ariaLiveEl: HTMLElement | null = null;
 
   get multiSelect(): MultiSelectState { return this._multiSelect; }
 
@@ -73,6 +80,110 @@ export class GraphCanvas extends LitElement {
 
   private _clearMultiSelect(): void {
     this._setMultiSelect({ selectedNodeIds: new Set(), mode: 'none', boundaryInput: null, boundaryOutput: null });
+  }
+
+  private _initDrillDown(): void {
+    if (!this._container || !this.drillDown) return;
+    this._drillDownState = new DrillDownState();
+    this._drillDownBars = new DrillDownBars();
+
+    this._container.style.display = 'flex';
+    const rfEl = this._container.querySelector('.react-flow') as HTMLElement | null;
+    if (rfEl) rfEl.style.flex = '1';
+
+    this._ariaLiveEl = document.createElement('div');
+    this._ariaLiveEl.setAttribute('aria-live', 'polite');
+    this._ariaLiveEl.setAttribute('role', 'status');
+    this._ariaLiveEl.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);';
+    this.appendChild(this._ariaLiveEl);
+
+    this._container.addEventListener('graph:drill-down', ((e: CustomEvent) => {
+      void this._handleDrillDown(e.detail.nodeId);
+    }) as EventListener);
+
+    this._container.addEventListener('drill-down-navigate', ((e: CustomEvent) => {
+      this._drillDownNavigateTo(e.detail.depth);
+    }) as EventListener);
+  }
+
+  private async _handleDrillDown(nodeId: string): Promise<void> {
+    const config = this.drillDown;
+    const state = this._drillDownState;
+    const model = this.model;
+    if (!config || !state || !model || !this._container) return;
+
+    const gen = state.resolveGeneration;
+    const target = await config.resolve(nodeId, model);
+    if (!target || state.resolveGeneration !== gen) return;
+
+    this._moveCoordinator?.dispose();
+    this._moveCoordinator = null;
+    this._clearMultiSelect();
+
+    const viewport = this._reactFlowInstance?.getViewport() ?? { x: 0, y: 0, zoom: 1 };
+    state.push(target, nodeId, viewport, [...this._nodes], [...this._edges], this._layoutGeneration);
+    this._layoutGeneration++;
+
+    this.model = target.model;
+
+    this._drillDownBars?.render(this._container, state);
+    this._announce(`Drilled into ${target.name}, level ${state.depth}`);
+  }
+
+  private _drillDownPop(): void {
+    const state = this._drillDownState;
+    if (!state || state.depth === 0 || !this._container) return;
+
+    const popped = state.pop();
+    if (!popped) return;
+
+    this._moveCoordinator?.dispose();
+    this._moveCoordinator = null;
+    this._clearMultiSelect();
+
+    this._layoutGeneration++;
+    this._nodes = popped.layoutNodes;
+    this._edges = popped.layoutEdges;
+    this.model = popped.model;
+
+    if (this._reactFlowInstance) {
+      this._reactFlowInstance.setViewport(popped.viewport);
+    }
+
+    this._drillDownBars?.render(this._container, state);
+    this._announce(`Navigated back to ${popped.name}`);
+  }
+
+  private _drillDownNavigateTo(barIndex: number): void {
+    const state = this._drillDownState;
+    if (!state || !this._container) return;
+
+    const targetLevel = state.levels[barIndex];
+    if (!targetLevel) return;
+
+    const removed = state.navigateTo(barIndex - 1);
+    if (removed.length === 0) return;
+
+    this._moveCoordinator?.dispose();
+    this._moveCoordinator = null;
+    this._clearMultiSelect();
+
+    this._layoutGeneration++;
+    this._nodes = targetLevel.layoutNodes;
+    this._edges = targetLevel.layoutEdges;
+    this.model = targetLevel.model;
+    if (this._reactFlowInstance) {
+      this._reactFlowInstance.setViewport(targetLevel.viewport);
+    }
+
+    this._drillDownBars?.render(this._container, state);
+    this._announce(`Navigated back to ${targetLevel.name}`);
+  }
+
+  private _announce(message: string): void {
+    if (this._ariaLiveEl) {
+      this._ariaLiveEl.textContent = message;
+    }
   }
 
   private _handleShiftClick(nodeId: string): void {
@@ -222,9 +333,24 @@ export class GraphCanvas extends LitElement {
       if ((e.key === 'Delete' || e.key === 'Backspace') && this._multiSelect.mode !== 'none') {
         e.preventDefault();
         this._handleMultiSelectDelete();
+        return;
+      }
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || (active as HTMLElement).isContentEditable)) return;
+
+      if (e.key === 'Escape' && this._drillDownState && this._drillDownState.depth > 0) {
+        e.preventDefault();
+        this._drillDownPop();
+      } else if (e.key === 'Home' && this._drillDownState && this._drillDownState.depth > 0) {
+        e.preventDefault();
+        this._drillDownNavigateTo(-1);
       }
     };
     this.addEventListener('keydown', this._keyDownHandler);
+
+    if (this.drillDown) {
+      this._initDrillDown();
+    }
 
     this._root = createRoot(this._container);
     this._renderReact();
@@ -253,6 +379,11 @@ export class GraphCanvas extends LitElement {
     this._gestureCoordinator = null;
     this._moveCoordinator?.dispose();
     this._moveCoordinator = null;
+    this._drillDownBars?.dispose();
+    this._drillDownBars = null;
+    this._drillDownState = null;
+    this._ariaLiveEl?.remove();
+    this._ariaLiveEl = null;
     this._root?.unmount();
     this._root = undefined;
     this._container?.remove();
@@ -267,6 +398,9 @@ export class GraphCanvas extends LitElement {
     }
     if (changed.has('editPolicy') && this._container) {
       this._container.classList.toggle('graph-readonly', !this.editPolicy);
+    }
+    if (changed.has('drillDown') && this.drillDown && !this._drillDownState) {
+      this._initDrillDown();
     }
     this._renderReact();
   }
@@ -284,12 +418,12 @@ export class GraphCanvas extends LitElement {
     try {
       const layout = await computeElkLayout(model, this.layoutOptions);
       if (generation !== this._layoutGeneration) return;
-      const { nodes, edges } = toReactFlowGraph(model, layout, undefined, this.layoutOptions?.direction);
+      const { nodes, edges } = toReactFlowGraph(model, layout, undefined, this.layoutOptions?.direction, this.drillDown?.isDrillable);
       this._nodes = nodes;
       this._edges = edges;
     } catch (err) {
       if (generation !== this._layoutGeneration) return;
-      const { nodes, edges } = toReactFlowGraph(model, undefined, undefined, this.layoutOptions?.direction);
+      const { nodes, edges } = toReactFlowGraph(model, undefined, undefined, this.layoutOptions?.direction, this.drillDown?.isDrillable);
       this._nodes = nodes;
       this._edges = edges;
       emitPagesEvent(this, 'graph:layout:error', {

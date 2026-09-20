@@ -447,6 +447,7 @@ export function toReactFlowGraph(
   layout?: ElkLayoutResult,
   decorations?: ReadonlyMap<string, NodeDecoration>,
   layoutDirection?: string,
+  isDrillable?: (nodeId: string, model: GraphModel) => boolean,
 ): { nodes: Node[]; edges: Edge[] } {
   const parentIds = new Set<string>();
   for (const node of model.nodes) {
@@ -455,9 +456,13 @@ export function toReactFlowGraph(
     }
   }
 
-  const nodes = model.nodes.map(n =>
-    toReactFlowNode(n, parentIds, layout?.nodeLayouts.get(n.id), decorations?.get(n.id)),
-  );
+  const nodes = model.nodes.map(n => {
+    const rfNode = toReactFlowNode(n, parentIds, layout?.nodeLayouts.get(n.id), decorations?.get(n.id));
+    if (isDrillable?.(n.id, model)) {
+      rfNode.data = { ...rfNode.data, _drillable: true };
+    }
+    return rfNode;
+  });
   const edges = model.edges.map(e => toReactFlowEdge(e));
 
   if (layout) {

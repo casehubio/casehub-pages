@@ -496,4 +496,55 @@ describe('dimension constraints', () => {
 
     unmount();
   });
+
+  it('renders drill-down button when _drillable is true', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const { container, unmount } = mountWithProps(Component, {
+      id: 'n1', type: 'task', data: { label: 'Task A', _drillable: true, _sourceHandlePosition: 'bottom', _targetHandlePosition: 'top' },
+      selected: false, isConnectable: true, positionAbsoluteX: 0, positionAbsoluteY: 0,
+      zIndex: 0, width: 0, height: 0,
+    });
+
+    const btn = container.querySelector('.stencil-action') as HTMLElement;
+    expect(btn).not.toBeNull();
+    expect(btn.getAttribute('aria-label')).toBe('Drill into Task A');
+
+    unmount();
+  });
+
+  it('does not render drill-down button when _drillable is absent', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const { container, unmount } = mountWithProps(Component, {
+      id: 'n1', type: 'task', data: { label: 'Task A', _sourceHandlePosition: 'bottom', _targetHandlePosition: 'top' },
+      selected: false, isConnectable: true, positionAbsoluteX: 0, positionAbsoluteY: 0,
+      zIndex: 0, width: 0, height: 0,
+    });
+
+    expect(container.querySelector('.stencil-action')).toBeNull();
+
+    unmount();
+  });
+
+  it('drill-down button dispatches graph:drill-down event on click', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const { container, unmount } = mountWithProps(Component, {
+      id: 'n1', type: 'task', data: { label: 'Task A', _drillable: true, _sourceHandlePosition: 'bottom', _targetHandlePosition: 'top' },
+      selected: false, isConnectable: true, positionAbsoluteX: 0, positionAbsoluteY: 0,
+      zIndex: 0, width: 0, height: 0,
+    });
+
+    const events: CustomEvent[] = [];
+    container.addEventListener('graph:drill-down', ((e: CustomEvent) => events.push(e)) as EventListener);
+
+    const btn = container.querySelector('.stencil-action') as HTMLElement;
+    act(() => { btn.click(); });
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.nodeId).toBe('n1');
+
+    unmount();
+  });
 });
