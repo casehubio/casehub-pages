@@ -93,140 +93,57 @@ describe('NodeMoveCoordinator', () => {
     container.remove();
   });
 
-  it('does not stop propagation on pointerdown — lets React Flow start connection', () => {
+  it('ghosts node immediately on activateMove', () => {
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
       onResult,
     });
 
-    const event = new PointerEvent('pointerdown', {
-      clientX: 100, clientY: 100, bubbles: true, cancelable: true,
-    });
-    const stopSpy = vi.spyOn(event, 'stopPropagation');
-
-    coord.startDrag('x', event, makeDisconnectedModel());
-
-    expect(stopSpy).not.toHaveBeenCalled();
-
-    coord.dispose();
-  });
-
-  it('does not ghost before hold timer fires', () => {
-    const coord = createNodeMoveCoordinator({
-      editPolicy: defaultEditPolicy(),
-      containerEl: container,
-      onResult,
-    });
-
-    coord.startDrag('x', new PointerEvent('pointerdown', {
-      clientX: 100, clientY: 100, bubbles: true,
-    }), makeModel());
-
-    const nodeEl = container.querySelector('.react-flow__node')!;
-    expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
-
-    coord.dispose();
-  });
-
-  it('ghosts node immediately when hold timer fires — before any drag', () => {
-    vi.useFakeTimers();
-    const coord = createNodeMoveCoordinator({
-      editPolicy: defaultEditPolicy(),
-      containerEl: container,
-      onResult,
-    });
-
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), makeDisconnectedModel());
 
     const nodeEl = container.querySelector('.react-flow__node')!;
-    expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
-
-    vi.advanceTimersByTime(350);
-
-    // Ghost appears on hold complete, BEFORE any pointermove
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(true);
 
     coord.dispose();
-    vi.useRealTimers();
   });
 
-  it('reports isActive after hold completes', () => {
-    vi.useFakeTimers();
+  it('reports isActive immediately after activateMove', () => {
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
       onResult,
     });
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), makeDisconnectedModel());
 
-    expect(coord.isActive).toBe(false);
-    vi.advanceTimersByTime(350);
     expect(coord.isActive).toBe(true);
 
     coord.dispose();
-    vi.useRealTimers();
   });
 
-  it('adds node-move-active class to container on hold to suppress connection line', () => {
-    vi.useFakeTimers();
+  it('adds node-move-active class to container immediately', () => {
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
       onResult,
     });
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), makeDisconnectedModel());
 
-    expect(container.classList.contains('node-move-active')).toBe(false);
-    vi.advanceTimersByTime(350);
     expect(container.classList.contains('node-move-active')).toBe(true);
 
     coord.dispose();
     expect(container.classList.contains('node-move-active')).toBe(false);
-    vi.useRealTimers();
-  });
-
-  it('cancels hold if pointer moves during hold period', () => {
-    vi.useFakeTimers();
-    const coord = createNodeMoveCoordinator({
-      editPolicy: defaultEditPolicy(),
-      containerEl: container,
-      onResult,
-    });
-
-    coord.startDrag('x', new PointerEvent('pointerdown', {
-      clientX: 100, clientY: 100, bubbles: true,
-    }), makeDisconnectedModel());
-
-    // Move beyond tolerance during hold period
-    document.dispatchEvent(new PointerEvent('pointermove', {
-      clientX: 110, clientY: 110, bubbles: true,
-    }));
-
-    // Timer fires but hold was cancelled
-    vi.advanceTimersByTime(350);
-
-    document.dispatchEvent(new PointerEvent('pointermove', {
-      clientX: 130, clientY: 130, bubbles: true,
-    }));
-
-    const nodeEl = container.querySelector('.react-flow__node')!;
-    expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
-
-    coord.dispose();
-    vi.useRealTimers();
   });
 
   it('ineligible node with parentId is a no-op', () => {
-    vi.useFakeTimers();
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
@@ -241,22 +158,17 @@ describe('NodeMoveCoordinator', () => {
       edges: [],
     };
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), model);
-
-    vi.advanceTimersByTime(350);
-    document.dispatchEvent(new PointerEvent('pointermove', { clientX: 120, clientY: 120, bubbles: true }));
 
     const nodeEl = container.querySelector('.react-flow__node')!;
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
 
     coord.dispose();
-    vi.useRealTimers();
   });
 
   it('ineligible node with children is a no-op', () => {
-    vi.useFakeTimers();
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
@@ -271,33 +183,26 @@ describe('NodeMoveCoordinator', () => {
       edges: [],
     };
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), model);
-
-    vi.advanceTimersByTime(350);
-    document.dispatchEvent(new PointerEvent('pointermove', { clientX: 120, clientY: 120, bubbles: true }));
 
     const nodeEl = container.querySelector('.react-flow__node')!;
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
 
     coord.dispose();
-    vi.useRealTimers();
   });
 
-  it('cancels when pointerup without hitting valid edge after hold', () => {
-    vi.useFakeTimers();
+  it('cancels when pointerup without hitting valid edge', () => {
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
       onResult,
     });
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), makeDisconnectedModel());
-
-    vi.advanceTimersByTime(350);
 
     document.dispatchEvent(new PointerEvent('pointermove', { clientX: 120, clientY: 120, bubbles: true }));
     document.dispatchEvent(new PointerEvent('pointerup', { clientX: 120, clientY: 120, bubbles: true }));
@@ -307,32 +212,6 @@ describe('NodeMoveCoordinator', () => {
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
 
     coord.dispose();
-    vi.useRealTimers();
-  });
-
-  it('cancels on quick release during hold period', () => {
-    vi.useFakeTimers();
-    const coord = createNodeMoveCoordinator({
-      editPolicy: defaultEditPolicy(),
-      containerEl: container,
-      onResult,
-    });
-
-    coord.startDrag('x', new PointerEvent('pointerdown', {
-      clientX: 100, clientY: 100, bubbles: true,
-    }), makeModel());
-
-    // Release before hold timer — connection/click, not move
-    document.dispatchEvent(new PointerEvent('pointerup', { clientX: 101, clientY: 101, bubbles: true }));
-
-    // Hold timer fires after release — should be no-op
-    vi.advanceTimersByTime(350);
-
-    const nodeEl = container.querySelector('.react-flow__node')!;
-    expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
-
-    coord.dispose();
-    vi.useRealTimers();
   });
 
   it('cancels after 500ms when pointer leaves container', () => {
@@ -343,22 +222,18 @@ describe('NodeMoveCoordinator', () => {
       onResult,
     });
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), makeDisconnectedModel());
 
-    vi.advanceTimersByTime(350); // hold completes
     const nodeEl = container.querySelector('.react-flow__node')!;
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(true);
 
-    // Pointer leaves container
     container.dispatchEvent(new PointerEvent('pointerleave', { bubbles: false }));
 
-    // Ghost still visible during 500ms grace period
     vi.advanceTimersByTime(400);
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(true);
 
-    // After 500ms, auto-cancels
     vi.advanceTimersByTime(200);
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
     expect(onResult).toHaveBeenCalledWith({ type: 'cancelled' });
@@ -374,11 +249,9 @@ describe('NodeMoveCoordinator', () => {
       onResult,
     });
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), makeDisconnectedModel());
-
-    vi.advanceTimersByTime(350);
 
     container.dispatchEvent(new PointerEvent('pointerleave', { bubbles: false }));
     vi.advanceTimersByTime(300);
@@ -393,19 +266,17 @@ describe('NodeMoveCoordinator', () => {
     vi.useRealTimers();
   });
 
-  it('dispose cleans up ghost and clone after hold', () => {
-    vi.useFakeTimers();
+  it('dispose cleans up ghost and clone', () => {
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
       onResult,
     });
 
-    coord.startDrag('x', new PointerEvent('pointerdown', {
+    coord.activateMove('x', new PointerEvent('pointerdown', {
       clientX: 100, clientY: 100, bubbles: true,
     }), makeDisconnectedModel());
 
-    vi.advanceTimersByTime(350);
     document.dispatchEvent(new PointerEvent('pointermove', { clientX: 120, clientY: 120, bubbles: true }));
 
     const nodeEl = container.querySelector('.react-flow__node')!;
@@ -414,6 +285,5 @@ describe('NodeMoveCoordinator', () => {
     coord.dispose();
 
     expect(nodeEl.classList.contains('node-move-ghost')).toBe(false);
-    vi.useRealTimers();
   });
 });

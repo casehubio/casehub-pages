@@ -9,6 +9,7 @@ import type { EditPolicy, MultiSelectState } from '../editing/types.js';
 import type { GraphEdit } from '../editing/types.js';
 import { createNodeMoveCoordinator } from '../editing/node-move-coordinator.js';
 import type { NodeMoveCoordinator, DragEndResult } from '../editing/node-move-coordinator.js';
+import { NodeGestureCoordinator } from '../gesture/node-gesture-coordinator.js';
 import { createRubberBandSelect } from '../editing/rubber-band-select.js';
 import type { RubberBandSelect } from '../editing/rubber-band-select.js';
 import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
@@ -42,7 +43,7 @@ export class GraphCanvas extends LitElement {
   private _connectStartPos: { x: number; y: number } | undefined;
   private _moveCoordinator: NodeMoveCoordinator | null = null;
   private _moveWasActive = false;
-  private _pointerDownHandler: ((e: PointerEvent) => void) | undefined;
+  private _gestureCoordinator: NodeGestureCoordinator | null = null;
   private _rubberBand: RubberBandSelect | null = null;
   private _keyDownHandler: ((e: KeyboardEvent) => void) | undefined;
   private _multiSelect: MultiSelectState = { selectedNodeIds: new Set(), mode: 'none', boundaryInput: null, boundaryOutput: null };
@@ -56,6 +57,18 @@ export class GraphCanvas extends LitElement {
       mode: state.mode,
       nodeIds: [...state.selectedNodeIds],
     });
+  }
+
+  private _ensureMoveCoordinator(): NodeMoveCoordinator | null {
+    if (!this.editPolicy || !this._container) return null;
+    if (!this._moveCoordinator) {
+      this._moveCoordinator = createNodeMoveCoordinator({
+        editPolicy: this.editPolicy,
+        containerEl: this._container,
+        onResult: (result: DragEndResult) => { this._handleMoveResult(result); },
+      });
+    }
+    return this._moveCoordinator;
   }
 
   private _clearMultiSelect(): void {
@@ -174,36 +187,18 @@ export class GraphCanvas extends LitElement {
 
     this._container.classList.toggle('graph-readonly', !this.editPolicy);
 
-    this._pointerDownHandler = (e: PointerEvent) => {
-      const target = e.target as HTMLElement;
-      const nodeEl = target.closest('.react-flow__node') as HTMLElement | null;
-      const nodeId = nodeEl?.dataset['id'];
-      if (!nodeId || !this.model || !this.editPolicy) return;
-
-      if (!this._moveCoordinator) {
-        this._moveCoordinator = createNodeMoveCoordinator({
-          editPolicy: this.editPolicy,
-          containerEl: this._container!,
-          onResult: (result: DragEndResult) => { this._handleMoveResult(result); },
-        });
-      }
-
-      const ms = this._multiSelect;
-      if (ms.mode === 'constrained' && ms.selectedNodeIds.has(nodeId) && ms.boundaryInput && ms.boundaryOutput) {
-        this._moveCoordinator.startSegmentDrag({
-          type: 'segment',
-          nodeIds: ms.selectedNodeIds,
-          entryNodeId: ms.boundaryInput.target,
-          exitNodeId: ms.boundaryOutput.source,
-          boundaryInput: ms.boundaryInput,
-          boundaryOutput: ms.boundaryOutput,
-        }, e, this.model);
-      } else {
-        if (ms.mode !== 'none') this._clearMultiSelect();
-        this._moveCoordinator.startDrag(nodeId, e, this.model);
-      }
-    };
-    this._container.addEventListener('pointerdown', this._pointerDownHandler);
+    this._gestureCoordinator = new NodeGestureCoordinator({
+      onConnect: () => {},
+      onMove: (nodeId, event, model) => {
+        this._ensureMoveCoordinator()?.activateMove(nodeId, event, model);
+      },
+      onSegmentMove: (subject, event, model) => {
+        this._ensureMoveCoordinator()?.activateSegmentMove(subject, event, model);
+      },
+      getMultiSelectState: () => this._multiSelect,
+      getModel: () => this.model ?? { nodes: [], edges: [] },
+    });
+    this._gestureCoordinator.attach(this._container);
 
     this._rubberBand = createRubberBandSelect({
       containerEl: this._container,
@@ -254,12 +249,10 @@ export class GraphCanvas extends LitElement {
     }
     this._rubberBand?.dispose();
     this._rubberBand = null;
+    this._gestureCoordinator?.dispose();
+    this._gestureCoordinator = null;
     this._moveCoordinator?.dispose();
     this._moveCoordinator = null;
-    if (this._pointerDownHandler && this._container) {
-      this._container.removeEventListener('pointerdown', this._pointerDownHandler);
-    }
-    this._pointerDownHandler = undefined;
     this._root?.unmount();
     this._root = undefined;
     this._container?.remove();

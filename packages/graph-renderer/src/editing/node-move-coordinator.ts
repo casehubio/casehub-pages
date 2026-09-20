@@ -3,8 +3,6 @@ import { nodeById, childrenOf } from '@casehubio/graph-core';
 import type { EditPolicy, SourceCleanupStrategy, DragSubject } from './types.js';
 import { defaultCanSpliceOntoEdge, defaultCanSpliceSegmentOntoEdge } from './splice-validation.js';
 
-const HOLD_DURATION = 300;
-const HOLD_MOVE_TOLERANCE = 3;
 const DRAG_THRESHOLD = 5;
 
 export type DragEndResult =
@@ -14,8 +12,8 @@ export type DragEndResult =
   | { type: 'cancelled' };
 
 export interface NodeMoveCoordinator {
-  startDrag(nodeId: string, event: PointerEvent, model: GraphModel): void;
-  startSegmentDrag(subject: DragSubject & { type: 'segment' }, event: PointerEvent, model: GraphModel): void;
+  activateMove(nodeId: string, event: PointerEvent, model: GraphModel): void;
+  activateSegmentMove(subject: DragSubject & { type: 'segment' }, event: PointerEvent, model: GraphModel): void;
   dispose(): void;
   readonly isActive: boolean;
 }
@@ -33,7 +31,6 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
   let draggedNodeId: string | null = null;
   let segmentSubject: (DragSubject & { type: 'segment' }) | null = null;
   let startPos: { x: number; y: number } | null = null;
-  let holdTimer: ReturnType<typeof setTimeout> | null = null;
   let holdConfirmed = false;
   let dragActive = false;
   let ghostedNodeEl: HTMLElement | null = null;
@@ -41,7 +38,6 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
   let highlightedEdgeEl: HTMLElement | null = null;
   let spliceIndicator: HTMLElement | null = null;
   let grabOffset = { x: 0, y: 0 };
-  let capturedPointerId: number | null = null;
   let leaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   const LEAVE_TIMEOUT = 500;
@@ -79,16 +75,6 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
     if (nodeEl) {
       if (!segmentSubject) nodeEl.classList.add('node-move-ghost');
       ghostedNodeEl = nodeEl;
-    }
-    if (nodeEl && capturedPointerId !== null) {
-      const handle = nodeEl.querySelector('.stencil-source-handle');
-      if (handle) {
-        try { handle.releasePointerCapture(capturedPointerId); } catch { /* ignore */ }
-      }
-    }
-    const canvas = containerEl.closest('pages-graph-canvas');
-    if (canvas) {
-      canvas.classList.remove('graph-connecting');
     }
     containerEl.classList.add('node-move-active');
     containerEl.addEventListener('pointerleave', onPointerLeave);
@@ -151,27 +137,6 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
       clearTimeout(leaveTimer);
       leaveTimer = null;
     }
-  }
-
-  function onHoldMove(e: PointerEvent): void {
-    if (!startPos) return;
-    if (Math.hypot(e.clientX - startPos.x, e.clientY - startPos.y) > HOLD_MOVE_TOLERANCE) {
-      cancelHold();
-    }
-  }
-
-  function onHoldUp(): void {
-    cancelHold();
-  }
-
-  function cancelHold(): void {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-    document.removeEventListener('pointermove', onHoldMove);
-    document.removeEventListener('pointerup', onHoldUp);
-    activeModel = null;
-    draggedNodeId = null;
-    startPos = null;
-    capturedPointerId = null;
   }
 
   function onDragMove(e: PointerEvent): void {
@@ -283,10 +248,7 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
   }
 
   function cleanup(): void {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     if (leaveTimer) { clearTimeout(leaveTimer); leaveTimer = null; }
-    document.removeEventListener('pointermove', onHoldMove);
-    document.removeEventListener('pointerup', onHoldUp);
     document.removeEventListener('pointermove', onDragMove, true);
     document.removeEventListener('pointerup', onDragUp, true);
     containerEl.removeEventListener('pointerleave', onPointerLeave);
@@ -305,10 +267,8 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
     activeModel = null;
     draggedNodeId = null;
     startPos = null;
-    holdTimer = null;
     holdConfirmed = false;
     dragActive = false;
-    capturedPointerId = null;
   }
 
   return {
@@ -316,13 +276,12 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
       return holdConfirmed;
     },
 
-    startDrag(nodeId: string, event: PointerEvent, model: GraphModel): void {
+    activateMove(nodeId: string, event: PointerEvent, model: GraphModel): void {
       if (!isEligible(nodeId, model)) return;
 
       draggedNodeId = nodeId;
       activeModel = model;
       startPos = { x: event.clientX, y: event.clientY };
-      capturedPointerId = event.pointerId;
       holdConfirmed = false;
       dragActive = false;
 
@@ -334,20 +293,12 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
         grabOffset = { x: event.clientX - rect.left, y: event.clientY - rect.top };
       }
 
-      document.addEventListener('pointermove', onHoldMove);
-      document.addEventListener('pointerup', onHoldUp);
-
-      holdTimer = setTimeout(() => {
-        holdTimer = null;
-        document.removeEventListener('pointermove', onHoldMove);
-        document.removeEventListener('pointerup', onHoldUp);
-        confirmHold();
-        document.addEventListener('pointermove', onDragMove, true);
-        document.addEventListener('pointerup', onDragUp, true);
-      }, HOLD_DURATION);
+      confirmHold();
+      document.addEventListener('pointermove', onDragMove, true);
+      document.addEventListener('pointerup', onDragUp, true);
     },
 
-    startSegmentDrag(subject: DragSubject & { type: 'segment' }, event: PointerEvent, model: GraphModel): void {
+    activateSegmentMove(subject: DragSubject & { type: 'segment' }, event: PointerEvent, model: GraphModel): void {
       for (const nid of subject.nodeIds) {
         const n = nodeById(model, nid);
         if (!n || n.parentId) return;
@@ -357,22 +308,13 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
       draggedNodeId = subject.entryNodeId;
       activeModel = model;
       startPos = { x: event.clientX, y: event.clientY };
-      capturedPointerId = event.pointerId;
       holdConfirmed = false;
       dragActive = false;
       grabOffset = { x: 0, y: 0 };
 
-      document.addEventListener('pointermove', onHoldMove);
-      document.addEventListener('pointerup', onHoldUp);
-
-      holdTimer = setTimeout(() => {
-        holdTimer = null;
-        document.removeEventListener('pointermove', onHoldMove);
-        document.removeEventListener('pointerup', onHoldUp);
-        confirmHold();
-        document.addEventListener('pointermove', onDragMove, true);
-        document.addEventListener('pointerup', onDragUp, true);
-      }, HOLD_DURATION);
+      confirmHold();
+      document.addEventListener('pointermove', onDragMove, true);
+      document.addEventListener('pointerup', onDragUp, true);
     },
 
     dispose(): void {
