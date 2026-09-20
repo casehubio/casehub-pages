@@ -26,7 +26,7 @@ export interface ElkLayoutResult {
 }
 
 const DEFAULT_NODE_WIDTH = 280;
-const DEFAULT_NODE_HEIGHT = 50;
+const DEFAULT_NODE_HEIGHT = 53;
 const DEFAULT_HEADER_HEIGHT = 35;
 
 const CHAR_WIDTH = 7.5;

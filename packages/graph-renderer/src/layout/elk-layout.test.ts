@@ -3,7 +3,7 @@ import { createGraph, type GraphModel } from '@casehubio/graph-core';
 import { computeElkLayout } from './elk-layout.js';
 
 const DEFAULT_NODE_WIDTH = 280;
-const DEFAULT_NODE_HEIGHT = 50;
+const DEFAULT_NODE_HEIGHT = 53;
 
 describe('computeElkLayout', () => {
   it('assigns positions to flat graph nodes', async () => {

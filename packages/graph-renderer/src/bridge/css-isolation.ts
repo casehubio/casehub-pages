@@ -80,8 +80,9 @@ ${pluginStyles}
   z-index: 3;
 }
 .react-flow__node.selected .stencil-decoration-wrapper {
-  outline: 3px solid var(--pages-accent-9, #5470c6);
-  outline-offset: 2px;
+  outline: 2px solid var(--pages-accent-9, #5470c6);
+  outline-offset: 3px;
+  border-radius: 8px;
 }
 .react-flow__node.connecting .stencil-decoration-wrapper {
   box-shadow: 0 0 0 2px var(--pages-accent-9, #5470c6);

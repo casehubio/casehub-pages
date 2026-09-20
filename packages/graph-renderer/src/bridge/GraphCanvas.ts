@@ -565,6 +565,11 @@ export class GraphCanvas extends LitElement {
           const canvasRect = this._container?.getBoundingClientRect();
           if (canvasRect && (pos.x < canvasRect.left || pos.x > canvasRect.right || pos.y < canvasRect.top || pos.y > canvasRect.bottom)) return;
 
+          if (_startPos) {
+            const dragDist = Math.hypot(pos.x - _startPos.x, pos.y - _startPos.y);
+            if (dragDist < 40) return;
+          }
+
           emitPagesEvent(this, 'graph:connect:end-on-empty', { ...pos, sourceNodeId: sourceId });
         },
         onPaneClick: (event) => {
