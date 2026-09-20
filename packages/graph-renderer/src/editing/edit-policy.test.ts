@@ -500,3 +500,97 @@ describe('applyGraphEdit moveNodeToEdge', () => {
     expect(preEdge!.type).toBe('flow');
   });
 });
+
+describe('edge-click insert-at-point regression (#459)', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+    clearRegistry();
+  });
+
+  afterEach(() => {
+    clearGrammarRegistry();
+    clearRegistry();
+  });
+
+  it('getInsertableTypes → splitEdge inserts node and preserves connectivity', () => {
+    registerStencil({
+      type: 'source', label: 'Source', icon: 's',
+      grammar: { type: 'source', connections: { inbound: { min: 0, max: 0, allowedFrom: [] }, outbound: { min: 0, max: 10, allowedTo: [] } } },
+      render: dummyRender,
+    });
+    registerStencil({
+      type: 'transform', label: 'Transform', icon: 't',
+      grammar: { type: 'transform', connections: { inbound: { min: 0, max: 10, allowedFrom: [] }, outbound: { min: 0, max: 10, allowedTo: [] } } },
+      render: dummyRender,
+    });
+    registerStencil({
+      type: 'sink', label: 'Sink', icon: 'k',
+      grammar: { type: 'sink', connections: { inbound: { min: 0, max: 10, allowedFrom: [] }, outbound: { min: 0, max: 0, allowedTo: [] } } },
+      render: dummyRender,
+    });
+
+    const pipeline: GraphModel = {
+      nodes: [
+        { id: 'src', type: 'source', properties: {} },
+        { id: 'snk', type: 'sink', properties: {} },
+      ],
+      edges: [{ id: 'e1', type: 'flow', source: 'src', target: 'snk' }],
+    };
+
+    const policy = defaultEditPolicy();
+    const edge = pipeline.edges[0]!;
+    const types = policy.getInsertableTypes(edge, pipeline);
+
+    expect(types.length).toBeGreaterThan(0);
+    expect(types.some(t => t.type === 'transform')).toBe(true);
+    expect(types.some(t => t.type === 'source')).toBe(false);
+    expect(types.some(t => t.type === 'sink')).toBe(false);
+
+    const result = applyGraphEdit(pipeline, {
+      type: 'splitEdge',
+      edgeId: 'e1',
+      insertNodeType: 'transform',
+    });
+
+    expect(result.model.edges.find(e => e.id === 'e1')).toBeUndefined();
+    expect(result.model.nodes).toHaveLength(3);
+    const inserted = result.model.nodes.find(n => n.type === 'transform');
+    expect(inserted).toBeTruthy();
+
+    const preEdge = result.model.edges.find(e => e.source === 'src' && e.target === inserted!.id);
+    const postEdge = result.model.edges.find(e => e.source === inserted!.id && e.target === 'snk');
+    expect(preEdge).toBeTruthy();
+    expect(postEdge).toBeTruthy();
+    expect(preEdge!.type).toBe('flow');
+    expect(postEdge!.type).toBe('flow');
+  });
+
+  it('single insertable type triggers direct splitEdge without chooser', () => {
+    registerStencil({
+      type: 'only', label: 'Only', icon: 'o',
+      grammar: { type: 'only', connections: { inbound: { min: 0, max: 10, allowedFrom: [] }, outbound: { min: 0, max: 10, allowedTo: [] } } },
+      render: dummyRender,
+    });
+
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'only', properties: {} },
+        { id: 'b', type: 'only', properties: {} },
+      ],
+      edges: [{ id: 'e1', type: 'default', source: 'a', target: 'b' }],
+    };
+
+    const policy = defaultEditPolicy();
+    const types = policy.getInsertableTypes(m.edges[0]!, m);
+    expect(types).toHaveLength(1);
+    expect(types[0]!.type).toBe('only');
+
+    const result = applyGraphEdit(m, {
+      type: 'splitEdge',
+      edgeId: 'e1',
+      insertNodeType: types[0]!.type,
+    });
+    expect(result.model.nodes).toHaveLength(3);
+    expect(result.model.edges).toHaveLength(2);
+  });
+});
