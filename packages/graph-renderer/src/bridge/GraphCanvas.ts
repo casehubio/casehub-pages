@@ -435,6 +435,7 @@ export class GraphCanvas extends LitElement {
   private _handleMoveResult(result: DragEndResult): void {
     this._moveWasActive = true;
     if (result.type === 'splice') {
+      if (!this.model?.edges.some(e => e.id === result.edgeId)) return;
       this.onMutation?.({
         type: 'moveNodeToEdge',
         nodeId: result.nodeId,
@@ -442,6 +443,7 @@ export class GraphCanvas extends LitElement {
         sourceCleanup: result.sourceCleanup,
       });
     } else if (result.type === 'splice-segment') {
+      if (!this.model?.edges.some(e => e.id === result.edgeId)) return;
       const ms = this._multiSelect;
       this._clearMultiSelect();
       this.onMutation?.({

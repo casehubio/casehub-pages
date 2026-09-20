@@ -84,9 +84,9 @@ export function applyGraphEdit(model: GraphModel, edit: GraphEdit): EditResult {
         }
       }
 
-      // Target-side splice
-      const targetEdge = model.edges.find(e => e.id === edit.edgeId);
-      if (!targetEdge) throw new Error(`Edge ${edit.edgeId} not found`);
+      // Target-side splice — look up in result.model (source cleanup may have removed it)
+      const targetEdge = result.model.edges.find(e => e.id === edit.edgeId);
+      if (!targetEdge) return result;
 
       result = removeEdge(result.model, edit.edgeId);
       result = addEdge(result.model, {
@@ -127,7 +127,7 @@ export function applyGraphEdit(model: GraphModel, edit: GraphEdit): EditResult {
 
       // Target splice: remove target edge, wire segment in
       const targetEdge = result.model.edges.find(e => e.id === edit.edgeId);
-      if (!targetEdge) throw new Error(`Edge ${edit.edgeId} not found`);
+      if (!targetEdge) return result;
       result = removeEdge(result.model, edit.edgeId);
       result = addEdge(result.model, {
         id: nextId('edge'),

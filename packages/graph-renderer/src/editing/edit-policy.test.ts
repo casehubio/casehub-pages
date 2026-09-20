@@ -499,6 +499,52 @@ describe('applyGraphEdit moveNodeToEdge', () => {
     expect(postEdge).toBeTruthy();
     expect(preEdge!.type).toBe('flow');
   });
+
+  it('returns source-cleanup-only result when target edge is missing (#460)', () => {
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+      ],
+      edges: [
+        { id: 'e-ax', type: 'default', source: 'a', target: 'x' },
+        { id: 'e-xb', type: 'default', source: 'x', target: 'b' },
+      ],
+    };
+
+    const result = applyGraphEdit(m, {
+      type: 'moveNodeToEdge',
+      nodeId: 'x',
+      edgeId: 'stale-edge',
+      sourceCleanup: 'disconnect',
+    });
+
+    expect(result.model.edges.find(e => e.id === 'e-ax')).toBeUndefined();
+    expect(result.model.edges.find(e => e.id === 'e-xb')).toBeUndefined();
+    expect(result.model.nodes).toHaveLength(3);
+  });
+
+  it('gracefully no-ops when source cleanup already removed target edge (#460)', () => {
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+      ],
+      edges: [
+        { id: 'e-ax', type: 'default', source: 'a', target: 'x' },
+        { id: 'e-xb', type: 'default', source: 'x', target: 'b' },
+      ],
+    };
+
+    expect(() => applyGraphEdit(m, {
+      type: 'moveNodeToEdge',
+      nodeId: 'x',
+      edgeId: 'e-ax',
+      sourceCleanup: 'auto-join',
+    })).not.toThrow();
+  });
 });
 
 describe('edge-click insert-at-point regression (#459)', () => {
