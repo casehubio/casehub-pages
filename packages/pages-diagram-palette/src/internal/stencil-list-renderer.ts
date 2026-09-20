@@ -11,11 +11,24 @@ export interface RenderOptions {
   itemRole: 'button' | 'option';
   iconRenderer?: IconRenderer | undefined;
   mode?: PaletteMode | undefined;
+  draggable?: boolean | undefined;
 }
 
 function renderIcon(icon: string, renderer?: IconRenderer): TemplateResult {
   if (renderer) return renderer(icon);
   return html`<span class="palette-item-icon">${icon}</span>`;
+}
+
+function handleDragStart(item: PaletteItem, e: DragEvent): void {
+  if (!e.dataTransfer) return;
+  e.dataTransfer.setData('application/x-pages-node-type', item.type);
+  e.dataTransfer.setData('application/x-pages-node-label', item.label);
+  e.dataTransfer.effectAllowed = 'move';
+  const ghost = (e.target as HTMLElement).cloneNode(true) as HTMLElement;
+  ghost.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0.5;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.2));transform:scale(0.85);pointer-events:none;';
+  document.body.appendChild(ghost);
+  e.dataTransfer.setDragImage(ghost, 0, 0);
+  requestAnimationFrame(() => ghost.remove());
 }
 
 function renderItem(
@@ -24,6 +37,7 @@ function renderItem(
   onSelect: (item: PaletteItem) => void,
   iconRenderer?: IconRenderer,
   compact = false,
+  draggable = false,
 ): TemplateResult {
   const handleClick = () => { onSelect(item); };
   const handleKeydown = (e: KeyboardEvent) => {
@@ -32,6 +46,7 @@ function renderItem(
       onSelect(item);
     }
   };
+  const onDragStart = draggable ? (e: DragEvent) => { handleDragStart(item, e); } : undefined;
   return compact
     ? html`
       <div class="palette-item compact"
@@ -39,8 +54,10 @@ function renderItem(
         aria-label=${item.label}
         title=${item.label}
         tabindex="-1"
+        draggable=${draggable ? 'true' : nothing}
         @click=${handleClick}
-        @keydown=${handleKeydown}>
+        @keydown=${handleKeydown}
+        @dragstart=${onDragStart}>
         ${renderIcon(item.icon, iconRenderer)}
       </div>`
     : html`
@@ -48,8 +65,10 @@ function renderItem(
         role=${role}
         aria-label=${item.label}
         tabindex="-1"
+        draggable=${draggable ? 'true' : nothing}
         @click=${handleClick}
-        @keydown=${handleKeydown}>
+        @keydown=${handleKeydown}
+        @dragstart=${onDragStart}>
         ${renderIcon(item.icon, iconRenderer)}
         <span class="palette-item-label">${item.label}</span>
       </div>`;
@@ -65,7 +84,7 @@ export function renderStencilList(
   if (compact) {
     return html`
       <div class="compact-column">
-        ${filtered.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer, true))}
+        ${filtered.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer, true, options.draggable))}
       </div>`;
   }
 
@@ -80,7 +99,7 @@ export function renderStencilList(
   return html`
     ${ungrouped && ungrouped.length > 0
       ? html`<div class="ungrouped-items">
-          ${ungrouped.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer))}
+          ${ungrouped.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer, false, options.draggable))}
         </div>`
       : nothing}
     ${groupEntries.map(([name, items]) =>
@@ -91,14 +110,14 @@ export function renderStencilList(
               @toggle=${(e: Event) => options.onGroupToggle?.(name, (e.target as HTMLDetailsElement).open)}>
               <summary>${name}</summary>
               <div class="palette-group-items">
-                ${items.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer))}
+                ${items.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer, false, options.draggable))}
               </div>
             </details>`
         : html`
             <div class="palette-group" role="group" aria-label=${name}>
               <div class="palette-group-header">${name}</div>
               <div class="palette-group-items">
-                ${items.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer))}
+                ${items.map(item => renderItem(item, options.itemRole, options.onSelect, options.iconRenderer, false, options.draggable))}
               </div>
             </div>`,
     )}`;

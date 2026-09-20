@@ -153,7 +153,10 @@ if (canvas) {
 
   // --- Mutation handler ---
   canvas.onMutation = function(edit) {
-    var result = casehub.applyGraphEdit(canvas.model, edit);
+    var oldModel = canvas.model;
+    var result = casehub.applyGraphEdit(oldModel, edit);
+    var oldDrill = drillByModel.get(oldModel);
+    if (oldDrill) drillByModel.set(result.model, oldDrill);
     canvas.model = result.model;
   };
 

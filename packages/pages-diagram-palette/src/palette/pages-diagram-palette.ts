@@ -106,6 +106,7 @@ export class PagesDiagramPalette extends LitElement {
           itemRole: 'button',
           iconRenderer: this.iconRenderer,
           mode: this._mode,
+          draggable: true,
         })}
       </div>`;
   }

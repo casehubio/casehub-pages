@@ -53,6 +53,9 @@ export class GraphCanvas extends LitElement {
   private _multiSelect: MultiSelectState = { selectedNodeIds: new Set(), mode: 'none', boundaryInput: null, boundaryOutput: null };
   private _drillDownState: DrillDownState | null = null;
   private _drillDownBars: DrillDownBars | null = null;
+  private _dropHandlers: { dragover: (e: DragEvent) => void; drop: (e: DragEvent) => void; dragleave: (e: DragEvent) => void } | null = null;
+  private _dropHighlightedEdgeEl: HTMLElement | null = null;
+  private _dropSpliceIndicator: HTMLElement | null = null;
   private _ariaLiveEl: HTMLElement | null = null;
 
   get multiSelect(): MultiSelectState { return this._multiSelect; }
@@ -348,6 +351,42 @@ export class GraphCanvas extends LitElement {
     };
     this.addEventListener('keydown', this._keyDownHandler);
 
+    this._dropHandlers = {
+      dragover: (e: DragEvent) => {
+        if (!e.dataTransfer?.types.includes('application/x-pages-node-type')) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        this._updateDropEdgeHighlight(e);
+      },
+      drop: (e: DragEvent) => {
+        const nodeType = e.dataTransfer?.getData('application/x-pages-node-type');
+        if (!nodeType || !this.model) return;
+        e.preventDefault();
+        const highlightedEdgeId = this._dropHighlightedEdgeEl?.dataset['id'];
+        this._clearDropEdgeHighlight();
+        if (highlightedEdgeId && this.model.edges.some(ed => ed.id === highlightedEdgeId)) {
+          this.onMutation?.({ type: 'splitEdge', edgeId: highlightedEdgeId, insertNodeType: nodeType });
+        } else {
+          const policy = this.editPolicy;
+          const placement = policy?.getAddPlacement?.(nodeType, this.model) ?? { type: 'detached' as const };
+          if (placement.type === 'splitEdge') {
+            this.onMutation?.({ type: 'splitEdge', edgeId: placement.edgeId, insertNodeType: nodeType });
+          } else {
+            this.onMutation?.({ type: 'addNode', nodeType });
+          }
+        }
+        const flowPos = this.screenToFlow(e.clientX, e.clientY);
+        emitPagesEvent(this, 'graph:palette:drop', { nodeType, x: e.clientX, y: e.clientY, flowX: flowPos?.x, flowY: flowPos?.y });
+      },
+      dragleave: (e: DragEvent) => {
+        if (this._container?.contains(e.relatedTarget as Node)) return;
+        this._clearDropEdgeHighlight();
+      },
+    };
+    this._container.addEventListener('dragover', this._dropHandlers.dragover);
+    this._container.addEventListener('drop', this._dropHandlers.drop);
+    this._container.addEventListener('dragleave', this._dropHandlers.dragleave);
+
     if (this.drillDown) {
       this._initDrillDown();
     }
@@ -373,6 +412,13 @@ export class GraphCanvas extends LitElement {
       this.removeEventListener('keydown', this._keyDownHandler);
       this._keyDownHandler = undefined;
     }
+    if (this._dropHandlers && this._container) {
+      this._container.removeEventListener('dragover', this._dropHandlers.dragover);
+      this._container.removeEventListener('drop', this._dropHandlers.drop);
+      this._container.removeEventListener('dragleave', this._dropHandlers.dragleave);
+      this._dropHandlers = null;
+    }
+    this._clearDropEdgeHighlight();
     this._rubberBand?.dispose();
     this._rubberBand = null;
     this._gestureCoordinator?.dispose();
@@ -454,6 +500,52 @@ export class GraphCanvas extends LitElement {
         edgeId: result.edgeId,
         bridgeEdge: result.bridgeEdge,
       });
+    }
+  }
+
+  private _updateDropEdgeHighlight(e: DragEvent): void {
+    this._clearDropEdgeHighlight();
+    if (!this.model || !this.editPolicy) return;
+    const hits = typeof document.elementsFromPoint === 'function' ? document.elementsFromPoint(e.clientX, e.clientY) : [];
+    for (const hitEl of hits) {
+      const edgeEl = hitEl.closest('.react-flow__edge') as HTMLElement | null;
+      if (!edgeEl) continue;
+      const edgeId = edgeEl.dataset['id'];
+      if (!edgeId) continue;
+      const edge = this.model.edges.find(ed => ed.id === edgeId);
+      if (!edge) continue;
+      if (this.editPolicy.getInsertableTypes(edge, this.model).length === 0) continue;
+      edgeEl.classList.add('edge-splice-valid');
+      this._dropHighlightedEdgeEl = edgeEl;
+      this._showDropSpliceIndicator(edgeEl);
+      break;
+    }
+  }
+
+  private _showDropSpliceIndicator(edgeEl: HTMLElement): void {
+    const path = edgeEl.querySelector('.react-flow__edge-path') as SVGGeometryElement | null;
+    if (!path) return;
+    const len = path.getTotalLength();
+    const pt = path.getPointAtLength(len / 2);
+    const svg = path.ownerSVGElement;
+    if (!svg) return;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const screenX = pt.x * ctm.a + ctm.e;
+    const screenY = pt.y * ctm.d + ctm.f;
+    this._dropSpliceIndicator = document.createElement('div');
+    this._dropSpliceIndicator.style.cssText = `position:fixed;left:${screenX - 12}px;top:${screenY - 3}px;width:24px;height:6px;background:#16a34a;border-radius:3px;pointer-events:none;z-index:1001;box-shadow:0 0 12px 4px rgba(22,163,106,0.6);transition:opacity 100ms;`;
+    document.body.appendChild(this._dropSpliceIndicator);
+  }
+
+  private _clearDropEdgeHighlight(): void {
+    if (this._dropHighlightedEdgeEl) {
+      this._dropHighlightedEdgeEl.classList.remove('edge-splice-valid');
+      this._dropHighlightedEdgeEl = null;
+    }
+    if (this._dropSpliceIndicator) {
+      this._dropSpliceIndicator.remove();
+      this._dropSpliceIndicator = null;
     }
   }
 
