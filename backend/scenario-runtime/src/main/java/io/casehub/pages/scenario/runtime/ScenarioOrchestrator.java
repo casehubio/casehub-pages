@@ -16,6 +16,10 @@ import io.casehub.platform.simulation.MapSimulationConfig;
 import io.casehub.platform.simulation.SimulationOverlay;
 import io.casehub.platform.simulation.SimulationRuntime;
 import io.casehub.platform.simulation.config.YamlCorpusLoader;
+import io.casehub.platform.simulation.event.quarkus.TemporalDriverService;
+import io.casehub.platform.simulation.event.quarkus.TemporalDriverSpeedRequest;
+import io.casehub.platform.simulation.event.quarkus.TemporalDriverStartRequest;
+import io.casehub.platform.simulation.event.quarkus.TemporalEventInput;
 import io.casehub.platform.simulation.inmem.InMemorySimulationCorpus;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
@@ -38,6 +42,7 @@ public class ScenarioOrchestrator {
     private final ExecutorRegistry executorRegistry = new ExecutorRegistry();
 
     @Inject Instance<SimulationRuntime> simulationRuntimeInstance;
+    @Inject Instance<TemporalDriverService> temporalDriverServiceInstance;
     private volatile SimulationOverlay activeOverlay;
 
     private volatile String                             sessionId;
@@ -91,6 +96,7 @@ public class ScenarioOrchestrator {
     public void stop() {
         if (this.sessionId == null) {return;}
         deactivateSimulation();
+        stopTemporalDrivers();
         broadcastControl("stop", null);
         this.sessionId = null;
         this.scenario  = null;
@@ -100,9 +106,9 @@ public class ScenarioOrchestrator {
         this.callbackUrl   = null;
         this.dispatchId    = null;
         this.callbackToken = null;
-        this.paused      = false;
-        this.speed       = 1.0;
-        this.runToTarget = null;
+        this.paused        = false;
+        this.speed         = 1.0;
+        this.runToTarget   = null;
         broadcastState();
     }
 
@@ -282,6 +288,7 @@ public class ScenarioOrchestrator {
 
     private void validateExecutors() {
         var missingExecutors = allSteps.stream()
+                                       .filter(s -> s.temporal() == null)
                                        .map(HierarchicalStep::target)
                                        .distinct()
                                        .filter(t -> !executorRegistry.hasExecutor(t))
@@ -293,7 +300,16 @@ public class ScenarioOrchestrator {
     }
 
     private void dispatchAllSequences() {
-        var sequences = SequencePartitioner.partitionInitial(allSteps);
+        for (var step : allSteps) {
+            if (step.temporal() != null && step.trigger() == null) {
+                handleTemporalStep(step);
+                continue;
+            }
+        }
+        var nonTemporal = allSteps.stream()
+                                  .filter(s -> s.temporal() == null)
+                                  .toList();
+        var sequences = SequencePartitioner.partitionInitial(nonTemporal);
         for (var seq : sequences) {
             dispatchSequence(seq);
         }
@@ -302,17 +318,28 @@ public class ScenarioOrchestrator {
     private void dispatchTriggeredSteps(String completedStepName) {
         for (var step : allSteps) {
             if (step.trigger() instanceof io.casehub.pages.scenario.Trigger.AfterTrigger after
-                    && after.step().equals(completedStepName)) {
+                && after.step().equals(completedStepName)) {
                 long delay = after.delayMs();
-                if (delay > 0) {
-                    Thread.ofVirtual().start(() -> {
-                        try { Thread.sleep(delay); } catch (InterruptedException e) { return; }
-                        dispatchSequence(new SequencePartitioner.StepSequence(
-                            step.target(), List.of(step)));
-                    });
+                if (step.temporal() != null) {
+                    if (delay > 0) {
+                        Thread.ofVirtual().start(() -> {
+                            try {Thread.sleep(delay);} catch (InterruptedException e) {return;}
+                            handleTemporalStep(step);
+                        });
+                    } else {
+                        handleTemporalStep(step);
+                    }
                 } else {
-                    dispatchSequence(new SequencePartitioner.StepSequence(
-                        step.target(), List.of(step)));
+                    if (delay > 0) {
+                        Thread.ofVirtual().start(() -> {
+                            try {Thread.sleep(delay);} catch (InterruptedException e) {return;}
+                            dispatchSequence(new SequencePartitioner.StepSequence(
+                                    step.target(), List.of(step)));
+                        });
+                    } else {
+                        dispatchSequence(new SequencePartitioner.StepSequence(
+                                step.target(), List.of(step)));
+                    }
                 }
             }
         }
@@ -512,6 +539,47 @@ public class ScenarioOrchestrator {
         simulationRuntimeInstance.get().popOverlay(activeOverlay);
         activeOverlay = null;
     }
+
+    private void stopTemporalDrivers() {
+        if (!temporalDriverServiceInstance.isResolvable()) {return;}
+        var service = temporalDriverServiceInstance.get();
+        for (var status : service.list()) {
+            try {
+                service.stop(status.name());
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+
+    private void handleTemporalStep(HierarchicalStep step) {
+        if (!temporalDriverServiceInstance.isResolvable()) {
+            throw new IllegalStateException("TemporalDriverService not available");
+        }
+        var service = temporalDriverServiceInstance.get();
+        var spec    = step.temporal();
+        switch (spec.action()) {
+            case START -> {
+                List<TemporalEventInput> events = spec.events() == null ? null
+                                                                        : spec.events().stream()
+                                                                              .map(e -> new TemporalEventInput(e.delay(), e.label(), e.payload()))
+                                                                              .toList();
+                service.start(new TemporalDriverStartRequest(
+                        spec.name(), spec.profile(), spec.qualifiedName(),
+                        spec.tenancyId(), events, spec.loop(), spec.speed()));
+            }
+            case STOP -> service.stop(spec.effectiveName());
+            case PAUSE -> service.pause(spec.effectiveName());
+            case RESUME -> service.resume(spec.effectiveName());
+            case SET_SPEED -> service.setSpeed(
+                    new TemporalDriverSpeedRequest(spec.effectiveName(), spec.speed()));
+        }
+        String stepName = step.name() != null ? step.name() : step.label();
+        completedSteps.put(stepName, true);
+        broadcastState();
+        dispatchTriggeredSteps(stepName);
+    }
+
 
     private void requireSession() {
         if (sessionId == null) {

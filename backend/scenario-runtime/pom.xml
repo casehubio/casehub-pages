@@ -49,6 +49,11 @@ variable interpolation, event-driven await.</description>
             <artifactId>casehub-platform-simulation-config-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.casehub</groupId>
+            <artifactId>casehub-platform-event-simulation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Test -->
         <dependency>

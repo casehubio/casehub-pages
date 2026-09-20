@@ -129,7 +129,8 @@ public final class ScenarioCompiler {
                                       ? scriptName + "." + calleeStep.name() : null;
                 result.add(new HierarchicalStep(prefixedName, prefixedLabel,
                                                 calleeStep.target(), calleeStep.actor(), calleeStep.trigger(),
-                                                null, null, calleeStep.content(), calleeStep.commands()));
+                                                null, null, calleeStep.content(), calleeStep.commands(),
+                                                calleeStep.temporal()));
             }
         }
         return result;

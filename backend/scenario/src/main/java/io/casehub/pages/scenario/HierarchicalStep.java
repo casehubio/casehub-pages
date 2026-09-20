@@ -7,10 +7,13 @@ public record HierarchicalStep(String name, String label, String target,
                                String actor, Trigger trigger,
                                io.casehub.yaml.core.foreach.ForEachDirective forEach, String when,
                                NarrativeContent content,
-                               List<ScenarioCommand> commands) {
+                               List<ScenarioCommand> commands,
+                               TemporalSpec temporal) {
     public HierarchicalStep {
         Objects.requireNonNull(label, "label");
-        Objects.requireNonNull(target, "target");
+        if (temporal == null) {
+            Objects.requireNonNull(target, "target");
+        }
         commands = commands != null ? List.copyOf(commands) : List.of();
     }
 
@@ -18,12 +21,12 @@ public record HierarchicalStep(String name, String label, String target,
                             String actor, Trigger trigger,
                             NarrativeContent content,
                             List<ScenarioCommand> commands) {
-        this(name, label, target, actor, trigger, null, null, content, commands);
+        this(name, label, target, actor, trigger, null, null, content, commands, null);
     }
 
     public HierarchicalStep(String name, String label, String target,
                             String actor, Trigger trigger,
                             List<ScenarioCommand> commands) {
-        this(name, label, target, actor, trigger, null, null, null, commands);
+        this(name, label, target, actor, trigger, null, null, null, commands, null);
     }
 }

@@ -17,7 +17,7 @@ public final class ScenarioStepAdapter implements ForEachAdapter<HierarchicalSte
         List<ScenarioCommand> resolvedCommands = resolveCommands(template.commands(), scopedResolver, stampedId);
         return new HierarchicalStep(template.name(), template.label(), template.target(),
                                     template.actor(), template.trigger(), null, null,
-                                    template.content(), resolvedCommands);
+                                    template.content(), resolvedCommands, template.temporal());
     }
 
     @Override

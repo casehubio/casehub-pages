@@ -88,6 +88,36 @@ public final class HierarchicalParser {
         return new SimulationSpec(strategies, corpus, capture);
     }
 
+    @SuppressWarnings("unchecked")
+    private static TemporalSpec parseTemporal(JsonNode node) {
+        TemporalSpec.Action action = TemporalSpec.Action.valueOf(
+                node.path("action").asText().toUpperCase().replace("-", "_"));
+        String name    = node.path("name").asText(null);
+        String profile = node.path("profile").asText(null);
+        String qualifiedName = node.has("qualified-name")
+                               ? node.get("qualified-name").asText() : null;
+        String tenancyId = node.has("tenancy-id")
+                           ? node.get("tenancy-id").asText() : null;
+        Boolean loop  = node.has("loop") ? node.get("loop").asBoolean() : null;
+        Double  speed = node.has("speed") ? node.get("speed").asDouble() : null;
+
+        List<TemporalSpec.Event> events = null;
+        if (node.has("events")) {
+            events = new java.util.ArrayList<>();
+            for (JsonNode e : node.get("events")) {
+                String delay = e.has("delay") ? e.get("delay").asText() : "0";
+                String label = e.path("label").asText(null);
+                Map<String, Object> payload = e.has("payload")
+                                              ? toMap(e.get("payload")) : Map.of();
+                events.add(new TemporalSpec.Event(delay, label, payload));
+            }
+        }
+
+        return new TemporalSpec(action, name, profile, qualifiedName,
+                                tenancyId, events, loop, speed);
+    }
+
+
     private static List<ScenarioChapter> parseChapters(JsonNode node) {
         List<ScenarioChapter> chapters = new ArrayList<>();
         for (JsonNode ch : node) {
@@ -123,10 +153,9 @@ public final class HierarchicalParser {
     }
 
     private static HierarchicalStep parseStep(JsonNode node) {
-        String name   = node.path("name").asText(null);
-        String label  = node.path("label").asText();
-        String target = node.path("target").asText();
-        String actor  = node.path("actor").asText(null);
+        String name  = node.path("name").asText(null);
+        String label = node.path("label").asText();
+        String actor = node.path("actor").asText(null);
         Trigger trigger = node.has("trigger")
                           ? parseTrigger(node.get("trigger")) : null;
         io.casehub.yaml.core.foreach.ForEachDirective forEach = node.has("forEach")
@@ -134,9 +163,14 @@ public final class HierarchicalParser {
         String when = node.path("when").asText(null);
         NarrativeContent content = node.has("content")
                                    ? parseContent(node.get("content")) : null;
+
+        TemporalSpec temporal = node.has("temporal")
+                                ? parseTemporal(node.get("temporal")) : null;
+        String target = temporal != null ? null : node.path("target").asText();
+
         List<ScenarioCommand> commands = parseCommands(node.get("commands"));
         return new HierarchicalStep(name, label, target, actor, trigger,
-                                    forEach, when, content, commands);
+                                    forEach, when, content, commands, temporal);
     }
 
     @SuppressWarnings("unchecked")

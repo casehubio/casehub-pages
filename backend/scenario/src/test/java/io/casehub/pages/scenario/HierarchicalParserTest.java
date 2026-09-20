@@ -1,7 +1,9 @@
 package io.casehub.pages.scenario;
 
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class HierarchicalParserTest {
 
@@ -519,5 +521,88 @@ class HierarchicalParserTest {
         assertThat(cmd.mode()).isEqualTo(ScenarioCommand.DataMode.SINGLE);
         assertThat(cmd.source()).isNull();
         assertThat(cmd.interval()).isNull();
+    }
+
+    @Test
+    void parseTemporalStartStep() {
+        var yaml = """
+                   scenario: temporal-test
+                   steps:
+                     - label: "Start feed"
+                       name: start-feed
+                       temporal:
+                         action: start
+                         profile: morning-routine
+                         speed: 20.0
+                   """;
+        var scenario = HierarchicalParser.parse(yaml);
+        assertThat(scenario.steps()).hasSize(1);
+        var step = scenario.steps().getFirst();
+        assertThat(step.label()).isEqualTo("Start feed");
+        assertThat(step.target()).isNull();
+        assertThat(step.temporal()).isNotNull();
+        assertThat(step.temporal().action()).isEqualTo(TemporalSpec.Action.START);
+        assertThat(step.temporal().profile()).isEqualTo("morning-routine");
+        assertThat(step.temporal().speed()).isEqualTo(20.0);
+    }
+
+    @Test
+    void parseTemporalStopStep() {
+        var yaml = """
+                   scenario: temporal-stop
+                   steps:
+                     - label: "Stop feed"
+                       temporal:
+                         action: stop
+                         name: morning-routine
+                   """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var step     = scenario.steps().getFirst();
+        assertThat(step.temporal().action()).isEqualTo(TemporalSpec.Action.STOP);
+        assertThat(step.temporal().effectiveName()).isEqualTo("morning-routine");
+    }
+
+    @Test
+    void parseTemporalInlineProfile() {
+        var yaml = """
+                   scenario: temporal-inline
+                   steps:
+                     - label: "Ad hoc burst"
+                       temporal:
+                         action: start
+                         name: smoke-alarm
+                         qualified-name: iot.alarm
+                         loop: false
+                         speed: 5.0
+                         events:
+                           - delay: "0"
+                             label: trigger
+                             payload:
+                               deviceId: smoke-01
+                               state: ALARM
+                   """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var step     = scenario.steps().getFirst();
+        assertThat(step.temporal().action()).isEqualTo(TemporalSpec.Action.START);
+        assertThat(step.temporal().qualifiedName()).isEqualTo("iot.alarm");
+        assertThat(step.temporal().events()).hasSize(1);
+        assertThat(step.temporal().events().getFirst().label()).isEqualTo("trigger");
+    }
+
+    @Test
+    void parseTemporalSetSpeed() {
+        var yaml = """
+                   scenario: temporal-speed
+                   steps:
+                     - label: "Speed up"
+                       temporal:
+                         action: set-speed
+                         name: morning-routine
+                         speed: 50.0
+                   """;
+        var scenario = HierarchicalParser.parse(yaml);
+        var step     = scenario.steps().getFirst();
+        assertThat(step.temporal().action()).isEqualTo(TemporalSpec.Action.SET_SPEED);
+        assertThat(step.temporal().speed()).isEqualTo(50.0);
     }
 }
