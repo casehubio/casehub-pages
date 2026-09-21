@@ -379,7 +379,7 @@ export class GraphCanvas extends LitElement {
         emitPagesEvent(this, 'graph:palette:drop', { nodeType, x: e.clientX, y: e.clientY, flowX: flowPos?.x, flowY: flowPos?.y });
       },
       dragleave: (e: DragEvent) => {
-        if (this._container?.contains(e.relatedTarget as Node)) return;
+        if (this._container?.contains(e.relatedTarget as globalThis.Node)) return;
         this._clearDropEdgeHighlight();
       },
     };
