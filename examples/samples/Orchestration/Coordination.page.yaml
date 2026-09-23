@@ -1,0 +1,67 @@
+pages:
+- name: Coordination
+  properties:
+    margin: 20px
+  rows:
+  - columns:
+    - span: 7
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Coordination Primitives</h2>
+              <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">State</div>
+                  <div id="orch-state" style="font-size: 20px; font-weight: 700; color: #4ade80; margin-top: 4px;">Ready</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Queues</div>
+                  <div id="orch-queues" style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-top: 4px;">—</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Virtual Time</div>
+                  <div id="orch-time" style="font-size: 20px; font-weight: 700; color: #a78bfa; margin-top: 4px;">0ms</div>
+                </div>
+              </div>
+              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Queue States</div>
+                <div id="queue-states" style="display: flex; gap: 12px; flex-wrap: wrap; min-height: 24px;"></div>
+              </div>
+              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Event Log</div>
+                <div id="event-log" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; color: var(--pages-neutral-9); line-height: 1.8;"></div>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button aria-label="A" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">A</button>
+                <button aria-label="B" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">B</button>
+                <button aria-label="C" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">C</button>
+                <button aria-label="D" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">D</button>
+                <button aria-label="E" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">E</button>
+                <button aria-label="F" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">F</button>
+              </div>
+            </div>
+    - span: 5
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Example</label>
+                <select id="example-picker" aria-label="Example" style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 13px;">
+                  <option value="signal-await">Signal / Await</option>
+                  <option value="mutex">Mutex</option>
+                  <option value="barrier">Barrier</option>
+                  <option value="channel">Channel (via Signal)</option>
+                </select>
+              </div>
+              <div style="margin-bottom: 16px;">
+                <button id="run-btn" aria-label="Run" role="button" style="padding: 8px 24px; background: #16a34a; border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; transition: background 0.15s;">▶ Run</button>
+              </div>
+              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">YAML Source</div>
+                <pre id="yaml-source" style="margin: 0; font-size: 12px; line-height: 1.6; color: var(--pages-neutral-11); white-space: pre-wrap; overflow-x: auto;"></pre>
+              </div>
+            </div>
