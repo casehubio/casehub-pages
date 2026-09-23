@@ -1,9 +1,12 @@
 export { parseScenario } from './parser.js';
-export { runScenario } from './runner.js';
-export { runSectionedScenario } from './sectioned-runner.js';
+export { createScheduler } from './scheduler.js';
 export { isSectioned } from './types.js';
+
 export type {
   Scenario, FlatScenario, SectionedScenario, ScenarioBase,
-  ScenarioStep, TutorialMeta, TutorialSection, SectionContent,
+  ScenarioStep, OrchestratedStep, TutorialMeta, TutorialSection,
+  SectionContent, DataTrigger, TimeTrigger, StepDecorators,
+  OrchestrationBlock,
 } from './types.js';
-export type { TutorialRunner, TutorialRunnerOptions } from './sectioned-runner.js';
+export type { ScenarioRunner, SchedulerOptions } from './scheduler.js';
+export type { StepExecutor, ExecutionContext } from './step-executor.js';

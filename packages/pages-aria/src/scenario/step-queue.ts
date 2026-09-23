@@ -1,16 +1,13 @@
-export type QueueState = 'ready' | 'suspended' | 'blocked' | 'done';
+import type { DataTrigger, TimeTrigger } from './types.js';
 
-export interface TriggerRef {
-  type: 'data' | 'time';
-  [key: string]: unknown;
-}
+export type QueueState = 'ready' | 'suspended' | 'blocked' | 'done';
 
 export class StepQueue {
   state: QueueState = 'ready';
   position = 0;
   wakeTime?: number;
   blockReason?: Promise<void>;
-  trigger?: TriggerRef;
+  trigger?: DataTrigger | TimeTrigger;
   children: StepQueue[] = [];
 
   constructor(
@@ -45,7 +42,7 @@ export class StepQueue {
     this.blockReason = undefined;
   }
 
-  suspend(trigger: TriggerRef): void {
+  suspend(trigger: DataTrigger | TimeTrigger): void {
     this.state = 'suspended';
     this.trigger = trigger;
   }

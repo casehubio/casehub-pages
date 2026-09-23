@@ -47,7 +47,7 @@ describe('StepQueue', () => {
   });
 
   it('suspend and activate', () => {
-    const trigger = { type: 'time' as const, delay: '5s' };
+    const trigger = { type: 'time' as const, delay: '5s' } as const;
     const q = new StepQueue('main', mockSteps());
     q.suspend(trigger);
     expect(q.state).toBe('suspended');

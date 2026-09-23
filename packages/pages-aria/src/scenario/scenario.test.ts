@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { parseScenario } from './parser.js';
-import { runScenario } from './runner.js';
 import { isSectioned } from './types.js';
 import type { FlatScenario, SectionedScenario, ScenarioStep } from './types.js';
 
@@ -176,107 +175,6 @@ steps:
   - unknown: value
 `;
     expect(() => parseScenario(yaml)).toThrow('Unknown step format');
-  });
-});
-
-describe('scenario runner', () => {
-  beforeEach(() => {
-    document.body.innerHTML = '';
-  });
-
-  it('executes click step', async () => {
-    document.body.innerHTML = '<button aria-label="Submit">Submit</button>';
-    const handler = vi.fn();
-    document.querySelector('button')!.addEventListener('click', handler);
-
-    await runScenario({
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'click', target: { role: 'button', name: 'Submit' } }],
-    });
-
-    expect(handler).toHaveBeenCalledOnce();
-  });
-
-  it('executes fill step', async () => {
-    document.body.innerHTML = '<input aria-label="Name" />';
-
-    await runScenario({
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'fill', target: { role: 'textbox', name: 'Name' }, value: 'Alice' }],
-    });
-
-    expect((document.querySelector('input') as HTMLInputElement).value).toBe('Alice');
-  });
-
-  it('executes assert step — passes when state matches', async () => {
-    document.body.innerHTML = '<button aria-label="Submit" aria-busy="false">Submit</button>';
-
-    await expect(runScenario({
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'assert', target: { role: 'button', name: 'Submit' }, state: { 'aria-busy': false } }],
-    })).resolves.toBeUndefined();
-  });
-
-  it('executes assert step — throws when state mismatches', async () => {
-    document.body.innerHTML = '<button aria-label="Submit" aria-busy="true">Submit</button>';
-
-    await expect(runScenario({
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'assert', target: { role: 'button', name: 'Submit' }, state: { 'aria-busy': false } }],
-    })).rejects.toThrow('State mismatch');
-  });
-
-  it('executes multiple steps in sequence', async () => {
-    document.body.innerHTML = `
-      <input aria-label="Name" />
-      <button aria-label="Submit">Submit</button>
-    `;
-    const clickHandler = vi.fn();
-    document.querySelector('button')!.addEventListener('click', clickHandler);
-
-    await runScenario({
-      scenario: 'multi-step',
-      steps: [
-        { delivery: 'aria', action: 'fill', target: { role: 'textbox', name: 'Name' }, value: 'Bob' },
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'Submit' } },
-      ],
-    });
-
-    expect((document.querySelector('input') as HTMLInputElement).value).toBe('Bob');
-    expect(clickHandler).toHaveBeenCalledOnce();
-  });
-
-  it('executes expand step — dispatches click', async () => {
-    document.body.innerHTML = '<div role="group" aria-label="Details" aria-expanded="false">Details</div>';
-    const handler = vi.fn();
-    document.querySelector('[role="group"]')!.addEventListener('click', handler);
-
-    await runScenario({
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'expand', target: { role: 'group', name: 'Details' } }],
-    });
-
-    expect(handler).toHaveBeenCalledOnce();
-  });
-
-  it('executes collapse step — dispatches click', async () => {
-    document.body.innerHTML = '<div role="group" aria-label="Details" aria-expanded="true">Details</div>';
-    const handler = vi.fn();
-    document.querySelector('[role="group"]')!.addEventListener('click', handler);
-
-    await runScenario({
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'collapse', target: { role: 'group', name: 'Details' } }],
-    });
-
-    expect(handler).toHaveBeenCalledOnce();
-  });
-
-  it('skips non-aria steps without error', async () => {
-    await expect(runScenario({
-      scenario: 'test',
-      steps: [{ delivery: 'graphql', name: 'inject', domain: 'connectors', operation: 'injectChat' }],
-    })).resolves.toBeUndefined();
   });
 });
 

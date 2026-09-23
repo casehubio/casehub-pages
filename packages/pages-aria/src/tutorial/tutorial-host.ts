@@ -3,7 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import type { TutorialDescriptor, LearningPath, YamlEditorSection } from './types.js';
 import { isSectioned } from '../scenario/types.js';
 import { parseScenario as parse } from '../scenario/parser.js';
-import { runSectionedScenario, type TutorialRunner } from '../scenario/sectioned-runner.js';
+import { createScheduler, type ScenarioRunner } from '../scenario/scheduler.js';
 import { validateYamlStep } from './yaml-editor-runner.js';
 import './tutorial-catalog.js';
 import '../controller/scenario-controller.js';
@@ -67,7 +67,7 @@ export class PagesTutorialHost extends LitElement {
   @state() private _yamlEditorSections: YamlEditorSection[] = [];
   @state() private _yamlEditorValid = false;
 
-  private _runner: TutorialRunner | null = null;
+  private _runner: ScenarioRunner | null = null;
   private _eventTarget: EventTarget | null = null;
   private _sectionTitles: string[] = [];
 
@@ -163,10 +163,11 @@ export class PagesTutorialHost extends LitElement {
       this._trackState();
 
       const tutorialDir = basePath.replace(/\/[^/]+$/, '');
-      this._runner = runSectionedScenario(parsed, {
+      this._runner = createScheduler(parsed, {
         eventTarget: this._eventTarget,
         contentBase: tutorialDir,
         startPaused: true,
+
         onComplete: (name) => {
           try { localStorage.setItem(`tutorial:completed:${name}`, 'true'); }
           catch { /* graceful degradation */ }
