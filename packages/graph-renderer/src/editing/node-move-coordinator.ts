@@ -154,12 +154,11 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
       cloneEl.style.top = `${e.clientY - grabOffset.y}px`;
     }
 
-    clearEdgeHighlight();
-
     const root = containerEl.getRootNode() as Document | ShadowRoot;
     const hits = typeof root.elementsFromPoint === 'function'
       ? root.elementsFromPoint(e.clientX, e.clientY)
       : [];
+    let nextEdgeEl: HTMLElement | null = null;
     for (const hitEl of hits) {
       const edgeEl = hitEl.closest('.react-flow__edge') as HTMLElement | null;
       if (!edgeEl) continue;
@@ -173,21 +172,26 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
         const entryNode = nodeById(activeModel, segmentSubject.entryNodeId);
         const exitNode = nodeById(activeModel, segmentSubject.exitNodeId);
         if (entryNode && exitNode && defaultCanSpliceSegmentOntoEdge(editPolicy, edge, entryNode, exitNode, segmentSubject.nodeIds, activeModel)) {
-          edgeEl.classList.add('edge-splice-valid');
-          highlightedEdgeEl = edgeEl;
-          showSpliceIndicator(edgeEl);
+          nextEdgeEl = edgeEl;
         }
       } else {
         if (edge.source === draggedNodeId || edge.target === draggedNodeId) continue;
         const draggedNode = nodeById(activeModel, draggedNodeId);
         if (!draggedNode) continue;
         if (canSplice(edge, draggedNode, activeModel)) {
-          edgeEl.classList.add('edge-splice-valid');
-          highlightedEdgeEl = edgeEl;
-          showSpliceIndicator(edgeEl);
+          nextEdgeEl = edgeEl;
         }
       }
       break;
+    }
+
+    if (nextEdgeEl !== highlightedEdgeEl) {
+      clearEdgeHighlight();
+      if (nextEdgeEl) {
+        nextEdgeEl.classList.add('edge-splice-valid');
+        highlightedEdgeEl = nextEdgeEl;
+        showSpliceIndicator(nextEdgeEl);
+      }
     }
   }
 
