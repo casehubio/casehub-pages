@@ -591,6 +591,32 @@
       ]
     },
     {
+      "category": "Scenarios",
+      "samples": [
+        {
+          "name": "Composition",
+          "path": "Scenarios/Composition.page.yaml",
+          "category": "Scenarios",
+          "file": "Composition.page.yaml",
+          "tsPath": "Scenarios/Composition.ts"
+        },
+        {
+          "name": "Coordination",
+          "path": "Scenarios/Coordination.page.yaml",
+          "category": "Scenarios",
+          "file": "Coordination.page.yaml",
+          "tsPath": "Scenarios/Coordination.ts"
+        },
+        {
+          "name": "Flow Control",
+          "path": "Scenarios/Flow Control.page.yaml",
+          "category": "Scenarios",
+          "file": "Flow Control.page.yaml",
+          "tsPath": "Scenarios/Flow Control.ts"
+        }
+      ]
+    },
+    {
       "category": "Domain Showcases",
       "samples": [
         {
@@ -667,32 +693,6 @@
         }
       ],
       "requiresServer": true
-    },
-    {
-      "category": "Scenarios",
-      "samples": [
-        {
-          "name": "Composition",
-          "path": "Scenarios/Composition.page.yaml",
-          "category": "Scenarios",
-          "file": "Composition.page.yaml",
-          "tsPath": "Scenarios/Composition.ts"
-        },
-        {
-          "name": "Coordination",
-          "path": "Scenarios/Coordination.page.yaml",
-          "category": "Scenarios",
-          "file": "Coordination.page.yaml",
-          "tsPath": "Scenarios/Coordination.ts"
-        },
-        {
-          "name": "Flow Control",
-          "path": "Scenarios/Flow Control.page.yaml",
-          "category": "Scenarios",
-          "file": "Flow Control.page.yaml",
-          "tsPath": "Scenarios/Flow Control.ts"
-        }
-      ]
     }
   ]
 }

@@ -19,13 +19,16 @@ const CATEGORY_ORDER = [
   'Theming',
   'Monitoring',
   'Scenario Automation',
+  'Scenarios',
   'Domain Showcases',
   'Server',
 ];
 
 const SERVER_CATEGORIES = new Set(['Server']);
 
-const DISPLAY_NAMES = {};
+const DISPLAY_NAMES = {
+  'Scenario Automation': 'ARIA Commands',
+};
 
 // Recursively find all sample files
 function findSamples(dir, baseDir = dir) {
@@ -84,7 +87,12 @@ const sortedCategories = [...knownKeys, ...unknownKeys];
 const categorized = sortedCategories.map(category => {
   const entry = {
     category: DISPLAY_NAMES[category] || category,
-    samples: categories[category].sort((a, b) => a.name.localeCompare(b.name))
+    samples: categories[category].sort((a, b) => a.name.localeCompare(b.name)).map(s => {
+      if (DISPLAY_NAMES[s.category]) {
+        return { ...s, category: DISPLAY_NAMES[s.category] };
+      }
+      return s;
+    })
   };
   if (SERVER_CATEGORIES.has(category)) {
     entry.requiresServer = true;
