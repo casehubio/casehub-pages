@@ -236,6 +236,7 @@ function runExample(idx) {
   });
 
   currentRunner = runner;
+  runner.play();
 
   if (stateEl) {
     stateEl.textContent = 'playing';
