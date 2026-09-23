@@ -7,7 +7,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./expand": "./src/expand.ts",
-    "./schema": "./src/schema.ts"
+    "./schema": "./src/schema.ts",
+    "./orchestration": "./src/orchestration/index.ts",
+    "./condition": "./src/condition/condition-evaluator.ts"
   },
   "devDependencies": {
     "@casehubio/pages-tsconfig": "workspace:*",
