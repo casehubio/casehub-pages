@@ -156,8 +156,9 @@ export function createNodeMoveCoordinator(opts: NodeMoveCoordinatorOptions): Nod
 
     clearEdgeHighlight();
 
-    const hits = typeof document.elementsFromPoint === 'function'
-      ? document.elementsFromPoint(e.clientX, e.clientY)
+    const root = containerEl.getRootNode() as Document | ShadowRoot;
+    const hits = typeof root.elementsFromPoint === 'function'
+      ? root.elementsFromPoint(e.clientX, e.clientY)
       : [];
     for (const hitEl of hits) {
       const edgeEl = hitEl.closest('.react-flow__edge') as HTMLElement | null;

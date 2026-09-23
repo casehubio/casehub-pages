@@ -96,6 +96,9 @@ ${pluginStyles}
 .node-move-active .react-flow__connectionline {
   display: none !important;
 }
+.node-move-active .react-flow__handle {
+  cursor: grabbing !important;
+}
 .node-move-active .react-flow__edge-interaction {
   stroke-width: 30px !important;
   pointer-events: stroke !important;

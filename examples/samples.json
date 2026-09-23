@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 94,
+  "totalSamples": 97,
   "categories": [
     {
       "category": "Charts",
@@ -667,6 +667,32 @@
         }
       ],
       "requiresServer": true
+    },
+    {
+      "category": "Orchestration",
+      "samples": [
+        {
+          "name": "Composition",
+          "path": "Orchestration/Composition.page.yaml",
+          "category": "Orchestration",
+          "file": "Composition.page.yaml",
+          "tsPath": "Orchestration/Composition.ts"
+        },
+        {
+          "name": "Coordination",
+          "path": "Orchestration/Coordination.page.yaml",
+          "category": "Orchestration",
+          "file": "Coordination.page.yaml",
+          "tsPath": "Orchestration/Coordination.ts"
+        },
+        {
+          "name": "Flow Control",
+          "path": "Orchestration/Flow Control.page.yaml",
+          "category": "Orchestration",
+          "file": "Flow Control.page.yaml",
+          "tsPath": "Orchestration/Flow Control.ts"
+        }
+      ]
     }
   ]
 }
