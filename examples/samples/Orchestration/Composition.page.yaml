@@ -1,0 +1,62 @@
+pages:
+- name: Composition
+  properties:
+    margin: 20px
+  rows:
+  - columns:
+    - span: 7
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Composition &amp; Triggers</h2>
+              <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">State</div>
+                  <div id="comp-state" style="font-size: 20px; font-weight: 700; color: #4ade80; margin-top: 4px;">Ready</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Virtual Time</div>
+                  <div id="comp-time" style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-top: 4px;">0ms</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Triggers</div>
+                  <div id="comp-trigger-count" style="font-size: 20px; font-weight: 700; color: #f59e0b; margin-top: 4px;">0</div>
+                </div>
+              </div>
+              <div id="trigger-states" style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px; margin-bottom: 16px; display: none;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Trigger State</div>
+                <div id="trigger-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+              </div>
+              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Event Log</div>
+                <div id="comp-event-log" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; color: var(--pages-neutral-9); line-height: 1.8;"></div>
+              </div>
+              <div style="display: flex; gap: 8px;" id="comp-buttons">
+                <button aria-label="A" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">A</button>
+                <button aria-label="B" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">B</button>
+                <button aria-label="C" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">C</button>
+                <button aria-label="D" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">D</button>
+              </div>
+            </div>
+    - span: 5
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Example</label>
+                <select id="comp-example-picker" style="width: 100%; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 13px;">
+                  <option value="data-trigger">Data Trigger</option>
+                  <option value="time-trigger">Time Trigger</option>
+                  <option value="orchestration-block">Orchestration Block</option>
+                </select>
+              </div>
+              <button id="comp-run-btn" aria-label="Run" style="margin-bottom: 16px; padding: 8px 24px; background: #16a34a; border: none; border-radius: 6px; cursor: pointer; color: #fff; font-size: 13px; font-weight: 600;">▶ Run</button>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">YAML Source</div>
+                <pre id="comp-yaml-source" style="margin: 0; font-size: 12px; color: var(--pages-neutral-10); line-height: 1.6; white-space: pre-wrap; overflow-x: auto;"></pre>
+              </div>
+            </div>
