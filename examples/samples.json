@@ -544,47 +544,47 @@
       ]
     },
     {
-      "category": "Scenario Automation",
+      "category": "ARIA Commands",
       "samples": [
         {
           "name": "Composable Workflow",
           "path": "Scenario Automation/Composable Workflow.page.yaml",
-          "category": "Scenario Automation",
+          "category": "ARIA Commands",
           "file": "Composable Workflow.page.yaml",
           "tsPath": "Scenario Automation/Composable Workflow.ts"
         },
         {
           "name": "Form Automation",
           "path": "Scenario Automation/Form Automation.page.yaml",
-          "category": "Scenario Automation",
+          "category": "ARIA Commands",
           "file": "Form Automation.page.yaml",
           "tsPath": "Scenario Automation/Form Automation.ts"
         },
         {
           "name": "Parameterized Script",
           "path": "Scenario Automation/Parameterized Script.page.yaml",
-          "category": "Scenario Automation",
+          "category": "ARIA Commands",
           "file": "Parameterized Script.page.yaml",
           "tsPath": "Scenario Automation/Parameterized Script.ts"
         },
         {
           "name": "Scenario Controller",
           "path": "Scenario Automation/Scenario Controller.page.yaml",
-          "category": "Scenario Automation",
+          "category": "ARIA Commands",
           "file": "Scenario Controller.page.yaml",
           "tsPath": "Scenario Automation/Scenario Controller.ts"
         },
         {
           "name": "Script Library",
           "path": "Scenario Automation/Script Library.page.yaml",
-          "category": "Scenario Automation",
+          "category": "ARIA Commands",
           "file": "Script Library.page.yaml",
           "tsPath": "Scenario Automation/Script Library.ts"
         },
         {
           "name": "Table Population",
           "path": "Scenario Automation/Table Population.page.yaml",
-          "category": "Scenario Automation",
+          "category": "ARIA Commands",
           "file": "Table Population.page.yaml",
           "tsPath": "Scenario Automation/Table Population.ts"
         }
@@ -669,28 +669,28 @@
       "requiresServer": true
     },
     {
-      "category": "Orchestration",
+      "category": "Scenarios",
       "samples": [
         {
           "name": "Composition",
-          "path": "Orchestration/Composition.page.yaml",
-          "category": "Orchestration",
+          "path": "Scenarios/Composition.page.yaml",
+          "category": "Scenarios",
           "file": "Composition.page.yaml",
-          "tsPath": "Orchestration/Composition.ts"
+          "tsPath": "Scenarios/Composition.ts"
         },
         {
           "name": "Coordination",
-          "path": "Orchestration/Coordination.page.yaml",
-          "category": "Orchestration",
+          "path": "Scenarios/Coordination.page.yaml",
+          "category": "Scenarios",
           "file": "Coordination.page.yaml",
-          "tsPath": "Orchestration/Coordination.ts"
+          "tsPath": "Scenarios/Coordination.ts"
         },
         {
           "name": "Flow Control",
-          "path": "Orchestration/Flow Control.page.yaml",
-          "category": "Orchestration",
+          "path": "Scenarios/Flow Control.page.yaml",
+          "category": "Scenarios",
           "file": "Flow Control.page.yaml",
-          "tsPath": "Orchestration/Flow Control.ts"
+          "tsPath": "Scenarios/Flow Control.ts"
         }
       ]
     }
