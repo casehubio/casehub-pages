@@ -149,7 +149,7 @@ function compFindByAriaLabel(name) {
   return null;
 }
 
-var compStepDelay = 500;
+var compStepDelay = 1500;
 
 function compFlashButton(name) {
   var btn = compFindByAriaLabel(name);

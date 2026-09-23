@@ -77,7 +77,7 @@ var picker = document.getElementById('example-picker');
 var runBtn = document.getElementById('run-btn');
 var speedSlider = document.getElementById('speed-slider');
 var speedLabel = document.getElementById('speed-label');
-var stepDelay = 500;
+var stepDelay = 1500;
 var currentRunner = null;
 
 if (speedSlider) {

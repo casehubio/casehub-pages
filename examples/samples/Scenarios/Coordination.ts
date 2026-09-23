@@ -106,7 +106,7 @@ function findByAriaLabel(name) {
   return null;
 }
 
-var coordStepDelay = 500;
+var coordStepDelay = 1500;
 
 function flashButton(name) {
   var btn = findByAriaLabel(name);
