@@ -149,17 +149,22 @@ function compFindByAriaLabel(name) {
   return null;
 }
 
+function compResetButtons() {
+  var btns = document.querySelectorAll('#comp-buttons button');
+  btns.forEach(function(b) {
+    b.style.background = 'var(--pages-accent-3)';
+    b.style.borderColor = 'var(--pages-accent-6)';
+    b.style.color = 'var(--pages-accent-11)';
+  });
+}
+
 function compFlashButton(name) {
   var btn = compFindByAriaLabel(name);
   if (!btn) return;
+  compResetButtons();
   btn.style.background = '#22c55e';
   btn.style.borderColor = '#22c55e';
   btn.style.color = '#000';
-  setTimeout(function() {
-    btn.style.background = 'var(--pages-accent-3)';
-    btn.style.borderColor = 'var(--pages-accent-6)';
-    btn.style.color = 'var(--pages-accent-11)';
-  }, 400);
 }
 
 var compCurrentRunner = null;
@@ -232,7 +237,7 @@ function compRunExample(key) {
               el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
               compFlashButton(target.name);
             }
-            setTimeout(resolve, 500);
+            setTimeout(function() { compResetButtons(); resolve(); }, 500);
           });
         }
       }],

@@ -112,17 +112,22 @@ function findByAriaLabel(name) {
   return null;
 }
 
+function resetButtons() {
+  var btns = document.querySelectorAll('#app-buttons button');
+  btns.forEach(function(b) {
+    b.style.background = 'var(--pages-neutral-2)';
+    b.style.borderColor = 'var(--pages-neutral-5)';
+    b.style.color = 'var(--pages-neutral-12)';
+  });
+}
+
 function flashButton(name) {
   var btn = findByAriaLabel(name);
   if (!btn) return;
+  resetButtons();
   btn.style.background = '#22c55e';
   btn.style.borderColor = '#22c55e';
   btn.style.color = '#000';
-  setTimeout(function() {
-    btn.style.background = 'var(--pages-neutral-2)';
-    btn.style.borderColor = 'var(--pages-neutral-5)';
-    btn.style.color = 'var(--pages-neutral-12)';
-  }, 400);
 }
 
 function resetUI() {
@@ -229,7 +234,7 @@ function runExample(idx) {
             el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
             flashButton(target.name);
           }
-          setTimeout(resolve, 500);
+          setTimeout(function() { resetButtons(); resolve(); }, 500);
         });
       }
     }],
