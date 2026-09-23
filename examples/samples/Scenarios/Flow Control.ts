@@ -98,8 +98,22 @@ function log(time, queue, action, status) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
+function findByAriaLabel(name) {
+  var el = document.querySelector('[aria-label="' + name + '"]');
+  if (el) return el;
+  var hosts = document.querySelectorAll('*');
+  for (var i = 0; i < hosts.length; i++) {
+    var root = hosts[i].shadowRoot;
+    if (root) {
+      el = root.querySelector('[aria-label="' + name + '"]');
+      if (el) return el;
+    }
+  }
+  return null;
+}
+
 function flashButton(name) {
-  var btn = document.querySelector('[aria-label="' + name + '"]');
+  var btn = findByAriaLabel(name);
   if (!btn) return;
   btn.style.background = '#22c55e';
   btn.style.borderColor = '#22c55e';
@@ -128,7 +142,7 @@ function resetUI() {
 function showExample(idx) {
   var ex = EXAMPLES[idx];
   if (!ex) return;
-  if (yamlEl) yamlEl.textContent = ex.yaml;
+  if (yamlEl) yamlEl.value = ex.yaml;
   if (descEl) descEl.textContent = ex.description;
 }
 
@@ -204,6 +218,21 @@ function runExample(idx) {
     eventTarget: eventTarget,
     speed: 2,
     startPaused: false,
+    executors: [{
+      canExecute: function(step) { return step.delivery === 'aria'; },
+      execute: function(step) {
+        return new Promise(function(resolve) {
+          var target = step.target;
+          if (!target) { resolve(); return; }
+          var el = findByAriaLabel(target.name);
+          if (el) {
+            el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            flashButton(target.name);
+          }
+          resolve();
+        });
+      }
+    }],
   });
 
   currentRunner = runner;
