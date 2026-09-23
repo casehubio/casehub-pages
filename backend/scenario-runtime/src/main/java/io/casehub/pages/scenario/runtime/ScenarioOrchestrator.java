@@ -527,7 +527,7 @@ public class ScenarioOrchestrator {
 
         if (!spec.corpus().isEmpty()) {
             var loader = new YamlCorpusLoader();
-            var loaded = loader.loadFromPaths(spec.corpus());
+            var loaded = loader.loadFromPaths(spec.corpus(), "default-tenant");
             loaded.forEach(corpus::seed);
         }
 

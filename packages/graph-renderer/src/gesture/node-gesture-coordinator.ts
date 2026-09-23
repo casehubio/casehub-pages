@@ -77,7 +77,11 @@ export class NodeGestureCoordinator {
       return;
     }
 
-    e.stopPropagation();
+    e.stopImmediatePropagation();
+    e.preventDefault();
+
+    const blockMouseDown = (me: MouseEvent) => { me.stopImmediatePropagation(); me.preventDefault(); };
+    this._container!.addEventListener('mousedown', blockMouseDown, { capture: true, once: true });
 
     const ms = this._config.getMultiSelectState();
     const model = this._config.getModel();

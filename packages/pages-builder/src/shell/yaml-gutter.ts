@@ -68,7 +68,7 @@ const builderGutterTheme = EditorView.baseTheme({
     borderRadius: '0',
   },
   '.cm-builder-active-line': {
-    backgroundColor: 'rgba(66, 133, 244, 0.06)',
+    backgroundColor: 'rgba(66, 133, 244, 0.12)',
   },
 });
 

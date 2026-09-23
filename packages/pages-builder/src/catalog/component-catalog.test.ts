@@ -139,9 +139,9 @@ describe('getFilteredCatalog', () => {
     expect(types).toContain('lazy-page');
   });
 
-  it('hides all components when acceptsComponents is false', () => {
+  it('hides all components when acceptsComponents false and layout-blocked parent', () => {
     const ctx: PaletteContext = {
-      parentType: 'rows',
+      parentType: 'row',
       acceptsComponents: false,
       availableDatasets: ['ds1'],
       siblingTypes: [],
@@ -150,8 +150,68 @@ describe('getFilteredCatalog', () => {
     expect(filtered).toHaveLength(0);
   });
 
+  it('shows layout types even when acceptsComponents is false (no blocked parent)', () => {
+    const ctx: PaletteContext = {
+      parentType: undefined,
+      acceptsComponents: false,
+      availableDatasets: ['ds1'],
+      siblingTypes: [],
+    };
+    const filtered = getFilteredCatalog(ctx);
+    expect(filtered.length).toBeGreaterThan(0);
+    expect(filtered.every(r => ['rows', 'columns', 'grid'].includes(r.entry.type))).toBe(true);
+  });
+
   it('data components have prereqHint set', () => {
     const barChart = COMPONENT_CATALOG.find(e => e.type === 'bar-chart');
     expect(barChart?.prereqHint).toBeTruthy();
+  });
+
+  it('hard-filters when allowedTypes has no component types', () => {
+    const ctx: PaletteContext = {
+      parentType: 'row',
+      acceptsComponents: false,
+      availableDatasets: [],
+      siblingTypes: [],
+      allowedTypes: { structuralTypes: ['column'], componentTypes: [] },
+    };
+    const entries = getFilteredCatalog(ctx);
+    expect(entries.length).toBe(0);
+  });
+
+  it('hard-filters to only allowed component types', () => {
+    const ctx: PaletteContext = {
+      parentType: 'column',
+      acceptsComponents: true,
+      availableDatasets: [],
+      siblingTypes: [],
+      allowedTypes: {
+        structuralTypes: [],
+        componentTypes: ['bar-chart', 'input', 'title'],
+      },
+    };
+    const entries = getFilteredCatalog(ctx);
+    const types = entries.map(e => e.entry.type);
+    expect(types).toContain('bar-chart');
+    expect(types).toContain('input');
+    expect(types).toContain('title');
+    expect(types).not.toContain('pie-chart');
+    expect(types).not.toContain('data-table');
+  });
+
+  it('contextRelevance still applies within allowed types', () => {
+    const ctx: PaletteContext = {
+      parentType: 'column',
+      acceptsComponents: true,
+      availableDatasets: [],
+      siblingTypes: [],
+      allowedTypes: {
+        structuralTypes: [],
+        componentTypes: ['bar-chart', 'title'],
+      },
+    };
+    const entries = getFilteredCatalog(ctx);
+    const barChart = entries.find(e => e.entry.type === 'bar-chart');
+    expect(barChart?.relevance).toBe('needs-prereq');
   });
 });

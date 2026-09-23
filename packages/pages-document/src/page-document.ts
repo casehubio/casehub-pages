@@ -341,6 +341,22 @@ export class PageNode {
     return rows[rows.length - 1]!;
   }
 
+  insertRowAt(index: number): RowNode {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const rowsPath = [...this.path, 'rows'];
+    const seq = doc.getIn(rowsPath);
+    const newRow = doc.createNode({ columns: [{ span: 12, components: [] }] });
+    if (!isSeq(seq)) {
+      doc.setIn(rowsPath, []);
+      (doc.getIn(rowsPath) as YAMLSeq).add(newRow);
+    } else {
+      (seq as YAMLSeq).items.splice(index, 0, newRow);
+    }
+    this._doc._notifyInternal();
+    return new RowNode(this._doc, [...this.path, 'rows', index]);
+  }
+
   addComponent(type: string, props?: Record<string, unknown>): ComponentNode {
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();

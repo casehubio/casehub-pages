@@ -92,10 +92,23 @@ describe('filterCatalog', () => {
     expect(results.find(r => r.entry.type === 'bar-chart')).toBeDefined();
   });
 
-  it('hides all components when acceptsComponents is false', () => {
+  it('acceptsComponents false hides regular components but keeps layout types visible', () => {
     const ctx: PaletteContext = {
       ...BASE_CTX,
       acceptsComponents: false,
+    };
+    const results = filterCatalog(ctx);
+    expect(results.find(r => r.entry.type === 'bar-chart')).toBeUndefined();
+    expect(results.find(r => r.entry.type === 'metric')).toBeUndefined();
+    expect(results.find(r => r.entry.type === 'rows')).toBeDefined();
+    expect(results.find(r => r.entry.type === 'grid')).toBeDefined();
+  });
+
+  it('acceptsComponents false with layout-blocked parent hides everything', () => {
+    const ctx: PaletteContext = {
+      ...BASE_CTX,
+      acceptsComponents: false,
+      parentType: 'row',
     };
     const results = filterCatalog(ctx);
     expect(results).toHaveLength(0);

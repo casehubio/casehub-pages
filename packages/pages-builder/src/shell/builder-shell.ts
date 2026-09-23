@@ -3,7 +3,7 @@ import type { DockItem } from '@casehubio/pages-component';
 import type { PagesDockWorkbench } from '@casehubio/pages-primitives/dock';
 import { customElement, property, state } from 'lit/decorators.js';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
-import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
+import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, allowedTypesAt, getContainerDescriptor } from '@casehubio/pages-document';
 import { expand } from '@casehubio/yaml-core/expand';
 import { EditorView } from '@codemirror/view';
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
@@ -17,6 +17,10 @@ import type { PropertyPaletteSource } from '@casehubio/pages-property-palette/ty
 import type { PaletteContext } from '../catalog/palette-context.js';
 import type { ComponentCatalogEntry } from '../catalog/component-catalog.js';
 import type { TreeNodeType } from '../tree/builder-tree.js';
+import { getClipboard } from '../clipboard/builder-clipboard.js';
+import { serializeNode, parseFragment } from '../clipboard/yaml-fragment.js';
+import { SelectionOverlay } from '../overlay/selection-overlay.js';
+import '../palette/position-picker.js';
 import { computeMinimalChanges } from './diff-patch.js';
 import { findPathAtOffset, getNodeRange, classifyPath, getParentPath } from './yaml-path.js';
 import { builderHighlightExtension, setHighlightRange } from './yaml-gutter.js';
@@ -49,7 +53,7 @@ type EditOrigin = 'editor' | 'tree' | 'properties' | 'palette' | 'toolbar';
 export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   @property({ attribute: false }) yaml = '';
 
-  @property({ attribute: false }) renderPreview?: (container: HTMLElement, yaml: string) => void;
+  @property({ attribute: false }) renderPreview?: (container: HTMLElement, yaml: string) => void | Promise<unknown>;
 
   @state() private _document: PageDocument = PageDocument.empty();
   @state() private _selectedPath: readonly (string | number)[] | undefined;
@@ -132,6 +136,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _inlinePickerPath: readonly (string | number)[] | undefined;
   private _inlinePickerNodeType: TreeNodeType | undefined;
   private _inlinePickerAnchor: HTMLElement | undefined;
+  private _positionPickerOpen = false;
+  private _positionPickerAnchor: HTMLElement | undefined;
+  private _insertPosition: 'before' | 'after' | undefined;
+  private _insertAtIndex: number | undefined;
+  private _selectionOverlay: SelectionOverlay | undefined;
+  private _overlayScrollBase = 0;
 
   get document(): PageDocument {
     return this._document;
@@ -180,11 +190,17 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
   }
 
+  private _clipboardUnsub: (() => void) | undefined;
+
   override connectedCallback(): void {
     super.connectedCallback();
     this._document = this.yaml ? this._parseDocument(this.yaml) : PageDocument.empty();
     this.registerShortcut('z', () => this._undo(), { description: 'Undo', requiresModifier: true });
     this.registerShortcut('Z', () => this._redo(), { description: 'Redo', requiresModifier: true });
+    this.registerShortcut('x', () => this._cutSelected(), { description: 'Cut', requiresModifier: true });
+    this.registerShortcut('c', () => this._copySelected(), { description: 'Copy', requiresModifier: true });
+    this.registerShortcut('Escape', () => { getClipboard().setInsertMode(false); }, { description: 'Exit insert mode' });
+    this._clipboardUnsub = getClipboard().subscribe(() => this._syncTree());
   }
 
   override disconnectedCallback(): void {
@@ -193,6 +209,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._editorClickCleanup?.();
     this._previewClickCleanup?.();
     if (this._previewClickTimer) clearTimeout(this._previewClickTimer);
+    this._clipboardUnsub?.();
+    this._selectionOverlay?.dispose();
+    this._selectionOverlayCleanup?.();
   }
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
@@ -264,14 +283,33 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     requestAnimationFrame(() => {
       const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
       if (!container) return;
+
+      const afterRender = () => {
+        this._injectEmptyColumnPlaceholders(container);
+        this._previewClickCleanup?.();
+        this._previewClickCleanup = this._wirePreviewClicks(container);
+        const overlayRoot = this.shadowRoot?.querySelector('.overlay-root') as HTMLElement;
+        if (overlayRoot && !this._selectionOverlay) {
+          this._selectionOverlay = new SelectionOverlay(overlayRoot);
+          this._wireSelectionOverlayEvents(overlayRoot);
+        }
+        if (this._selectedPath && this._selectedNodeType) {
+          this._applyPreviewHighlight(this._selectedPath, this._selectedNodeType);
+        }
+      };
+
       if (this.renderPreview) {
         const yamlText = this._document.toString();
-        this.renderPreview(container, this._expandYamlForPreview(yamlText));
+        const result = this.renderPreview(container, this._expandYamlForPreview(yamlText));
+        if (result && typeof (result as any).then === 'function') {
+          (result as Promise<unknown>).then(afterRender, afterRender);
+        } else {
+          afterRender();
+        }
       } else {
         container.innerHTML = '<div class="preview-placeholder">Visual preview — provide renderPreview callback to enable live rendering</div>';
+        afterRender();
       }
-      this._previewClickCleanup?.();
-      this._previewClickCleanup = this._wirePreviewClicks(container);
     });
   }
 
@@ -315,53 +353,174 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _highlightPreviewNode(path: readonly (string | number)[], nodeType: TreeNodeType): void {
     if (this._viewMode === 'source') return;
-    requestAnimationFrame(() => {
-      const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
-      if (!container) return;
+    requestAnimationFrame(() => this._applyPreviewHighlight(path, nodeType));
+  }
 
-      let overlay = container.querySelector('.builder-scope-overlay') as HTMLElement;
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.className = 'builder-scope-overlay';
-        container.style.position = 'relative';
-        container.appendChild(overlay);
-      }
+  private _applyPreviewHighlight(path: readonly (string | number)[], nodeType: TreeNodeType): void {
+    const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
+    const overlayRoot = this.shadowRoot?.querySelector('.overlay-root') as HTMLElement;
+    if (!container || !overlayRoot) return;
 
-      const scopeComps = collectComponentsInScope(this._document, path, nodeType);
-      const renderedIndex = this._buildRenderedIndex(container);
-      const elements: HTMLElement[] = [];
-      for (const comp of scopeComps) {
-        const el = renderedIndex.get(JSON.stringify(comp.path));
-        if (el) elements.push(el);
-      }
+    if (!this._selectionOverlay) {
+      this._selectionOverlay = new SelectionOverlay(overlayRoot);
+      this._wireSelectionOverlayEvents(overlayRoot);
+    }
 
-      if (elements.length === 0) {
-        overlay.style.display = 'none';
+    const scopeComps = collectComponentsInScope(this._document, path, nodeType);
+    const renderedIndex = this._buildRenderedIndex(container);
+    const elements: HTMLElement[] = [];
+    for (const comp of scopeComps) {
+      const el = renderedIndex.get(JSON.stringify(comp.path));
+      if (el) elements.push(el);
+    }
+
+    const containerRect = container.getBoundingClientRect();
+
+    if (elements.length === 0) {
+      const placeholder = container.querySelector(`.empty-column-placeholder[data-column-path='${JSON.stringify(path)}']`) as HTMLElement | null;
+      if (placeholder) {
+        const phRect = placeholder.getBoundingClientRect();
+        const phBounds = new DOMRect(
+          phRect.left - containerRect.left - 4,
+          phRect.top - containerRect.top - 4,
+          phRect.width + 8,
+          phRect.height + 8,
+        );
+        this._selectionOverlay.update(phBounds, nodeType, path, { isContainer: true });
+        this._selectionOverlay.hideInsertionPoints();
         return;
       }
+      this._selectionOverlay.hide();
+      return;
+    }
+    const rects = elements.map(el => el.getBoundingClientRect());
+    const pad = 4;
+    const minX = Math.min(...rects.map(r => r.left)) - containerRect.left - pad;
+    const minY = Math.min(...rects.map(r => r.top)) - containerRect.top - pad;
+    const maxX = Math.max(...rects.map(r => r.right)) - containerRect.left + pad;
+    const maxY = Math.max(...rects.map(r => r.bottom)) - containerRect.top + pad;
+    const bounds = new DOMRect(minX, minY, maxX - minX, maxY - minY);
 
-      const containerRect = container.getBoundingClientRect();
-      const rects = elements.map(el => el.getBoundingClientRect());
-      const pad = 4;
-      const minX = Math.min(...rects.map(r => r.left)) - containerRect.left - pad;
-      const minY = Math.min(...rects.map(r => r.top)) - containerRect.top + container.scrollTop - pad;
-      const maxX = Math.max(...rects.map(r => r.right)) - containerRect.left + pad;
-      const maxY = Math.max(...rects.map(r => r.bottom)) - containerRect.top + container.scrollTop + pad;
+    let isContainer = false;
+    if (nodeType === 'component') {
+      const comp = this._findComponentAtPath(path);
+      isContainer = comp?.isContainer() ?? false;
+    }
 
-      overlay.style.cssText = `
-        position: absolute; pointer-events: none;
-        left: ${minX}px; top: ${minY}px;
-        width: ${maxX - minX}px; height: ${maxY - minY}px;
-        outline: 2px solid var(--pages-primary, #4285f4);
-        outline-offset: 0;
-        border-radius: 6px;
-        background: rgba(66, 133, 244, 0.04);
-        z-index: 10;
-        transition: all 0.15s ease;
-      `;
+    this._selectionOverlay.update(bounds, nodeType, path, { isContainer });
+    this._overlayScrollBase = container.scrollTop;
 
-      elements[0]!.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+    if (isContainer || nodeType === 'page' || nodeType === 'column' || nodeType === 'row') {
+      const childBounds = elements.length > 1
+        ? elements.map(el => {
+            const r = el.getBoundingClientRect();
+            return new DOMRect(
+              r.left - containerRect.left,
+              r.top - containerRect.top,
+              r.width,
+              r.height,
+            );
+          })
+        : [];
+      if (childBounds.length > 0) {
+        this._selectionOverlay.showInsertionPoints(childBounds, path, nodeType);
+      } else {
+        this._selectionOverlay.hideInsertionPoints();
+      }
+    } else {
+      this._selectionOverlay.hideInsertionPoints();
+    }
+
+    const clipboard = getClipboard();
+    if (clipboard.insertMode && clipboard.fragmentType) {
+      this._selectionOverlay.setInsertMode(clipboard.fragmentType);
+    }
+
+    elements[0]!.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  private _selectionOverlayCleanup: (() => void) | undefined;
+
+  private _wireSelectionOverlayEvents(overlayRoot: HTMLElement): void {
+    this._selectionOverlayCleanup?.();
+
+    const onAdd = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
+      this._handleTreeAdd(new CustomEvent('tree-add', { detail: { path: detail.path, nodeType: detail.nodeType, target } }));
+    };
+    const onInsert = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
+      this._handleTreeInsert(new CustomEvent('tree-insert', { detail: { path: detail.path, nodeType: detail.nodeType, target } }));
+    };
+    const onCut = (e: Event) => {
+      const { path, nodeType } = (e as CustomEvent).detail;
+      this._handleTreeCut(new CustomEvent('tree-cut', { detail: { path, nodeType } }));
+    };
+    const onCopy = (e: Event) => {
+      const { path, nodeType } = (e as CustomEvent).detail;
+      this._handleTreeCopy(new CustomEvent('tree-copy', { detail: { path, nodeType } }));
+    };
+    const onDelete = (e: Event) => {
+      const { path, nodeType } = (e as CustomEvent).detail;
+      this._applyEdit('toolbar', () => {
+        this._deleteAtPath(path, nodeType);
+      });
+    };
+
+    const onInsertAt = (e: Event) => {
+      this._handleInsertAt(e as CustomEvent);
+    };
+
+    overlayRoot.addEventListener('selection-add', onAdd);
+    overlayRoot.addEventListener('selection-insert', onInsert);
+    overlayRoot.addEventListener('selection-insert-at', onInsertAt);
+    overlayRoot.addEventListener('selection-cut', onCut);
+    overlayRoot.addEventListener('selection-copy', onCopy);
+    overlayRoot.addEventListener('selection-delete', onDelete);
+
+    this._selectionOverlayCleanup = () => {
+      overlayRoot.removeEventListener('selection-add', onAdd);
+      overlayRoot.removeEventListener('selection-insert', onInsert);
+      overlayRoot.removeEventListener('selection-insert-at', onInsertAt);
+      overlayRoot.removeEventListener('selection-cut', onCut);
+      overlayRoot.removeEventListener('selection-copy', onCopy);
+      overlayRoot.removeEventListener('selection-delete', onDelete);
+    };
+  }
+
+  private _injectEmptyColumnPlaceholders(container: HTMLElement): void {
+    container.querySelectorAll('.empty-column-placeholder').forEach(el => el.remove());
+    const allPageEls = Array.from(container.querySelectorAll('[data-component-type="page"]')) as HTMLElement[];
+    const gridPageEls = allPageEls.filter(el => getComputedStyle(el).display === 'grid');
+    for (const [pi, page] of this._document.getPages().entries()) {
+      const pageEl = gridPageEls[pi];
+      if (!pageEl) continue;
+      const rows = page.getRows();
+      let y = 0;
+      for (let ri = 0; ri < rows.length; ri++) {
+        const row = rows[ri]!;
+        let x = 0;
+        let maxComps = 1;
+        const cols = row.getColumns();
+        for (let ci = 0; ci < cols.length; ci++) {
+          const col = cols[ci]!;
+          const compCount = col.getComponents().length;
+          if (compCount > maxComps) maxComps = compCount;
+          if (compCount === 0) {
+            const ph = document.createElement('div');
+            ph.className = 'empty-column-placeholder';
+            ph.dataset.componentType = '__empty';
+            ph.dataset.columnPath = JSON.stringify([...page.path, 'rows', ri, 'columns', ci]);
+            ph.style.cssText = `grid-column: ${x + 1} / span ${col.span}; grid-row: ${y + 1} / span 1; min-height: 32px; border: 1px dashed var(--pages-neutral-4, #94a3b8); border-radius: 4px; opacity: 0.4;`;
+            pageEl.appendChild(ph);
+          }
+          x += col.span;
+        }
+        y += maxComps;
+      }
+    }
   }
 
   private _buildRenderedIndex(container: HTMLElement): Map<string, HTMLElement> {
@@ -383,13 +542,31 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _previewClickTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private _findComponentFromEvent(e: Event): HTMLElement | null {
+    for (const el of e.composedPath()) {
+      if (el instanceof HTMLElement && el.dataset.componentType) return el;
+    }
+    return null;
+  }
+
   private _wirePreviewClicks(container: HTMLElement): () => void {
     const clickHandler = (e: Event) => {
-      const target = e.target as HTMLElement;
-      const compEl = target.closest('[data-component-type]') as HTMLElement | null;
+      const compEl = this._findComponentFromEvent(e);
       if (!compEl) return;
       const compType = compEl.dataset.componentType;
       if (!compType) return;
+
+      if (compType === '__empty' && compEl.dataset.columnPath) {
+        try {
+          const colPath = JSON.parse(compEl.dataset.columnPath) as (string | number)[];
+          this._syncSource = 'visual';
+          this._selectedPath = colPath;
+          this._selectedNodeType = 'column';
+          this._updatePropertySource();
+        } catch { /* malformed path — ignore click */ }
+        return;
+      }
+
       const path = this._findFirstComponentPathByType(compType, compEl, container);
       if (!path) return;
 
@@ -409,8 +586,16 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         clearTimeout(this._previewClickTimer);
         this._previewClickTimer = null;
       }
-      if (!this._selectedPath) return;
-      const parent = getParentPath(this._selectedPath);
+      let currentPath = this._selectedPath;
+      if (!currentPath) {
+        const compEl = this._findComponentFromEvent(e);
+        if (!compEl) return;
+        const compType = compEl.dataset.componentType;
+        if (!compType) return;
+        currentPath = this._findFirstComponentPathByType(compType, compEl, container);
+        if (!currentPath) return;
+      }
+      const parent = getParentPath(currentPath);
       if (parent) {
         const parentType = classifyPath(parent);
         if (parentType) {
@@ -422,11 +607,21 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       }
     };
 
+    const scrollHandler = () => {
+      const overlayRoot = this.shadowRoot?.querySelector('.overlay-root') as HTMLElement | null;
+      if (overlayRoot) {
+        const delta = container.scrollTop - this._overlayScrollBase;
+        overlayRoot.style.transform = `translateY(${-delta}px)`;
+      }
+    };
+
     container.addEventListener('click', clickHandler);
     container.addEventListener('dblclick', dblClickHandler);
+    container.addEventListener('scroll', scrollHandler);
     return () => {
       container.removeEventListener('click', clickHandler);
       container.removeEventListener('dblclick', dblClickHandler);
+      container.removeEventListener('scroll', scrollHandler);
     };
   }
 
@@ -514,12 +709,222 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._selectedPath = e.detail.path;
     this._selectedNodeType = e.detail.nodeType;
     this._updatePropertySource();
+
+    const clipboard = getClipboard();
+    if (clipboard.fragment && clipboard.insertMode) {
+      this._pasteAsChild(e.detail.path, e.detail.nodeType);
+      return;
+    }
+
     this._refreshPaletteContext();
     this._inlinePickerOpen = true;
     this._inlinePickerPath = e.detail.path;
     this._inlinePickerNodeType = e.detail.nodeType;
     this._inlinePickerAnchor = e.detail.target;
     this._syncTree();
+  }
+
+  private _handleTreeCut(e: CustomEvent<{ path: readonly (string | number)[]; nodeType: TreeNodeType }>): void {
+    const yaml = serializeNode(this._document, e.detail.path);
+    if (!yaml) return;
+    const fragType = parseFragment(yaml);
+    if (!fragType) return;
+    getClipboard().set(yaml, fragType.type, 'cut');
+    this._applyEdit('tree', () => {
+      this._deleteAtPath(e.detail.path, e.detail.nodeType);
+    });
+  }
+
+  private _handleTreeCopy(e: CustomEvent<{ path: readonly (string | number)[]; nodeType: TreeNodeType }>): void {
+    const yaml = serializeNode(this._document, e.detail.path);
+    if (!yaml) return;
+    const fragType = parseFragment(yaml);
+    if (!fragType) return;
+    getClipboard().set(yaml, fragType.type, 'copy');
+  }
+
+  private _pasteAsChild(targetPath: readonly (string | number)[], targetNodeType: TreeNodeType): void {
+    const clipboard = getClipboard();
+    if (!clipboard.fragment) return;
+    const parsed = parseFragment(clipboard.fragment);
+    if (!parsed) return;
+
+    this._applyEdit('tree', () => {
+      if (targetNodeType === 'column' || targetNodeType === 'page') {
+        const yamlObj = parseYaml(clipboard.fragment!) as Record<string, unknown>;
+        const type = yamlObj['type'] as string | undefined;
+        const props = yamlObj['properties'] as Record<string, unknown> | undefined;
+        if (type) {
+          if (targetNodeType === 'column') {
+            this._findColumnAtPath(targetPath)?.addComponent(type, props);
+          } else {
+            this._findPageAtPath(targetPath)?.addComponent(type, props);
+          }
+        }
+      }
+    });
+
+    if (clipboard.operation === 'cut') clipboard.clear();
+    else clipboard.setInsertMode(false);
+  }
+
+  private _cutSelected(): void {
+    if (!this._selectedPath || !this._selectedNodeType) return;
+    this._handleTreeCut(new CustomEvent('tree-cut', {
+      detail: { path: this._selectedPath, nodeType: this._selectedNodeType },
+    }));
+  }
+
+  private _copySelected(): void {
+    if (!this._selectedPath || !this._selectedNodeType) return;
+    this._handleTreeCopy(new CustomEvent('tree-copy', {
+      detail: { path: this._selectedPath, nodeType: this._selectedNodeType },
+    }));
+  }
+
+  private _handleTreeInsert(e: CustomEvent<{ path: readonly (string | number)[]; nodeType: TreeNodeType; target?: HTMLElement }>): void {
+    this._syncSource = 'tree';
+    this._selectedPath = e.detail.path;
+    this._selectedNodeType = e.detail.nodeType;
+    this._updatePropertySource();
+    this._inlinePickerPath = e.detail.path;
+    this._inlinePickerNodeType = e.detail.nodeType;
+    this._positionPickerOpen = true;
+    this._positionPickerAnchor = e.detail.target;
+    this._inlinePickerAnchor = e.detail.target;
+    this._syncTree();
+  }
+
+  private _handlePositionSelect(e: CustomEvent<{ position: 'before' | 'after' }>): void {
+    this._insertPosition = e.detail.position;
+    this._positionPickerOpen = false;
+
+    const clipboard = getClipboard();
+    if (clipboard.fragment && clipboard.insertMode) {
+      this._pasteAtPosition(
+        this._inlinePickerPath ?? [],
+        this._inlinePickerNodeType ?? 'component',
+        e.detail.position,
+      );
+      this._insertPosition = undefined;
+      this._syncTree();
+      return;
+    }
+
+    this._refreshPaletteContextForSibling(this._inlinePickerPath ?? [], this._inlinePickerNodeType ?? 'component');
+    this._inlinePickerOpen = true;
+    this._syncTree();
+  }
+
+  private _pasteAtPosition(
+    siblingPath: readonly (string | number)[],
+    siblingNodeType: TreeNodeType,
+    position: 'before' | 'after',
+  ): void {
+    const clipboard = getClipboard();
+    if (!clipboard.fragment) return;
+    const parsed = parseFragment(clipboard.fragment);
+    if (!parsed) return;
+    const yamlObj = parseYaml(clipboard.fragment) as Record<string, unknown>;
+    const type = yamlObj['type'] as string | undefined;
+    const props = yamlObj['properties'] as Record<string, unknown> | undefined;
+    if (!type) return;
+
+    this._applyEdit('tree', () => {
+      if (siblingNodeType === 'component') {
+        const col = this._findColumnAtPath(siblingPath.slice(0, -2) as (string | number)[]);
+        if (!col) return;
+        const compIndex = siblingPath[siblingPath.length - 1] as number;
+        const insertIndex = position === 'before' ? compIndex : compIndex + 1;
+        col.insertComponentAt(insertIndex, type, props);
+      } else if (siblingNodeType === 'row') {
+        const page = this._findPageAtPath(['pages', siblingPath[1] as number]);
+        if (!page) return;
+        const rowIndex = siblingPath[3] as number;
+        const insertIndex = position === 'before' ? rowIndex : rowIndex + 1;
+        page.insertRowAt(insertIndex);
+      }
+    });
+
+    if (clipboard.operation === 'cut') clipboard.clear();
+    else clipboard.setInsertMode(false);
+  }
+
+  private _handleInsertAt(e: CustomEvent<{
+    parentPath: readonly (string | number)[];
+    index: number;
+    parentNodeType: TreeNodeType;
+    target: HTMLElement;
+  }>): void {
+    const { parentPath, index, parentNodeType, target } = e.detail;
+    this._syncSource = 'tree';
+
+    const resolvedParentType = parentNodeType === 'component'
+      ? (this._findComponentAtPath(parentPath)?.type ?? parentNodeType)
+      : parentNodeType;
+    const constraint = allowedTypesAt(resolvedParentType);
+
+    if (constraint.componentTypes.length === 0 && constraint.structuralTypes.length > 0) {
+      let newPath: readonly (string | number)[] | undefined;
+      this._applyEdit('tree', () => {
+        if (parentNodeType === 'row') {
+          const row = this._findRowAtPath(parentPath);
+          if (row) {
+            const cols = row.getColumns();
+            const totalSpan = cols.reduce((sum, c) => sum + c.span, 0);
+            const newSpan = Math.max(1, Math.floor(12 / (cols.length + 1)));
+            const shrinkBy = Math.max(0, totalSpan + newSpan - 12);
+            if (shrinkBy > 0 && cols.length > 0) {
+              const perCol = Math.ceil(shrinkBy / cols.length);
+              for (const c of cols) {
+                c.span = Math.max(1, c.span - perCol);
+              }
+            }
+            newPath = row.insertColumnAt(index, newSpan).path;
+          }
+        } else if (parentNodeType === 'page') {
+          const page = this._findPageAtPath(parentPath);
+          if (page) newPath = page.insertRowAt(index).path;
+        }
+      });
+      if (newPath) {
+        this._selectedPath = newPath;
+        this._selectedNodeType = parentNodeType === 'row' ? 'column' : 'row';
+        this._expandAfterAdd(parentPath, parentNodeType);
+        this._updatePropertySource();
+      }
+      this._syncTree();
+      return;
+    }
+
+    const datasets = this._document.getDatasets();
+    this._paletteContext = {
+      parentType: parentNodeType === 'column' || parentNodeType === 'row'
+        ? parentNodeType
+        : parentNodeType === 'component'
+          ? this._findComponentAtPath(parentPath)?.type
+          : undefined,
+      acceptsComponents: constraint.componentTypes.length > 0,
+      availableDatasets: datasets.map(d => d.uuid),
+      siblingTypes: [],
+      allowedTypes: constraint,
+    };
+
+    this._inlinePickerOpen = true;
+    this._inlinePickerPath = parentPath;
+    this._inlinePickerNodeType = parentNodeType;
+    this._inlinePickerAnchor = target;
+    this._insertAtIndex = index;
+    this._syncTree();
+  }
+
+  private _expandAfterAdd(parentPath: readonly (string | number)[], parentNodeType: TreeNodeType): void {
+    const tree = this.shadowRoot?.querySelector('pages-builder-tree') as any;
+    if (!tree) return;
+    const key = JSON.stringify(parentPath);
+    if (!tree._expandedPaths.has(key)) {
+      tree._expandedPaths = new Set([...tree._expandedPaths, key]);
+    }
   }
 
   private static _LAYOUT_TYPES = new Set(['rows', 'columns', 'grid']);
@@ -530,31 +935,128 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       ? entry.defaultProps : undefined;
     const path = this._inlinePickerPath;
     const nt = this._inlinePickerNodeType;
+    const insertPos = this._insertPosition;
     this._inlinePickerOpen = false;
-    if (path && nt) {
+    this._insertPosition = undefined;
+
+    if (!path || !nt) { this._syncTree(); return; }
+
+    if (this._insertAtIndex !== undefined) {
+      const insertIndex = this._insertAtIndex;
+      this._insertAtIndex = undefined;
+      let newPath: readonly (string | number)[] | undefined;
       this._applyEdit('tree', () => {
         if (nt === 'page') {
           const page = this._findPageAtPath(path);
-          if (page && PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
-            page.addRow();
+          if (!page) return;
+          if (PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
+            newPath = page.insertRowAt(insertIndex).path;
           } else {
-            page?.addComponent(entry.type, props);
+            newPath = page.insertChildAt(insertIndex, entry.type, props).path;
           }
         } else if (nt === 'column') {
-          this._findColumnAtPath(path)?.addComponent(entry.type, props);
+          const col = this._findColumnAtPath(path);
+          if (col) newPath = col.insertComponentAt(insertIndex, entry.type, props).path;
         } else if (nt === 'row') {
           const row = this._findRowAtPath(path);
-          if (row) {
-            const cols = row.getColumns();
-            if (cols.length > 0) cols[0]!.addComponent(entry.type, props);
-          }
+          if (row) newPath = row.insertColumnAt(insertIndex).path;
         } else if (nt === 'component') {
-          const page = this._findPageAtPath(['pages', path[1] as number]);
-          if (page) page.addComponent(entry.type, props);
+          const node = this._findComponentAtPath(path);
+          if (node?.isContainer()) {
+            const desc = getContainerDescriptor(node.type);
+            if (desc) {
+              newPath = node.addChild(desc.defaultContentSlot, entry.type, props).path;
+            }
+          }
         }
       });
-    } else {
+      if (newPath) {
+        this._selectedPath = newPath;
+        this._selectedNodeType = nt === 'row' ? 'column' : 'component';
+        this._expandAfterAdd(path, nt);
+        this._updatePropertySource();
+      }
       this._syncTree();
+      return;
+    }
+
+    if (insertPos && nt === 'row' && PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
+      let newPath: readonly (string | number)[] | undefined;
+      this._applyEdit('tree', () => {
+        const page = this._findPageAtPath(['pages', path[1] as number]);
+        if (!page) return;
+        const rowIndex = path[3] as number;
+        const insertIndex = insertPos === 'before' ? rowIndex : rowIndex + 1;
+        const row = page.insertRowAt(insertIndex);
+        newPath = row.path;
+      });
+      if (newPath) {
+        this._selectedPath = newPath;
+        this._selectedNodeType = 'row';
+        this._expandAfterAdd(['pages', path[1] as number], 'page');
+        this._expandAfterAdd(newPath, 'row');
+        this._updatePropertySource();
+      }
+      return;
+    }
+
+    if (insertPos && nt === 'component') {
+      let newPath: readonly (string | number)[] | undefined;
+      this._applyEdit('tree', () => {
+        const col = this._findColumnAtPath(path.slice(0, -2) as (string | number)[]);
+        if (!col) return;
+        const compIndex = path[path.length - 1] as number;
+        const insertIndex = insertPos === 'before' ? compIndex : compIndex + 1;
+        const comp = col.insertComponentAt(insertIndex, entry.type, props);
+        newPath = comp.path;
+      });
+      if (newPath) {
+        this._selectedPath = newPath;
+        this._selectedNodeType = 'component';
+        this._updatePropertySource();
+      }
+      return;
+    }
+
+    let newChildPath: readonly (string | number)[] | undefined;
+    this._applyEdit('tree', () => {
+      if (nt === 'page') {
+        const page = this._findPageAtPath(path);
+        if (page && PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
+          const row = page.addRow();
+          newChildPath = row.path;
+        } else if (page) {
+          const comp = page.addComponent(entry.type, props);
+          newChildPath = comp.path;
+        }
+      } else if (nt === 'column') {
+        const comp = this._findColumnAtPath(path)?.addComponent(entry.type, props);
+        if (comp) newChildPath = comp.path;
+      } else if (nt === 'row') {
+        const row = this._findRowAtPath(path);
+        if (row) {
+          const cols = row.getColumns();
+          if (cols.length > 0) {
+            const comp = cols[0]!.addComponent(entry.type, props);
+            newChildPath = comp.path;
+          }
+        }
+      } else if (nt === 'component') {
+        const page = this._findPageAtPath(['pages', path[1] as number]);
+        if (page) {
+          const comp = page.addComponent(entry.type, props);
+          newChildPath = comp.path;
+        }
+      }
+    });
+    if (newChildPath) {
+      this._selectedPath = newChildPath;
+      this._selectedNodeType = classifyPath(newChildPath) ?? 'component';
+      this._expandAfterAdd(path, nt);
+      this._expandAfterAdd(newChildPath, this._selectedNodeType);
+      this._updatePropertySource();
+    } else {
+      this._expandAfterAdd(path, nt);
     }
   }
 
@@ -796,18 +1298,29 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       <pages-builder-tree
         .document="${this._document}"
         .selectedPath="${this._selectedPath}"
+        .clipboardFragmentType="${getClipboard().fragmentType ?? undefined}"
+        .insertMode="${getClipboard().insertMode}"
         @node-select="${(e: CustomEvent) => this._handleNodeSelect(e)}"
         @tree-add="${(e: CustomEvent) => this._handleTreeAdd(e)}"
+        @tree-insert="${(e: CustomEvent) => this._handleTreeInsert(e)}"
+        @tree-insert-at="${(e: CustomEvent) => this._handleInsertAt(e)}"
+        @tree-cut="${(e: CustomEvent) => this._handleTreeCut(e)}"
+        @tree-copy="${(e: CustomEvent) => this._handleTreeCopy(e)}"
         @tree-action="${(e: CustomEvent) => this._handleTreeAction(e)}"
-        @tree-drop="${(e: CustomEvent) => this._handleTreeDrop(e)}"
       ></pages-builder-tree>
       <pages-builder-inline-picker
         .context="${this._paletteContext}"
         .open="${this._inlinePickerOpen}"
         .anchor="${this._inlinePickerAnchor}"
         @component-select="${(e: CustomEvent) => this._handleInlinePickerSelect(e)}"
-        @picker-close="${() => { this._inlinePickerOpen = false; this._syncTree(); }}"
+        @picker-close="${() => { this._inlinePickerOpen = false; this._insertAtIndex = undefined; this._syncTree(); }}"
       ></pages-builder-inline-picker>
+      <pages-position-picker
+        .open="${this._positionPickerOpen}"
+        .anchor="${this._positionPickerAnchor}"
+        @position-select="${(e: CustomEvent) => this._handlePositionSelect(e)}"
+        @picker-close="${() => { this._positionPickerOpen = false; this._syncTree(); }}"
+      ></pages-position-picker>
     `, this._treeContainer);
   }
 
@@ -855,8 +1368,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           @input="${() => this._handleEditorInput()}"
         ></pages-code-editor>
       </div>
-      <div class="editor-visual${showVisual ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
+      <div class="editor-visual${showVisual ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}" style="position:relative;">
         <div class="preview-container"></div>
+        <div class="overlay-root" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
       </div>
     `, this._centreContainer);
   }
@@ -868,6 +1382,20 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._paletteContext = {
       parentType,
       acceptsComponents: nt !== 'row',
+      availableDatasets: datasets.map(d => d.uuid),
+      siblingTypes: [],
+    };
+  }
+
+  private _refreshPaletteContextForSibling(_path: readonly (string | number)[], nodeType: TreeNodeType): void {
+    const datasets = this._document.getDatasets();
+    const parentNt = nodeType === 'component' ? 'column'
+      : nodeType === 'column' ? 'row'
+      : nodeType === 'row' ? undefined
+      : undefined;
+    this._paletteContext = {
+      parentType: parentNt,
+      acceptsComponents: nodeType !== 'row',
       availableDatasets: datasets.map(d => d.uuid),
       siblingTypes: [],
     };

@@ -1518,7 +1518,7 @@ async function mountBuilderShell(
     }) as EventListener);
   }
 
-  const layout: LayoutState = options.layout ?? { panels: [], floatingFrames: [] };
+  const layout: LayoutState = options.layout ?? { splits: {}, docks: {}, panels: {} };
   const emptyRoot: Component = { type: "panel", props: {} };
   return {
     root: emptyRoot,

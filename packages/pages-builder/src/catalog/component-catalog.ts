@@ -46,7 +46,6 @@ function defaultRelevance(ctx: PaletteContext): ContextRelevance {
 }
 
 function layoutRelevance(ctx: PaletteContext): ContextRelevance {
-  if (!ctx.acceptsComponents) return 'hidden';
   if (ctx.parentType && LAYOUT_BLOCKED_PARENTS.has(ctx.parentType)) return 'hidden';
   return 'normal';
 }
@@ -174,7 +173,15 @@ export const COMPONENT_CATALOG: readonly ComponentCatalogEntry[] = [
 ];
 
 export function getFilteredCatalog(ctx: PaletteContext): readonly FilteredCatalogEntry[] {
-  return COMPONENT_CATALOG
+  let catalog = COMPONENT_CATALOG;
+  if (ctx.allowedTypes) {
+    const allowed = new Set([
+      ...ctx.allowedTypes.structuralTypes,
+      ...ctx.allowedTypes.componentTypes,
+    ]);
+    catalog = catalog.filter(e => allowed.has(e.type));
+  }
+  return catalog
     .map(e => ({ entry: e, relevance: e.contextRelevance(ctx) }))
     .filter(e => e.relevance !== 'hidden');
 }

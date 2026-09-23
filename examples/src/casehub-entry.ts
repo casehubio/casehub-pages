@@ -16,7 +16,7 @@ import { createSchemaCompletion } from "@casehubio/pages-code-editor";
 import { dashboardSchema } from "@casehubio/pages-schema";
 import "@casehubio/pages-property-palette";
 import "@casehubio/pages-diagram-palette";
-import "@casehubio/pages-builder";
+// pages-builder loaded on demand — static import crashes UMD bundle (decorator compat)
 import { createBasicPipelineModel, PIPELINE_SCHEMAS } from "./pipeline-stencils";
 import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";

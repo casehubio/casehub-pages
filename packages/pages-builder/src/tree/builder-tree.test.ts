@@ -330,6 +330,131 @@ describe('PagesBuilderTree interactions', () => {
     expect(events[0]!.detail.target).toBeInstanceOf(HTMLElement);
   });
 
+  it('renders insert button on every non-section node', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const insertBtns = el.shadowRoot!.querySelectorAll('.insert-btn');
+    const nonSectionItems = el.shadowRoot!.querySelectorAll('[data-node-type]:not([data-node-type="section"])');
+    expect(insertBtns.length).toBe(nonSectionItems.length);
+  });
+
+  it('renders cut and copy buttons on every non-section node', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const cutBtns = el.shadowRoot!.querySelectorAll('.cut-btn');
+    const copyBtns = el.shadowRoot!.querySelectorAll('.copy-btn');
+    const nonSectionItems = el.shadowRoot!.querySelectorAll('[data-node-type]:not([data-node-type="section"])');
+    expect(cutBtns.length).toBe(nonSectionItems.length);
+    expect(copyBtns.length).toBe(nonSectionItems.length);
+  });
+
+  it('fires tree-cut on cut button click', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('tree-cut', ((e: CustomEvent) => events.push(e)) as EventListener);
+
+    const cutBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.cut-btn')!;
+    cutBtn.click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.path).toBeDefined();
+    expect(events[0]!.detail.nodeType).toBeDefined();
+  });
+
+  it('fires tree-copy on copy button click', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('tree-copy', ((e: CustomEvent) => events.push(e)) as EventListener);
+
+    const copyBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.copy-btn')!;
+    copyBtn.click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.path).toBeDefined();
+  });
+
+  it('fires tree-insert on insert button click', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('tree-insert', ((e: CustomEvent) => events.push(e)) as EventListener);
+
+    const insertBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.insert-btn')!;
+    insertBtn.click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.detail.path).toBeDefined();
+    expect(events[0]!.detail.target).toBeInstanceOf(HTMLElement);
+  });
+
+  it('highlights valid paste targets when insert mode active for component', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el.clipboardFragmentType = 'component';
+    el.insertMode = true;
+    await el.updateComplete;
+
+    const validTargets = el.shadowRoot!.querySelectorAll('.paste-target');
+    expect(validTargets.length).toBeGreaterThan(0);
+    const pageTargets = el.shadowRoot!.querySelectorAll('[data-node-type="page"].paste-target');
+    expect(pageTargets.length).toBeGreaterThan(0);
+  });
+
+  it('does not highlight sections as paste targets', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    el.clipboardFragmentType = 'component';
+    el.insertMode = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const sectionTargets = el.shadowRoot!.querySelectorAll('[data-node-type="section"].paste-target');
+    expect(sectionTargets.length).toBe(0);
+  });
+
+  it('clears paste-target class when insert mode is false', async () => {
+    const doc = PageDocument.parse(ROWS_PAGE);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    el.clipboardFragmentType = 'component';
+    el.insertMode = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el.insertMode = false;
+    await el.updateComplete;
+
+    const targets = el.shadowRoot!.querySelectorAll('.paste-target');
+    expect(targets.length).toBe(0);
+  });
+
   it('opens context menu on right-click', async () => {
     const doc = PageDocument.parse(MINIMAL_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
@@ -439,5 +564,90 @@ describe('PagesBuilderTree', () => {
 
     const items = el.shadowRoot!.querySelectorAll('[role="treeitem"]');
     expect(items).toHaveLength(0);
+  });
+});
+
+describe('Tree insertion points', () => {
+  let el: PagesBuilderTree;
+
+  afterEach(() => el?.remove());
+
+  const THREE_COMPS = `pages:
+- name: P1
+  components:
+  - type: bar-chart
+  - type: title
+  - type: input
+`;
+
+  async function setup(yaml: string, expandPath?: readonly (string | number)[]): Promise<void> {
+    const doc = PageDocument.parse(yaml);
+    el = document.createElement('pages-builder-tree') as PagesBuilderTree;
+    el.document = doc;
+    if (expandPath) el.selectedPath = expandPath;
+    document.body.appendChild(el);
+    await el.updateComplete;
+  }
+
+  it('renders N+1 insertion points for N children of expanded container', async () => {
+    await setup(THREE_COMPS, ['pages', 0, 'components', 0]);
+    const points = el.shadowRoot!.querySelectorAll('.tree-insertion-point');
+    expect(points.length).toBe(4);
+  });
+
+  it('does not render insertion points for collapsed containers', async () => {
+    await setup(THREE_COMPS);
+    const points = el.shadowRoot!.querySelectorAll('.tree-insertion-point');
+    expect(points.length).toBe(0);
+  });
+
+  it('insertion points have correct data-index attributes', async () => {
+    await setup(THREE_COMPS, ['pages', 0, 'components', 0]);
+    const points = el.shadowRoot!.querySelectorAll('.tree-insertion-point');
+    const indices = Array.from(points).map(p => p.getAttribute('data-index'));
+    expect(indices).toEqual(['0', '1', '2', '3']);
+  });
+
+  it('insertion point fires tree-insert-at with correct detail', async () => {
+    await setup(THREE_COMPS, ['pages', 0, 'components', 0]);
+    let detail: any;
+    el.addEventListener('tree-insert-at', (e: Event) => {
+      detail = (e as CustomEvent).detail;
+    });
+
+    const point = el.shadowRoot!.querySelector('.tree-insertion-point') as HTMLElement;
+    point.click();
+    expect(detail).toBeTruthy();
+    expect(detail.index).toBe(0);
+    expect(detail.parentPath).toEqual(['pages', 0]);
+    expect(detail.parentNodeType).toBe('page');
+    expect(detail.target).toBeInstanceOf(HTMLElement);
+  });
+
+  it('insertion points have ARIA attributes', async () => {
+    await setup(THREE_COMPS, ['pages', 0, 'components', 0]);
+    const point = el.shadowRoot!.querySelector('.tree-insertion-point');
+    expect(point?.getAttribute('role')).toBe('button');
+    expect(point?.getAttribute('aria-label')).toContain('Insert');
+  });
+
+  it('row shows insertion points between columns', async () => {
+    await setup(ROWS_PAGE, ['pages', 0, 'rows', 0, 'columns', 0]);
+    const rowGroup = el.shadowRoot!.querySelectorAll('.tree-insertion-point');
+    expect(rowGroup.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('does not render insertion points for section nodes', async () => {
+    await setup(THREE_COMPS, ['pages', 0, 'components', 0]);
+    const sectionGroups = el.shadowRoot!.querySelectorAll('[data-node-type="section"]');
+    expect(sectionGroups.length).toBeGreaterThan(0);
+    for (const section of sectionGroups) {
+      const group = section.nextElementSibling;
+      if (group?.getAttribute('role') === 'group') {
+        const directInsertionPoints = Array.from(group.children)
+          .filter(c => c.classList.contains('tree-insertion-point'));
+        expect(directInsertionPoints.length).toBe(0);
+      }
+    }
   });
 });

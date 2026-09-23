@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import { computeElkLayout, toReactFlowGraph } from '@casehubio/graph-renderer';
 import type { ElkLayoutOptions, ElkLayoutResult, EditPolicy, GraphEdit } from '@casehubio/graph-renderer';
 import type { PersistenceBackend, GraphModel, NodeDecoration } from '@casehubio/graph-core';
+import { getGrammar } from '@casehubio/graph-core';
 import type { Node, Edge } from '@xyflow/react';
 import type { PropertyPaletteSource, EditorResolver } from '@casehubio/pages-property-palette';
 import type { PaletteItem, PaletteSelectDetail } from '@casehubio/pages-diagram-palette';
@@ -11,6 +12,7 @@ import type { ExportFormat } from '@casehubio/graph-renderer';
 import { getPropertySchema } from './schema-registry.js';
 import '@casehubio/pages-property-palette';
 import '@casehubio/pages-diagram-palette';
+import '@casehubio/pages-diagram-palette/chooser';
 
 export interface AdapterResult {
   readonly model: GraphModel;
@@ -72,6 +74,16 @@ export declare class DiagramBaseInterface {
   _renderPropertyPanel(): TemplateResult;
   _renderStencilPalette(): TemplateResult;
   _paletteItems(): PaletteItem[];
+  _chooserState: { x: number; y: number; sourceNodeId?: string | undefined } | null;
+  _lastPointerX: number;
+  _lastPointerY: number;
+  _onCanvasPointerDown: (e: PointerEvent) => void;
+  _showPickerAtPaneClick(): void;
+  _showPickerAtConnectEnd(payload: { sourceNodeId?: string }): void;
+  _chooserItems(): PaletteItem[];
+  _onChooserSelect: (e: Event) => void;
+  _onChooserDismiss: () => void;
+  _renderNodePicker(): TemplateResult | typeof nothing;
   protected _layoutOptions(): ElkLayoutOptions;
   protected _decorations(): ReadonlyMap<string, NodeDecoration> | undefined;
   protected _editPolicy(): EditPolicy | undefined;
@@ -221,6 +233,110 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
     protected _iconRenderer(): ((icon: string) => TemplateResult) | undefined {
       return undefined;
     }
+
+    // --- Node picker (canvas click / connect-end-on-empty) ---
+
+    @state() protected _chooserState: { x: number; y: number; sourceNodeId?: string | undefined } | null = null;
+    protected _lastPointerX = 0;
+    protected _lastPointerY = 0;
+
+    protected _onCanvasPointerDown = (e: PointerEvent): void => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      this._lastPointerX = e.clientX - rect.left;
+      this._lastPointerY = e.clientY - rect.top;
+    };
+
+    protected _showPickerAtPaneClick(): void {
+      if (this.readonly) return;
+      this._chooserState = { x: this._lastPointerX, y: this._lastPointerY };
+    }
+
+    protected _showPickerAtConnectEnd(payload: { sourceNodeId?: string }): void {
+      if (this.readonly) return;
+      this._chooserState = {
+        x: this._lastPointerX,
+        y: this._lastPointerY,
+        sourceNodeId: payload?.sourceNodeId,
+      };
+    }
+
+    protected _chooserItems(): PaletteItem[] {
+      const items = this._paletteItems();
+      const sourceId = this._chooserState?.sourceNodeId;
+      if (!sourceId || !this._adapterResult) return items;
+      const source = this._adapterResult.model.nodes.find(n => n.id === sourceId);
+      if (!source) return items;
+      const sourceGrammar = getGrammar(source.type);
+      if (!sourceGrammar) return items;
+      const { allowedTo, max: outMax } = sourceGrammar.connections.outbound;
+      const outboundAllowed = new Set(allowedTo);
+      const model = this._adapterResult.model;
+      const creatableTypes = new Set(items.map(i => i.type));
+      const outboundToCreatable = model.edges.filter(e => {
+        if (e.source !== sourceId) return false;
+        const targetType = model.nodes.find(n => n.id === e.target)?.type ?? '';
+        return outboundAllowed.has(targetType) && creatableTypes.has(targetType);
+      }).length;
+      return items.filter(item => {
+        if (outboundAllowed.has(item.type)) {
+          return outboundToCreatable < outMax;
+        }
+        const targetGrammar = getGrammar(item.type);
+        if (targetGrammar && targetGrammar.connections.inbound.allowedFrom.includes(source.type)) return true;
+        return false;
+      });
+    }
+
+    protected _onChooserSelect = (e: Event): void => {
+      const detail = (e as CustomEvent<PaletteSelectDetail>).detail;
+      const nodeType = detail?.item?.type;
+      if (!nodeType || !this._adapterResult || !this._chooserState) return;
+      const { sourceNodeId } = this._chooserState;
+      if (sourceNodeId) {
+        this._pushUndo();
+        try {
+          let yaml = this._applyGraphEdit(this._currentYaml, { type: 'addNode', nodeType });
+          const prevResult = this._adapterResult;
+          const result = this._adaptYaml(yaml);
+          this._adapterResult = result;
+          const oldIds = new Set(prevResult!.model.nodes.map(n => n.id));
+          const newNode = result.model.nodes.find(n => !oldIds.has(n.id));
+          if (newNode) {
+            try {
+              yaml = this._applyGraphEdit(yaml, { type: 'addEdge', sourceId: sourceNodeId, targetId: newNode.id });
+            } catch (_) { /* edge creation may not be supported for all type pairs */ }
+          }
+          this._currentYaml = yaml;
+          void this._fullRender(yaml);
+        } catch (err) {
+          this._currentYaml = this._undoStack.pop() ?? this._currentYaml;
+          this._error = `Edit failed: ${err}`;
+        }
+      } else {
+        this._handleMutation({ type: 'addNode', nodeType });
+      }
+      this._chooserState = null;
+    };
+
+    protected _onChooserDismiss = (): void => {
+      this._chooserState = null;
+    };
+
+    protected _renderNodePicker(): TemplateResult | typeof nothing {
+      if (!this._chooserState) return nothing;
+      return html`
+        <div style="position:absolute;left:${this._chooserState.x}px;top:${this._chooserState.y}px;z-index:10;">
+          <pages-node-chooser
+            .items=${this._chooserItems()}
+            .iconRenderer=${this._iconRenderer()}
+            @pages-palette-select=${this._onChooserSelect}
+            @pages-chooser-dismiss=${this._onChooserDismiss}
+          ></pages-node-chooser>
+        </div>
+      `;
+    }
+
+    // --- Stencil palette ---
 
     protected _renderStencilPalette(): TemplateResult {
       const items = this._paletteItems();

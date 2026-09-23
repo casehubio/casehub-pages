@@ -41,7 +41,7 @@ function findSamples(dir, baseDir = dir) {
       samples.push(...findSamples(filePath, baseDir));
     } else if (file.endsWith('.page.yaml') || file.endsWith('.dash.yml') || file.endsWith('.yml') || file.endsWith('.yaml')) {
       const relativePath = path.relative(baseDir, filePath);
-      const name = file.replace(/\.(dash\.yaml|dash\.yml|yml|yaml)$/, '');
+      const name = file.replace(/\.(page\.yaml|page\.yml|dash\.yaml|dash\.yml|yml|yaml)$/, '');
       const category = path.dirname(relativePath).split(path.sep)[0];
 
       const entry = {

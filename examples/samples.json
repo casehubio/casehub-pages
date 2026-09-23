@@ -7,67 +7,67 @@
       "category": "Charts",
       "samples": [
         {
-          "name": "Charts.page",
+          "name": "Charts",
           "path": "Charts/Charts.page.yaml",
           "category": "Charts",
           "file": "Charts.page.yaml"
         },
         {
-          "name": "Decal Pattern.page",
+          "name": "Decal Pattern",
           "path": "Charts/Decal Pattern.page.yaml",
           "category": "Charts",
           "file": "Decal Pattern.page.yaml"
         },
         {
-          "name": "Density Heatmap.page",
+          "name": "Density Heatmap",
           "path": "Charts/Density Heatmap.page.yaml",
           "category": "Charts",
           "file": "Density Heatmap.page.yaml"
         },
         {
-          "name": "ECharts Custom.page",
+          "name": "ECharts Custom",
           "path": "Charts/ECharts Custom.page.yaml",
           "category": "Charts",
           "file": "ECharts Custom.page.yaml"
         },
         {
-          "name": "Event Timeline.page",
+          "name": "Event Timeline",
           "path": "Charts/Event Timeline.page.yaml",
           "category": "Charts",
           "file": "Event Timeline.page.yaml"
         },
         {
-          "name": "Heatmap.page",
+          "name": "Heatmap",
           "path": "Charts/Heatmap.page.yaml",
           "category": "Charts",
           "file": "Heatmap.page.yaml"
         },
         {
-          "name": "Histogram.page",
+          "name": "Histogram",
           "path": "Charts/Histogram.page.yaml",
           "category": "Charts",
           "file": "Histogram.page.yaml"
         },
         {
-          "name": "SPI Broadening.page",
+          "name": "SPI Broadening",
           "path": "Charts/SPI Broadening.page.yaml",
           "category": "Charts",
           "file": "SPI Broadening.page.yaml"
         },
         {
-          "name": "Timeline and Graph.page",
+          "name": "Timeline and Graph",
           "path": "Charts/Timeline and Graph.page.yaml",
           "category": "Charts",
           "file": "Timeline and Graph.page.yaml"
         },
         {
-          "name": "TimeSeries.page",
+          "name": "TimeSeries",
           "path": "Charts/TimeSeries.page.yaml",
           "category": "Charts",
           "file": "TimeSeries.page.yaml"
         },
         {
-          "name": "Treemap.page",
+          "name": "Treemap",
           "path": "Charts/Treemap.page.yaml",
           "category": "Charts",
           "file": "Treemap.page.yaml"
@@ -78,112 +78,112 @@
       "category": "Tables",
       "samples": [
         {
-          "name": "Accumulate Flag.page",
+          "name": "Accumulate Flag",
           "path": "Tables/Accumulate Flag.page.yaml",
           "category": "Tables",
           "file": "Accumulate Flag.page.yaml"
         },
         {
-          "name": "Column Settings.page",
+          "name": "Column Settings",
           "path": "Tables/Column Settings.page.yaml",
           "category": "Tables",
           "file": "Column Settings.page.yaml"
         },
         {
-          "name": "Data Table.page",
+          "name": "Data Table",
           "path": "Tables/Data Table.page.yaml",
           "category": "Tables",
           "file": "Data Table.page.yaml"
         },
         {
-          "name": "GitHub Repos.page",
+          "name": "GitHub Repos",
           "path": "Tables/GitHub Repos.page.yaml",
           "category": "Tables",
           "file": "GitHub Repos.page.yaml"
         },
         {
-          "name": "Google Spreadsheet.page",
+          "name": "Google Spreadsheet",
           "path": "Tables/Google Spreadsheet.page.yaml",
           "category": "Tables",
           "file": "Google Spreadsheet.page.yaml"
         },
         {
-          "name": "Grid Tables.page",
+          "name": "Grid Tables",
           "path": "Tables/Grid Tables.page.yaml",
           "category": "Tables",
           "file": "Grid Tables.page.yaml"
         },
         {
-          "name": "Grouped Roadmap.page",
+          "name": "Grouped Roadmap",
           "path": "Tables/Grouped Roadmap.page.yaml",
           "category": "Tables",
           "file": "Grouped Roadmap.page.yaml"
         },
         {
-          "name": "Grouped View.page",
+          "name": "Grouped View",
           "path": "Tables/Grouped View.page.yaml",
           "category": "Tables",
           "file": "Grouped View.page.yaml"
         },
         {
-          "name": "Inline Dataset.page",
+          "name": "Inline Dataset",
           "path": "Tables/Inline Dataset.page.yaml",
           "category": "Tables",
           "file": "Inline Dataset.page.yaml"
         },
         {
-          "name": "Lookup Operations.page",
+          "name": "Lookup Operations",
           "path": "Tables/Lookup Operations.page.yaml",
           "category": "Tables",
           "file": "Lookup Operations.page.yaml"
         },
         {
-          "name": "Master Detail.page",
+          "name": "Master Detail",
           "path": "Tables/Master Detail.page.yaml",
           "category": "Tables",
           "file": "Master Detail.page.yaml",
           "tsPath": "Tables/Master Detail.ts"
         },
         {
-          "name": "Project Roadmap.page",
+          "name": "Project Roadmap",
           "path": "Tables/Project Roadmap.page.yaml",
           "category": "Tables",
           "file": "Project Roadmap.page.yaml"
         },
         {
-          "name": "Row Detail.page",
+          "name": "Row Detail",
           "path": "Tables/Row Detail.page.yaml",
           "category": "Tables",
           "file": "Row Detail.page.yaml",
           "tsPath": "Tables/Row Detail.ts"
         },
         {
-          "name": "Row Styles.page",
+          "name": "Row Styles",
           "path": "Tables/Row Styles.page.yaml",
           "category": "Tables",
           "file": "Row Styles.page.yaml"
         },
         {
-          "name": "Spanning.page",
+          "name": "Spanning",
           "path": "Tables/Spanning.page.yaml",
           "category": "Tables",
           "file": "Spanning.page.yaml",
           "tsPath": "Tables/Spanning.ts"
         },
         {
-          "name": "Tabbed Table.page",
+          "name": "Tabbed Table",
           "path": "Tables/Tabbed Table.page.yaml",
           "category": "Tables",
           "file": "Tabbed Table.page.yaml"
         },
         {
-          "name": "Tree Table.page",
+          "name": "Tree Table",
           "path": "Tables/Tree Table.page.yaml",
           "category": "Tables",
           "file": "Tree Table.page.yaml"
         },
         {
-          "name": "Variable Heights.page",
+          "name": "Variable Heights",
           "path": "Tables/Variable Heights.page.yaml",
           "category": "Tables",
           "file": "Variable Heights.page.yaml",
@@ -195,19 +195,19 @@
       "category": "Metrics",
       "samples": [
         {
-          "name": "Badges and Countdown.page",
+          "name": "Badges and Countdown",
           "path": "Metrics/Badges and Countdown.page.yaml",
           "category": "Metrics",
           "file": "Badges and Countdown.page.yaml"
         },
         {
-          "name": "Metric Patterns.page",
+          "name": "Metric Patterns",
           "path": "Metrics/Metric Patterns.page.yaml",
           "category": "Metrics",
           "file": "Metric Patterns.page.yaml"
         },
         {
-          "name": "Metrics and Gauges.page",
+          "name": "Metrics and Gauges",
           "path": "Metrics/Metrics and Gauges.page.yaml",
           "category": "Metrics",
           "file": "Metrics and Gauges.page.yaml"
@@ -218,13 +218,13 @@
       "category": "Maps",
       "samples": [
         {
-          "name": "Maps.page",
+          "name": "Maps",
           "path": "Maps/Maps.page.yaml",
           "category": "Maps",
           "file": "Maps.page.yaml"
         },
         {
-          "name": "SVG Heatmap.page",
+          "name": "SVG Heatmap",
           "path": "Maps/SVG Heatmap.page.yaml",
           "category": "Maps",
           "file": "SVG Heatmap.page.yaml"
@@ -235,19 +235,19 @@
       "category": "Forms",
       "samples": [
         {
-          "name": "Contact Manager.page",
+          "name": "Contact Manager",
           "path": "Forms/Contact Manager.page.yaml",
           "category": "Forms",
           "file": "Contact Manager.page.yaml"
         },
         {
-          "name": "Developer Registration.page",
+          "name": "Developer Registration",
           "path": "Forms/Developer Registration.page.yaml",
           "category": "Forms",
           "file": "Developer Registration.page.yaml"
         },
         {
-          "name": "Schema Form.page",
+          "name": "Schema Form",
           "path": "Forms/Schema Form.page.yaml",
           "category": "Forms",
           "file": "Schema Form.page.yaml",
@@ -259,55 +259,55 @@
       "category": "Layout",
       "samples": [
         {
-          "name": "Carousel and Stack.page",
+          "name": "Carousel and Stack",
           "path": "Layout/Carousel and Stack.page.yaml",
           "category": "Layout",
           "file": "Carousel and Stack.page.yaml"
         },
         {
-          "name": "Column with Rows.page",
+          "name": "Column with Rows",
           "path": "Layout/Column with Rows.page.yaml",
           "category": "Layout",
           "file": "Column with Rows.page.yaml"
         },
         {
-          "name": "Dock Workbench.page",
+          "name": "Dock Workbench",
           "path": "Layout/Dock Workbench.page.yaml",
           "category": "Layout",
           "file": "Dock Workbench.page.yaml"
         },
         {
-          "name": "Floating Workspace.page",
+          "name": "Floating Workspace",
           "path": "Layout/Floating Workspace.page.yaml",
           "category": "Layout",
           "file": "Floating Workspace.page.yaml"
         },
         {
-          "name": "Frame Sandbox.page",
+          "name": "Frame Sandbox",
           "path": "Layout/Frame Sandbox.page.yaml",
           "category": "Layout",
           "file": "Frame Sandbox.page.yaml"
         },
         {
-          "name": "Layout Patterns.page",
+          "name": "Layout Patterns",
           "path": "Layout/Layout Patterns.page.yaml",
           "category": "Layout",
           "file": "Layout Patterns.page.yaml"
         },
         {
-          "name": "Split and Dock.page",
+          "name": "Split and Dock",
           "path": "Layout/Split and Dock.page.yaml",
           "category": "Layout",
           "file": "Split and Dock.page.yaml"
         },
         {
-          "name": "Team Management.page",
+          "name": "Team Management",
           "path": "Layout/Team Management.page.yaml",
           "category": "Layout",
           "file": "Team Management.page.yaml"
         },
         {
-          "name": "Workspace Compositor.page",
+          "name": "Workspace Compositor",
           "path": "Layout/Workspace Compositor.page.yaml",
           "category": "Layout",
           "file": "Workspace Compositor.page.yaml"
@@ -318,13 +318,13 @@
       "category": "Interactivity",
       "samples": [
         {
-          "name": "Action Button.page",
+          "name": "Action Button",
           "path": "Interactivity/Action Button.page.yaml",
           "category": "Interactivity",
           "file": "Action Button.page.yaml"
         },
         {
-          "name": "Dynamic Visibility.page",
+          "name": "Dynamic Visibility",
           "path": "Interactivity/Dynamic Visibility.page.yaml",
           "category": "Interactivity",
           "file": "Dynamic Visibility.page.yaml"
@@ -336,7 +336,7 @@
           "file": "Navigation Rebinding.dash.yml"
         },
         {
-          "name": "Selectors and Filters.page",
+          "name": "Selectors and Filters",
           "path": "Interactivity/Selectors and Filters.page.yaml",
           "category": "Interactivity",
           "file": "Selectors and Filters.page.yaml"
@@ -347,28 +347,28 @@
       "category": "Graph Editing",
       "samples": [
         {
-          "name": "Basic Pipeline.page",
+          "name": "Basic Pipeline",
           "path": "Graph Editing/Basic Pipeline.page.yaml",
           "category": "Graph Editing",
           "file": "Basic Pipeline.page.yaml",
           "tsPath": "Graph Editing/Basic Pipeline.ts"
         },
         {
-          "name": "Interactive Editing.page",
+          "name": "Interactive Editing",
           "path": "Graph Editing/Interactive Editing.page.yaml",
           "category": "Graph Editing",
           "file": "Interactive Editing.page.yaml",
           "tsPath": "Graph Editing/Interactive Editing.ts"
         },
         {
-          "name": "Multi Select.page",
+          "name": "Multi Select",
           "path": "Graph Editing/Multi Select.page.yaml",
           "category": "Graph Editing",
           "file": "Multi Select.page.yaml",
           "tsPath": "Graph Editing/Multi Select.ts"
         },
         {
-          "name": "Nested Pipeline.page",
+          "name": "Nested Pipeline",
           "path": "Graph Editing/Nested Pipeline.page.yaml",
           "category": "Graph Editing",
           "file": "Nested Pipeline.page.yaml",
@@ -380,7 +380,7 @@
       "category": "Live Data",
       "samples": [
         {
-          "name": "Polling.page",
+          "name": "Polling",
           "path": "Live Data/Polling.page.yaml",
           "category": "Live Data",
           "file": "Polling.page.yaml"
@@ -391,13 +391,13 @@
       "category": "Content",
       "samples": [
         {
-          "name": "Alerts.page",
+          "name": "Alerts",
           "path": "Content/Alerts.page.yaml",
           "category": "Content",
           "file": "Alerts.page.yaml"
         },
         {
-          "name": "Content Types.page",
+          "name": "Content Types",
           "path": "Content/Content Types.page.yaml",
           "category": "Content",
           "file": "Content Types.page.yaml"
@@ -408,21 +408,21 @@
       "category": "Custom Components",
       "samples": [
         {
-          "name": "Case Definition Editor.page",
+          "name": "Case Definition Editor",
           "path": "Custom Components/Case Definition Editor.page.yaml",
           "category": "Custom Components",
           "file": "Case Definition Editor.page.yaml",
           "tsPath": "Custom Components/Case Definition Editor.ts"
         },
         {
-          "name": "Code Editor.page",
+          "name": "Code Editor",
           "path": "Custom Components/Code Editor.page.yaml",
           "category": "Custom Components",
           "file": "Code Editor.page.yaml",
           "tsPath": "Custom Components/Code Editor.ts"
         },
         {
-          "name": "Iframe Components.page",
+          "name": "Iframe Components",
           "path": "Custom Components/Iframe Components.page.yaml",
           "category": "Custom Components",
           "file": "Iframe Components.page.yaml"
@@ -433,27 +433,27 @@
       "category": "Theming",
       "samples": [
         {
-          "name": "DarkMode.page",
+          "name": "DarkMode",
           "path": "Theming/DarkMode.page.yaml",
           "category": "Theming",
           "file": "DarkMode.page.yaml"
         },
         {
-          "name": "Theme Designer.page",
+          "name": "Theme Designer",
           "path": "Theming/Theme Designer.page.yaml",
           "category": "Theming",
           "file": "Theme Designer.page.yaml",
           "tsPath": "Theming/Theme Designer.ts"
         },
         {
-          "name": "Theme Picker.page",
+          "name": "Theme Picker",
           "path": "Theming/Theme Picker.page.yaml",
           "category": "Theming",
           "file": "Theme Picker.page.yaml",
           "tsPath": "Theming/Theme Picker.ts"
         },
         {
-          "name": "Token Showcase.page",
+          "name": "Token Showcase",
           "path": "Theming/Token Showcase.page.yaml",
           "category": "Theming",
           "file": "Token Showcase.page.yaml"
@@ -464,25 +464,25 @@
       "category": "Monitoring",
       "samples": [
         {
-          "name": "Ansible Metrics.page",
+          "name": "Ansible Metrics",
           "path": "Monitoring/Ansible Metrics.page.yaml",
           "category": "Monitoring",
           "file": "Ansible Metrics.page.yaml"
         },
         {
-          "name": "Backstage Metrics.page",
+          "name": "Backstage Metrics",
           "path": "Monitoring/Backstage Metrics.page.yaml",
           "category": "Monitoring",
           "file": "Backstage Metrics.page.yaml"
         },
         {
-          "name": "Jupyter Hub Metrics.page",
+          "name": "Jupyter Hub Metrics",
           "path": "Monitoring/Jupyter Hub Metrics.page.yaml",
           "category": "Monitoring",
           "file": "Jupyter Hub Metrics.page.yaml"
         },
         {
-          "name": "Jupyter Metrics Summary.page",
+          "name": "Jupyter Metrics Summary",
           "path": "Monitoring/Jupyter Metrics Summary.page.yaml",
           "category": "Monitoring",
           "file": "Jupyter Metrics Summary.page.yaml"
@@ -500,7 +500,7 @@
           "file": "Kepler Metrics.yaml"
         },
         {
-          "name": "ModelMesh Metrics.page",
+          "name": "ModelMesh Metrics",
           "path": "Monitoring/ModelMesh Metrics.page.yaml",
           "category": "Monitoring",
           "file": "ModelMesh Metrics.page.yaml"
@@ -524,19 +524,19 @@
           "file": "Prometheus HTTP Requests.yml"
         },
         {
-          "name": "Quarkus Monitoring.page",
+          "name": "Quarkus Monitoring",
           "path": "Monitoring/Quarkus Monitoring.page.yaml",
           "category": "Monitoring",
           "file": "Quarkus Monitoring.page.yaml"
         },
         {
-          "name": "Real Time JVM Monitoring.page",
+          "name": "Real Time JVM Monitoring",
           "path": "Monitoring/Real Time JVM Monitoring.page.yaml",
           "category": "Monitoring",
           "file": "Real Time JVM Monitoring.page.yaml"
         },
         {
-          "name": "Triton Inference Server.page",
+          "name": "Triton Inference Server",
           "path": "Monitoring/Triton Inference Server.page.yaml",
           "category": "Monitoring",
           "file": "Triton Inference Server.page.yaml"
@@ -547,42 +547,42 @@
       "category": "Scenario Automation",
       "samples": [
         {
-          "name": "Composable Workflow.page",
+          "name": "Composable Workflow",
           "path": "Scenario Automation/Composable Workflow.page.yaml",
           "category": "Scenario Automation",
           "file": "Composable Workflow.page.yaml",
           "tsPath": "Scenario Automation/Composable Workflow.ts"
         },
         {
-          "name": "Form Automation.page",
+          "name": "Form Automation",
           "path": "Scenario Automation/Form Automation.page.yaml",
           "category": "Scenario Automation",
           "file": "Form Automation.page.yaml",
           "tsPath": "Scenario Automation/Form Automation.ts"
         },
         {
-          "name": "Parameterized Script.page",
+          "name": "Parameterized Script",
           "path": "Scenario Automation/Parameterized Script.page.yaml",
           "category": "Scenario Automation",
           "file": "Parameterized Script.page.yaml",
           "tsPath": "Scenario Automation/Parameterized Script.ts"
         },
         {
-          "name": "Scenario Controller.page",
+          "name": "Scenario Controller",
           "path": "Scenario Automation/Scenario Controller.page.yaml",
           "category": "Scenario Automation",
           "file": "Scenario Controller.page.yaml",
           "tsPath": "Scenario Automation/Scenario Controller.ts"
         },
         {
-          "name": "Script Library.page",
+          "name": "Script Library",
           "path": "Scenario Automation/Script Library.page.yaml",
           "category": "Scenario Automation",
           "file": "Script Library.page.yaml",
           "tsPath": "Scenario Automation/Script Library.ts"
         },
         {
-          "name": "Table Population.page",
+          "name": "Table Population",
           "path": "Scenario Automation/Table Population.page.yaml",
           "category": "Scenario Automation",
           "file": "Table Population.page.yaml",
@@ -594,49 +594,49 @@
       "category": "Domain Showcases",
       "samples": [
         {
-          "name": "FIFA 2022 Goals.page",
+          "name": "FIFA 2022 Goals",
           "path": "Domain Showcases/FIFA 2022 Goals.page.yaml",
           "category": "Domain Showcases",
           "file": "FIFA 2022 Goals.page.yaml"
         },
         {
-          "name": "Fleet Monitor.page",
+          "name": "Fleet Monitor",
           "path": "Domain Showcases/Fleet Monitor.page.yaml",
           "category": "Domain Showcases",
           "file": "Fleet Monitor.page.yaml"
         },
         {
-          "name": "Github Repositories.page",
+          "name": "Github Repositories",
           "path": "Domain Showcases/Github Repositories.page.yaml",
           "category": "Domain Showcases",
           "file": "Github Repositories.page.yaml"
         },
         {
-          "name": "Most Spoken Languages.page",
+          "name": "Most Spoken Languages",
           "path": "Domain Showcases/Most Spoken Languages.page.yaml",
           "category": "Domain Showcases",
           "file": "Most Spoken Languages.page.yaml"
         },
         {
-          "name": "Patient Tracker.page",
+          "name": "Patient Tracker",
           "path": "Domain Showcases/Patient Tracker.page.yaml",
           "category": "Domain Showcases",
           "file": "Patient Tracker.page.yaml"
         },
         {
-          "name": "Podman Stats.page",
+          "name": "Podman Stats",
           "path": "Domain Showcases/Podman Stats.page.yaml",
           "category": "Domain Showcases",
           "file": "Podman Stats.page.yaml"
         },
         {
-          "name": "Sales Dashboard.page",
+          "name": "Sales Dashboard",
           "path": "Domain Showcases/Sales Dashboard.page.yaml",
           "category": "Domain Showcases",
           "file": "Sales Dashboard.page.yaml"
         },
         {
-          "name": "Workforce Analytics.page",
+          "name": "Workforce Analytics",
           "path": "Domain Showcases/Workforce Analytics.page.yaml",
           "category": "Domain Showcases",
           "file": "Workforce Analytics.page.yaml"
@@ -647,19 +647,19 @@
       "category": "Server",
       "samples": [
         {
-          "name": "Live Event Stream.page",
+          "name": "Live Event Stream",
           "path": "Server/Live Event Stream.page.yaml",
           "category": "Server",
           "file": "Live Event Stream.page.yaml"
         },
         {
-          "name": "Multi-Topic Dashboard.page",
+          "name": "Multi-Topic Dashboard",
           "path": "Server/Multi-Topic Dashboard.page.yaml",
           "category": "Server",
           "file": "Multi-Topic Dashboard.page.yaml"
         },
         {
-          "name": "Reconnect Replay.page",
+          "name": "Reconnect Replay",
           "path": "Server/Reconnect Replay.page.yaml",
           "category": "Server",
           "file": "Reconnect Replay.page.yaml",

@@ -111,7 +111,7 @@ describe('PagesBuilderInlinePicker', () => {
   });
 
   it('hides category pills with no matching entries', async () => {
-    el = createPicker({ acceptsComponents: false });
+    el = createPicker({ acceptsComponents: false, parentType: 'row' });
     el.open = true;
     document.body.appendChild(el);
     await el.updateComplete;

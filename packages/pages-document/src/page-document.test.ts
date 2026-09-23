@@ -218,6 +218,18 @@ describe('PageDocument', () => {
       expect(doc.getPages()[0]!.getRows()).toHaveLength(2);
     });
 
+    it('inserts a row at a specific index', () => {
+      const doc = PageDocument.parse(ROWS_PAGE);
+      const page = doc.getPages()[0]!;
+      const rowsBefore = page.getRows().length;
+      page.insertRowAt(0);
+      const rowsAfter = page.getRows();
+      expect(rowsAfter).toHaveLength(rowsBefore + 1);
+      const newRow = rowsAfter[0]!;
+      expect(newRow.getColumns()).toHaveLength(1);
+      expect(newRow.getColumns()[0]!.span).toBe(12);
+    });
+
     it('adds a component to a column', () => {
       const doc = PageDocument.parse(ROWS_PAGE);
       const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;

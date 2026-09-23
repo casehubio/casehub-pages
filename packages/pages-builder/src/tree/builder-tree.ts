@@ -4,7 +4,7 @@ import { RovingTabindexMixin, KeyboardShortcutMixin, type RovingDirection } from
 import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
 import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
 import { computeMenuItems } from './tree-context-menu.js';
-import { computeDropPosition, computeDropTarget, isValidDrop, type DropTarget } from './tree-dnd.js';
+
 import '@casehubio/pages-primitives/context-menu';
 
 export type TreeNodeType = 'page' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section';
@@ -233,6 +233,8 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
 
   @property({ attribute: false }) document: PageDocument | undefined;
   @property({ attribute: false }) selectedPath: readonly (string | number)[] | undefined;
+  @property({ attribute: false }) clipboardFragmentType: string | undefined;
+  @property({ type: Boolean }) insertMode = false;
 
   @state() private _expandedPaths = new Set<string>();
   @state() private _treeModel: TreeNodeInfo[] = [];
@@ -241,9 +243,6 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   @state() private _contextMenuNode: TreeNodeInfo | undefined;
   @state() private _contextMenuX = 0;
   @state() private _contextMenuY = 0;
-  @state() private _draggedPath: readonly (string | number)[] | undefined;
-  @state() private _dropTarget: DropTarget | undefined;
-
   private _unsub: (() => void) | undefined;
 
   override connectedCallback(): void {
@@ -394,6 +393,30 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     }));
   }
 
+  private _handleInsertClick(node: TreeNodeInfo, e: Event): void {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('tree-insert', {
+      bubbles: true, composed: true,
+      detail: { path: node.path, nodeType: node.nodeType, target: e.currentTarget as HTMLElement },
+    }));
+  }
+
+  private _handleCutClick(node: TreeNodeInfo, e: Event): void {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('tree-cut', {
+      bubbles: true, composed: true,
+      detail: { path: node.path, nodeType: node.nodeType },
+    }));
+  }
+
+  private _handleCopyClick(node: TreeNodeInfo, e: Event): void {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('tree-copy', {
+      bubbles: true, composed: true,
+      detail: { path: node.path, nodeType: node.nodeType },
+    }));
+  }
+
   private _handleTreeKeydown(e: KeyboardEvent): void {
     if (!this.selectedPath || !this._contextMenuNode && !this.selectedPath) return;
     const path = this.selectedPath;
@@ -446,110 +469,112 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     return search(this._treeModel);
   }
 
-  private _handleDragStart(node: TreeNodeInfo, e: DragEvent): void {
-    if (node.nodeType === 'section') { e.preventDefault(); return; }
-    this._draggedPath = node.path;
-    e.dataTransfer!.effectAllowed = 'move';
-    e.dataTransfer!.setData('text/plain', pathKey(node.path));
-  }
-
-  private _handleDragOver(node: TreeNodeInfo, e: DragEvent): void {
-    if (!this._draggedPath || node.nodeType === 'section') return;
-    e.preventDefault();
-    e.dataTransfer!.dropEffect = 'move';
-    const position = computeDropPosition(e, e.currentTarget as HTMLElement);
-    const target = computeDropTarget(this._draggedPath, node.path, node.nodeType, position);
-    if (isValidDrop('component', target)) {
-      this._dropTarget = target;
-    } else {
-      this._dropTarget = undefined;
-    }
-  }
-
-  private _handleDragLeave(): void {
-    this._dropTarget = undefined;
-  }
-
-  private _handleDrop(node: TreeNodeInfo, e: DragEvent): void {
-    e.preventDefault();
-    if (!this._draggedPath || !this._dropTarget || this._dropTarget.type === 'invalid') return;
-    this.dispatchEvent(new CustomEvent('tree-drop', {
-      bubbles: true, composed: true,
-      detail: {
-        sourcePath: this._draggedPath,
-        target: this._dropTarget,
-      },
-    }));
-    this._draggedPath = undefined;
-    this._dropTarget = undefined;
-  }
-
-  private _handleDragEnd(): void {
-    this._draggedPath = undefined;
-    this._dropTarget = undefined;
-  }
-
-  private _isDropIndicator(node: TreeNodeInfo): 'before' | 'after' | 'on' | undefined {
-    if (!this._dropTarget || this._dropTarget.type === 'invalid') return undefined;
-    const nodePk = pathKey(node.path);
-    if (this._dropTarget.type === 'on-container' && pathKey(this._dropTarget.parentPath) === nodePk) return 'on';
-    if (this._dropTarget.type === 'between') {
-      const parentPk = pathKey(this._dropTarget.parentPath);
-      const nodeParentPk = pathKey(node.path.slice(0, -1));
-      const nodeIdx = node.path[node.path.length - 1] as number;
-      if (parentPk === nodeParentPk) {
-        if (this._dropTarget.index === nodeIdx) return 'before';
-        if (this._dropTarget.index === nodeIdx + 1) return 'after';
-      }
-    }
-    return undefined;
+  private _isPasteTarget(node: TreeNodeInfo): boolean {
+    if (!this.insertMode || !this.clipboardFragmentType || node.nodeType === 'section') return false;
+    const ft = this.clipboardFragmentType;
+    if (ft === 'component') return node.nodeType === 'column' || node.nodeType === 'page' || node.nodeType === 'component';
+    if (ft === 'row') return node.nodeType === 'page' || node.nodeType === 'row';
+    if (ft === 'column') return node.nodeType === 'row' || node.nodeType === 'column';
+    return false;
   }
 
   private _renderNode(node: TreeNodeInfo, level: number): TemplateResult {
     const hasChildren = node.children.length > 0;
     const expanded = hasChildren && this._isExpanded(node.path);
     const selected = this._isSelected(node.path);
-    const dropIndicator = this._isDropIndicator(node);
-    const isDragging = this._draggedPath && pathKey(this._draggedPath) === pathKey(node.path);
+    const isSection = node.nodeType === 'section';
+    const pasteTarget = this._isPasteTarget(node);
 
     return html`
       <div class="tree-node">
-        ${dropIndicator === 'before' ? html`<div class="drop-line"></div>` : nothing}
         <div
           role="treeitem"
           aria-level="${level}"
           aria-expanded="${hasChildren ? String(expanded) : nothing}"
           aria-selected="${selected}"
-          class="tree-item${selected ? ' selected' : ''}${node.nodeType === 'section' ? ' section' : ''}${dropIndicator === 'on' ? ' drop-target' : ''}${isDragging ? ' dragging' : ''}"
+          class="tree-item${selected ? ' selected' : ''}${isSection ? ' section' : ''}${pasteTarget ? ' paste-target' : ''}"
           style="padding-left: ${level * 16}px"
           tabindex="-1"
-          draggable="${node.nodeType !== 'section' ? 'true' : 'false'}"
           data-path="${pathKey(node.path)}"
           data-node-type="${node.nodeType}"
           @click="${(e: Event) => this._handleItemClick(node, e)}"
           @keydown="${(e: KeyboardEvent) => this._handleItemKeydown(node, e)}"
           @contextmenu="${(e: MouseEvent) => this._handleContextMenu(node, e)}"
-          @dragstart="${(e: DragEvent) => this._handleDragStart(node, e)}"
-          @dragover="${(e: DragEvent) => this._handleDragOver(node, e)}"
-          @dragleave="${() => this._handleDragLeave()}"
-          @drop="${(e: DragEvent) => this._handleDrop(node, e)}"
-          @dragend="${() => this._handleDragEnd()}"
         >
           ${hasChildren ? html`<span class="toggle">${expanded ? '▼' : '▸'}</span>`
             : html`<span class="toggle-spacer"></span>`}
           <span class="label">${node.label}</span>
           ${this._isContainerNode(node) ? html`
-            <button class="add-btn" aria-label="Add to ${node.label}" @click="${(e: Event) => this._handleAddClick(node, e)}">+</button>
+            <button class="add-btn" title="Add child" aria-label="Add to ${node.label}" @click="${(e: Event) => this._handleAddClick(node, e)}">+</button>
+          ` : nothing}
+          ${!isSection ? html`
+            <button class="insert-btn" title="Insert before/after" aria-label="Insert near ${node.label}" @click="${(e: Event) => this._handleInsertClick(node, e)}">↓</button>
+            <button class="cut-btn" title="Cut" aria-label="Cut ${node.label}" @click="${(e: Event) => this._handleCutClick(node, e)}">✂</button>
+            <button class="copy-btn" title="Copy" aria-label="Copy ${node.label}" @click="${(e: Event) => this._handleCopyClick(node, e)}">⎘</button>
           ` : nothing}
         </div>
         ${expanded ? html`
           <div role="group">
-            ${node.children.map(child => this._renderNode(child, level + 1))}
+            ${this._renderChildrenWithInsertionPoints(node, level + 1)}
           </div>
         ` : nothing}
-        ${dropIndicator === 'after' ? html`<div class="drop-line"></div>` : nothing}
       </div>
     `;
+  }
+
+  private _renderChildrenWithInsertionPoints(
+    parent: TreeNodeInfo, childLevel: number,
+  ): TemplateResult[] {
+    const results: TemplateResult[] = [];
+    const children = parent.children;
+    const showInsertionPoints = this._isContainerNode(parent)
+      && parent.nodeType !== 'section';
+
+    if (showInsertionPoints) {
+      results.push(this._renderInsertionPoint(parent, 0, childLevel));
+    }
+
+    for (let i = 0; i < children.length; i++) {
+      results.push(this._renderNode(children[i]!, childLevel));
+      if (showInsertionPoints) {
+        results.push(this._renderInsertionPoint(parent, i + 1, childLevel));
+      }
+    }
+    return results;
+  }
+
+  private _renderInsertionPoint(
+    parent: TreeNodeInfo, index: number, level: number,
+  ): TemplateResult {
+    return html`
+      <div
+        class="tree-insertion-point"
+        role="button"
+        aria-label="Insert at position ${index} in ${parent.label}"
+        style="padding-left: ${level * 16}px"
+        data-index="${index}"
+        @click="${(e: Event) => this._handleInsertionPointClick(parent, index, e)}"
+      >
+        <span class="insertion-line"></span>
+        <span class="insertion-icon">+</span>
+        <span class="insertion-line"></span>
+      </div>
+    `;
+  }
+
+  private _handleInsertionPointClick(
+    parent: TreeNodeInfo, index: number, e: Event,
+  ): void {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('tree-insert-at', {
+      bubbles: true, composed: true,
+      detail: {
+        parentPath: parent.path,
+        index,
+        parentNodeType: parent.nodeType,
+        target: e.currentTarget as HTMLElement,
+      },
+    }));
   }
 
   override render(): TemplateResult {
@@ -644,31 +669,77 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       opacity: 0;
     }
 
-    .tree-item:hover .add-btn {
+    .insert-btn, .cut-btn, .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--pages-border-color, #dadce0);
+      border-radius: 4px;
+      background: var(--pages-surface-bg, #fff);
+      color: var(--pages-text-secondary, #5f6368);
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+      opacity: 0;
+    }
+
+    .tree-item:hover .add-btn,
+    .tree-item:hover .insert-btn,
+    .tree-item:hover .cut-btn,
+    .tree-item:hover .copy-btn {
       opacity: 1;
     }
 
-    .add-btn:hover {
+    .add-btn:hover, .insert-btn:hover, .cut-btn:hover, .copy-btn:hover {
       background: var(--pages-primary, #1967d2);
       color: #fff;
       border-color: var(--pages-primary, #1967d2);
     }
 
-    .tree-item.dragging {
-      opacity: 0.4;
-    }
-
-    .tree-item.drop-target {
+    .tree-item.paste-target {
       outline: 2px solid var(--pages-primary, #1967d2);
       outline-offset: -2px;
       border-radius: 4px;
     }
 
-    .drop-line {
-      height: 2px;
-      background: var(--pages-primary, #1967d2);
-      margin: 0 8px;
-      border-radius: 1px;
+    .tree-item.paste-target .add-btn,
+    .tree-item.paste-target .insert-btn {
+      opacity: 1;
+      color: var(--pages-primary, #1967d2);
+      border-color: var(--pages-primary, #1967d2);
+    }
+
+    .tree-insertion-point {
+      display: flex;
+      align-items: center;
+      height: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 150ms ease;
+      padding-right: 8px;
+    }
+
+    .tree-insertion-point:hover,
+    .tree-insertion-point:focus-visible {
+      opacity: 1;
+    }
+
+    .insertion-line {
+      flex: 1;
+      height: 1px;
+      background: var(--pages-primary, #4285f4);
+    }
+
+    .insertion-icon {
+      font-size: 10px;
+      color: var(--pages-primary, #4285f4);
+      padding: 0 4px;
+      font-weight: bold;
+      line-height: 1;
     }
   `;
 }
