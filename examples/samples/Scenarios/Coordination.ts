@@ -118,7 +118,7 @@ function flashButton(name) {
     btn.style.background = 'var(--pages-accent-3)';
     btn.style.borderColor = 'var(--pages-accent-6)';
     btn.style.color = 'var(--pages-accent-11)';
-  }, coordStepDelay);
+  }, Math.max(coordStepDelay - 150, 50));
 }
 
 function formatTime(ms) {

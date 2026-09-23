@@ -161,7 +161,7 @@ function compFlashButton(name) {
     btn.style.background = 'var(--pages-accent-3)';
     btn.style.borderColor = 'var(--pages-accent-6)';
     btn.style.color = 'var(--pages-accent-11)';
-  }, compStepDelay);
+  }, Math.max(compStepDelay - 150, 50));
 }
 
 var compCurrentRunner = null;

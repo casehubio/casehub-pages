@@ -132,7 +132,7 @@ function flashButton(name) {
     btn.style.background = 'var(--pages-neutral-2)';
     btn.style.borderColor = 'var(--pages-neutral-5)';
     btn.style.color = 'var(--pages-neutral-12)';
-  }, stepDelay);
+  }, Math.max(stepDelay - 150, 50));
 }
 
 function resetUI() {
