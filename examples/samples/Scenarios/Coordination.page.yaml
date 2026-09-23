@@ -60,8 +60,6 @@ pages:
               <div style="margin-bottom: 16px;">
                 <button id="run-btn" aria-label="Run" role="button" style="padding: 8px 24px; background: #16a34a; border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; transition: background 0.15s;">▶ Run</button>
               </div>
-              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
-                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">YAML Source</div>
-                <pre id="yaml-source" style="margin: 0; font-size: 12px; line-height: 1.6; color: var(--pages-neutral-11); white-space: pre-wrap; overflow-x: auto;"></pre>
-              </div>
+              <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">YAML Source</div>
+              <pages-code-editor id="yaml-source" readonly language="yaml" line-numbers style="min-height: 200px; border: 1px solid var(--pages-neutral-4); border-radius: 8px; overflow: hidden;"></pages-code-editor>
             </div>

@@ -92,6 +92,33 @@ var currentRunner = null;
 
 var QUEUE_COLORS = { ready: '#4ade80', blocked: '#f59e0b', suspended: '#8b5cf6', done: '#6b7280' };
 
+function findByAriaLabel(name) {
+  var el = document.querySelector('[aria-label="' + name + '"]');
+  if (el) return el;
+  var hosts = document.querySelectorAll('*');
+  for (var i = 0; i < hosts.length; i++) {
+    var root = hosts[i].shadowRoot;
+    if (root) {
+      el = root.querySelector('[aria-label="' + name + '"]');
+      if (el) return el;
+    }
+  }
+  return null;
+}
+
+function flashButton(name) {
+  var btn = findByAriaLabel(name);
+  if (!btn) return;
+  btn.style.background = '#22c55e';
+  btn.style.borderColor = '#22c55e';
+  btn.style.color = '#000';
+  setTimeout(function() {
+    btn.style.background = 'var(--pages-accent-3)';
+    btn.style.borderColor = 'var(--pages-accent-6)';
+    btn.style.color = 'var(--pages-accent-11)';
+  }, 400);
+}
+
 function formatTime(ms) {
   var s = Math.floor(ms / 1000);
   var m = Math.floor(s / 60);
@@ -140,7 +167,7 @@ function resetUI() {
 function showYaml(key) {
   var example = EXAMPLES[key];
   if (example) {
-    yamlSourceEl.textContent = example.yaml;
+    yamlSourceEl.value = example.yaml;
   }
 }
 
@@ -196,7 +223,21 @@ function runExample(key) {
     eventTarget: et,
     speed: 2,
     startPaused: true,
-    executors: [],
+    executors: [{
+      canExecute: function(step) { return step.delivery === 'aria'; },
+      execute: function(step) {
+        return new Promise(function(resolve) {
+          var target = step.target;
+          if (!target) { resolve(); return; }
+          var el = findByAriaLabel(target.name);
+          if (el) {
+            el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            flashButton(target.name);
+          }
+          resolve();
+        });
+      }
+    }],
   });
 
   currentRunner = runner;
