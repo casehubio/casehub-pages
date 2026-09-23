@@ -57,6 +57,6 @@ pages:
               <button id="comp-run-btn" aria-label="Run" style="margin-bottom: 16px; padding: 8px 24px; background: #16a34a; border: none; border-radius: 6px; cursor: pointer; color: #fff; font-size: 13px; font-weight: 600;">▶ Run</button>
               <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
                 <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">YAML Source</div>
-                <pre id="comp-yaml-source" style="margin: 0; font-size: 12px; color: var(--pages-neutral-10); line-height: 1.6; white-space: pre-wrap; overflow-x: auto;"></pre>
+                <pages-code-editor id="comp-yaml-source" readonly language="yaml" line-numbers style="min-height: 200px; border: 1px solid var(--pages-neutral-4); border-radius: 8px; overflow: hidden;"></pages-code-editor>
               </div>
             </div>

@@ -119,7 +119,7 @@ function compSetTriggerStatus(name, status) {
 function compShowYaml(key) {
   var example = COMP_EXAMPLES[key];
   var pre = document.getElementById('comp-yaml-source');
-  if (pre && example) pre.textContent = example.yaml;
+  if (pre && example) pre.value = example.yaml;
 }
 
 function compResetUI() {
@@ -133,6 +133,33 @@ function compResetUI() {
   if (container) container.style.display = 'none';
   var countEl = document.getElementById('comp-trigger-count');
   if (countEl) countEl.textContent = '0';
+}
+
+function compFindByAriaLabel(name) {
+  var el = document.querySelector('[aria-label="' + name + '"]');
+  if (el) return el;
+  var hosts = document.querySelectorAll('*');
+  for (var i = 0; i < hosts.length; i++) {
+    var root = hosts[i].shadowRoot;
+    if (root) {
+      el = root.querySelector('[aria-label="' + name + '"]');
+      if (el) return el;
+    }
+  }
+  return null;
+}
+
+function compFlashButton(name) {
+  var btn = compFindByAriaLabel(name);
+  if (!btn) return;
+  btn.style.background = '#22c55e';
+  btn.style.borderColor = '#22c55e';
+  btn.style.color = '#000';
+  setTimeout(function() {
+    btn.style.background = 'var(--pages-accent-3)';
+    btn.style.borderColor = 'var(--pages-accent-6)';
+    btn.style.color = 'var(--pages-accent-11)';
+  }, 400);
 }
 
 var compCurrentRunner = null;
@@ -194,6 +221,21 @@ function compRunExample(key) {
       eventTarget: et,
       speed: 2,
       startPaused: true,
+      executors: [{
+        canExecute: function(step) { return step.delivery === 'aria'; },
+        execute: function(step) {
+          return new Promise(function(resolve) {
+            var target = step.target;
+            if (!target) { resolve(); return; }
+            var el = compFindByAriaLabel(target.name);
+            if (el) {
+              el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+              compFlashButton(target.name);
+            }
+            resolve();
+          });
+        }
+      }],
     });
     compCurrentRunner = runner;
     runner.play();
