@@ -216,7 +216,7 @@ function runExample(idx) {
 
   var runner = createScheduler(scenario, {
     eventTarget: eventTarget,
-    speed: 2,
+    speed: 1,
     startPaused: false,
     executors: [{
       canExecute: function(step) { return step.delivery === 'aria'; },
@@ -229,7 +229,7 @@ function runExample(idx) {
             el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
             flashButton(target.name);
           }
-          resolve();
+          setTimeout(resolve, 500);
         });
       }
     }],

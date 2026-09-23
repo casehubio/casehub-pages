@@ -221,7 +221,7 @@ function runExample(key) {
 
   var runner = casehubPages.createScheduler(scenario, {
     eventTarget: et,
-    speed: 2,
+    speed: 1,
     startPaused: true,
     executors: [{
       canExecute: function(step) { return step.delivery === 'aria'; },
@@ -234,7 +234,7 @@ function runExample(key) {
             el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
             flashButton(target.name);
           }
-          resolve();
+          setTimeout(resolve, 500);
         });
       }
     }],

@@ -219,7 +219,7 @@ function compRunExample(key) {
     var scenario = casehubPages.parseScenario(example.yaml);
     var runner = casehubPages.createScheduler(scenario, {
       eventTarget: et,
-      speed: 2,
+      speed: 1,
       startPaused: true,
       executors: [{
         canExecute: function(step) { return step.delivery === 'aria'; },
@@ -232,7 +232,7 @@ function compRunExample(key) {
               el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
               compFlashButton(target.name);
             }
-            resolve();
+            setTimeout(resolve, 500);
           });
         }
       }],
