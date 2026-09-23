@@ -33,9 +33,9 @@ var EXAMPLES = [
       'scenario: delay-demo',
       'steps:',
       '  - click: { role: button, name: "A" }',
-      '  - delay: 1000ms',
+      '  - delay: 3000ms',
       '  - click: { role: button, name: "B" }',
-      '  - delay: 500ms',
+      '  - delay: 1500ms',
       '  - click: { role: button, name: "C" }',
     ].join('\n'),
   },
@@ -77,7 +77,7 @@ var picker = document.getElementById('example-picker');
 var runBtn = document.getElementById('run-btn');
 var speedSlider = document.getElementById('speed-slider');
 var speedLabel = document.getElementById('speed-label');
-var stepDelay = 1500;
+var stepDelay = 500;
 var currentRunner = null;
 
 if (speedSlider) {
