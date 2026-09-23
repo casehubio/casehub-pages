@@ -58,3 +58,56 @@ export type Scenario = FlatScenario | SectionedScenario;
 export function isSectioned(s: Scenario): s is SectionedScenario {
   return 'sections' in s;
 }
+
+// --- Orchestration types (DES scheduler) ---
+
+import type { RetryDirective, LoopDirective } from '@casehubio/yaml-core/orchestration';
+
+export interface StepDecorators {
+  mutex?: string;
+  retry?: RetryDirective;
+  loop?: LoopDirective;
+  when?: string;
+  timeout?: string;
+  delay?: string;
+}
+
+export type OrchestrationConstruct =
+  | { delivery: 'orchestration'; construct: 'concurrent'; branches: Record<string, ScenarioStep[]> }
+  | { delivery: 'orchestration'; construct: 'signal'; name: string }
+  | { delivery: 'orchestration'; construct: 'await'; signal?: string; barrier?: string; timeout?: string }
+  | { delivery: 'orchestration'; construct: 'delay'; duration: string }
+  | { delivery: 'orchestration'; construct: 'trigger'; trigger: DataTrigger | TimeTrigger; steps: OrchestratedStep[] };
+
+export type OrchestratedStep = (ScenarioStep | OrchestrationConstruct) & {
+  name?: string;
+  decorators?: StepDecorators;
+};
+
+export interface DataTrigger {
+  type: 'data';
+  channel: string;
+  condition?: string;
+}
+
+export interface TimeTrigger {
+  type: 'time';
+  delay: string;
+  repeat?: boolean;
+  fireTime?: number;
+}
+
+export interface StateMachineDefinition {
+  initial: string;
+  states: string[];
+  transitions: Array<{ from: string; to: string; guard?: string }>;
+  terminal?: string[];
+}
+
+export interface OrchestrationBlock {
+  machines?: Record<string, StateMachineDefinition>;
+  barriers?: Record<string, { count: number }>;
+  quorums?: Record<string, { required: number; of: string[] }>;
+  channels?: Record<string, { capacity?: number }>;
+  signals?: string[];
+}

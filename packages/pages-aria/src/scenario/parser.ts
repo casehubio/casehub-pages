@@ -1,8 +1,10 @@
 import { parse } from 'yaml';
 import type { AriaTarget } from '@casehubio/pages-primitives';
+import { parseRetryDirective, parseLoopDirective } from '@casehubio/yaml-core/orchestration';
 import type {
   Scenario, FlatScenario, SectionedScenario,
   ScenarioStep, TutorialMeta, TutorialSection, SectionContent,
+  OrchestratedStep, StepDecorators, OrchestrationBlock,
 } from './types.js';
 
 const ARIA_ACTIONS = new Set([
@@ -80,11 +82,91 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
   return step;
 }
 
-function parseSteps(rawSteps: unknown[]): ScenarioStep[] {
+const ORCHESTRATION_KEYS = new Set(['concurrent', 'signal', 'await', 'delay', 'trigger']);
+const DECORATOR_KEYS = new Set(['mutex', 'retry', 'loop', 'when', 'timeout', 'delay']);
+const DELIVERY_KEYS = new Set(['simulated', 'graphql']);
+
+function extractDecorators(raw: Record<string, unknown>): StepDecorators | undefined {
+  const decorators: StepDecorators = {};
+  let found = false;
+  if (raw.mutex != null) { decorators.mutex = raw.mutex as string; found = true; }
+  if (raw.retry != null) { decorators.retry = parseRetryDirective(raw.retry); found = true; }
+  if (raw.loop != null) { decorators.loop = parseLoopDirective(raw.loop); found = true; }
+  if (raw.when != null) { decorators.when = raw.when as string; found = true; }
+  if (raw.timeout != null) { decorators.timeout = raw.timeout as string; found = true; }
+  if (raw.delay != null) { decorators.delay = raw.delay as string; found = true; }
+  return found ? decorators : undefined;
+}
+
+function parseOrchestrationStep(raw: Record<string, unknown>): OrchestratedStep | undefined {
+  if ('concurrent' in raw) {
+    const branches = raw.concurrent as Record<string, unknown[]>;
+    const parsed: Record<string, ScenarioStep[]> = {};
+    for (const [name, steps] of Object.entries(branches)) {
+      parsed[name] = parseSteps(steps);
+    }
+    return { delivery: 'orchestration', construct: 'concurrent', branches: parsed } as OrchestratedStep;
+  }
+  if ('signal' in raw) {
+    return { delivery: 'orchestration', construct: 'signal', name: raw.signal as string } as OrchestratedStep;
+  }
+  if ('await' in raw) {
+    const body = raw.await as Record<string, unknown>;
+    return {
+      delivery: 'orchestration', construct: 'await',
+      ...(body.signal != null ? { signal: body.signal as string } : {}),
+      ...(body.barrier != null ? { barrier: body.barrier as string } : {}),
+      ...(body.timeout != null ? { timeout: body.timeout as string } : {}),
+    } as OrchestratedStep;
+  }
+  if ('delay' in raw && !Object.keys(raw).some(k => ARIA_ACTIONS.has(k))) {
+    return { delivery: 'orchestration', construct: 'delay', duration: raw.delay as string } as OrchestratedStep;
+  }
+  if ('trigger' in raw) {
+    const trigger = raw.trigger as Record<string, unknown>;
+    const innerSteps = Array.isArray(raw.steps) ? parseSteps(raw.steps) : [];
+    return {
+      delivery: 'orchestration', construct: 'trigger',
+      trigger: { type: trigger.type as string, ...trigger },
+      steps: innerSteps,
+    } as OrchestratedStep;
+  }
+  return undefined;
+}
+
+function parseDeliveryStep(raw: Record<string, unknown>): ScenarioStep | undefined {
+  if ('simulated' in raw) {
+    const body = raw.simulated as Record<string, unknown>;
+    return { delivery: 'simulated', dataset: body.dataset as string, data: body.data as Record<string, unknown> } as ScenarioStep;
+  }
+  if ('graphql' in raw) {
+    const body = raw.graphql as Record<string, unknown>;
+    return {
+      delivery: 'graphql',
+      name: body.name as string,
+      domain: body.domain as string,
+      operation: body.operation as string,
+      ...(body.params != null ? { params: body.params as Record<string, unknown> } : {}),
+    } as ScenarioStep;
+  }
+  return undefined;
+}
+
+function parseSteps(rawSteps: unknown[]): OrchestratedStep[] {
   return rawSteps.map((raw: unknown) => {
     const step = raw as Record<string, unknown>;
-    if (step.delivery) return step as ScenarioStep;
-    return expandAriaShorthand(step);
+    if (step.delivery) return step as OrchestratedStep;
+
+    const orch = parseOrchestrationStep(step);
+    if (orch) return orch;
+
+    const delivery = parseDeliveryStep(step);
+    if (delivery) return delivery as OrchestratedStep;
+
+    const ariaStep = expandAriaShorthand(step) as OrchestratedStep;
+    const decorators = extractDecorators(step);
+    if (decorators) ariaStep.decorators = decorators;
+    return ariaStep;
   });
 }
 
@@ -116,19 +198,23 @@ export function parseScenario(yamlString: string): Scenario {
 
   const meta = parsed.meta as TutorialMeta | undefined;
 
+  const orchestration = parsed.orchestration as OrchestrationBlock | undefined;
+
   if (hasSections) {
-    const result: SectionedScenario = {
+    const result: SectionedScenario & { orchestration?: OrchestrationBlock } = {
       scenario: parsed.scenario as string,
       sections: parseSections(parsed.sections as unknown[]),
     };
     if (meta) result.meta = meta;
+    if (orchestration) result.orchestration = orchestration;
     return result;
   }
 
-  const result: FlatScenario = {
+  const result: FlatScenario & { orchestration?: OrchestrationBlock } = {
     scenario: parsed.scenario as string,
     steps: parseSteps(parsed.steps as unknown[]),
   };
   if (meta) result.meta = meta;
+  if (orchestration) result.orchestration = orchestration;
   return result;
 }
