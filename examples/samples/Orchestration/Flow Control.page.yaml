@@ -1,0 +1,61 @@
+pages:
+- name: Flow Control
+  properties:
+    margin: 20px
+  rows:
+  - columns:
+    - span: 7
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Flow Control</h2>
+              <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">State</div>
+                  <div id="orch-state" style="font-size: 18px; font-weight: 700; color: #4ade80; margin-top: 2px;">idle</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Step</div>
+                  <div id="orch-step" style="font-size: 18px; font-weight: 700; color: #3b82f6; margin-top: 2px;">—</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Virtual Time</div>
+                  <div id="orch-time" style="font-size: 18px; font-weight: 700; color: #a78bfa; margin-top: 2px;">0ms</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Progress</div>
+                  <div id="orch-progress" style="font-size: 18px; font-weight: 700; color: #f59e0b; margin-top: 2px;">0%</div>
+                </div>
+              </div>
+              <div style="margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap;" id="app-buttons">
+                <button aria-label="A" role="button" style="padding: 10px 24px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.3s, border-color 0.3s;">A</button>
+                <button aria-label="B" role="button" style="padding: 10px 24px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.3s, border-color 0.3s;">B</button>
+                <button aria-label="C" role="button" style="padding: 10px 24px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.3s, border-color 0.3s;">C</button>
+                <button aria-label="D" role="button" style="padding: 10px 24px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.3s, border-color 0.3s;">D</button>
+              </div>
+              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Event Log</div>
+                <div id="event-log" style="max-height: 280px; overflow-y: auto; font-family: monospace; font-size: 12px; color: var(--pages-neutral-9); line-height: 1.8;"></div>
+              </div>
+            </div>
+    - span: 5
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="example-picker" style="flex: 1; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 13px;">
+                  <option value="0">Sequential</option>
+                  <option value="1">Concurrent</option>
+                  <option value="2">Delay</option>
+                  <option value="3">Loop</option>
+                  <option value="4">When Guard</option>
+                </select>
+                <button id="run-btn" style="padding: 8px 20px; border: 1px solid var(--pages-accent-6); border-radius: 6px; background: var(--pages-accent-3); color: var(--pages-accent-9); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;">▶ Run</button>
+              </div>
+              <div style="font-size: 12px; color: var(--pages-neutral-9); padding: 0 2px;" id="example-description"></div>
+              <pre id="yaml-source" style="margin: 0; padding: 16px; background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; font-size: 12px; line-height: 1.6; color: var(--pages-neutral-12); overflow-x: auto; white-space: pre; max-height: 500px; overflow-y: auto;"></pre>
+            </div>
