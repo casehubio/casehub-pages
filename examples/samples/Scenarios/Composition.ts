@@ -149,22 +149,19 @@ function compFindByAriaLabel(name) {
   return null;
 }
 
-function compResetButtons() {
-  var btns = document.querySelectorAll('#comp-buttons button');
-  btns.forEach(function(b) {
-    b.style.background = 'var(--pages-accent-3)';
-    b.style.borderColor = 'var(--pages-accent-6)';
-    b.style.color = 'var(--pages-accent-11)';
-  });
-}
+var compStepDelay = 500;
 
 function compFlashButton(name) {
   var btn = compFindByAriaLabel(name);
   if (!btn) return;
-  compResetButtons();
   btn.style.background = '#22c55e';
   btn.style.borderColor = '#22c55e';
   btn.style.color = '#000';
+  setTimeout(function() {
+    btn.style.background = 'var(--pages-accent-3)';
+    btn.style.borderColor = 'var(--pages-accent-6)';
+    btn.style.color = 'var(--pages-accent-11)';
+  }, compStepDelay);
 }
 
 var compCurrentRunner = null;
@@ -237,7 +234,7 @@ function compRunExample(key) {
               el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
               compFlashButton(target.name);
             }
-            setTimeout(function() { compResetButtons(); resolve(); }, 500);
+            setTimeout(resolve, compStepDelay);
           });
         }
       }],
@@ -256,6 +253,16 @@ if (compPicker) {
   compPicker.addEventListener('change', function() {
     compShowYaml(compPicker.value);
     compResetUI();
+  });
+}
+
+// Wire up speed slider
+var compSpeedSlider = document.getElementById('comp-speed-slider');
+var compSpeedLabel = document.getElementById('comp-speed-label');
+if (compSpeedSlider) {
+  compSpeedSlider.addEventListener('input', function() {
+    compStepDelay = parseInt(compSpeedSlider.value, 10);
+    if (compSpeedLabel) compSpeedLabel.textContent = compStepDelay + 'ms';
   });
 }
 

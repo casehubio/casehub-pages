@@ -75,7 +75,17 @@ var yamlEl = document.getElementById('yaml-source');
 var descEl = document.getElementById('example-description');
 var picker = document.getElementById('example-picker');
 var runBtn = document.getElementById('run-btn');
+var speedSlider = document.getElementById('speed-slider');
+var speedLabel = document.getElementById('speed-label');
+var stepDelay = 500;
 var currentRunner = null;
+
+if (speedSlider) {
+  speedSlider.addEventListener('input', function() {
+    stepDelay = parseInt(speedSlider.value, 10);
+    if (speedLabel) speedLabel.textContent = stepDelay + 'ms';
+  });
+}
 
 function formatTime(ms) {
   var s = Math.floor(ms / 1000);
@@ -112,22 +122,17 @@ function findByAriaLabel(name) {
   return null;
 }
 
-function resetButtons() {
-  var btns = document.querySelectorAll('#app-buttons button');
-  btns.forEach(function(b) {
-    b.style.background = 'var(--pages-neutral-2)';
-    b.style.borderColor = 'var(--pages-neutral-5)';
-    b.style.color = 'var(--pages-neutral-12)';
-  });
-}
-
 function flashButton(name) {
   var btn = findByAriaLabel(name);
   if (!btn) return;
-  resetButtons();
   btn.style.background = '#22c55e';
   btn.style.borderColor = '#22c55e';
   btn.style.color = '#000';
+  setTimeout(function() {
+    btn.style.background = 'var(--pages-neutral-2)';
+    btn.style.borderColor = 'var(--pages-neutral-5)';
+    btn.style.color = 'var(--pages-neutral-12)';
+  }, stepDelay);
 }
 
 function resetUI() {
@@ -234,7 +239,7 @@ function runExample(idx) {
             el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
             flashButton(target.name);
           }
-          setTimeout(function() { resetButtons(); resolve(); }, 500);
+          setTimeout(resolve, stepDelay);
         });
       }
     }],

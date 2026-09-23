@@ -106,22 +106,19 @@ function findByAriaLabel(name) {
   return null;
 }
 
-function resetButtons() {
-  var btns = document.querySelectorAll('#app-buttons button');
-  btns.forEach(function(b) {
-    b.style.background = 'var(--pages-accent-3)';
-    b.style.borderColor = 'var(--pages-accent-6)';
-    b.style.color = 'var(--pages-accent-11)';
-  });
-}
+var coordStepDelay = 500;
 
 function flashButton(name) {
   var btn = findByAriaLabel(name);
   if (!btn) return;
-  resetButtons();
   btn.style.background = '#22c55e';
   btn.style.borderColor = '#22c55e';
   btn.style.color = '#000';
+  setTimeout(function() {
+    btn.style.background = 'var(--pages-accent-3)';
+    btn.style.borderColor = 'var(--pages-accent-6)';
+    btn.style.color = 'var(--pages-accent-11)';
+  }, coordStepDelay);
 }
 
 function formatTime(ms) {
@@ -239,7 +236,7 @@ function runExample(key) {
             el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
             flashButton(target.name);
           }
-          setTimeout(function() { resetButtons(); resolve(); }, 500);
+          setTimeout(resolve, coordStepDelay);
         });
       }
     }],
@@ -258,6 +255,15 @@ if (examplePicker) {
   showYaml(examplePicker.value);
   examplePicker.addEventListener('change', function() {
     showYaml(examplePicker.value);
+  });
+}
+
+var coordSpeedSlider = document.getElementById('speed-slider');
+var coordSpeedLabel = document.getElementById('speed-label');
+if (coordSpeedSlider) {
+  coordSpeedSlider.addEventListener('input', function() {
+    coordStepDelay = parseInt(coordSpeedSlider.value, 10);
+    if (coordSpeedLabel) coordSpeedLabel.textContent = coordStepDelay + 'ms';
   });
 }
 
