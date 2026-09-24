@@ -1,6 +1,7 @@
 var EXAMPLES = [
   {
     name: 'Sequential',
+    tags: ['steps'],
     description: 'Steps execute one after another in declaration order.',
     yaml: [
       'scenario: sequential-demo',
@@ -13,6 +14,7 @@ var EXAMPLES = [
   },
   {
     name: 'Concurrent',
+    tags: ['concurrent'],
     description: 'Two branches execute in parallel — the scheduler interleaves steps from each branch on every tick.',
     yaml: [
       'scenario: concurrent-demo',
@@ -28,6 +30,7 @@ var EXAMPLES = [
   },
   {
     name: 'Delay',
+    tags: ['delay'],
     description: 'A virtual-time delay pauses the queue — the clock advances but no steps execute during the gap.',
     yaml: [
       'scenario: delay-demo',
@@ -41,6 +44,7 @@ var EXAMPLES = [
   },
   {
     name: 'Loop',
+    tags: ['loop', 'decorator'],
     description: 'The loop decorator repeats a step N times before advancing.',
     yaml: [
       'scenario: loop-demo',
@@ -52,6 +56,7 @@ var EXAMPLES = [
   },
   {
     name: 'When Guard',
+    tags: ['when', 'decorator'],
     description: 'The when decorator conditionally skips a step based on a guard expression. B executes (when: true), C is skipped (when: false).',
     yaml: [
       'scenario: when-guard-demo',
@@ -153,7 +158,21 @@ function showExample(idx) {
   var ex = EXAMPLES[idx];
   if (!ex) return;
   if (yamlEl) yamlEl.value = ex.yaml;
-  if (descEl) descEl.textContent = ex.description;
+  if (descEl) {
+    descEl.innerHTML = '';
+    if (ex.tags && ex.tags.length > 0) {
+      var tagSpan = document.createElement('span');
+      tagSpan.style.cssText = 'display: inline-flex; gap: 4px; margin-right: 6px; vertical-align: middle;';
+      ex.tags.forEach(function(t) {
+        var chip = document.createElement('span');
+        chip.textContent = t;
+        chip.style.cssText = 'padding: 1px 6px; border-radius: 3px; background: var(--pages-accent-3); color: var(--pages-accent-9); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;';
+        tagSpan.appendChild(chip);
+      });
+      descEl.appendChild(tagSpan);
+    }
+    descEl.appendChild(document.createTextNode(ex.description));
+  }
 }
 
 function runExample(idx) {

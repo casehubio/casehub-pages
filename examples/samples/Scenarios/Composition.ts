@@ -12,7 +12,8 @@ var COMP_EXAMPLES = {
       '      - click: { role: button, name: "C" }',
       '      - click: { role: button, name: "D" }',
     ].join('\n'),
-    description: 'A triggered queue activates when data arrives on a channel. The main steps run first; the trigger queue waits until the channel has data.',
+    tags: ['trigger', 'data channel', 'concurrent'],
+    description: 'External data activates a suspended queue. Main steps run first; the trigger queue waits until data arrives on the channel. Click Send to inject data.',
     triggers: [{ name: 'trades', type: 'data' }],
   },
   'time-trigger': {
@@ -28,7 +29,8 @@ var COMP_EXAMPLES = {
       '      - click: { role: button, name: "D" }',
       '  - click: { role: button, name: "B" }',
     ].join('\n'),
-    description: 'A triggered queue activates after virtual time elapses. The main branch continues while the timer counts down.',
+    tags: ['trigger', 'time', 'delay'],
+    description: 'Time-based activation. A suspended queue activates after virtual time elapses. The main branch continues while the timer counts down.',
     triggers: [{ name: 'timer', type: 'time', delay: '2s' }],
   },
   'orchestration-block': {
@@ -52,7 +54,8 @@ var COMP_EXAMPLES = {
       '        - await: { barrier: sync }',
       '        - click: { role: button, name: "D" }',
     ].join('\n'),
-    description: 'Orchestration block pre-declares primitives. Init delays, signals ready, both branches sync at a barrier, then proceed together.',
+    tags: ['orchestration block', 'signal', 'await', 'barrier', 'delay', 'concurrent'],
+    description: 'Top-level orchestration block pre-declares barriers and signals. Init delays then signals, worker awaits, both sync at a barrier before proceeding.',
     triggers: [],
   },
 };
@@ -128,10 +131,27 @@ function compSetTriggerStatus(name, status) {
   if (label) label.textContent = status;
 }
 
+var compDescEl = document.getElementById('comp-description');
+
 function compShowYaml(key) {
   var example = COMP_EXAMPLES[key];
   var pre = document.getElementById('comp-yaml-source');
   if (pre && example) pre.value = example.yaml;
+  if (compDescEl && example) {
+    compDescEl.innerHTML = '';
+    if (example.tags && example.tags.length > 0) {
+      var tagSpan = document.createElement('span');
+      tagSpan.style.cssText = 'display: inline-flex; gap: 4px; margin-right: 6px; vertical-align: middle; flex-wrap: wrap;';
+      example.tags.forEach(function(t) {
+        var chip = document.createElement('span');
+        chip.textContent = t;
+        chip.style.cssText = 'padding: 1px 6px; border-radius: 3px; background: var(--pages-accent-3); color: var(--pages-accent-9); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;';
+        tagSpan.appendChild(chip);
+      });
+      compDescEl.appendChild(tagSpan);
+    }
+    compDescEl.appendChild(document.createTextNode(example.description));
+  }
 }
 
 function compResetUI() {

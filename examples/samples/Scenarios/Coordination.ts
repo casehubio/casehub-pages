@@ -1,7 +1,8 @@
 var EXAMPLES = {
   'signal-await': {
     title: 'Signal / Await',
-    description: 'Sender signals after a click, receiver awaits before proceeding — causal dependency.',
+    tags: ['signal', 'await', 'concurrent'],
+    description: 'One-way dependency between branches. Sender signals after a click, receiver blocks until the signal arrives.',
     yaml: [
       'scenario: signal-await-demo',
       'steps:',
@@ -16,7 +17,8 @@ var EXAMPLES = {
   },
   'mutex': {
     title: 'Mutex',
-    description: 'Two branches share a lock — steps with the same mutex never interleave.',
+    tags: ['mutex', 'decorator', 'concurrent'],
+    description: 'Mutual exclusion via decorator. Steps tagged with the same mutex never run simultaneously across branches.',
     yaml: [
       'scenario: mutex-demo',
       'steps:',
@@ -35,7 +37,8 @@ var EXAMPLES = {
   },
   'barrier': {
     title: 'Barrier',
-    description: 'Three branches with different workloads meet at a barrier — fast and medium wait for slow before all proceed together.',
+    tags: ['barrier', 'await', 'delay', 'orchestration block', 'concurrent'],
+    description: 'N-way sync point. Three branches with staggered delays converge at a barrier — fast and medium block until slow arrives, then all proceed.',
     yaml: [
       'scenario: barrier-demo',
       'orchestration:',
@@ -61,7 +64,8 @@ var EXAMPLES = {
   },
   'channel': {
     title: 'Channel (via Signal)',
-    description: 'Producer signals readiness, consumer awaits — models a channel handshake.',
+    tags: ['signal', 'await', 'orchestration block', 'concurrent'],
+    description: 'Two-way handshake. Producer signals data-ready, consumer processes and acks — round-trip coordination using signal pairs.',
     yaml: [
       'scenario: channel-demo',
       'orchestration:',
@@ -168,10 +172,27 @@ function resetUI() {
   timeEl.textContent = '0ms';
 }
 
+var descEl = document.getElementById('example-description');
+
 function showYaml(key) {
   var example = EXAMPLES[key];
   if (example) {
     yamlSourceEl.value = example.yaml;
+    if (descEl) {
+      descEl.innerHTML = '';
+      if (example.tags && example.tags.length > 0) {
+        var tagSpan = document.createElement('span');
+        tagSpan.style.cssText = 'display: inline-flex; gap: 4px; margin-right: 6px; vertical-align: middle; flex-wrap: wrap;';
+        example.tags.forEach(function(t) {
+          var chip = document.createElement('span');
+          chip.textContent = t;
+          chip.style.cssText = 'padding: 1px 6px; border-radius: 3px; background: var(--pages-accent-3); color: var(--pages-accent-9); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;';
+          tagSpan.appendChild(chip);
+        });
+        descEl.appendChild(tagSpan);
+      }
+      descEl.appendChild(document.createTextNode(example.description));
+    }
   }
 }
 
