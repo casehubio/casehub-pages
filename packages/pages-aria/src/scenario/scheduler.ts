@@ -95,7 +95,7 @@ export function createScheduler(
     };
     if (runnerState === 'done') state.progress = 1;
     options.eventTarget.dispatchEvent(new CustomEvent('pages-event', {
-      detail: { topic: 'scenario:state', payload: state },
+      detail: { topic: 'scenario:state', payload: { ...state, virtualTime: clock.now() } },
     }));
   }
 
@@ -362,15 +362,25 @@ export function createScheduler(
         emitState();
       }
 
-      // Advance virtual time to next wake point
+      // Advance virtual time to next wake point, emitting state updates
+      // so listeners see virtual time ticking during delays
       const nextWake = earliestWakeTime();
       if (nextWake !== undefined && nextWake > clock.now()) {
         const delta = nextWake - clock.now();
         const spd = clock.speed();
         if (spd !== Infinity && delta > 0) {
-          await new Promise<void>(r => setTimeout(r, delta / spd));
+          const realMs = delta / spd;
+          const tickInterval = 50;
+          const ticks = Math.ceil(realMs / tickInterval);
+          const vtPerTick = delta / ticks;
+          for (let i = 0; i < ticks && !disposed; i++) {
+            await new Promise<void>(r => setTimeout(r, tickInterval));
+            clock.advance(vtPerTick);
+            emitState();
+          }
+        } else {
+          clock.advance(delta);
         }
-        clock.advance(delta);
       }
       for (const q of blockedQueues()) {
         if (q.wakeTime !== undefined && q.wakeTime <= clock.now()) {

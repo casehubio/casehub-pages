@@ -196,6 +196,7 @@ function compRunExample(key) {
     if (detail.topic === 'scenario:state') {
       var payload = detail.payload;
       compUpdateState(payload.paused ? 'paused' : (payload.progress >= 1 ? 'done' : 'playing'));
+      if (payload.virtualTime !== undefined) compUpdateTime(payload.virtualTime);
     }
     if (detail.topic === 'scenario:step') {
       var p = detail.payload;

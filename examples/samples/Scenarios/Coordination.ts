@@ -213,10 +213,12 @@ function runExample(key) {
     }
     if (detail.topic === 'scenario:state') {
       var sp = detail.payload;
-      timeEl.textContent = Math.round(sp.progress * 100) + '%';
-      if (sp.paused === false && sp.progress >= 1) {
-        stateEl.textContent = 'Done';
-        stateEl.style.color = '#4ade80';
+      if (sp.virtualTime !== undefined && timeEl) timeEl.textContent = Math.round(sp.virtualTime) + 'ms';
+      if (sp.progress >= 1) {
+        if (stateEl) { stateEl.textContent = 'Done'; stateEl.style.color = '#4ade80'; }
+        if (timeEl) timeEl.textContent = '100%';
+      } else if (sp.paused) {
+        if (stateEl) { stateEl.textContent = 'Paused'; stateEl.style.color = '#f59e0b'; }
       }
     }
   });

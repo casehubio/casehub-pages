@@ -78,7 +78,6 @@ var runBtn = document.getElementById('run-btn');
 var speedSlider = document.getElementById('speed-slider');
 var speedLabel = document.getElementById('speed-label');
 var stepDelay = 500;
-var delayInterval = null;
 var currentRunner = null;
 
 if (speedSlider) {
@@ -137,7 +136,6 @@ function flashButton(name) {
 }
 
 function resetUI() {
-  if (delayInterval) { clearInterval(delayInterval); delayInterval = null; }
   if (logEl) logEl.innerHTML = '';
   if (stateEl) stateEl.textContent = 'idle';
   if (stepEl) stepEl.textContent = '—';
@@ -192,10 +190,14 @@ function runExample(idx) {
 
     if (detail.topic === 'scenario:state') {
       var payload = detail.payload;
+      var isDelaying = !payload.paused && payload.progress < 1 && payload.virtualTime !== undefined;
       if (stateEl) {
-        stateEl.textContent = payload.paused ? 'paused' : (payload.progress >= 1 ? 'done' : 'playing');
-        stateEl.style.color = payload.progress >= 1 ? '#4ade80' : (payload.paused ? '#f59e0b' : '#3b82f6');
+        if (payload.progress >= 1) { stateEl.textContent = 'done'; stateEl.style.color = '#4ade80'; }
+        else if (payload.paused) { stateEl.textContent = 'paused'; stateEl.style.color = '#f59e0b'; }
+        else if (isDelaying) { stateEl.textContent = 'delaying'; stateEl.style.color = '#f59e0b'; }
+        else { stateEl.textContent = 'playing'; stateEl.style.color = '#3b82f6'; }
       }
+      if (timeEl && payload.virtualTime !== undefined) timeEl.textContent = Math.round(payload.virtualTime) + 'ms';
       if (progressEl) progressEl.textContent = Math.round(payload.progress * 100) + '%';
       if (payload.error && payload.error.message) {
         log(0, 'system', 'error', payload.error.message);
@@ -209,26 +211,12 @@ function runExample(idx) {
       var target = step && step.target ? step.target.name : (step ? (step.name || step.duration || '') : '');
       var label = action + (target ? ' ' + target : '');
 
-      if (delayInterval) { clearInterval(delayInterval); delayInterval = null; }
       if (stepEl) stepEl.textContent = label;
       if (timeEl) timeEl.textContent = sp.virtualTime + 'ms';
 
       if (step && step.delivery === 'orchestration' && step.construct === 'delay') {
         log(sp.virtualTime, sp.queue || 'main', 'delay ' + (step.duration || ''), '⏱');
-        var durationMs = parseInt(step.duration, 10) || 0;
-        if (durationMs > 0) {
-          var delayStart = Date.now();
-          var vtStart = sp.virtualTime;
-          if (stateEl) { stateEl.textContent = 'delaying'; stateEl.style.color = '#f59e0b'; }
-          delayInterval = setInterval(function() {
-            var elapsed = Date.now() - delayStart;
-            var frac = Math.min(elapsed / (durationMs / (currentRunner ? currentRunner.clock.speed() : 1)), 1);
-            if (timeEl) timeEl.textContent = Math.round(vtStart + durationMs * frac) + 'ms';
-            if (frac >= 1 && delayInterval) { clearInterval(delayInterval); delayInterval = null; }
-          }, 50);
-        }
       } else if (step && step.delivery === 'aria') {
-        if (stateEl) { stateEl.textContent = 'playing'; stateEl.style.color = '#3b82f6'; }
         log(sp.virtualTime, sp.queue || 'main', label, '✓');
       } else {
         log(sp.virtualTime, sp.queue || 'main', label, '⏭');
