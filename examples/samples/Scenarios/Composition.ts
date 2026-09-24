@@ -109,7 +109,7 @@ function compRenderTriggers(triggers) {
     if (fireBtn) {
       fireBtn.addEventListener('click', function() {
         if (compCurrentRunner && compCurrentRunner.injectData) {
-          compCurrentRunner.injectData(t.name, { ts: Date.now() });
+          compCurrentRunner.injectData(t.name, { ts: +new Date() });
           compLog('data → ' + t.name, 'user', 0);
         }
       });
