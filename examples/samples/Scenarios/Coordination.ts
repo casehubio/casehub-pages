@@ -279,6 +279,8 @@ function runExample(key) {
 if (examplePicker) {
   showYaml(examplePicker.value);
   examplePicker.addEventListener('change', function() {
+    if (currentRunner) { currentRunner.dispose(); currentRunner = null; }
+    resetUI();
     showYaml(examplePicker.value);
   });
 }

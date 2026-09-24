@@ -72,7 +72,7 @@ var EXAMPLES = [
   {
     name: 'Delay (decorator)',
     tags: ['delay', 'decorator'],
-    description: 'Delay as a decorator pauses AFTER the step completes. Compare with standalone delay which is its own step between actions.',
+    description: 'Delay in decorator form pauses AFTER the step completes. Compare with standalone delay which is its own step between actions.',
     yaml: [
       'scenario: delay-decorator-demo',
       'steps:',
@@ -86,7 +86,7 @@ var EXAMPLES = [
   {
     name: 'Loop (until)',
     tags: ['loop', 'decorator'],
-    description: 'Loop with count and until condition. Repeats up to N times or until the condition is met. Here: A loops 3 times, B loops until "true" (runs once).',
+    description: 'Loop with count and until condition. Repeats up to N times or until the condition is met. Button "A" loops 3 times, button "B" loops until "true" (runs once).',
     yaml: [
       'scenario: loop-until-demo',
       'steps:',
@@ -331,6 +331,8 @@ function runExample(idx) {
 
 if (picker) {
   picker.addEventListener('change', function() {
+    if (currentRunner) { currentRunner.dispose(); currentRunner = null; }
+    resetUI();
     showExample(parseInt(picker.value, 10));
   });
 }

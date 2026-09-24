@@ -67,18 +67,18 @@ var COMP_EXAMPLES = {
       'name: status-panel',
       'parameters:',
       '  title:',
-      '    type: STRING',
+      '    type: "STRING"',
       '    required: true',
       '  dataset:',
-      '    type: STRING',
+      '    type: "STRING"',
       '    required: true',
       '  threshold:',
-      '    type: NUMBER',
+      '    type: "NUMBER"',
       '    required: false',
       '    defaultValue: "80"',
       'outputs:',
       '  panelId:',
-      '    type: STRING',
+      '    type: "STRING"',
       '    value: "${params.title}-panel"',
       'sections:',
       '  pages:',
@@ -364,8 +364,9 @@ var compPicker = document.getElementById('comp-example-picker');
 if (compPicker) {
   compShowYaml(compPicker.value);
   compPicker.addEventListener('change', function() {
-    compShowYaml(compPicker.value);
+    if (compCurrentRunner) { compCurrentRunner.dispose(); compCurrentRunner = null; }
     compResetUI();
+    compShowYaml(compPicker.value);
   });
 }
 
