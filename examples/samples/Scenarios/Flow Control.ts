@@ -78,6 +78,7 @@ var runBtn = document.getElementById('run-btn');
 var speedSlider = document.getElementById('speed-slider');
 var speedLabel = document.getElementById('speed-label');
 var stepDelay = 500;
+var delayInterval = null;
 var currentRunner = null;
 
 if (speedSlider) {
@@ -136,6 +137,7 @@ function flashButton(name) {
 }
 
 function resetUI() {
+  if (delayInterval) { clearInterval(delayInterval); delayInterval = null; }
   if (logEl) logEl.innerHTML = '';
   if (stateEl) stateEl.textContent = 'idle';
   if (stepEl) stepEl.textContent = '—';
@@ -207,12 +209,26 @@ function runExample(idx) {
       var target = step && step.target ? step.target.name : (step ? (step.name || step.duration || '') : '');
       var label = action + (target ? ' ' + target : '');
 
+      if (delayInterval) { clearInterval(delayInterval); delayInterval = null; }
       if (stepEl) stepEl.textContent = label;
       if (timeEl) timeEl.textContent = sp.virtualTime + 'ms';
 
       if (step && step.delivery === 'orchestration' && step.construct === 'delay') {
         log(sp.virtualTime, sp.queue || 'main', 'delay ' + (step.duration || ''), '⏱');
+        var durationMs = parseInt(step.duration, 10) || 0;
+        if (durationMs > 0) {
+          var delayStart = Date.now();
+          var vtStart = sp.virtualTime;
+          if (stateEl) { stateEl.textContent = 'delaying'; stateEl.style.color = '#f59e0b'; }
+          delayInterval = setInterval(function() {
+            var elapsed = Date.now() - delayStart;
+            var frac = Math.min(elapsed / (durationMs / (currentRunner ? currentRunner.clock.speed() : 1)), 1);
+            if (timeEl) timeEl.textContent = Math.round(vtStart + durationMs * frac) + 'ms';
+            if (frac >= 1 && delayInterval) { clearInterval(delayInterval); delayInterval = null; }
+          }, 50);
+        }
       } else if (step && step.delivery === 'aria') {
+        if (stateEl) { stateEl.textContent = 'playing'; stateEl.style.color = '#3b82f6'; }
         log(sp.virtualTime, sp.queue || 'main', label, '✓');
       } else {
         log(sp.virtualTime, sp.queue || 'main', label, '⏭');
