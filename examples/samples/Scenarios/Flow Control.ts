@@ -210,10 +210,6 @@ function runExample(idx) {
       if (stepEl) stepEl.textContent = label;
       if (timeEl) timeEl.textContent = sp.virtualTime + 'ms';
 
-      if (step && step.delivery === 'aria' && step.target && step.target.name) {
-        flashButton(step.target.name);
-      }
-
       if (step && step.delivery === 'orchestration' && step.construct === 'delay') {
         log(sp.virtualTime, sp.queue || 'main', 'delay ' + (step.duration || ''), '⏱');
       } else if (step && step.delivery === 'aria') {
