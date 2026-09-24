@@ -205,7 +205,10 @@ export function createScheduler(
           return;
         }
         if (step.barrier) {
-          const latch = scope.latch(step.barrier as string, 1);
+          const barrierName = step.barrier as string;
+          const barrierConfig = (scenario as any).orchestration?.barriers?.[barrierName];
+          const barrierCount = barrierConfig?.count ?? 1;
+          const latch = scope.latch(barrierName, barrierCount);
           latch.countDown();
           if (latch.getCount() <= 0) break;
           queue.advance();
