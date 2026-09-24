@@ -52,6 +52,8 @@ pages:
                   <option value="data-trigger">Data Trigger</option>
                   <option value="time-trigger">Time Trigger</option>
                   <option value="orchestration-block">Orchestration Block</option>
+                  <option value="modules">Modules</option>
+                  <option value="foreach">forEach</option>
                 </select>
               </div>
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
