@@ -364,7 +364,12 @@ export function createScheduler(
       // Advance virtual time to next wake point
       const nextWake = earliestWakeTime();
       if (nextWake !== undefined && nextWake > clock.now()) {
-        clock.advance(nextWake - clock.now());
+        const delta = nextWake - clock.now();
+        const spd = clock.speed();
+        if (spd !== Infinity && delta > 0) {
+          await new Promise<void>(r => setTimeout(r, delta / spd));
+        }
+        clock.advance(delta);
       }
       for (const q of blockedQueues()) {
         if (q.wakeTime !== undefined && q.wakeTime <= clock.now()) {
