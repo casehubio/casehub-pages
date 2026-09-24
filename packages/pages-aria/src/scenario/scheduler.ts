@@ -36,6 +36,7 @@ export interface ScenarioRunner {
   readonly outline: OutlineNode[];
   readonly clock: VirtualClock;
 
+  injectData(channel: string, value: unknown): void;
   addEventListener(type: string, handler: EventListener): void;
   removeEventListener(type: string, handler: EventListener): void;
 }
@@ -418,8 +419,15 @@ export function createScheduler(
         }
       }
 
-      // Yield — in speed=Infinity tests this is just a microtask yield
-      await Promise.resolve();
+      // Yield to the event loop. Use setTimeout when waiting for external
+      // events (data triggers) so the browser can paint and handle input.
+      // Microtask yield for everything else (fast in tests with speed=Infinity).
+      const hasSuspended = suspendedQueues().length > 0;
+      if (hasSuspended && clock.speed() !== Infinity) {
+        await new Promise<void>(r => setTimeout(r, 100));
+      } else {
+        await Promise.resolve();
+      }
     }
 
     runnerState = 'done';
@@ -515,6 +523,10 @@ export function createScheduler(
         stepResolve();
         stepResolve = undefined;
       }
+    },
+
+    injectData(channel: string, value: unknown): void {
+      scope.channel(channel).send(value);
     },
 
     addEventListener(type: string, handler: EventListener): void {

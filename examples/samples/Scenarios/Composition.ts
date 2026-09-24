@@ -102,8 +102,18 @@ function compRenderTriggers(triggers) {
     row.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--pages-neutral-3); border-radius: 4px;';
     row.innerHTML = '<span style="width: 8px; height: 8px; border-radius: 50%; background: #6b7280;" id="trigger-dot-' + t.name + '"></span>'
       + '<span style="font-size: 12px; color: var(--pages-neutral-12);">' + t.name + ' (' + t.type + ')</span>'
-      + '<span style="font-size: 10px; color: var(--pages-neutral-8); margin-left: auto;" id="trigger-status-' + t.name + '">suspended</span>';
+      + '<span style="font-size: 10px; color: var(--pages-neutral-8); margin-left: auto;" id="trigger-status-' + t.name + '">suspended</span>'
+      + '<button id="trigger-fire-' + t.name + '" style="padding: 2px 10px; font-size: 11px; border: 1px solid var(--pages-accent-6); border-radius: 4px; background: var(--pages-accent-3); color: var(--pages-accent-9); cursor: pointer; margin-left: 4px;">Send</button>';
     list.appendChild(row);
+    var fireBtn = document.getElementById('trigger-fire-' + t.name);
+    if (fireBtn) {
+      fireBtn.addEventListener('click', function() {
+        if (compCurrentRunner && compCurrentRunner.injectData) {
+          compCurrentRunner.injectData(t.name, { ts: Date.now() });
+          compLog('data → ' + t.name, 'user', 0);
+        }
+      });
+    }
   });
 }
 
