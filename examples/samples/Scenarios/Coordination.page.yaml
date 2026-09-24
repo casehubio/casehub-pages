@@ -24,6 +24,10 @@ pages:
                   <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Virtual Time</div>
                   <div id="orch-time" style="font-size: 20px; font-weight: 700; color: #a78bfa; margin-top: 4px;">0ms</div>
                 </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Progress</div>
+                  <div id="orch-progress" style="font-size: 20px; font-weight: 700; color: #f59e0b; margin-top: 4px;">0%</div>
+                </div>
               </div>
               <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                 <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Queue States</div>

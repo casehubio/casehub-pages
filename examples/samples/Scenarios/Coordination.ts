@@ -89,6 +89,7 @@ var EXAMPLES = {
 var stateEl = document.getElementById('orch-state');
 var queuesEl = document.getElementById('orch-queues');
 var timeEl = document.getElementById('orch-time');
+var progressEl = document.getElementById('orch-progress');
 var queueStatesEl = document.getElementById('queue-states');
 var eventLogEl = document.getElementById('event-log');
 var yamlSourceEl = document.getElementById('yaml-source');
@@ -170,6 +171,7 @@ function resetUI() {
   stateEl.style.color = '#3b82f6';
   queuesEl.textContent = '—';
   timeEl.textContent = '0ms';
+  if (progressEl) progressEl.textContent = '0%';
 }
 
 var descEl = document.getElementById('example-description');
@@ -237,9 +239,9 @@ function runExample(key) {
     if (detail.topic === 'scenario:state') {
       var sp = detail.payload;
       if (sp.virtualTime !== undefined && timeEl) timeEl.textContent = Math.round(sp.virtualTime) + 'ms';
+      if (progressEl) progressEl.textContent = Math.round(sp.progress * 100) + '%';
       if (sp.progress >= 1) {
         if (stateEl) { stateEl.textContent = 'Done'; stateEl.style.color = '#4ade80'; }
-        if (timeEl) timeEl.textContent = '100%';
       } else if (sp.paused) {
         if (stateEl) { stateEl.textContent = 'Paused'; stateEl.style.color = '#f59e0b'; }
       }

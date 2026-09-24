@@ -169,6 +169,11 @@ function compUpdateTime(ms) {
   if (el) el.textContent = ms + 'ms';
 }
 
+function compUpdateProgress(progress) {
+  var el = document.getElementById('comp-progress');
+  if (el) el.textContent = Math.round(progress * 100) + '%';
+}
+
 function compRenderTriggers(triggers) {
   var container = document.getElementById('trigger-states');
   var list = document.getElementById('trigger-list');
@@ -232,6 +237,13 @@ function compShowYaml(key) {
     }
     compDescEl.appendChild(document.createTextNode(example.description));
   }
+  var interactive = document.getElementById('comp-interactive');
+  var runBtn = document.getElementById('comp-run-btn');
+  var speedRow = document.getElementById('comp-speed-slider');
+  var isYamlOnly = (key === 'modules' || key === 'foreach');
+  if (interactive) interactive.style.display = isYamlOnly ? 'none' : '';
+  if (runBtn) runBtn.style.display = isYamlOnly ? 'none' : '';
+  if (speedRow) speedRow.parentElement.style.display = isYamlOnly ? 'none' : '';
 }
 
 function compResetUI() {
@@ -239,6 +251,7 @@ function compResetUI() {
   if (log) log.innerHTML = '';
   compUpdateState('Ready');
   compUpdateTime(0);
+  compUpdateProgress(0);
   var list = document.getElementById('trigger-list');
   if (list) list.innerHTML = '';
   var container = document.getElementById('trigger-states');
@@ -298,6 +311,7 @@ function compRunExample(key) {
     if (detail.topic === 'scenario:state') {
       var payload = detail.payload;
       compUpdateState(payload.paused ? 'paused' : (payload.progress >= 1 ? 'done' : 'playing'));
+      compUpdateProgress(payload.progress);
       if (payload.virtualTime !== undefined) compUpdateTime(payload.virtualTime);
     }
     if (detail.topic === 'scenario:step') {

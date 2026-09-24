@@ -140,6 +140,7 @@ var speedSlider = document.getElementById('speed-slider');
 var speedLabel = document.getElementById('speed-label');
 var stepDelay = 500;
 var currentRunner = null;
+var runGeneration = 0;
 
 if (speedSlider) {
   speedSlider.addEventListener('input', function() {
@@ -236,6 +237,8 @@ function runExample(idx) {
     currentRunner.dispose();
     currentRunner = null;
   }
+  runGeneration++;
+  var thisGen = runGeneration;
   resetUI();
 
   var ex = EXAMPLES[idx];
@@ -260,6 +263,7 @@ function runExample(idx) {
   var eventTarget = new EventTarget();
 
   eventTarget.addEventListener('pages-event', function(e) {
+    if (thisGen !== runGeneration) return;
     var detail = e.detail;
     if (!detail) return;
 

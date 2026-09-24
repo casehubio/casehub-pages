@@ -11,6 +11,7 @@ pages:
           content: |
             <div>
               <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Composition &amp; Triggers</h2>
+              <div id="comp-interactive" style="">
               <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                 <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
                   <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">State</div>
@@ -23,6 +24,10 @@ pages:
                 <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
                   <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Triggers</div>
                   <div id="comp-trigger-count" style="font-size: 20px; font-weight: 700; color: #f59e0b; margin-top: 4px;">0</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                  <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Progress</div>
+                  <div id="comp-progress" style="font-size: 20px; font-weight: 700; color: #f59e0b; margin-top: 4px;">0%</div>
                 </div>
               </div>
               <div id="trigger-states" style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px; margin-bottom: 16px; display: none;">
@@ -38,6 +43,7 @@ pages:
                 <button aria-label="B" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">B</button>
                 <button aria-label="C" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">C</button>
                 <button aria-label="D" role="button" style="padding: 8px 20px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 6px; cursor: pointer; color: var(--pages-accent-11); font-size: 13px; font-weight: 600;">D</button>
+              </div>
               </div>
             </div>
     - span: 5
