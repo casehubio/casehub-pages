@@ -53,6 +53,10 @@ pages:
                   <option value="2">Delay</option>
                   <option value="3">Loop</option>
                   <option value="4">When Guard</option>
+                  <option value="5">Delay (decorator)</option>
+                  <option value="6">Loop (until)</option>
+                  <option value="7">Retry</option>
+                  <option value="8">Timeout</option>
                 </select>
                 <button id="run-btn" style="padding: 8px 20px; border: 1px solid var(--pages-accent-6); border-radius: 6px; background: var(--pages-accent-3); color: var(--pages-accent-9); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;">▶ Run</button>
               </div>

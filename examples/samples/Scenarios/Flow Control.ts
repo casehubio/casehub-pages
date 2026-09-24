@@ -69,6 +69,62 @@ var EXAMPLES = [
       '  - click: { role: button, name: "D" }',
     ].join('\n'),
   },
+  {
+    name: 'Delay (decorator)',
+    tags: ['delay', 'decorator'],
+    description: 'Delay as a decorator pauses AFTER the step completes. Compare with standalone delay which is its own step between actions.',
+    yaml: [
+      'scenario: delay-decorator-demo',
+      'steps:',
+      '  - click: { role: button, name: "A" }',
+      '    delay: 1000ms',
+      '  - click: { role: button, name: "B" }',
+      '    delay: 500ms',
+      '  - click: { role: button, name: "C" }',
+    ].join('\n'),
+  },
+  {
+    name: 'Loop (until)',
+    tags: ['loop', 'decorator'],
+    description: 'Loop with count and until condition. Repeats up to N times or until the condition is met. Here: A loops 3 times, B loops until "true" (runs once).',
+    yaml: [
+      'scenario: loop-until-demo',
+      'steps:',
+      '  - click: { role: button, name: "A" }',
+      '    loop: { count: 3 }',
+      '  - click: { role: button, name: "B" }',
+      '    loop: { count: 5, until: true }',
+      '  - click: { role: button, name: "C" }',
+    ].join('\n'),
+  },
+  {
+    name: 'Retry',
+    tags: ['retry', 'decorator'],
+    description: 'Retry decorator re-executes a step on failure up to N times. If the executor throws, the scheduler retries before advancing or failing the queue.',
+    yaml: [
+      'scenario: retry-demo',
+      'steps:',
+      '  - click: { role: button, name: "A" }',
+      '    retry: 3',
+      '  - click: { role: button, name: "B" }',
+      '    retry: { max: 2 }',
+      '  - click: { role: button, name: "C" }',
+    ].join('\n'),
+  },
+  {
+    name: 'Timeout',
+    tags: ['timeout', 'decorator'],
+    description: 'Timeout decorator sets a maximum duration for a step. If the step takes longer, it is aborted.',
+    yaml: [
+      'scenario: timeout-demo',
+      'steps:',
+      '  - click: { role: button, name: "A" }',
+      '    timeout: 5s',
+      '  - click: { role: button, name: "B" }',
+      '    timeout: 2s',
+      '  - click: { role: button, name: "C" }',
+    ].join('\n'),
+  },
 ];
 
 var logEl = document.getElementById('event-log');
