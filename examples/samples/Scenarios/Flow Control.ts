@@ -52,15 +52,15 @@ var EXAMPLES = [
   },
   {
     name: 'When Guard',
-    description: 'The when decorator conditionally skips a step based on a guard expression.',
+    description: 'The when decorator conditionally skips a step based on a guard expression. B executes (when: true), C is skipped (when: false).',
     yaml: [
       'scenario: when-guard-demo',
       'steps:',
       '  - click: { role: button, name: "A" }',
       '  - click: { role: button, name: "B" }',
-      '    when: isReady',
+      '    when: true',
       '  - click: { role: button, name: "C" }',
-      '    when: neverTrue',
+      '    when: false',
       '  - click: { role: button, name: "D" }',
     ].join('\n'),
   },
