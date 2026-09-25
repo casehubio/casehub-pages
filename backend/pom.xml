@@ -22,6 +22,7 @@
         <module>layout-sqlite</module>
         <module>data</module>
         <module>data-sql</module>
+        <module>data-prometheus</module>
         <module>push</module>
         <module>push-runtime</module>
         <module>push-store-jdbc</module>
