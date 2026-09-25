@@ -206,7 +206,7 @@ export function createScheduler(
         }
         if (step.barrier) {
           const barrierName = step.barrier as string;
-          const barrierConfig = (scenario as any).orchestration?.barriers?.[barrierName];
+          const barrierConfig = scenario.orchestration?.barriers?.[barrierName];
           const barrierCount = barrierConfig?.count ?? 1;
           const latch = scope.latch(barrierName, barrierCount);
           latch.countDown();

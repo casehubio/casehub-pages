@@ -43,6 +43,7 @@ export interface TutorialSection {
 export interface ScenarioBase {
   scenario: string;
   meta?: TutorialMeta;
+  orchestration?: OrchestrationBlock;
 }
 
 export interface FlatScenario extends ScenarioBase {
