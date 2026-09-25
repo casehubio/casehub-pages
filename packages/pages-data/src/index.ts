@@ -18,6 +18,7 @@ export type { SortColumn, SortOp, SortOrder } from "./dataset/sort.js";
 
 export type { DataSetOp } from "./dataset/ops.js";
 export { applyOps, validateOpOrder } from "./dataset/ops.js";
+export { resolveOps } from "./dataset/ops-resolve.js";
 
 export type { DataSetLookup } from "./dataset/lookup.js";
 export { createLookup } from "./dataset/lookup.js";

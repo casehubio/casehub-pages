@@ -17,27 +17,31 @@ function mockFetch(body: unknown, status = 200): typeof globalThis.fetch {
 }
 
 describe("ServerQueryClient", () => {
-  it("POSTs DataSetLookup and returns TypedDataSet", async () => {
+  it("POSTs DataSetLookup and returns dataset with remainingOps", async () => {
     const response = {
-      columns: [{ id: "name", name: "Name", type: "LABEL" }],
-      rows: [["Alice"], ["Bob"]],
+      result: {
+        columns: [{ id: "name", name: "Name", type: "LABEL" }],
+        rows: [["Alice"], ["Bob"]],
+      },
+      remainingOps: [],
     };
     const fetchFn = mockFetch(response);
     const client = new ServerQueryClient("/api/dataset/query", fetchFn);
 
-    const result = await client.query(makeLookup("ds-1"));
+    const { dataset, remainingOps } = await client.query(makeLookup("ds-1"));
 
     expect(fetchFn).toHaveBeenCalledWith("/api/dataset/query", expect.objectContaining({
       method: "POST",
       headers: { "Content-Type": "application/json" },
     }));
-    expect(result.columns).toHaveLength(1);
-    expect(result.columns[0]!.name).toBe("Name");
-    expect(result.rows).toHaveLength(2);
+    expect(dataset.columns).toHaveLength(1);
+    expect(dataset.columns[0]!.name).toBe("Name");
+    expect(dataset.rows).toHaveLength(2);
+    expect(remainingOps).toHaveLength(0);
   });
 
   it("adds Authorization header when tokenFn returns a token", async () => {
-    const response = { columns: [], rows: [] };
+    const response = { result: { columns: [], rows: [] }, remainingOps: [] };
     const fetchFn = mockFetch(response);
     const tokenFn = () => "jwt-token-123";
     const client = new ServerQueryClient("/api/dataset/query", fetchFn, tokenFn);
@@ -50,7 +54,7 @@ describe("ServerQueryClient", () => {
   });
 
   it("omits Authorization header when tokenFn returns null", async () => {
-    const response = { columns: [], rows: [] };
+    const response = { result: { columns: [], rows: [] }, remainingOps: [] };
     const fetchFn = mockFetch(response);
     const tokenFn = () => null;
     const client = new ServerQueryClient("/api/dataset/query", fetchFn, tokenFn);
@@ -90,19 +94,38 @@ describe("ServerQueryClient", () => {
 
   it("maps null values in rows correctly", async () => {
     const response = {
-      columns: [
-        { id: "name", name: "Name", type: "LABEL" },
-        { id: "age", name: "Age", type: "NUMBER" },
-      ],
-      rows: [["Alice", "30"], [null, null]],
+      result: {
+        columns: [
+          { id: "name", name: "Name", type: "LABEL" },
+          { id: "age", name: "Age", type: "NUMBER" },
+        ],
+        rows: [["Alice", "30"], [null, null]],
+      },
+      remainingOps: [],
     };
     const fetchFn = mockFetch(response);
     const client = new ServerQueryClient("/api/dataset/query", fetchFn);
 
-    const result = await client.query(makeLookup("ds-1"));
+    const { dataset } = await client.query(makeLookup("ds-1"));
 
-    expect(result.rows).toHaveLength(2);
-    expect(result.rows[1]!.cells[0]!.type).toBe("NULL");
-    expect(result.rows[1]!.cells[1]!.type).toBe("NULL");
+    expect(dataset.rows).toHaveLength(2);
+    expect(dataset.rows[1]!.cells[0]!.type).toBe("NULL");
+    expect(dataset.rows[1]!.cells[1]!.type).toBe("NULL");
+  });
+
+  it("defaults remainingOps to empty when not present", async () => {
+    const response = {
+      result: {
+        columns: [{ id: "name", name: "Name", type: "LABEL" }],
+        rows: [["Alice"]],
+      },
+    };
+    const fetchFn = mockFetch(response);
+    const client = new ServerQueryClient("/api/dataset/query", fetchFn);
+
+    const { dataset, remainingOps } = await client.query(makeLookup("ds-1"));
+
+    expect(dataset.rows).toHaveLength(1);
+    expect(remainingOps).toHaveLength(0);
   });
 });

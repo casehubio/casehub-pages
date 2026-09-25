@@ -17,14 +17,17 @@ function mockFetch(response: unknown, status = 200): typeof globalThis.fetch {
 describe("serverQuerySource", () => {
   it("emits snapshot from server query response", async () => {
     const fetchFn = mockFetch({
-      columns: [
-        { id: "name", name: "Name", type: "TEXT" },
-        { id: "count", name: "Count", type: "NUMBER" },
-      ],
-      rows: [
-        ["alice", "42"],
-        ["bob", "17"],
-      ],
+      result: {
+        columns: [
+          { id: "name", name: "Name", type: "TEXT" },
+          { id: "count", name: "Count", type: "NUMBER" },
+        ],
+        rows: [
+          ["alice", "42"],
+          ["bob", "17"],
+        ],
+      },
+      remainingOps: [],
     });
 
     const source = serverQuerySource(
@@ -90,8 +93,11 @@ describe("serverQuerySource", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({
-            columns: [{ id: "x", name: "X", type: "TEXT" }],
-            rows: [["val"]],
+            result: {
+              columns: [{ id: "x", name: "X", type: "TEXT" }],
+              rows: [["val"]],
+            },
+            remainingOps: [],
           }),
         }); };
       });
@@ -122,8 +128,11 @@ describe("serverQuerySource", () => {
 
   it("passes auth token via tokenFn", async () => {
     const fetchFn = mockFetch({
-      columns: [{ id: "x", name: "X", type: "TEXT" }],
-      rows: [["val"]],
+      result: {
+        columns: [{ id: "x", name: "X", type: "TEXT" }],
+        rows: [["val"]],
+      },
+      remainingOps: [],
     });
 
     const source = serverQuerySource(

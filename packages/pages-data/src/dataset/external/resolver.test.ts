@@ -630,8 +630,11 @@ describe("resolveExternalDataSet", () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({
-          columns: [{ id: "name", name: "Name", type: "LABEL" }],
-          rows: [["Alice"]],
+          result: {
+            columns: [{ id: "name", name: "Name", type: "LABEL" }],
+            rows: [["Alice"]],
+          },
+          remainingOps: [],
         }),
       }) as unknown as typeof globalThis.fetch;
 
@@ -671,7 +674,7 @@ describe("resolveExternalDataSet", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ columns: [], rows: [] }),
+          json: () => Promise.resolve({ result: { columns: [], rows: [] }, remainingOps: [] }),
         });
       }) as unknown as typeof globalThis.fetch;
 
@@ -705,7 +708,7 @@ describe("resolveExternalDataSet", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ columns: [], rows: [] }),
+          json: () => Promise.resolve({ result: { columns: [], rows: [] }, remainingOps: [] }),
         });
       }) as unknown as typeof globalThis.fetch;
 
@@ -732,7 +735,7 @@ describe("resolveExternalDataSet", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ columns: [], rows: [] }),
+          json: () => Promise.resolve({ result: { columns: [], rows: [] }, remainingOps: [] }),
         });
       }) as unknown as typeof globalThis.fetch;
 
@@ -756,7 +759,7 @@ describe("resolveExternalDataSet", () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ columns: [], rows: [] }),
+        json: () => Promise.resolve({ result: { columns: [], rows: [] }, remainingOps: [] }),
       }) as unknown as typeof globalThis.fetch;
 
       const ctx = makeCtx({

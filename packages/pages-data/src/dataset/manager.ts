@@ -2,7 +2,7 @@ import type { DataSetId, TypedDataSet, Column } from "./types.js";
 import type { DataSetLookup } from "./lookup.js";
 import type { DataSetOp, ResolvedDataSetOp } from "./ops.js";
 import { applyOps } from "./ops.js";
-import { resolveFilterTypes } from "./filter-resolve.js";
+import { resolveOps } from "./ops-resolve.js";
 import { DataSetError } from "./errors.js";
 import type { DataSetEvent } from "./events.js";
 
@@ -28,19 +28,6 @@ export interface DataSetManager {
   apply(id: DataSetId, event: DataSetEvent): void;
   lookup(query: DataSetLookup, options?: LookupOptions): LookupResult;
   age(id: DataSetId): number | undefined;
-}
-
-function resolveOps(
-  ops: readonly DataSetOp[],
-  columns: readonly Column[],
-): ResolvedDataSetOp[] {
-  return ops.map(op => {
-    if (op.type !== "filter") return op;
-    return {
-      type: "filter" as const,
-      expressions: op.expressions.map(expr => resolveFilterTypes(expr, columns)),
-    };
-  });
 }
 
 function paginate(

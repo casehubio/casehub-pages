@@ -11,6 +11,8 @@ import type {
 } from "./types.js";
 import { HttpMethod } from "./types.js";
 import { DataSetError } from "../errors.js";
+import { applyOps } from "../ops.js";
+import { resolveOps } from "../ops-resolve.js";
 import { extractDataSet } from "./extraction.js";
 import { joinDataSets } from "./join.js";
 import type { DataSetLookup } from "../lookup.js";
@@ -111,9 +113,12 @@ export async function resolveExternalDataSet(
       config.tokenFn,
     );
     const effectiveLookup = lookup ?? { dataSetId: def.uuid, operations: [] };
-    const dataset = await client.query(effectiveLookup);
-    ctx.manager.apply(def.uuid, { type: "snapshot", dataset });
-    return { dataset, inferredColumns: false, source: "serverQuery" };
+    const { dataset, remainingOps } = await client.query(effectiveLookup);
+    const final = remainingOps.length > 0
+      ? applyOps(dataset, resolveOps(remainingOps, dataset.columns))
+      : dataset;
+    ctx.manager.apply(def.uuid, { type: "snapshot", dataset: final });
+    return { dataset: final, inferredColumns: false, source: "serverQuery" };
   }
 
   // ---- Existing code (unchanged) ----

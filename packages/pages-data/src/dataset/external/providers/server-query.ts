@@ -1,4 +1,5 @@
 import type { DataSetLookup } from "../../lookup.js";
+import type { DataSetOp } from "../../ops.js";
 import type { Column, DataSet, TypedDataSet } from "../../types.js";
 import { ColumnType } from "../../types.js";
 import { toTypedDataSet } from "../../conversion.js";
@@ -34,7 +35,7 @@ export class ServerQueryClient {
     private readonly tokenFn?: () => string | null,
   ) {}
 
-  async query(lookup: DataSetLookup): Promise<TypedDataSet> {
+  async query(lookup: DataSetLookup): Promise<{ dataset: TypedDataSet; remainingOps: DataSetOp[] }> {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     const token = this.tokenFn?.();
     if (token) {
@@ -71,7 +72,13 @@ export class ServerQueryClient {
       );
     }
 
-    const body = await response.json() as ServerQueryResponse;
-    return toTypedDataSet(toDataSet(body));
+    const body = await response.json() as {
+      result: ServerQueryResponse;
+      remainingOps?: DataSetOp[];
+    };
+    return {
+      dataset: toTypedDataSet(toDataSet(body.result)),
+      remainingOps: body.remainingOps ?? [],
+    };
   }
 }

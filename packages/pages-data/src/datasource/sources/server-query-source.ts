@@ -43,7 +43,7 @@ export function serverQuerySource(
       };
 
       void client.query(lookup)
-        .then((dataset) => {
+        .then(({ dataset }) => {
           if (connected) {
             sink.apply({ type: "snapshot", dataset });
           }
