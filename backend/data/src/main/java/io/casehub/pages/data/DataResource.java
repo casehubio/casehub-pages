@@ -70,12 +70,12 @@ public class DataResource {
         DataProvider provider = resolveProvider(lookup.dataSetId());
         if (provider == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity(Map.of("error", "No provider found for dataset: " + lookup.dataSetId()))
-                .build();
+                           .entity(Map.of("error", "No provider found for dataset: " + lookup.dataSetId()))
+                           .build();
         }
 
-        DataSetResult result = cacheService.queryCached(tenantId, lookup, () -> provider.query(lookup));
-        return Response.ok(result).build();
+        QueryResult queryResult = cacheService.queryCached(tenantId, lookup, () -> provider.query(lookup));
+        return Response.ok(queryResult).build();
     }
 
     @DELETE

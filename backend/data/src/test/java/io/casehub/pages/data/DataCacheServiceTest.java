@@ -53,10 +53,16 @@ class DataCacheServiceTest {
     @Test
     void queryCacheHit() {
         var lookup = new DataSetLookup("ds-1", List.of(), null);
-        var expected = new DataSetResult(List.of(), List.of());
+        var expected = QueryResult.complete(new DataSetResult(List.of(), List.of()));
 
-        var result1 = cache.queryCached("tenant-1", lookup, () -> { queryCount++; return expected; });
-        var result2 = cache.queryCached("tenant-1", lookup, () -> { queryCount++; return new DataSetResult(List.of(), List.of()); });
+        var result1 = cache.queryCached("tenant-1", lookup, () -> {
+            queryCount++;
+            return expected;
+        });
+        var result2 = cache.queryCached("tenant-1", lookup, () -> {
+            queryCount++;
+            return QueryResult.complete(new DataSetResult(List.of(), List.of()));
+        });
 
         assertThat(result1).isSameAs(expected);
         assertThat(result2).isSameAs(expected);
@@ -66,12 +72,18 @@ class DataCacheServiceTest {
     @Test
     void invalidateRemovesQueryEntries() {
         var lookup = new DataSetLookup("ds-1", List.of(), null);
-        cache.queryCached("tenant-1", lookup, () -> { queryCount++; return new DataSetResult(List.of(), List.of()); });
+        cache.queryCached("tenant-1", lookup, () -> {
+            queryCount++;
+            return QueryResult.complete(new DataSetResult(List.of(), List.of()));
+        });
         assertThat(queryCount).isEqualTo(1);
 
         cache.invalidate("tenant-1", "ds-1");
 
-        cache.queryCached("tenant-1", lookup, () -> { queryCount++; return new DataSetResult(List.of(), List.of()); });
+        cache.queryCached("tenant-1", lookup, () -> {
+            queryCount++;
+            return QueryResult.complete(new DataSetResult(List.of(), List.of()));
+        });
         assertThat(queryCount).isEqualTo(2);
     }
 
@@ -89,12 +101,18 @@ class DataCacheServiceTest {
     @Test
     void refreshTimeSecondsHintOverridesTtl() throws InterruptedException {
         var lookup = new DataSetLookup("ds-1", List.of(), 1);
-        cache.queryCached("tenant-1", lookup, () -> { queryCount++; return new DataSetResult(List.of(), List.of()); });
+        cache.queryCached("tenant-1", lookup, () -> {
+            queryCount++;
+            return QueryResult.complete(new DataSetResult(List.of(), List.of()));
+        });
         assertThat(queryCount).isEqualTo(1);
 
         Thread.sleep(1500);
 
-        cache.queryCached("tenant-1", lookup, () -> { queryCount++; return new DataSetResult(List.of(), List.of()); });
+        cache.queryCached("tenant-1", lookup, () -> {
+            queryCount++;
+            return QueryResult.complete(new DataSetResult(List.of(), List.of()));
+        });
         assertThat(queryCount).isEqualTo(2);
     }
 
@@ -113,8 +131,8 @@ class DataCacheServiceTest {
     @Test
     void invalidateDoesNotAffectOtherTenants() {
         var lookup = new DataSetLookup("ds-1", List.of(), null);
-        var result1 = new DataSetResult(List.of(), List.of());
-        var result2 = new DataSetResult(List.of(), List.of());
+        var result1 = QueryResult.complete(new DataSetResult(List.of(), List.of()));
+        var result2 = QueryResult.complete(new DataSetResult(List.of(), List.of()));
 
         cache.queryCached("tenant-1", lookup, () -> result1);
         cache.queryCached("tenant-2", lookup, () -> result2);
@@ -122,7 +140,10 @@ class DataCacheServiceTest {
         cache.invalidate("tenant-1", "ds-1");
 
         // tenant-2's entry should still be cached (loader not called again)
-        var fetched = cache.queryCached("tenant-2", lookup, () -> { queryCount++; return new DataSetResult(List.of(), List.of()); });
+        var fetched = cache.queryCached("tenant-2", lookup, () -> {
+            queryCount++;
+            return QueryResult.complete(new DataSetResult(List.of(), List.of()));
+        });
         assertThat(fetched).isSameAs(result2);
         assertThat(queryCount).isEqualTo(0);
     }

@@ -4,6 +4,7 @@ import io.casehub.pages.data.Aggregation;
 import io.casehub.pages.data.DataSetLookup;
 import io.casehub.pages.data.DataSetOp;
 import io.casehub.pages.data.DataSetResult;
+import io.casehub.pages.data.QueryResult;
 import io.casehub.pages.data.FilterExpression;
 import io.casehub.pages.data.FilterOp;
 import io.casehub.pages.data.GroupOp;
@@ -45,7 +46,8 @@ class SqlDataProviderTest {
     void queryWithNoOperationsReturnsAllRows() {
         DataSetLookup lookup = new DataSetLookup("test-sales", List.of(), null);
 
-        DataSetResult result = provider.query(lookup);
+        QueryResult qr = provider.query(lookup);
+        DataSetResult result = qr.result();
 
         assertThat(result.rows()).hasSize(5);
         assertThat(result.columns()).isNotEmpty();
@@ -64,7 +66,8 @@ class SqlDataProviderTest {
         ));
         DataSetLookup lookup = new DataSetLookup("test-sales", List.of(filter), null);
 
-        DataSetResult result = provider.query(lookup);
+        QueryResult qr = provider.query(lookup);
+        DataSetResult result = qr.result();
 
         assertThat(result.rows()).hasSize(3);
         // All returned rows should have "North" in the REGION column
@@ -81,7 +84,8 @@ class SqlDataProviderTest {
         SortOp sort = new SortOp(List.of(new SortColumn("AMOUNT", true)));
         DataSetLookup lookup = new DataSetLookup("test-sales", List.of(sort), null);
 
-        DataSetResult result = provider.query(lookup);
+        QueryResult qr = provider.query(lookup);
+        DataSetResult result = qr.result();
 
         assertThat(result.rows()).hasSize(5);
         int amountIdx = columnIndex(result, "AMOUNT");
@@ -102,7 +106,8 @@ class SqlDataProviderTest {
         );
         DataSetLookup lookup = new DataSetLookup("test-sales", List.of(group), null);
 
-        DataSetResult result = provider.query(lookup);
+        QueryResult qr = provider.query(lookup);
+        DataSetResult result = qr.result();
 
         // 3 distinct products: Widget, Gadget, Doohickey
         assertThat(result.rows()).hasSize(3);

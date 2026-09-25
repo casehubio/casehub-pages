@@ -34,16 +34,16 @@ class DataResourceQueryTest {
         }
 
         @Override
-        public DataSetResult query(DataSetLookup lookup) {
+        public QueryResult query(DataSetLookup lookup) {
             List<ColumnDef> columns = List.of(
                     new ColumnDef("name", "Name", "string"),
                     new ColumnDef("value", "Value", "number")
-            );
+                                             );
             List<List<String>> rows = List.of(
                     List.of("alpha", "10"),
                     List.of("beta", "20")
-            );
-            return new DataSetResult(columns, rows);
+                                             );
+            return QueryResult.complete(new DataSetResult(columns, rows));
         }
     }
 
@@ -109,14 +109,15 @@ class DataResourceQueryTest {
                 .post("/api/dataset/query")
                 .then()
                 .statusCode(200)
-                .body("columns", hasSize(2))
-                .body("columns[0].id", equalTo("name"))
-                .body("columns[0].name", equalTo("Name"))
-                .body("columns[0].type", equalTo("string"))
-                .body("columns[1].id", equalTo("value"))
-                .body("rows", hasSize(2))
-                .body("rows[0][0]", equalTo("alpha"))
-                .body("rows[0][1]", equalTo("10"));
+                .body("result.columns", hasSize(2))
+                .body("result.columns[0].id", equalTo("name"))
+                .body("result.columns[0].name", equalTo("Name"))
+                .body("result.columns[0].type", equalTo("string"))
+                .body("result.columns[1].id", equalTo("value"))
+                .body("result.rows", hasSize(2))
+                .body("result.rows[0][0]", equalTo("alpha"))
+                .body("result.rows[0][1]", equalTo("10"))
+                .body("remainingOps", hasSize(0));
     }
 
     @Test

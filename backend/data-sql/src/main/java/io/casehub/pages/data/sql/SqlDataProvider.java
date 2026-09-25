@@ -3,7 +3,7 @@ package io.casehub.pages.data.sql;
 import io.agroal.api.AgroalDataSource;
 import io.casehub.pages.data.DataProvider;
 import io.casehub.pages.data.DataSetLookup;
-import io.casehub.pages.data.DataSetResult;
+import io.casehub.pages.data.QueryResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -52,7 +52,7 @@ public class SqlDataProvider implements DataProvider {
     }
 
     @Override
-    public DataSetResult query(DataSetLookup lookup) {
+    public QueryResult query(DataSetLookup lookup) {
         loadConfigs();
         QueryConfig qc = queryConfigs.get(lookup.dataSetId());
         if (qc == null) {
@@ -63,15 +63,15 @@ public class SqlDataProvider implements DataProvider {
         AgroalDataSource ds = defaultDataSource;
 
         try (Connection conn = ds.getConnection()) {
-            Set<String> allowedColumns = discoverColumns(conn, qc.query());
-            PreparedQuery pq = SqlQueryBuilder.build(qc.query(), lookup.operations(), allowedColumns);
+            Set<String>   allowedColumns = discoverColumns(conn, qc.query());
+            PreparedQuery pq             = SqlQueryBuilder.build(qc.query(), lookup.operations(), allowedColumns);
 
             try (PreparedStatement stmt = conn.prepareStatement(pq.sql())) {
                 for (int i = 0; i < pq.params().size(); i++) {
                     stmt.setObject(i + 1, pq.params().get(i));
                 }
                 try (ResultSet rs = stmt.executeQuery()) {
-                    return ResultSetMapper.toDataSetResult(rs);
+                    return QueryResult.complete(ResultSetMapper.toDataSetResult(rs));
                 }
             }
         } catch (SQLException e) {

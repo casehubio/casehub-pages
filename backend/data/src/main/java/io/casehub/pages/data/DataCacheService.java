@@ -77,14 +77,14 @@ public class DataCacheService {
         return (FetchResult) entry.value();
     }
 
-    public DataSetResult queryCached(String tenantId, DataSetLookup lookup, Supplier<DataSetResult> loader) {
+    public QueryResult queryCached(String tenantId, DataSetLookup lookup, Supplier<QueryResult> loader) {
         if (cache == null) {
             return loader.get();
         }
-        long ttl = resolveTtl("query", lookup.refreshTimeSeconds(), queryDefaultTtlSeconds);
-        var key = new CacheKey(tenantId, "query", hashQuery(lookup));
-        var entry = cache.get(key, k -> new CacheEntry(loader.get(), ttl));
-        return (DataSetResult) entry.value();
+        long ttl   = resolveTtl("query", lookup.refreshTimeSeconds(), queryDefaultTtlSeconds);
+        var  key   = new CacheKey(tenantId, "query", hashQuery(lookup));
+        var  entry = cache.get(key, k -> new CacheEntry(loader.get(), ttl));
+        return (QueryResult) entry.value();
     }
 
     public void invalidate(String tenantId, String dataSetId) {

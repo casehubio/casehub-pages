@@ -29,9 +29,10 @@ class NoOpDataProviderTest {
     @Test
     void query_returns_empty_columns_and_rows() {
         DataSetLookup lookup = new DataSetLookup("any-id", List.of(), null);
-        DataSetResult result = provider.query(lookup);
+        QueryResult   qr     = provider.query(lookup);
 
-        assertThat(result.columns()).isEmpty();
-        assertThat(result.rows()).isEmpty();
+        assertThat(qr.result().columns()).isEmpty();
+        assertThat(qr.result().rows()).isEmpty();
+        assertThat(qr.remainingOps()).isEmpty();
     }
 }

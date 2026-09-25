@@ -19,7 +19,7 @@ public class NoOpDataProvider implements DataProvider {
     }
 
     @Override
-    public DataSetResult query(DataSetLookup lookup) {
-        return new DataSetResult(List.of(), List.of());
+    public QueryResult query(DataSetLookup lookup) {
+        return QueryResult.complete(new DataSetResult(List.of(), List.of()));
     }
 }
