@@ -218,6 +218,7 @@ Scenarios are hierarchical YAML documents (chapters → sections → steps → c
 - `casehub-pages-push-store-redis` — Redis durable event store implementation
 - `casehub-pages-data` — Data provider SPI + REST relay/query resource, caching, filter/sort push-down. No JDBC
 - `casehub-pages-data-sql` — SQL data provider via Agroal
+- `casehub-pages-data-prometheus` — Prometheus data provider via java.net.http
 - `casehub-pages-layout` — Layout persistence SPI (`LayoutPersistenceStore`) + REST resource
 - `casehub-pages-layout-sqlite` — SQLite layout store implementation
 - `casehub-pages-auth` — Dev authentication: token-based login resource
@@ -409,7 +410,7 @@ Hierarchical scenario execution with distributed actors, ARIA-driven browser aut
 | #19 | Loading and error states for components | ✅ shipped |
 | #20 | Chart click → cross-filter event protocol | ✅ shipped |
 | #21 | Optional Quarkus backend MVP | ✅ shipped |
-| #22 | Server-side data provider: Prometheus | 🔲 open |
+| #22 | Server-side data provider: Prometheus | ✅ shipped |
 | #23 | Server-side data provider: Elasticsearch | 🔲 open |
 | #24 | View state persistence (URL-based) | ✅ shipped |
 | #25 | LLM-friendly API documentation for host application integration | ✅ shipped |
