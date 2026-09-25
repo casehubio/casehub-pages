@@ -9,15 +9,23 @@ import io.casehub.pages.data.ResultColumn;
 import io.casehub.pages.data.SortColumn;
 import io.casehub.pages.data.SortOp;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class SqlQueryBuilder {
 
     private SqlQueryBuilder() {}
+
+    private static final Pattern TIME_FRAME_PATTERN = Pattern.compile("now-(\\d+)(SECOND|MINUTE|HOUR|DAY|WEEK|MONTH|YEAR)\\s+till\\s+now");
+
 
     public static PreparedQuery build(String baseQuery, List<DataSetOp> operations, Set<String> allowedColumns) {
         StringBuilder sql = new StringBuilder();
@@ -183,6 +191,12 @@ public final class SqlQueryBuilder {
                 sql.append(")");
                 params.addAll(args);
             }
+            case "TIME_FRAME" -> {
+                Instant[] range = parseTimeFrame(args.get(0));
+                sql.append(col).append(" BETWEEN ? AND ?");
+                params.add(Timestamp.from(range[0]));
+                params.add(Timestamp.from(range[1]));
+            }
             default -> throw new IllegalArgumentException("Unsupported filter function: " + fn);
         }
     }
@@ -245,4 +259,29 @@ public final class SqlQueryBuilder {
             throw new IllegalArgumentException("Column not in allowlist: " + columnId);
         }
     }
+
+    static Instant[] parseTimeFrame(String expr) {
+        Matcher m = TIME_FRAME_PATTERN.matcher(expr);
+        if (!m.matches()) {
+            throw new IllegalArgumentException("Invalid TIME_FRAME expression: " + expr);
+        }
+        long amount = Long.parseLong(m.group(1));
+        ChronoUnit unit = switch (m.group(2)) {
+            case "SECOND" -> ChronoUnit.SECONDS;
+            case "MINUTE" -> ChronoUnit.MINUTES;
+            case "HOUR" -> ChronoUnit.HOURS;
+            case "DAY" -> ChronoUnit.DAYS;
+            case "WEEK" -> ChronoUnit.WEEKS;
+            default -> ChronoUnit.DAYS;
+        };
+        long multiplier = switch (m.group(2)) {
+            case "MONTH" -> 30;
+            case "YEAR" -> 365;
+            default -> 1;
+        };
+        Instant now  = Instant.now();
+        Instant from = now.minus(amount * multiplier, unit);
+        return new Instant[]{from, now};
+    }
+
 }

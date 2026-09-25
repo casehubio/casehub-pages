@@ -1,7 +1,6 @@
 package io.casehub.pages.data.sql;
 
 import io.casehub.pages.data.Aggregation;
-import io.casehub.pages.data.DataSetOp;
 import io.casehub.pages.data.FilterExpression;
 import io.casehub.pages.data.FilterOp;
 import io.casehub.pages.data.GroupOp;
@@ -133,6 +132,27 @@ class SqlQueryBuilderTest {
         assertThat(pq.sql()).contains("\"name\" LIKE ?");
         assertThat(pq.params()).containsExactly("%widget%");
     }
+// ── Filter: TIME_FRAME ──────────────────────────────────────────
+
+    @Test
+    void timeFrameFilterGeneratesBetweenWithResolvedTimestamps() {
+        FilterOp filter = new FilterOp(List.of(
+                new FilterExpression.Unresolved("created_at", "TIME_FRAME", List.of("now-1HOUR till now"))
+                                              ));
+
+        PreparedQuery pq = SqlQueryBuilder.build(BASE, List.of(filter), ALLOWED);
+
+        assertThat(pq.sql()).contains("\"created_at\" BETWEEN ? AND ?");
+        assertThat(pq.params()).hasSize(2);
+        assertThat(pq.params().get(0)).isInstanceOf(java.sql.Timestamp.class);
+        assertThat(pq.params().get(1)).isInstanceOf(java.sql.Timestamp.class);
+
+        java.sql.Timestamp from   = (java.sql.Timestamp) pq.params().get(0);
+        java.sql.Timestamp to     = (java.sql.Timestamp) pq.params().get(1);
+        long               diffMs = to.getTime() - from.getTime();
+        assertThat(diffMs).isBetween(3500_000L, 3700_000L);
+    }
+
 
     // ── Sort: single column ──────────────────────────────────────────
 
