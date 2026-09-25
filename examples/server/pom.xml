@@ -31,6 +31,11 @@
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.casehub</groupId>
+            <artifactId>casehub-pages-data-backend</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-scheduler</artifactId>
         </dependency>

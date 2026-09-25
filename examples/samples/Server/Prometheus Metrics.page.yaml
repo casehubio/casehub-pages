@@ -1,0 +1,116 @@
+datasets:
+- uuid: cpu-metrics
+  serverQuery: true
+  operations:
+  - type: filter
+    column: timestamp
+    function: TIME_FRAME
+    args: ["now-1HOUR till now"]
+  - type: filter
+    column: mode
+    function: EQUALS_TO
+    args: [idle]
+
+- uuid: http-requests
+  serverQuery: true
+  operations:
+  - type: filter
+    column: timestamp
+    function: TIME_FRAME
+    args: ["now-30MINUTE till now"]
+
+- uuid: memory-usage
+  serverQuery: true
+  operations:
+  - type: filter
+    column: timestamp
+    function: TIME_FRAME
+    args: ["now-1HOUR till now"]
+
+pages:
+- name: Prometheus Metrics
+  rows:
+  - columns:
+    - components:
+      - type: html
+        properties:
+          content: |
+            <div style="padding: 20px; background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; margin-bottom: 16px;">
+              <h2 style="margin: 0 0 8px; color: var(--pages-text-primary, #eee); font-size: 20px;">Server-Side Data Providers</h2>
+              <p style="margin: 0 0 12px; color: var(--pages-text-muted, #999); font-size: 14px;">
+                These charts use <code>serverQuery: true</code> to route queries through the server's DataProvider SPI.
+                The server translates operations it can handle natively and returns <code>remainingOps</code> for client-side completion.
+              </p>
+              <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
+                ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">./start-server.sh</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
+              </p>
+            </div>
+
+  - columns:
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <h3 style="color: var(--pages-text-primary, #eee); margin: 0 0 8px;">CPU Idle — Filtered by Mode</h3>
+            <p style="color: var(--pages-text-muted, #888); font-size: 13px; margin: 0 0 12px;">
+              TIME_FRAME + EQUALS_TO filter applied server-side
+            </p>
+      - type: line-chart
+        properties:
+          lookup:
+            uuid: cpu-metrics
+          width: 600
+          height: 300
+
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <h3 style="color: var(--pages-text-primary, #eee); margin: 0 0 8px;">HTTP Request Rates</h3>
+            <p style="color: var(--pages-text-muted, #888); font-size: 13px; margin: 0 0 12px;">
+              All endpoints, last 30 minutes
+            </p>
+      - type: line-chart
+        properties:
+          lookup:
+            uuid: http-requests
+          width: 600
+          height: 300
+
+  - columns:
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <h3 style="color: var(--pages-text-primary, #eee); margin: 0 0 8px;">Memory Usage by Host</h3>
+            <p style="color: var(--pages-text-muted, #888); font-size: 13px; margin: 0 0 12px;">
+              Available memory across instances
+            </p>
+      - type: line-chart
+        properties:
+          lookup:
+            uuid: memory-usage
+          width: 600
+          height: 300
+
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <h3 style="color: var(--pages-text-primary, #eee); margin: 0 0 8px;">CPU Data Table</h3>
+            <p style="color: var(--pages-text-muted, #888); font-size: 13px; margin: 0 0 12px;">
+              Raw data with client-side sorting via remainingOps
+            </p>
+      - type: data-table
+        properties:
+          lookup:
+            uuid: cpu-metrics
+            operations:
+            - type: sort
+              columns:
+              - columnId: timestamp
+                ascending: false

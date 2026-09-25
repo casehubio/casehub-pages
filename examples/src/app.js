@@ -424,7 +424,13 @@ async function loadSampleInTarget(samplePath) {
             }
         };
 
-        currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, { baseUrl, fetch: galleryFetch });
+        const siteOptions = { baseUrl, fetch: galleryFetch };
+        if (activeTab === 'server') {
+            siteOptions.providerConfig = {
+                serverQuery: { endpoint: 'http://localhost:8090/api/demo/query' },
+            };
+        }
+        currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, siteOptions);
         const currentTheme = casehubPages.getTheme() || 'casehub-dark';
         currentSite.setTheme(currentTheme.endsWith('-dark') ? 'dark' : 'light');
         casehubPages.applyTheme(currentTheme, sampleTarget);

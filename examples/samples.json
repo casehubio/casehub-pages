@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 97,
+  "totalSamples": 98,
   "categories": [
     {
       "category": "Charts",
@@ -683,6 +683,12 @@
           "path": "Server/Multi-Topic Dashboard.page.yaml",
           "category": "Server",
           "file": "Multi-Topic Dashboard.page.yaml"
+        },
+        {
+          "name": "Prometheus Metrics",
+          "path": "Server/Prometheus Metrics.page.yaml",
+          "category": "Server",
+          "file": "Prometheus Metrics.page.yaml"
         },
         {
           "name": "Reconnect Replay",
