@@ -92,6 +92,10 @@ export declare class DiagramBaseInterface {
   protected _layoutOptions(): ElkLayoutOptions;
   protected _computeLayout(model: GraphModel, options: ElkLayoutOptions): Promise<LayoutResult>;
   protected _postLayout(nodes: Node[], edges: Edge[]): { nodes: Node[]; edges: Edge[] };
+  _handleCanvasEvent: (e: CustomEvent) => void;
+  _handleEdgeClick(e: CustomEvent): void;
+  _renderCanvas(): TemplateResult;
+  _renderDialogs(): TemplateResult;
   protected _decorations(): ReadonlyMap<string, NodeDecoration> | undefined;
   protected _editPolicy(): EditPolicy | undefined;
   protected _editorResolver(): EditorResolver | undefined;
@@ -164,6 +168,51 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
       edges: Edge[],
     ): { nodes: Node[]; edges: Edge[] } {
       return { nodes, edges };
+    }
+
+    protected _handleCanvasEvent = (e: CustomEvent): void => {
+      const topic = e.detail?.topic;
+      switch (topic) {
+        case 'graph:node:click':
+          this._handleNodeClick(e);
+          break;
+        case 'graph:edge:click':
+          this._handleEdgeClick(e);
+          break;
+        case 'graph:selection:change':
+          this._handleSelectionChange(e);
+          break;
+        case 'graph:pane:click':
+          this._showPickerAtPaneClick();
+          break;
+        case 'graph:connect:end-on-empty':
+          this._showPickerAtConnectEnd(e.detail?.payload);
+          break;
+      }
+    };
+
+    protected _handleEdgeClick(_e: CustomEvent): void {
+    }
+
+    protected _renderCanvas(): TemplateResult {
+      return html`
+        <pages-graph-canvas
+          .nodes=${this._nodes}
+          .edges=${this._edges}
+          .model=${this._adapterResult?.model}
+          .editPolicy=${this._editPolicy()}
+          .onMutation=${this._handleMutation}
+          style="width:100%;height:100%;"
+          @pages-event=${this._handleCanvasEvent}
+        ></pages-graph-canvas>
+      `;
+    }
+
+    protected _renderDialogs(): TemplateResult {
+      return html`
+        ${this._showConflict ? this._renderConflictDialog() : nothing}
+        ${this._confirmMessage ? this._renderDeleteConfirm() : nothing}
+      `;
     }
 
     protected _editPolicy(): EditPolicy | undefined {
