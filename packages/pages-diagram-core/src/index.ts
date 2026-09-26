@@ -8,4 +8,4 @@ export { PagesDiagramToolbar } from './diagram-toolbar.js';
 export { GitHubBackend } from './github-backend.js';
 export type { GitHubBackendConfig } from './github-backend.js';
 export { DiagramBaseMixin } from './diagram-base-mixin.js';
-export type { AdapterResult, DiagramBaseInterface } from './diagram-base-mixin.js';
+export type { AdapterResult, DiagramBaseInterface, LayoutResult } from './diagram-base-mixin.js';

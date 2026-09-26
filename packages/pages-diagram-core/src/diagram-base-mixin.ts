@@ -20,6 +20,11 @@ export interface AdapterResult {
   readonly degraded?: { readonly reason: string };
 }
 
+export interface LayoutResult {
+  readonly layout: ElkLayoutResult;
+  readonly direction?: 'DOWN' | 'RIGHT' | 'LEFT' | 'UP' | undefined;
+}
+
 const MAX_UNDO = 50;
 
 type Constructor<T = Record<string, unknown>> = new (...args: any[]) => T;
@@ -85,6 +90,8 @@ export declare class DiagramBaseInterface {
   _onChooserDismiss: () => void;
   _renderNodePicker(): TemplateResult | typeof nothing;
   protected _layoutOptions(): ElkLayoutOptions;
+  protected _computeLayout(model: GraphModel, options: ElkLayoutOptions): Promise<LayoutResult>;
+  protected _postLayout(nodes: Node[], edges: Edge[]): { nodes: Node[]; edges: Edge[] };
   protected _decorations(): ReadonlyMap<string, NodeDecoration> | undefined;
   protected _editPolicy(): EditPolicy | undefined;
   protected _editorResolver(): EditorResolver | undefined;
@@ -142,6 +149,21 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
 
     protected _layoutOptions(): ElkLayoutOptions {
       return { direction: 'DOWN', spacing: 60 };
+    }
+
+    protected async _computeLayout(
+      model: GraphModel,
+      options: ElkLayoutOptions,
+    ): Promise<LayoutResult> {
+      const layout = await computeElkLayout(model, options);
+      return { layout, direction: options.direction };
+    }
+
+    protected _postLayout(
+      nodes: Node[],
+      edges: Edge[],
+    ): { nodes: Node[]; edges: Edge[] } {
+      return { nodes, edges };
     }
 
     protected _editPolicy(): EditPolicy | undefined {
@@ -412,16 +434,19 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
         this._error = '';
         const result = this._adaptYaml(yamlStr);
         this._adapterResult = result;
-        const layout = await computeElkLayout(result.model, this._layoutOptions());
+        const { layout, direction } = await this._computeLayout(
+          result.model, this._layoutOptions(),
+        );
         if (this._adapterResult !== result) {
           this._renderInProgress = false;
           await this._fullRender(this._currentYaml);
           return;
         }
         this._lastLayout = layout;
-        const { nodes, edges } = toReactFlowGraph(result.model, layout, this._decorations(), this._layoutOptions().direction);
-        this._nodes = nodes;
-        this._edges = edges;
+        const rfGraph = toReactFlowGraph(result.model, layout, this._decorations(), direction);
+        const processed = this._postLayout(rfGraph.nodes, rfGraph.edges);
+        this._nodes = processed.nodes;
+        this._edges = processed.edges;
       } catch (e) {
         this._error = String(e);
       } finally {
@@ -441,9 +466,10 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
       try {
         this._error = '';
         this._adapterResult = this._adaptYaml(yamlStr);
-        const { nodes, edges } = toReactFlowGraph(this._adapterResult.model, this._lastLayout, this._decorations(), this._layoutOptions().direction);
-        this._nodes = nodes;
-        this._edges = edges;
+        const rfGraph = toReactFlowGraph(this._adapterResult.model, this._lastLayout, this._decorations(), this._layoutOptions().direction);
+        const processed = this._postLayout(rfGraph.nodes, rfGraph.edges);
+        this._nodes = processed.nodes;
+        this._edges = processed.edges;
         this._updateSelectedNode();
       } catch (e) {
         this._error = `Edit failed: ${e}`;
