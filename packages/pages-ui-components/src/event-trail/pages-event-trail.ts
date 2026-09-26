@@ -22,13 +22,16 @@ export class PagesEventTrail extends DataSourceMixin(LiveRegionMixin(LitElement)
   @property({ type: String }) entityField?: ColumnId;
   @property({ type: String }) entityLabel?: string;
   @property({ type: Boolean }) showDateRange = false;
-  @property({ type: Object }) getRowDetail?: (row: TypedRow) => TemplateResult | undefined;
+  @property({ type: Object }) getRowDetail?: (row: TypedRow, rawEntry?: unknown) => TemplateResult | undefined;
   @property({ type: Object }) getRowKey?: (row: TypedRow) => string;
+  @property({ type: String }) recordsPath?: string;
+  @property({ type: Boolean }) csvExport = false;
 
   @state() private _rawEntries: unknown[] = [];
   @state() private _filterState: FilterState = EMPTY_FILTER_STATE;
   @state() private _filteredDataSet?: TypedDataSet;
   @state() private _expandedKey: string | null = null;
+  @state() private _rawEntryByRow = new WeakMap<TypedRow, unknown>();
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -45,8 +48,11 @@ export class PagesEventTrail extends DataSourceMixin(LiveRegionMixin(LitElement)
           const signal = abort.signal;
           globalThis.fetch(url, { signal })
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-            .then((entries: unknown[]) => {
+            .then((body: unknown) => {
               if (signal.aborted) return;
+              const entries = (this.recordsPath
+                ? (body as Record<string, unknown>)[this.recordsPath]
+                : body) as unknown[];
               this._rawEntries = entries;
               const dataset = fromRows(entries, this.columnDefs);
               sink.apply({ type: 'snapshot', dataset });
@@ -97,6 +103,11 @@ export class PagesEventTrail extends DataSourceMixin(LiveRegionMixin(LitElement)
     if (props.entityField !== undefined) this.entityField = props.entityField as ColumnId;
     if (props.entityLabel !== undefined) this.entityLabel = props.entityLabel as string;
     if (props.showDateRange !== undefined) this.showDateRange = props.showDateRange as boolean;
+    if (props.getRowDetail !== undefined) this.getRowDetail = props.getRowDetail as (row: TypedRow, rawEntry?: unknown) => TemplateResult | undefined;
+    if (props.getRowKey !== undefined) this.getRowKey = props.getRowKey as (row: TypedRow) => string;
+    if (props.columnRenderers !== undefined) this.columnRenderers = props.columnRenderers as ReadonlyMap<ColumnId, ColumnRenderer>;
+    if (props.recordsPath !== undefined) this.recordsPath = props.recordsPath as string;
+    if (props.csvExport !== undefined) this.csvExport = props.csvExport as boolean;
     super.configure(props);
   }
 
@@ -127,6 +138,16 @@ export class PagesEventTrail extends DataSourceMixin(LiveRegionMixin(LitElement)
       return true;
     });
     this._filteredDataSet = fromRows(filtered, this.columnDefs);
+    this._rawEntryByRow = new WeakMap();
+    for (let i = 0; i < this._filteredDataSet.rows.length; i++) {
+      const row = this._filteredDataSet.rows[i];
+      if (row) this._rawEntryByRow.set(row, filtered[i]);
+    }
+  }
+
+  _wrapGetRowDetail(): ((row: TypedRow) => TemplateResult | undefined) | undefined {
+    if (!this.getRowDetail) return undefined;
+    return (row: TypedRow) => this.getRowDetail!(row, this._rawEntryByRow.get(row));
   }
 
   private _handleDetailChange(e: CustomEvent): void {
@@ -190,11 +211,12 @@ export class PagesEventTrail extends DataSourceMixin(LiveRegionMixin(LitElement)
         .columnConfig=${this.columnConfig}
         .columnRenderers=${this.columnRenderers}
         .getRowKey=${this.getRowKey}
-        .getRowDetail=${this.getRowDetail}
+        .getRowDetail=${this._wrapGetRowDetail()}
         detailMode="single"
         .expandedDetailKeys=${this._expandedKey ? [this._expandedKey] : []}
         client-sort
         client-filter
+        ?csvExport=${this.csvExport}
         @detail-change=${this._handleDetailChange}
       ></pages-table>
     `;
