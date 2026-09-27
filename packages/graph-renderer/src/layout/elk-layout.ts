@@ -72,13 +72,9 @@ function buildElkNode(
       'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
       'elk.padding': `[top=${Math.max(padding, headerHeight)},left=${padding},bottom=${padding},right=${padding}]`,
       'elk.spacing.nodeNode': String(spacing),
+      'elk.layered.spacing.nodeNodeBetweenLayers': String(spacing),
       ...(elkOptions ?? {}),
     };
-    if (wrapping) {
-      containerOpts['elk.layered.wrapping.strategy'] = 'SINGLE_EDGE';
-      containerOpts['elk.layered.wrapping.cutting.strategy'] = 'ARD';
-      containerOpts['elk.aspectRatio'] = '1.6';
-    }
     elkNode.layoutOptions = containerOpts;
   }
   const part = partitions?.get(node.id);
