@@ -22,3 +22,5 @@ export { ModuleExpander } from './module-expander.js';
 export type { ExpandedModule } from './module-expander.js';
 export { CsvParser } from './csv-parser.js';
 export type { CsvDataSource, CsvColumn, CsvColumnType } from './csv-parser.js';
+export { matches, valuePattern, structuralPattern, defaultPattern } from './match.js';
+export type { MatchPattern, ValuePattern, StructuralPattern, DefaultPattern, MatchCase } from './match.js';
