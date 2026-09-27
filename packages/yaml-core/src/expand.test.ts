@@ -182,8 +182,8 @@ describe('expand', () => {
       pages: [{
         name: 'dashboard',
         components: {
-          'metric': { type: 'metric', when: '${features.showMetrics}' },
-          'table': { type: 'data-table', when: '${features.showTable}' },
+          'metric': { type: 'metric', if: '${features.showMetrics}' },
+          'table': { type: 'data-table', if: '${features.showTable}' },
         },
       }],
     };

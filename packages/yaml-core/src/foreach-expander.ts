@@ -12,7 +12,7 @@ export interface Reference {
 export interface ForEachAdapter<E> {
   stamp(template: E, stampedId: string, scopedResolver: VariableResolver): E;
   getForEach(element: E): ForEachDirective | null;
-  getWhen(element: E): string | null;
+  getCondition(element: E): string | null;
   getReferences(element: E): Reference[];
   withReferences(element: E, rewritten: Reference[]): E;
 }
@@ -132,10 +132,10 @@ export class ForEachExpander {
       const groupKey = elementToGroup.get(elementId)!;
 
       if (groupKey === null) {
-        const when = adapter.getWhen(element);
-        if (when !== null) {
-          const resolvedWhen = resolver.resolveString(when, elementId);
-          if (!isTruthy(resolvedWhen)) {
+        const condition = adapter.getCondition(element);
+        if (condition !== null) {
+          const resolved = resolver.resolveString(condition, elementId);
+          if (!isTruthy(resolved)) {
             excludedIds.add(elementId);
             continue;
           }
@@ -153,10 +153,10 @@ export class ForEachExpander {
         const eachResolver = resolver.withScope('each',
           forEachContextSource({ [as]: value }, null));
 
-        const when = adapter.getWhen(element);
-        if (when !== null) {
-          const resolvedWhen = eachResolver.resolveString(when, stampedId);
-          if (!isTruthy(resolvedWhen)) {
+        const condition = adapter.getCondition(element);
+        if (condition !== null) {
+          const resolved = eachResolver.resolveString(condition, stampedId);
+          if (!isTruthy(resolved)) {
             excludedIds.add(stampedId);
             continue;
           }
@@ -238,10 +238,10 @@ export class ForEachExpander {
       const groupKey = elementToGroup.get(elementId)!;
 
       if (groupKey === null) {
-        const when = adapter.getWhen(element);
-        if (when !== null) {
-          const resolvedWhen = resolver.resolveString(when, elementId);
-          if (!isTruthy(resolvedWhen)) {
+        const condition = adapter.getCondition(element);
+        if (condition !== null) {
+          const resolved = resolver.resolveString(condition, elementId);
+          if (!isTruthy(resolved)) {
             excludedIds.add(elementId);
             continue;
           }
@@ -268,10 +268,10 @@ export class ForEachExpander {
               { [as]: row },
             ));
 
-          const when = adapter.getWhen(element);
-          if (when !== null) {
-            const resolvedWhen = rowResolver.resolveString(when, stampedId);
-            if (!isTruthy(resolvedWhen)) {
+          const condition = adapter.getCondition(element);
+          if (condition !== null) {
+            const resolved = rowResolver.resolveString(condition, stampedId);
+            if (!isTruthy(resolved)) {
               excludedIds.add(stampedId);
               continue;
             }
@@ -290,10 +290,10 @@ export class ForEachExpander {
           const eachResolver = resolver.withScope('each',
             forEachContextSource({ [as]: value }, null));
 
-          const when = adapter.getWhen(element);
-          if (when !== null) {
-            const resolvedWhen = eachResolver.resolveString(when, stampedId);
-            if (!isTruthy(resolvedWhen)) {
+          const condition = adapter.getCondition(element);
+          if (condition !== null) {
+            const resolved = eachResolver.resolveString(condition, stampedId);
+            if (!isTruthy(resolved)) {
               excludedIds.add(stampedId);
               continue;
             }

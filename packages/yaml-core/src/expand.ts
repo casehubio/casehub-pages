@@ -24,19 +24,19 @@ interface MapElement {
   id: string;
   raw: Record<string, unknown>;
   forEach: ForEachDirective | null;
-  when: string | null;
+  condition: string | null;
 }
 
 const mapAdapter: ForEachAdapter<MapElement> = {
   stamp(template, stampedId, scopedResolver) {
     const raw = { ...template.raw };
     delete raw['forEach'];
-    delete raw['when'];
+    delete raw['if'];
     const resolved = scopedResolver.resolveMap(raw, stampedId);
-    return { id: stampedId, raw: resolved, forEach: null, when: null };
+    return { id: stampedId, raw: resolved, forEach: null, condition: null };
   },
   getForEach(element) { return element.forEach; },
-  getWhen(element) { return element.when; },
+  getCondition(element) { return element.condition; },
   getReferences() { return []; },
   withReferences(element) { return element; },
 };
@@ -85,7 +85,7 @@ function parseImports(rawImports: unknown): YamlImport[] {
   return rawImports.map((raw) => ({
     module: raw.module as string,
     as: raw.as as string,
-    when: raw.when as string | undefined,
+    condition: raw.if as string | undefined,
     parameters: (raw.parameters ?? {}) as Record<string, string>,
   }));
 }
@@ -119,8 +119,8 @@ function expandForEachInSection(
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       const raw = value as Record<string, unknown>;
       const forEach = parseForEachDirective(raw['forEach'] ?? null);
-      const when = raw['when'] as string | null ?? null;
-      elements.set(key, { id: key, raw, forEach, when });
+      const condition = raw['if'] as string | null ?? null;
+      elements.set(key, { id: key, raw, forEach, condition });
     } else {
       nonMapEntries.push([key, value]);
     }
@@ -129,8 +129,8 @@ function expandForEachInSection(
   if (elements.size === 0) return section;
 
   const hasForEach = [...elements.values()].some((e) => e.forEach !== null);
-  const hasWhen = [...elements.values()].some((e) => e.when !== null);
-  if (!hasForEach && !hasWhen) return section;
+  const hasCondition = [...elements.values()].some((e) => e.condition !== null);
+  if (!hasForEach && !hasCondition) return section;
 
   const hasCsv = Object.keys(dataSources).length > 0;
   const result = hasCsv

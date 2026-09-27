@@ -303,8 +303,8 @@ export class ModuleExpander {
       const paramScope = resolveParameters(module, imp, resolvedParams);
       moduleScopes[imp.as] = paramScope;
 
-      if (imp.when !== undefined) {
-        importConditions[imp.as] = imp.when;
+      if (imp.condition !== undefined) {
+        importConditions[imp.as] = imp.condition;
       }
 
       const resolvedOutputs = resolveOutputs(module, paramScope);

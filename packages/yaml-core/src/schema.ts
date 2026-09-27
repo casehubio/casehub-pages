@@ -23,7 +23,7 @@ export const outputSchema = z.object({
 export const importSchema = z.object({
   module: z.string(),
   as: z.string(),
-  when: z.string().optional(),
+  if: z.string().optional(),
   parameters: z.record(z.string(), z.string()).optional(),
 });
 
@@ -64,5 +64,5 @@ export const yamlCoreDocumentSchema = z.object({
 
 export const yamlCoreElementMixin = {
   forEach: forEachSchema.optional(),
-  when: z.string().optional(),
+  if: z.string().optional(),
 };

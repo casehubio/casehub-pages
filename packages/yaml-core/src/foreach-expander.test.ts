@@ -10,16 +10,16 @@ interface TestElement {
   id: string;
   spec: Record<string, unknown>;
   forEach: ForEachDirective | null;
-  when: string | null;
+  condition: string | null;
 }
 
 const testAdapter: ForEachAdapter<TestElement> = {
   stamp(template, stampedId, scopedResolver) {
     const resolvedSpec = scopedResolver.resolveMap(template.spec, stampedId);
-    return { id: stampedId, spec: resolvedSpec, forEach: null, when: null };
+    return { id: stampedId, spec: resolvedSpec, forEach: null, condition: null };
   },
   getForEach(element) { return element.forEach; },
-  getWhen(element) { return element.when; },
+  getCondition(element) { return element.condition; },
   getReferences() { return []; },
   withReferences(element) { return element; },
 };
@@ -33,7 +33,7 @@ describe('ForEachExpander — inline forEach', () => {
       id: 'regional-source',
       spec: { name: 'customers-${each.region}', uri: 's3://${each.region}/data.csv' },
       forEach: { type: 'inline', as: 'region', in: ['us-east', 'eu-west', 'ap-south'] },
-      when: null,
+      condition: null,
     });
 
     const result = ForEachExpander.expand(elements, {}, resolver, testAdapter, 1000);
@@ -54,7 +54,7 @@ describe('ForEachExpander — inline forEach', () => {
       id: 'node',
       spec: { name: '${each.env}' },
       forEach: { type: 'inline', as: 'env', in: ['${var.suffix}'] },
-      when: null,
+      condition: null,
     });
 
     const result = ForEachExpander.expand(elements, {}, varResolver, testAdapter, 1000);
@@ -67,7 +67,7 @@ describe('ForEachExpander — inline forEach', () => {
     const elements = new Map<string, TestElement>();
     elements.set('template', {
       id: 'template', spec: { name: 'x' },
-      forEach: { type: 'inline', as: 'idx', in: [] }, when: null,
+      forEach: { type: 'inline', as: 'idx', in: [] }, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, {}, resolver, testAdapter, 1000);
@@ -78,7 +78,7 @@ describe('ForEachExpander — inline forEach', () => {
     const elements = new Map<string, TestElement>();
     elements.set('node', {
       id: 'node', spec: { name: '${each.x}' },
-      forEach: { type: 'inline', as: 'x', in: ['same', 'same'] }, when: null,
+      forEach: { type: 'inline', as: 'x', in: ['same', 'same'] }, condition: null,
     });
 
     expect(() => ForEachExpander.expand(elements, {}, resolver, testAdapter, 1000))
@@ -92,7 +92,7 @@ describe('ForEachExpander — named groups', () => {
     const elements = new Map<string, TestElement>();
     elements.set('regional-source', {
       id: 'regional-source', spec: { name: '${each.region}' },
-      forEach: { type: 'group-ref', groupName: 'regional' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'regional' }, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, groups, resolver, testAdapter, 1000);
@@ -108,11 +108,11 @@ describe('ForEachExpander — named groups', () => {
     const elements = new Map<string, TestElement>();
     elements.set('source', {
       id: 'source', spec: { name: '${each.region}' },
-      forEach: { type: 'group-ref', groupName: 'regional' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'regional' }, condition: null,
     });
     elements.set('ingest', {
       id: 'ingest', spec: { name: '${each.region}-ingest' },
-      forEach: { type: 'group-ref', groupName: 'regional' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'regional' }, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, groups, resolver, testAdapter, 1000);
@@ -128,7 +128,7 @@ describe('ForEachExpander — named groups', () => {
     const elements = new Map<string, TestElement>();
     elements.set('step', {
       id: 'step', spec: { name: '${each.member}' },
-      forEach: { type: 'group-ref', groupName: 'team-members', as: 'member' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'team-members', as: 'member' }, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, groups, resolver, testAdapter, 1000);
@@ -142,7 +142,7 @@ describe('ForEachExpander — fixed elements', () => {
   it('passes through', () => {
     const elements = new Map<string, TestElement>();
     elements.set('db', {
-      id: 'db', spec: { name: 'database' }, forEach: null, when: null,
+      id: 'db', spec: { name: 'database' }, forEach: null, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, {}, resolver, testAdapter, 1000);
@@ -156,7 +156,7 @@ describe('ForEachExpander — fixed elements', () => {
       { var: (name) => name === 'prod' ? 'production' : undefined }, new Set());
     const elements = new Map<string, TestElement>();
     elements.set('db', {
-      id: 'db', spec: { env: '${var.prod}' }, forEach: null, when: null,
+      id: 'db', spec: { env: '${var.prod}' }, forEach: null, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, {}, varResolver, testAdapter, 1000);
@@ -168,11 +168,11 @@ describe('ForEachExpander — mixed elements', () => {
   it('correct count', () => {
     const groups = { regional: { as: 'region', in: ['us-east', 'eu-west'] } };
     const elements = new Map<string, TestElement>();
-    elements.set('fixed-db', { id: 'fixed-db', spec: { name: 'db' }, forEach: null, when: null });
-    elements.set('fixed-schema', { id: 'fixed-schema', spec: { name: 'schema' }, forEach: null, when: null });
+    elements.set('fixed-db', { id: 'fixed-db', spec: { name: 'db' }, forEach: null, condition: null });
+    elements.set('fixed-schema', { id: 'fixed-schema', spec: { name: 'schema' }, forEach: null, condition: null });
     elements.set('regional-source', {
       id: 'regional-source', spec: { name: '${each.region}' },
-      forEach: { type: 'group-ref', groupName: 'regional' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'regional' }, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, groups, resolver, testAdapter, 1000);
@@ -182,12 +182,12 @@ describe('ForEachExpander — mixed elements', () => {
   it('preserves element order', () => {
     const groups = { env: { as: 'e', in: ['a', 'b'] } };
     const elements = new Map<string, TestElement>();
-    elements.set('first', { id: 'first', spec: { name: '1' }, forEach: null, when: null });
+    elements.set('first', { id: 'first', spec: { name: '1' }, forEach: null, condition: null });
     elements.set('expand', {
       id: 'expand', spec: { name: '${each.e}' },
-      forEach: { type: 'group-ref', groupName: 'env' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'env' }, condition: null,
     });
-    elements.set('last', { id: 'last', spec: { name: '3' }, forEach: null, when: null });
+    elements.set('last', { id: 'last', spec: { name: '3' }, forEach: null, condition: null });
 
     const result = ForEachExpander.expand(elements, groups, resolver, testAdapter, 1000);
     expect([...result.elements.keys()]).toEqual(['first', 'expand.a', 'expand.b', 'last']);
@@ -199,7 +199,7 @@ describe('ForEachExpander — expansion limit', () => {
     const elements = new Map<string, TestElement>();
     elements.set('node', {
       id: 'node', spec: { name: '${each.idx}' },
-      forEach: { type: 'inline', as: 'idx', in: ['1', '2', '3', '4', '5'] }, when: null,
+      forEach: { type: 'inline', as: 'idx', in: ['1', '2', '3', '4', '5'] }, condition: null,
     });
 
     expect(() => ForEachExpander.expand(elements, {}, resolver, testAdapter, 3))
@@ -213,7 +213,7 @@ describe('ForEachExpander — when conditions', () => {
       { var: (name) => name === 'enabled' ? 'true' : undefined }, new Set());
     const elements = new Map<string, TestElement>();
     elements.set('node', {
-      id: 'node', spec: { name: 'x' }, forEach: null, when: '${var.enabled}',
+      id: 'node', spec: { name: 'x' }, forEach: null, condition: '${var.enabled}',
     });
 
     const result = ForEachExpander.expand(elements, {}, varResolver, testAdapter, 1000);
@@ -226,7 +226,7 @@ describe('ForEachExpander — when conditions', () => {
       { var: (name) => name === 'enabled' ? 'false' : undefined }, new Set());
     const elements = new Map<string, TestElement>();
     elements.set('node', {
-      id: 'node', spec: { name: 'x' }, forEach: null, when: '${var.enabled}',
+      id: 'node', spec: { name: 'x' }, forEach: null, condition: '${var.enabled}',
     });
 
     const result = ForEachExpander.expand(elements, {}, varResolver, testAdapter, 1000);
@@ -241,7 +241,7 @@ describe('ForEachExpander — when conditions', () => {
     elements.set('source', {
       id: 'source', spec: { name: '${each.region}' },
       forEach: { type: 'inline', as: 'region', in: ['us-east', 'eu-west'] },
-      when: '${var.enable_sources}',
+      condition: '${var.enable_sources}',
     });
 
     const result = ForEachExpander.expand(elements, {}, varResolver, testAdapter, 1000);
@@ -254,7 +254,7 @@ describe('ForEachExpander — when conditions', () => {
     elements.set('source', {
       id: 'source', spec: { name: '${each.flag}' },
       forEach: { type: 'inline', as: 'flag', in: ['true', 'false'] },
-      when: '${each.flag}',
+      condition: '${each.flag}',
     });
 
     const result = ForEachExpander.expand(elements, {}, resolver, testAdapter, 1000);
@@ -270,7 +270,7 @@ describe('ForEachExpander — value expander', () => {
     const elements = new Map<string, TestElement>();
     elements.set('source', {
       id: 'source', spec: { name: '${each.region}' },
-      forEach: { type: 'group-ref', groupName: 'regional' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'regional' }, condition: null,
     });
 
     const expander = (resolved: string) => {
@@ -288,7 +288,7 @@ describe('ForEachExpander — value expander', () => {
     const elements = new Map<string, TestElement>();
     elements.set('node', {
       id: 'node', spec: { name: '${each.x}' },
-      forEach: { type: 'inline', as: 'x', in: ['a', 'b'] }, when: null,
+      forEach: { type: 'inline', as: 'x', in: ['a', 'b'] }, condition: null,
     });
 
     const result = ForEachExpander.expand(elements, {}, resolver, testAdapter, 1000, null);
@@ -301,7 +301,7 @@ describe('ForEachExpander — reference rewriting', () => {
     id: string;
     spec: Record<string, unknown>;
     forEach: ForEachDirective | null;
-    when: string | null;
+    condition: string | null;
     refs: Reference[];
   }
 
@@ -310,11 +310,11 @@ describe('ForEachExpander — reference rewriting', () => {
       return {
         id: stampedId,
         spec: scopedResolver.resolveMap(template.spec, stampedId),
-        forEach: null, when: null, refs: template.refs,
+        forEach: null, condition: null, refs: template.refs,
       };
     },
     getForEach(element) { return element.forEach; },
-    getWhen(element) { return element.when; },
+    getCondition(element) { return element.condition; },
     getReferences(element) { return element.refs; },
     withReferences(element, rewritten) {
       return { ...element, refs: rewritten };
@@ -324,10 +324,10 @@ describe('ForEachExpander — reference rewriting', () => {
   it('static reference unchanged', () => {
     const elements = new Map<string, RefElement>();
     elements.set('static-node', {
-      id: 'static-node', spec: {}, forEach: null, when: null, refs: [],
+      id: 'static-node', spec: {}, forEach: null, condition: null, refs: [],
     });
     elements.set('consumer', {
-      id: 'consumer', spec: {}, forEach: null, when: null,
+      id: 'consumer', spec: {}, forEach: null, condition: null,
       refs: [{ targetId: 'static-node', optional: false }],
     });
 
@@ -343,12 +343,12 @@ describe('ForEachExpander — reference rewriting', () => {
     elements.set('source', {
       id: 'source', spec: {},
       forEach: { type: 'group-ref', groupName: 'regional' },
-      when: null, refs: [],
+      condition: null, refs: [],
     });
     elements.set('sink', {
       id: 'sink', spec: {},
       forEach: { type: 'group-ref', groupName: 'regional' },
-      when: null, refs: [{ targetId: 'source', optional: false }],
+      condition: null, refs: [{ targetId: 'source', optional: false }],
     });
 
     const result = ForEachExpander.expand(elements, groups, resolver, refAdapter, 1000);
@@ -369,12 +369,12 @@ describe('ForEachExpander — reference rewriting', () => {
     elements.set('src', {
       id: 'src', spec: {},
       forEach: { type: 'group-ref', groupName: 'g1' },
-      when: null, refs: [],
+      condition: null, refs: [],
     });
     elements.set('sink', {
       id: 'sink', spec: {},
       forEach: { type: 'group-ref', groupName: 'g2' },
-      when: null, refs: [{ targetId: 'src', optional: true }],
+      condition: null, refs: [{ targetId: 'src', optional: true }],
     });
 
     const result = ForEachExpander.expand(elements, groups, resolver, refAdapter, 1000);
@@ -390,12 +390,12 @@ describe('ForEachExpander — reference rewriting', () => {
     elements.set('src', {
       id: 'src', spec: {},
       forEach: { type: 'group-ref', groupName: 'g1' },
-      when: null, refs: [],
+      condition: null, refs: [],
     });
     elements.set('sink', {
       id: 'sink', spec: {},
       forEach: { type: 'group-ref', groupName: 'g2' },
-      when: null, refs: [{ targetId: 'src', optional: false }],
+      condition: null, refs: [{ targetId: 'src', optional: false }],
     });
 
     expect(() => ForEachExpander.expand(elements, groups, resolver, refAdapter, 1000))
@@ -405,10 +405,10 @@ describe('ForEachExpander — reference rewriting', () => {
   it('reference to excluded required throws', () => {
     const elements = new Map<string, RefElement>();
     elements.set('excluded', {
-      id: 'excluded', spec: {}, forEach: null, when: 'false', refs: [],
+      id: 'excluded', spec: {}, forEach: null, condition: 'false', refs: [],
     });
     elements.set('consumer', {
-      id: 'consumer', spec: {}, forEach: null, when: null,
+      id: 'consumer', spec: {}, forEach: null, condition: null,
       refs: [{ targetId: 'excluded', optional: false }],
     });
 
@@ -426,7 +426,7 @@ describe('ForEachExpander — CSV data sources', () => {
     elements.set('create-member', {
       id: 'create-member',
       spec: { fullName: '${each.member.name}', memberRole: '${each.member.role}' },
-      forEach: { type: 'group-ref', groupName: 'members' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'members' }, condition: null,
     });
 
     const result = ForEachExpander.expandWithCsv(
@@ -450,7 +450,7 @@ describe('ForEachExpander — CSV data sources', () => {
       id: 'grant-admin',
       spec: { user: '${each.member.name}' },
       forEach: { type: 'group-ref', groupName: 'members' },
-      when: '${each.member.admin}',
+      condition: '${each.member.admin}',
     });
 
     const result = ForEachExpander.expandWithCsv(
@@ -470,11 +470,11 @@ describe('ForEachExpander — CSV data sources', () => {
     const elements = new Map<string, TestElement>();
     elements.set('user-step', {
       id: 'user-step', spec: { n: '${each.user.name}' },
-      forEach: { type: 'group-ref', groupName: 'users' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'users' }, condition: null,
     });
     elements.set('env-step', {
       id: 'env-step', spec: { n: '${each.e}' },
-      forEach: { type: 'group-ref', groupName: 'env' }, when: null,
+      forEach: { type: 'group-ref', groupName: 'env' }, condition: null,
     });
 
     const result = ForEachExpander.expandWithCsv(

@@ -28,7 +28,7 @@ export interface YamlModule {
 export interface YamlImport {
   module: string;
   as: string;
-  when?: string | undefined;
+  condition?: string | undefined;
   parameters: Record<string, string>;
 }
 

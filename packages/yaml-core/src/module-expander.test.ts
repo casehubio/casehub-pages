@@ -125,7 +125,7 @@ describe('ModuleExpander', () => {
       sections: { nodes: { n: {} } },
     };
     const imp: YamlImport = {
-      module: 'm', as: 'a', when: '${var.enabled}', parameters: {},
+      module: 'm', as: 'a', condition: '${var.enabled}', parameters: {},
     };
     const result = ModuleExpander.expand([imp], { m: module }, {});
     expect(result.importConditions['a']).toBe('${var.enabled}');
