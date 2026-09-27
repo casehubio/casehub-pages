@@ -17,6 +17,8 @@ export { computeElkLayout } from './layout/elk-layout.js';
 export type { ElkLayoutOptions, ElkLayoutResult, NodeLayout } from './layout/elk-layout.js';
 export { computeStackColumnLayout } from './layout/stack-column-layout.js';
 export type { StackColumnOptions } from './layout/stack-column-layout.js';
+export { computeRadialLayout } from './layout/radial-layout.js';
+export type { RadialLayoutOptions } from './layout/radial-layout.js';
 
 // ─── Layout Rule Engine ─────────────────────────────────────────────
 export { LayoutEngine } from './layout/engine.js';
