@@ -15,6 +15,8 @@ export { GraphCanvas } from './bridge/GraphCanvas.js';
 export { PagesGraphCanvas } from './bridge/PagesGraphCanvas.js';
 export { computeElkLayout } from './layout/elk-layout.js';
 export type { ElkLayoutOptions, ElkLayoutResult, NodeLayout } from './layout/elk-layout.js';
+export { computeStackColumnLayout } from './layout/stack-column-layout.js';
+export type { StackColumnOptions } from './layout/stack-column-layout.js';
 
 // ─── Layout Rule Engine ─────────────────────────────────────────────
 export { LayoutEngine } from './layout/engine.js';
