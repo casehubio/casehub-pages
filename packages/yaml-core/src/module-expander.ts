@@ -1,4 +1,4 @@
-import type { YamlImport, YamlModule, YamlModuleOutput, VariableSource } from './types.js';
+import type { YamlImport, YamlModule, YamlModuleFile, YamlModuleOutput, VariableSource } from './types.js';
 import { VariableResolver } from './variable-resolver.js';
 import { ParameterValidator } from './parameter-validator.js';
 
@@ -7,6 +7,29 @@ const WHOLE_MODULE_REF = /^\s*\$\{module\.[^}]+}\s*$/;
 
 export interface ExpandedModule {
   sections: Record<string, Record<string, unknown>>;
+  moduleScopes: Record<string, Record<string, string>>;
+  importConditions: Record<string, string>;
+  moduleOutputs: Record<string, Record<string, string>>;
+}
+
+export type SectionDeserializer = (sectionName: string, entryKey: string, rawEntry: Record<string, unknown>) => unknown;
+
+export type SectionContentRewriter = (sectionName: string, entryKey: string, entryValue: unknown, alias: string, moduleKeys: Set<string>) => unknown;
+
+export interface ExpansionOptions {
+  deserializer?: SectionDeserializer;
+  rewriter?: SectionContentRewriter;
+}
+
+export interface ModuleBridge<T> {
+  fromSections(sections: Record<string, Record<string, unknown>>): T;
+  toSections(content: T): Record<string, Record<string, unknown>>;
+  rewriter?(): SectionContentRewriter | undefined;
+  deriveOutputs?(expandedContent: T, alias: string, paramScope: Record<string, string>): Record<string, string>;
+}
+
+export interface TypedExpandedModule<T> {
+  content: T;
   moduleScopes: Record<string, Record<string, string>>;
   importConditions: Record<string, string>;
   moduleOutputs: Record<string, Record<string, string>>;
@@ -40,16 +63,20 @@ function validateImports(
   const seenAliases = new Set<string>();
 
   for (const imp of imports) {
-    if (!availableModules[imp.module]) {
-      errors.push(`Import references unknown module '${imp.module}'.`);
-    } else {
-      validateOutputNames(availableModules[imp.module]!, errors);
+    if (imp.module) {
+      if (!availableModules[imp.module]) {
+        errors.push(`Import references unknown module '${imp.module}'.`);
+      } else {
+        validateOutputNames(availableModules[imp.module]!, errors);
+      }
+    } else if (!imp.steps) {
+      errors.push(`Import '${imp.as}' must specify either 'module' or 'steps'.`);
     }
 
     if (!imp.as || imp.as.trim() === '') {
-      errors.push(`Import of module '${imp.module}' is missing a required alias (as).`);
+      errors.push(`Import of '${imp.module ?? imp.steps}' is missing a required alias (as).`);
     } else {
-      if (imp.as.includes('.')) {
+      if (imp.as.includes('.') && (imp.forEach != null || imp.loop != null)) {
         errors.push(`Import alias '${imp.as}' contains '.', which is reserved as the ID separator.`);
       }
       if (seenAliases.has(imp.as)) {
@@ -84,6 +111,10 @@ function validateModuleRefs(
   const processedAliases = new Set<string>();
 
   for (const imp of imports) {
+    if (!imp.module) {
+      processedAliases.add(imp.as);
+      continue;
+    }
     const targetModule = availableModules[imp.module];
     if (!targetModule) {
       processedAliases.add(imp.as);
@@ -164,7 +195,7 @@ function findModuleByAlias(
   availableModules: Record<string, YamlModule>,
 ): YamlModule | null {
   for (const imp of imports) {
-    if (alias === imp.as) {
+    if (alias === imp.as && imp.module !== undefined) {
       return availableModules[imp.module] ?? null;
     }
   }
@@ -297,6 +328,7 @@ export class ModuleExpander {
     const deferred = deferredPrefixes ?? new Set<string>();
 
     for (const imp of imports) {
+      if (!imp.module) continue;
       const module = availableModules[imp.module]!;
       const resolvedParams = resolveModuleRefsInParams(
         imp.parameters, allOutputs, imp.as);
@@ -339,5 +371,171 @@ export class ModuleExpander {
 
   static outputSource(moduleOutputs: Record<string, Record<string, string>>): VariableSource {
     return buildModuleSource(moduleOutputs);
+  }
+
+  static resolveExtensions(moduleFiles: YamlModuleFile[]): Record<string, YamlModule> {
+    const byName = new Map<string, YamlModuleFile>();
+    for (const file of moduleFiles) {
+      if (byName.has(file.module.name)) {
+        throw new Error(`Duplicate module name '${file.module.name}'`);
+      }
+      byName.set(file.module.name, file);
+    }
+
+    const result: Record<string, YamlModule> = {};
+
+    for (const file of moduleFiles) {
+      const header = file.module;
+      if (!header.extendsModule) {
+        result[header.name] = {
+          name: header.name,
+          parameters: { ...header.parameters },
+          outputs: { ...header.outputs },
+          sections: { ...file.sections },
+        };
+        continue;
+      }
+
+      if (header.extendsModule === header.name) {
+        throw new Error(`Module '${header.name}' cannot extend itself`);
+      }
+
+      const parent = byName.get(header.extendsModule);
+      if (!parent) {
+        throw new Error(`Module '${header.name}' extends unknown module '${header.extendsModule}'`);
+      }
+
+      if (parent.module.extendsModule) {
+        throw new Error(`Module '${header.name}' extends '${header.extendsModule}' which itself extends '${parent.module.extendsModule}' — only single-level inheritance is supported`);
+      }
+
+      const mergedParams = { ...parent.module.parameters, ...header.parameters };
+      const mergedOutputs = { ...parent.module.outputs, ...header.outputs };
+      const mergedSections: Record<string, Record<string, unknown>> = {};
+
+      for (const [sectionName, sectionContent] of Object.entries(parent.sections)) {
+        mergedSections[sectionName] = { ...sectionContent };
+      }
+      for (const [sectionName, sectionContent] of Object.entries(file.sections)) {
+        if (!mergedSections[sectionName]) {
+          mergedSections[sectionName] = {};
+        }
+        Object.assign(mergedSections[sectionName]!, sectionContent);
+      }
+
+      result[header.name] = {
+        name: header.name,
+        parameters: mergedParams,
+        outputs: mergedOutputs,
+        sections: mergedSections,
+      };
+    }
+
+    return result;
+  }
+
+  static expandTyped<T>(
+    imports: YamlImport[],
+    availableModules: Record<string, YamlModule>,
+    existingContent: T,
+    bridge: ModuleBridge<T>,
+    deferredPrefixes?: Set<string>,
+  ): TypedExpandedModule<T> {
+    const sections = bridge.toSections(existingContent);
+    const rewriter = bridge.rewriter?.();
+    const options: ExpansionOptions | undefined = rewriter ? { rewriter } : undefined;
+    const expanded = ModuleExpander.expandWithOptions(imports, availableModules, sections, deferredPrefixes, options);
+
+    if (bridge.deriveOutputs) {
+      const content = bridge.fromSections(expanded.sections);
+      for (const imp of imports) {
+        const alias = imp.as;
+        const paramScope = expanded.moduleScopes[alias] ?? {};
+        const derivedOutputs = bridge.deriveOutputs(content, alias, paramScope);
+        if (Object.keys(derivedOutputs).length > 0) {
+          expanded.moduleOutputs[alias] = { ...expanded.moduleOutputs[alias], ...derivedOutputs };
+        }
+      }
+      return {
+        content,
+        moduleScopes: expanded.moduleScopes,
+        importConditions: expanded.importConditions,
+        moduleOutputs: expanded.moduleOutputs,
+      };
+    }
+
+    return {
+      content: bridge.fromSections(expanded.sections),
+      moduleScopes: expanded.moduleScopes,
+      importConditions: expanded.importConditions,
+      moduleOutputs: expanded.moduleOutputs,
+    };
+  }
+
+  private static expandWithOptions(
+    imports: YamlImport[],
+    availableModules: Record<string, YamlModule>,
+    existingSections: Record<string, Record<string, unknown>>,
+    deferredPrefixes?: Set<string>,
+    options?: ExpansionOptions,
+  ): ExpandedModule {
+    validateImports(imports, availableModules);
+    validateModuleRefs(imports, availableModules);
+
+    const mergedSections: Record<string, Record<string, unknown>> = {};
+    const moduleScopes: Record<string, Record<string, string>> = {};
+    const importConditions: Record<string, string> = {};
+    const allOutputs: Record<string, Record<string, string>> = {};
+
+    for (const [key, value] of Object.entries(existingSections)) {
+      mergedSections[key] = { ...value };
+    }
+
+    const deferred = deferredPrefixes ?? new Set<string>();
+
+    for (const imp of imports) {
+      if (!imp.module) continue;
+      const module = availableModules[imp.module]!;
+      const resolvedParams = resolveModuleRefsInParams(imp.parameters, allOutputs, imp.as);
+      const paramScope = resolveParameters(module, imp, resolvedParams);
+      moduleScopes[imp.as] = paramScope;
+
+      if (imp.condition !== undefined) {
+        importConditions[imp.as] = imp.condition;
+      }
+
+      const resolvedOutputs = resolveOutputs(module, paramScope);
+      allOutputs[imp.as] = resolvedOutputs;
+
+      const sectionResolver = VariableResolver.forParams(module.parameters, paramScope, deferred);
+
+      for (const [sectionName, sectionContent] of Object.entries(module.sections)) {
+        if (!mergedSections[sectionName]) {
+          mergedSections[sectionName] = {};
+        }
+        const targetSection = mergedSections[sectionName]!;
+
+        for (const [contentKey, value] of Object.entries(sectionContent)) {
+          const resolvedContentKey = contentKey.includes('${')
+            ? sectionResolver.resolveString(contentKey, `${imp.as}.${sectionName}`)
+            : contentKey;
+          const prefixedKey = `${imp.as}.${resolvedContentKey}`;
+
+          let processedValue = sectionResolver.resolve(value);
+
+          if (options?.deserializer && typeof processedValue === 'object' && processedValue !== null && !Array.isArray(processedValue)) {
+            processedValue = options.deserializer(sectionName, prefixedKey, processedValue as Record<string, unknown>);
+          }
+
+          if (options?.rewriter) {
+            processedValue = options.rewriter(sectionName, prefixedKey, processedValue, imp.as, new Set(Object.keys(module.sections)));
+          }
+
+          targetSection[prefixedKey] = processedValue;
+        }
+      }
+    }
+
+    return { sections: mergedSections, moduleScopes, importConditions, moduleOutputs: allOutputs };
   }
 }

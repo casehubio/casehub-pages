@@ -1,8 +1,13 @@
 export type {
   ParameterType,
+  ParsedValue,
+  StepParameterType,
+  ObjectVariableSource,
   YamlModuleParameter,
   YamlModuleOutput,
   YamlModule,
+  YamlModuleHeader,
+  YamlModuleFile,
   YamlImport,
   IterationGroup,
   ForEachDirective,
@@ -12,6 +17,16 @@ export type {
   ExpandResult,
 } from './types.js';
 
+export {
+  parseValue, rawValue, canAcceptType,
+  isScalarStepParam, stepParamToParameterType, parameterTypeToStepParam,
+  parseStepParameterType, validateStepParamValue, parseScalarStepParam,
+  drillOnlySource, drillFields,
+  chainSources, parseForEachDirective,
+  UnresolvedVariableError,
+  nestedSource, forEachContextSource,
+} from './types.js';
+
 export { isTruthy } from './truthiness.js';
 export { VariableResolver } from './variable-resolver.js';
 export { ForEachExpander, commaSplitExpander } from './foreach-expander.js';
@@ -19,8 +34,9 @@ export type { ForEachAdapter, Reference, ExpansionResult, IterationValueExpander
 export { ParameterValidator, ParameterValidationError } from './parameter-validator.js';
 export type { ParameterViolation } from './parameter-validator.js';
 export { ModuleExpander } from './module-expander.js';
-export type { ExpandedModule } from './module-expander.js';
+export type { ExpandedModule, SectionDeserializer, SectionContentRewriter, ExpansionOptions, ModuleBridge, TypedExpandedModule } from './module-expander.js';
+export { ImportExpander } from './import-expander.js';
 export { CsvParser } from './csv-parser.js';
 export type { CsvDataSource, CsvColumn, CsvColumnType } from './csv-parser.js';
-export { matches, valuePattern, structuralPattern, defaultPattern } from './match.js';
-export type { MatchPattern, ValuePattern, StructuralPattern, DefaultPattern, MatchCase } from './match.js';
+export { matches, valuePattern, structuralPattern, defaultPattern, anyOfPattern } from './match.js';
+export type { MatchPattern, ValuePattern, StructuralPattern, AnyOfPattern, DefaultPattern, MatchCase } from './match.js';

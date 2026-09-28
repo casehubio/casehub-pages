@@ -148,14 +148,25 @@ describe('ModuleExpander', () => {
       .toThrow('nonexistent');
   });
 
-  it('dot in alias throws', () => {
+  it('dot in alias with expansion directive throws', () => {
     const module: YamlModule = {
       name: 'm', parameters: {}, outputs: {}, sections: {},
     };
     expect(() => ModuleExpander.expand(
-      [{ module: 'm', as: 'infra.monitor', parameters: {} }],
+      [{ module: 'm', as: 'infra.monitor', parameters: {}, forEach: 'envs' }],
       { m: module }, {}))
       .toThrow('.');
+  });
+
+  it('dot in alias without expansion directive is allowed (expanded imports)', () => {
+    const module: YamlModule = {
+      name: 'm', parameters: {}, outputs: {},
+      sections: { nodes: { n: { v: 1 } } },
+    };
+    const result = ModuleExpander.expand(
+      [{ module: 'm', as: 'infra.monitor', parameters: {} }],
+      { m: module }, {});
+    expect(result.sections['nodes']!['infra.monitor.n']).toEqual({ v: 1 });
   });
 
   it('duplicate alias throws', () => {

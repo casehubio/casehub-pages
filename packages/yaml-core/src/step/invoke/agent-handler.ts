@@ -17,8 +17,8 @@ export class AgentInvokeHandler implements InvokeHandler {
       async execute(params: Record<string, unknown>): Promise<StepResult> {
         try {
           const result = await invoker(agentBinding.descriptor, params, {
-            model: agentBinding.model,
-            timeout: agentBinding.timeout,
+            ...(agentBinding.model !== undefined ? { model: agentBinding.model } : {}),
+            ...(agentBinding.timeout !== undefined ? { timeout: agentBinding.timeout } : {}),
             structuredOutput: agentBinding.structuredOutput,
           });
           return stepSuccess(result);

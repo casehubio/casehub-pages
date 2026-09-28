@@ -25,14 +25,14 @@ export class DefaultBlockingOrcStateMachine<S extends string> implements Blockin
   transition(from: S, to: S, payload?: unknown): boolean {
     if (this.state !== from) return false;
     for (const h of this.exitHandlers) {
-      if (h.state === from) h.handler(payload);
+      if (h.state === from) h.handler();
     }
     this.state = to;
     for (const h of this.transitionHandlers) {
       if (h.from === from && h.to === to) h.handler(payload);
     }
     for (const h of this.enterHandlers) {
-      if (h.state === to) h.handler(payload);
+      if (h.state === to) h.handler();
     }
     const resolved: number[] = [];
     for (let i = 0; i < this.waiters.length; i++) {

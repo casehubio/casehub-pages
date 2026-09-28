@@ -148,11 +148,27 @@ export interface YamlModule {
   sections: Record<string, Record<string, unknown>>;
 }
 
+export interface YamlModuleHeader {
+  name: string;
+  parameters: Record<string, YamlModuleParameter>;
+  outputs: Record<string, YamlModuleOutput>;
+  extendsModule?: string;
+}
+
+export interface YamlModuleFile {
+  module: YamlModuleHeader;
+  sections: Record<string, Record<string, unknown>>;
+  imports: YamlImport[];
+}
+
 export interface YamlImport {
-  module: string;
+  module?: string;
+  steps?: string;
   as: string;
   condition?: string | undefined;
   parameters: Record<string, string>;
+  forEach?: unknown;
+  loop?: unknown;
 }
 
 export interface IterationGroup {

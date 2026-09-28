@@ -13,7 +13,7 @@ export class StepDefinitionParser {
     for (const [name, actionRaw] of Object.entries(actionsRaw)) {
       actions[name] = StepDefinitionParser.parseAction(name, actionRaw);
     }
-    return { namespace, actions };
+    return { ...(namespace !== undefined ? { namespace } : {}), actions };
   }
 
   static parseAction(name: string, raw: Record<string, unknown>): StepDefinition {
@@ -22,7 +22,7 @@ export class StepDefinitionParser {
     const outputs = StepDefinitionParser.parseParams(raw['outputs'] as Record<string, unknown> | undefined);
     const invokeRaw = raw['invoke'] as Record<string, unknown> | undefined;
     const invoke = invokeRaw ? StepDefinitionParser.parseInvoke(invokeRaw) : undefined;
-    return { name, description, inputs, outputs, invoke };
+    return { name, ...(description !== undefined ? { description } : {}), inputs, outputs, ...(invoke !== undefined ? { invoke } : {}) };
   }
 
   static parseParams(raw: Record<string, unknown> | undefined): Record<string, StepParameter> {
@@ -34,13 +34,17 @@ export class StepDefinitionParser {
       } else if (typeof paramRaw === 'object' && paramRaw !== null) {
         const p = paramRaw as Record<string, unknown>;
         const type: StepParameterType = p['type'] ? parseStepParameterType(p['type'] as string) : 'STRING';
+        const defaultValue = (p['defaultValue'] as string | undefined) ?? (p['default'] as string | undefined);
+        const allowedValues = p['allowedValues'] as string[] | undefined;
+        const format = p['format'] as string | undefined;
+        const desc = p['description'] as string | undefined;
         result[name] = {
           type,
           required: p['required'] === true,
-          defaultValue: p['defaultValue'] as string | undefined ?? p['default'] as string | undefined,
-          allowedValues: p['allowedValues'] as string[] | undefined,
-          format: p['format'] as string | undefined,
-          description: p['description'] as string | undefined,
+          ...(defaultValue !== undefined ? { defaultValue } : {}),
+          ...(allowedValues !== undefined ? { allowedValues } : {}),
+          ...(format !== undefined ? { format } : {}),
+          ...(desc !== undefined ? { description: desc } : {}),
         };
       }
     }
@@ -52,27 +56,30 @@ export class StepDefinitionParser {
       return { kind: 'mcp', tool: raw['mcp'] as string };
     }
     if (raw['python']) {
+      const wd = raw['workingDir'] as string | undefined;
       return {
         kind: 'script', runtime: RUNTIME_PYTHON, script: raw['python'] as string,
         timeout: (raw['timeout'] as string) ?? '30s', env: (raw['env'] as Record<string, string>) ?? {},
-        workingDir: raw['workingDir'] as string | undefined,
+        ...(wd !== undefined ? { workingDir: wd } : {}),
       };
     }
     if (raw['node']) {
+      const wd = raw['workingDir'] as string | undefined;
       return {
         kind: 'script', runtime: RUNTIME_NODE, script: raw['node'] as string,
         timeout: (raw['timeout'] as string) ?? '30s', env: (raw['env'] as Record<string, string>) ?? {},
-        workingDir: raw['workingDir'] as string | undefined,
+        ...(wd !== undefined ? { workingDir: wd } : {}),
       };
     }
     if (raw['script']) {
       const spec = raw['script'] as Record<string, unknown>;
+      const wd = spec['workingDir'] as string | undefined;
       return {
         kind: 'script',
         runtime: spec['runtime'] as string,
         script: spec['script'] as string,
         timeout: (spec['timeout'] as string) ?? '30s',
-        workingDir: spec['workingDir'] as string | undefined,
+        ...(wd !== undefined ? { workingDir: wd } : {}),
         env: (spec['env'] as Record<string, string>) ?? {},
       };
     }
@@ -91,24 +98,28 @@ export class StepDefinitionParser {
     }
     if (raw['agent']) {
       const spec = raw['agent'] as Record<string, unknown>;
+      const model = spec['model'] as string | undefined;
+      const agentTimeout = spec['timeout'] as string | undefined;
       return {
         kind: 'agent',
         descriptor: spec['descriptor'] as string,
-        model: spec['model'] as string | undefined,
-        timeout: spec['timeout'] as string | undefined,
+        ...(model !== undefined ? { model } : {}),
+        ...(agentTimeout !== undefined ? { timeout: agentTimeout } : {}),
         structuredOutput: spec['structuredOutput'] === true,
       };
     }
     if (raw['process']) {
       const spec = raw['process'] as Record<string, unknown>;
+      const processTimeout = spec['timeout'] as string | undefined;
+      const processWd = spec['workingDir'] as string | undefined;
       return {
         kind: 'process',
         command: spec['command'] as string,
         args: (spec['args'] as string[]) ?? [],
         output: (spec['output'] as string) ?? 'json',
-        timeout: spec['timeout'] as string | undefined,
+        ...(processTimeout !== undefined ? { timeout: processTimeout } : {}),
         env: (spec['env'] as Record<string, string>) ?? {},
-        workingDir: spec['workingDir'] as string | undefined,
+        ...(processWd !== undefined ? { workingDir: processWd } : {}),
         onError: (spec['onError'] as string) ?? 'stderr',
       };
     }

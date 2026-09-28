@@ -21,3 +21,20 @@ export { DefaultScenarioScope } from './scenario-scope.js';
 export { DefaultStepResultStore } from './step-result-store.js';
 
 export { rewriteVariablePrefixes } from './variable-prefix-rewriter.js';
+
+export type { OrcCounter } from './counter.js';
+export { DefaultOrcCounter } from './counter.js';
+export type { OrcGauge } from './gauge.js';
+export { DefaultOrcGauge } from './gauge.js';
+export type { OrcFlag } from './flag.js';
+export { DefaultOrcFlag } from './flag.js';
+export type { OrcAccumulator } from './accumulator.js';
+export { DefaultOrcAccumulator } from './accumulator.js';
+export type { OrcMap } from './orc-map.js';
+export { DefaultOrcMap } from './orc-map.js';
+export type { SpawnedTask } from './spawned-task.js';
+export { DefaultSpawnedTask } from './spawned-task.js';
+export type { EventMapping } from './event-router.js';
+export { EventRouter } from './event-router.js';
+export type { BlockingOrcStateMachine } from './blocking-state-machine.js';
+export { DefaultBlockingOrcStateMachine } from './blocking-state-machine.js';

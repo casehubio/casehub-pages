@@ -37,7 +37,7 @@ export class StepPluginRegistry {
           if (!entries.has(name)) {
             const definition: StepDefinition = {
               name: plugin.name,
-              description: plugin.description,
+              ...(plugin.description !== undefined ? { description: plugin.description } : {}),
               inputs: plugin.inputs,
               outputs: plugin.outputs,
             };

@@ -303,7 +303,7 @@ export class StepWalker {
       const awaitSteps = barrierVal['await'] as string[];
       const timeoutRaw = barrierVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'barrier', name: stepName, awaitSteps, timeout, decorators };
+      return { kind: 'barrier', name: stepName, awaitSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
     }
 
     if (structuralType === 'quorum') {
@@ -312,7 +312,7 @@ export class StepWalker {
       const ofSteps = quorumVal['of'] as string[];
       const timeoutRaw = quorumVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'quorum', name: stepName, required, ofSteps, timeout, decorators };
+      return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
     }
 
     if (invokeSpec) {

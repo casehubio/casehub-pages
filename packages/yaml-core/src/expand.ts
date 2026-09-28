@@ -13,6 +13,7 @@ import { ForEachExpander } from './foreach-expander.js';
 import type { ForEachAdapter, Reference } from './foreach-expander.js';
 import { CsvParser } from './csv-parser.js';
 import type { CsvDataSource } from './csv-parser.js';
+import { ImportExpander } from './import-expander.js';
 
 const YAML_CORE_KEYS = new Set(['variables', 'modules', 'imports', 'iterations', 'data']);
 
@@ -83,10 +84,13 @@ function parseModules(
 function parseImports(rawImports: unknown): YamlImport[] {
   if (!Array.isArray(rawImports)) return [];
   return rawImports.map((raw) => ({
-    module: raw.module as string,
+    module: raw.module as string | undefined,
+    steps: raw.steps as string | undefined,
     as: raw.as as string,
     condition: raw.if as string | undefined,
     parameters: (raw.parameters ?? {}) as Record<string, string>,
+    forEach: raw.forEach as unknown,
+    loop: raw.loop as unknown,
   }));
 }
 
@@ -178,7 +182,8 @@ export function expand(
   let workingMap = { ...map };
 
   const modules = parseModules(rawModules);
-  const imports = parseImports(rawImports);
+  const rawParsedImports = parseImports(rawImports);
+  const imports = ImportExpander.expand(rawParsedImports, iterationGroups, dataSources);
 
   if (imports.length > 0) {
     try {

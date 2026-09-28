@@ -14,7 +14,7 @@ export class RestInvokeHandler implements InvokeHandler {
           const response = await fetch(restBinding.url, {
             method: restBinding.method,
             headers: { 'Content-Type': 'application/json', ...restBinding.headers },
-            body: restBinding.method !== 'GET' ? JSON.stringify({ ...restBinding.body, ...params }) : undefined,
+            body: restBinding.method !== 'GET' ? JSON.stringify({ ...restBinding.body, ...params }) : null,
           });
           const body = await response.json() as Record<string, unknown>;
           return stepSuccess(body);

@@ -192,4 +192,95 @@ describe('expand', () => {
     expect(comps['metric']).toBeDefined();
     expect(comps['table']).toBeUndefined();
   });
+
+  it('expands imports with forEach before module expansion', () => {
+    const input = {
+      modules: {
+        regional: {
+          parameters: { region: { type: 'STRING', required: true } },
+          outputs: {},
+          sections: {
+            components: { 'status': { type: 'status', properties: { region: '${var.region}' } } },
+          },
+        },
+      },
+      imports: [
+        {
+          module: 'regional',
+          as: 'r',
+          forEach: { as: 'region', in: ['us', 'eu'] },
+          parameters: { region: '${each.region}' },
+        },
+      ],
+      components: {},
+    };
+    const result = expand(input);
+    const comps = result.map['components'] as Record<string, unknown>;
+    expect(comps['r.us.status']).toBeDefined();
+    expect(comps['r.eu.status']).toBeDefined();
+    expect((comps['r.us.status'] as any).properties.region).toBe('us');
+    expect((comps['r.eu.status'] as any).properties.region).toBe('eu');
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it('expands imports with loop before module expansion', () => {
+    const input = {
+      modules: {
+        worker: {
+          parameters: { index: { type: 'STRING', required: true } },
+          outputs: {},
+          sections: {
+            services: { 'task-runner': { type: 'worker', index: '${var.index}' } },
+          },
+        },
+      },
+      imports: [
+        {
+          module: 'worker',
+          as: 'w',
+          loop: 2,
+          parameters: { index: '${each.i}' },
+        },
+      ],
+      services: {},
+    };
+    const result = expand(input);
+    const svcs = result.map['services'] as Record<string, unknown>;
+    expect(svcs['w.0.task-runner']).toBeDefined();
+    expect(svcs['w.1.task-runner']).toBeDefined();
+    expect((svcs['w.0.task-runner'] as any).index).toBe('0');
+    expect((svcs['w.1.task-runner'] as any).index).toBe('1');
+  });
+
+  it('expands imports with forEach using iteration groups', () => {
+    const input = {
+      iterations: {
+        envs: { as: 'env', in: ['dev', 'prod'] },
+      },
+      modules: {
+        dashboard: {
+          parameters: { env: { type: 'STRING', required: true } },
+          outputs: {},
+          sections: {
+            pages: { 'main': { name: '${var.env}-dashboard' } },
+          },
+        },
+      },
+      imports: [
+        {
+          module: 'dashboard',
+          as: 'dash',
+          forEach: 'envs',
+          parameters: { env: '${each.env}' },
+        },
+      ],
+      pages: {},
+    };
+    const result = expand(input);
+    const pages = result.map['pages'] as Record<string, unknown>;
+    expect(pages['dash.dev.main']).toBeDefined();
+    expect(pages['dash.prod.main']).toBeDefined();
+    expect((pages['dash.dev.main'] as any).name).toBe('dev-dashboard');
+    expect((pages['dash.prod.main'] as any).name).toBe('prod-dashboard');
+  });
 });

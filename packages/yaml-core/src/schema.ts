@@ -21,10 +21,13 @@ export const outputSchema = z.object({
 });
 
 export const importSchema = z.object({
-  module: z.string(),
+  module: z.string().optional(),
+  steps: z.string().optional(),
   as: z.string(),
   if: z.string().optional(),
   parameters: z.record(z.string(), z.string()).optional(),
+  forEach: z.unknown().optional(),
+  loop: z.unknown().optional(),
 });
 
 export const forEachSchema = z.union([
