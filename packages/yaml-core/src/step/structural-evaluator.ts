@@ -8,8 +8,15 @@ import type { StepContext } from './decorator-chain.js';
 import { DecoratorChain } from './decorator-chain.js';
 import { isTruthy } from '../truthiness.js';
 import { matches } from '../match.js';
+import type { InvokeHandler } from './invoke/invoke-handler.js';
+import { StepDefinitionParser } from './step-definition-parser.js';
 
 export class StructuralStepEvaluator {
+  private readonly invokeHandlers: InvokeHandler[];
+
+  constructor(invokeHandlers: InvokeHandler[] = []) {
+    this.invokeHandlers = invokeHandlers;
+  }
   async evaluate(step: ResolvedStep, context: StepContext): Promise<StepResult> {
     const result = await this.dispatch(step, context);
     if (step.name && result.kind === 'success') {
@@ -45,7 +52,21 @@ export class StructuralStepEvaluator {
   }
 
   private async evaluateInvoke(step: InvokeStep, context: StepContext): Promise<StepResult> {
-    return stepFailure(`Invoke step '${step.name ?? 'anonymous'}' requires a runtime invoke handler`);
+    let binding;
+    try {
+      binding = StepDefinitionParser.parseInvoke(step.invokeSpec);
+    } catch {
+      return stepFailure(`Invoke step '${step.name ?? 'anonymous'}': invalid binding spec`);
+    }
+
+    const handler = this.invokeHandlers.find(h => h.supports(binding));
+    if (!handler) {
+      return stepFailure(`Invoke step '${step.name ?? 'anonymous'}' requires a runtime invoke handler for '${binding.kind}'`);
+    }
+
+    const definition = { name: step.name ?? 'anonymous', inputs: {}, outputs: {} };
+    const action = handler.create(definition, binding);
+    return action.execute({}, context.services);
   }
 
   private async evaluateBlock(step: BlockStep, context: StepContext): Promise<StepResult> {

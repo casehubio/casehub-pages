@@ -2,13 +2,14 @@ import { describe, it, expect, vi } from 'vitest';
 import type {
   StepAction, StepResult, ResolvedStep, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
-  BarrierStep, QuorumStep, CatalogEntry, SelectStep,
+  BarrierStep, QuorumStep, CatalogEntry, SelectStep, InvokeStep,
 } from './step-walker.js';
 import { stepSuccess, stepFailure, MapServiceRegistry } from './step-walker.js';
 import { StructuralStepEvaluator } from './structural-evaluator.js';
 import type { StepContext } from './decorator-chain.js';
 import { DefaultScenarioScope } from '../orchestration/scenario-scope.js';
 import { defaultPattern, valuePattern } from '../match.js';
+import { createMockRestHandler, createMockMcpHandler } from './invoke/test-helpers.js';
 
 function makeAction(result: StepResult = stepSuccess({})): StepAction {
   return { execute: vi.fn().mockResolvedValue(result) };
@@ -279,6 +280,87 @@ describe('StructuralStepEvaluator', () => {
       };
       const result = await new StructuralStepEvaluator().evaluate(step, makeContext({ scope }));
       expect(result.kind).toBe('failure');
+    });
+  });
+
+  describe('invoke step', () => {
+    it('returns failure when no handlers are registered', async () => {
+      const step: InvokeStep = {
+        kind: 'invoke', name: 'call-api',
+        invokeSpec: { rest: { method: 'GET', url: '/api/users' } },
+        decorators: {},
+      };
+      const evaluator = new StructuralStepEvaluator();
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('failure');
+    });
+
+    it('dispatches to matching REST handler', async () => {
+      const step: InvokeStep = {
+        kind: 'invoke', name: 'call-api',
+        invokeSpec: { rest: { method: 'GET', url: '/api/users' } },
+        decorators: {},
+      };
+      const evaluator = new StructuralStepEvaluator([createMockRestHandler()]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      if (result.kind === 'success') {
+        expect(result.output).toHaveProperty('status', 200);
+      }
+    });
+
+    it('dispatches to matching MCP handler', async () => {
+      const step: InvokeStep = {
+        kind: 'invoke', name: 'search',
+        invokeSpec: { mcp: 'file_search' },
+        decorators: {},
+      };
+      const evaluator = new StructuralStepEvaluator([createMockMcpHandler()]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      if (result.kind === 'success') {
+        expect(result.output).toHaveProperty('results');
+      }
+    });
+
+    it('selects correct handler from multiple', async () => {
+      const step: InvokeStep = {
+        kind: 'invoke', name: 'call-mcp',
+        invokeSpec: { mcp: 'code_review' },
+        decorators: {},
+      };
+      const evaluator = new StructuralStepEvaluator([
+        createMockRestHandler(),
+        createMockMcpHandler(),
+      ]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      if (result.kind === 'success') {
+        expect(result.output).toHaveProperty('findings');
+      }
+    });
+
+    it('returns failure for unknown binding type', async () => {
+      const step: InvokeStep = {
+        kind: 'invoke', name: 'bad',
+        invokeSpec: { unknown_type: { foo: 'bar' } },
+        decorators: {},
+      };
+      const evaluator = new StructuralStepEvaluator([createMockRestHandler()]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('failure');
+    });
+
+    it('records successful invoke result in scope', async () => {
+      const scope = new DefaultScenarioScope();
+      const step: InvokeStep = {
+        kind: 'invoke', name: 'my-invoke',
+        invokeSpec: { mcp: 'file_search' },
+        decorators: {},
+      };
+      const evaluator = new StructuralStepEvaluator([createMockMcpHandler()]);
+      await evaluator.evaluate(step, makeContext({ scope }));
+      expect(scope.resultStore().result('my-invoke')).toHaveProperty('results');
     });
   });
 
