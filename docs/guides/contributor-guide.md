@@ -203,7 +203,7 @@ Generation counter pattern for ECharts rendering. Each render tagged with a gene
 | Package/Module | Purpose |
 |----------------|---------|
 | `@casehubio/pages-webapp` | Webpack orchestrator -- assembles final application bundle. Also Maven module for SNAPSHOT publishing. |
-| `@casehubio/pages-examples` | Interactive examples gallery (100+ samples, 16 categories) with fixture data, mock data, and tagged samples. Includes interactive step workflow and coordination primitive demos. Playwright test suite (`tests/`, `playwright.config.ts`). `samples.json` index for gallery navigation. `createStepRunner` helper exported from bundle for step system demos. |
+| `@casehubio/pages-examples` | Interactive examples gallery (103 samples, 16 categories) with fixture data, mock data, and tagged samples. Includes interactive step workflow, coordination primitive, invoke bindings, and concurrency pattern demos. Playwright test suite (`tests/`, `playwright.config.ts`). `samples.json` index for gallery navigation. `createStepRunner` helper exported from bundle for step system demos. |
 | `casehub-pages-ui-static` | Maven module (`static-assets/pom.xml`): runs `assembly.sh` at `generate-resources` phase to package pre-built static assets (theme CSS, component ESM) into `META-INF/resources/pages/` for non-bundled consumers. `validate-bundle.mjs` verifies bundle integrity. |
 | `casehub-pages-npm` | Maven module (`npm-packages/pom.xml`): runs `pack-all.sh` at `generate-resources` phase to pack all `@casehubio/pages-*` npm packages into a SNAPSHOT JAR for cross-repo Maven consumption. Published to GitHub Maven Packages. |
 | `templates/quinoa-host` | Starter template: esbuild config, `@casehubio/pages-runtime` + `@casehubio/pages-ui` via `file:` references. |
