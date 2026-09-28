@@ -451,7 +451,14 @@ export class GraphCanvas extends LitElement {
     this._renderReact();
   }
 
+  private _layoutDeferred = false;
+
   private async _runLayout(): Promise<void> {
+    if (this._moveCoordinator?.isActive) {
+      this._layoutDeferred = true;
+      return;
+    }
+
     const model = this.model;
     if (!model) {
       this._nodes = [];
@@ -464,6 +471,10 @@ export class GraphCanvas extends LitElement {
     try {
       const layout = await computeElkLayout(model, this.layoutOptions);
       if (generation !== this._layoutGeneration) return;
+      if (this._moveCoordinator?.isActive) {
+        this._layoutDeferred = true;
+        return;
+      }
       const { nodes, edges } = toReactFlowGraph(model, layout, undefined, this.layoutOptions?.direction, this.drillDown?.isDrillable);
       this._nodes = nodes;
       this._edges = edges;
@@ -480,6 +491,10 @@ export class GraphCanvas extends LitElement {
 
   private _handleMoveResult(result: DragEndResult): void {
     this._moveWasActive = true;
+    if (this._layoutDeferred) {
+      this._layoutDeferred = false;
+      void this._runLayout();
+    }
     if (result.type === 'splice') {
       if (!this.model?.edges.some(e => e.id === result.edgeId)) return;
       this.onMutation?.({
