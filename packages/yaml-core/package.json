@@ -9,7 +9,8 @@
     "./expand": "./src/expand.ts",
     "./schema": "./src/schema.ts",
     "./orchestration": "./src/orchestration/index.ts",
-    "./condition": "./src/condition/condition-evaluator.ts"
+    "./condition": "./src/condition/condition-evaluator.ts",
+    "./step": "./src/step/index.ts"
   },
   "devDependencies": {
     "@casehubio/pages-tsconfig": "workspace:*",

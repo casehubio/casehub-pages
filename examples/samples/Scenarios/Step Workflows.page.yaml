@@ -1,0 +1,58 @@
+pages:
+- name: Step Workflows
+  properties:
+    margin: 20px
+  rows:
+  - columns:
+    - span: 7
+      components:
+      - type: html
+        properties:
+          content: |
+            <div>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Step Workflows</h2>
+              <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">State</div>
+                  <div id="sw-state" style="font-size: 18px; font-weight: 700; color: #4ade80; margin-top: 2px;">idle</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Result</div>
+                  <div id="sw-result" style="font-size: 18px; font-weight: 700; color: #3b82f6; margin-top: 2px;">—</div>
+                </div>
+                <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">Steps Run</div>
+                  <div id="sw-count" style="font-size: 18px; font-weight: 700; color: #a78bfa; margin-top: 2px;">0</div>
+                </div>
+              </div>
+              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Output</div>
+                <div id="sw-output" style="min-height: 40px; font-family: monospace; font-size: 12px; color: var(--pages-neutral-9);"></div>
+              </div>
+              <div style="background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <div style="margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--pages-neutral-12);">Execution Trace</div>
+                <div id="sw-trace" style="max-height: 280px; overflow-y: auto; font-family: monospace; font-size: 12px; color: var(--pages-neutral-9); line-height: 1.8;"></div>
+              </div>
+            </div>
+    - span: 5
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="sw-example-picker" style="flex: 1; padding: 8px 12px; border: 1px solid var(--pages-neutral-5); border-radius: 6px; background: var(--pages-neutral-2); color: var(--pages-neutral-12); font-size: 13px;">
+                  <option value="0">Block (sequential)</option>
+                  <option value="1">Parallel</option>
+                  <option value="2">If / Else</option>
+                  <option value="3">Match / Cases</option>
+                  <option value="4">Try / Catch / Finally</option>
+                  <option value="5">Barrier</option>
+                  <option value="6">Quorum</option>
+                  <option value="7">Select (first-to-complete)</option>
+                </select>
+                <button id="sw-run-btn" style="padding: 8px 24px; background: #16a34a; border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; white-space: nowrap;">▶ Run</button>
+              </div>
+              <div style="font-size: 12px; color: var(--pages-neutral-9); padding: 0 2px;" id="sw-description"></div>
+              <pages-code-editor id="sw-yaml-source" readonly language="yaml" line-numbers style="min-height: 200px; border: 1px solid var(--pages-neutral-4); border-radius: 8px; overflow: hidden;"></pages-code-editor>
+            </div>

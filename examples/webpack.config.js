@@ -115,6 +115,7 @@ module.exports = (env = {}) => {
         "@casehubio/yaml-core/schema": path.resolve(__dirname, "../packages/yaml-core/src/schema"),
         "@casehubio/yaml-core/orchestration": path.resolve(__dirname, "../packages/yaml-core/src/orchestration"),
         "@casehubio/yaml-core/condition": path.resolve(__dirname, "../packages/yaml-core/src/condition/condition-evaluator"),
+        "@casehubio/yaml-core/step": path.resolve(__dirname, "../packages/yaml-core/src/step"),
         "@casehubio/yaml-core": path.resolve(__dirname, "../packages/yaml-core"),
         "@casehubio/pages-ui-tokens": path.resolve(__dirname, "../packages/pages-ui-tokens"),
         "@casehubio/pages-aria/scenario": path.resolve(__dirname, "../packages/pages-aria/src/scenario"),
