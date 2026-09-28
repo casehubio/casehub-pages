@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 98,
+  "totalSamples": 101,
   "categories": [
     {
       "category": "Charts",
@@ -10,67 +10,118 @@
           "name": "Charts",
           "path": "Charts/Charts.page.yaml",
           "category": "Charts",
-          "file": "Charts.page.yaml"
+          "file": "Charts.page.yaml",
+          "tags": [
+            "echarts",
+            "bar",
+            "line",
+            "pie",
+            "scatter"
+          ]
         },
         {
           "name": "Decal Pattern",
           "path": "Charts/Decal Pattern.page.yaml",
           "category": "Charts",
-          "file": "Decal Pattern.page.yaml"
+          "file": "Decal Pattern.page.yaml",
+          "tags": [
+            "echarts",
+            "accessibility",
+            "pattern"
+          ]
         },
         {
           "name": "Density Heatmap",
           "path": "Charts/Density Heatmap.page.yaml",
           "category": "Charts",
-          "file": "Density Heatmap.page.yaml"
+          "file": "Density Heatmap.page.yaml",
+          "tags": [
+            "echarts",
+            "heatmap",
+            "density"
+          ]
         },
         {
           "name": "ECharts Custom",
           "path": "Charts/ECharts Custom.page.yaml",
           "category": "Charts",
-          "file": "ECharts Custom.page.yaml"
+          "file": "ECharts Custom.page.yaml",
+          "tags": [
+            "echarts",
+            "custom option"
+          ]
         },
         {
           "name": "Event Timeline",
           "path": "Charts/Event Timeline.page.yaml",
           "category": "Charts",
-          "file": "Event Timeline.page.yaml"
+          "file": "Event Timeline.page.yaml",
+          "tags": [
+            "echarts",
+            "timeline"
+          ]
         },
         {
           "name": "Heatmap",
           "path": "Charts/Heatmap.page.yaml",
           "category": "Charts",
-          "file": "Heatmap.page.yaml"
+          "file": "Heatmap.page.yaml",
+          "tags": [
+            "echarts",
+            "heatmap"
+          ]
         },
         {
           "name": "Histogram",
           "path": "Charts/Histogram.page.yaml",
           "category": "Charts",
-          "file": "Histogram.page.yaml"
+          "file": "Histogram.page.yaml",
+          "tags": [
+            "echarts",
+            "histogram"
+          ]
         },
         {
           "name": "SPI Broadening",
           "path": "Charts/SPI Broadening.page.yaml",
           "category": "Charts",
-          "file": "SPI Broadening.page.yaml"
+          "file": "SPI Broadening.page.yaml",
+          "tags": [
+            "echarts",
+            "line",
+            "area"
+          ]
         },
         {
           "name": "Timeline and Graph",
           "path": "Charts/Timeline and Graph.page.yaml",
           "category": "Charts",
-          "file": "Timeline and Graph.page.yaml"
+          "file": "Timeline and Graph.page.yaml",
+          "tags": [
+            "echarts",
+            "timeline",
+            "graph"
+          ]
         },
         {
           "name": "TimeSeries",
           "path": "Charts/TimeSeries.page.yaml",
           "category": "Charts",
-          "file": "TimeSeries.page.yaml"
+          "file": "TimeSeries.page.yaml",
+          "tags": [
+            "echarts",
+            "time series"
+          ]
         },
         {
           "name": "Treemap",
           "path": "Charts/Treemap.page.yaml",
           "category": "Charts",
-          "file": "Treemap.page.yaml"
+          "file": "Treemap.page.yaml",
+          "tags": [
+            "echarts",
+            "treemap"
+          ]
         }
       ]
     },
@@ -81,112 +132,193 @@
           "name": "Accumulate Flag",
           "path": "Tables/Accumulate Flag.page.yaml",
           "category": "Tables",
-          "file": "Accumulate Flag.page.yaml"
+          "file": "Accumulate Flag.page.yaml",
+          "tags": [
+            "table",
+            "accumulate",
+            "flag"
+          ]
         },
         {
           "name": "Column Settings",
           "path": "Tables/Column Settings.page.yaml",
           "category": "Tables",
-          "file": "Column Settings.page.yaml"
+          "file": "Column Settings.page.yaml",
+          "tags": [
+            "table",
+            "columns",
+            "settings"
+          ]
         },
         {
           "name": "Data Table",
           "path": "Tables/Data Table.page.yaml",
           "category": "Tables",
-          "file": "Data Table.page.yaml"
+          "file": "Data Table.page.yaml",
+          "tags": [
+            "table",
+            "data table"
+          ]
         },
         {
           "name": "GitHub Repos",
           "path": "Tables/GitHub Repos.page.yaml",
           "category": "Tables",
-          "file": "GitHub Repos.page.yaml"
+          "file": "GitHub Repos.page.yaml",
+          "tags": [
+            "table",
+            "fetch",
+            "rest api"
+          ]
         },
         {
           "name": "Google Spreadsheet",
           "path": "Tables/Google Spreadsheet.page.yaml",
           "category": "Tables",
-          "file": "Google Spreadsheet.page.yaml"
+          "file": "Google Spreadsheet.page.yaml",
+          "tags": [
+            "table",
+            "google sheets"
+          ]
         },
         {
           "name": "Grid Tables",
           "path": "Tables/Grid Tables.page.yaml",
           "category": "Tables",
-          "file": "Grid Tables.page.yaml"
+          "file": "Grid Tables.page.yaml",
+          "tags": [
+            "table",
+            "grid layout"
+          ]
         },
         {
           "name": "Grouped Roadmap",
           "path": "Tables/Grouped Roadmap.page.yaml",
           "category": "Tables",
-          "file": "Grouped Roadmap.page.yaml"
+          "file": "Grouped Roadmap.page.yaml",
+          "tags": [
+            "table",
+            "grouping",
+            "roadmap"
+          ]
         },
         {
           "name": "Grouped View",
           "path": "Tables/Grouped View.page.yaml",
           "category": "Tables",
-          "file": "Grouped View.page.yaml"
+          "file": "Grouped View.page.yaml",
+          "tags": [
+            "table",
+            "grouping"
+          ]
         },
         {
           "name": "Inline Dataset",
           "path": "Tables/Inline Dataset.page.yaml",
           "category": "Tables",
-          "file": "Inline Dataset.page.yaml"
+          "file": "Inline Dataset.page.yaml",
+          "tags": [
+            "table",
+            "inline data"
+          ]
         },
         {
           "name": "Lookup Operations",
           "path": "Tables/Lookup Operations.page.yaml",
           "category": "Tables",
-          "file": "Lookup Operations.page.yaml"
+          "file": "Lookup Operations.page.yaml",
+          "tags": [
+            "table",
+            "lookup",
+            "filter",
+            "group"
+          ]
         },
         {
           "name": "Master Detail",
           "path": "Tables/Master Detail.page.yaml",
           "category": "Tables",
           "file": "Master Detail.page.yaml",
+          "tags": [
+            "table",
+            "master-detail"
+          ],
           "tsPath": "Tables/Master Detail.ts"
         },
         {
           "name": "Project Roadmap",
           "path": "Tables/Project Roadmap.page.yaml",
           "category": "Tables",
-          "file": "Project Roadmap.page.yaml"
+          "file": "Project Roadmap.page.yaml",
+          "tags": [
+            "table",
+            "roadmap",
+            "row styles"
+          ]
         },
         {
           "name": "Row Detail",
           "path": "Tables/Row Detail.page.yaml",
           "category": "Tables",
           "file": "Row Detail.page.yaml",
+          "tags": [
+            "table",
+            "row expansion"
+          ],
           "tsPath": "Tables/Row Detail.ts"
         },
         {
           "name": "Row Styles",
           "path": "Tables/Row Styles.page.yaml",
           "category": "Tables",
-          "file": "Row Styles.page.yaml"
+          "file": "Row Styles.page.yaml",
+          "tags": [
+            "table",
+            "conditional styles"
+          ]
         },
         {
           "name": "Spanning",
           "path": "Tables/Spanning.page.yaml",
           "category": "Tables",
           "file": "Spanning.page.yaml",
+          "tags": [
+            "table",
+            "column spanning"
+          ],
           "tsPath": "Tables/Spanning.ts"
         },
         {
           "name": "Tabbed Table",
           "path": "Tables/Tabbed Table.page.yaml",
           "category": "Tables",
-          "file": "Tabbed Table.page.yaml"
+          "file": "Tabbed Table.page.yaml",
+          "tags": [
+            "table",
+            "tabs",
+            "navigation"
+          ]
         },
         {
           "name": "Tree Table",
           "path": "Tables/Tree Table.page.yaml",
           "category": "Tables",
-          "file": "Tree Table.page.yaml"
+          "file": "Tree Table.page.yaml",
+          "tags": [
+            "table",
+            "tree",
+            "hierarchy"
+          ]
         },
         {
           "name": "Variable Heights",
           "path": "Tables/Variable Heights.page.yaml",
           "category": "Tables",
           "file": "Variable Heights.page.yaml",
+          "tags": [
+            "table",
+            "variable height"
+          ],
           "tsPath": "Tables/Variable Heights.ts"
         }
       ]
@@ -198,19 +330,33 @@
           "name": "Badges and Countdown",
           "path": "Metrics/Badges and Countdown.page.yaml",
           "category": "Metrics",
-          "file": "Badges and Countdown.page.yaml"
+          "file": "Badges and Countdown.page.yaml",
+          "tags": [
+            "metric",
+            "badge",
+            "countdown"
+          ]
         },
         {
           "name": "Metric Patterns",
           "path": "Metrics/Metric Patterns.page.yaml",
           "category": "Metrics",
-          "file": "Metric Patterns.page.yaml"
+          "file": "Metric Patterns.page.yaml",
+          "tags": [
+            "metric",
+            "patterns",
+            "layout"
+          ]
         },
         {
           "name": "Metrics and Gauges",
           "path": "Metrics/Metrics and Gauges.page.yaml",
           "category": "Metrics",
-          "file": "Metrics and Gauges.page.yaml"
+          "file": "Metrics and Gauges.page.yaml",
+          "tags": [
+            "metric",
+            "gauge"
+          ]
         }
       ]
     },
@@ -221,13 +367,23 @@
           "name": "Maps",
           "path": "Maps/Maps.page.yaml",
           "category": "Maps",
-          "file": "Maps.page.yaml"
+          "file": "Maps.page.yaml",
+          "tags": [
+            "map",
+            "leaflet",
+            "geospatial"
+          ]
         },
         {
           "name": "SVG Heatmap",
           "path": "Maps/SVG Heatmap.page.yaml",
           "category": "Maps",
-          "file": "SVG Heatmap.page.yaml"
+          "file": "SVG Heatmap.page.yaml",
+          "tags": [
+            "map",
+            "svg",
+            "heatmap"
+          ]
         }
       ]
     },
@@ -238,19 +394,34 @@
           "name": "Contact Manager",
           "path": "Forms/Contact Manager.page.yaml",
           "category": "Forms",
-          "file": "Contact Manager.page.yaml"
+          "file": "Contact Manager.page.yaml",
+          "tags": [
+            "form",
+            "crud",
+            "data scope"
+          ]
         },
         {
           "name": "Developer Registration",
           "path": "Forms/Developer Registration.page.yaml",
           "category": "Forms",
-          "file": "Developer Registration.page.yaml"
+          "file": "Developer Registration.page.yaml",
+          "tags": [
+            "form",
+            "input",
+            "validation"
+          ]
         },
         {
           "name": "Schema Form",
           "path": "Forms/Schema Form.page.yaml",
           "category": "Forms",
           "file": "Schema Form.page.yaml",
+          "tags": [
+            "form",
+            "json schema",
+            "dynamic"
+          ],
           "tsPath": "Forms/Schema Form.ts"
         }
       ]
@@ -262,55 +433,100 @@
           "name": "Carousel and Stack",
           "path": "Layout/Carousel and Stack.page.yaml",
           "category": "Layout",
-          "file": "Carousel and Stack.page.yaml"
+          "file": "Carousel and Stack.page.yaml",
+          "tags": [
+            "layout",
+            "carousel",
+            "stack"
+          ]
         },
         {
           "name": "Column with Rows",
           "path": "Layout/Column with Rows.page.yaml",
           "category": "Layout",
-          "file": "Column with Rows.page.yaml"
+          "file": "Column with Rows.page.yaml",
+          "tags": [
+            "layout",
+            "columns",
+            "rows"
+          ]
         },
         {
           "name": "Dock Workbench",
           "path": "Layout/Dock Workbench.page.yaml",
           "category": "Layout",
-          "file": "Dock Workbench.page.yaml"
+          "file": "Dock Workbench.page.yaml",
+          "tags": [
+            "layout",
+            "dock",
+            "workbench"
+          ]
         },
         {
           "name": "Floating Workspace",
           "path": "Layout/Floating Workspace.page.yaml",
           "category": "Layout",
-          "file": "Floating Workspace.page.yaml"
+          "file": "Floating Workspace.page.yaml",
+          "tags": [
+            "layout",
+            "floating",
+            "windows"
+          ]
         },
         {
           "name": "Frame Sandbox",
           "path": "Layout/Frame Sandbox.page.yaml",
           "category": "Layout",
-          "file": "Frame Sandbox.page.yaml"
+          "file": "Frame Sandbox.page.yaml",
+          "tags": [
+            "layout",
+            "frame",
+            "sandbox"
+          ]
         },
         {
           "name": "Layout Patterns",
           "path": "Layout/Layout Patterns.page.yaml",
           "category": "Layout",
-          "file": "Layout Patterns.page.yaml"
+          "file": "Layout Patterns.page.yaml",
+          "tags": [
+            "layout",
+            "patterns",
+            "responsive"
+          ]
         },
         {
           "name": "Split and Dock",
           "path": "Layout/Split and Dock.page.yaml",
           "category": "Layout",
-          "file": "Split and Dock.page.yaml"
+          "file": "Split and Dock.page.yaml",
+          "tags": [
+            "layout",
+            "split",
+            "dock"
+          ]
         },
         {
           "name": "Team Management",
           "path": "Layout/Team Management.page.yaml",
           "category": "Layout",
-          "file": "Team Management.page.yaml"
+          "file": "Team Management.page.yaml",
+          "tags": [
+            "layout",
+            "tabs",
+            "form"
+          ]
         },
         {
           "name": "Workspace Compositor",
           "path": "Layout/Workspace Compositor.page.yaml",
           "category": "Layout",
-          "file": "Workspace Compositor.page.yaml"
+          "file": "Workspace Compositor.page.yaml",
+          "tags": [
+            "layout",
+            "compositor",
+            "zones"
+          ]
         }
       ]
     },
@@ -321,25 +537,45 @@
           "name": "Action Button",
           "path": "Interactivity/Action Button.page.yaml",
           "category": "Interactivity",
-          "file": "Action Button.page.yaml"
+          "file": "Action Button.page.yaml",
+          "tags": [
+            "button",
+            "action",
+            "event"
+          ]
         },
         {
           "name": "Dynamic Visibility",
           "path": "Interactivity/Dynamic Visibility.page.yaml",
           "category": "Interactivity",
-          "file": "Dynamic Visibility.page.yaml"
+          "file": "Dynamic Visibility.page.yaml",
+          "tags": [
+            "visibility",
+            "conditional"
+          ]
         },
         {
           "name": "Navigation Rebinding",
-          "path": "Interactivity/Navigation Rebinding.dash.yml",
+          "path": "Interactivity/Navigation Rebinding.page.yaml",
           "category": "Interactivity",
-          "file": "Navigation Rebinding.dash.yml"
+          "file": "Navigation Rebinding.page.yaml",
+          "tags": [
+            "navigation",
+            "tree",
+            "tabs",
+            "menu"
+          ]
         },
         {
           "name": "Selectors and Filters",
           "path": "Interactivity/Selectors and Filters.page.yaml",
           "category": "Interactivity",
-          "file": "Selectors and Filters.page.yaml"
+          "file": "Selectors and Filters.page.yaml",
+          "tags": [
+            "selector",
+            "filter",
+            "variable"
+          ]
         }
       ]
     },
@@ -351,6 +587,11 @@
           "path": "Graph Editing/Basic Pipeline.page.yaml",
           "category": "Graph Editing",
           "file": "Basic Pipeline.page.yaml",
+          "tags": [
+            "graph",
+            "pipeline",
+            "dag"
+          ],
           "tsPath": "Graph Editing/Basic Pipeline.ts"
         },
         {
@@ -358,6 +599,11 @@
           "path": "Graph Editing/Interactive Editing.page.yaml",
           "category": "Graph Editing",
           "file": "Interactive Editing.page.yaml",
+          "tags": [
+            "graph",
+            "editing",
+            "drag-drop"
+          ],
           "tsPath": "Graph Editing/Interactive Editing.ts"
         },
         {
@@ -365,6 +611,10 @@
           "path": "Graph Editing/Multi Select.page.yaml",
           "category": "Graph Editing",
           "file": "Multi Select.page.yaml",
+          "tags": [
+            "graph",
+            "multi-select"
+          ],
           "tsPath": "Graph Editing/Multi Select.ts"
         },
         {
@@ -372,6 +622,11 @@
           "path": "Graph Editing/Nested Pipeline.page.yaml",
           "category": "Graph Editing",
           "file": "Nested Pipeline.page.yaml",
+          "tags": [
+            "graph",
+            "nested",
+            "subgraph"
+          ],
           "tsPath": "Graph Editing/Nested Pipeline.ts"
         }
       ]
@@ -383,7 +638,12 @@
           "name": "Polling",
           "path": "Live Data/Polling.page.yaml",
           "category": "Live Data",
-          "file": "Polling.page.yaml"
+          "file": "Polling.page.yaml",
+          "tags": [
+            "polling",
+            "live data",
+            "refresh"
+          ]
         }
       ]
     },
@@ -394,13 +654,22 @@
           "name": "Alerts",
           "path": "Content/Alerts.page.yaml",
           "category": "Content",
-          "file": "Alerts.page.yaml"
+          "file": "Alerts.page.yaml",
+          "tags": [
+            "alert",
+            "notification"
+          ]
         },
         {
           "name": "Content Types",
           "path": "Content/Content Types.page.yaml",
           "category": "Content",
-          "file": "Content Types.page.yaml"
+          "file": "Content Types.page.yaml",
+          "tags": [
+            "html",
+            "markdown",
+            "content"
+          ]
         }
       ]
     },
@@ -412,6 +681,11 @@
           "path": "Custom Components/Case Definition Editor.page.yaml",
           "category": "Custom Components",
           "file": "Case Definition Editor.page.yaml",
+          "tags": [
+            "custom",
+            "editor",
+            "web component"
+          ],
           "tsPath": "Custom Components/Case Definition Editor.ts"
         },
         {
@@ -419,13 +693,23 @@
           "path": "Custom Components/Code Editor.page.yaml",
           "category": "Custom Components",
           "file": "Code Editor.page.yaml",
+          "tags": [
+            "custom",
+            "code editor",
+            "monaco"
+          ],
           "tsPath": "Custom Components/Code Editor.ts"
         },
         {
           "name": "Iframe Components",
           "path": "Custom Components/Iframe Components.page.yaml",
           "category": "Custom Components",
-          "file": "Iframe Components.page.yaml"
+          "file": "Iframe Components.page.yaml",
+          "tags": [
+            "custom",
+            "iframe",
+            "embed"
+          ]
         }
       ]
     },
@@ -436,13 +720,22 @@
           "name": "DarkMode",
           "path": "Theming/DarkMode.page.yaml",
           "category": "Theming",
-          "file": "DarkMode.page.yaml"
+          "file": "DarkMode.page.yaml",
+          "tags": [
+            "theme",
+            "dark mode"
+          ]
         },
         {
           "name": "Theme Designer",
           "path": "Theming/Theme Designer.page.yaml",
           "category": "Theming",
           "file": "Theme Designer.page.yaml",
+          "tags": [
+            "theme",
+            "designer",
+            "tokens"
+          ],
           "tsPath": "Theming/Theme Designer.ts"
         },
         {
@@ -450,13 +743,21 @@
           "path": "Theming/Theme Picker.page.yaml",
           "category": "Theming",
           "file": "Theme Picker.page.yaml",
+          "tags": [
+            "theme",
+            "picker"
+          ],
           "tsPath": "Theming/Theme Picker.ts"
         },
         {
           "name": "Token Showcase",
           "path": "Theming/Token Showcase.page.yaml",
           "category": "Theming",
-          "file": "Token Showcase.page.yaml"
+          "file": "Token Showcase.page.yaml",
+          "tags": [
+            "theme",
+            "design tokens"
+          ]
         }
       ]
     },
@@ -467,126 +768,142 @@
           "name": "Ansible Metrics",
           "path": "Monitoring/Ansible Metrics.page.yaml",
           "category": "Monitoring",
-          "file": "Ansible Metrics.page.yaml"
+          "file": "Ansible Metrics.page.yaml",
+          "tags": [
+            "monitoring",
+            "ansible",
+            "prometheus"
+          ]
         },
         {
           "name": "Backstage Metrics",
           "path": "Monitoring/Backstage Metrics.page.yaml",
           "category": "Monitoring",
-          "file": "Backstage Metrics.page.yaml"
+          "file": "Backstage Metrics.page.yaml",
+          "tags": [
+            "monitoring",
+            "backstage"
+          ]
         },
         {
           "name": "Jupyter Hub Metrics",
           "path": "Monitoring/Jupyter Hub Metrics.page.yaml",
           "category": "Monitoring",
-          "file": "Jupyter Hub Metrics.page.yaml"
+          "file": "Jupyter Hub Metrics.page.yaml",
+          "tags": [
+            "monitoring",
+            "jupyter",
+            "histogram"
+          ]
         },
         {
           "name": "Jupyter Metrics Summary",
           "path": "Monitoring/Jupyter Metrics Summary.page.yaml",
           "category": "Monitoring",
-          "file": "Jupyter Metrics Summary.page.yaml"
+          "file": "Jupyter Metrics Summary.page.yaml",
+          "tags": [
+            "monitoring",
+            "jupyter",
+            "summary"
+          ]
         },
         {
           "name": "JVM Monitoring",
-          "path": "Monitoring/JVM Monitoring.yml",
+          "path": "Monitoring/JVM Monitoring.page.yaml",
           "category": "Monitoring",
-          "file": "JVM Monitoring.yml"
+          "file": "JVM Monitoring.page.yaml",
+          "tags": [
+            "monitoring",
+            "jvm",
+            "micrometer"
+          ]
         },
         {
           "name": "Kepler Metrics",
-          "path": "Monitoring/Kepler Metrics.yaml",
+          "path": "Monitoring/Kepler Metrics.page.yaml",
           "category": "Monitoring",
-          "file": "Kepler Metrics.yaml"
+          "file": "Kepler Metrics.page.yaml",
+          "tags": [
+            "monitoring",
+            "kepler",
+            "energy"
+          ]
         },
         {
           "name": "ModelMesh Metrics",
           "path": "Monitoring/ModelMesh Metrics.page.yaml",
           "category": "Monitoring",
-          "file": "ModelMesh Metrics.page.yaml"
+          "file": "ModelMesh Metrics.page.yaml",
+          "tags": [
+            "monitoring",
+            "modelmesh",
+            "inference"
+          ]
         },
         {
           "name": "OpenTelemetry Basic",
-          "path": "Monitoring/OpenTelemetry Basic.yaml",
+          "path": "Monitoring/OpenTelemetry Basic.page.yaml",
           "category": "Monitoring",
-          "file": "OpenTelemetry Basic.yaml"
+          "file": "OpenTelemetry Basic.page.yaml",
+          "tags": [
+            "monitoring",
+            "opentelemetry",
+            "traces"
+          ]
         },
         {
           "name": "Prometheus Basic",
-          "path": "Monitoring/Prometheus Basic.yml",
+          "path": "Monitoring/Prometheus Basic.page.yaml",
           "category": "Monitoring",
-          "file": "Prometheus Basic.yml"
+          "file": "Prometheus Basic.page.yaml",
+          "tags": [
+            "monitoring",
+            "prometheus"
+          ]
         },
         {
           "name": "Prometheus HTTP Requests",
-          "path": "Monitoring/Prometheus HTTP Requests.yml",
+          "path": "Monitoring/Prometheus HTTP Requests.page.yaml",
           "category": "Monitoring",
-          "file": "Prometheus HTTP Requests.yml"
+          "file": "Prometheus HTTP Requests.page.yaml",
+          "tags": [
+            "monitoring",
+            "prometheus",
+            "http"
+          ]
         },
         {
           "name": "Quarkus Monitoring",
           "path": "Monitoring/Quarkus Monitoring.page.yaml",
           "category": "Monitoring",
-          "file": "Quarkus Monitoring.page.yaml"
+          "file": "Quarkus Monitoring.page.yaml",
+          "tags": [
+            "monitoring",
+            "quarkus",
+            "micrometer"
+          ]
         },
         {
           "name": "Real Time JVM Monitoring",
           "path": "Monitoring/Real Time JVM Monitoring.page.yaml",
           "category": "Monitoring",
-          "file": "Real Time JVM Monitoring.page.yaml"
+          "file": "Real Time JVM Monitoring.page.yaml",
+          "tags": [
+            "monitoring",
+            "jvm",
+            "real-time"
+          ]
         },
         {
           "name": "Triton Inference Server",
           "path": "Monitoring/Triton Inference Server.page.yaml",
           "category": "Monitoring",
-          "file": "Triton Inference Server.page.yaml"
-        }
-      ]
-    },
-    {
-      "category": "ARIA Commands",
-      "samples": [
-        {
-          "name": "Composable Workflow",
-          "path": "Scenario Automation/Composable Workflow.page.yaml",
-          "category": "ARIA Commands",
-          "file": "Composable Workflow.page.yaml",
-          "tsPath": "Scenario Automation/Composable Workflow.ts"
-        },
-        {
-          "name": "Form Automation",
-          "path": "Scenario Automation/Form Automation.page.yaml",
-          "category": "ARIA Commands",
-          "file": "Form Automation.page.yaml",
-          "tsPath": "Scenario Automation/Form Automation.ts"
-        },
-        {
-          "name": "Parameterized Script",
-          "path": "Scenario Automation/Parameterized Script.page.yaml",
-          "category": "ARIA Commands",
-          "file": "Parameterized Script.page.yaml",
-          "tsPath": "Scenario Automation/Parameterized Script.ts"
-        },
-        {
-          "name": "Scenario Controller",
-          "path": "Scenario Automation/Scenario Controller.page.yaml",
-          "category": "ARIA Commands",
-          "file": "Scenario Controller.page.yaml",
-          "tsPath": "Scenario Automation/Scenario Controller.ts"
-        },
-        {
-          "name": "Script Library",
-          "path": "Scenario Automation/Script Library.page.yaml",
-          "category": "ARIA Commands",
-          "file": "Script Library.page.yaml",
-          "tsPath": "Scenario Automation/Script Library.ts"
-        },
-        {
-          "name": "Table Population",
-          "path": "Scenario Automation/Table Population.page.yaml",
-          "category": "ARIA Commands",
-          "file": "Table Population.page.yaml",
-          "tsPath": "Scenario Automation/Table Population.ts"
+          "file": "Triton Inference Server.page.yaml",
+          "tags": [
+            "monitoring",
+            "triton",
+            "inference"
+          ]
         }
       ]
     },
@@ -594,10 +911,30 @@
       "category": "Scenarios",
       "samples": [
         {
+          "name": "Composable Workflow",
+          "path": "Scenarios/Composable Workflow.page.yaml",
+          "category": "Scenarios",
+          "file": "Composable Workflow.page.yaml",
+          "tags": [
+            "scenario",
+            "fill",
+            "select",
+            "click",
+            "composition"
+          ],
+          "tsPath": "Scenarios/Composable Workflow.ts"
+        },
+        {
           "name": "Composition",
           "path": "Scenarios/Composition.page.yaml",
           "category": "Scenarios",
           "file": "Composition.page.yaml",
+          "tags": [
+            "scenario",
+            "trigger",
+            "module",
+            "forEach"
+          ],
           "tsPath": "Scenarios/Composition.ts"
         },
         {
@@ -605,14 +942,129 @@
           "path": "Scenarios/Coordination.page.yaml",
           "category": "Scenarios",
           "file": "Coordination.page.yaml",
+          "tags": [
+            "scenario",
+            "signal",
+            "barrier",
+            "mutex",
+            "concurrent"
+          ],
           "tsPath": "Scenarios/Coordination.ts"
+        },
+        {
+          "name": "Coordination Primitives",
+          "path": "Scenarios/Coordination Primitives.page.yaml",
+          "category": "Scenarios",
+          "file": "Coordination Primitives.page.yaml",
+          "tsPath": "Scenarios/Coordination Primitives.ts"
+        },
+        {
+          "name": "Data Delivery",
+          "path": "Scenarios/Data Delivery.page.yaml",
+          "category": "Scenarios",
+          "file": "Data Delivery.page.yaml",
+          "tags": [
+            "scenario",
+            "simulated",
+            "graphql",
+            "data injection"
+          ],
+          "tsPath": "Scenarios/Data Delivery.ts"
         },
         {
           "name": "Flow Control",
           "path": "Scenarios/Flow Control.page.yaml",
           "category": "Scenarios",
           "file": "Flow Control.page.yaml",
+          "tags": [
+            "scenario",
+            "loop",
+            "retry",
+            "timeout",
+            "when",
+            "delay"
+          ],
           "tsPath": "Scenarios/Flow Control.ts"
+        },
+        {
+          "name": "Form Automation",
+          "path": "Scenarios/Form Automation.page.yaml",
+          "category": "Scenarios",
+          "file": "Form Automation.page.yaml",
+          "tags": [
+            "scenario",
+            "fill",
+            "select",
+            "assert",
+            "click"
+          ],
+          "tsPath": "Scenarios/Form Automation.ts"
+        },
+        {
+          "name": "Parameterized Script",
+          "path": "Scenarios/Parameterized Script.page.yaml",
+          "category": "Scenarios",
+          "file": "Parameterized Script.page.yaml",
+          "tags": [
+            "scenario",
+            "parameters",
+            "reuse"
+          ],
+          "tsPath": "Scenarios/Parameterized Script.ts"
+        },
+        {
+          "name": "Scenario Controller",
+          "path": "Scenarios/Scenario Controller.page.yaml",
+          "category": "Scenarios",
+          "file": "Scenario Controller.page.yaml",
+          "tags": [
+            "scenario",
+            "controller",
+            "playback"
+          ],
+          "tsPath": "Scenarios/Scenario Controller.ts"
+        },
+        {
+          "name": "Script Library",
+          "path": "Scenarios/Script Library.page.yaml",
+          "category": "Scenarios",
+          "file": "Script Library.page.yaml",
+          "tags": [
+            "scenario",
+            "library",
+            "search",
+            "labels"
+          ],
+          "tsPath": "Scenarios/Script Library.ts"
+        },
+        {
+          "name": "Step Workflows",
+          "path": "Scenarios/Step Workflows.page.yaml",
+          "category": "Scenarios",
+          "file": "Step Workflows.page.yaml",
+          "tags": [
+            "step",
+            "if-else",
+            "match",
+            "try-catch",
+            "barrier",
+            "quorum",
+            "parallel"
+          ],
+          "tsPath": "Scenarios/Step Workflows.ts"
+        },
+        {
+          "name": "Table Population",
+          "path": "Scenarios/Table Population.page.yaml",
+          "category": "Scenarios",
+          "file": "Table Population.page.yaml",
+          "tags": [
+            "scenario",
+            "fill",
+            "click",
+            "data injection"
+          ],
+          "tsPath": "Scenarios/Table Population.ts"
         }
       ]
     },
@@ -623,49 +1075,89 @@
           "name": "FIFA 2022 Goals",
           "path": "Domain Showcases/FIFA 2022 Goals.page.yaml",
           "category": "Domain Showcases",
-          "file": "FIFA 2022 Goals.page.yaml"
+          "file": "FIFA 2022 Goals.page.yaml",
+          "tags": [
+            "showcase",
+            "sports",
+            "charts"
+          ]
         },
         {
           "name": "Fleet Monitor",
           "path": "Domain Showcases/Fleet Monitor.page.yaml",
           "category": "Domain Showcases",
-          "file": "Fleet Monitor.page.yaml"
+          "file": "Fleet Monitor.page.yaml",
+          "tags": [
+            "showcase",
+            "iot",
+            "monitoring"
+          ]
         },
         {
           "name": "Github Repositories",
           "path": "Domain Showcases/Github Repositories.page.yaml",
           "category": "Domain Showcases",
-          "file": "Github Repositories.page.yaml"
+          "file": "Github Repositories.page.yaml",
+          "tags": [
+            "showcase",
+            "github",
+            "api"
+          ]
         },
         {
           "name": "Most Spoken Languages",
           "path": "Domain Showcases/Most Spoken Languages.page.yaml",
           "category": "Domain Showcases",
-          "file": "Most Spoken Languages.page.yaml"
+          "file": "Most Spoken Languages.page.yaml",
+          "tags": [
+            "showcase",
+            "chart",
+            "data"
+          ]
         },
         {
           "name": "Patient Tracker",
           "path": "Domain Showcases/Patient Tracker.page.yaml",
           "category": "Domain Showcases",
-          "file": "Patient Tracker.page.yaml"
+          "file": "Patient Tracker.page.yaml",
+          "tags": [
+            "showcase",
+            "clinical",
+            "tracker"
+          ]
         },
         {
           "name": "Podman Stats",
           "path": "Domain Showcases/Podman Stats.page.yaml",
           "category": "Domain Showcases",
-          "file": "Podman Stats.page.yaml"
+          "file": "Podman Stats.page.yaml",
+          "tags": [
+            "showcase",
+            "containers",
+            "podman"
+          ]
         },
         {
           "name": "Sales Dashboard",
           "path": "Domain Showcases/Sales Dashboard.page.yaml",
           "category": "Domain Showcases",
-          "file": "Sales Dashboard.page.yaml"
+          "file": "Sales Dashboard.page.yaml",
+          "tags": [
+            "showcase",
+            "sales",
+            "metrics"
+          ]
         },
         {
           "name": "Workforce Analytics",
           "path": "Domain Showcases/Workforce Analytics.page.yaml",
           "category": "Domain Showcases",
-          "file": "Workforce Analytics.page.yaml"
+          "file": "Workforce Analytics.page.yaml",
+          "tags": [
+            "showcase",
+            "hr",
+            "analytics"
+          ]
         }
       ]
     },
@@ -676,25 +1168,45 @@
           "name": "Live Event Stream",
           "path": "Server/Live Event Stream.page.yaml",
           "category": "Server",
-          "file": "Live Event Stream.page.yaml"
+          "file": "Live Event Stream.page.yaml",
+          "tags": [
+            "server",
+            "sse",
+            "streaming"
+          ]
         },
         {
           "name": "Multi-Topic Dashboard",
           "path": "Server/Multi-Topic Dashboard.page.yaml",
           "category": "Server",
-          "file": "Multi-Topic Dashboard.page.yaml"
+          "file": "Multi-Topic Dashboard.page.yaml",
+          "tags": [
+            "server",
+            "multi-topic",
+            "sse"
+          ]
         },
         {
           "name": "Prometheus Metrics",
           "path": "Server/Prometheus Metrics.page.yaml",
           "category": "Server",
-          "file": "Prometheus Metrics.page.yaml"
+          "file": "Prometheus Metrics.page.yaml",
+          "tags": [
+            "server",
+            "prometheus",
+            "push"
+          ]
         },
         {
           "name": "Reconnect Replay",
           "path": "Server/Reconnect Replay.page.yaml",
           "category": "Server",
           "file": "Reconnect Replay.page.yaml",
+          "tags": [
+            "server",
+            "reconnect",
+            "replay"
+          ],
           "tsPath": "Server/Reconnect Replay.ts"
         }
       ],

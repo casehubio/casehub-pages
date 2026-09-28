@@ -67,7 +67,7 @@ const mockEndpoints = {
   'mock-data/triton-metrics.txt': 'data/triton/metrics',
   'mock-data/podman-images.json': 'data/podman/images/json',
   'mock-data/podman-containers.json': 'data/podman/containers/json',
-  'samples/kepler/data/kepler/metrics': 'data/kepler/metrics',
+  'mock-data/kepler-metrics.txt': 'data/kepler/metrics',
 };
 
 for (const [src, dest] of Object.entries(mockEndpoints)) {

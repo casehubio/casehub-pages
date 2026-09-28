@@ -238,6 +238,24 @@ function loadSample(sample) {
     sampleContainer.style.display = 'flex';
     currentSampleName.textContent = sample.name;
 
+    // Render tags
+    let tagsContainer = document.getElementById('sample-tags');
+    if (!tagsContainer) {
+        tagsContainer = document.createElement('div');
+        tagsContainer.id = 'sample-tags';
+        tagsContainer.style.cssText = 'display: inline-flex; gap: 4px; margin-left: 10px; flex-wrap: wrap; align-items: center;';
+        currentSampleName.parentElement.insertBefore(tagsContainer, currentSampleName.nextSibling);
+    }
+    tagsContainer.innerHTML = '';
+    if (sample.tags && sample.tags.length > 0) {
+        sample.tags.forEach(tag => {
+            const chip = document.createElement('span');
+            chip.textContent = tag;
+            chip.style.cssText = 'padding: 1px 6px; border-radius: 3px; background: var(--pages-accent-3); color: var(--pages-accent-9); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;';
+            tagsContainer.appendChild(chip);
+        });
+    }
+
     // Load sample in target div
     loadSampleInTarget(sample.path);
 
