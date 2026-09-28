@@ -1,5 +1,128 @@
 export type ParameterType = 'STRING' | 'LIST' | 'INTEGER' | 'NUMBER' | 'BOOLEAN';
 
+export type ParsedValue =
+  | { type: 'string'; value: string }
+  | { type: 'integer'; value: number }
+  | { type: 'number'; value: number }
+  | { type: 'boolean'; value: boolean }
+  | { type: 'list'; value: string[] };
+
+export function parseValue(paramType: ParameterType, raw: string): ParsedValue {
+  switch (paramType) {
+    case 'STRING': return { type: 'string', value: raw };
+    case 'INTEGER': {
+      const n = parseInt(raw, 10);
+      if (isNaN(n)) throw new Error(`Cannot parse '${raw}' as INTEGER`);
+      return { type: 'integer', value: n };
+    }
+    case 'NUMBER': {
+      const n = parseFloat(raw);
+      if (isNaN(n)) throw new Error(`Cannot parse '${raw}' as NUMBER`);
+      return { type: 'number', value: n };
+    }
+    case 'BOOLEAN': {
+      const lower = raw.toLowerCase();
+      if (['true', 'yes', 'on', 'y', '1'].includes(lower)) return { type: 'boolean', value: true };
+      if (['false', 'no', 'off', 'n', '0'].includes(lower)) return { type: 'boolean', value: false };
+      throw new Error(`Cannot parse '${raw}' as BOOLEAN`);
+    }
+    case 'LIST': return { type: 'list', value: raw.split(',').map(s => s.trim()) };
+  }
+}
+
+export function rawValue(parsed: ParsedValue): unknown {
+  return parsed.value;
+}
+
+export function canAcceptType(target: ParameterType, source: ParameterType): boolean {
+  if (target === source) return true;
+  if (target === 'STRING' && source !== 'LIST') return true;
+  if (target === 'NUMBER' && source === 'INTEGER') return true;
+  return false;
+}
+
+export type StepParameterType = 'STRING' | 'INTEGER' | 'NUMBER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT';
+
+export function isScalarStepParam(type: StepParameterType): boolean {
+  return type !== 'ARRAY' && type !== 'OBJECT';
+}
+
+export function stepParamToParameterType(type: StepParameterType): ParameterType | undefined {
+  switch (type) {
+    case 'STRING': return 'STRING';
+    case 'INTEGER': return 'INTEGER';
+    case 'NUMBER': return 'NUMBER';
+    case 'BOOLEAN': return 'BOOLEAN';
+    default: return undefined;
+  }
+}
+
+export function parameterTypeToStepParam(type: ParameterType): StepParameterType {
+  switch (type) {
+    case 'STRING': return 'STRING';
+    case 'LIST': return 'ARRAY';
+    case 'INTEGER': return 'INTEGER';
+    case 'NUMBER': return 'NUMBER';
+    case 'BOOLEAN': return 'BOOLEAN';
+  }
+}
+
+export function parseStepParameterType(name: string): StepParameterType {
+  const upper = name.toUpperCase();
+  if (upper === 'DECIMAL') return 'NUMBER';
+  const valid: StepParameterType[] = ['STRING', 'INTEGER', 'NUMBER', 'BOOLEAN', 'ARRAY', 'OBJECT'];
+  if (valid.includes(upper as StepParameterType)) return upper as StepParameterType;
+  throw new Error(`Unknown StepParameterType: '${name}'`);
+}
+
+export function validateStepParamValue(type: StepParameterType, value: unknown): boolean {
+  switch (type) {
+    case 'STRING': return typeof value === 'string';
+    case 'INTEGER': return typeof value === 'number' && Number.isInteger(value);
+    case 'NUMBER': return typeof value === 'number';
+    case 'BOOLEAN': return typeof value === 'boolean';
+    case 'ARRAY': return Array.isArray(value);
+    case 'OBJECT': return value !== null && typeof value === 'object' && !Array.isArray(value);
+  }
+}
+
+export function parseScalarStepParam(type: StepParameterType, raw: string): unknown {
+  switch (type) {
+    case 'STRING': return raw;
+    case 'INTEGER': {
+      const n = parseInt(raw, 10);
+      if (isNaN(n)) throw new Error(`Cannot parse '${raw}' as INTEGER`);
+      return n;
+    }
+    case 'NUMBER': {
+      const n = parseFloat(raw);
+      if (isNaN(n)) throw new Error(`Cannot parse '${raw}' as NUMBER`);
+      return n;
+    }
+    case 'BOOLEAN': {
+      const lower = raw.toLowerCase();
+      if (['true', 'yes', 'on', 'y', '1'].includes(lower)) return true;
+      if (['false', 'no', 'off', 'n', '0'].includes(lower)) return false;
+      throw new Error(`Cannot parse '${raw}' as BOOLEAN`);
+    }
+    case 'ARRAY':
+    case 'OBJECT':
+      throw new Error(`Cannot parse scalar default for compound type '${type}'`);
+  }
+}
+
+export interface ObjectVariableSource {
+  resolve(name: string): unknown;
+  allowContainerReturn(): boolean;
+}
+
+export function drillOnlySource(source: ObjectVariableSource): ObjectVariableSource {
+  return {
+    resolve: (name: string) => source.resolve(name),
+    allowContainerReturn: () => false,
+  };
+}
+
 export interface YamlModuleParameter {
   type: ParameterType;
   required: boolean;
@@ -79,7 +202,7 @@ export function chainSources(...sources: VariableSource[]): VariableSource {
   };
 }
 
-function drillFields(map: Record<string, unknown>, dotPath: string): unknown {
+export function drillFields(map: Record<string, unknown>, dotPath: string): unknown {
   let current: unknown = map;
   for (const part of dotPath.split('.')) {
     if (current !== null && typeof current === 'object' && !Array.isArray(current)) {

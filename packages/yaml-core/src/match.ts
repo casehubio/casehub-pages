@@ -1,4 +1,4 @@
-export type MatchPattern = ValuePattern | StructuralPattern | DefaultPattern;
+export type MatchPattern = ValuePattern | StructuralPattern | AnyOfPattern | DefaultPattern;
 
 export interface ValuePattern {
   type: 'value';
@@ -8,6 +8,11 @@ export interface ValuePattern {
 export interface StructuralPattern {
   type: 'structural';
   fields: Record<string, unknown>;
+}
+
+export interface AnyOfPattern {
+  type: 'any-of';
+  values: unknown[];
 }
 
 export interface DefaultPattern {
@@ -37,6 +42,11 @@ export function matches(pattern: MatchPattern, scrutinee: unknown): boolean {
       }
       return true;
     }
+    case 'any-of':
+      return pattern.values.some(v => Object.is(v, scrutinee)
+        || (v !== null && v !== undefined
+            && scrutinee !== null && scrutinee !== undefined
+            && v === scrutinee));
     case 'default':
       return true;
   }
@@ -48,6 +58,10 @@ export function valuePattern(value: unknown): ValuePattern {
 
 export function structuralPattern(fields: Record<string, unknown>): StructuralPattern {
   return { type: 'structural', fields: { ...fields } };
+}
+
+export function anyOfPattern(values: unknown[]): AnyOfPattern {
+  return { type: 'any-of', values: [...values] };
 }
 
 export function defaultPattern(): DefaultPattern {
