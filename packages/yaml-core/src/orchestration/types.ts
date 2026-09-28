@@ -59,5 +59,15 @@ export interface ScenarioScope {
   stateMachine<S extends string>(name: string, states: readonly S[], initial: S): OrcStateMachine<S>;
   primitive<T>(name: string, type: new (...args: unknown[]) => T): T;
   resultStore(): StepResultStore;
+  counter(name: string): import('./counter.js').OrcCounter;
+  gauge<T>(name: string, initial: T): import('./gauge.js').OrcGauge<T>;
+  flag(name: string): import('./flag.js').OrcFlag;
+  accumulator(name: string, op: (a: number, b: number) => number, identity: number): import('./accumulator.js').OrcAccumulator;
+  map<K, V>(name: string): import('./orc-map.js').OrcMap<K, V>;
+  spawn(name: string, task: () => Promise<void>): import('./spawned-task.js').SpawnedTask;
+  childScope(name: string): ScenarioScope;
+  withDeadline(deadlineMs: number, onDeadline?: () => void): ScenarioScope;
+  isDeadlineExpired(): boolean;
+  remainingTime(): number | undefined;
   close(): void;
 }

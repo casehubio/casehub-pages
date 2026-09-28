@@ -8,10 +8,20 @@ import { DefaultOrcSignal } from './signal.js';
 import { DefaultOrcChannel } from './channel.js';
 import { StateMachineBuilder } from './state-machine.js';
 import { DefaultStepResultStore } from './step-result-store.js';
+import { DefaultOrcCounter } from './counter.js';
+import { DefaultOrcGauge } from './gauge.js';
+import { DefaultOrcFlag } from './flag.js';
+import { DefaultOrcAccumulator } from './accumulator.js';
+import { DefaultOrcMap } from './orc-map.js';
+import { DefaultSpawnedTask } from './spawned-task.js';
 
 export class DefaultScenarioScope implements ScenarioScope {
   private readonly _primitives = new Map<string, unknown>();
   private _resultStore?: DefaultStepResultStore;
+  private _deadlineMs?: number;
+  private _deadlineStart?: number;
+  private _deadlineExpired = false;
+  private _deadlineTimer?: ReturnType<typeof setTimeout>;
 
   semaphore(name: string, permits: number): OrcSemaphore {
     return this._getOrCreate(name, () => new DefaultOrcSemaphore(permits));
@@ -53,7 +63,61 @@ export class DefaultScenarioScope implements ScenarioScope {
     return this._resultStore;
   }
 
+  counter(name: string): import('./counter.js').OrcCounter {
+    return this._getOrCreate(name, () => new DefaultOrcCounter());
+  }
+
+  gauge<T>(name: string, initial: T): import('./gauge.js').OrcGauge<T> {
+    return this._getOrCreate(name, () => new DefaultOrcGauge<T>(initial));
+  }
+
+  flag(name: string): import('./flag.js').OrcFlag {
+    return this._getOrCreate(name, () => new DefaultOrcFlag());
+  }
+
+  accumulator(name: string, op: (a: number, b: number) => number, identity: number): import('./accumulator.js').OrcAccumulator {
+    return this._getOrCreate(name, () => new DefaultOrcAccumulator(op, identity));
+  }
+
+  map<K, V>(name: string): import('./orc-map.js').OrcMap<K, V> {
+    return this._getOrCreate(name, () => new DefaultOrcMap<K, V>());
+  }
+
+  spawn(name: string, task: () => Promise<void>): import('./spawned-task.js').SpawnedTask {
+    return this._getOrCreate(name, () => new DefaultSpawnedTask(name, task));
+  }
+
+  childScope(name: string): ScenarioScope {
+    return this._getOrCreate(name, () => new DefaultScenarioScope());
+  }
+
+  withDeadline(deadlineMs: number, onDeadline?: () => void): ScenarioScope {
+    const child = new DefaultScenarioScope();
+    child._deadlineMs = deadlineMs;
+    child._deadlineStart = Date.now();
+    if (onDeadline) {
+      child._deadlineTimer = setTimeout(() => {
+        child._deadlineExpired = true;
+        onDeadline();
+      }, deadlineMs);
+    }
+    return child;
+  }
+
+  isDeadlineExpired(): boolean {
+    if (this._deadlineExpired) return true;
+    if (this._deadlineMs === undefined || this._deadlineStart === undefined) return false;
+    return Date.now() - this._deadlineStart >= this._deadlineMs;
+  }
+
+  remainingTime(): number | undefined {
+    if (this._deadlineMs === undefined || this._deadlineStart === undefined) return undefined;
+    const remaining = this._deadlineMs - (Date.now() - this._deadlineStart);
+    return remaining > 0 ? remaining : 0;
+  }
+
   close(): void {
+    if (this._deadlineTimer) clearTimeout(this._deadlineTimer);
     for (const [, prim] of this._primitives) {
       if (prim && typeof prim === 'object') {
         if ('close' in prim && typeof (prim as Record<string, unknown>).close === 'function') {
