@@ -128,6 +128,43 @@ var CC_EXAMPLES = [
       { 'deadline-check': { name: 'batch' } },
     ],
   },
+  {
+    name: 'Combined Pipeline',
+    tags: ['combined', 'pipeline', 'multi-primitive'],
+    description: 'Rate-limited pipeline with deadline — composes semaphore, channel, spawned task, concurrent map, and deadline into a single workflow. A producer feeds items through a bounded channel, rate-limited workers process them under a semaphore gate, results accumulate in a concurrent map, and a deadline scopes the entire pipeline.',
+    yaml: [
+      'steps:',
+      '  - deadline-create: { name: "pipeline", deadlineMs: 3000 }',
+      '  - spawn-task: { name: "monitor", duration: 2500 }',
+      '  - deadline-check: { name: "pipeline" }',
+      '  - parallel:',
+      '    - chan-produce: { name: "jobs", capacity: 2, items: 4, interval: 150 }',
+      '    - pipeline-consume:',
+      '        channel: jobs',
+      '        semaphore: gate',
+      '        permits: 2',
+      '        map: results',
+      '        expect: 4',
+      '        processingMs: 300',
+      '  - map-reader: { name: "results" }',
+      '  - deadline-check: { name: "pipeline" }',
+      '  - task-join: { name: "monitor", timeout: 2000 }',
+      '  - task-poll: { name: "monitor" }',
+    ].join('\n'),
+    steps: [
+      { 'deadline-create': { name: 'pipeline', deadlineMs: 3000 } },
+      { 'spawn-task': { name: 'monitor', duration: 2500 } },
+      { 'deadline-check': { name: 'pipeline' } },
+      { parallel: [
+        { 'chan-produce': { name: 'jobs', capacity: 2, items: 4, interval: 150 } },
+        { 'pipeline-consume': { channel: 'jobs', semaphore: 'gate', permits: 2, map: 'results', expect: 4, processingMs: 300 } },
+      ] },
+      { 'map-reader': { name: 'results' } },
+      { 'deadline-check': { name: 'pipeline' } },
+      { 'task-join': { name: 'monitor', timeout: 2000 } },
+      { 'task-poll': { name: 'monitor' } },
+    ],
+  },
 ];
 
 var ccTraceEl = document.getElementById('cc-trace');
@@ -499,6 +536,43 @@ async function ccRunExample(idx) {
         outputs.push(msg);
         ccTrace(msg, expired ? '⚠' : '✓');
         return runner.stepSuccess({ label: params.label, expired: expired });
+      }
+    },
+    {
+      name: 'pipeline-consume',
+      inputs: { channel: { type: 'STRING', required: true }, semaphore: { type: 'STRING', required: true }, permits: { type: 'NUMBER', required: true }, map: { type: 'STRING', required: true }, expect: { type: 'NUMBER', required: true }, processingMs: { type: 'NUMBER', required: true } },
+      execute: async function(params) {
+        ccStepCount++;
+        if (ccCountEl) ccCountEl.textContent = String(ccStepCount);
+        var ch = runner.scope.channel(params.channel, 2);
+        var sem = runner.scope.semaphore(params.semaphore, params.permits);
+        var m = runner.scope.map(params.map);
+        var processed = 0;
+        for (var i = 0; i < params.expect; i++) {
+          try {
+            var item = await ch.receive(3000);
+            if (item === undefined) break;
+            ccTrace('pipeline ← ' + item, '⚠');
+            var avail = sem.availablePermits();
+            ccTrace('gate: waiting (permits=' + avail + ')', '⚠');
+            await sem.acquire();
+            ccTrace('gate: acquired → processing ' + item, '✓');
+            outputs.push('processing: ' + item);
+            await ccDelay(params.processingMs);
+            m.put(item, 'done');
+            sem.release();
+            processed++;
+            var msg = item + ' → done (released permit)';
+            outputs.push(msg);
+            ccTrace(msg, '✓');
+          } catch (e) {
+            ccTrace('pipeline error: ' + e.message, '✗');
+            break;
+          }
+        }
+        ccTrace('pipeline: processed ' + processed + '/' + params.expect + ' items', '✓');
+        outputs.push('pipeline complete: ' + processed + ' items');
+        return runner.stepSuccess({ processed: processed });
       }
     },
   ]);
