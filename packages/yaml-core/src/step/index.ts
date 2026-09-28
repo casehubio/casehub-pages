@@ -23,6 +23,11 @@ export { CompositeStepCatalog, ImportScopedStepCatalog } from './step-catalog.js
 
 export { ValidatingStepAction } from './step-action.js';
 
+export { DecoratorChain } from './decorator-chain.js';
+export type { StepContext, DecoratedExecution } from './decorator-chain.js';
+
+export { StructuralStepEvaluator } from './structural-evaluator.js';
+
 export { StepSchemaComposer } from './step-schema-composer.js';
 
 export type { PluginRegistration } from './step-plugin-registry.js';

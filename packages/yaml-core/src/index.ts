@@ -36,6 +36,8 @@ export type { ParameterViolation } from './parameter-validator.js';
 export { ModuleExpander } from './module-expander.js';
 export type { ExpandedModule, SectionDeserializer, SectionContentRewriter, ExpansionOptions, ModuleBridge, TypedExpandedModule } from './module-expander.js';
 export { ImportExpander } from './import-expander.js';
+export { TypedName, TypedMap, TypedVariables } from './typed-values.js';
+export type { TypedSchema, ValueType, TypedEntry } from './typed-values.js';
 export { CsvParser } from './csv-parser.js';
 export type { CsvDataSource, CsvColumn, CsvColumnType } from './csv-parser.js';
 export { matches, valuePattern, structuralPattern, defaultPattern, anyOfPattern } from './match.js';
