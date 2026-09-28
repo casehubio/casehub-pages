@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  matches, valuePattern, structuralPattern, defaultPattern,
+  matches, valuePattern, structuralPattern, anyOfPattern, defaultPattern,
 } from './match.js';
 
 describe('MatchPattern', () => {
@@ -44,6 +44,39 @@ describe('MatchPattern', () => {
     it('missing field does not match', () => {
       const pattern = structuralPattern({ type: 'trade', priority: 'HIGH' });
       expect(matches(pattern, { type: 'trade' })).toBe(false);
+    });
+  });
+
+  describe('AnyOfPattern', () => {
+    it('matches single value in list', () => {
+      expect(matches(anyOfPattern(['ACTIVE']), 'ACTIVE')).toBe(true);
+    });
+
+    it('matches value at any position', () => {
+      const pattern = anyOfPattern(['a', 'b', 'c']);
+      expect(matches(pattern, 'a')).toBe(true);
+      expect(matches(pattern, 'b')).toBe(true);
+      expect(matches(pattern, 'c')).toBe(true);
+    });
+
+    it('no match when value not in list', () => {
+      expect(matches(anyOfPattern(['a', 'b']), 'z')).toBe(false);
+    });
+
+    it('mixed types', () => {
+      const pattern = anyOfPattern(['x', 42]);
+      expect(matches(pattern, 'x')).toBe(true);
+      expect(matches(pattern, 42)).toBe(true);
+      expect(matches(pattern, 99)).toBe(false);
+    });
+
+    it('empty values list never matches', () => {
+      expect(matches(anyOfPattern([]), 'anything')).toBe(false);
+    });
+
+    it('matches null when null is in values', () => {
+      expect(matches(anyOfPattern([null, 'a']), null)).toBe(true);
+      expect(matches(anyOfPattern(['a', 'b']), null)).toBe(false);
     });
   });
 

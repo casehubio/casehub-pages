@@ -17,8 +17,9 @@ import { DefaultSpawnedTask } from './spawned-task.js';
 
 export class DefaultScenarioScope implements ScenarioScope {
   private readonly _primitives = new Map<string, unknown>();
-  private readonly _parent?: DefaultScenarioScope;
   private _resultStore?: DefaultStepResultStore;
+
+  constructor(private readonly _parent?: DefaultScenarioScope) {}
   private _deadlineMs?: number;
   private _deadlineStart?: number;
   private _deadlineExpired = false;
@@ -89,11 +90,7 @@ export class DefaultScenarioScope implements ScenarioScope {
   }
 
   childScope(name: string): ScenarioScope {
-    return this._getOrCreate(name, () => {
-      const child = new DefaultScenarioScope();
-      (child as { _parent: DefaultScenarioScope | undefined })._parent = this;
-      return child;
-    });
+    return this._getOrCreate(name, () => new DefaultScenarioScope(this));
   }
 
   withDeadline(deadlineMs: number, onDeadline?: () => void): ScenarioScope {
@@ -138,7 +135,7 @@ export class DefaultScenarioScope implements ScenarioScope {
       }
     }
     if (tasks.length > 0) {
-      Promise.allSettled(tasks.map(t => t.joinWithTimeout(5000))).catch(() => {});
+      void Promise.allSettled(tasks.map(t => t.joinWithTimeout(5000)));
     }
     this._primitives.clear();
   }

@@ -69,11 +69,16 @@ export class DefaultBlockingOrcStateMachine<S extends string> implements Blockin
   awaitStateWithTimeout(target: S, timeoutMs: number): Promise<boolean> {
     if (this.state === target) return Promise.resolve(true);
     return new Promise(resolve => {
-      const timer = setTimeout(() => resolve(false), timeoutMs);
-      this.waiters.push({
+      const waiter = {
         check: () => this.state === target,
         resolve: () => { clearTimeout(timer); resolve(true); },
-      });
+      };
+      const timer = setTimeout(() => {
+        const idx = this.waiters.indexOf(waiter);
+        if (idx >= 0) this.waiters.splice(idx, 1);
+        resolve(false);
+      }, timeoutMs);
+      this.waiters.push(waiter);
     });
   }
 
@@ -96,11 +101,16 @@ export class DefaultBlockingOrcStateMachine<S extends string> implements Blockin
   awaitAnyStateWithTimeout(targets: Set<S>, timeoutMs: number): Promise<S | undefined> {
     if (targets.has(this.state)) return Promise.resolve(this.state);
     return new Promise(resolve => {
-      const timer = setTimeout(() => resolve(undefined), timeoutMs);
-      this.waiters.push({
+      const waiter = {
         check: () => targets.has(this.state),
         resolve: () => { clearTimeout(timer); resolve(this.state); },
-      });
+      };
+      const timer = setTimeout(() => {
+        const idx = this.waiters.indexOf(waiter);
+        if (idx >= 0) this.waiters.splice(idx, 1);
+        resolve(undefined);
+      }, timeoutMs);
+      this.waiters.push(waiter);
     });
   }
 }
