@@ -17,6 +17,7 @@ import { DefaultSpawnedTask } from './spawned-task.js';
 
 export class DefaultScenarioScope implements ScenarioScope {
   private readonly _primitives = new Map<string, unknown>();
+  private readonly _parent?: DefaultScenarioScope;
   private _resultStore?: DefaultStepResultStore;
   private _deadlineMs?: number;
   private _deadlineStart?: number;
@@ -88,7 +89,11 @@ export class DefaultScenarioScope implements ScenarioScope {
   }
 
   childScope(name: string): ScenarioScope {
-    return this._getOrCreate(name, () => new DefaultScenarioScope());
+    return this._getOrCreate(name, () => {
+      const child = new DefaultScenarioScope();
+      (child as { _parent: DefaultScenarioScope | undefined })._parent = this;
+      return child;
+    });
   }
 
   withDeadline(deadlineMs: number, onDeadline?: () => void): ScenarioScope {
@@ -118,24 +123,35 @@ export class DefaultScenarioScope implements ScenarioScope {
 
   close(): void {
     if (this._deadlineTimer) clearTimeout(this._deadlineTimer);
+    const tasks: Array<{ joinWithTimeout(ms: number): Promise<boolean> }> = [];
     for (const [, prim] of this._primitives) {
       if (prim && typeof prim === 'object') {
-        if ('close' in prim && typeof (prim as Record<string, unknown>).close === 'function') {
+        if (prim instanceof DefaultScenarioScope) {
+          prim.close();
+        } else if ('joinWithTimeout' in prim && typeof (prim as Record<string, unknown>).joinWithTimeout === 'function') {
+          tasks.push(prim as { joinWithTimeout(ms: number): Promise<boolean> });
+        } else if ('close' in prim && typeof (prim as Record<string, unknown>).close === 'function') {
           (prim as { close(): void }).close();
         } else if ('signal' in prim && typeof (prim as Record<string, unknown>).signal === 'function') {
           (prim as OrcSignal).signal();
         }
       }
     }
+    if (tasks.length > 0) {
+      Promise.allSettled(tasks.map(t => t.joinWithTimeout(5000))).catch(() => {});
+    }
     this._primitives.clear();
   }
 
   private _getOrCreate<T>(name: string, factory: () => T): T {
     let existing = this._primitives.get(name) as T | undefined;
-    if (existing === undefined) {
-      existing = factory();
-      this._primitives.set(name, existing);
+    if (existing !== undefined) return existing;
+    if (this._parent) {
+      const parentVal = this._parent._primitives.get(name) as T | undefined;
+      if (parentVal !== undefined) return parentVal;
     }
+    existing = factory();
+    this._primitives.set(name, existing);
     return existing;
   }
 }

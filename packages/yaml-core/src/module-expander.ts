@@ -524,11 +524,11 @@ export class ModuleExpander {
           let processedValue = sectionResolver.resolve(value);
 
           if (options?.deserializer && typeof processedValue === 'object' && processedValue !== null && !Array.isArray(processedValue)) {
-            processedValue = options.deserializer(sectionName, prefixedKey, processedValue as Record<string, unknown>);
+            processedValue = options.deserializer(sectionName, resolvedContentKey, processedValue as Record<string, unknown>);
           }
 
           if (options?.rewriter) {
-            processedValue = options.rewriter(sectionName, prefixedKey, processedValue, imp.as, new Set(Object.keys(module.sections)));
+            processedValue = options.rewriter(sectionName, resolvedContentKey, processedValue, imp.as, new Set(Object.keys(module.sections)));
           }
 
           targetSection[prefixedKey] = processedValue;

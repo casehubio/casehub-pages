@@ -35,7 +35,7 @@ export class StepDefinitionParser {
         const p = paramRaw as Record<string, unknown>;
         const type: StepParameterType = p['type'] ? parseStepParameterType(p['type'] as string) : 'STRING';
         const defaultValue = (p['defaultValue'] as string | undefined) ?? (p['default'] as string | undefined);
-        const allowedValues = p['allowedValues'] as string[] | undefined;
+        const allowedValues = (p['allowedValues'] ?? p['enum']) as string[] | undefined;
         const format = p['format'] as string | undefined;
         const desc = p['description'] as string | undefined;
         result[name] = {
@@ -56,7 +56,7 @@ export class StepDefinitionParser {
       return { kind: 'mcp', tool: raw['mcp'] as string };
     }
     if (raw['python']) {
-      const wd = raw['workingDir'] as string | undefined;
+      const wd = (raw['workingDir'] ?? raw['working-dir']) as string | undefined;
       return {
         kind: 'script', runtime: RUNTIME_PYTHON, script: raw['python'] as string,
         timeout: (raw['timeout'] as string) ?? '30s', env: (raw['env'] as Record<string, string>) ?? {},
@@ -64,7 +64,7 @@ export class StepDefinitionParser {
       };
     }
     if (raw['node']) {
-      const wd = raw['workingDir'] as string | undefined;
+      const wd = (raw['workingDir'] ?? raw['working-dir']) as string | undefined;
       return {
         kind: 'script', runtime: RUNTIME_NODE, script: raw['node'] as string,
         timeout: (raw['timeout'] as string) ?? '30s', env: (raw['env'] as Record<string, string>) ?? {},
@@ -105,13 +105,13 @@ export class StepDefinitionParser {
         descriptor: spec['descriptor'] as string,
         ...(model !== undefined ? { model } : {}),
         ...(agentTimeout !== undefined ? { timeout: agentTimeout } : {}),
-        structuredOutput: spec['structuredOutput'] === true,
+        structuredOutput: (spec['structuredOutput'] ?? spec['structured-output']) === true,
       };
     }
     if (raw['process']) {
       const spec = raw['process'] as Record<string, unknown>;
       const processTimeout = spec['timeout'] as string | undefined;
-      const processWd = spec['workingDir'] as string | undefined;
+      const processWd = (spec['workingDir'] ?? spec['working-dir']) as string | undefined;
       return {
         kind: 'process',
         command: spec['command'] as string,
@@ -120,7 +120,7 @@ export class StepDefinitionParser {
         ...(processTimeout !== undefined ? { timeout: processTimeout } : {}),
         env: (spec['env'] as Record<string, string>) ?? {},
         ...(processWd !== undefined ? { workingDir: processWd } : {}),
-        onError: (spec['onError'] as string) ?? 'stderr',
+        onError: ((spec['onError'] ?? spec['on-error']) as string) ?? 'stderr',
       };
     }
     throw new Error(`Unknown invoke binding type. Expected one of: mcp, python, node, script, graphql, rest, agent, process`);

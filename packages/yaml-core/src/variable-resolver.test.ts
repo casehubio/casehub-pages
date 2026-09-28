@@ -78,10 +78,10 @@ describe('VariableResolver', () => {
     expect(resolver.resolve(3.14)).toBe(3.14);
   });
 
-  it('bare name passes through as literal', () => {
+  it('bare name throws UnresolvedVariableError', () => {
     const resolver = new VariableResolver(
       { var: mapSource({ x: '1' }) }, new Set());
-    expect(resolver.resolveString('${x}', 'test')).toBe('${x}');
+    expect(() => resolver.resolveString('${x}', 'test')).toThrow(/bare variable/i);
   });
 
   it('unknown prefix throws listing available', () => {

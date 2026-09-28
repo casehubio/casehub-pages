@@ -118,7 +118,8 @@ export class VariableResolver {
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(input)) {
       if (typeof val === 'string' && val.includes('${')) {
-        result[key] = this.resolveString(val, elementContext);
+        const objResult = this.resolveObjectValue(val, elementContext);
+        result[key] = objResult !== undefined ? objResult : this.resolveString(val, elementContext);
       } else if (Array.isArray(val)) {
         result[key] = this.resolveList(val, elementContext);
       } else if (val !== null && typeof val === 'object') {
@@ -133,7 +134,8 @@ export class VariableResolver {
   resolveList(input: unknown[], elementContext: string): unknown[] {
     return input.map((item) => {
       if (typeof item === 'string' && item.includes('${')) {
-        return this.resolveString(item, elementContext);
+        const objResult = this.resolveObjectValue(item, elementContext);
+        return objResult !== undefined ? objResult : this.resolveString(item, elementContext);
       }
       if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
         return this.resolveMap(item as Record<string, unknown>, elementContext);
@@ -145,7 +147,8 @@ export class VariableResolver {
   private lookupVariable(key: string, elementContext: string): string | null {
     const dot = key.indexOf('.');
     if (dot < 0) {
-      return null;
+      throw new UnresolvedVariableError(key, elementContext,
+        `Bare variable '\${${key}}' has no prefix — use '\${prefix.${key}}' format.`);
     }
 
     const prefix = key.substring(0, dot);
