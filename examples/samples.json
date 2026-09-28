@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 101,
+  "totalSamples": 103,
   "categories": [
     {
       "category": "Charts",
@@ -938,6 +938,13 @@
           "tsPath": "Scenarios/Composition.ts"
         },
         {
+          "name": "Concurrency Patterns",
+          "path": "Scenarios/Concurrency Patterns.page.yaml",
+          "category": "Scenarios",
+          "file": "Concurrency Patterns.page.yaml",
+          "tsPath": "Scenarios/Concurrency Patterns.ts"
+        },
+        {
           "name": "Coordination",
           "path": "Scenarios/Coordination.page.yaml",
           "category": "Scenarios",
@@ -999,6 +1006,13 @@
             "click"
           ],
           "tsPath": "Scenarios/Form Automation.ts"
+        },
+        {
+          "name": "Invoke Bindings",
+          "path": "Scenarios/Invoke Bindings.page.yaml",
+          "category": "Scenarios",
+          "file": "Invoke Bindings.page.yaml",
+          "tsPath": "Scenarios/Invoke Bindings.ts"
         },
         {
           "name": "Parameterized Script",

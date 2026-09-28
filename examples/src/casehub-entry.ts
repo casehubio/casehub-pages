@@ -43,6 +43,7 @@ export type { StepResult, ResolvedStep } from "@casehubio/yaml-core/step";
 export { matches, valuePattern, structuralPattern, anyOfPattern, defaultPattern } from "@casehubio/yaml-core";
 export { isTruthy } from "@casehubio/yaml-core";
 export { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
+export { DefaultCorrelationScope } from "@casehubio/yaml-core/orchestration";
 
 import { StepPluginRegistry } from "@casehubio/yaml-core/step";
 import { CompositeStepCatalog } from "@casehubio/yaml-core/step";
