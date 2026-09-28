@@ -28,6 +28,9 @@ export type { StepContext, DecoratedExecution } from './decorator-chain.js';
 
 export { StructuralStepEvaluator } from './structural-evaluator.js';
 
+export type { StepRunner, DeadlineContext } from './step-runner.js';
+export { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './step-runner.js';
+
 export { StepSchemaComposer } from './step-schema-composer.js';
 
 export type { PluginRegistration } from './step-plugin-registry.js';
