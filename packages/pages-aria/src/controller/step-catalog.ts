@@ -6,6 +6,7 @@ export interface CatalogActionSummary {
   description: string;
   invokeKind: string | null;
   source: string;
+  portability: string;
   inputCount: number;
   outputCount: number;
 }
@@ -15,6 +16,7 @@ export interface CatalogActionDetail {
   description: string;
   invokeKind: string | null;
   source: string;
+  portability: string;
   inputs: Record<string, ParameterInfo>;
   outputs: Record<string, ParameterInfo>;
   invoke: { kind: string; metadata: Record<string, string> } | null;
