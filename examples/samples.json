@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 103,
+  "totalSamples": 104,
   "categories": [
     {
       "category": "Charts",
@@ -1050,6 +1050,12 @@
             "labels"
           ],
           "tsPath": "Scenarios/Script Library.ts"
+        },
+        {
+          "name": "Step Catalog",
+          "path": "Scenarios/Step Catalog.page.yaml",
+          "category": "Scenarios",
+          "file": "Step Catalog.page.yaml"
         },
         {
           "name": "Step Workflows",

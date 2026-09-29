@@ -2,6 +2,7 @@
   "name": "@casehubio/pages-aria",
   "version": "0.1.0",
   "type": "module",
+  "sideEffects": ["dist/*.js"],
   "exports": {
     "./walker": "./src/walker/index.ts",
     "./executor": "./src/executor/index.ts",

@@ -70,6 +70,10 @@ module.exports = (env = {}) => {
           test: /pages-code-editor[\/]dist[\/]/,
           sideEffects: true,
         },
+        {
+          test: /pages-aria[\/]dist[\/]/,
+          sideEffects: true,
+        },
       ],
     },
     entry: {
