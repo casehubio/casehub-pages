@@ -1,7 +1,7 @@
 // Step Catalog Browser demo — showcases browsing step actions, schemas, try-it, and template generation.
 // Mock fetch intercepts GraphQL catalog queries and execution endpoint.
 
-var CATALOG_ACTIONS = [
+var catalogActionsList = [
   { name: 'check-compliance', description: 'Check document compliance against a standard', invokeKind: 'rest', source: 'yaml', inputCount: 2, outputCount: 1 },
   { name: 'send-notification', description: 'Send a notification via MCP', invokeKind: 'mcp', source: 'mcp', inputCount: 3, outputCount: 0 },
   { name: 'run-audit', description: 'Execute a security audit script', invokeKind: 'script', source: 'script', inputCount: 1, outputCount: 2 },
@@ -10,7 +10,7 @@ var CATALOG_ACTIONS = [
   { name: 'validate-schema', description: 'Validate a JSON schema against data', invokeKind: 'script', source: 'script', inputCount: 2, outputCount: 1 },
 ];
 
-var CATALOG_DETAILS = {
+var catalogDetails = {
   'check-compliance': {
     name: 'check-compliance', description: 'Check document compliance against a standard',
     invokeKind: 'rest', source: 'yaml',
@@ -80,7 +80,7 @@ var CATALOG_DETAILS = {
   },
 };
 
-var MOCK_RESULTS = {
+var mockResults = {
   'check-compliance': { kind: 'success', output: { compliant: true }, executionMetadata: { durationMs: 234 } },
   'send-notification': { kind: 'success', output: {}, executionMetadata: { durationMs: 89 } },
   'run-audit': { kind: 'success', output: { score: 87, findings: 'No critical issues found. 2 low-severity findings.' }, executionMetadata: { durationMs: 4521 } },
@@ -102,20 +102,20 @@ window.fetch = function(url, opts) {
       var actionName = nameMatch ? nameMatch[1] : '';
       return Promise.resolve({
         ok: true,
-        json: function() { return Promise.resolve({ data: { catalogAction: CATALOG_DETAILS[actionName] || null } }); },
+        json: function() { return Promise.resolve({ data: { catalogAction: catalogDetails[actionName] || null } }); },
       });
     }
     if (query.includes('catalogActions')) {
       return Promise.resolve({
         ok: true,
-        json: function() { return Promise.resolve({ data: { catalogActions: CATALOG_ACTIONS } }); },
+        json: function() { return Promise.resolve({ data: { catalogActions: catalogActionsList } }); },
       });
     }
   }
 
   if (urlStr.includes('/scenario/catalog/execute') && opts && opts.method === 'POST') {
     var execBody = JSON.parse(opts.body || '{}');
-    var result = MOCK_RESULTS[execBody.actionName] || { kind: 'failure', message: 'Unknown action: ' + execBody.actionName };
+    var result = mockResults[execBody.actionName] || { kind: 'failure', message: 'Unknown action: ' + execBody.actionName };
     return new Promise(function(resolve) {
       setTimeout(function() {
         resolve({ ok: true, json: function() { return Promise.resolve(result); } });
