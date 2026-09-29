@@ -1,0 +1,32 @@
+namespace: compliance
+actions:
+  check-compliance:
+    description: "Check document compliance against a standard"
+    inputs:
+      documentId:
+        type: string
+        required: true
+        description: "Document identifier"
+      standard:
+        type: string
+        required: true
+        default: "ISO-27001"
+        enum: ["ISO-27001", "SOC-2", "GDPR"]
+        description: "Compliance standard to check"
+    outputs:
+      compliant:
+        type: boolean
+        description: "Whether the document is compliant"
+    invoke:
+      rest:
+        method: POST
+        url: "https://api.example.com/compliance/check"
+  list-standards:
+    description: "List available compliance standards"
+    inputs: {}
+    outputs:
+      standards:
+        type: string
+        description: "Available standards"
+    invoke:
+      mcp: compliance-list-standards
