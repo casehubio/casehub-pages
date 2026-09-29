@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { PagesActionCatalog } from './step-catalog.js';
+import type { PagesActionCatalog, CatalogActionSummary, CatalogActionDetail } from './step-catalog.js';
 import './step-catalog.js';
+import type { CatalogDataSource } from './catalog-data-source.js';
+
+class MockCatalogSource implements CatalogDataSource {
+  constructor(
+    private readonly summaries: CatalogActionSummary[],
+    private readonly details: Map<string, CatalogActionDetail>,
+    readonly priority: number,
+  ) {}
+  async fetchSummaries(): Promise<CatalogActionSummary[]> { return this.summaries; }
+  async fetchDetail(name: string): Promise<CatalogActionDetail | null> { return this.details.get(name) ?? null; }
+}
 
 const MOCK_ACTIONS = [
   { name: 'check-compliance', description: 'Check doc compliance', invokeKind: 'rest', source: 'yaml', inputCount: 2, outputCount: 1 },
@@ -243,6 +254,155 @@ describe('pages-action-catalog', () => {
       expect(events.length).toBe(1);
       expect(events[0]!.detail.actionName).toBe('check-compliance');
       expect(events[0]!.detail.yaml).toContain('check-compliance');
+    });
+  });
+
+  describe('multi-source merge', () => {
+    const SOURCE_A_ACTIONS: CatalogActionSummary[] = [
+      { name: 'action-a', description: 'From source A', invokeKind: 'rest', source: 'registry', portability: 'universal', inputCount: 1, outputCount: 0 },
+      { name: 'shared-action', description: 'A version', invokeKind: 'rest', source: 'registry', portability: 'universal', inputCount: 2, outputCount: 1 },
+    ];
+    const SOURCE_B_ACTIONS: CatalogActionSummary[] = [
+      { name: 'action-b', description: 'From source B', invokeKind: 'mcp', source: 'graphql', portability: 'java', inputCount: 1, outputCount: 1 },
+      { name: 'shared-action', description: 'B version', invokeKind: 'graphql', source: 'graphql', portability: 'java', inputCount: 3, outputCount: 2 },
+    ];
+    const DETAIL_A: CatalogActionDetail = {
+      name: 'action-a', description: 'From source A', invokeKind: 'rest', source: 'registry', portability: 'universal',
+      inputs: { x: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: null, description: null } },
+      outputs: {}, invoke: null,
+    };
+
+    it('merges actions from multiple sources', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      const sourceA = new MockCatalogSource(SOURCE_A_ACTIONS, new Map(), 0);
+      const sourceB = new MockCatalogSource(SOURCE_B_ACTIONS, new Map(), 10);
+      el.sources = [sourceA, sourceB];
+      await el.loadFromSources();
+      await el.updateComplete;
+      const items = el.shadowRoot!.querySelectorAll('.action-item');
+      expect(items.length).toBe(3);
+    });
+
+    it('lower priority source wins on name collision', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      const sourceA = new MockCatalogSource(SOURCE_A_ACTIONS, new Map(), 0);
+      const sourceB = new MockCatalogSource(SOURCE_B_ACTIONS, new Map(), 10);
+      el.sources = [sourceA, sourceB];
+      await el.loadFromSources();
+      await el.updateComplete;
+      const names = Array.from(el.shadowRoot!.querySelectorAll('.action-name')).map(n => n.textContent);
+      expect(names).toContain('shared-action');
+      const sharedItem = el.shadowRoot!.querySelectorAll('.action-item')[1]!;
+      expect(sharedItem.querySelector('.action-desc')!.textContent).toBe('A version');
+    });
+
+    it('fetches detail from the source that provided the summary', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      const detailMap = new Map<string, CatalogActionDetail>([['action-a', DETAIL_A]]);
+      const sourceA = new MockCatalogSource(SOURCE_A_ACTIONS, detailMap, 0);
+      const sourceB = new MockCatalogSource(SOURCE_B_ACTIONS, new Map(), 10);
+      el.sources = [sourceA, sourceB];
+      await el.loadFromSources();
+      await el['_loadDetail']('action-a');
+      await el.updateComplete;
+      expect(el['_selectedAction']).not.toBeNull();
+      expect(el['_selectedAction']!.name).toBe('action-a');
+      expect(el['_selectedAction']!.portability).toBe('universal');
+    });
+
+    it('handles source fetch failure gracefully', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      const failingSource: CatalogDataSource = {
+        priority: 0,
+        fetchSummaries: () => Promise.reject(new Error('network error')),
+        fetchDetail: () => Promise.reject(new Error('network error')),
+      };
+      const goodSource = new MockCatalogSource(SOURCE_B_ACTIONS, new Map(), 10);
+      el.sources = [failingSource, goodSource];
+      await el.loadFromSources();
+      await el.updateComplete;
+      const items = el.shadowRoot!.querySelectorAll('.action-item');
+      expect(items.length).toBe(2);
+    });
+  });
+
+  describe('portability badges', () => {
+    it('renders portability badge on action items', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      const actions: CatalogActionSummary[] = [
+        { name: 'rest-action', description: 'Universal', invokeKind: 'rest', source: 'yaml', portability: 'universal', inputCount: 1, outputCount: 0 },
+        { name: 'ts-action', description: 'TS only', invokeKind: 'mcp', source: 'plugin', portability: 'ts', inputCount: 1, outputCount: 0 },
+      ];
+      const source = new MockCatalogSource(actions, new Map(), 0);
+      el.sources = [source];
+      await el.loadFromSources();
+      await el.updateComplete;
+      const badges = el.shadowRoot!.querySelectorAll('.portability-badge:not(.filter-chip)');
+      expect(badges.length).toBe(2);
+      expect(badges[0]!.textContent).toBe('universal');
+      expect(badges[0]!.classList.contains('portability-universal')).toBe(true);
+      expect(badges[1]!.textContent).toBe('ts');
+      expect(badges[1]!.classList.contains('portability-ts')).toBe(true);
+    });
+
+    it('does not render portability badge when portability is empty', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      vi.stubGlobal('fetch', mockFetch());
+      await el.loadCatalog();
+      await el.updateComplete;
+      const badges = el.shadowRoot!.querySelectorAll('.portability-badge:not(.filter-chip)');
+      expect(badges.length).toBe(0);
+    });
+  });
+
+  describe('portability filter', () => {
+    const MIXED_ACTIONS: CatalogActionSummary[] = [
+      { name: 'rest-action', description: 'Universal', invokeKind: 'rest', source: 'yaml', portability: 'universal', inputCount: 1, outputCount: 0 },
+      { name: 'ts-action', description: 'TS only', invokeKind: 'mcp', source: 'plugin', portability: 'ts', inputCount: 1, outputCount: 0 },
+      { name: 'java-action', description: 'Java only', invokeKind: 'graphql', source: 'graphql', portability: 'java', inputCount: 2, outputCount: 1 },
+    ];
+
+    it('renders portability filter chips', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      el.sources = [new MockCatalogSource(MIXED_ACTIONS, new Map(), 0)];
+      await el.loadFromSources();
+      await el.updateComplete;
+      const chips = el.shadowRoot!.querySelectorAll('.filter-chip.portability-badge');
+      expect(chips.length).toBe(3);
+    });
+
+    it('filters by portability when chip is clicked', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      el.sources = [new MockCatalogSource(MIXED_ACTIONS, new Map(), 0)];
+      await el.loadFromSources();
+      await el.updateComplete;
+      el['_portabilityFilter'] = ['ts'];
+      await el.updateComplete;
+      const items = el.shadowRoot!.querySelectorAll('.action-item');
+      expect(items.length).toBe(1);
+      expect(items[0]!.querySelector('.action-name')!.textContent).toBe('ts-action');
+    });
+
+    it('combines source and portability filters with AND logic', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      document.body.appendChild(el);
+      el.sources = [new MockCatalogSource(MIXED_ACTIONS, new Map(), 0)];
+      await el.loadFromSources();
+      await el.updateComplete;
+      el['_sourceFilter'] = ['yaml', 'plugin'];
+      el['_portabilityFilter'] = ['ts'];
+      await el.updateComplete;
+      const items = el.shadowRoot!.querySelectorAll('.action-item');
+      expect(items.length).toBe(1);
+      expect(items[0]!.querySelector('.action-name')!.textContent).toBe('ts-action');
     });
   });
 });

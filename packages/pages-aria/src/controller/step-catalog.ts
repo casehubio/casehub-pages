@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
+import type { CatalogDataSource } from './catalog-data-source.js';
 
 export interface CatalogActionSummary {
   name: string;
@@ -218,19 +219,31 @@ export class PagesActionCatalog extends LitElement {
       background: var(--pages-danger-3, #fee2e2);
       color: var(--pages-danger-11, #991b1b);
     }
+    .portability-badge {
+      font-size: 9px; padding: 1px 5px;
+      border-radius: var(--pages-radius-sm, 4px);
+      font-weight: 500; text-transform: uppercase;
+    }
+    .portability-universal { background: var(--pages-success-3, #dcfce7); color: var(--pages-success-11, #166534); }
+    .portability-java { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-11, #92400e); }
+    .portability-ts { background: var(--pages-accent-3, #e8eaf6); color: var(--pages-accent-11, #283593); }
+    .portability-both { background: var(--pages-info-3, #e0e7ff); color: var(--pages-info-11, #3730a3); }
   `;
 
   @property() baseUrl = '';
   @property() execBaseUrl = '';
+  @property({ attribute: false }) sources: CatalogDataSource[] = [];
 
   @state() private _actions: CatalogActionSummary[] = [];
   @state() private _searchText = '';
   @state() private _sourceFilter: string[] = [];
+  @state() private _portabilityFilter: string[] = [];
   @state() private _view: 'list' | 'detail' = 'list';
   @state() private _selectedAction: CatalogActionDetail | null = null;
   @state() private _tryParams: Record<string, string> = {};
   @state() private _tryResult: { kind: string; output?: Record<string, unknown>; message?: string } | null = null;
   @state() private _tryLoading = false;
+  private _sourceMap = new Map<string, CatalogDataSource>();
 
   private get _filtered(): CatalogActionSummary[] {
     let result = this._actions;
@@ -243,11 +256,18 @@ export class PagesActionCatalog extends LitElement {
     if (this._sourceFilter.length > 0) {
       result = result.filter(a => this._sourceFilter.includes(a.source));
     }
+    if (this._portabilityFilter.length > 0) {
+      result = result.filter(a => this._portabilityFilter.includes(a.portability));
+    }
     return result;
   }
 
   private get _allSources(): string[] {
     return [...new Set(this._actions.map(a => a.source))];
+  }
+
+  private get _allPortabilities(): string[] {
+    return [...new Set(this._actions.map(a => a.portability).filter(Boolean))];
   }
 
   async loadCatalog(): Promise<void> {
@@ -265,7 +285,44 @@ export class PagesActionCatalog extends LitElement {
     } catch { /* ignore */ }
   }
 
+  async loadFromSources(): Promise<void> {
+    if (this.sources.length === 0) return;
+    const sorted = [...this.sources].sort((a, b) => a.priority - b.priority);
+    const results = await Promise.all(sorted.map(s => s.fetchSummaries().catch(() => [] as CatalogActionSummary[])));
+    const seen = new Set<string>();
+    const merged: CatalogActionSummary[] = [];
+    this._sourceMap.clear();
+    for (let i = 0; i < results.length; i++) {
+      for (const summary of results[i]!) {
+        if (!seen.has(summary.name)) {
+          seen.add(summary.name);
+          merged.push(summary);
+          this._sourceMap.set(summary.name, sorted[i]!);
+        }
+      }
+    }
+    this._actions = merged;
+  }
+
+  private _setDetail(detail: CatalogActionDetail): void {
+    this._selectedAction = detail;
+    this._view = 'detail';
+    this._tryParams = {};
+    this._tryResult = null;
+    if (detail.inputs) {
+      for (const [key, param] of Object.entries(detail.inputs) as [string, ParameterInfo][]) {
+        this._tryParams[key] = param.defaultValue ?? '';
+      }
+    }
+  }
+
   async _loadDetail(name: string): Promise<void> {
+    const source = this._sourceMap.get(name);
+    if (source) {
+      const detail = await source.fetchDetail(name);
+      if (detail) this._setDetail(detail);
+      return;
+    }
     try {
       const resp = await fetch(`${this.baseUrl}/graphql`, {
         method: 'POST',
@@ -277,17 +334,7 @@ export class PagesActionCatalog extends LitElement {
       if (!resp.ok) return;
       const json = await resp.json();
       const detail = json.data?.catalogAction;
-      if (detail) {
-        this._selectedAction = detail;
-        this._view = 'detail';
-        this._tryParams = {};
-        this._tryResult = null;
-        if (detail.inputs) {
-          for (const [key, param] of Object.entries(detail.inputs) as [string, ParameterInfo][]) {
-            this._tryParams[key] = param.defaultValue ?? '';
-          }
-        }
-      }
+      if (detail) this._setDetail(detail);
     } catch { /* ignore */ }
   }
 
@@ -365,6 +412,16 @@ export class PagesActionCatalog extends LitElement {
           `)}
         </div>
       ` : nothing}
+      ${this._allPortabilities.length > 0 ? html`
+        <div class="filters">
+          ${this._allPortabilities.map(p => html`
+            <button class="filter-chip portability-badge portability-${p}"
+                    role="checkbox"
+                    aria-checked="${this._portabilityFilter.includes(p)}"
+                    @click=${() => { this._togglePortability(p); }}>${p}</button>
+          `)}
+        </div>
+      ` : nothing}
       <div class="action-list" role="list">
         ${this._filtered.length === 0
           ? html`<div class="empty">No step actions found</div>`
@@ -381,6 +438,7 @@ export class PagesActionCatalog extends LitElement {
         ${action.description ? html`<div class="action-desc">${action.description}</div>` : nothing}
         <div class="action-meta">
           <span class="source-badge">${action.source}</span>
+          ${action.portability ? html`<span class="portability-badge portability-${action.portability}">${action.portability}</span>` : nothing}
           ${action.invokeKind ? html`<span class="kind-badge">${action.invokeKind}</span>` : nothing}
           <span class="io-count">${action.inputCount} in / ${action.outputCount} out</span>
         </div>
@@ -396,6 +454,7 @@ export class PagesActionCatalog extends LitElement {
                 @click=${() => { this._view = 'list'; this._selectedAction = null; }}>&#8592; Back</button>
         <span class="detail-name">${d.name}</span>
         <span class="source-badge">${d.source}</span>
+        ${d.portability ? html`<span class="portability-badge portability-${d.portability}">${d.portability}</span>` : nothing}
         ${d.invokeKind ? html`<span class="kind-badge">${d.invokeKind}</span>` : nothing}
       </div>
       <div class="detail-body">
@@ -499,6 +558,14 @@ export class PagesActionCatalog extends LitElement {
       this._sourceFilter = this._sourceFilter.filter(s => s !== source);
     } else {
       this._sourceFilter = [...this._sourceFilter, source];
+    }
+  }
+
+  private _togglePortability(portability: string): void {
+    if (this._portabilityFilter.includes(portability)) {
+      this._portabilityFilter = this._portabilityFilter.filter(p => p !== portability);
+    } else {
+      this._portabilityFilter = [...this._portabilityFilter, portability];
     }
   }
 }
