@@ -56,4 +56,54 @@ describe('DefinitionParser', () => {
       }
     });
   });
+
+  describe('portability', () => {
+    it('explicit portability value is preserved', () => {
+      const file = DefinitionParser.parse({
+        actions: { a: { portability: 'java', inputs: {} } },
+      });
+      expect(file.actions['a']!.portability).toBe('java');
+    });
+
+    it('rest invoke infers universal', () => {
+      const file = DefinitionParser.parse({
+        actions: { a: { invoke: { rest: { url: '/x' } } } },
+      });
+      expect(file.actions['a']!.portability).toBe('universal');
+    });
+
+    it('mcp invoke infers ts', () => {
+      const file = DefinitionParser.parse({
+        actions: { a: { invoke: { mcp: 'tool' } } },
+      });
+      expect(file.actions['a']!.portability).toBe('ts');
+    });
+
+    it('no invoke infers ts', () => {
+      const file = DefinitionParser.parse({
+        actions: { a: { inputs: {} } },
+      });
+      expect(file.actions['a']!.portability).toBe('ts');
+    });
+
+    it('throws on invalid portability value', () => {
+      expect(() => DefinitionParser.parse({
+        actions: { a: { portability: 'invalid' } },
+      })).toThrow(/Invalid portability/);
+    });
+
+    it('graphql invoke infers universal', () => {
+      const file = DefinitionParser.parse({
+        actions: { a: { invoke: { graphql: '{ x }' } } },
+      });
+      expect(file.actions['a']!.portability).toBe('universal');
+    });
+
+    it('process invoke infers universal', () => {
+      const file = DefinitionParser.parse({
+        actions: { a: { invoke: { process: { command: 'echo' } } } },
+      });
+      expect(file.actions['a']!.portability).toBe('universal');
+    });
+  });
 });

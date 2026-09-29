@@ -1,4 +1,5 @@
 import type { ParameterType } from '../types.js';
+import type { Portability } from './portability.js';
 
 export interface Parameter {
   type: ParameterType;
@@ -69,6 +70,7 @@ export interface Definition {
   inputs: Record<string, Parameter>;
   outputs: Record<string, Parameter>;
   invoke?: InvokeBinding;
+  portability?: Portability;
 }
 
 export interface DefinitionFile {

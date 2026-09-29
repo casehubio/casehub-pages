@@ -55,4 +55,12 @@ describe('PluginRegistry', () => {
     const src = reg.createSource(42);
     expect(src.priority).toBe(42);
   });
+
+  it('createSource sets portability to ts on produced definitions', () => {
+    const reg = new PluginRegistry();
+    reg.register(plugin('test'));
+    const entries = new Map<string, CatalogEntry>();
+    reg.createSource().populate(entries);
+    expect(entries.get('test')!.definition.portability).toBe('ts');
+  });
 });

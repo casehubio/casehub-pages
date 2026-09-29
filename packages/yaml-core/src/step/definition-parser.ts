@@ -2,6 +2,8 @@ import type { Parameter, Definition, DefinitionFile, InvokeBinding } from './typ
 import { parseParameterType } from '../types.js';
 import type { ParameterType } from '../types.js';
 import { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
+import { inferPortability } from './portability.js';
+import type { Portability } from './portability.js';
 
 export class DefinitionParser {
   static parse(raw: Record<string, unknown>): DefinitionFile {
@@ -22,7 +24,20 @@ export class DefinitionParser {
     const outputs = DefinitionParser.parseParams(raw['outputs'] as Record<string, unknown> | undefined);
     const invokeRaw = raw['invoke'] as Record<string, unknown> | undefined;
     const invoke = invokeRaw ? DefinitionParser.parseInvoke(invokeRaw) : undefined;
-    return { name, ...(description !== undefined ? { description } : {}), inputs, outputs, ...(invoke !== undefined ? { invoke } : {}) };
+
+    const VALID_PORTABILITY = new Set(['universal', 'java', 'ts', 'both']);
+    const portabilityRaw = raw['portability'] as string | undefined;
+    let portability: Portability;
+    if (portabilityRaw !== undefined) {
+      if (!VALID_PORTABILITY.has(portabilityRaw)) {
+        throw new Error(`Invalid portability '${portabilityRaw}' for action '${name}'. Must be one of: universal, java, ts, both`);
+      }
+      portability = portabilityRaw as Portability;
+    } else {
+      portability = inferPortability(invoke);
+    }
+
+    return { name, ...(description !== undefined ? { description } : {}), inputs, outputs, ...(invoke !== undefined ? { invoke } : {}), portability };
   }
 
   static parseParams(raw: Record<string, unknown> | undefined): Record<string, Parameter> {

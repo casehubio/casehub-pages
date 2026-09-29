@@ -40,6 +40,7 @@ export class PluginRegistry {
               ...(plugin.description !== undefined ? { description: plugin.description } : {}),
               inputs: plugin.inputs,
               outputs: plugin.outputs,
+              portability: 'ts',
             };
             const action: Action = { execute: plugin.execute };
             entries.set(name, { qualifiedName: name, definition, action });

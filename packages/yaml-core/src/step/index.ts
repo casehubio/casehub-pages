@@ -5,6 +5,9 @@ export type {
 } from './types.js';
 export { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
 
+export type { Portability, RuntimeEnvironment, PortabilityViolation } from './portability.js';
+export { inferPortability, isCompatible, validatePortability } from './portability.js';
+
 export { DefinitionParser } from './definition-parser.js';
 
 export { Validator } from './validator.js';
