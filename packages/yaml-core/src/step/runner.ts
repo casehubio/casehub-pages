@@ -1,8 +1,8 @@
-import type { ResolvedStep, StepResult } from './step-walker.js';
-import type { StepContext } from './decorator-chain.js';
+import type { ResolvedStep, Result } from './walker.js';
+import type { Context } from './decorator-chain.js';
 
-export interface StepRunner {
-  run(step: ResolvedStep, context: StepContext): Promise<StepResult>;
+export interface Runner {
+  run(step: ResolvedStep, context: Context): Promise<Result>;
 }
 
 export interface DeadlineContext {

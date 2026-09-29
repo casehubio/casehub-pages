@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createCatalogExecuteHandler } from './catalog-execute-handler.js';
-import type { StepCatalog, CatalogEntry } from '@casehubio/yaml-core/step';
+import type { Catalog, CatalogEntry } from '@casehubio/yaml-core/step';
 
-function mockCatalog(entries: Map<string, CatalogEntry>): StepCatalog {
+function mockCatalog(entries: Map<string, CatalogEntry>): Catalog {
   return {
     resolve: (name: string) => entries.get(name),
     availableActions: () => new Set(entries.keys()),

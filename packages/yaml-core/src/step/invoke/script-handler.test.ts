@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ScriptInvokeHandler } from './script-handler.js';
-import type { ScriptBinding } from '../step-types.js';
+import type { ScriptBinding } from '../types.js';
 
 describe('ScriptInvokeHandler', () => {
   const binding: ScriptBinding = { kind: 'script', runtime: 'python3', script: 'run.py', timeout: '10s', env: { KEY: 'val' } };

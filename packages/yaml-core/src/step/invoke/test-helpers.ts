@@ -1,10 +1,10 @@
 import type { InvokeHandler } from './invoke-handler.js';
-import type { StepAction, StepResult } from '../step-walker.js';
-import { stepSuccess } from '../step-walker.js';
+import type { Action, Result } from '../walker.js';
+import { stepSuccess } from '../walker.js';
 import type {
-  StepDefinition, InvokeBinding, RestBinding, McpBinding, GraphqlBinding,
+  Definition, InvokeBinding, RestBinding, McpBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
-} from '../step-types.js';
+} from '../types.js';
 
 export const MOCK_REST_RESPONSES: Record<string, Record<string, unknown>> = {
   'GET /api/users': { status: 200, body: [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] },
@@ -41,11 +41,11 @@ class MockRestInvokeHandler implements InvokeHandler {
 
   supports(binding: InvokeBinding): boolean { return binding.kind === 'rest'; }
 
-  create(_definition: StepDefinition, binding: InvokeBinding): StepAction {
+  create(_definition: Definition, binding: InvokeBinding): Action {
     const { method, url } = binding as RestBinding;
     const responses = this.responses;
     return {
-      async execute(): Promise<StepResult> {
+      async execute(): Promise<Result> {
         return stepSuccess(responses[`${method} ${url}`] ?? {});
       },
     };
@@ -57,11 +57,11 @@ class MockMcpInvokeHandler implements InvokeHandler {
 
   supports(binding: InvokeBinding): boolean { return binding.kind === 'mcp'; }
 
-  create(_definition: StepDefinition, binding: InvokeBinding): StepAction {
+  create(_definition: Definition, binding: InvokeBinding): Action {
     const { tool } = binding as McpBinding;
     const responses = this.responses;
     return {
-      async execute(): Promise<StepResult> {
+      async execute(): Promise<Result> {
         return stepSuccess(responses[tool] ?? {});
       },
     };
@@ -73,11 +73,11 @@ class MockGraphqlInvokeHandler implements InvokeHandler {
 
   supports(binding: InvokeBinding): boolean { return binding.kind === 'graphql'; }
 
-  create(_definition: StepDefinition, binding: InvokeBinding): StepAction {
+  create(_definition: Definition, binding: InvokeBinding): Action {
     const { query } = binding as GraphqlBinding;
     const responses = this.responses;
     return {
-      async execute(): Promise<StepResult> {
+      async execute(): Promise<Result> {
         const key = query.trimStart().startsWith('mutation') ? 'mutation' : 'query';
         return stepSuccess(responses[key] ?? {});
       },
@@ -90,11 +90,11 @@ class MockScriptInvokeHandler implements InvokeHandler {
 
   supports(binding: InvokeBinding): boolean { return binding.kind === 'script'; }
 
-  create(_definition: StepDefinition, binding: InvokeBinding): StepAction {
+  create(_definition: Definition, binding: InvokeBinding): Action {
     const { runtime } = binding as ScriptBinding;
     const responses = this.responses;
     return {
-      async execute(): Promise<StepResult> {
+      async execute(): Promise<Result> {
         return stepSuccess(responses[runtime] ?? {});
       },
     };
@@ -106,11 +106,11 @@ class MockAgentInvokeHandler implements InvokeHandler {
 
   supports(binding: InvokeBinding): boolean { return binding.kind === 'agent'; }
 
-  create(_definition: StepDefinition, binding: InvokeBinding): StepAction {
+  create(_definition: Definition, binding: InvokeBinding): Action {
     const { descriptor } = binding as AgentBinding;
     const responses = this.responses;
     return {
-      async execute(): Promise<StepResult> {
+      async execute(): Promise<Result> {
         return stepSuccess(responses[descriptor] ?? responses['_default'] ?? {});
       },
     };
@@ -122,11 +122,11 @@ class MockProcessInvokeHandler implements InvokeHandler {
 
   supports(binding: InvokeBinding): boolean { return binding.kind === 'process'; }
 
-  create(_definition: StepDefinition, binding: InvokeBinding): StepAction {
+  create(_definition: Definition, binding: InvokeBinding): Action {
     const { command } = binding as ProcessBinding;
     const responses = this.responses;
     return {
-      async execute(): Promise<StepResult> {
+      async execute(): Promise<Result> {
         const r = responses[command] ?? { stdout: '', exitCode: 0 };
         return stepSuccess({ stdout: r.stdout, exitCode: r.exitCode });
       },

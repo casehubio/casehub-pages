@@ -15,12 +15,12 @@ export interface CatalogActionDetail {
   description: string;
   invokeKind: string | null;
   source: string;
-  inputs: Record<string, StepParameterInfo>;
-  outputs: Record<string, StepParameterInfo>;
+  inputs: Record<string, ParameterInfo>;
+  outputs: Record<string, ParameterInfo>;
   invoke: { kind: string; metadata: Record<string, string> } | null;
 }
 
-export interface StepParameterInfo {
+export interface ParameterInfo {
   type: string;
   required: boolean;
   defaultValue: string | null;
@@ -29,7 +29,7 @@ export interface StepParameterInfo {
   description: string | null;
 }
 
-export class PagesStepCatalog extends LitElement {
+export class PagesActionCatalog extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -281,7 +281,7 @@ export class PagesStepCatalog extends LitElement {
         this._tryParams = {};
         this._tryResult = null;
         if (detail.inputs) {
-          for (const [key, param] of Object.entries(detail.inputs) as [string, StepParameterInfo][]) {
+          for (const [key, param] of Object.entries(detail.inputs) as [string, ParameterInfo][]) {
             this._tryParams[key] = param.defaultValue ?? '';
           }
         }
@@ -317,7 +317,7 @@ export class PagesStepCatalog extends LitElement {
   static generateTemplate(detail: CatalogActionDetail): string {
     const lines: string[] = [`- ${detail.name}:`];
     if (detail.inputs) {
-      for (const [name, param] of Object.entries(detail.inputs) as [string, StepParameterInfo][]) {
+      for (const [name, param] of Object.entries(detail.inputs) as [string, ParameterInfo][]) {
         const value = param.defaultValue ? `"${param.defaultValue}"` : '""';
         const comment = [param.type?.toLowerCase(), param.required ? 'required' : 'optional']
           .filter(Boolean).join(', ');
@@ -329,7 +329,7 @@ export class PagesStepCatalog extends LitElement {
 
   private _useTemplate(): void {
     if (!this._selectedAction) return;
-    const yaml = PagesStepCatalog.generateTemplate(this._selectedAction);
+    const yaml = PagesActionCatalog.generateTemplate(this._selectedAction);
     void navigator.clipboard?.writeText(yaml);
     this.dispatchEvent(new CustomEvent('step-template-selected', {
       detail: { actionName: this._selectedAction.name, yaml },
@@ -407,11 +407,11 @@ export class PagesStepCatalog extends LitElement {
               ${Object.entries(d.inputs).map(([name, p]) => html`
                 <tr>
                   <td>${name}</td>
-                  <td>${(p as StepParameterInfo).type}</td>
-                  <td>${(p as StepParameterInfo).required ? 'yes' : ''}</td>
-                  <td>${(p as StepParameterInfo).defaultValue ?? ''}</td>
-                  <td>${(p as StepParameterInfo).allowedValues?.join(', ') ?? ''}</td>
-                  <td>${(p as StepParameterInfo).description ?? ''}</td>
+                  <td>${(p as ParameterInfo).type}</td>
+                  <td>${(p as ParameterInfo).required ? 'yes' : ''}</td>
+                  <td>${(p as ParameterInfo).defaultValue ?? ''}</td>
+                  <td>${(p as ParameterInfo).allowedValues?.join(', ') ?? ''}</td>
+                  <td>${(p as ParameterInfo).description ?? ''}</td>
                 </tr>
               `)}
             </tbody>
@@ -426,8 +426,8 @@ export class PagesStepCatalog extends LitElement {
               ${Object.entries(d.outputs).map(([name, p]) => html`
                 <tr>
                   <td>${name}</td>
-                  <td>${(p as StepParameterInfo).type}</td>
-                  <td>${(p as StepParameterInfo).description ?? ''}</td>
+                  <td>${(p as ParameterInfo).type}</td>
+                  <td>${(p as ParameterInfo).description ?? ''}</td>
                 </tr>
               `)}
             </tbody>
@@ -450,7 +450,7 @@ export class PagesStepCatalog extends LitElement {
           <div class="section-title">Try It</div>
           <div class="try-form">
             ${d.inputs ? Object.entries(d.inputs).map(([name, p]) => {
-              const param = p as StepParameterInfo;
+              const param = p as ParameterInfo;
               return html`
                 <div class="try-field">
                   <label>${name}${param.required ? ' *' : ''}</label>
@@ -501,6 +501,6 @@ export class PagesStepCatalog extends LitElement {
   }
 }
 
-if (!customElements.get('pages-step-catalog')) {
-  customElements.define('pages-step-catalog', PagesStepCatalog);
+if (!customElements.get('pages-action-catalog')) {
+  customElements.define('pages-action-catalog', PagesActionCatalog);
 }

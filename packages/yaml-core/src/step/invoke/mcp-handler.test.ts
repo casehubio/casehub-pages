@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { McpInvokeHandler } from './mcp-handler.js';
-import type { McpBinding } from '../step-types.js';
+import type { McpBinding } from '../types.js';
 
 describe('McpInvokeHandler', () => {
   const binding: McpBinding = { kind: 'mcp', tool: 'read-file' };

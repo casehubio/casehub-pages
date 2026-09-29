@@ -1,18 +1,18 @@
 import { describe, it, expect, vi } from 'vitest';
 import { RuntimePluginSource } from './plugin-source.js';
-import { StepPluginRegistry } from '../step-plugin-registry.js';
-import { stepSuccess } from '../step-walker.js';
-import type { CatalogEntry } from '../step-walker.js';
+import { PluginRegistry } from '../plugin-registry.js';
+import { stepSuccess } from '../walker.js';
+import type { CatalogEntry } from '../walker.js';
 
 describe('RuntimePluginSource', () => {
   it('priority is 200', () => {
-    const registry = new StepPluginRegistry();
+    const registry = new PluginRegistry();
     const source = new RuntimePluginSource(registry);
     expect(source.priority).toBe(200);
   });
 
   it('populate delegates to registry createSource', () => {
-    const registry = new StepPluginRegistry();
+    const registry = new PluginRegistry();
     registry.register({
       name: 'hello',
       inputs: { name: { type: 'STRING', required: true } },
@@ -27,7 +27,7 @@ describe('RuntimePluginSource', () => {
   });
 
   it('entries from registry appear in populated map with correct definition', () => {
-    const registry = new StepPluginRegistry();
+    const registry = new PluginRegistry();
     registry.register({
       name: 'greet',
       description: 'Greet someone',

@@ -1,7 +1,7 @@
-import type { StepAction } from '../step-walker.js';
-import type { StepDefinition, InvokeBinding } from '../step-types.js';
+import type { Action } from '../walker.js';
+import type { Definition, InvokeBinding } from '../types.js';
 
 export interface InvokeHandler {
   supports(binding: InvokeBinding): boolean;
-  create(definition: StepDefinition, binding: InvokeBinding): StepAction;
+  create(definition: Definition, binding: InvokeBinding): Action;
 }

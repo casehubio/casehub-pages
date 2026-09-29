@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { RestInvokeHandler } from './rest-handler.js';
-import type { RestBinding } from '../step-types.js';
+import type { RestBinding } from '../types.js';
 
 describe('RestInvokeHandler', () => {
   const postBinding: RestBinding = { kind: 'rest', method: 'POST', url: 'http://api/data', headers: { Authorization: 'Bearer tok' }, body: { source: 'test' } };

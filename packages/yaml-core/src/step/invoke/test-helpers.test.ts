@@ -7,7 +7,7 @@ import {
 } from './test-helpers.js';
 import type {
   RestBinding, McpBinding, GraphqlBinding, ScriptBinding, AgentBinding, ProcessBinding,
-} from '../step-types.js';
+} from '../types.js';
 
 const EMPTY_DEFINITION = { name: 'test', inputs: {}, outputs: {} };
 const NO_SERVICES = undefined as never;

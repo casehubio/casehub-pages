@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GraphqlInvokeHandler } from './graphql-handler.js';
-import type { GraphqlBinding } from '../step-types.js';
+import type { GraphqlBinding } from '../types.js';
 
 describe('GraphqlInvokeHandler', () => {
   const binding: GraphqlBinding = { kind: 'graphql', query: '{ users { id } }' };

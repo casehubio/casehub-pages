@@ -1,11 +1,11 @@
-import type { CatalogSource } from '../step-catalog.js';
-import type { CatalogEntry } from '../step-walker.js';
-import type { StepPluginRegistry } from '../step-plugin-registry.js';
+import type { CatalogSource } from '../catalog.js';
+import type { CatalogEntry } from '../walker.js';
+import type { PluginRegistry } from '../plugin-registry.js';
 
 export class RuntimePluginSource implements CatalogSource {
   readonly priority = 200;
 
-  constructor(private readonly registry: StepPluginRegistry) {}
+  constructor(private readonly registry: PluginRegistry) {}
 
   populate(entries: Map<string, CatalogEntry>): void {
     const source = this.registry.createSource(this.priority);

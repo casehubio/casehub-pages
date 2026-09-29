@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { McpToolSource } from './mcp-source.js';
-import type { StepDefinition } from '../step-types.js';
-import type { CatalogEntry } from '../step-walker.js';
-import type { MapServiceRegistry } from '../step-walker.js';
+import type { Definition } from '../types.js';
+import type { CatalogEntry } from '../walker.js';
+import type { MapServiceRegistry } from '../walker.js';
 
-const definition: StepDefinition = { name: 'myTool', inputs: {}, outputs: {} };
+const definition: Definition = { name: 'myTool', inputs: {}, outputs: {} };
 
 function makeSource(invoker = vi.fn(async () => ({ result: 'ok' }))) {
-  const tools = new Map<string, StepDefinition>([['myTool', definition]]);
+  const tools = new Map<string, Definition>([['myTool', definition]]);
   return { source: new McpToolSource(tools, invoker), invoker };
 }
 

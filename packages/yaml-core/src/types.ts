@@ -1,11 +1,11 @@
-export type ParameterType = 'STRING' | 'LIST' | 'INTEGER' | 'NUMBER' | 'BOOLEAN';
+export type ParameterType = 'STRING' | 'INTEGER' | 'NUMBER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT';
 
 export type ParsedValue =
   | { type: 'string'; value: string }
   | { type: 'integer'; value: number }
   | { type: 'number'; value: number }
   | { type: 'boolean'; value: boolean }
-  | { type: 'list'; value: string[] };
+  | { type: 'array'; value: string[] };
 
 export function parseValue(paramType: ParameterType, raw: string): ParsedValue {
   switch (paramType) {
@@ -26,7 +26,8 @@ export function parseValue(paramType: ParameterType, raw: string): ParsedValue {
       if (['false', 'no', 'off', 'n', '0'].includes(lower)) return { type: 'boolean', value: false };
       throw new Error(`Cannot parse '${raw}' as BOOLEAN`);
     }
-    case 'LIST': return { type: 'list', value: raw.split(',').map(s => s.trim()) };
+    case 'ARRAY': return { type: 'array', value: raw.split(',').map(s => s.trim()) };
+    case 'OBJECT': throw new Error('Cannot parse OBJECT from a raw string');
   }
 }
 
@@ -36,46 +37,25 @@ export function rawValue(parsed: ParsedValue): unknown {
 
 export function canAcceptType(target: ParameterType, source: ParameterType): boolean {
   if (target === source) return true;
-  if (target === 'STRING' && source !== 'LIST') return true;
+  if (target === 'STRING' && source !== 'ARRAY' && source !== 'OBJECT') return true;
   if (target === 'NUMBER' && source === 'INTEGER') return true;
   return false;
 }
 
-export type StepParameterType = 'STRING' | 'INTEGER' | 'NUMBER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT';
-
-export function isScalarStepParam(type: StepParameterType): boolean {
+export function isScalarParam(type: ParameterType): boolean {
   return type !== 'ARRAY' && type !== 'OBJECT';
 }
 
-export function stepParamToParameterType(type: StepParameterType): ParameterType | undefined {
-  switch (type) {
-    case 'STRING': return 'STRING';
-    case 'INTEGER': return 'INTEGER';
-    case 'NUMBER': return 'NUMBER';
-    case 'BOOLEAN': return 'BOOLEAN';
-    default: return undefined;
-  }
-}
-
-export function parameterTypeToStepParam(type: ParameterType): StepParameterType {
-  switch (type) {
-    case 'STRING': return 'STRING';
-    case 'LIST': return 'ARRAY';
-    case 'INTEGER': return 'INTEGER';
-    case 'NUMBER': return 'NUMBER';
-    case 'BOOLEAN': return 'BOOLEAN';
-  }
-}
-
-export function parseStepParameterType(name: string): StepParameterType {
+export function parseParameterType(name: string): ParameterType {
   const upper = name.toUpperCase();
   if (upper === 'DECIMAL') return 'NUMBER';
-  const valid: StepParameterType[] = ['STRING', 'INTEGER', 'NUMBER', 'BOOLEAN', 'ARRAY', 'OBJECT'];
-  if (valid.includes(upper as StepParameterType)) return upper as StepParameterType;
-  throw new Error(`Unknown StepParameterType: '${name}'`);
+  if (upper === 'LIST') return 'ARRAY';
+  const valid: ParameterType[] = ['STRING', 'INTEGER', 'NUMBER', 'BOOLEAN', 'ARRAY', 'OBJECT'];
+  if (valid.includes(upper as ParameterType)) return upper as ParameterType;
+  throw new Error(`Unknown ParameterType: '${name}'`);
 }
 
-export function validateStepParamValue(type: StepParameterType, value: unknown): boolean {
+export function validateParamValue(type: ParameterType, value: unknown): boolean {
   switch (type) {
     case 'STRING': return typeof value === 'string';
     case 'INTEGER': return typeof value === 'number' && Number.isInteger(value);
@@ -86,7 +66,7 @@ export function validateStepParamValue(type: StepParameterType, value: unknown):
   }
 }
 
-export function parseScalarStepParam(type: StepParameterType, raw: string): unknown {
+export function parseScalarParam(type: ParameterType, raw: string): unknown {
   switch (type) {
     case 'STRING': return raw;
     case 'INTEGER': {

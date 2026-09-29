@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ProcessInvokeHandler } from './process-handler.js';
-import type { ProcessBinding } from '../step-types.js';
+import type { ProcessBinding } from '../types.js';
 
 describe('ProcessInvokeHandler', () => {
   const baseBinding: ProcessBinding = { kind: 'process', command: 'echo', args: ['hello'], output: 'json', env: { BASE: '1' }, onError: 'stderr' };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './step-runner.js';
+import { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './runner.js';
 
 describe('DefaultDeadlineContext', () => {
   it('reports not expired when no deadline', () => {

@@ -1,7 +1,7 @@
 export type {
   ParameterType,
   ParsedValue,
-  StepParameterType,
+
   ObjectVariableSource,
   YamlModuleParameter,
   YamlModuleOutput,
@@ -19,8 +19,8 @@ export type {
 
 export {
   parseValue, rawValue, canAcceptType,
-  isScalarStepParam, stepParamToParameterType, parameterTypeToStepParam,
-  parseStepParameterType, validateStepParamValue, parseScalarStepParam,
+  isScalarParam,
+  parseParameterType, validateParamValue, parseScalarParam,
   drillOnlySource, drillFields,
   chainSources, parseForEachDirective,
   UnresolvedVariableError,

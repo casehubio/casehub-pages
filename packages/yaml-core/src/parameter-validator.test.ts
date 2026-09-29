@@ -38,16 +38,16 @@ describe('ParameterValidator', () => {
     expect(violations[0]!.constraint).toBe('maxLength');
   });
 
-  it('minLength list counts elements', () => {
+  it('minLength array counts elements', () => {
     const violations = ParameterValidator.validate(
-      { tags: param({ type: 'LIST', minLength: 3 }) }, { tags: 'a,b' });
+      { tags: param({ type: 'ARRAY', minLength: 3 }) }, { tags: 'a,b' });
     expect(violations).toHaveLength(1);
     expect(violations[0]!.constraint).toBe('minLength');
   });
 
-  it('maxLength list counts elements', () => {
+  it('maxLength array counts elements', () => {
     const violations = ParameterValidator.validate(
-      { tags: param({ type: 'LIST', maxLength: 2 }) }, { tags: 'a,b,c' });
+      { tags: param({ type: 'ARRAY', maxLength: 2 }) }, { tags: 'a,b,c' });
     expect(violations).toHaveLength(1);
     expect(violations[0]!.constraint).toBe('maxLength');
   });

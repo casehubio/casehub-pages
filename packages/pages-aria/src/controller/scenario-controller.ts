@@ -7,7 +7,7 @@ import type { PagesScenarioYamlViewer } from './scenario-yaml-viewer.js';
 import './library-view.js';
 import type { PagesLibraryView } from './library-view.js';
 import './step-catalog.js';
-import type { PagesStepCatalog } from './step-catalog.js';
+import type { PagesActionCatalog } from './step-catalog.js';
 
 const ACTION_ICONS: Record<string, string> = {
   'show-markdown': '◫',
@@ -373,7 +373,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
 
   private async _loadCatalogView(): Promise<void> {
     await this.updateComplete;
-    const view = this.shadowRoot?.querySelector('pages-step-catalog') as PagesStepCatalog | null;
+    const view = this.shadowRoot?.querySelector('pages-action-catalog') as PagesActionCatalog | null;
     if (view) {
       await view.loadCatalog();
     }
@@ -381,7 +381,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
 
   private _renderCatalog(): TemplateResult {
     return html`
-      <pages-step-catalog
+      <pages-action-catalog
         .baseUrl=${this._conn?.restBase ?? this.baseUrl ?? ''}
         .execBaseUrl=${this._conn?.restBase ?? this.baseUrl ?? ''}
         @step-template-selected=${(e: CustomEvent) => {
@@ -389,7 +389,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
             detail: e.detail, bubbles: true, composed: true,
           }));
         }}
-      ></pages-step-catalog>
+      ></pages-action-catalog>
     `;
   }
 

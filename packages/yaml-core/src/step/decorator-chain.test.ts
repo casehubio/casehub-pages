@@ -1,15 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { StepAction, StepResult, ServiceRegistry } from './step-walker.js';
-import { stepSuccess, stepFailure } from './step-walker.js';
+import type { Action, Result, ServiceRegistry } from './walker.js';
+import { stepSuccess, stepFailure } from './walker.js';
 import { DecoratorChain } from './decorator-chain.js';
-import type { StepContext } from './decorator-chain.js';
+import type { Context } from './decorator-chain.js';
 import { DefaultScenarioScope } from '../orchestration/scenario-scope.js';
 
-function mockAction(result: StepResult = stepSuccess({})): StepAction {
+function mockAction(result: Result = stepSuccess({})): Action {
   return { execute: vi.fn().mockResolvedValue(result) };
 }
 
-function mockContext(overrides: Partial<StepContext> = {}): StepContext {
+function mockContext(overrides: Partial<Context> = {}): Context {
   return {
     params: {},
     services: { lookup: () => { throw new Error('no service'); } },
@@ -59,7 +59,7 @@ describe('DecoratorChain', () => {
 
     it('stops on failure', async () => {
       let callCount = 0;
-      const action: StepAction = {
+      const action: Action = {
         execute: vi.fn().mockImplementation(() => {
           callCount++;
           return callCount === 2
@@ -77,7 +77,7 @@ describe('DecoratorChain', () => {
   describe('retry decorator', () => {
     it('retries on failure up to max', async () => {
       let callCount = 0;
-      const action: StepAction = {
+      const action: Action = {
         execute: vi.fn().mockImplementation(() => {
           callCount++;
           return callCount < 3
@@ -116,7 +116,7 @@ describe('DecoratorChain', () => {
     });
 
     it('returns failure when execution exceeds timeout', async () => {
-      const action: StepAction = {
+      const action: Action = {
         execute: () => new Promise((resolve) => setTimeout(() => resolve(stepSuccess({})), 500)),
       };
       const chain = DecoratorChain.build({ timeout: '10ms' }, action);
@@ -153,7 +153,7 @@ describe('DecoratorChain', () => {
     it('releases semaphore even on failure', async () => {
       const scope = new DefaultScenarioScope();
       const sem = scope.semaphore('fail-sem', 1);
-      const action: StepAction = {
+      const action: Action = {
         execute: () => { throw new Error('boom'); },
       };
       const chain = DecoratorChain.build({ semaphore: 'fail-sem' }, action);
@@ -186,7 +186,7 @@ describe('DecoratorChain', () => {
 
   describe('on-error decorator', () => {
     it('catches exceptions and returns failure', async () => {
-      const action: StepAction = {
+      const action: Action = {
         execute: () => { throw new Error('unhandled'); },
       };
       const chain = DecoratorChain.build({ 'on-error': 'continue' }, action);
@@ -250,7 +250,7 @@ describe('DecoratorChain', () => {
   describe('composition', () => {
     it('applies decorators in correct order: if → loop → retry', async () => {
       let callCount = 0;
-      const action: StepAction = {
+      const action: Action = {
         execute: vi.fn().mockImplementation(() => {
           callCount++;
           return callCount <= 2

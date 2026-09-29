@@ -50,7 +50,7 @@ function buildModuleSource(
 
 function canAccept(target: string, source: string): boolean {
   if (target === source) return true;
-  if (target === 'STRING' && source !== 'LIST') return true;
+  if (target === 'STRING' && source !== 'ARRAY' && source !== 'OBJECT') return true;
   if (target === 'NUMBER' && source === 'INTEGER') return true;
   return false;
 }

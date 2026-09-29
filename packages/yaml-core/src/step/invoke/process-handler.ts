@@ -1,7 +1,7 @@
 import type { InvokeHandler } from './invoke-handler.js';
-import type { StepAction, StepResult } from '../step-walker.js';
-import { stepSuccess, stepFailure } from '../step-walker.js';
-import type { StepDefinition, InvokeBinding, ProcessBinding } from '../step-types.js';
+import type { Action, Result } from '../walker.js';
+import { stepSuccess, stepFailure } from '../walker.js';
+import type { Definition, InvokeBinding, ProcessBinding } from '../types.js';
 
 export type ProcessExecutor = (command: string, args: string[], env: Record<string, string>, workingDir?: string, timeoutMs?: number) => Promise<{ stdout: string; stderr: string; exitCode: number }>;
 
@@ -10,11 +10,11 @@ export class ProcessInvokeHandler implements InvokeHandler {
 
   supports(binding: InvokeBinding): boolean { return binding.kind === 'process'; }
 
-  create(definition: StepDefinition, binding: InvokeBinding): StepAction {
+  create(definition: Definition, binding: InvokeBinding): Action {
     const processBinding = binding as ProcessBinding;
     const executor = this.executor;
     return {
-      async execute(params: Record<string, unknown>): Promise<StepResult> {
+      async execute(params: Record<string, unknown>): Promise<Result> {
         try {
           const env = { ...processBinding.env };
           for (const [k, v] of Object.entries(params)) {

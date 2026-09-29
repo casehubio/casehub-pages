@@ -1,7 +1,7 @@
-import type { CatalogSource } from '../step-catalog.js';
-import type { CatalogEntry, StepAction, StepResult } from '../step-walker.js';
-import { stepSuccess, stepFailure } from '../step-walker.js';
-import type { StepDefinition } from '../step-types.js';
+import type { CatalogSource } from '../catalog.js';
+import type { CatalogEntry, Action, Result } from '../walker.js';
+import { stepSuccess, stepFailure } from '../walker.js';
+import type { Definition } from '../types.js';
 
 export type McpToolInvoker = (toolName: string, params: Record<string, unknown>) => Promise<Record<string, unknown>>;
 
@@ -9,7 +9,7 @@ export class McpToolSource implements CatalogSource {
   readonly priority = 300;
 
   constructor(
-    private readonly tools: Map<string, StepDefinition>,
+    private readonly tools: Map<string, Definition>,
     private readonly invoker: McpToolInvoker,
   ) {}
 
@@ -17,8 +17,8 @@ export class McpToolSource implements CatalogSource {
     for (const [name, definition] of this.tools) {
       if (!entries.has(name)) {
         const invoker = this.invoker;
-        const action: StepAction = {
-          async execute(params: Record<string, unknown>): Promise<StepResult> {
+        const action: Action = {
+          async execute(params: Record<string, unknown>): Promise<Result> {
             try {
               const result = await invoker(name, params);
               return stepSuccess(result);

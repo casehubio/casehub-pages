@@ -20,7 +20,7 @@ export class ParameterValidationError extends Error {
 }
 
 interface ParsedValue {
-  type: 'string' | 'integer' | 'number' | 'boolean' | 'list';
+  type: 'string' | 'integer' | 'number' | 'boolean' | 'array';
   raw: unknown;
 }
 
@@ -28,9 +28,9 @@ function parseValue(type: ParameterType, value: string): ParsedValue {
   switch (type) {
     case 'STRING':
       return { type: 'string', raw: value };
-    case 'LIST':
+    case 'ARRAY':
       return {
-        type: 'list',
+        type: 'array',
         raw: value.split(',').map((s) => s.trim()),
       };
     case 'INTEGER': {
@@ -61,7 +61,7 @@ function numericValue(parsed: ParsedValue): number {
 }
 
 function lengthOf(param: YamlModuleParameter, rawValue: string, parsed: ParsedValue): number {
-  if (parsed.type === 'list') return (parsed.raw as string[]).length;
+  if (parsed.type === 'array') return (parsed.raw as string[]).length;
   return rawValue.length;
 }
 
@@ -106,7 +106,7 @@ function validateConstraints(
   }
 
   if (param.pattern !== undefined) {
-    if (parsed.type === 'list') {
+    if (parsed.type === 'array') {
       for (const item of parsed.raw as string[]) {
         if (!new RegExp(param.pattern).test(item)) {
           violations.push(createViolation(name, 'pattern',

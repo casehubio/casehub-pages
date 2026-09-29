@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { StepDefinitionParser } from './step-definition-parser.js';
+import { DefinitionParser } from './definition-parser.js';
 
-describe('StepDefinitionParser', () => {
+describe('DefinitionParser', () => {
   describe('enum alias for allowedValues', () => {
     it('reads allowedValues from "enum" key', () => {
-      const params = StepDefinitionParser.parseParams({
+      const params = DefinitionParser.parseParams({
         status: { type: 'STRING', enum: ['active', 'inactive'] },
       });
       expect(params['status']!.allowedValues).toEqual(['active', 'inactive']);
     });
 
     it('prefers allowedValues over enum when both present', () => {
-      const params = StepDefinitionParser.parseParams({
+      const params = DefinitionParser.parseParams({
         status: { type: 'STRING', allowedValues: ['a'], enum: ['b'] },
       });
       expect(params['status']!.allowedValues).toEqual(['a']);
@@ -20,7 +20,7 @@ describe('StepDefinitionParser', () => {
 
   describe('kebab-case aliases', () => {
     it('reads structured-output on agent binding', () => {
-      const binding = StepDefinitionParser.parseInvoke({
+      const binding = DefinitionParser.parseInvoke({
         agent: { descriptor: 'test-agent', 'structured-output': true },
       });
       expect(binding.kind).toBe('agent');
@@ -30,7 +30,7 @@ describe('StepDefinitionParser', () => {
     });
 
     it('reads working-dir on process binding', () => {
-      const binding = StepDefinitionParser.parseInvoke({
+      const binding = DefinitionParser.parseInvoke({
         process: { command: 'echo', 'working-dir': '/tmp' },
       });
       if (binding.kind === 'process') {
@@ -39,7 +39,7 @@ describe('StepDefinitionParser', () => {
     });
 
     it('reads on-error on process binding', () => {
-      const binding = StepDefinitionParser.parseInvoke({
+      const binding = DefinitionParser.parseInvoke({
         process: { command: 'echo', 'on-error': 'ignore' },
       });
       if (binding.kind === 'process') {
@@ -48,7 +48,7 @@ describe('StepDefinitionParser', () => {
     });
 
     it('reads working-dir on python shorthand', () => {
-      const binding = StepDefinitionParser.parseInvoke({
+      const binding = DefinitionParser.parseInvoke({
         python: 'script.py', 'working-dir': '/opt',
       });
       if (binding.kind === 'script') {

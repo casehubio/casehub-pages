@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { AgentInvokeHandler } from './agent-handler.js';
-import type { AgentBinding } from '../step-types.js';
+import type { AgentBinding } from '../types.js';
 
 describe('AgentInvokeHandler', () => {
   const binding: AgentBinding = { kind: 'agent', descriptor: 'summarizer', model: 'gpt-4', timeout: '30s', structuredOutput: true };

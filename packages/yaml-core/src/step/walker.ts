@@ -2,23 +2,23 @@ import type { MatchPattern } from '../match.js';
 
 export interface CatalogEntry {
   qualifiedName: string;
-  definition: import('./step-types.js').StepDefinition;
-  action: StepAction;
+  definition: import('./types').Definition;
+  action: Action;
 }
 
-export interface StepAction {
-  execute(params: Record<string, unknown>, services: ServiceRegistry): Promise<StepResult>;
+export interface Action {
+  execute(params: Record<string, unknown>, services: ServiceRegistry): Promise<Result>;
 }
 
-export type StepResult =
+export type Result =
   | { kind: 'success'; output: Record<string, unknown>; executionMetadata: Record<string, unknown> }
   | { kind: 'failure'; message: string };
 
-export function stepSuccess(output: Record<string, unknown>, metadata?: Record<string, unknown>): StepResult {
+export function stepSuccess(output: Record<string, unknown>, metadata?: Record<string, unknown>): Result {
   return { kind: 'success', output, executionMetadata: metadata ?? {} };
 }
 
-export function stepFailure(message: string): StepResult {
+export function stepFailure(message: string): Result {
   return { kind: 'failure', message };
 }
 
@@ -41,7 +41,7 @@ export class MapServiceRegistry implements ServiceRegistry {
   }
 }
 
-export interface StepCatalog {
+export interface Catalog {
   resolve(actionName: string): CatalogEntry | undefined;
   availableActions(): Set<string>;
 }
@@ -169,24 +169,24 @@ const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finall
 
 const MAX_DEPTH = 32;
 
-export class StepWalker {
-  static resolve(steps: Record<string, unknown>[], catalog: StepCatalog): ResolvedStep[] {
+export class Walker {
+  static resolve(steps: Record<string, unknown>[], catalog: Catalog): ResolvedStep[] {
     const seenNames = new Set<string>();
-    const resolved = StepWalker.resolveAtDepth(steps, catalog, 0, seenNames);
-    StepWalker.validateRefs(resolved, seenNames);
+    const resolved = Walker.resolveAtDepth(steps, catalog, 0, seenNames);
+    Walker.validateRefs(resolved, seenNames);
     return resolved;
   }
 
   private static resolveAtDepth(
-    steps: Record<string, unknown>[], catalog: StepCatalog, depth: number,
+    steps: Record<string, unknown>[], catalog: Catalog, depth: number,
     seenNames: Set<string> = new Set(),
   ): ResolvedStep[] {
     if (depth > MAX_DEPTH) throw new Error(`Step nesting exceeds maximum depth of ${MAX_DEPTH}`);
-    return steps.map(step => StepWalker.resolveOne(step, catalog, depth, seenNames));
+    return steps.map(step => Walker.resolveOne(step, catalog, depth, seenNames));
   }
 
   private static resolveOne(
-    step: Record<string, unknown>, catalog: StepCatalog, depth: number,
+    step: Record<string, unknown>, catalog: Catalog, depth: number,
     seenNames: Set<string> = new Set(),
   ): ResolvedStep {
     let stepName: string | null = null;
@@ -245,20 +245,20 @@ export class StepWalker {
     }
 
     if (structuralType === 'block') {
-      const substeps = StepWalker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
       return { kind: 'block', name: stepName, steps: substeps, decorators };
     }
 
     if (structuralType === 'parallel') {
-      const substeps = StepWalker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
       return { kind: 'parallel', name: stepName, steps: substeps, decorators };
     }
 
     if (structuralType === 'if') {
       const thenRaw = (companions['then'] as Record<string, unknown>[] | undefined) ?? [];
       const elseRaw = (companions['else'] as Record<string, unknown>[] | undefined) ?? [];
-      const thenSteps = StepWalker.resolveAtDepth(thenRaw, catalog, depth + 1, seenNames);
-      const elseSteps = StepWalker.resolveAtDepth(elseRaw, catalog, depth + 1, seenNames);
+      const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, seenNames);
+      const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, seenNames);
       return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators };
     }
 
@@ -270,11 +270,11 @@ export class StepWalker {
         let caseSteps: ResolvedStep[];
         if ('default' in c) {
           pattern = { type: 'default' };
-          caseSteps = StepWalker.resolveAtDepth(
+          caseSteps = Walker.resolveAtDepth(
             (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
         } else {
-          pattern = StepWalker.parsePattern(c['pattern'] ?? c['when']);
-          caseSteps = StepWalker.resolveAtDepth(
+          pattern = Walker.parsePattern(c['pattern'] ?? c['when']);
+          caseSteps = Walker.resolveAtDepth(
             ((c['steps'] ?? c['do']) as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
         }
         const guard = (c['guard'] as string) ?? null;
@@ -287,11 +287,11 @@ export class StepWalker {
     }
 
     if (structuralType === 'try') {
-      const trySteps = StepWalker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
+      const trySteps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
       const catchRaw = (companions['catch'] as Record<string, unknown>[] | undefined) ?? [];
       const finallyRaw = (companions['finally'] as Record<string, unknown>[] | undefined) ?? [];
-      const catchSteps = StepWalker.resolveAtDepth(catchRaw, catalog, depth + 1, seenNames);
-      const finallySteps = StepWalker.resolveAtDepth(finallyRaw, catalog, depth + 1, seenNames);
+      const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, seenNames);
+      const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, seenNames);
       return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators };
     }
 
@@ -301,12 +301,12 @@ export class StepWalker {
         if (b['subscribe']) {
           const sub = b['subscribe'] as Record<string, unknown> | string;
           const channelName = typeof sub === 'string' ? sub : (sub['channel'] as string);
-          const subSteps = StepWalker.resolveAtDepth(
+          const subSteps = Walker.resolveAtDepth(
             ((b['steps'] ?? b['do']) as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
           return { type: 'subscribe' as const, name: channelName, steps: subSteps };
         }
         if (b['wait']) {
-          const waitSteps = StepWalker.resolveAtDepth(
+          const waitSteps = Walker.resolveAtDepth(
             ((b['steps'] ?? b['do']) as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
           return { type: 'wait' as const, name: b['wait'] as string, steps: waitSteps };
         }
@@ -363,22 +363,22 @@ export class StepWalker {
         }
       }
       if ('steps' in step && Array.isArray(step.steps)) {
-        StepWalker.validateRefs(step.steps, knownNames);
+        Walker.validateRefs(step.steps, knownNames);
       }
       if (step.kind === 'if-else') {
-        StepWalker.validateRefs(step.thenSteps, knownNames);
-        StepWalker.validateRefs(step.elseSteps, knownNames);
+        Walker.validateRefs(step.thenSteps, knownNames);
+        Walker.validateRefs(step.elseSteps, knownNames);
       }
       if (step.kind === 'try-catch-finally') {
-        StepWalker.validateRefs(step.trySteps, knownNames);
-        StepWalker.validateRefs(step.catchSteps, knownNames);
-        StepWalker.validateRefs(step.finallySteps, knownNames);
+        Walker.validateRefs(step.trySteps, knownNames);
+        Walker.validateRefs(step.catchSteps, knownNames);
+        Walker.validateRefs(step.finallySteps, knownNames);
       }
       if (step.kind === 'match') {
-        for (const c of step.cases) StepWalker.validateRefs(c.steps, knownNames);
+        for (const c of step.cases) Walker.validateRefs(c.steps, knownNames);
       }
       if (step.kind === 'select') {
-        for (const b of step.branches) StepWalker.validateRefs(b.steps, knownNames);
+        for (const b of step.branches) Walker.validateRefs(b.steps, knownNames);
       }
     }
   }

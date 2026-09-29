@@ -80,7 +80,7 @@ Location: `backend/scenario-runtime/src/main/java/io/casehub/pages/scenario/runt
 
 Scans and caches catalog entries at startup from three sources:
 
-1. **YAML step definition files** — reads `*.yaml` files from a configurable classpath/filesystem path (e.g. `casehub.step-catalog.definitions-path`). Parses the `StepDefinitionFile` format using the same schema as the TS `StepDefinitionParser`: namespace, actions map (each with name, description, inputs, outputs, invoke binding). The Java parser mirrors the TS parser's field mapping (including `default`/`defaultValue` and `enum`/`allowedValues` aliases).
+1. **YAML step definition files** — reads `*.yaml` files from a configurable classpath/filesystem path (e.g. `casehub.step-catalog.definitions-path`). Parses the `DefinitionFile` format using the same schema as the TS `StepDefinitionParser`: namespace, actions map (each with name, description, inputs, outputs, invoke binding). The Java parser mirrors the TS parser's field mapping (including `default`/`defaultValue` and `enum`/`allowedValues` aliases).
 
 2. **MCP tools** — enumerates tools from the platform's MCP domain registry (CDI-discovered `@McpDomain` beans). Each `@Query`/`@Mutation` has a name, parameter types, and return type that map to the catalog schema.
 
@@ -277,9 +277,9 @@ Per `aria-interaction-contract.md`:
 
 ## References
 
-- `packages/yaml-core/src/step/step-walker.ts` — StepCatalog interface, CatalogEntry
-- `packages/yaml-core/src/step/step-types.ts` — StepDefinition, StepParameter, InvokeBinding types
-- `packages/yaml-core/src/step/step-catalog.ts` — CompositeStepCatalog, CatalogSource
+- `../../../packages/yaml-core/src/step/walker.ts` — StepCatalog interface, CatalogEntry
+- `../../../packages/yaml-core/src/step/types.ts` — StepDefinition, StepParameter, InvokeBinding types
+- `../../../packages/yaml-core/src/step/catalog.ts` — CompositeStepCatalog, CatalogSource
 - `packages/yaml-core/src/step/sources/yaml-source.ts` — YamlStepDefinitionSource
 - `packages/yaml-core/src/step/sources/mcp-source.ts` — McpToolSource
 - `packages/yaml-core/src/step/sources/script-source.ts` — ScriptSource

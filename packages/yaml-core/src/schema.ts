@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const parameterTypeEnum = z.enum(['STRING', 'LIST', 'INTEGER', 'NUMBER', 'BOOLEAN']);
+const parameterTypeEnum = z.enum(['STRING', 'INTEGER', 'NUMBER', 'BOOLEAN', 'ARRAY', 'OBJECT']);
 
 export const parameterSchema = z.object({
   type: parameterTypeEnum.default('STRING').optional(),

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { PagesStepCatalog } from './step-catalog.js';
+import type { PagesActionCatalog } from './step-catalog.js';
 import './step-catalog.js';
 
 const MOCK_ACTIONS = [
@@ -23,8 +23,8 @@ const MOCK_DETAIL = {
   invoke: { kind: 'rest', metadata: { method: 'POST', url: 'https://api.example.com/compliance/check' } },
 };
 
-function createCatalog(baseUrl = 'http://localhost:8080'): PagesStepCatalog {
-  const el = document.createElement('pages-step-catalog') as PagesStepCatalog;
+function createCatalog(baseUrl = 'http://localhost:8080'): PagesActionCatalog {
+  const el = document.createElement('pages-action-catalog') as PagesActionCatalog;
   el.baseUrl = baseUrl;
   el.execBaseUrl = 'http://localhost:9090';
   return el;
@@ -55,8 +55,8 @@ function mockFetch() {
   });
 }
 
-describe('pages-step-catalog', () => {
-  let el: PagesStepCatalog;
+describe('pages-action-catalog', () => {
+  let el: PagesActionCatalog;
 
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch());
@@ -218,7 +218,7 @@ describe('pages-step-catalog', () => {
     it('generates correct YAML from action detail', async () => {
       el = createCatalog();
       document.body.appendChild(el);
-      const { PagesStepCatalog: Cls } = await import('./step-catalog.js');
+      const { PagesActionCatalog: Cls } = await import('./step-catalog.js');
       const yaml = Cls.generateTemplate(MOCK_DETAIL);
       expect(yaml).toContain('- check-compliance:');
       expect(yaml).toContain('documentId:');

@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { ScriptSource } from './script-source.js';
 import type { ScriptFileEntry } from './script-source.js';
 import type { InvokeHandler } from '../invoke/invoke-handler.js';
-import { stepSuccess } from '../step-walker.js';
-import type { CatalogEntry, MapServiceRegistry } from '../step-walker.js';
+import { stepSuccess } from '../walker.js';
+import type { CatalogEntry, MapServiceRegistry } from '../walker.js';
 
 const scriptEntry: ScriptFileEntry = {
   name: 'transform',

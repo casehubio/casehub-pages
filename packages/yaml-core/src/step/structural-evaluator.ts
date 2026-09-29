@@ -1,23 +1,23 @@
 import type {
-  ResolvedStep, StepResult, PluginStep, BlockStep, ParallelStep,
+  ResolvedStep, Result, PluginStep, BlockStep, ParallelStep,
   IfElseStep, MatchStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, InvokeStep,
-} from './step-walker.js';
-import { stepSuccess, stepFailure } from './step-walker.js';
-import type { StepContext } from './decorator-chain.js';
+} from './walker.js';
+import { stepSuccess, stepFailure } from './walker.js';
+import type { Context } from './decorator-chain.js';
 import { DecoratorChain } from './decorator-chain.js';
 import { isTruthy } from '../truthiness.js';
 import { matches } from '../match.js';
 import type { InvokeHandler } from './invoke/invoke-handler.js';
-import { StepDefinitionParser } from './step-definition-parser.js';
+import { DefinitionParser } from './definition-parser.js';
 
-export class StructuralStepEvaluator {
+export class StructuralEvaluator {
   private readonly invokeHandlers: InvokeHandler[];
 
   constructor(invokeHandlers: InvokeHandler[] = []) {
     this.invokeHandlers = invokeHandlers;
   }
-  async evaluate(step: ResolvedStep, context: StepContext): Promise<StepResult> {
+  async evaluate(step: ResolvedStep, context: Context): Promise<Result> {
     const result = await this.dispatch(step, context);
     if (step.name && result.kind === 'success') {
       context.scope.resultStore().recordSuccess(step.name, result.output);
@@ -31,7 +31,7 @@ export class StructuralStepEvaluator {
     return result;
   }
 
-  private async dispatch(step: ResolvedStep, context: StepContext): Promise<StepResult> {
+  private async dispatch(step: ResolvedStep, context: Context): Promise<Result> {
     switch (step.kind) {
       case 'plugin': return this.evaluatePlugin(step, context);
       case 'invoke': return this.evaluateInvoke(step, context);
@@ -46,15 +46,15 @@ export class StructuralStepEvaluator {
     }
   }
 
-  private async evaluatePlugin(step: PluginStep, context: StepContext): Promise<StepResult> {
+  private async evaluatePlugin(step: PluginStep, context: Context): Promise<Result> {
     const chain = DecoratorChain.build(step.decorators, step.entry.action);
     return chain.execute({ ...context, params: step.params, stepName: step.name ?? 'anonymous' });
   }
 
-  private async evaluateInvoke(step: InvokeStep, context: StepContext): Promise<StepResult> {
+  private async evaluateInvoke(step: InvokeStep, context: Context): Promise<Result> {
     let binding;
     try {
-      binding = StepDefinitionParser.parseInvoke(step.invokeSpec);
+      binding = DefinitionParser.parseInvoke(step.invokeSpec);
     } catch {
       return stepFailure(`Invoke step '${step.name ?? 'anonymous'}': invalid binding spec`);
     }
@@ -69,8 +69,8 @@ export class StructuralStepEvaluator {
     return action.execute({}, context.services);
   }
 
-  private async evaluateBlock(step: BlockStep, context: StepContext): Promise<StepResult> {
-    let lastResult: StepResult = stepSuccess({});
+  private async evaluateBlock(step: BlockStep, context: Context): Promise<Result> {
+    let lastResult: Result = stepSuccess({});
     for (const child of step.steps) {
       lastResult = await this.evaluate(child, context);
       if (lastResult.kind === 'failure') return lastResult;
@@ -78,7 +78,7 @@ export class StructuralStepEvaluator {
     return lastResult;
   }
 
-  private async evaluateParallel(step: ParallelStep, context: StepContext): Promise<StepResult> {
+  private async evaluateParallel(step: ParallelStep, context: Context): Promise<Result> {
     const results = await Promise.allSettled(
       step.steps.map((child) => this.evaluate(child, context)),
     );
@@ -96,9 +96,9 @@ export class StructuralStepEvaluator {
     return stepSuccess(outputs);
   }
 
-  private async evaluateIfElse(step: IfElseStep, context: StepContext): Promise<StepResult> {
+  private async evaluateIfElse(step: IfElseStep, context: Context): Promise<Result> {
     const branch = isTruthy(step.condition) ? step.thenSteps : step.elseSteps;
-    let lastResult: StepResult = stepSuccess({});
+    let lastResult: Result = stepSuccess({});
     for (const child of branch) {
       lastResult = await this.evaluate(child, context);
       if (lastResult.kind === 'failure') return lastResult;
@@ -106,11 +106,11 @@ export class StructuralStepEvaluator {
     return lastResult;
   }
 
-  private async evaluateMatch(step: MatchStep, context: StepContext): Promise<StepResult> {
+  private async evaluateMatch(step: MatchStep, context: Context): Promise<Result> {
     for (const matchCase of step.cases) {
       if (matches(matchCase.pattern, step.scrutinee)) {
         if (matchCase.guard !== null && !isTruthy(matchCase.guard)) continue;
-        let lastResult: StepResult = stepSuccess({});
+        let lastResult: Result = stepSuccess({});
         for (const child of matchCase.steps) {
           lastResult = await this.evaluate(child, context);
           if (lastResult.kind === 'failure') return lastResult;
@@ -121,8 +121,8 @@ export class StructuralStepEvaluator {
     return stepSuccess({});
   }
 
-  private async evaluateTryCatchFinally(step: TryCatchFinallyStep, context: StepContext): Promise<StepResult> {
-    let tryResult: StepResult = stepSuccess({});
+  private async evaluateTryCatchFinally(step: TryCatchFinallyStep, context: Context): Promise<Result> {
+    let tryResult: Result = stepSuccess({});
 
     for (const child of step.trySteps) {
       tryResult = await this.evaluate(child, context);
@@ -130,7 +130,7 @@ export class StructuralStepEvaluator {
     }
 
     if (tryResult.kind === 'failure' && step.catchSteps.length > 0) {
-      let catchResult: StepResult = stepSuccess({});
+      let catchResult: Result = stepSuccess({});
       for (const child of step.catchSteps) {
         catchResult = await this.evaluate(child, context);
         if (catchResult.kind === 'failure') break;
@@ -145,13 +145,13 @@ export class StructuralStepEvaluator {
     return tryResult;
   }
 
-  private async evaluateSelect(step: SelectStep, context: StepContext): Promise<StepResult> {
+  private async evaluateSelect(step: SelectStep, context: Context): Promise<Result> {
     const promises = step.branches.map(async (branch) => {
       if (branch.type === 'wait') {
         const sig = context.scope.signal(branch.name);
         await sig.await();
       }
-      let lastResult: StepResult = stepSuccess({});
+      let lastResult: Result = stepSuccess({});
       for (const child of branch.steps) {
         lastResult = await this.evaluate(child, context);
         if (lastResult.kind === 'failure') return lastResult;
@@ -162,7 +162,7 @@ export class StructuralStepEvaluator {
     return Promise.race(promises);
   }
 
-  private async evaluateBarrier(step: BarrierStep, _context: StepContext): Promise<StepResult> {
+  private async evaluateBarrier(step: BarrierStep, _context: Context): Promise<Result> {
     const store = _context.scope.resultStore();
     const allCompleted = step.awaitSteps.every((name) => store.hasCompleted(name));
     if (allCompleted) return stepSuccess({});
@@ -170,7 +170,7 @@ export class StructuralStepEvaluator {
     return stepFailure(`Barrier: waiting on steps [${missing.join(', ')}]`);
   }
 
-  private async evaluateQuorum(step: QuorumStep, context: StepContext): Promise<StepResult> {
+  private async evaluateQuorum(step: QuorumStep, context: Context): Promise<Result> {
     const store = context.scope.resultStore();
     const completed = step.ofSteps.filter((name) => store.hasCompleted(name));
     if (completed.length >= step.required) return stepSuccess({});

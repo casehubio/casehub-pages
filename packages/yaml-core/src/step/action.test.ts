@@ -1,20 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ValidatingStepAction } from './step-action.js';
-import type { StepDefinition } from './step-types.js';
-import type { StepAction, ServiceRegistry } from './step-walker.js';
-import { stepSuccess, stepFailure } from './step-walker.js';
+import { ValidatingAction } from './action.js';
+import type { Definition } from './types.js';
+import type { Action, ServiceRegistry } from './walker.js';
+import { stepSuccess, stepFailure } from './walker.js';
 
 const services: ServiceRegistry = { lookup: () => { throw new Error('unused'); } };
 
-function def(overrides?: Partial<StepDefinition>): StepDefinition {
+function def(overrides?: Partial<Definition>): Definition {
   return { name: 'test-action', inputs: {}, outputs: {}, ...overrides };
 }
 
-describe('ValidatingStepAction', () => {
+describe('ValidatingAction', () => {
   it('passes valid inputs to delegate and returns result', async () => {
     const expected = stepSuccess({ message: 'ok' });
-    const delegate: StepAction = { execute: vi.fn().mockResolvedValue(expected) };
-    const action = new ValidatingStepAction(delegate, def({
+    const delegate: Action = { execute: vi.fn().mockResolvedValue(expected) };
+    const action = new ValidatingAction(delegate, def({
       inputs: { name: { type: 'STRING', required: true } },
     }));
     const result = await action.execute({ name: 'hello' }, services);
@@ -23,8 +23,8 @@ describe('ValidatingStepAction', () => {
   });
 
   it('returns failure when required input missing', async () => {
-    const delegate: StepAction = { execute: vi.fn() };
-    const action = new ValidatingStepAction(delegate, def({
+    const delegate: Action = { execute: vi.fn() };
+    const action = new ValidatingAction(delegate, def({
       inputs: { name: { type: 'STRING', required: true } },
     }));
     const result = await action.execute({}, services);
@@ -33,8 +33,8 @@ describe('ValidatingStepAction', () => {
   });
 
   it('returns failure when input has wrong type', async () => {
-    const delegate: StepAction = { execute: vi.fn() };
-    const action = new ValidatingStepAction(delegate, def({
+    const delegate: Action = { execute: vi.fn() };
+    const action = new ValidatingAction(delegate, def({
       inputs: { count: { type: 'INTEGER', required: true } },
     }));
     const result = await action.execute({ count: 'not-a-number' }, services);
@@ -43,8 +43,8 @@ describe('ValidatingStepAction', () => {
   });
 
   it('validates outputs on success — returns failure when output violates', async () => {
-    const delegate: StepAction = { execute: vi.fn().mockResolvedValue(stepSuccess({ result: 42 })) };
-    const action = new ValidatingStepAction(delegate, def({
+    const delegate: Action = { execute: vi.fn().mockResolvedValue(stepSuccess({ result: 42 })) };
+    const action = new ValidatingAction(delegate, def({
       outputs: { result: { type: 'STRING', required: true } },
     }));
     const result = await action.execute({}, services);
@@ -53,16 +53,16 @@ describe('ValidatingStepAction', () => {
 
   it('skips output validation when definition has no outputs', async () => {
     const expected = stepSuccess({ anything: 123 });
-    const delegate: StepAction = { execute: vi.fn().mockResolvedValue(expected) };
-    const action = new ValidatingStepAction(delegate, def());
+    const delegate: Action = { execute: vi.fn().mockResolvedValue(expected) };
+    const action = new ValidatingAction(delegate, def());
     const result = await action.execute({}, services);
     expect(result).toBe(expected);
   });
 
   it('passes through delegate failure without output validation', async () => {
     const expected = stepFailure('boom');
-    const delegate: StepAction = { execute: vi.fn().mockResolvedValue(expected) };
-    const action = new ValidatingStepAction(delegate, def({
+    const delegate: Action = { execute: vi.fn().mockResolvedValue(expected) };
+    const action = new ValidatingAction(delegate, def({
       outputs: { result: { type: 'STRING', required: true } },
     }));
     const result = await action.execute({}, services);

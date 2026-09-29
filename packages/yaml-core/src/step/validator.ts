@@ -1,35 +1,35 @@
-import type { StepParameter } from './step-types.js';
-import { validateStepParamValue, isScalarStepParam } from '../types.js';
+import type { Parameter } from './types.js';
+import { validateParamValue, isScalarParam } from '../types.js';
 
-export interface StepViolation {
+export interface Violation {
   parameterName: string;
   constraint: string;
   message: string;
 }
 
-export class StepValidator {
+export class Validator {
   static validateInputs(
     actionName: string,
     params: Record<string, unknown>,
-    definition: { inputs: Record<string, StepParameter> },
-  ): StepViolation[] {
-    return StepValidator.validateParams(actionName, params, definition.inputs, 'input');
+    definition: { inputs: Record<string, Parameter> },
+  ): Violation[] {
+    return Validator.validateParams(actionName, params, definition.inputs, 'input');
   }
 
   static validateOutputs(
     outputs: Record<string, unknown>,
-    definition: { outputs: Record<string, StepParameter> },
-  ): StepViolation[] {
-    return StepValidator.validateParams('output', outputs, definition.outputs, 'output');
+    definition: { outputs: Record<string, Parameter> },
+  ): Violation[] {
+    return Validator.validateParams('output', outputs, definition.outputs, 'output');
   }
 
   private static validateParams(
     context: string,
     values: Record<string, unknown>,
-    declarations: Record<string, StepParameter>,
+    declarations: Record<string, Parameter>,
     direction: string,
-  ): StepViolation[] {
-    const violations: StepViolation[] = [];
+  ): Violation[] {
+    const violations: Violation[] = [];
 
     for (const [name, param] of Object.entries(declarations)) {
       const value = values[name];
@@ -39,17 +39,17 @@ export class StepValidator {
         }
         continue;
       }
-      if (!validateStepParamValue(param.type, value)) {
+      if (!validateParamValue(param.type, value)) {
         violations.push({ parameterName: name, constraint: 'type', message: `${direction} '${name}' expected ${param.type} but got ${typeof value}` });
       }
       if (param.allowedValues && param.allowedValues.length > 0) {
-        const canonical = isScalarStepParam(param.type) ? String(value) : value;
+        const canonical = isScalarParam(param.type) ? String(value) : value;
         if (!param.allowedValues.some(a => a === canonical || a === String(canonical))) {
           violations.push({ parameterName: name, constraint: 'allowedValues', message: `${direction} '${name}' value '${value}' not in allowed values: ${param.allowedValues.join(', ')}` });
         }
       }
       if (param.format && typeof value === 'string') {
-        if (!StepValidator.validateFormat(value, param.format)) {
+        if (!Validator.validateFormat(value, param.format)) {
           violations.push({ parameterName: name, constraint: 'format', message: `${direction} '${name}' does not match format '${param.format}'` });
         }
       }

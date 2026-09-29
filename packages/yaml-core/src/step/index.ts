@@ -1,40 +1,40 @@
 export type {
-  StepParameter, StepDefinition, StepDefinitionFile,
+  Parameter, Definition, DefinitionFile,
   InvokeBinding, McpBinding, RestBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
-} from './step-types.js';
-export { RUNTIME_PYTHON, RUNTIME_NODE } from './step-types.js';
+} from './types.js';
+export { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
 
-export { StepDefinitionParser } from './step-definition-parser.js';
+export { DefinitionParser } from './definition-parser.js';
 
-export { StepValidator } from './step-validator.js';
-export type { StepViolation } from './step-validator.js';
+export { Validator } from './validator.js';
+export type { Violation } from './validator.js';
 
 export type {
   ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, SelectBranch, ResolvedMatchCase,
-  StepAction, StepResult, ServiceRegistry, StepCatalog, CatalogEntry,
-} from './step-walker.js';
-export { StepWalker, MapServiceRegistry, stepSuccess, stepFailure } from './step-walker.js';
+  Action, Result, ServiceRegistry, Catalog, CatalogEntry,
+} from './walker.js';
+export { Walker, MapServiceRegistry, stepSuccess, stepFailure } from './walker.js';
 
-export type { CatalogSource } from './step-catalog.js';
-export { CompositeStepCatalog, ImportScopedStepCatalog } from './step-catalog.js';
+export type { CatalogSource } from './catalog.js';
+export { CompositeCatalog, ImportScopedCatalog } from './catalog.js';
 
-export { ValidatingStepAction } from './step-action.js';
+export { ValidatingAction } from './action.js';
 
 export { DecoratorChain } from './decorator-chain.js';
-export type { StepContext, DecoratedExecution } from './decorator-chain.js';
+export type { Context, DecoratedExecution } from './decorator-chain.js';
 
-export { StructuralStepEvaluator } from './structural-evaluator.js';
+export { StructuralEvaluator } from './structural-evaluator.js';
 
-export type { StepRunner, DeadlineContext } from './step-runner.js';
-export { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './step-runner.js';
+export type { Runner, DeadlineContext } from './runner.js';
+export { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './runner.js';
 
-export { StepSchemaComposer } from './step-schema-composer.js';
+export { SchemaComposer } from './schema-composer.js';
 
-export type { PluginRegistration } from './step-plugin-registry.js';
-export { StepPluginRegistry } from './step-plugin-registry.js';
+export type { PluginRegistration } from './plugin-registry.js';
+export { PluginRegistry } from './plugin-registry.js';
 
 export type { InvokeHandler } from './invoke/invoke-handler.js';
 export { McpInvokeHandler } from './invoke/mcp-handler.js';
@@ -44,7 +44,7 @@ export { ScriptInvokeHandler } from './invoke/script-handler.js';
 export { AgentInvokeHandler } from './invoke/agent-handler.js';
 export { ProcessInvokeHandler } from './invoke/process-handler.js';
 
-export { YamlStepDefinitionSource } from './sources/yaml-source.js';
+export { YamlDefinitionSource } from './sources/yaml-source.js';
 export { McpToolSource } from './sources/mcp-source.js';
 export { RuntimePluginSource } from './sources/plugin-source.js';
 export { ScriptSource } from './sources/script-source.js';

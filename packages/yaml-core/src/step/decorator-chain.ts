@@ -1,11 +1,11 @@
-import type { StepAction, StepResult, ServiceRegistry } from './step-walker.js';
-import { stepSuccess, stepFailure } from './step-walker.js';
+import type { Action, Result, ServiceRegistry } from './walker.js';
+import { stepSuccess, stepFailure } from './walker.js';
 import type { ScenarioScope } from '../orchestration/types.js';
 import { parseLoopDirective, parseRetryDirective } from '../orchestration/directives.js';
 import { parseDuration } from '../orchestration/duration-parser.js';
 import { isTruthy } from '../truthiness.js';
 
-export interface StepContext {
+export interface Context {
   readonly params: Record<string, unknown>;
   readonly services: ServiceRegistry;
   readonly scope: ScenarioScope;
@@ -13,12 +13,12 @@ export interface StepContext {
 }
 
 export interface DecoratedExecution {
-  execute(context: StepContext): Promise<StepResult>;
+  execute(context: Context): Promise<Result>;
 }
 
 class CoreExecution implements DecoratedExecution {
-  constructor(private readonly action: StepAction) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  constructor(private readonly action: Action) {}
+  async execute(context: Context): Promise<Result> {
     return this.action.execute(context.params, context.services);
   }
 }
@@ -28,7 +28,7 @@ class WhenDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly condition: string,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     if (!isTruthy(this.condition)) {
       return stepSuccess({});
     }
@@ -41,10 +41,10 @@ class LoopDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly raw: unknown,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const directive = parseLoopDirective(this.raw);
     const count = 'count' in directive ? directive.count : 0;
-    let lastResult: StepResult = stepSuccess({});
+    let lastResult: Result = stepSuccess({});
     for (let i = 0; i < count; i++) {
       lastResult = await this.next.execute(context);
       if (lastResult.kind === 'failure') return lastResult;
@@ -58,9 +58,9 @@ class RetryDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly raw: unknown,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const directive = parseRetryDirective(this.raw);
-    let lastResult: StepResult = stepFailure('no attempts');
+    let lastResult: Result = stepFailure('no attempts');
     for (let attempt = 0; attempt < directive.max; attempt++) {
       if (attempt > 0 && directive.type === 'full' && directive.delayMs > 0) {
         await delay(directive.delayMs);
@@ -77,9 +77,9 @@ class TimeoutDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly raw: unknown,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
-    const timeoutPromise = new Promise<StepResult>((resolve) =>
+    const timeoutPromise = new Promise<Result>((resolve) =>
       setTimeout(() => resolve(stepFailure(`Step '${context.stepName}' exceeded timeout of ${ms}ms`)), ms),
     );
     return Promise.race([this.next.execute(context), timeoutPromise]);
@@ -91,7 +91,7 @@ class DelayDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly raw: unknown,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
     await delay(ms);
     return this.next.execute(context);
@@ -103,7 +103,7 @@ class SemaphoreDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly name: string,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const sem = context.scope.semaphore(this.name, 1);
     await sem.acquire();
     try {
@@ -121,7 +121,7 @@ class SignalDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly name: string,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const result = await this.next.execute(context);
     if (result.kind === 'success') {
       context.scope.signal(this.name).signal();
@@ -135,7 +135,7 @@ class TransitionDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly raw: unknown,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const result = await this.next.execute(context);
     if (result.kind === 'success' && typeof this.raw === 'object' && this.raw !== null) {
       const spec = this.raw as Record<string, unknown>;
@@ -156,7 +156,7 @@ class TransformDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly raw: unknown,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const result = await this.next.execute(context);
     if (result.kind === 'success' && typeof this.raw === 'object' && this.raw !== null) {
       const additions = this.raw as Record<string, unknown>;
@@ -171,7 +171,7 @@ class OnErrorDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly _policy: unknown,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     try {
       return await this.next.execute(context);
     } catch (e) {
@@ -185,7 +185,7 @@ class OnSuccessDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly handler: string,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const result = await this.next.execute(context);
     if (result.kind === 'success') {
       return {
@@ -202,7 +202,7 @@ class OnFailureDecorator implements DecoratedExecution {
     private readonly next: DecoratedExecution,
     private readonly handler: string,
   ) {}
-  async execute(context: StepContext): Promise<StepResult> {
+  async execute(context: Context): Promise<Result> {
     const result = await this.next.execute(context);
     if (result.kind === 'failure') {
       return stepSuccess({
@@ -221,7 +221,7 @@ function delay(ms: number): Promise<void> {
 export class DecoratorChain {
   static build(
     decorators: Record<string, unknown>,
-    action: StepAction,
+    action: Action,
   ): DecoratedExecution {
     let execution: DecoratedExecution = new CoreExecution(action);
 

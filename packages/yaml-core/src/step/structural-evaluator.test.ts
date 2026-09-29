@@ -1,21 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
 import type {
-  StepAction, StepResult, ResolvedStep, PluginStep, BlockStep,
+  Action, Result, ResolvedStep, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
   BarrierStep, QuorumStep, CatalogEntry, SelectStep, InvokeStep,
-} from './step-walker.js';
-import { stepSuccess, stepFailure, MapServiceRegistry } from './step-walker.js';
-import { StructuralStepEvaluator } from './structural-evaluator.js';
-import type { StepContext } from './decorator-chain.js';
+} from './walker.js';
+import { stepSuccess, stepFailure, MapServiceRegistry } from './walker.js';
+import { StructuralEvaluator } from './structural-evaluator.js';
+import type { Context } from './decorator-chain.js';
 import { DefaultScenarioScope } from '../orchestration/scenario-scope.js';
 import { defaultPattern, valuePattern } from '../match.js';
 import { createMockRestHandler, createMockMcpHandler } from './invoke/test-helpers.js';
 
-function makeAction(result: StepResult = stepSuccess({})): StepAction {
+function makeAction(result: Result = stepSuccess({})): Action {
   return { execute: vi.fn().mockResolvedValue(result) };
 }
 
-function makeEntry(name: string, result: StepResult = stepSuccess({})): CatalogEntry {
+function makeEntry(name: string, result: Result = stepSuccess({})): CatalogEntry {
   return {
     qualifiedName: name,
     definition: { name, inputs: {}, outputs: {} },
@@ -23,7 +23,7 @@ function makeEntry(name: string, result: StepResult = stepSuccess({})): CatalogE
   };
 }
 
-function makeContext(overrides: Partial<StepContext> = {}): StepContext {
+function makeContext(overrides: Partial<Context> = {}): Context {
   return {
     params: {},
     services: new MapServiceRegistry(),
@@ -33,14 +33,14 @@ function makeContext(overrides: Partial<StepContext> = {}): StepContext {
   };
 }
 
-describe('StructuralStepEvaluator', () => {
+describe('StructuralEvaluator', () => {
   describe('plugin step', () => {
     it('executes catalog action with params', async () => {
       const entry = makeEntry('greet', stepSuccess({ msg: 'hello' }));
       const step: PluginStep = {
         kind: 'plugin', name: 'greet', entry, params: { who: 'world' }, decorators: {},
       };
-      const evaluator = new StructuralStepEvaluator();
+      const evaluator = new StructuralEvaluator();
       const result = await evaluator.evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(entry.action.execute).toHaveBeenCalledWith({ who: 'world' }, expect.anything());
@@ -62,7 +62,7 @@ describe('StructuralStepEvaluator', () => {
           { kind: 'plugin', name: 'b', entry: b, params: {}, decorators: {} },
         ],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(order).toEqual(['a', 'b']);
     });
@@ -77,7 +77,7 @@ describe('StructuralStepEvaluator', () => {
           { kind: 'plugin', name: 'b', entry: b, params: {}, decorators: {} },
         ],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('failure');
       expect(b.action.execute).not.toHaveBeenCalled();
     });
@@ -94,7 +94,7 @@ describe('StructuralStepEvaluator', () => {
           { kind: 'plugin', name: 'b', entry: b, params: {}, decorators: {} },
         ],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(a.action.execute).toHaveBeenCalled();
       expect(b.action.execute).toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe('StructuralStepEvaluator', () => {
           { kind: 'plugin', name: 'b', entry: b, params: {}, decorators: {} },
         ],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('failure');
     });
   });
@@ -124,7 +124,7 @@ describe('StructuralStepEvaluator', () => {
         thenSteps: [{ kind: 'plugin', name: 't', entry: thenEntry, params: {}, decorators: {} }],
         elseSteps: [{ kind: 'plugin', name: 'e', entry: elseEntry, params: {}, decorators: {} }],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(thenEntry.action.execute).toHaveBeenCalled();
       expect(elseEntry.action.execute).not.toHaveBeenCalled();
@@ -138,7 +138,7 @@ describe('StructuralStepEvaluator', () => {
         thenSteps: [{ kind: 'plugin', name: 't', entry: thenEntry, params: {}, decorators: {} }],
         elseSteps: [{ kind: 'plugin', name: 'e', entry: elseEntry, params: {}, decorators: {} }],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(thenEntry.action.execute).not.toHaveBeenCalled();
       expect(elseEntry.action.execute).toHaveBeenCalled();
@@ -164,7 +164,7 @@ describe('StructuralStepEvaluator', () => {
           },
         ],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(matchEntry.action.execute).toHaveBeenCalled();
       expect(defaultEntry.action.execute).not.toHaveBeenCalled();
@@ -187,7 +187,7 @@ describe('StructuralStepEvaluator', () => {
           },
         ],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(defaultEntry.action.execute).toHaveBeenCalled();
     });
@@ -204,7 +204,7 @@ describe('StructuralStepEvaluator', () => {
         catchSteps: [{ kind: 'plugin', name: 'c', entry: catchEntry, params: {}, decorators: {} }],
         finallySteps: [{ kind: 'plugin', name: 'f', entry: finallyEntry, params: {}, decorators: {} }],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(tryEntry.action.execute).toHaveBeenCalled();
       expect(catchEntry.action.execute).not.toHaveBeenCalled();
@@ -221,7 +221,7 @@ describe('StructuralStepEvaluator', () => {
         catchSteps: [{ kind: 'plugin', name: 'c', entry: catchEntry, params: {}, decorators: {} }],
         finallySteps: [{ kind: 'plugin', name: 'f', entry: finallyEntry, params: {}, decorators: {} }],
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext());
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       expect(tryEntry.action.execute).toHaveBeenCalled();
       expect(catchEntry.action.execute).toHaveBeenCalled();
@@ -239,7 +239,7 @@ describe('StructuralStepEvaluator', () => {
       const step: BarrierStep = {
         kind: 'barrier', name: null, awaitSteps: ['step-a', 'step-b'], decorators: {},
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext({ scope }));
+      const result = await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
       expect(result.kind).toBe('success');
     });
 
@@ -251,7 +251,7 @@ describe('StructuralStepEvaluator', () => {
       const step: BarrierStep = {
         kind: 'barrier', name: null, awaitSteps: ['step-a', 'step-b'], decorators: {},
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext({ scope }));
+      const result = await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
       expect(result.kind).toBe('failure');
     });
   });
@@ -266,7 +266,7 @@ describe('StructuralStepEvaluator', () => {
       const step: QuorumStep = {
         kind: 'quorum', name: null, required: 2, ofSteps: ['s1', 's2', 's3'], decorators: {},
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext({ scope }));
+      const result = await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
       expect(result.kind).toBe('success');
     });
 
@@ -278,7 +278,7 @@ describe('StructuralStepEvaluator', () => {
       const step: QuorumStep = {
         kind: 'quorum', name: null, required: 2, ofSteps: ['s1', 's2', 's3'], decorators: {},
       };
-      const result = await new StructuralStepEvaluator().evaluate(step, makeContext({ scope }));
+      const result = await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
       expect(result.kind).toBe('failure');
     });
   });
@@ -290,7 +290,7 @@ describe('StructuralStepEvaluator', () => {
         invokeSpec: { rest: { method: 'GET', url: '/api/users' } },
         decorators: {},
       };
-      const evaluator = new StructuralStepEvaluator();
+      const evaluator = new StructuralEvaluator();
       const result = await evaluator.evaluate(step, makeContext());
       expect(result.kind).toBe('failure');
     });
@@ -301,7 +301,7 @@ describe('StructuralStepEvaluator', () => {
         invokeSpec: { rest: { method: 'GET', url: '/api/users' } },
         decorators: {},
       };
-      const evaluator = new StructuralStepEvaluator([createMockRestHandler()]);
+      const evaluator = new StructuralEvaluator([createMockRestHandler()]);
       const result = await evaluator.evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       if (result.kind === 'success') {
@@ -315,7 +315,7 @@ describe('StructuralStepEvaluator', () => {
         invokeSpec: { mcp: 'file_search' },
         decorators: {},
       };
-      const evaluator = new StructuralStepEvaluator([createMockMcpHandler()]);
+      const evaluator = new StructuralEvaluator([createMockMcpHandler()]);
       const result = await evaluator.evaluate(step, makeContext());
       expect(result.kind).toBe('success');
       if (result.kind === 'success') {
@@ -329,7 +329,7 @@ describe('StructuralStepEvaluator', () => {
         invokeSpec: { mcp: 'code_review' },
         decorators: {},
       };
-      const evaluator = new StructuralStepEvaluator([
+      const evaluator = new StructuralEvaluator([
         createMockRestHandler(),
         createMockMcpHandler(),
       ]);
@@ -346,7 +346,7 @@ describe('StructuralStepEvaluator', () => {
         invokeSpec: { unknown_type: { foo: 'bar' } },
         decorators: {},
       };
-      const evaluator = new StructuralStepEvaluator([createMockRestHandler()]);
+      const evaluator = new StructuralEvaluator([createMockRestHandler()]);
       const result = await evaluator.evaluate(step, makeContext());
       expect(result.kind).toBe('failure');
     });
@@ -358,7 +358,7 @@ describe('StructuralStepEvaluator', () => {
         invokeSpec: { mcp: 'file_search' },
         decorators: {},
       };
-      const evaluator = new StructuralStepEvaluator([createMockMcpHandler()]);
+      const evaluator = new StructuralEvaluator([createMockMcpHandler()]);
       await evaluator.evaluate(step, makeContext({ scope }));
       expect(scope.resultStore().result('my-invoke')).toHaveProperty('results');
     });
@@ -371,7 +371,7 @@ describe('StructuralStepEvaluator', () => {
       const step: PluginStep = {
         kind: 'plugin', name: 'my-step', entry, params: {}, decorators: {},
       };
-      await new StructuralStepEvaluator().evaluate(step, makeContext({ scope }));
+      await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
       expect(scope.resultStore().result('my-step')).toEqual({ v: 42 });
     });
   });

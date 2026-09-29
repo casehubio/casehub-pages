@@ -1,4 +1,4 @@
-import type { StepCatalog, StepResult } from '@casehubio/yaml-core/step';
+import type { Catalog, Result } from '@casehubio/yaml-core/step';
 import { stepFailure, MapServiceRegistry } from '@casehubio/yaml-core/step';
 
 export interface CatalogExecuteRequest {
@@ -7,9 +7,9 @@ export interface CatalogExecuteRequest {
 }
 
 export function createCatalogExecuteHandler(
-  catalog: StepCatalog,
-): (req: CatalogExecuteRequest) => Promise<StepResult> {
-  return async (req: CatalogExecuteRequest): Promise<StepResult> => {
+  catalog: Catalog,
+): (req: CatalogExecuteRequest) => Promise<Result> {
+  return async (req: CatalogExecuteRequest): Promise<Result> => {
     const entry = catalog.resolve(req.actionName);
     if (!entry) {
       return stepFailure(`Action '${req.actionName}' not found in catalog`);

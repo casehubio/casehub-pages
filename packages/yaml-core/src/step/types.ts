@@ -1,7 +1,7 @@
-import type { StepParameterType } from '../types.js';
+import type { ParameterType } from '../types.js';
 
-export interface StepParameter {
-  type: StepParameterType;
+export interface Parameter {
+  type: ParameterType;
   required: boolean;
   defaultValue?: string;
   allowedValues?: string[];
@@ -63,17 +63,17 @@ export interface ProcessBinding {
   onError: string;
 }
 
-export interface StepDefinition {
+export interface Definition {
   name: string;
   description?: string;
-  inputs: Record<string, StepParameter>;
-  outputs: Record<string, StepParameter>;
+  inputs: Record<string, Parameter>;
+  outputs: Record<string, Parameter>;
   invoke?: InvokeBinding;
 }
 
-export interface StepDefinitionFile {
+export interface DefinitionFile {
   namespace?: string;
-  actions: Record<string, StepDefinition>;
+  actions: Record<string, Definition>;
 }
 
 export const RUNTIME_PYTHON = 'python3';

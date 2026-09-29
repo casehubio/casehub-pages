@@ -1,4 +1,4 @@
-import type { StepCatalog } from './step-walker.js';
+import type { Catalog } from './walker.js';
 
 const DECORATOR_KEYS = [
   'if', 'on-success', 'on-failure', 'forEach', 'loop',
@@ -7,8 +7,8 @@ const DECORATOR_KEYS = [
   'semaphore', 'barrier', 'quorum', 'race',
 ];
 
-export class StepSchemaComposer {
-  static compose(catalog: StepCatalog): Record<string, unknown> {
+export class SchemaComposer {
+  static compose(catalog: Catalog): Record<string, unknown> {
     const oneOf: Record<string, unknown>[] = [];
 
     for (const actionName of catalog.availableActions()) {

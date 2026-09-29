@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { StepPluginRegistry } from './step-plugin-registry.js';
-import type { PluginRegistration } from './step-plugin-registry.js';
-import type { CatalogEntry } from './step-walker.js';
+import { PluginRegistry } from './plugin-registry.js';
+import type { PluginRegistration } from './plugin-registry.js';
+import type { CatalogEntry } from './walker.js';
 
 function plugin(name: string): PluginRegistration {
   return {
@@ -12,34 +12,34 @@ function plugin(name: string): PluginRegistration {
   };
 }
 
-describe('StepPluginRegistry', () => {
+describe('PluginRegistry', () => {
   it('register and has', () => {
-    const reg = new StepPluginRegistry();
+    const reg = new PluginRegistry();
     reg.register(plugin('greet'));
     expect(reg.has('greet')).toBe(true);
     expect(reg.has('missing')).toBe(false);
   });
 
   it('register duplicate throws', () => {
-    const reg = new StepPluginRegistry();
+    const reg = new PluginRegistry();
     reg.register(plugin('greet'));
     expect(() => reg.register(plugin('greet'))).toThrow("already registered");
   });
 
   it('unregister removes plugin', () => {
-    const reg = new StepPluginRegistry();
+    const reg = new PluginRegistry();
     reg.register(plugin('greet'));
     expect(reg.unregister('greet')).toBe(true);
     expect(reg.has('greet')).toBe(false);
   });
 
   it('unregister returns false for unknown', () => {
-    const reg = new StepPluginRegistry();
+    const reg = new PluginRegistry();
     expect(reg.unregister('missing')).toBe(false);
   });
 
   it('createSource populates catalog entries', () => {
-    const reg = new StepPluginRegistry();
+    const reg = new PluginRegistry();
     reg.register(plugin('alpha'));
     reg.register(plugin('beta'));
     const src = reg.createSource();
@@ -51,7 +51,7 @@ describe('StepPluginRegistry', () => {
   });
 
   it('createSource respects priority parameter', () => {
-    const reg = new StepPluginRegistry();
+    const reg = new PluginRegistry();
     const src = reg.createSource(42);
     expect(src.priority).toBe(42);
   });

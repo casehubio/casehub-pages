@@ -1,11 +1,11 @@
-import type { StepCatalog, CatalogEntry } from './step-walker.js';
+import type { Catalog, CatalogEntry } from './walker.js';
 
 export interface CatalogSource {
   populate(entries: Map<string, CatalogEntry>): void;
   readonly priority: number;
 }
 
-export class CompositeStepCatalog implements StepCatalog {
+export class CompositeCatalog implements Catalog {
   private readonly entries = new Map<string, CatalogEntry>();
 
   constructor(sources: CatalogSource[]) {
@@ -30,10 +30,10 @@ export class CompositeStepCatalog implements StepCatalog {
   }
 }
 
-export class ImportScopedStepCatalog implements StepCatalog {
+export class ImportScopedCatalog implements Catalog {
   constructor(
     private readonly importedEntries: Map<string, CatalogEntry>,
-    private readonly delegate: StepCatalog,
+    private readonly delegate: Catalog,
   ) {}
 
   resolve(actionName: string): CatalogEntry | undefined {

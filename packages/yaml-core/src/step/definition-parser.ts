@@ -1,39 +1,39 @@
-import type { StepParameter, StepDefinition, StepDefinitionFile, InvokeBinding } from './step-types.js';
-import { parseStepParameterType } from '../types.js';
-import type { StepParameterType } from '../types.js';
-import { RUNTIME_PYTHON, RUNTIME_NODE } from './step-types.js';
+import type { Parameter, Definition, DefinitionFile, InvokeBinding } from './types.js';
+import { parseParameterType } from '../types.js';
+import type { ParameterType } from '../types.js';
+import { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
 
-export class StepDefinitionParser {
-  static parse(raw: Record<string, unknown>): StepDefinitionFile {
+export class DefinitionParser {
+  static parse(raw: Record<string, unknown>): DefinitionFile {
     const namespace = raw['namespace'] as string | undefined;
     const actionsRaw = raw['actions'] as Record<string, Record<string, unknown>> | undefined;
     if (!actionsRaw) throw new Error('Step definition file must have an actions map');
 
-    const actions: Record<string, StepDefinition> = {};
+    const actions: Record<string, Definition> = {};
     for (const [name, actionRaw] of Object.entries(actionsRaw)) {
-      actions[name] = StepDefinitionParser.parseAction(name, actionRaw);
+      actions[name] = DefinitionParser.parseAction(name, actionRaw);
     }
     return { ...(namespace !== undefined ? { namespace } : {}), actions };
   }
 
-  static parseAction(name: string, raw: Record<string, unknown>): StepDefinition {
+  static parseAction(name: string, raw: Record<string, unknown>): Definition {
     const description = raw['description'] as string | undefined;
-    const inputs = StepDefinitionParser.parseParams(raw['inputs'] as Record<string, unknown> | undefined);
-    const outputs = StepDefinitionParser.parseParams(raw['outputs'] as Record<string, unknown> | undefined);
+    const inputs = DefinitionParser.parseParams(raw['inputs'] as Record<string, unknown> | undefined);
+    const outputs = DefinitionParser.parseParams(raw['outputs'] as Record<string, unknown> | undefined);
     const invokeRaw = raw['invoke'] as Record<string, unknown> | undefined;
-    const invoke = invokeRaw ? StepDefinitionParser.parseInvoke(invokeRaw) : undefined;
+    const invoke = invokeRaw ? DefinitionParser.parseInvoke(invokeRaw) : undefined;
     return { name, ...(description !== undefined ? { description } : {}), inputs, outputs, ...(invoke !== undefined ? { invoke } : {}) };
   }
 
-  static parseParams(raw: Record<string, unknown> | undefined): Record<string, StepParameter> {
+  static parseParams(raw: Record<string, unknown> | undefined): Record<string, Parameter> {
     if (!raw) return {};
-    const result: Record<string, StepParameter> = {};
+    const result: Record<string, Parameter> = {};
     for (const [name, paramRaw] of Object.entries(raw)) {
       if (typeof paramRaw === 'string') {
-        result[name] = { type: parseStepParameterType(paramRaw), required: false };
+        result[name] = { type: parseParameterType(paramRaw), required: false };
       } else if (typeof paramRaw === 'object' && paramRaw !== null) {
         const p = paramRaw as Record<string, unknown>;
-        const type: StepParameterType = p['type'] ? parseStepParameterType(p['type'] as string) : 'STRING';
+        const type: ParameterType = p['type'] ? parseParameterType(p['type'] as string) : 'STRING';
         const defaultValue = (p['defaultValue'] as string | undefined) ?? (p['default'] as string | undefined);
         const allowedValues = (p['allowedValues'] ?? p['enum']) as string[] | undefined;
         const format = p['format'] as string | undefined;

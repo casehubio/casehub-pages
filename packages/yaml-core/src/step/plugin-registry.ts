@@ -1,16 +1,16 @@
-import type { StepAction, CatalogEntry } from './step-walker.js';
-import type { StepDefinition, StepParameter } from './step-types.js';
-import type { CatalogSource } from './step-catalog.js';
+import type { Action, CatalogEntry } from './walker.js';
+import type { Definition, Parameter } from './types.js';
+import type { CatalogSource } from './catalog.js';
 
 export interface PluginRegistration {
   name: string;
   description?: string;
-  inputs: Record<string, StepParameter>;
-  outputs: Record<string, StepParameter>;
-  execute: StepAction['execute'];
+  inputs: Record<string, Parameter>;
+  outputs: Record<string, Parameter>;
+  execute: Action['execute'];
 }
 
-export class StepPluginRegistry {
+export class PluginRegistry {
   private readonly plugins = new Map<string, PluginRegistration>();
 
   register(plugin: PluginRegistration): void {
@@ -35,13 +35,13 @@ export class StepPluginRegistry {
       populate(entries: Map<string, CatalogEntry>): void {
         for (const [name, plugin] of plugins) {
           if (!entries.has(name)) {
-            const definition: StepDefinition = {
+            const definition: Definition = {
               name: plugin.name,
               ...(plugin.description !== undefined ? { description: plugin.description } : {}),
               inputs: plugin.inputs,
               outputs: plugin.outputs,
             };
-            const action: StepAction = { execute: plugin.execute };
+            const action: Action = { execute: plugin.execute };
             entries.set(name, { qualifiedName: name, definition, action });
           }
         }

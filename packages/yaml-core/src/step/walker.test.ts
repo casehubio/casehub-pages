@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import type { StepCatalog, CatalogEntry, StepAction, StepResult } from './step-walker.js';
-import { StepWalker, stepSuccess } from './step-walker.js';
+import type { Catalog, CatalogEntry, Action, Result } from './walker.js';
+import { Walker, stepSuccess } from './walker.js';
 
-const noopAction: StepAction = {
+const noopAction: Action = {
   execute: () => Promise.resolve(stepSuccess({})),
 };
 
-function makeCatalog(actions: Record<string, CatalogEntry> = {}): StepCatalog {
+function makeCatalog(actions: Record<string, CatalogEntry> = {}): Catalog {
   return {
     resolve: (name) => actions[name],
     availableActions: () => new Set(Object.keys(actions)),
@@ -21,7 +21,7 @@ function makeEntry(name: string): CatalogEntry {
   };
 }
 
-describe('StepWalker', () => {
+describe('Walker', () => {
   describe('name uniqueness', () => {
     it('allows unique names', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA'), doB: makeEntry('doB') });
@@ -29,7 +29,7 @@ describe('StepWalker', () => {
         { step: 'first', doA: {} },
         { step: 'second', doB: {} },
       ];
-      expect(() => StepWalker.resolve(steps, catalog)).not.toThrow();
+      expect(() => Walker.resolve(steps, catalog)).not.toThrow();
     });
 
     it('throws on duplicate step names', () => {
@@ -38,7 +38,7 @@ describe('StepWalker', () => {
         { step: 'same-name', doA: {} },
         { step: 'same-name', doA: {} },
       ];
-      expect(() => StepWalker.resolve(steps, catalog)).toThrow(/duplicate.*same-name/i);
+      expect(() => Walker.resolve(steps, catalog)).toThrow(/duplicate.*same-name/i);
     });
 
     it('allows null names (unnamed steps)', () => {
@@ -47,7 +47,7 @@ describe('StepWalker', () => {
         { doA: {} },
         { doA: {} },
       ];
-      expect(() => StepWalker.resolve(steps, catalog)).not.toThrow();
+      expect(() => Walker.resolve(steps, catalog)).not.toThrow();
     });
 
     it('detects duplicates in nested blocks', () => {
@@ -60,7 +60,7 @@ describe('StepWalker', () => {
           ],
         },
       ];
-      expect(() => StepWalker.resolve(steps, catalog)).toThrow(/duplicate.*outer/i);
+      expect(() => Walker.resolve(steps, catalog)).toThrow(/duplicate.*outer/i);
     });
   });
 
@@ -72,7 +72,7 @@ describe('StepWalker', () => {
         { step: 'step-b', doA: {} },
         { barrier: { await: ['step-a', 'step-b'] } },
       ];
-      expect(() => StepWalker.resolve(steps, catalog)).not.toThrow();
+      expect(() => Walker.resolve(steps, catalog)).not.toThrow();
     });
 
     it('throws when barrier references unknown step name', () => {
@@ -81,7 +81,7 @@ describe('StepWalker', () => {
         { step: 'step-a', doA: {} },
         { barrier: { await: ['step-a', 'nonexistent'] } },
       ];
-      expect(() => StepWalker.resolve(steps, catalog)).toThrow(/nonexistent/);
+      expect(() => Walker.resolve(steps, catalog)).toThrow(/nonexistent/);
     });
 
     it('throws when quorum references unknown step name', () => {
@@ -90,7 +90,7 @@ describe('StepWalker', () => {
         { step: 'step-a', doA: {} },
         { quorum: { required: 1, of: ['step-a', 'ghost'] } },
       ];
-      expect(() => StepWalker.resolve(steps, catalog)).toThrow(/ghost/);
+      expect(() => Walker.resolve(steps, catalog)).toThrow(/ghost/);
     });
   });
 
@@ -106,7 +106,7 @@ describe('StepWalker', () => {
           ],
         },
       ];
-      const resolved = StepWalker.resolve(steps, catalog);
+      const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('match');
       if (resolved[0]!.kind === 'match') {
         expect(resolved[0]!.cases[1]!.pattern.type).toBe('default');
@@ -126,7 +126,7 @@ describe('StepWalker', () => {
           ],
         },
       ];
-      const resolved = StepWalker.resolve(steps, catalog);
+      const resolved = Walker.resolve(steps, catalog);
       if (resolved[0]!.kind === 'match') {
         expect(resolved[0]!.cases[0]!.pattern).toEqual({ type: 'value', value: 'hello' });
         expect(resolved[0]!.cases[1]!.pattern).toEqual({ type: 'value', value: 'world' });

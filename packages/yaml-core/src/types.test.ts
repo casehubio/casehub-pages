@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  parseValue, rawValue, canAcceptType, isScalarStepParam,
-  stepParamToParameterType, parameterTypeToStepParam,
-  parseStepParameterType, validateStepParamValue, parseScalarStepParam,
+  parseValue, rawValue, canAcceptType, isScalarParam,
+  parseParameterType, validateParamValue, parseScalarParam,
   chainSources, drillFields, nestedSource, forEachContextSource,
   parseForEachDirective, drillOnlySource, UnresolvedVariableError,
 } from './types.js';
@@ -45,8 +44,8 @@ describe('parseValue', () => {
     expect(() => parseValue('BOOLEAN', 'maybe')).toThrow("Cannot parse 'maybe' as BOOLEAN");
   });
 
-  it('LIST splits on comma and trims', () => {
-    expect(parseValue('LIST', 'a, b , c')).toEqual({ type: 'list', value: ['a', 'b', 'c'] });
+  it('ARRAY splits on comma and trims', () => {
+    expect(parseValue('ARRAY', 'a, b , c')).toEqual({ type: 'array', value: ['a', 'b', 'c'] });
   });
 });
 
@@ -55,7 +54,7 @@ describe('rawValue', () => {
     expect(rawValue({ type: 'string', value: 'hi' })).toBe('hi');
     expect(rawValue({ type: 'integer', value: 5 })).toBe(5);
     expect(rawValue({ type: 'boolean', value: true })).toBe(true);
-    expect(rawValue({ type: 'list', value: ['a', 'b'] })).toEqual(['a', 'b']);
+    expect(rawValue({ type: 'array', value: ['a', 'b'] })).toEqual(['a', 'b']);
   });
 });
 
@@ -63,17 +62,18 @@ describe('canAcceptType', () => {
   it('same type returns true', () => {
     expect(canAcceptType('STRING', 'STRING')).toBe(true);
     expect(canAcceptType('INTEGER', 'INTEGER')).toBe(true);
-    expect(canAcceptType('LIST', 'LIST')).toBe(true);
+    expect(canAcceptType('ARRAY', 'ARRAY')).toBe(true);
   });
 
-  it('STRING accepts non-LIST types', () => {
+  it('STRING accepts scalar types', () => {
     expect(canAcceptType('STRING', 'INTEGER')).toBe(true);
     expect(canAcceptType('STRING', 'NUMBER')).toBe(true);
     expect(canAcceptType('STRING', 'BOOLEAN')).toBe(true);
   });
 
-  it('STRING rejects LIST', () => {
-    expect(canAcceptType('STRING', 'LIST')).toBe(false);
+  it('STRING rejects compound types', () => {
+    expect(canAcceptType('STRING', 'ARRAY')).toBe(false);
+    expect(canAcceptType('STRING', 'OBJECT')).toBe(false);
   });
 
   it('NUMBER accepts INTEGER', () => {
@@ -83,129 +83,110 @@ describe('canAcceptType', () => {
   it('other combos return false', () => {
     expect(canAcceptType('INTEGER', 'NUMBER')).toBe(false);
     expect(canAcceptType('BOOLEAN', 'STRING')).toBe(false);
-    expect(canAcceptType('LIST', 'STRING')).toBe(false);
+    expect(canAcceptType('ARRAY', 'STRING')).toBe(false);
   });
 });
 
-describe('isScalarStepParam', () => {
+describe('isScalarParam', () => {
   it('true for scalar types', () => {
-    expect(isScalarStepParam('STRING')).toBe(true);
-    expect(isScalarStepParam('INTEGER')).toBe(true);
-    expect(isScalarStepParam('NUMBER')).toBe(true);
-    expect(isScalarStepParam('BOOLEAN')).toBe(true);
+    expect(isScalarParam('STRING')).toBe(true);
+    expect(isScalarParam('INTEGER')).toBe(true);
+    expect(isScalarParam('NUMBER')).toBe(true);
+    expect(isScalarParam('BOOLEAN')).toBe(true);
   });
 
   it('false for compound types', () => {
-    expect(isScalarStepParam('ARRAY')).toBe(false);
-    expect(isScalarStepParam('OBJECT')).toBe(false);
+    expect(isScalarParam('ARRAY')).toBe(false);
+    expect(isScalarParam('OBJECT')).toBe(false);
   });
 });
 
-describe('stepParamToParameterType', () => {
-  it('maps scalar types', () => {
-    expect(stepParamToParameterType('STRING')).toBe('STRING');
-    expect(stepParamToParameterType('INTEGER')).toBe('INTEGER');
-    expect(stepParamToParameterType('NUMBER')).toBe('NUMBER');
-    expect(stepParamToParameterType('BOOLEAN')).toBe('BOOLEAN');
-  });
-
-  it('returns undefined for compound types', () => {
-    expect(stepParamToParameterType('ARRAY')).toBeUndefined();
-    expect(stepParamToParameterType('OBJECT')).toBeUndefined();
-  });
-});
-
-describe('parameterTypeToStepParam', () => {
-  it('maps all ParameterType values', () => {
-    expect(parameterTypeToStepParam('STRING')).toBe('STRING');
-    expect(parameterTypeToStepParam('LIST')).toBe('ARRAY');
-    expect(parameterTypeToStepParam('INTEGER')).toBe('INTEGER');
-    expect(parameterTypeToStepParam('NUMBER')).toBe('NUMBER');
-    expect(parameterTypeToStepParam('BOOLEAN')).toBe('BOOLEAN');
-  });
-});
-
-describe('parseStepParameterType', () => {
+describe('parseParameterType', () => {
   it('recognizes all 6 types case-insensitively', () => {
-    expect(parseStepParameterType('string')).toBe('STRING');
-    expect(parseStepParameterType('Integer')).toBe('INTEGER');
-    expect(parseStepParameterType('NUMBER')).toBe('NUMBER');
-    expect(parseStepParameterType('boolean')).toBe('BOOLEAN');
-    expect(parseStepParameterType('Array')).toBe('ARRAY');
-    expect(parseStepParameterType('OBJECT')).toBe('OBJECT');
+    expect(parseParameterType('string')).toBe('STRING');
+    expect(parseParameterType('Integer')).toBe('INTEGER');
+    expect(parseParameterType('NUMBER')).toBe('NUMBER');
+    expect(parseParameterType('boolean')).toBe('BOOLEAN');
+    expect(parseParameterType('Array')).toBe('ARRAY');
+    expect(parseParameterType('OBJECT')).toBe('OBJECT');
   });
 
   it('maps DECIMAL to NUMBER', () => {
-    expect(parseStepParameterType('decimal')).toBe('NUMBER');
-    expect(parseStepParameterType('DECIMAL')).toBe('NUMBER');
+    expect(parseParameterType('decimal')).toBe('NUMBER');
+    expect(parseParameterType('DECIMAL')).toBe('NUMBER');
+  });
+
+  it('maps LIST to ARRAY (migration alias)', () => {
+    expect(parseParameterType('LIST')).toBe('ARRAY');
+    expect(parseParameterType('list')).toBe('ARRAY');
   });
 
   it('throws on unknown type', () => {
-    expect(() => parseStepParameterType('MAP')).toThrow("Unknown StepParameterType: 'MAP'");
+    expect(() => parseParameterType('MAP')).toThrow("Unknown ParameterType: 'MAP'");
   });
 });
 
-describe('validateStepParamValue', () => {
+describe('validateParamValue', () => {
   it('STRING validates typeof string', () => {
-    expect(validateStepParamValue('STRING', 'hello')).toBe(true);
-    expect(validateStepParamValue('STRING', 42)).toBe(false);
+    expect(validateParamValue('STRING', 'hello')).toBe(true);
+    expect(validateParamValue('STRING', 42)).toBe(false);
   });
 
   it('INTEGER validates number + isInteger', () => {
-    expect(validateStepParamValue('INTEGER', 42)).toBe(true);
-    expect(validateStepParamValue('INTEGER', 3.14)).toBe(false);
-    expect(validateStepParamValue('INTEGER', 'x')).toBe(false);
+    expect(validateParamValue('INTEGER', 42)).toBe(true);
+    expect(validateParamValue('INTEGER', 3.14)).toBe(false);
+    expect(validateParamValue('INTEGER', 'x')).toBe(false);
   });
 
   it('NUMBER validates typeof number', () => {
-    expect(validateStepParamValue('NUMBER', 3.14)).toBe(true);
-    expect(validateStepParamValue('NUMBER', 42)).toBe(true);
-    expect(validateStepParamValue('NUMBER', 'x')).toBe(false);
+    expect(validateParamValue('NUMBER', 3.14)).toBe(true);
+    expect(validateParamValue('NUMBER', 42)).toBe(true);
+    expect(validateParamValue('NUMBER', 'x')).toBe(false);
   });
 
   it('BOOLEAN validates typeof boolean', () => {
-    expect(validateStepParamValue('BOOLEAN', true)).toBe(true);
-    expect(validateStepParamValue('BOOLEAN', false)).toBe(true);
-    expect(validateStepParamValue('BOOLEAN', 'true')).toBe(false);
+    expect(validateParamValue('BOOLEAN', true)).toBe(true);
+    expect(validateParamValue('BOOLEAN', false)).toBe(true);
+    expect(validateParamValue('BOOLEAN', 'true')).toBe(false);
   });
 
   it('ARRAY validates Array.isArray', () => {
-    expect(validateStepParamValue('ARRAY', [1, 2])).toBe(true);
-    expect(validateStepParamValue('ARRAY', 'not array')).toBe(false);
+    expect(validateParamValue('ARRAY', [1, 2])).toBe(true);
+    expect(validateParamValue('ARRAY', 'not array')).toBe(false);
   });
 
   it('OBJECT validates non-null non-array object', () => {
-    expect(validateStepParamValue('OBJECT', { a: 1 })).toBe(true);
-    expect(validateStepParamValue('OBJECT', null)).toBe(false);
-    expect(validateStepParamValue('OBJECT', [1])).toBe(false);
-    expect(validateStepParamValue('OBJECT', 'str')).toBe(false);
+    expect(validateParamValue('OBJECT', { a: 1 })).toBe(true);
+    expect(validateParamValue('OBJECT', null)).toBe(false);
+    expect(validateParamValue('OBJECT', [1])).toBe(false);
+    expect(validateParamValue('OBJECT', 'str')).toBe(false);
   });
 });
 
-describe('parseScalarStepParam', () => {
+describe('parseScalarParam', () => {
   it('STRING returns raw', () => {
-    expect(parseScalarStepParam('STRING', 'hello')).toBe('hello');
+    expect(parseScalarParam('STRING', 'hello')).toBe('hello');
   });
 
   it('INTEGER parses valid, throws on invalid', () => {
-    expect(parseScalarStepParam('INTEGER', '10')).toBe(10);
-    expect(() => parseScalarStepParam('INTEGER', 'abc')).toThrow();
+    expect(parseScalarParam('INTEGER', '10')).toBe(10);
+    expect(() => parseScalarParam('INTEGER', 'abc')).toThrow();
   });
 
   it('NUMBER parses valid, throws on invalid', () => {
-    expect(parseScalarStepParam('NUMBER', '2.5')).toBe(2.5);
-    expect(() => parseScalarStepParam('NUMBER', 'abc')).toThrow();
+    expect(parseScalarParam('NUMBER', '2.5')).toBe(2.5);
+    expect(() => parseScalarParam('NUMBER', 'abc')).toThrow();
   });
 
   it('BOOLEAN parses truthy and falsy', () => {
-    expect(parseScalarStepParam('BOOLEAN', 'yes')).toBe(true);
-    expect(parseScalarStepParam('BOOLEAN', 'off')).toBe(false);
-    expect(() => parseScalarStepParam('BOOLEAN', 'maybe')).toThrow();
+    expect(parseScalarParam('BOOLEAN', 'yes')).toBe(true);
+    expect(parseScalarParam('BOOLEAN', 'off')).toBe(false);
+    expect(() => parseScalarParam('BOOLEAN', 'maybe')).toThrow();
   });
 
   it('ARRAY and OBJECT throw', () => {
-    expect(() => parseScalarStepParam('ARRAY', '[]')).toThrow("compound type 'ARRAY'");
-    expect(() => parseScalarStepParam('OBJECT', '{}')).toThrow("compound type 'OBJECT'");
+    expect(() => parseScalarParam('ARRAY', '[]')).toThrow("compound type 'ARRAY'");
+    expect(() => parseScalarParam('OBJECT', '{}')).toThrow("compound type 'OBJECT'");
   });
 });
 

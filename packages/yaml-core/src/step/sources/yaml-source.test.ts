@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { YamlStepDefinitionSource } from './yaml-source.js';
+import { YamlDefinitionSource } from './yaml-source.js';
 import type { InvokeHandler } from '../invoke/invoke-handler.js';
-import { stepSuccess } from '../step-walker.js';
-import type { CatalogEntry } from '../step-walker.js';
-import type { StepDefinitionFile } from '../step-types.js';
+import { stepSuccess } from '../walker.js';
+import type { CatalogEntry } from '../walker.js';
+import type { DefinitionFile } from '../types.js';
 
 function makeHandler(supports = true): InvokeHandler {
   return {
@@ -12,7 +12,7 @@ function makeHandler(supports = true): InvokeHandler {
   };
 }
 
-const parsedFile: StepDefinitionFile = {
+const parsedFile: DefinitionFile = {
   actions: {
     greet: {
       name: 'greet',
@@ -23,7 +23,7 @@ const parsedFile: StepDefinitionFile = {
   },
 };
 
-const namespacedFile: StepDefinitionFile = {
+const namespacedFile: DefinitionFile = {
   namespace: 'myns',
   actions: {
     hello: {
@@ -35,15 +35,15 @@ const namespacedFile: StepDefinitionFile = {
   },
 };
 
-describe('YamlStepDefinitionSource', () => {
+describe('YamlDefinitionSource', () => {
   it('priority is 100', () => {
-    const source = new YamlStepDefinitionSource([]);
+    const source = new YamlDefinitionSource([]);
     expect(source.priority).toBe(100);
   });
 
   it('addParsedFile + populate creates entries for actions with invoke bindings', () => {
     const handler = makeHandler();
-    const source = new YamlStepDefinitionSource([handler]);
+    const source = new YamlDefinitionSource([handler]);
     source.addParsedFile(parsedFile);
     const entries = new Map<string, CatalogEntry>();
     source.populate(entries);
@@ -54,7 +54,7 @@ describe('YamlStepDefinitionSource', () => {
 
   it('namespaced actions get both qualified and short names', () => {
     const handler = makeHandler();
-    const source = new YamlStepDefinitionSource([handler]);
+    const source = new YamlDefinitionSource([handler]);
     source.addParsedFile(namespacedFile);
     const entries = new Map<string, CatalogEntry>();
     source.populate(entries);
@@ -66,7 +66,7 @@ describe('YamlStepDefinitionSource', () => {
 
   it('handler that does not support binding — action not added', () => {
     const handler = makeHandler(false);
-    const source = new YamlStepDefinitionSource([handler]);
+    const source = new YamlDefinitionSource([handler]);
     source.addParsedFile(parsedFile);
     const entries = new Map<string, CatalogEntry>();
     source.populate(entries);
@@ -75,7 +75,7 @@ describe('YamlStepDefinitionSource', () => {
 
   it('populate does not overwrite existing entries', () => {
     const handler = makeHandler();
-    const source = new YamlStepDefinitionSource([handler]);
+    const source = new YamlDefinitionSource([handler]);
     source.addParsedFile(parsedFile);
     const existing: CatalogEntry = { qualifiedName: 'greet', definition: parsedFile.actions['greet']!, action: { execute: vi.fn() } };
     const entries = new Map<string, CatalogEntry>([['greet', existing]]);
@@ -85,7 +85,7 @@ describe('YamlStepDefinitionSource', () => {
 
   it('addFile parses raw YAML via StepDefinitionParser', () => {
     const handler = makeHandler();
-    const source = new YamlStepDefinitionSource([handler]);
+    const source = new YamlDefinitionSource([handler]);
     source.addFile({
       actions: {
         greet: {

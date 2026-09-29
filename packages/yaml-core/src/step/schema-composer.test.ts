@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { StepSchemaComposer } from './step-schema-composer.js';
-import type { StepCatalog, CatalogEntry, StepAction } from './step-walker.js';
+import { SchemaComposer } from './schema-composer.js';
+import type { Catalog, CatalogEntry, Action } from './walker.js';
 
-const noop: StepAction = { execute: async () => ({ kind: 'success', output: {}, executionMetadata: {} }) };
+const noop: Action = { execute: async () => ({ kind: 'success', output: {}, executionMetadata: {} }) };
 
-function mockCatalog(actions: Record<string, CatalogEntry>): StepCatalog {
+function mockCatalog(actions: Record<string, CatalogEntry>): Catalog {
   return {
     resolve: (name) => actions[name],
     availableActions: () => new Set(Object.keys(actions)),
@@ -23,10 +23,10 @@ function catalogEntry(name: string, inputs: Record<string, { type: string }>): C
   };
 }
 
-describe('StepSchemaComposer', () => {
+describe('SchemaComposer', () => {
   it('compose produces JSON Schema with oneOf', () => {
     const catalog = mockCatalog({ greet: catalogEntry('greet', {}) });
-    const schema = StepSchemaComposer.compose(catalog) as { oneOf: unknown[] };
+    const schema = SchemaComposer.compose(catalog) as { oneOf: unknown[] };
     expect(schema.type).toBe('object');
     expect(Array.isArray(schema.oneOf)).toBe(true);
     expect(schema.oneOf.length).toBeGreaterThan(0);
@@ -36,7 +36,7 @@ describe('StepSchemaComposer', () => {
     const catalog = mockCatalog({
       send: catalogEntry('send', { message: { type: 'STRING' }, count: { type: 'INTEGER' } }),
     });
-    const schema = StepSchemaComposer.compose(catalog) as { oneOf: Array<{ properties: Record<string, { type?: string; properties?: Record<string, { type: string }> }> }> };
+    const schema = SchemaComposer.compose(catalog) as { oneOf: Array<{ properties: Record<string, { type?: string; properties?: Record<string, { type: string }> }> }> };
     const sendVariant = schema.oneOf.find(v => v.properties?.['send']);
     expect(sendVariant).toBeDefined();
     const sendProp = sendVariant!.properties['send'] as { properties: Record<string, { type: string }> };
@@ -46,7 +46,7 @@ describe('StepSchemaComposer', () => {
 
   it('includes decorator keys in shared properties', () => {
     const catalog = mockCatalog({});
-    const schema = StepSchemaComposer.compose(catalog) as { properties: Record<string, unknown> };
+    const schema = SchemaComposer.compose(catalog) as { properties: Record<string, unknown> };
     expect(schema.properties).toHaveProperty('if');
     expect(schema.properties).toHaveProperty('retry');
     expect(schema.properties).toHaveProperty('timeout');
@@ -55,7 +55,7 @@ describe('StepSchemaComposer', () => {
 
   it('includes built-in step types', () => {
     const catalog = mockCatalog({});
-    const schema = StepSchemaComposer.compose(catalog) as { oneOf: Array<{ required?: string[] }> };
+    const schema = SchemaComposer.compose(catalog) as { oneOf: Array<{ required?: string[] }> };
     const requiredSets = schema.oneOf.map(v => v.required ?? []);
     expect(requiredSets.some(r => r.includes('invoke'))).toBe(true);
     expect(requiredSets.some(r => r.includes('block'))).toBe(true);
@@ -64,7 +64,7 @@ describe('StepSchemaComposer', () => {
     expect(requiredSets.some(r => r.includes('parallel'))).toBe(true);
   });
 
-  it('maps StepParameterType to JSON Schema types', () => {
+  it('maps ParameterType to JSON Schema types', () => {
     const catalog = mockCatalog({
       typed: catalogEntry('typed', {
         s: { type: 'STRING' },
@@ -74,7 +74,7 @@ describe('StepSchemaComposer', () => {
         o: { type: 'OBJECT' },
       }),
     });
-    const schema = StepSchemaComposer.compose(catalog) as { oneOf: Array<{ properties: Record<string, { properties?: Record<string, { type: string }> }> }> };
+    const schema = SchemaComposer.compose(catalog) as { oneOf: Array<{ properties: Record<string, { properties?: Record<string, { type: string }> }> }> };
     const typedVariant = schema.oneOf.find(v => v.properties?.['typed']);
     const props = (typedVariant!.properties['typed'] as { properties: Record<string, { type: string }> }).properties;
     expect(props['s']!.type).toBe('string');
