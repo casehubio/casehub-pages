@@ -6,6 +6,8 @@ import { ScenarioConnectionController, type ScenarioState, type OutlineNode } fr
 import type { PagesScenarioYamlViewer } from './scenario-yaml-viewer.js';
 import './library-view.js';
 import type { PagesLibraryView } from './library-view.js';
+import './step-catalog.js';
+import type { PagesStepCatalog } from './step-catalog.js';
 
 const ACTION_ICONS: Record<string, string> = {
   'show-markdown': '◫',
@@ -187,7 +189,7 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
   @state() private _expanded = false;
   @state() private _yamlOpen = false;
   @state() private _calloutMsPerChar = 25;
-  @state() private _view: 'outline' | 'library' = 'outline';
+  @state() private _view: 'outline' | 'library' | 'catalog' = 'outline';
 
   @state() private _outline: OutlineNode[] = [];
 
@@ -308,7 +310,9 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
     }
     return html`
       ${this._renderViewHeader()}
-      ${this._view === 'library' ? this._renderLibrary() : this._renderOutline()}
+      ${this._view === 'library' ? this._renderLibrary()
+        : this._view === 'catalog' ? this._renderCatalog()
+        : this._renderOutline()}
       ${this._renderDemoActions()}
       ${this._renderTransport()}
       ${this._renderStatus()}
@@ -322,6 +326,11 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
                 aria-label="Toggle library"
                 @click=${() => { this._toggleLibrary(); }}>
           ${this._view === 'library' ? '☰ Outline' : '☰ Library'}
+        </button>
+        <button class="view-toggle ${this._view === 'catalog' ? 'active' : ''}"
+                aria-label="Toggle step catalog"
+                @click=${() => { this._toggleCatalog(); }}>
+          ${this._view === 'catalog' ? '☰ Outline' : '⚙ Catalog'}
         </button>
       </div>
     `;
@@ -350,6 +359,37 @@ export class PagesScenarioController extends KeyboardShortcutMixin(LitElement) {
         .baseUrl=${this._conn?.restBase ?? this.baseUrl ?? ''}
         @script-selected=${(e: CustomEvent) => { this._onScriptSelected(e); }}
       ></pages-library-view>
+    `;
+  }
+
+  private _toggleCatalog(): void {
+    if (this._view === 'catalog') {
+      this._view = 'outline';
+    } else {
+      this._view = 'catalog';
+      void this._loadCatalogView();
+    }
+  }
+
+  private async _loadCatalogView(): Promise<void> {
+    await this.updateComplete;
+    const view = this.shadowRoot?.querySelector('pages-step-catalog') as PagesStepCatalog | null;
+    if (view) {
+      await view.loadCatalog();
+    }
+  }
+
+  private _renderCatalog(): TemplateResult {
+    return html`
+      <pages-step-catalog
+        .baseUrl=${this._conn?.restBase ?? this.baseUrl ?? ''}
+        .execBaseUrl=${this._conn?.restBase ?? this.baseUrl ?? ''}
+        @step-template-selected=${(e: CustomEvent) => {
+          this.dispatchEvent(new CustomEvent('step-template-selected', {
+            detail: e.detail, bubbles: true, composed: true,
+          }));
+        }}
+      ></pages-step-catalog>
     `;
   }
 
