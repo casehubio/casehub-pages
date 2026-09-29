@@ -142,8 +142,8 @@ export interface YamlModuleFile {
 }
 
 export interface YamlImport {
-  module?: string;
-  steps?: string;
+  module?: string | undefined;
+  steps?: string | undefined;
   as: string;
   condition?: string | undefined;
   parameters: Record<string, string>;
