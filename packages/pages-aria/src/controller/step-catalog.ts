@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { CatalogDataSource } from './catalog-data-source.js';
+import { isCompatible } from '@casehubio/yaml-core/step';
 
 export interface CatalogActionSummary {
   name: string;
@@ -228,11 +229,20 @@ export class PagesActionCatalog extends LitElement {
     .portability-java { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-11, #92400e); }
     .portability-ts { background: var(--pages-accent-3, #e8eaf6); color: var(--pages-accent-11, #283593); }
     .portability-both { background: var(--pages-info-3, #e0e7ff); color: var(--pages-info-11, #3730a3); }
+    .portability-violation {
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      background: var(--pages-warning-3, #fef3c7);
+      color: var(--pages-warning-11, #92400e);
+      border-radius: var(--pages-radius-sm, 4px);
+      font-size: var(--pages-font-size-sm, 12px);
+      margin-bottom: var(--pages-space-1, 4px);
+    }
   `;
 
   @property() baseUrl = '';
   @property() execBaseUrl = '';
   @property({ attribute: false }) sources: CatalogDataSource[] = [];
+  @property() runtime: 'java' | 'ts' = 'ts';
 
   @state() private _actions: CatalogActionSummary[] = [];
   @state() private _searchText = '';
@@ -509,6 +519,11 @@ export class PagesActionCatalog extends LitElement {
 
         <div class="try-panel">
           <div class="section-title">Try It</div>
+          ${d.portability && !isCompatible(d.portability as 'universal' | 'java' | 'ts' | 'both', this.runtime)
+            ? html`<div class="portability-violation">
+                This action requires '${d.portability}' runtime — incompatible with current '${this.runtime}' runtime.
+              </div>`
+            : nothing}
           <div class="try-form">
             ${d.inputs ? Object.entries(d.inputs).map(([name, p]) => {
               const param = p as ParameterInfo;
@@ -533,7 +548,7 @@ export class PagesActionCatalog extends LitElement {
           <div class="try-actions">
             <button class="exec-btn"
                     aria-label="Execute ${d.name}"
-                    ?disabled=${this._tryLoading}
+                    ?disabled=${this._tryLoading || (!!d.portability && !isCompatible(d.portability as 'universal' | 'java' | 'ts' | 'both', this.runtime))}
                     @click=${() => { void this._executeAction(); }}>
               ${this._tryLoading ? 'Running...' : 'Execute'}
             </button>

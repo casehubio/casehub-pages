@@ -405,4 +405,50 @@ describe('pages-action-catalog', () => {
       expect(items[0]!.querySelector('.action-name')!.textContent).toBe('ts-action');
     });
   });
+
+  describe('portability pre-flight check', () => {
+    const JAVA_DETAIL: CatalogActionDetail = {
+      name: 'java-action', description: 'Java only', invokeKind: 'graphql', source: 'graphql', portability: 'java',
+      inputs: { id: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: null, description: null } },
+      outputs: {}, invoke: null,
+    };
+    const UNIVERSAL_DETAIL: CatalogActionDetail = {
+      name: 'universal-action', description: 'Universal', invokeKind: 'rest', source: 'yaml', portability: 'universal',
+      inputs: {}, outputs: {}, invoke: null,
+    };
+
+    it('shows violation message for incompatible action', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      el.runtime = 'ts';
+      document.body.appendChild(el);
+      el['_setDetail'](JAVA_DETAIL);
+      await el.updateComplete;
+      const violation = el.shadowRoot!.querySelector('.portability-violation');
+      expect(violation).not.toBeNull();
+      expect(violation!.textContent).toContain('java');
+      expect(violation!.textContent).toContain('ts');
+    });
+
+    it('disables execute button for incompatible action', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      el.runtime = 'ts';
+      document.body.appendChild(el);
+      el['_setDetail'](JAVA_DETAIL);
+      await el.updateComplete;
+      const btn = el.shadowRoot!.querySelector('.exec-btn') as HTMLButtonElement;
+      expect(btn.disabled).toBe(true);
+    });
+
+    it('does not show violation for compatible action', async () => {
+      el = document.createElement('pages-action-catalog') as PagesActionCatalog;
+      el.runtime = 'ts';
+      document.body.appendChild(el);
+      el['_setDetail'](UNIVERSAL_DETAIL);
+      await el.updateComplete;
+      const violation = el.shadowRoot!.querySelector('.portability-violation');
+      expect(violation).toBeNull();
+      const btn = el.shadowRoot!.querySelector('.exec-btn') as HTMLButtonElement;
+      expect(btn.disabled).toBe(false);
+    });
+  });
 });
