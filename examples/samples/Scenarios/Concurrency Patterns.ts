@@ -4,12 +4,11 @@ var CC_EXAMPLES = [
     tags: ['semaphore', 'rate-limit', 'permits'],
     description: 'Rate-limited parallel workers — a semaphore with 2 permits gates 4 parallel tasks. Each worker acquires a permit before proceeding, blocking when none are available. Watch the trace to see only 2 workers active at a time.',
     yaml: [
-      'steps:',
-      '  - parallel:',
-      '    - sem-worker: { name: "pool", permits: 2, worker: "A", duration: 400 }',
-      '    - sem-worker: { name: "pool", permits: 2, worker: "B", duration: 300 }',
-      '    - sem-worker: { name: "pool", permits: 2, worker: "C", duration: 500 }',
-      '    - sem-worker: { name: "pool", permits: 2, worker: "D", duration: 200 }',
+      '- parallel:',
+      '  - sem-worker: { name: "pool", permits: 2, worker: "A", duration: 400 }',
+      '  - sem-worker: { name: "pool", permits: 2, worker: "B", duration: 300 }',
+      '  - sem-worker: { name: "pool", permits: 2, worker: "C", duration: 500 }',
+      '  - sem-worker: { name: "pool", permits: 2, worker: "D", duration: 200 }',
     ].join('\n'),
     steps: [
       { parallel: [
@@ -25,10 +24,9 @@ var CC_EXAMPLES = [
     tags: ['channel', 'producer', 'consumer'],
     description: 'Producer-consumer pattern — a bounded channel with capacity 2 connects a producer that sends 4 items to a consumer that receives them. The producer blocks when the channel is full until the consumer drains it.',
     yaml: [
-      'steps:',
-      '  - parallel:',
-      '    - chan-produce: { name: "work", capacity: 2, items: 4, interval: 200 }',
-      '    - chan-consume: { name: "work", expect: 4, interval: 300 }',
+      '- parallel:',
+      '  - chan-produce: { name: "work", capacity: 2, items: 4, interval: 200 }',
+      '  - chan-consume: { name: "work", expect: 4, interval: 300 }',
     ].join('\n'),
     steps: [
       { parallel: [
@@ -42,13 +40,12 @@ var CC_EXAMPLES = [
     tags: ['orc-map', 'atomic', 'concurrent'],
     description: 'Concurrent map with atomic operations — parallel workers write to a shared map using put, putIfAbsent, merge, and computeIfAbsent. Each operation is atomic, preventing data races.',
     yaml: [
-      'steps:',
-      '  - parallel:',
-      '    - map-writer: { name: "registry", op: "put", key: "svc-a", value: "running" }',
-      '    - map-writer: { name: "registry", op: "put", key: "svc-b", value: "starting" }',
-      '    - map-writer: { name: "registry", op: "putIfAbsent", key: "svc-a", value: "duplicate" }',
-      '    - map-writer: { name: "registry", op: "merge", key: "svc-b", value: "running" }',
-      '  - map-reader: { name: "registry" }',
+      '- parallel:',
+      '  - map-writer: { name: "registry", op: "put", key: "svc-a", value: "running" }',
+      '  - map-writer: { name: "registry", op: "put", key: "svc-b", value: "starting" }',
+      '  - map-writer: { name: "registry", op: "putIfAbsent", key: "svc-a", value: "duplicate" }',
+      '  - map-writer: { name: "registry", op: "merge", key: "svc-b", value: "running" }',
+      '- map-reader: { name: "registry" }',
     ].join('\n'),
     steps: [
       { parallel: [
@@ -65,13 +62,12 @@ var CC_EXAMPLES = [
     tags: ['spawn', 'background', 'async'],
     description: 'Background task lifecycle — spawn a long-running task, do other work in the foreground, then join the background task. Shows isDone/isFailed polling and join with timeout.',
     yaml: [
-      'steps:',
-      '  - spawn-task: { name: "indexer", duration: 800 }',
-      '  - task-poll: { name: "indexer" }',
-      '  - log: { message: "Foreground work while indexer runs" }',
-      '  - task-poll: { name: "indexer" }',
-      '  - task-join: { name: "indexer", timeout: 2000 }',
-      '  - task-poll: { name: "indexer" }',
+      '- spawn-task: { name: "indexer", duration: 800 }',
+      '- task-poll: { name: "indexer" }',
+      '- log: { message: "Foreground work while indexer runs" }',
+      '- task-poll: { name: "indexer" }',
+      '- task-join: { name: "indexer", timeout: 2000 }',
+      '- task-poll: { name: "indexer" }',
     ].join('\n'),
     steps: [
       { 'spawn-task': { name: 'indexer', duration: 800 } },
