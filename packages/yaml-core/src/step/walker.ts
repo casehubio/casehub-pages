@@ -202,7 +202,7 @@ export class Walker {
 
     for (const [key, value] of Object.entries(step)) {
       if (REMOVED_KEYS.has(key)) {
-        throw new Error(`'${key}' is no longer valid — use 'do' for nested action lists`);
+        throw new Error(`'${key}' is no longer valid — use inline sibling keys, or 'block' for multiple actions`);
       }
       if (key === 'step') {
         stepName = value as string;

@@ -209,20 +209,20 @@ describe('Walker', () => {
     it('rejects steps key with clear error', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       expect(() => Walker.resolve([{ steps: [{ doA: {} }] }], catalog))
-        .toThrow("'steps' is no longer valid");
+        .toThrow("'steps' is no longer valid — use inline sibling keys");
     });
 
     it('rejects do key with clear error', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       expect(() => Walker.resolve([{ do: [{ doA: {} }] }], catalog))
-        .toThrow("'do' is no longer valid");
+        .toThrow("'do' is no longer valid — use inline sibling keys");
     });
 
     it('rejects steps key in nested context', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       expect(() => Walker.resolve([
         { block: [{ steps: [{ doA: {} }] }] },
-      ], catalog)).toThrow("'steps' is no longer valid");
+      ], catalog)).toThrow("'steps' is no longer valid — use inline sibling keys");
     });
   });
 });
