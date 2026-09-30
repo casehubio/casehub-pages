@@ -1055,7 +1055,8 @@
           "name": "Step Catalog",
           "path": "Scenarios/Step Catalog.page.yaml",
           "category": "Scenarios",
-          "file": "Step Catalog.page.yaml"
+          "file": "Step Catalog.page.yaml",
+          "tsPath": "Scenarios/Step Catalog.ts"
         },
         {
           "name": "Step Workflows",

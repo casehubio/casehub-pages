@@ -35,37 +35,37 @@ export { dockWorkbench, html, rows, split, columns, withId, dockBar, deferred, w
 export type { DockWorkbenchConfig, DockPanelConfig, DockSideConfig } from "@casehubio/pages-ui/dist/dsl/builders.js";
 export { createScheduler, parseScenario } from "@casehubio/pages-aria/scenario";
 export type { ScenarioRunner, SchedulerOptions } from "@casehubio/pages-aria/scenario";
-export { StepWalker, stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
-export { StructuralStepEvaluator } from "@casehubio/yaml-core/step";
-export { StepPluginRegistry } from "@casehubio/yaml-core/step";
-export { CompositeStepCatalog } from "@casehubio/yaml-core/step";
+export { Walker, stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
+export { StructuralEvaluator } from "@casehubio/yaml-core/step";
+export { PluginRegistry } from "@casehubio/yaml-core/step";
+export { CompositeCatalog } from "@casehubio/yaml-core/step";
 export type { StepResult, ResolvedStep } from "@casehubio/yaml-core/step";
 export { matches, valuePattern, structuralPattern, anyOfPattern, defaultPattern } from "@casehubio/yaml-core";
 export { isTruthy } from "@casehubio/yaml-core";
 export { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
 export { DefaultCorrelationScope } from "@casehubio/yaml-core/orchestration";
 
-import { StepPluginRegistry } from "@casehubio/yaml-core/step";
-import { CompositeStepCatalog } from "@casehubio/yaml-core/step";
-import { StepWalker } from "@casehubio/yaml-core/step";
-import { StructuralStepEvaluator } from "@casehubio/yaml-core/step";
+import { PluginRegistry } from "@casehubio/yaml-core/step";
+import { CompositeCatalog } from "@casehubio/yaml-core/step";
+import { Walker } from "@casehubio/yaml-core/step";
+import { StructuralEvaluator } from "@casehubio/yaml-core/step";
 import { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
 import { stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
 import type { StepAction } from "@casehubio/yaml-core/step";
 
 export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<string, { type: string; required: boolean }>; outputs?: Record<string, { type: string; required: boolean }>; execute: StepAction['execute'] }>) {
-  const registry = new StepPluginRegistry();
+  const registry = new PluginRegistry();
   for (const p of plugins) {
     registry.register({ name: p.name, inputs: p.inputs ?? {}, outputs: p.outputs ?? {}, execute: p.execute });
   }
-  const catalog = new CompositeStepCatalog([registry.createSource()]);
-  const evaluator = new StructuralStepEvaluator();
+  const catalog = new CompositeCatalog([registry.createSource()]);
+  const evaluator = new StructuralEvaluator();
   const scope = new DefaultScenarioScope();
 
   return {
-    resolve(steps: Record<string, unknown>[]) { return StepWalker.resolve(steps, catalog); },
+    resolve(steps: Record<string, unknown>[]) { return Walker.resolve(steps, catalog); },
     async run(steps: Record<string, unknown>[]) {
-      const resolved = StepWalker.resolve(steps, catalog);
+      const resolved = Walker.resolve(steps, catalog);
       const results = [];
       for (const step of resolved) {
         const result = await evaluator.evaluate(step, { scope } as never);

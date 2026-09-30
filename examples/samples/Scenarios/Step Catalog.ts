@@ -2,18 +2,18 @@
 // Mock fetch intercepts GraphQL catalog queries and execution endpoint.
 
 var catalogActionsList = [
-  { name: 'check-compliance', description: 'Check document compliance against a standard', invokeKind: 'rest', source: 'yaml', inputCount: 2, outputCount: 1 },
-  { name: 'send-notification', description: 'Send a notification via MCP', invokeKind: 'mcp', source: 'mcp', inputCount: 3, outputCount: 0 },
-  { name: 'run-audit', description: 'Execute a security audit script', invokeKind: 'script', source: 'script', inputCount: 1, outputCount: 2 },
-  { name: 'classify-document', description: 'Classify a document using an AI agent', invokeKind: 'agent', source: 'yaml', inputCount: 2, outputCount: 3 },
-  { name: 'fetch-market-data', description: 'Fetch latest market data via REST', invokeKind: 'rest', source: 'yaml', inputCount: 1, outputCount: 4 },
-  { name: 'validate-schema', description: 'Validate a JSON schema against data', invokeKind: 'script', source: 'script', inputCount: 2, outputCount: 1 },
+  { name: 'check-compliance', description: 'Check document compliance against a standard', invokeKind: 'rest', source: 'yaml', portability: 'universal', inputCount: 2, outputCount: 1 },
+  { name: 'send-notification', description: 'Send a notification via MCP', invokeKind: 'mcp', source: 'mcp', portability: 'ts', inputCount: 3, outputCount: 0 },
+  { name: 'run-audit', description: 'Execute a security audit script', invokeKind: 'script', source: 'script', portability: 'ts', inputCount: 1, outputCount: 2 },
+  { name: 'classify-document', description: 'Classify a document using an AI agent', invokeKind: 'agent', source: 'yaml', portability: 'ts', inputCount: 2, outputCount: 3 },
+  { name: 'fetch-market-data', description: 'Fetch latest market data via REST', invokeKind: 'rest', source: 'yaml', portability: 'universal', inputCount: 1, outputCount: 4 },
+  { name: 'validate-schema', description: 'Validate a JSON schema against data', invokeKind: 'script', source: 'script', portability: 'both', inputCount: 2, outputCount: 1 },
 ];
 
 var catalogDetails = {
   'check-compliance': {
     name: 'check-compliance', description: 'Check document compliance against a standard',
-    invokeKind: 'rest', source: 'yaml',
+    invokeKind: 'rest', source: 'yaml', portability: 'universal',
     inputs: {
       documentId: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: null, description: 'Document identifier' },
       standard: { type: 'STRING', required: true, defaultValue: 'ISO-27001', allowedValues: ['ISO-27001', 'SOC-2', 'GDPR'], format: null, description: 'Compliance standard to check' },
@@ -23,7 +23,7 @@ var catalogDetails = {
   },
   'send-notification': {
     name: 'send-notification', description: 'Send a notification via MCP',
-    invokeKind: 'mcp', source: 'mcp',
+    invokeKind: 'mcp', source: 'mcp', portability: 'ts',
     inputs: {
       recipient: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: 'email', description: 'Recipient email' },
       subject: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: null, description: 'Notification subject' },
@@ -34,7 +34,7 @@ var catalogDetails = {
   },
   'run-audit': {
     name: 'run-audit', description: 'Execute a security audit script',
-    invokeKind: 'script', source: 'script',
+    invokeKind: 'script', source: 'script', portability: 'ts',
     inputs: { target: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: 'url', description: 'Target URL to audit' } },
     outputs: {
       score: { type: 'INTEGER', required: false, defaultValue: null, allowedValues: null, format: null, description: 'Security score 0-100' },
@@ -44,7 +44,7 @@ var catalogDetails = {
   },
   'classify-document': {
     name: 'classify-document', description: 'Classify a document using an AI agent',
-    invokeKind: 'agent', source: 'yaml',
+    invokeKind: 'agent', source: 'yaml', portability: 'ts',
     inputs: {
       documentUrl: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: 'url', description: 'URL of the document' },
       taxonomy: { type: 'STRING', required: false, defaultValue: 'default', allowedValues: ['default', 'legal', 'financial', 'medical'], format: null, description: 'Classification taxonomy' },
@@ -58,7 +58,7 @@ var catalogDetails = {
   },
   'fetch-market-data': {
     name: 'fetch-market-data', description: 'Fetch latest market data via REST',
-    invokeKind: 'rest', source: 'yaml',
+    invokeKind: 'rest', source: 'yaml', portability: 'universal',
     inputs: { symbol: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: null, description: 'Ticker symbol' } },
     outputs: {
       price: { type: 'NUMBER', required: false, defaultValue: null, allowedValues: null, format: null, description: 'Current price' },
@@ -70,7 +70,7 @@ var catalogDetails = {
   },
   'validate-schema': {
     name: 'validate-schema', description: 'Validate a JSON schema against data',
-    invokeKind: 'script', source: 'script',
+    invokeKind: 'script', source: 'script', portability: 'both',
     inputs: {
       schema: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: null, description: 'JSON schema' },
       data: { type: 'STRING', required: true, defaultValue: null, allowedValues: null, format: null, description: 'Data to validate' },
@@ -126,11 +126,12 @@ window.fetch = function(url, opts) {
   return _origFetch.apply(window, arguments);
 };
 
-customElements.whenDefined('pages-step-catalog').then(function() {
+customElements.whenDefined('pages-action-catalog').then(function() {
   var catalogEl = document.getElementById('step-catalog');
   if (catalogEl) {
     catalogEl.baseUrl = '';
     catalogEl.execBaseUrl = '';
+    catalogEl.runtime = 'ts';
     catalogEl.loadCatalog();
 
     catalogEl.addEventListener('step-template-selected', function(e) {

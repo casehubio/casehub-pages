@@ -123,7 +123,7 @@ module.exports = (env = {}) => {
         "@casehubio/yaml-core": path.resolve(__dirname, "../packages/yaml-core"),
         "@casehubio/pages-ui-tokens": path.resolve(__dirname, "../packages/pages-ui-tokens"),
         "@casehubio/pages-aria/scenario": path.resolve(__dirname, "../packages/pages-aria/src/scenario"),
-        "@casehubio/pages-aria/dist/controller": path.resolve(__dirname, "../packages/pages-aria/dist/controller.js"),
+        "@casehubio/pages-aria/dist/controller": path.resolve(__dirname, "../packages/pages-aria/src/controller/standalone.ts"),
         "@casehubio/pages-table": path.resolve(__dirname, "../packages/pages-table"),
         "@casehubio/pages-ui-components/input": path.resolve(__dirname, "../packages/pages-ui-components/dist/input"),
         "@casehubio/pages-ui-components/select": path.resolve(__dirname, "../packages/pages-ui-components/dist/select"),

@@ -2,7 +2,7 @@
   "name": "@casehubio/pages-aria",
   "version": "0.1.0",
   "type": "module",
-  "sideEffects": ["dist/*.js"],
+  "sideEffects": ["dist/*.js", "src/controller/standalone.ts", "src/controller/step-catalog.ts", "src/controller/scenario-controller.ts", "src/controller/scenario-narrative.ts", "src/controller/scenario-yaml-viewer.ts", "src/controller/library-view.ts", "src/tutorial/tutorial-host.ts"],
   "exports": {
     "./walker": "./src/walker/index.ts",
     "./executor": "./src/executor/index.ts",

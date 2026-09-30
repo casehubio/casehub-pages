@@ -15,9 +15,9 @@ pages:
                   <span style="font-size: 14px; font-weight: 600; color: var(--pages-neutral-12);">Step Catalog</span>
                   <span style="font-size: 11px; color: var(--pages-neutral-9); margin-left: 8px;">Browse available step actions</span>
                 </div>
-                <pages-step-catalog id="step-catalog"
+                <pages-action-catalog id="step-catalog"
                   style="height: calc(100% - 45px); overflow-y: auto;">
-                </pages-step-catalog>
+                </pages-action-catalog>
               </div>
               <div style="flex: 1; background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; overflow: hidden;">
                 <div style="padding: 12px 16px; border-bottom: 1px solid var(--pages-neutral-4); display: flex; justify-content: space-between; align-items: center;">
