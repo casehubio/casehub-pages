@@ -94,14 +94,14 @@ describe('Walker', () => {
     });
   });
 
-  describe('match case default key', () => {
-    it('handles "default" key holding steps directly', () => {
+  describe('match case body resolution', () => {
+    it('handles "default" key holding actions directly', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       const steps = [
         {
           match: 'value',
           cases: [
-            { pattern: 'x', do: [{ doA: {} }] },
+            { pattern: 'x', doA: {} },
             { default: [{ step: 'fallback', doA: {} }] },
           ],
         },
@@ -109,19 +109,20 @@ describe('Walker', () => {
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('match');
       if (resolved[0]!.kind === 'match') {
+        expect(resolved[0]!.cases[0]!.steps).toHaveLength(1);
         expect(resolved[0]!.cases[1]!.pattern.type).toBe('default');
         expect(resolved[0]!.cases[1]!.steps).toHaveLength(1);
       }
     });
 
-    it('accepts "pattern" as primary key and "when" as alias', () => {
-      const catalog = makeCatalog({ doA: makeEntry('doA') });
+    it('resolves inline action as case body', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA'), doB: makeEntry('doB') });
       const steps = [
         {
           match: 'v',
           cases: [
-            { when: 'hello', do: [{ doA: {} }] },
-            { pattern: 'world', do: [{ doA: {} }] },
+            { when: 'hello', doA: {} },
+            { pattern: 'world', doB: {} },
             { default: [] },
           ],
         },
@@ -129,8 +130,77 @@ describe('Walker', () => {
       const resolved = Walker.resolve(steps, catalog);
       if (resolved[0]!.kind === 'match') {
         expect(resolved[0]!.cases[0]!.pattern).toEqual({ type: 'value', value: 'hello' });
+        expect(resolved[0]!.cases[0]!.steps).toHaveLength(1);
+        expect(resolved[0]!.cases[0]!.steps[0]!.kind).toBe('plugin');
         expect(resolved[0]!.cases[1]!.pattern).toEqual({ type: 'value', value: 'world' });
         expect(resolved[0]!.cases[2]!.pattern.type).toBe('default');
+      }
+    });
+
+    it('resolves block as case body for multiple actions', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA'), doB: makeEntry('doB') });
+      const steps = [
+        {
+          match: 'v',
+          cases: [
+            { when: 'x', block: [{ doA: {} }, { doB: {} }] },
+            { default: [] },
+          ],
+        },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      if (resolved[0]!.kind === 'match') {
+        expect(resolved[0]!.cases[0]!.steps).toHaveLength(1);
+        expect(resolved[0]!.cases[0]!.steps[0]!.kind).toBe('block');
+        if (resolved[0]!.cases[0]!.steps[0]!.kind === 'block') {
+          expect(resolved[0]!.cases[0]!.steps[0]!.steps).toHaveLength(2);
+        }
+      }
+    });
+  });
+
+  describe('select branch body resolution', () => {
+    it('resolves inline action as wait body', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      const steps = [
+        {
+          select: [
+            { wait: 'sig-a', doA: {} },
+          ],
+        },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      if (resolved[0]!.kind === 'select') {
+        expect(resolved[0]!.branches[0]!.name).toBe('sig-a');
+        expect(resolved[0]!.branches[0]!.steps).toHaveLength(1);
+        expect(resolved[0]!.branches[0]!.steps[0]!.kind).toBe('plugin');
+      }
+    });
+
+    it('resolves block as wait body for multiple actions', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA'), doB: makeEntry('doB') });
+      const steps = [
+        {
+          select: [
+            { wait: 'sig-a', block: [{ doA: {} }, { doB: {} }] },
+          ],
+        },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      if (resolved[0]!.kind === 'select') {
+        expect(resolved[0]!.branches[0]!.steps).toHaveLength(1);
+        expect(resolved[0]!.branches[0]!.steps[0]!.kind).toBe('block');
+      }
+    });
+
+    it('handles empty wait branch', () => {
+      const catalog = makeCatalog();
+      const steps = [
+        { select: [{ wait: 'sig-a' }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      if (resolved[0]!.kind === 'select') {
+        expect(resolved[0]!.branches[0]!.steps).toHaveLength(0);
       }
     });
   });
@@ -140,6 +210,12 @@ describe('Walker', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       expect(() => Walker.resolve([{ steps: [{ doA: {} }] }], catalog))
         .toThrow("'steps' is no longer valid");
+    });
+
+    it('rejects do key with clear error', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      expect(() => Walker.resolve([{ do: [{ doA: {} }] }], catalog))
+        .toThrow("'do' is no longer valid");
     });
 
     it('rejects steps key in nested context', () => {

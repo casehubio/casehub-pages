@@ -167,7 +167,7 @@ const DECORATOR_KEYS = new Set([
 
 const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finally']);
 
-const REMOVED_KEYS = new Set(['steps']);
+const REMOVED_KEYS = new Set(['steps', 'do']);
 
 const MAX_DEPTH = 32;
 
@@ -279,8 +279,10 @@ export class Walker {
             (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
         } else {
           pattern = Walker.parsePattern(c['pattern'] ?? c['when']);
-          caseSteps = Walker.resolveAtDepth(
-            (c['do'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
+          const rest = Walker.stripKeys(c, ['pattern', 'when', 'guard']);
+          caseSteps = Object.keys(rest).length > 0
+            ? [Walker.resolveOne(rest, catalog, depth + 1, seenNames)]
+            : [];
         }
         const guard = (c['guard'] as string) ?? null;
         if (pattern.type === 'default' && i !== casesRaw.length - 1) {
@@ -306,14 +308,18 @@ export class Walker {
         if (b['subscribe']) {
           const sub = b['subscribe'] as Record<string, unknown> | string;
           const channelName = typeof sub === 'string' ? sub : (sub['channel'] as string);
-          const subSteps = Walker.resolveAtDepth(
-            (b['do'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
-          return { type: 'subscribe' as const, name: channelName, steps: subSteps };
+          const rest = Walker.stripKeys(b, ['subscribe']);
+          const branchStep = Object.keys(rest).length > 0
+            ? [Walker.resolveOne(rest, catalog, depth + 1, seenNames)]
+            : [];
+          return { type: 'subscribe' as const, name: channelName, steps: branchStep };
         }
         if (b['wait']) {
-          const waitSteps = Walker.resolveAtDepth(
-            (b['do'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
-          return { type: 'wait' as const, name: b['wait'] as string, steps: waitSteps };
+          const rest = Walker.stripKeys(b, ['wait']);
+          const branchStep = Object.keys(rest).length > 0
+            ? [Walker.resolveOne(rest, catalog, depth + 1, seenNames)]
+            : [];
+          return { type: 'wait' as const, name: b['wait'] as string, steps: branchStep };
         }
         throw new Error('Select branch must have subscribe or wait');
       });
@@ -386,6 +392,15 @@ export class Walker {
         for (const b of step.branches) Walker.validateRefs(b.steps, knownNames);
       }
     }
+  }
+
+  private static stripKeys(obj: Record<string, unknown>, keys: string[]): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    const exclude = new Set(keys);
+    for (const [k, v] of Object.entries(obj)) {
+      if (!exclude.has(k)) result[k] = v;
+    }
+    return result;
   }
 
   private static parsePattern(raw: unknown): MatchPattern {
