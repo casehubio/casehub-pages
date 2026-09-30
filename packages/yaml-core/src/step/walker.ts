@@ -167,6 +167,8 @@ const DECORATOR_KEYS = new Set([
 
 const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finally']);
 
+const REMOVED_KEYS = new Set(['steps']);
+
 const MAX_DEPTH = 32;
 
 export class Walker {
@@ -199,6 +201,9 @@ export class Walker {
     const companions: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(step)) {
+      if (REMOVED_KEYS.has(key)) {
+        throw new Error(`'${key}' is no longer valid — use 'do' for nested action lists`);
+      }
       if (key === 'step') {
         stepName = value as string;
         if (stepName !== null && seenNames.has(stepName)) {
@@ -275,7 +280,7 @@ export class Walker {
         } else {
           pattern = Walker.parsePattern(c['pattern'] ?? c['when']);
           caseSteps = Walker.resolveAtDepth(
-            ((c['steps'] ?? c['do']) as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
+            (c['do'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
         }
         const guard = (c['guard'] as string) ?? null;
         if (pattern.type === 'default' && i !== casesRaw.length - 1) {
@@ -302,12 +307,12 @@ export class Walker {
           const sub = b['subscribe'] as Record<string, unknown> | string;
           const channelName = typeof sub === 'string' ? sub : (sub['channel'] as string);
           const subSteps = Walker.resolveAtDepth(
-            ((b['steps'] ?? b['do']) as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
+            (b['do'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
           return { type: 'subscribe' as const, name: channelName, steps: subSteps };
         }
         if (b['wait']) {
           const waitSteps = Walker.resolveAtDepth(
-            ((b['steps'] ?? b['do']) as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
+            (b['do'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
           return { type: 'wait' as const, name: b['wait'] as string, steps: waitSteps };
         }
         throw new Error('Select branch must have subscribe or wait');

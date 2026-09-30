@@ -101,7 +101,7 @@ describe('Walker', () => {
         {
           match: 'value',
           cases: [
-            { pattern: 'x', steps: [{ doA: {} }] },
+            { pattern: 'x', do: [{ doA: {} }] },
             { default: [{ step: 'fallback', doA: {} }] },
           ],
         },
@@ -121,7 +121,7 @@ describe('Walker', () => {
           match: 'v',
           cases: [
             { when: 'hello', do: [{ doA: {} }] },
-            { pattern: 'world', steps: [{ doA: {} }] },
+            { pattern: 'world', do: [{ doA: {} }] },
             { default: [] },
           ],
         },
@@ -132,6 +132,21 @@ describe('Walker', () => {
         expect(resolved[0]!.cases[1]!.pattern).toEqual({ type: 'value', value: 'world' });
         expect(resolved[0]!.cases[2]!.pattern.type).toBe('default');
       }
+    });
+  });
+
+  describe('removed keys', () => {
+    it('rejects steps key with clear error', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      expect(() => Walker.resolve([{ steps: [{ doA: {} }] }], catalog))
+        .toThrow("'steps' is no longer valid");
+    });
+
+    it('rejects steps key in nested context', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      expect(() => Walker.resolve([
+        { block: [{ steps: [{ doA: {} }] }] },
+      ], catalog)).toThrow("'steps' is no longer valid");
     });
   });
 });
