@@ -18,7 +18,7 @@ const importAdapter: ForEachAdapter<YamlImport> = {
     }
     return {
       module: template.module,
-      steps: template.steps,
+      actions: template.actions,
       as: stampedId,
       parameters: resolvedParams,
     };

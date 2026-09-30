@@ -140,7 +140,7 @@ describe('ImportExpander', () => {
       expect(result[0]!.parameters['port']).toBe('8080');
     });
 
-    it('preserves module and steps fields on stamped imports', () => {
+    it('preserves module and actions fields on stamped imports', () => {
       const imports: YamlImport[] = [
         {
           module: 'mod-a',
@@ -149,7 +149,7 @@ describe('ImportExpander', () => {
           forEach: { as: 'x', in: ['1'] },
         },
         {
-          steps: 'step-defs',
+          actions: 'step-defs',
           as: 'b',
           parameters: {},
           forEach: { as: 'x', in: ['1'] },
@@ -157,8 +157,8 @@ describe('ImportExpander', () => {
       ];
       const result = ImportExpander.expand(imports, {}, {});
       expect(result[0]!.module).toBe('mod-a');
-      expect(result[0]!.steps).toBeUndefined();
-      expect(result[1]!.steps).toBe('step-defs');
+      expect(result[0]!.actions).toBeUndefined();
+      expect(result[1]!.actions).toBe('step-defs');
       expect(result[1]!.module).toBeUndefined();
     });
 

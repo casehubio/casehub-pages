@@ -69,12 +69,12 @@ function validateImports(
       } else {
         validateOutputNames(availableModules[imp.module]!, errors);
       }
-    } else if (!imp.steps) {
-      errors.push(`Import '${imp.as}' must specify either 'module' or 'steps'.`);
+    } else if (!imp.actions) {
+      errors.push(`Import '${imp.as}' must specify either 'module' or 'actions'.`);
     }
 
     if (!imp.as || imp.as.trim() === '') {
-      errors.push(`Import of '${imp.module ?? imp.steps}' is missing a required alias (as).`);
+      errors.push(`Import of '${imp.module ?? imp.actions}' is missing a required alias (as).`);
     } else {
       if (imp.as.includes('.') && (imp.forEach != null || imp.loop != null)) {
         errors.push(`Import alias '${imp.as}' contains '.', which is reserved as the ID separator.`);

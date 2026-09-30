@@ -22,7 +22,7 @@ export const outputSchema = z.object({
 
 export const importSchema = z.object({
   module: z.string().optional(),
-  steps: z.string().optional(),
+  actions: z.string().optional(),
   as: z.string(),
   if: z.string().optional(),
   parameters: z.record(z.string(), z.string()).optional(),

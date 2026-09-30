@@ -39,7 +39,7 @@ export { Walker, stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
 export { StructuralEvaluator } from "@casehubio/yaml-core/step";
 export { PluginRegistry } from "@casehubio/yaml-core/step";
 export { CompositeCatalog } from "@casehubio/yaml-core/step";
-export type { StepResult, ResolvedStep } from "@casehubio/yaml-core/step";
+export type { Result, ResolvedStep } from "@casehubio/yaml-core/step";
 export { matches, valuePattern, structuralPattern, anyOfPattern, defaultPattern } from "@casehubio/yaml-core";
 export { isTruthy } from "@casehubio/yaml-core";
 export { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
@@ -51,9 +51,9 @@ import { Walker } from "@casehubio/yaml-core/step";
 import { StructuralEvaluator } from "@casehubio/yaml-core/step";
 import { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
 import { stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
-import type { StepAction } from "@casehubio/yaml-core/step";
+import type { Action } from "@casehubio/yaml-core/step";
 
-export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<string, { type: string; required: boolean }>; outputs?: Record<string, { type: string; required: boolean }>; execute: StepAction['execute'] }>) {
+export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<string, { type: string; required: boolean }>; outputs?: Record<string, { type: string; required: boolean }>; execute: Action['execute'] }>) {
   const registry = new PluginRegistry();
   for (const p of plugins) {
     registry.register({ name: p.name, inputs: p.inputs ?? {}, outputs: p.outputs ?? {}, execute: p.execute });

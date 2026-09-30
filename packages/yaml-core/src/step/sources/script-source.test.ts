@@ -51,7 +51,7 @@ describe('ScriptSource', () => {
     expect(entries.get('transform')).toBe(existing);
   });
 
-  it('action wraps with ValidatingStepAction — wrong type triggers validation failure', async () => {
+  it('action wraps with ValidatingAction — wrong type triggers validation failure', async () => {
     const handler = makeHandler();
     const source = new ScriptSource([scriptEntry], handler);
     const entries = new Map<string, CatalogEntry>();

@@ -83,7 +83,7 @@ describe('YamlDefinitionSource', () => {
     expect(entries.get('greet')).toBe(existing);
   });
 
-  it('addFile parses raw YAML via StepDefinitionParser', () => {
+  it('addFile parses raw YAML via DefinitionParser', () => {
     const handler = makeHandler();
     const source = new YamlDefinitionSource([handler]);
     source.addFile({
