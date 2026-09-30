@@ -64,18 +64,16 @@ var SW_EXAMPLES = [
       '- match: "warning"',
       '  cases:',
       '    - pattern: "error"',
-      '      do:',
-      '        - log: { message: "Matched: error" }',
+      '      log: { message: "Matched: error" }',
       '    - pattern: "warning"',
-      '      do:',
-      '        - log: { message: "Matched: warning" }',
+      '      log: { message: "Matched: warning" }',
       '    - default:',
       '        - log: { message: "No match — default" }',
     ].join('\n'),
     steps: [
       { match: 'warning', cases: [
-        { pattern: 'error', do: [{ log: { message: 'Matched: error' } }] },
-        { pattern: 'warning', do: [{ log: { message: 'Matched: warning' } }] },
+        { pattern: 'error', log: { message: 'Matched: error' } },
+        { pattern: 'warning', log: { message: 'Matched: warning' } },
         { default: [{ log: { message: 'No match — default' } }] },
       ] },
     ],
@@ -155,16 +153,14 @@ var SW_EXAMPLES = [
     yaml: [
       '- select:',
       '  - wait: fast-signal',
-      '    do:',
-      '      - log: { message: "Fast branch won the race" }',
+      '    log: { message: "Fast branch won the race" }',
       '  - wait: slow-signal',
-      '    do:',
-      '      - log: { message: "Slow branch won the race" }',
+      '    log: { message: "Slow branch won the race" }',
     ].join('\n'),
     steps: [
       { select: [
-        { wait: 'fast-signal', do: [{ log: { message: 'Fast branch won the race' } }] },
-        { wait: 'slow-signal', do: [{ log: { message: 'Slow branch won the race' } }] },
+        { wait: 'fast-signal', log: { message: 'Fast branch won the race' } },
+        { wait: 'slow-signal', log: { message: 'Slow branch won the race' } },
       ] },
     ],
     preRun: function(runner) {
