@@ -393,9 +393,10 @@ Hierarchical scenario execution with distributed actors, ARIA-driven browser aut
 | Visual feedback: highlights, focus rings, typing animation (#351) | ✅ shipped |
 | Distributed executor protocol: @ScenarioAction CDI, orchestrator (#418) | ✅ shipped |
 | MCP scenario domain (#419) | ✅ shipped |
-| Spotlight targeting, RestStep, end-to-end demo (#356-#359) | 🔲 open |
+| Spotlight targeting, RestStep, end-to-end demo (#356-#358) | ✅ shipped |
 | Scenario templates: parameterized @include (#327) | 🔲 open |
-| Scenario assertions: server-side verification (#328) | 🔲 open |
+| Scenario assertions: server-side verification (#328) | ✅ shipped |
+| Scenario declaration model unification (#507) | 🔧 active |
 
 ### Backlog
 
@@ -420,9 +421,9 @@ Hierarchical scenario execution with distributed actors, ARIA-driven browser aut
 | #36 | Accumulate + expression for inline datasets | ✅ shipped |
 | #44 | Minor polish for domain examples | ✅ done |
 | #46 | Floating workspace — free-form frame management | ✅ shipped |
-| #93 | Layout editor — drag-and-drop dashboard authoring UI | 🔲 open |
+| #93 | Layout editor — drag-and-drop dashboard authoring UI | ✅ done |
 | #95 | Dashboard platform completion | 🔲 open |
-| #142 | Scenario Engine — composition, triggers, remote control, demo UI (phases 5-7) | 🔲 open |
+| #142 | Scenario Engine — composition, triggers, remote control, demo UI (phases 5-7) | ✅ done |
 | #251-#255 | UI component library (badge, status-dot, dialog, button) | ✅ shipped |
 | #256 | Durable EventStore implementation (JDBC/Redis) | ✅ shipped |
 | #258 | Visual Diagram Editor — Foundation (graph-core, graph-renderer, graph-work-registry) | ✅ shipped |
