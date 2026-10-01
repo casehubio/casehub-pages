@@ -1,111 +1,106 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createScheduler } from './scheduler.js';
-import type { StepExecutor } from './step-executor.js';
 import type { SchedulerOptions } from './scheduler.js';
+import type { SchedulerStep, PreExtractedStep } from './types.js';
+import type { PluginStep, ParallelStep, BlockStep, DelayStep } from '@casehubio/yaml-core/step';
+import { stepSuccess, stepFailure } from '@casehubio/yaml-core/step';
 
-function mockExecutor(): { executor: StepExecutor; calls: unknown[] } {
-  const calls: unknown[] = [];
-  const executor: StepExecutor = {
-    canExecute: (step: any) => step.delivery === 'aria',
-    execute: async (step) => { calls.push(step); },
+function pluginStep(name: string, calls: unknown[], params: Record<string, unknown> = {}, decorators: Record<string, unknown> = {}): PluginStep {
+  return {
+    kind: 'plugin', name: null, params, decorators,
+    entry: {
+      qualifiedName: name,
+      definition: { name, inputs: {}, outputs: {} },
+      action: { async execute(p) { calls.push({ action: name, params: p }); return stepSuccess({}); } },
+    },
   };
-  return { executor, calls };
 }
 
-function testOptions(executors: StepExecutor[]): SchedulerOptions {
+function failingPluginStep(name: string, message: string, decorators: Record<string, unknown> = {}): PluginStep {
   return {
-    eventTarget: new EventTarget(),
-    speed: Infinity,
-    startPaused: true,
-    executors,
+    kind: 'plugin', name, params: {}, decorators,
+    entry: {
+      qualifiedName: name,
+      definition: { name, inputs: {}, outputs: {} },
+      action: { async execute() { return stepFailure(message); } },
+    },
   };
+}
+
+function testOptions(): SchedulerOptions {
+  return { eventTarget: new EventTarget(), speed: Infinity, startPaused: true };
+}
+
+function parallelStep(branches: Record<string, SchedulerStep[]>): ParallelStep {
+  const steps: BlockStep[] = Object.entries(branches).map(([name, branchSteps]) => ({
+    kind: 'block' as const, name, steps: branchSteps as any, decorators: {},
+  }));
+  return { kind: 'parallel', name: null, steps, decorators: {} };
 }
 
 describe('DES Scheduler', () => {
-  it('executes flat sequential steps in order', async () => {
-    const { executor, calls } = mockExecutor();
+  it('executes flat sequential plugin steps in order', async () => {
+    const calls: unknown[] = [];
     const scenario = {
       scenario: 'test',
       steps: [
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'A' } },
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'B' } },
+        pluginStep('click', calls, { name: 'A' }),
+        pluginStep('click', calls, { name: 'B' }),
       ],
     };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const runner = createScheduler(scenario as any, testOptions());
     runner.play();
     await vi.waitFor(() => expect(runner.state).toBe('done'));
     expect(calls).toHaveLength(2);
-    expect((calls[0] as any).target.name).toBe('A');
-    expect((calls[1] as any).target.name).toBe('B');
+    expect((calls[0] as any).params.name).toBe('A');
+    expect((calls[1] as any).params.name).toBe('B');
   });
 
   it('starts in paused state when startPaused is true', () => {
-    const { executor } = mockExecutor();
-    const scenario = {
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'click', target: { role: 'button', name: 'A' } }],
-    };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const calls: unknown[] = [];
+    const scenario = { scenario: 'test', steps: [pluginStep('click', calls)] };
+    const runner = createScheduler(scenario as any, testOptions());
     expect(runner.state).toBe('paused');
   });
 
   it('starts in idle state when startPaused is false', () => {
-    const { executor } = mockExecutor();
-    const scenario = {
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'click', target: { role: 'button', name: 'A' } }],
-    };
-    const runner = createScheduler(scenario as any, {
-      ...testOptions([executor]),
-      startPaused: false,
-    });
+    const calls: unknown[] = [];
+    const scenario = { scenario: 'test', steps: [pluginStep('click', calls)] };
+    const runner = createScheduler(scenario as any, { ...testOptions(), startPaused: false });
     expect(runner.state).toBe('idle');
   });
 
   it('step() executes exactly one step', async () => {
-    const { executor, calls } = mockExecutor();
+    const calls: unknown[] = [];
     const scenario = {
       scenario: 'test',
-      steps: [
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'A' } },
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'B' } },
-      ],
+      steps: [pluginStep('click', calls, { name: 'A' }), pluginStep('click', calls, { name: 'B' })],
     };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const runner = createScheduler(scenario as any, testOptions());
     await runner.step();
     expect(calls).toHaveLength(1);
     expect(runner.state).toBe('paused');
   });
 
-  it('concurrent branches execute with DES interleaving', async () => {
-    const { executor, calls } = mockExecutor();
+  it('parallel branches execute with DES interleaving', async () => {
+    const calls: unknown[] = [];
     const scenario = {
       scenario: 'test',
-      steps: [{
-        delivery: 'orchestration', construct: 'concurrent',
-        branches: {
-          'a': [
-            { delivery: 'aria', action: 'click', target: { role: 'button', name: 'A1' } },
-            { delivery: 'aria', action: 'click', target: { role: 'button', name: 'A2' } },
-          ],
-          'b': [
-            { delivery: 'aria', action: 'click', target: { role: 'button', name: 'B1' } },
-          ],
-        },
-      }],
+      steps: [parallelStep({
+        'a': [pluginStep('click', calls, { name: 'A1' }), pluginStep('click', calls, { name: 'A2' })],
+        'b': [pluginStep('click', calls, { name: 'B1' })],
+      })],
     };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const runner = createScheduler(scenario as any, testOptions());
     runner.play();
     await vi.waitFor(() => expect(runner.state).toBe('done'));
     expect(calls).toHaveLength(3);
   });
 
   it('dispose stops execution and cleans up', async () => {
-    const { executor, calls } = mockExecutor();
-    const steps = Array.from({ length: 100 }, (_, i) => ({
-      delivery: 'aria', action: 'click', target: { role: 'button', name: `btn-${i}` },
-    }));
-    const runner = createScheduler({ scenario: 'test', steps } as any, testOptions([executor]));
+    const calls: unknown[] = [];
+    const steps = Array.from({ length: 100 }, (_, i) => pluginStep('click', calls, { name: `btn-${i}` }));
+    const runner = createScheduler({ scenario: 'test', steps } as any, testOptions());
     runner.play();
     await new Promise(r => setTimeout(r, 10));
     runner.dispose();
@@ -115,61 +110,54 @@ describe('DES Scheduler', () => {
   });
 
   it('emits scenario:state on play', async () => {
-    const { executor } = mockExecutor();
+    const calls: unknown[] = [];
     const et = new EventTarget();
     const states: unknown[] = [];
     et.addEventListener('pages-event', (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail.topic === 'scenario:state') states.push(detail.payload);
     });
-    const scenario = {
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'click', target: { role: 'button', name: 'A' } }],
-    };
-    const runner = createScheduler(scenario as any, { eventTarget: et, speed: Infinity, startPaused: true, executors: [executor] });
+    const scenario = { scenario: 'test', steps: [pluginStep('click', calls)] };
+    const runner = createScheduler(scenario as any, { eventTarget: et, speed: Infinity, startPaused: true });
     runner.play();
     await vi.waitFor(() => expect(runner.state).toBe('done'));
     expect(states.length).toBeGreaterThan(0);
     expect((states[0] as any).scenario).toBe('test');
   });
 
-  it('signal construct unblocks await', async () => {
-    const { executor, calls } = mockExecutor();
+  it('signal-fire unblocks await-signal', async () => {
+    const calls: unknown[] = [];
     const scenario = {
       scenario: 'test',
-      steps: [
-        {
-          delivery: 'orchestration', construct: 'concurrent',
-          branches: {
-            'sender': [
-              { delivery: 'aria', action: 'click', target: { role: 'button', name: 'Send' } },
-              { delivery: 'orchestration', construct: 'signal', name: 'data-ready' },
-            ],
-            'receiver': [
-              { delivery: 'orchestration', construct: 'await', signal: 'data-ready' },
-              { delivery: 'aria', action: 'click', target: { role: 'button', name: 'Receive' } },
-            ],
-          },
-        },
-      ],
+      steps: [parallelStep({
+        'sender': [
+          pluginStep('click', calls, { name: 'Send' }),
+          { kind: 'signal-fire', name: 'data-ready', decorators: {} } as PreExtractedStep,
+        ],
+        'receiver': [
+          { kind: 'await-signal', name: 'data-ready', decorators: {} } as PreExtractedStep,
+          pluginStep('click', calls, { name: 'Receive' }),
+        ],
+      })],
     };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const runner = createScheduler(scenario as any, testOptions());
     runner.play();
     await vi.waitFor(() => expect(runner.state).toBe('done'));
     expect(calls).toHaveLength(2);
   });
 
-  it('delay construct blocks queue for virtual time', async () => {
-    const { executor, calls } = mockExecutor();
+  it('delay step blocks queue for virtual time', async () => {
+    const calls: unknown[] = [];
+    const delayStep: DelayStep = { kind: 'delay', name: null, duration: 1000, decorators: {} };
     const scenario = {
       scenario: 'test',
       steps: [
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'Before' } },
-        { delivery: 'orchestration', construct: 'delay', duration: '1000ms' },
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'After' } },
+        pluginStep('click', calls, { name: 'Before' }),
+        delayStep,
+        pluginStep('click', calls, { name: 'After' }),
       ],
     };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const runner = createScheduler(scenario as any, testOptions());
     runner.play();
     await vi.waitFor(() => expect(runner.state).toBe('done'));
     expect(calls).toHaveLength(2);
@@ -177,18 +165,34 @@ describe('DES Scheduler', () => {
   });
 
   it('handles empty scenario', async () => {
-    const { executor } = mockExecutor();
     const scenario = { scenario: 'empty', steps: [] };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const runner = createScheduler(scenario as any, testOptions());
     runner.play();
     await vi.waitFor(() => expect(runner.state).toBe('done'));
   });
 
   it('setSpeed updates clock speed', () => {
-    const { executor } = mockExecutor();
     const scenario = { scenario: 'test', steps: [] };
-    const runner = createScheduler(scenario as any, testOptions([executor]));
+    const runner = createScheduler(scenario as any, testOptions());
     runner.setSpeed(2);
     expect(runner.clock.speed()).toBe(2);
+  });
+
+  it('Result failure triggers error event', async () => {
+    const et = new EventTarget();
+    const errors: unknown[] = [];
+    et.addEventListener('pages-event', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.payload?.error) errors.push(detail.payload.error);
+    });
+    const scenario = {
+      scenario: 'test',
+      steps: [failingPluginStep('bad-step', 'something broke')],
+    };
+    const runner = createScheduler(scenario as any, { eventTarget: et, speed: Infinity, startPaused: true });
+    runner.play();
+    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    expect(errors).toHaveLength(1);
+    expect((errors[0] as any).message).toBe('something broke');
   });
 });

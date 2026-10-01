@@ -1,15 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import { DefaultScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { bindScenario } from './yaml-binder.js';
+import type { SchedulerStep } from './types.js';
+import type { ParallelStep, BlockStep } from '@casehubio/yaml-core/step';
+import { stepSuccess } from '@casehubio/yaml-core/step';
+
+function simplePlugin(name: string): SchedulerStep {
+  return {
+    kind: 'plugin', name: null, params: {}, decorators: {},
+    entry: { qualifiedName: name, definition: { name, inputs: {}, outputs: {} }, action: { async execute() { return stepSuccess({}); } } },
+  } as any;
+}
 
 describe('YamlBinder', () => {
   it('creates a single queue for flat sequential steps', () => {
     const scenario = {
       scenario: 'test',
-      steps: [
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'A' } },
-        { delivery: 'aria', action: 'click', target: { role: 'button', name: 'B' } },
-      ],
+      steps: [simplePlugin('click'), simplePlugin('fill')],
     };
     const scope = new DefaultScenarioScope();
     const result = bindScenario(scenario as any, scope);
@@ -18,19 +25,15 @@ describe('YamlBinder', () => {
     expect(result.queues[0].id).toBe('main');
   });
 
-  it('creates child queues for concurrent block', () => {
-    const scenario = {
-      scenario: 'test',
+  it('creates child queues for parallel step', () => {
+    const parallel: ParallelStep = {
+      kind: 'parallel', name: null, decorators: {},
       steps: [
-        {
-          delivery: 'orchestration', construct: 'concurrent',
-          branches: {
-            'branch-a': [{ delivery: 'aria', action: 'click' }],
-            'branch-b': [{ delivery: 'aria', action: 'click' }],
-          },
-        },
+        { kind: 'block', name: 'branch-a', steps: [simplePlugin('click') as any], decorators: {} } as BlockStep,
+        { kind: 'block', name: 'branch-b', steps: [simplePlugin('click') as any], decorators: {} } as BlockStep,
       ],
     };
+    const scenario = { scenario: 'test', steps: [parallel] };
     const scope = new DefaultScenarioScope();
     const result = bindScenario(scenario as any, scope);
     expect(result.queues).toHaveLength(3);
@@ -57,34 +60,18 @@ describe('YamlBinder', () => {
     expect(scope.signal('go').isSignalled()).toBe(false);
   });
 
-  it('creates anonymous semaphore for inline mutex', () => {
+  it('pushes PreExtractedStep to queue without special handling', () => {
     const scenario = {
       scenario: 'test',
       steps: [
-        { delivery: 'aria', action: 'click', decorators: { mutex: 'db-write' } },
-      ],
-    };
-    const scope = new DefaultScenarioScope();
-    bindScenario(scenario as any, scope);
-    expect(scope.semaphore('__anon_mutex_db-write', 1).availablePermits()).toBe(1);
-  });
-
-  it('creates suspended queue for triggered steps', () => {
-    const scenario = {
-      scenario: 'test',
-      steps: [
-        {
-          delivery: 'orchestration', construct: 'trigger',
-          trigger: { type: 'data', channel: 'trades' },
-          steps: [{ delivery: 'aria', action: 'click' }],
-        },
+        { kind: 'signal-fire', name: 'go', decorators: {} },
+        simplePlugin('click'),
       ],
     };
     const scope = new DefaultScenarioScope();
     const result = bindScenario(scenario as any, scope);
-    const triggerQueue = result.queues.find(q => q.state === 'suspended');
-    expect(triggerQueue).toBeDefined();
-    expect(triggerQueue!.trigger).toEqual({ type: 'data', channel: 'trades' });
+    expect(result.queues).toHaveLength(1);
+    expect(result.queues[0].steps).toHaveLength(2);
   });
 
   it('rejects __anon_ prefix in top-level orchestration names', () => {
@@ -101,8 +88,8 @@ describe('YamlBinder', () => {
     const scenario = {
       scenario: 'test',
       sections: [
-        { title: 'Intro', steps: [{ delivery: 'aria', action: 'click' }] },
-        { title: 'Body', steps: [{ delivery: 'aria', action: 'fill' }] },
+        { title: 'Intro', steps: [simplePlugin('click')] },
+        { title: 'Body', steps: [simplePlugin('fill')] },
       ],
     };
     const scope = new DefaultScenarioScope();

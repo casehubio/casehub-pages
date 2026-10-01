@@ -1,16 +1,16 @@
-import { DefaultScenarioScope, parseDuration } from '@casehubio/yaml-core/orchestration';
+import { DefaultScenarioScope, parseDuration, parseRetryDirective, parseLoopDirective } from '@casehubio/yaml-core/orchestration';
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { ConditionEvaluator } from '@casehubio/yaml-core/condition';
-import type { Scenario, OrchestratedStep, DataTrigger, TimeTrigger, StepDecorators, SectionContent } from './types.js';
+import type { Scenario, SchedulerStep, SectionContent } from './types.js';
 import type { LoopDirective } from '@casehubio/yaml-core/orchestration';
 import { isSectioned } from './types.js';
 import type { ScenarioState, OutlineNode } from '../controller/scenario-connection-controller.js';
 import { DefaultVirtualClock } from './virtual-clock.js';
 import type { VirtualClock } from './virtual-clock.js';
 import { StepQueue } from './step-queue.js';
-import type { StepExecutor, ExecutionContext } from './step-executor.js';
-import { AriaExecutor } from './step-executor.js';
-import { executeStep as ariaExecuteStep } from '../executor/command-executor.js';
+import type { ExecutionContext } from './step-executor.js';
+import { MapServiceRegistry } from '@casehubio/yaml-core/step';
+import type { Result } from '@casehubio/yaml-core/step';
 import { bindScenario } from './yaml-binder.js';
 import type { BindResult } from './yaml-binder.js';
 import { evaluateTrigger } from './trigger-evaluator.js';
@@ -20,7 +20,6 @@ export interface SchedulerOptions {
   contentBase?: string;
   speed?: number;
   startPaused?: boolean;
-  executors?: StepExecutor[];
   onComplete?: (scenarioName: string) => void;
 }
 
@@ -53,8 +52,6 @@ export function createScheduler(
 
   let scope: ScenarioScope = new DefaultScenarioScope();
   const conditionEvaluator = new ConditionEvaluator(() => false);
-  const builtInAria = new AriaExecutor(ariaExecuteStep as (step: unknown, eventTarget?: EventTarget, speed?: number) => Promise<void>);
-  const executors: StepExecutor[] = [...(options.executors ?? []), builtInAria];
 
   const binding: BindResult = bindScenario(scenario as any, scope);
   let queues = binding.queues;
@@ -161,78 +158,66 @@ export function createScheduler(
     }
   }
 
-  async function dispatchStep(step: OrchestratedStep, queue: StepQueue, context: ExecutionContext): Promise<void> {
-    if ((step as any).delivery === 'orchestration') {
-      await dispatchOrchestration(step as any, queue, context);
-      return;
-    }
-
-    const executor = executors.find(e => e.canExecute(step));
-    if (!executor) return;
-    await executor.execute(step, context);
-  }
-
-  async function dispatchOrchestration(
-    step: OrchestratedStep & { construct: string; [key: string]: unknown },
-    queue: StepQueue,
-    _context: ExecutionContext,
-  ): Promise<void> {
-    switch (step.construct) {
-      case 'concurrent': {
+  async function dispatchStep(step: SchedulerStep, queue: StepQueue, _context: ExecutionContext): Promise<Result | undefined> {
+    switch (step.kind) {
+      case 'plugin': {
+        const services = new MapServiceRegistry()
+          .register({ name: 'EventTarget' }, options.eventTarget)
+          .register({ name: 'Speed' }, clock.speed());
+        return step.entry.action.execute(step.params, services);
+      }
+      case 'parallel': {
         queue.block();
-        break;
-      }
-      case 'signal': {
-        scope.signal(step.name as string).signal();
-        break;
-      }
-      case 'await': {
-        if (step.signal) {
-          const sig = scope.signal(step.signal as string);
-          if (sig.isSignalled()) break;
-          queue.advance();
-          const promise = sig.await();
-          queue.block(promise);
-          promise.then(() => {
-            if (!disposed) {
-              queue.unblock();
-              if (queue.isDone()) {
-                queue.state = 'done';
-                resolveParentIfChildrenDone(queue);
-              }
-            }
-          });
-          return;
-        }
-        if (step.barrier) {
-          const barrierName = step.barrier as string;
-          const barrierConfig = scenario.orchestration?.barriers?.[barrierName];
-          const barrierCount = barrierConfig?.count ?? 1;
-          const latch = scope.latch(barrierName, barrierCount);
-          latch.countDown();
-          if (latch.getCount() <= 0) break;
-          queue.advance();
-          const promise = latch.await();
-          queue.block(promise);
-          promise.then(() => {
-            if (!disposed) {
-              queue.unblock();
-              if (queue.isDone()) {
-                queue.state = 'done';
-                resolveParentIfChildrenDone(queue);
-              }
-            }
-          });
-          return;
-        }
-        break;
-      }
-      case 'delay': {
-        const ms = parseDuration(step.duration as string);
-        queue.advance();
-        queue.block(undefined, clock.now() + ms);
         return;
       }
+      case 'delay': {
+        queue.advance();
+        queue.block(undefined, clock.now() + step.duration);
+        return;
+      }
+      case 'signal-fire': {
+        scope.signal(step.name).signal();
+        return;
+      }
+      case 'await-signal': {
+        const sig = scope.signal(step.name);
+        if (sig.isSignalled()) return;
+        queue.advance();
+        const promise = sig.await();
+        queue.block(promise);
+        promise.then(() => {
+          if (!disposed) {
+            queue.unblock();
+            if (queue.isDone()) {
+              queue.state = 'done';
+              resolveParentIfChildrenDone(queue);
+            }
+          }
+        });
+        return;
+      }
+      case 'await-barrier': {
+        const barrierConfig = scenario.orchestration?.barriers?.[step.name];
+        const barrierCount = barrierConfig?.count ?? 1;
+        const latch = scope.latch(step.name, barrierCount);
+        latch.countDown();
+        if (latch.getCount() <= 0) return;
+        queue.advance();
+        const promise = latch.await();
+        queue.block(promise);
+        promise.then(() => {
+          if (!disposed) {
+            queue.unblock();
+            if (queue.isDone()) {
+              queue.state = 'done';
+              resolveParentIfChildrenDone(queue);
+            }
+          }
+        });
+        return;
+      }
+      default:
+        return;
     }
   }
 
@@ -283,65 +268,32 @@ export function createScheduler(
 
         await Promise.all(ready.map(async (queue) => {
           if (disposed) return;
-          const step = queue.currentStep() as OrchestratedStep;
+          const step = queue.currentStep() as SchedulerStep;
           if (!step) {
             queue.state = 'done';
             resolveParentIfChildrenDone(queue);
             return;
           }
 
-          const decorators = step.decorators;
+          const decorators = 'decorators' in step ? (step as { decorators: Record<string, unknown> }).decorators : {};
           const posKey = `${queue.id}:${queue.position}`;
 
-          if (decorators?.when) {
-            if (!conditionEvaluator.evaluate(decorators.when)) {
+          if (decorators['if'] != null) {
+            if (!conditionEvaluator.evaluate(decorators['if'] as string)) {
               queue.advance();
               return;
             }
           }
 
-          try {
-            await dispatchStep(step, queue, context);
-            emitStepEvent(queue, step);
+          const result = await dispatchStep(step, queue, context);
+          emitStepEvent(queue, step);
 
-            if (queue.state !== 'ready') {
-              emitQueueEvent(queue);
-              return;
-            }
-
-            let advancePosition = true;
-            if (decorators?.loop) {
-              if (evaluateLoopContinuation(decorators.loop, posKey, loopState)) {
-                advancePosition = false;
-                retryState.delete(posKey);
-              } else {
-                loopState.delete(posKey);
-              }
-            }
-
-            if (advancePosition) {
-              retryState.delete(posKey);
-              queue.advance();
-            }
-
-            if (decorators?.delay) {
-              queue.block(undefined, clock.now() + parseDuration(decorators.delay));
-              emitQueueEvent(queue, 'delay');
-              return;
-            }
-
-            if (advancePosition && queue.isDone()) {
-              queue.state = 'done';
-              emitQueueEvent(queue);
-              resolveParentIfChildrenDone(queue);
-            }
-          } catch (err) {
-            const stepName = (step as { name?: string }).name ?? posKey;
-            scope.resultStore().recordFailure(stepName, {
-              message: (err as Error).message ?? String(err),
-              stepName,
-            });
-            const retryMax = decorators?.retry?.max ?? 0;
+          if (result && result.kind === 'failure') {
+            const stepName = ('name' in step ? step.name : null) ?? posKey;
+            scope.resultStore().recordFailure(stepName, { message: result.message, stepName });
+            const retryRaw = decorators['retry'];
+            const retryDirective = retryRaw != null ? parseRetryDirective(retryRaw) : undefined;
+            const retryMax = retryDirective?.max ?? 0;
             const retryCount = retryState.get(posKey) ?? 0;
             if (retryCount < retryMax) {
               retryState.set(posKey, retryCount + 1);
@@ -355,10 +307,45 @@ export function createScheduler(
                   step: stepName, paused: true, speed: clock.speed(),
                   progress: totalSteps > 0 ? countCompletedSteps(queues) / totalSteps : 0,
                   content: null, slides: null,
-                  error: { step: stepName, message: (err as Error).message ?? String(err) },
+                  error: { step: stepName, message: result.message },
                 } },
               }));
             }
+            return;
+          }
+
+          if (queue.state !== 'ready') {
+            emitQueueEvent(queue);
+            return;
+          }
+
+          let advancePosition = true;
+          const loopRaw = decorators['loop'];
+          if (loopRaw != null) {
+            const loopDirective = parseLoopDirective(loopRaw);
+            if (evaluateLoopContinuation(loopDirective, posKey, loopState)) {
+              advancePosition = false;
+              retryState.delete(posKey);
+            } else {
+              loopState.delete(posKey);
+            }
+          }
+
+          if (advancePosition) {
+            retryState.delete(posKey);
+            queue.advance();
+          }
+
+          if (decorators['delay'] != null) {
+            queue.block(undefined, clock.now() + parseDuration(decorators['delay'] as string));
+            emitQueueEvent(queue, 'delay');
+            return;
+          }
+
+          if (advancePosition && queue.isDone()) {
+            queue.state = 'done';
+            emitQueueEvent(queue);
+            resolveParentIfChildrenDone(queue);
           }
         }));
 

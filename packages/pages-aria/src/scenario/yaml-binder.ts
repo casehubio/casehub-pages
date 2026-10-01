@@ -1,6 +1,7 @@
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { StepQueue } from './step-queue.js';
-import type { OrchestratedStep, OrchestrationBlock, DataTrigger, TimeTrigger } from './types.js';
+import type { SchedulerStep, OrchestrationBlock, DataTrigger, TimeTrigger } from './types.js';
+import type { ParallelStep, BlockStep } from '@casehubio/yaml-core/step';
 
 export interface BindResult {
   queues: StepQueue[];
@@ -8,7 +9,7 @@ export interface BindResult {
 }
 
 export function bindScenario(
-  scenario: { orchestration?: OrchestrationBlock; steps?: OrchestratedStep[]; sections?: Array<{ steps: OrchestratedStep[] }> },
+  scenario: { orchestration?: OrchestrationBlock; steps?: SchedulerStep[]; sections?: Array<{ steps: SchedulerStep[] }> },
   scope: ScenarioScope,
 ): BindResult {
   if (scenario.orchestration) {
@@ -23,7 +24,7 @@ export function bindScenario(
   const mainQueue = new StepQueue('main', []);
   const allQueues: StepQueue[] = [mainQueue];
 
-  buildQueueTree(allSteps as OrchestratedStep[], mainQueue, allQueues, triggers, scope);
+  buildQueueTree(allSteps, mainQueue, allQueues, triggers, scope);
 
   return { queues: allQueues, triggers };
 }
@@ -60,33 +61,25 @@ function bindOrchestrationBlock(block: OrchestrationBlock, scope: ScenarioScope)
 }
 
 function buildQueueTree(
-  steps: OrchestratedStep[],
+  steps: SchedulerStep[],
   currentQueue: StepQueue,
   allQueues: StepQueue[],
   triggers: Map<string, DataTrigger | TimeTrigger>,
-  scope: ScenarioScope,
+  _scope: ScenarioScope,
 ): void {
   for (const step of steps) {
-    if (isOrchestration(step) && step.construct === 'concurrent') {
-      for (const [branchName, branchSteps] of Object.entries(step.branches)) {
-        const child = new StepQueue(branchName, branchSteps as unknown[], currentQueue);
-        allQueues.push(child);
+    if (step.kind === 'parallel') {
+      const parallel = step as ParallelStep;
+      for (const child of parallel.steps) {
+        if (child.kind === 'block') {
+          const block = child as BlockStep;
+          const childQueue = new StepQueue(block.name ?? `branch-${allQueues.length}`, block.steps as unknown[], currentQueue);
+          allQueues.push(childQueue);
+        }
       }
       (currentQueue.steps as unknown[]).push(step);
-    } else if (isOrchestration(step) && step.construct === 'trigger') {
-      const triggerQueue = new StepQueue(`trigger-${triggers.size}`, (step as any).steps);
-      triggerQueue.suspend((step as any).trigger);
-      triggers.set(triggerQueue.id, (step as any).trigger);
-      allQueues.push(triggerQueue);
     } else {
-      if ((step as OrchestratedStep).decorators?.mutex) {
-        scope.semaphore(`__anon_mutex_${(step as OrchestratedStep).decorators!.mutex!}`, 1);
-      }
       (currentQueue.steps as unknown[]).push(step);
     }
   }
-}
-
-function isOrchestration(step: unknown): step is { delivery: 'orchestration'; construct: string; [key: string]: unknown } {
-  return (step as any).delivery === 'orchestration';
 }
