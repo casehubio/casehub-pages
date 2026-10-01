@@ -106,4 +106,35 @@ describe('DefinitionParser', () => {
       expect(file.actions['a']!.portability).toBe('universal');
     });
   });
+
+  describe('parseInvoke — new binding kinds', () => {
+    it('parses aria binding', () => {
+      const binding = DefinitionParser.parseInvoke({ aria: 'click' });
+      expect(binding).toEqual({ kind: 'aria', action: 'click' });
+    });
+
+    it('parses graphql-domain binding', () => {
+      const binding = DefinitionParser.parseInvoke({ 'graphql-domain': true });
+      expect(binding).toEqual({ kind: 'graphql-domain' });
+    });
+
+    it('parses simulated binding', () => {
+      const binding = DefinitionParser.parseInvoke({ simulated: true });
+      expect(binding).toEqual({ kind: 'simulated' });
+    });
+
+    it('aria invoke infers ts portability', () => {
+      const file = DefinitionParser.parse({
+        actions: { click: { invoke: { aria: 'click' } } },
+      });
+      expect(file.actions['click']!.portability).toBe('ts');
+    });
+
+    it('graphql-domain invoke infers universal portability', () => {
+      const file = DefinitionParser.parse({
+        actions: { gql: { invoke: { 'graphql-domain': true } } },
+      });
+      expect(file.actions['gql']!.portability).toBe('universal');
+    });
+  });
 });

@@ -138,6 +138,15 @@ export class DefinitionParser {
         onError: ((spec['onError'] ?? spec['on-error']) as string) ?? 'stderr',
       };
     }
-    throw new Error(`Unknown invoke binding type. Expected one of: mcp, python, node, script, graphql, rest, agent, process`);
+    if (raw['aria']) {
+      return { kind: 'aria', action: raw['aria'] as string };
+    }
+    if (raw['graphql-domain'] != null) {
+      return { kind: 'graphql-domain' };
+    }
+    if (raw['simulated'] != null) {
+      return { kind: 'simulated' };
+    }
+    throw new Error(`Unknown invoke binding type. Expected one of: mcp, python, node, script, graphql, rest, agent, process, aria, graphql-domain, simulated`);
   }
 }

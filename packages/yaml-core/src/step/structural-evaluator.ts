@@ -1,7 +1,7 @@
 import type {
   ResolvedStep, Result, PluginStep, BlockStep, ParallelStep,
   IfElseStep, MatchStep, TryCatchFinallyStep, SelectStep,
-  BarrierStep, QuorumStep, InvokeStep,
+  BarrierStep, QuorumStep, InvokeStep, DelayStep,
 } from './walker.js';
 import { stepSuccess, stepFailure } from './walker.js';
 import type { Context } from './decorator-chain.js';
@@ -43,6 +43,7 @@ export class StructuralEvaluator {
       case 'select': return this.evaluateSelect(step, context);
       case 'barrier': return this.evaluateBarrier(step, context);
       case 'quorum': return this.evaluateQuorum(step, context);
+      case 'delay': return this.evaluateDelay(step);
     }
   }
 
@@ -175,5 +176,10 @@ export class StructuralEvaluator {
     const completed = step.ofSteps.filter((name) => store.hasCompleted(name));
     if (completed.length >= step.required) return stepSuccess({});
     return stepFailure(`Quorum: ${completed.length}/${step.required} of [${step.ofSteps.join(', ')}] completed`);
+  }
+
+  private async evaluateDelay(step: DelayStep): Promise<Result> {
+    await new Promise(resolve => setTimeout(resolve, step.duration));
+    return stepSuccess({});
   }
 }

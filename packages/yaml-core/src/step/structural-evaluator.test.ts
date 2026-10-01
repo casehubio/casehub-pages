@@ -3,6 +3,7 @@ import type {
   Action, Result, ResolvedStep, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
   BarrierStep, QuorumStep, CatalogEntry, SelectStep, InvokeStep,
+  DelayStep,
 } from './walker.js';
 import { stepSuccess, stepFailure, MapServiceRegistry } from './walker.js';
 import { StructuralEvaluator } from './structural-evaluator.js';
@@ -373,6 +374,25 @@ describe('StructuralEvaluator', () => {
       };
       await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
       expect(scope.resultStore().result('my-step')).toEqual({ v: 42 });
+    });
+  });
+
+  describe('delay step', () => {
+    it('evaluates delay step with real-time wait', async () => {
+      const step: DelayStep = { kind: 'delay', name: null, duration: 30, decorators: {} };
+      const start = Date.now();
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
+      const elapsed = Date.now() - start;
+      expect(result.kind).toBe('success');
+      expect(elapsed).toBeGreaterThanOrEqual(20);
+    });
+
+    it('records named delay result', async () => {
+      const scope = new DefaultScenarioScope();
+      const step: DelayStep = { kind: 'delay', name: 'pause', duration: 10, decorators: {} };
+      const result = await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
+      expect(result.kind).toBe('success');
+      expect(scope.resultStore().hasCompleted('pause')).toBe(true);
     });
   });
 });

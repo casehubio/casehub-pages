@@ -92,9 +92,10 @@ class DelayDecorator implements DecoratedExecution {
     private readonly raw: unknown,
   ) {}
   async execute(context: Context): Promise<Result> {
+    const result = await this.next.execute(context);
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
     await delay(ms);
-    return this.next.execute(context);
+    return result;
   }
 }
 

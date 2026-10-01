@@ -49,6 +49,8 @@ export interface StepResultStore {
   result(stepName: string): Record<string, unknown> | undefined;
   error(stepName: string): StepError | undefined;
   hasCompleted(stepName: string): boolean;
+  awaitAll(names: string[]): Promise<void>;
+  awaitCount(names: string[], threshold: number): Promise<void>;
 }
 
 export interface ScenarioScope {
