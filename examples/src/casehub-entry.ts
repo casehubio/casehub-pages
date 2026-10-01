@@ -33,7 +33,7 @@ export { defaultEditPolicy, applyGraphEdit, getAllStencils } from "@casehubio/gr
 export { createZoneLayoutEngine } from "@casehubio/pages-runtime";
 export { dockWorkbench, html, rows, split, columns, withId, dockBar, deferred, withStyle, hostPanel } from "@casehubio/pages-ui/dist/dsl/builders.js";
 export type { DockWorkbenchConfig, DockPanelConfig, DockSideConfig } from "@casehubio/pages-ui/dist/dsl/builders.js";
-export { createScheduler, parseScenario } from "@casehubio/pages-aria/scenario";
+export { createScheduler, parseScenario, createScenarioCatalog } from "@casehubio/pages-aria/scenario";
 export type { ScenarioRunner, SchedulerOptions } from "@casehubio/pages-aria/scenario";
 export { Walker, stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
 export { StructuralEvaluator } from "@casehubio/yaml-core/step";

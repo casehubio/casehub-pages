@@ -246,15 +246,17 @@ function runExample(idx) {
 
   var parseScenario = window.casehubPages && window.casehubPages.parseScenario;
   var createScheduler = window.casehubPages && window.casehubPages.createScheduler;
+  var createScenarioCatalog = window.casehubPages && window.casehubPages.createScenarioCatalog;
 
-  if (!parseScenario || !createScheduler) {
+  if (!parseScenario || !createScheduler || !createScenarioCatalog) {
     log(0, 'system', 'error', 'scheduler not in bundle');
     return;
   }
 
+  var catalog = createScenarioCatalog();
   var scenario;
   try {
-    scenario = parseScenario(ex.yaml);
+    scenario = parseScenario(ex.yaml, catalog);
   } catch (e) {
     log(0, 'system', 'parse error', e.message || String(e));
     return;
@@ -286,16 +288,16 @@ function runExample(idx) {
     if (detail.topic === 'scenario:step') {
       var sp = detail.payload;
       var step = sp.step;
-      var action = step ? (step.action || step.construct || '?') : '?';
-      var target = step && step.target ? step.target.name : (step ? (step.name || step.duration || '') : '');
+      var action = step ? (step.entry ? step.entry.qualifiedName : step.kind || '?') : '?';
+      var target = step && step.params ? (step.params.name || '') : (step ? (step.name || step.duration || '') : '');
       var label = action + (target ? ' ' + target : '');
 
       if (stepEl) stepEl.textContent = label;
       if (timeEl) timeEl.textContent = sp.virtualTime + 'ms';
 
-      if (step && step.delivery === 'orchestration' && step.construct === 'delay') {
+      if (step && step.kind === 'delay') {
         log(sp.virtualTime, sp.queue || 'main', 'delay ' + (step.duration || ''), '⏱');
-      } else if (step && step.delivery === 'aria') {
+      } else if (step && step.kind === 'plugin') {
         log(sp.virtualTime, sp.queue || 'main', label, '✓');
       } else {
         log(sp.virtualTime, sp.queue || 'main', label, '⏭');
@@ -307,21 +309,6 @@ function runExample(idx) {
     eventTarget: eventTarget,
     speed: 1,
     startPaused: false,
-    executors: [{
-      canExecute: function(step) { return step.delivery === 'aria'; },
-      execute: function(step) {
-        return new Promise(function(resolve) {
-          var target = step.target;
-          if (!target) { resolve(); return; }
-          var el = findByAriaLabel(target.name);
-          if (el) {
-            el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-            flashButton(target.name);
-          }
-          setTimeout(resolve, stepDelay);
-        });
-      }
-    }],
   });
 
   currentRunner = runner;

@@ -8,7 +8,6 @@ import type { ScenarioState, OutlineNode } from '../controller/scenario-connecti
 import { DefaultVirtualClock } from './virtual-clock.js';
 import type { VirtualClock } from './virtual-clock.js';
 import { StepQueue } from './step-queue.js';
-import type { ExecutionContext } from './step-executor.js';
 import { MapServiceRegistry } from '@casehubio/yaml-core/step';
 import type { Result } from '@casehubio/yaml-core/step';
 import { bindScenario } from './yaml-binder.js';
@@ -158,7 +157,7 @@ export function createScheduler(
     }
   }
 
-  async function dispatchStep(step: SchedulerStep, queue: StepQueue, _context: ExecutionContext): Promise<Result | undefined> {
+  async function dispatchStep(step: SchedulerStep, queue: StepQueue): Promise<Result | undefined> {
     switch (step.kind) {
       case 'plugin': {
         const services = new MapServiceRegistry()
@@ -258,14 +257,6 @@ export function createScheduler(
 
       const ready = readyQueues();
       if (ready.length > 0) {
-        const context: ExecutionContext = {
-          scope,
-          clock,
-          eventTarget: options.eventTarget,
-          speed: clock.speed(),
-          conditionEvaluator,
-        };
-
         await Promise.all(ready.map(async (queue) => {
           if (disposed) return;
           const step = queue.currentStep() as SchedulerStep;
@@ -285,7 +276,7 @@ export function createScheduler(
             }
           }
 
-          const result = await dispatchStep(step, queue, context);
+          const result = await dispatchStep(step, queue);
           emitStepEvent(queue, step);
 
           if (result && result.kind === 'failure') {

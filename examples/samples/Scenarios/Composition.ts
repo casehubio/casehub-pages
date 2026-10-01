@@ -317,8 +317,8 @@ function compRunExample(key) {
     if (detail.topic === 'scenario:step') {
       var p = detail.payload;
       var step = p.step;
-      var action = step.action || step.construct || '?';
-      var target = step.target ? step.target.name : (step.name || step.duration || '');
+      var action = step.entry ? step.entry.qualifiedName : (step.kind || '?');
+      var target = step.params ? (step.params.name || '') : (step.name || step.duration || '');
       var label = action + (target ? ' ' + target : '');
       compLog(label.padEnd(20) + '✓', p.queue, p.virtualTime);
       compUpdateTime(p.virtualTime);
@@ -345,26 +345,12 @@ function compRunExample(key) {
   compLog('Starting: ' + key, 'system', 0);
 
   try {
-    var scenario = casehubPages.parseScenario(example.yaml);
+    var catalog = casehubPages.createScenarioCatalog();
+    var scenario = casehubPages.parseScenario(example.yaml, catalog);
     var runner = casehubPages.createScheduler(scenario, {
       eventTarget: et,
       speed: 1,
       startPaused: true,
-      executors: [{
-        canExecute: function(step) { return step.delivery === 'aria'; },
-        execute: function(step) {
-          return new Promise(function(resolve) {
-            var target = step.target;
-            if (!target) { resolve(); return; }
-            var el = compFindByAriaLabel(target.name);
-            if (el) {
-              el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-              compFlashButton(target.name);
-            }
-            setTimeout(resolve, compStepDelay);
-          });
-        }
-      }],
     });
     compCurrentRunner = runner;
     runner.play();

@@ -210,7 +210,8 @@ function runExample(key) {
   resetUI();
 
   var et = new EventTarget();
-  var scenario = casehubPages.parseScenario(example.yaml);
+  var catalog = casehubPages.createScenarioCatalog();
+  var scenario = casehubPages.parseScenario(example.yaml, catalog);
 
   et.addEventListener('pages-event', function(e) {
     var detail = e.detail;
@@ -218,13 +219,11 @@ function runExample(key) {
       var p = detail.payload;
       var stepObj = p.step;
       var action = '';
-      if (stepObj.delivery === 'orchestration') {
-        if (stepObj.construct === 'signal') action = 'signal ' + stepObj.name;
-        else if (stepObj.construct === 'await') action = 'await ' + (stepObj.signal || stepObj.barrier || '?');
-        else action = stepObj.construct;
-      } else if (stepObj.action) {
-        action = stepObj.action + ' ' + ((stepObj.target && stepObj.target.name) || '');
-      }
+      if (stepObj.kind === 'signal-fire') action = 'signal ' + stepObj.name;
+      else if (stepObj.kind === 'await-signal') action = 'await ' + stepObj.name;
+      else if (stepObj.kind === 'await-barrier') action = 'await ' + stepObj.name;
+      else if (stepObj.kind === 'plugin') action = (stepObj.entry ? stepObj.entry.qualifiedName : '?') + ' ' + ((stepObj.params && stepObj.params.name) || '');
+      else action = stepObj.kind || '?';
       appendLog(p.virtualTime, p.queue, action, '✓');
     }
     if (detail.topic === 'scenario:queue') {
@@ -252,21 +251,6 @@ function runExample(key) {
     eventTarget: et,
     speed: 1,
     startPaused: true,
-    executors: [{
-      canExecute: function(step) { return step.delivery === 'aria'; },
-      execute: function(step) {
-        return new Promise(function(resolve) {
-          var target = step.target;
-          if (!target) { resolve(); return; }
-          var el = findByAriaLabel(target.name);
-          if (el) {
-            el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-            flashButton(target.name);
-          }
-          setTimeout(resolve, coordStepDelay);
-        });
-      }
-    }],
   });
 
   currentRunner = runner;

@@ -185,11 +185,13 @@ function ddRunExample(idx) {
 
   var parseScenario = window.casehubPages && window.casehubPages.parseScenario;
   var createScheduler = window.casehubPages && window.casehubPages.createScheduler;
-  if (!parseScenario || !createScheduler) return;
+  var createScenarioCatalog = window.casehubPages && window.casehubPages.createScenarioCatalog;
+  if (!parseScenario || !createScheduler || !createScenarioCatalog) return;
 
+  var catalog = createScenarioCatalog();
   var scenario;
   try {
-    scenario = parseScenario(ex.yaml);
+    scenario = parseScenario(ex.yaml, catalog);
   } catch (e) {
     ddLog(0, 'system', 'parse error', e.message || String(e));
     return;
@@ -213,12 +215,14 @@ function ddRunExample(idx) {
     if (detail.topic === 'scenario:step') {
       var sp = detail.payload;
       var step = sp.step;
-      var delivery = step ? step.delivery : '?';
-      var label = delivery;
-      if (delivery === 'simulated') label = 'inject → ' + (step.dataset || '?');
-      else if (delivery === 'graphql') label = 'gql → ' + (step.operation || step.name || '?');
-      else if (delivery === 'aria') label = (step.action || '?') + ' ' + ((step.target && step.target.name) || '');
-      else if (delivery === 'orchestration') label = step.construct + ' ' + (step.duration || '');
+      var kind = step ? step.kind : '?';
+      var label = kind;
+      if (kind === 'plugin' && step.entry) {
+        var qn = step.entry.qualifiedName;
+        if (qn === 'simulated') label = 'inject → ' + ((step.params && step.params.dataset) || '?');
+        else if (qn === 'graphql') label = 'gql → ' + ((step.params && (step.params.operation || step.params.name)) || '?');
+        else label = qn + ' ' + ((step.params && step.params.name) || '');
+      } else if (kind === 'delay') label = 'delay ' + (step.duration || '');
 
       if (ddStepEl) ddStepEl.textContent = label;
       ddLog(sp.virtualTime, sp.queue || 'main', label, '✓');
@@ -229,49 +233,6 @@ function ddRunExample(idx) {
     eventTarget: eventTarget,
     speed: 1,
     startPaused: false,
-    executors: [
-      {
-        canExecute: function(step) { return step.delivery === 'simulated'; },
-        execute: function(step) {
-          return new Promise(function(resolve) {
-            ddInjectionCount++;
-            if (ddInjectionsEl) ddInjectionsEl.textContent = String(ddInjectionCount);
-            var ds = step.dataset || 'default';
-            if (!ddInjectedData[ds]) ddInjectedData[ds] = [];
-            ddInjectedData[ds].push(step.data);
-            ddRenderData();
-            setTimeout(resolve, 400);
-          });
-        }
-      },
-      {
-        canExecute: function(step) { return step.delivery === 'graphql'; },
-        execute: function(step) {
-          return new Promise(function(resolve) {
-            ddInjectionCount++;
-            if (ddInjectionsEl) ddInjectionsEl.textContent = String(ddInjectionCount);
-            var ds = 'graphql';
-            if (!ddInjectedData[ds]) ddInjectedData[ds] = [];
-            ddInjectedData[ds].push({ operation: step.operation, params: step.params });
-            ddRenderData();
-            setTimeout(resolve, 400);
-          });
-        }
-      },
-      {
-        canExecute: function(step) { return step.delivery === 'aria'; },
-        execute: function(step) {
-          return new Promise(function(resolve) {
-            var target = step.target;
-            if (target) {
-              var el = ddFindByLabel(target.name);
-              if (el) el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-            }
-            setTimeout(resolve, 400);
-          });
-        }
-      }
-    ],
   });
 
   ddCurrentRunner = runner;

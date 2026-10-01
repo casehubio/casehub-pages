@@ -1,5 +1,6 @@
 export { parseScenario } from './parser.js';
 export { createScheduler } from './scheduler.js';
+export { createScenarioCatalog } from './catalog-factory.js';
 export { isSectioned } from './types.js';
 
 export type {
@@ -9,4 +10,3 @@ export type {
   OrchestrationBlock,
 } from './types.js';
 export type { ScenarioRunner, SchedulerOptions } from './scheduler.js';
-export type { StepExecutor, ExecutionContext } from './step-executor.js';
