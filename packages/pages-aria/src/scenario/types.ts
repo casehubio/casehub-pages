@@ -1,20 +1,11 @@
-import type { AriaTarget } from '@casehubio/pages-primitives';
+import type { ResolvedStep } from '@casehubio/yaml-core/step';
 
-export interface AwaitCondition {
-  match: Record<string, unknown>;
-  timeout?: number;
-  interval?: number;
-}
+export type PreExtractedStep =
+  | { kind: 'signal-fire'; name: string; decorators: Record<string, unknown> }
+  | { kind: 'await-signal'; name: string; decorators: Record<string, unknown> }
+  | { kind: 'await-barrier'; name: string; decorators: Record<string, unknown> };
 
-export type ScenarioStep =
-  | { delivery: 'aria'; name?: string; action: string;
-      target?: AriaTarget; value?: string;
-      state?: Record<string, unknown>; timeout?: number }
-  | { delivery: 'graphql'; name: string; domain: string;
-      operation: string; params?: Record<string, unknown>;
-      await?: AwaitCondition }
-  | { delivery: 'simulated'; name?: string; dataset: string;
-      data: Record<string, unknown> };
+export type SchedulerStep = ResolvedStep | PreExtractedStep;
 
 export interface TutorialMeta {
   title: string;
@@ -37,7 +28,7 @@ export interface SectionContent {
 export interface TutorialSection {
   title: string;
   content?: SectionContent;
-  steps: ScenarioStep[];
+  steps: SchedulerStep[];
 }
 
 export interface ScenarioBase {
@@ -47,7 +38,7 @@ export interface ScenarioBase {
 }
 
 export interface FlatScenario extends ScenarioBase {
-  steps: ScenarioStep[];
+  steps: SchedulerStep[];
 }
 
 export interface SectionedScenario extends ScenarioBase {
@@ -61,29 +52,6 @@ export function isSectioned(s: Scenario): s is SectionedScenario {
 }
 
 // --- Orchestration types (DES scheduler) ---
-
-import type { RetryDirective, LoopDirective } from '@casehubio/yaml-core/orchestration';
-
-export interface StepDecorators {
-  mutex?: string;
-  retry?: RetryDirective;
-  loop?: LoopDirective;
-  when?: string;
-  timeout?: string;
-  delay?: string;
-}
-
-export type OrchestrationConstruct =
-  | { delivery: 'orchestration'; construct: 'concurrent'; branches: Record<string, ScenarioStep[]> }
-  | { delivery: 'orchestration'; construct: 'signal'; name: string }
-  | { delivery: 'orchestration'; construct: 'await'; signal?: string; barrier?: string; timeout?: string }
-  | { delivery: 'orchestration'; construct: 'delay'; duration: string }
-  | { delivery: 'orchestration'; construct: 'trigger'; trigger: DataTrigger | TimeTrigger; steps: OrchestratedStep[] };
-
-export type OrchestratedStep = (ScenarioStep | OrchestrationConstruct) & {
-  name?: string;
-  decorators?: StepDecorators;
-};
 
 export interface DataTrigger {
   type: 'data';

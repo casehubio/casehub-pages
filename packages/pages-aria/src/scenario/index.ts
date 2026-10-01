@@ -4,8 +4,8 @@ export { isSectioned } from './types.js';
 
 export type {
   Scenario, FlatScenario, SectionedScenario, ScenarioBase,
-  ScenarioStep, OrchestratedStep, TutorialMeta, TutorialSection,
-  SectionContent, DataTrigger, TimeTrigger, StepDecorators,
+  PreExtractedStep, SchedulerStep, TutorialMeta, TutorialSection,
+  SectionContent, DataTrigger, TimeTrigger,
   OrchestrationBlock,
 } from './types.js';
 export type { ScenarioRunner, SchedulerOptions } from './scheduler.js';
