@@ -121,4 +121,66 @@ describe('GraphCanvas', () => {
       expect((element as any).flowToScreen(100, 200)).toBeUndefined();
     });
   });
+
+  describe('shadow DOM element hit testing', () => {
+    let host: HTMLDivElement;
+    let canvas: any;
+
+    beforeEach(() => {
+      host = document.createElement('div');
+      const shadow = host.attachShadow({ mode: 'open' });
+      document.body.appendChild(host);
+      canvas = document.createElement('graph-canvas-core');
+      shadow.appendChild(canvas);
+    });
+
+    afterEach(() => {
+      host.remove();
+      document.head.querySelectorAll('style[data-graph-isolation]')
+        .forEach(el => { el.remove(); });
+    });
+
+    it('_updateDropEdgeHighlight queries elementsFromPoint on the root node, not document', () => {
+      canvas.model = { nodes: [], edges: [] };
+      canvas.editPolicy = { getInsertableTypes: () => [] };
+
+      const shadow = canvas._container.getRootNode();
+      const shadowEfp = vi.fn().mockReturnValue([]);
+      shadow.elementsFromPoint = shadowEfp;
+
+      const originalDocEfp = document.elementsFromPoint;
+      const docEfp = vi.fn().mockReturnValue([]);
+      document.elementsFromPoint = docEfp;
+
+      try {
+        canvas._updateDropEdgeHighlight({ clientX: 10, clientY: 20 } as unknown as DragEvent);
+        expect(shadowEfp).toHaveBeenCalledWith(10, 20);
+        expect(docEfp).not.toHaveBeenCalled();
+      } finally {
+        if (originalDocEfp) document.elementsFromPoint = originalDocEfp;
+        else delete (document as any).elementsFromPoint;
+      }
+    });
+
+    it('_updateDropEdgeHighlight falls back to document when not in shadow DOM', () => {
+      const plainCanvas = document.createElement('graph-canvas-core') as any;
+      document.body.appendChild(plainCanvas);
+
+      plainCanvas.model = { nodes: [], edges: [] };
+      plainCanvas.editPolicy = { getInsertableTypes: () => [] };
+
+      const originalDocEfp = document.elementsFromPoint;
+      const docEfp = vi.fn().mockReturnValue([]);
+      document.elementsFromPoint = docEfp;
+
+      try {
+        plainCanvas._updateDropEdgeHighlight({ clientX: 30, clientY: 40 } as unknown as DragEvent);
+        expect(docEfp).toHaveBeenCalledWith(30, 40);
+      } finally {
+        if (originalDocEfp) document.elementsFromPoint = originalDocEfp;
+        else delete (document as any).elementsFromPoint;
+        plainCanvas.remove();
+      }
+    });
+  });
 });

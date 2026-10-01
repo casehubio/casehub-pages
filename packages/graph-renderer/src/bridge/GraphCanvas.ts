@@ -523,7 +523,8 @@ export class GraphCanvas extends LitElement {
   private _updateDropEdgeHighlight(e: DragEvent): void {
     this._clearDropEdgeHighlight();
     if (!this.model || !this.editPolicy) return;
-    const hits = typeof document.elementsFromPoint === 'function' ? document.elementsFromPoint(e.clientX, e.clientY) : [];
+    const root = this._container?.getRootNode() as DocumentOrShadowRoot | undefined;
+    const hits = typeof root?.elementsFromPoint === 'function' ? root.elementsFromPoint(e.clientX, e.clientY) : [];
     for (const hitEl of hits) {
       const edgeEl = hitEl.closest('.react-flow__edge') as HTMLElement | null;
       if (!edgeEl) continue;
@@ -651,7 +652,8 @@ export class GraphCanvas extends LitElement {
             : { x: event.changedTouches[0]?.clientX ?? 0, y: event.changedTouches[0]?.clientY ?? 0 };
 
           let targetNodeId: string | undefined;
-          for (const hitEl of document.elementsFromPoint(pos.x, pos.y)) {
+          const connectRoot = this._container?.getRootNode() as DocumentOrShadowRoot | undefined;
+          for (const hitEl of (typeof connectRoot?.elementsFromPoint === 'function' ? connectRoot.elementsFromPoint(pos.x, pos.y) : [])) {
             const nodeEl = hitEl.closest('.react-flow__node') as HTMLElement | null;
             if (nodeEl?.dataset['id']) {
               targetNodeId = nodeEl.dataset['id'];
