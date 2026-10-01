@@ -53,6 +53,18 @@ describe('inferPortability', () => {
   it('undefined invoke infers ts', () => {
     expect(inferPortability(undefined)).toBe('ts');
   });
+
+  it('aria binding infers ts', () => {
+    expect(inferPortability({ kind: 'aria', action: 'click' })).toBe('ts');
+  });
+
+  it('graphql-domain binding infers universal', () => {
+    expect(inferPortability({ kind: 'graphql-domain' } as any)).toBe('universal');
+  });
+
+  it('simulated binding infers ts', () => {
+    expect(inferPortability({ kind: 'simulated' } as any)).toBe('ts');
+  });
 });
 
 describe('validatePortability', () => {

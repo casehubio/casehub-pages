@@ -2,6 +2,7 @@ export type {
   Parameter, Definition, DefinitionFile,
   InvokeBinding, McpBinding, RestBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
+  AriaBinding, GraphqlDomainBinding, SimulatedBinding,
 } from './types.js';
 export { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
 
@@ -16,7 +17,7 @@ export type { Violation } from './validator.js';
 export type {
   ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
-  BarrierStep, QuorumStep, SelectBranch, ResolvedMatchCase,
+  BarrierStep, QuorumStep, DelayStep, SelectBranch, ResolvedMatchCase,
   Action, Result, ServiceRegistry, Catalog, CatalogEntry,
 } from './walker.js';
 export { Walker, MapServiceRegistry, stepSuccess, stepFailure } from './walker.js';

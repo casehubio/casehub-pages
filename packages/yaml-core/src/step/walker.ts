@@ -68,7 +68,8 @@ export type ResolvedStep =
   | TryCatchFinallyStep
   | SelectStep
   | BarrierStep
-  | QuorumStep;
+  | QuorumStep
+  | DelayStep;
 
 export interface PluginStep {
   kind: 'plugin';
@@ -146,6 +147,13 @@ export interface QuorumStep {
   required: number;
   ofSteps: string[];
   timeout?: number;
+  decorators: Record<string, unknown>;
+}
+
+export interface DelayStep {
+  kind: 'delay';
+  name: string | null;
+  duration: number;
   decorators: Record<string, unknown>;
 }
 
@@ -343,6 +351,12 @@ export class Walker {
       return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
     }
 
+    if (!structuralType && !actionKey && !invokeSpec && decorators['delay'] !== undefined) {
+      const duration = parseDurationMs(decorators['delay'] as string);
+      const { delay: _, ...rest } = decorators;
+      return { kind: 'delay', name: stepName, duration, decorators: rest };
+    }
+
     if (invokeSpec) {
       return { kind: 'invoke', name: stepName, invokeSpec, decorators };
     }
@@ -351,7 +365,7 @@ export class Walker {
       const entry = catalog.resolve(actionKey)!;
       const params = (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue))
         ? actionValue as Record<string, unknown>
-        : {};
+        : { value: actionValue };
       return { kind: 'plugin', name: stepName, entry, params, decorators };
     }
 

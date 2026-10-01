@@ -205,6 +205,57 @@ describe('Walker', () => {
     });
   });
 
+  describe('DelayStep resolution', () => {
+    it('resolves standalone delay as DelayStep', () => {
+      const steps = [{ delay: '500ms' }];
+      const resolved = Walker.resolve(steps, makeCatalog());
+      expect(resolved).toHaveLength(1);
+      expect(resolved[0]!.kind).toBe('delay');
+      expect((resolved[0] as any).duration).toBe(500);
+    });
+
+    it('resolves delay with step name', () => {
+      const steps = [{ step: 'pause', delay: '2s' }];
+      const resolved = Walker.resolve(steps, makeCatalog());
+      expect(resolved[0]!.kind).toBe('delay');
+      expect(resolved[0]!.name).toBe('pause');
+      expect((resolved[0] as any).duration).toBe(2000);
+    });
+
+    it('treats delay alongside action key as decorator', () => {
+      const catalog = makeCatalog({ click: makeEntry('click') });
+      const steps = [{ click: { role: 'button', name: 'A' }, delay: '1s' }];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('plugin');
+      expect(resolved[0]!.decorators['delay']).toBe('1s');
+    });
+  });
+
+  describe('non-object action value wrapping', () => {
+    it('wraps string action value as { value: string }', () => {
+      const catalog = makeCatalog({ navigate: makeEntry('navigate') });
+      const steps = [{ navigate: '/dashboard' }];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('plugin');
+      expect((resolved[0] as any).params).toEqual({ value: '/dashboard' });
+    });
+
+    it('wraps number action value as { value: number }', () => {
+      const catalog = makeCatalog({ wait: makeEntry('wait') });
+      const steps = [{ wait: 500 }];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('plugin');
+      expect((resolved[0] as any).params).toEqual({ value: 500 });
+    });
+
+    it('passes object action values unchanged', () => {
+      const catalog = makeCatalog({ click: makeEntry('click') });
+      const steps = [{ click: { role: 'button', name: 'A' } }];
+      const resolved = Walker.resolve(steps, catalog);
+      expect((resolved[0] as any).params).toEqual({ role: 'button', name: 'A' });
+    });
+  });
+
   describe('removed keys', () => {
     it('rejects steps key with clear error', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });

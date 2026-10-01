@@ -16,7 +16,10 @@ export type InvokeBinding =
   | GraphqlBinding
   | ScriptBinding
   | AgentBinding
-  | ProcessBinding;
+  | ProcessBinding
+  | AriaBinding
+  | GraphqlDomainBinding
+  | SimulatedBinding;
 
 export interface McpBinding {
   kind: 'mcp';
@@ -76,6 +79,19 @@ export interface Definition {
 export interface DefinitionFile {
   namespace?: string;
   actions: Record<string, Definition>;
+}
+
+export interface AriaBinding {
+  kind: 'aria';
+  action: string;
+}
+
+export interface GraphqlDomainBinding {
+  kind: 'graphql-domain';
+}
+
+export interface SimulatedBinding {
+  kind: 'simulated';
 }
 
 export const RUNTIME_PYTHON = 'python3';

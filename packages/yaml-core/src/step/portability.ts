@@ -10,7 +10,7 @@ export interface PortabilityViolation {
   message: string;
 }
 
-const UNIVERSAL_BINDINGS = new Set(['rest', 'graphql', 'process']);
+const UNIVERSAL_BINDINGS = new Set(['rest', 'graphql', 'graphql-domain', 'process']);
 
 export function inferPortability(invoke: InvokeBinding | undefined): Portability {
   if (!invoke) return 'ts';
