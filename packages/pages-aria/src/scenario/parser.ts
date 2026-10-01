@@ -1,193 +1,123 @@
 import { parse } from 'yaml';
-import type { AriaTarget } from '@casehubio/pages-primitives';
-import { parseRetryDirective, parseLoopDirective } from '@casehubio/yaml-core/orchestration';
+import type { Catalog, ResolvedStep } from '@casehubio/yaml-core/step';
+import { Walker } from '@casehubio/yaml-core/step';
 import type {
   Scenario, FlatScenario, SectionedScenario,
-  ScenarioStep, TutorialMeta, TutorialSection, SectionContent,
-  OrchestratedStep, StepDecorators, OrchestrationBlock,
+  TutorialMeta, TutorialSection, SectionContent,
+  SchedulerStep, PreExtractedStep,
+  OrchestrationBlock,
 } from './types.js';
 
-const ARIA_ACTIONS = new Set([
-  'navigate', 'click', 'fill', 'select',
-  'expand', 'collapse', 'assert', 'wait',
-  'show-markdown', 'spotlight',
-  'editor-insert', 'editor-replace', 'editor-delete',
-  'editor-set-content', 'editor-cursor',
-  'editor-highlight', 'editor-completion',
+const WALKER_KNOWN_KEYS = new Set([
+  'step', 'invoke',
+  'block', 'parallel', 'try', 'catch', 'finally', 'select',
+  'if', 'then', 'else', 'match', 'cases',
+  'on-success', 'on-failure', 'forEach', 'loop',
+  'retry', 'timeout', 'delay', 'on-error', 'trigger',
+  'transform', 'signal', 'publish', 'transition',
+  'semaphore', 'barrier', 'quorum', 'race',
 ]);
 
-function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
-  const action = Object.keys(raw).find(k => ARIA_ACTIONS.has(k));
-  if (!action) throw new Error(`Unknown step format: ${JSON.stringify(raw)}`);
+type SlotType = 'walker' | 'pre' | 'skip';
 
-  if (action === 'navigate') {
-    return {
-      delivery: 'aria',
-      name: `navigate-${raw[action] as string}`,
-      action: 'navigate',
-      value: raw[action] as string,
-    };
+function hasActionKey(step: Record<string, unknown>): boolean {
+  for (const key of Object.keys(step)) {
+    if (!WALKER_KNOWN_KEYS.has(key) && key !== 'concurrent' && key !== 'await') return true;
   }
+  return false;
+}
 
-  if (action === 'show-markdown') {
-    const body = raw[action] as Record<string, unknown>;
-    const step: ScenarioStep = {
-      delivery: 'aria',
-      name: `show-markdown-${(body.file as string) ?? 'inline'}`,
-      action: 'show-markdown',
-      state: body,
-    };
-    if (body.content != null) (step as Record<string, unknown>).value = body.content;
-    return step;
+function collectDecorators(step: Record<string, unknown>, exclude: Set<string>): Record<string, unknown> {
+  const decorators: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(step)) {
+    if (!exclude.has(k)) decorators[k] = v;
   }
+  return decorators;
+}
 
-  if (action === 'spotlight') {
-    const body = raw[action] as Record<string, unknown>;
-    const tgt = body.target as Record<string, unknown> | undefined;
-    const target: AriaTarget | undefined = tgt
-      ? { role: tgt.role as string, name: tgt.name as string,
-          ...(tgt.index != null ? { index: tgt.index as string } : {}),
-          ...(tgt.within != null ? { within: tgt.within as AriaTarget } : {}) }
-      : undefined;
-    const step: ScenarioStep = {
-      delivery: 'aria',
-      name: `spotlight-${target?.role ?? 'unknown'}-${target?.name ?? 'unknown'}`,
-      action: 'spotlight',
-      ...(target ? { target } : {}),
-    };
-    for (const [key, val] of Object.entries(body)) {
-      if (key !== 'target' && val != null) {
-        (step as Record<string, unknown>)[key] = val;
+function preExtract(rawSteps: Record<string, unknown>[]): {
+  walkerSteps: Record<string, unknown>[];
+  preExtracted: PreExtractedStep[];
+  slotTypes: SlotType[];
+} {
+  const walkerSteps: Record<string, unknown>[] = [];
+  const preExtracted: PreExtractedStep[] = [];
+  const slotTypes: SlotType[] = [];
+
+  for (const step of rawSteps) {
+    if ('await' in step && typeof step['await'] === 'object' && step['await'] !== null) {
+      const body = step['await'] as Record<string, unknown>;
+      const decorators = collectDecorators(step, new Set(['await', 'step']));
+      if (body['signal']) {
+        preExtracted.push({ kind: 'await-signal', name: body['signal'] as string, decorators });
+        slotTypes.push('pre');
+        continue;
+      }
+      if (body['barrier']) {
+        preExtracted.push({ kind: 'await-barrier', name: body['barrier'] as string, decorators });
+        slotTypes.push('pre');
+        continue;
       }
     }
-    return step;
-  }
 
-  const body = raw[action] as Record<string, unknown>;
-  const role = (body.role as string) ?? 'unknown';
-  const name = (body.name as string) ?? 'unknown';
-  const autoName = `${action}-${role}-${name}`;
-
-  const target: AriaTarget = { role, name };
-  if (body.index != null) target.index = body.index as string;
-  if (body.within != null) target.within = body.within as AriaTarget;
-
-  const targetKeys = new Set(['role', 'name', 'index', 'within']);
-  const step: ScenarioStep = { delivery: 'aria', name: autoName, action, target };
-  for (const [key, val] of Object.entries(body)) {
-    if (!targetKeys.has(key) && val != null) {
-      (step as Record<string, unknown>)[key] = val;
+    if ('concurrent' in step) {
+      const branches = step['concurrent'] as Record<string, unknown[]>;
+      const parallelChildren: Record<string, unknown>[] = [];
+      for (const [name, branchSteps] of Object.entries(branches)) {
+        parallelChildren.push({ step: name, block: branchSteps });
+      }
+      walkerSteps.push({
+        ...(step['step'] ? { step: step['step'] } : {}),
+        parallel: parallelChildren,
+      });
+      slotTypes.push('walker');
+      continue;
     }
-  }
-  return step;
-}
 
-const ORCHESTRATION_KEYS = new Set(['concurrent', 'signal', 'await', 'delay', 'trigger']);
-const DECORATOR_KEYS = new Set(['mutex', 'retry', 'loop', 'when', 'timeout', 'delay']);
-const DELIVERY_KEYS = new Set(['simulated', 'graphql']);
-
-function extractDecorators(raw: Record<string, unknown>): StepDecorators | undefined {
-  const decorators: StepDecorators = {};
-  let found = false;
-  if (raw.mutex != null) { decorators.mutex = raw.mutex as string; found = true; }
-  if (raw.retry != null) { decorators.retry = parseRetryDirective(raw.retry); found = true; }
-  if (raw.loop != null) { decorators.loop = parseLoopDirective(raw.loop); found = true; }
-  if (raw.when != null) { decorators.when = raw.when as string; found = true; }
-  if (raw.timeout != null) { decorators.timeout = raw.timeout as string; found = true; }
-  if (raw.delay != null) { decorators.delay = raw.delay as string; found = true; }
-  return found ? decorators : undefined;
-}
-
-function parseOrchestrationStep(raw: Record<string, unknown>): OrchestratedStep | undefined {
-  if ('concurrent' in raw) {
-    const branches = raw.concurrent as Record<string, unknown[]>;
-    const parsed: Record<string, ScenarioStep[]> = {};
-    for (const [name, steps] of Object.entries(branches)) {
-      parsed[name] = parseSteps(steps);
+    if ('trigger' in step && 'steps' in step) {
+      slotTypes.push('skip');
+      continue;
     }
-    return { delivery: 'orchestration', construct: 'concurrent', branches: parsed } as OrchestratedStep;
+
+    if ('signal' in step && !hasActionKey(step)) {
+      const decorators = collectDecorators(step, new Set(['signal', 'step']));
+      preExtracted.push({ kind: 'signal-fire', name: step['signal'] as string, decorators });
+      slotTypes.push('pre');
+      continue;
+    }
+
+    walkerSteps.push(step);
+    slotTypes.push('walker');
   }
-  if ('signal' in raw) {
-    return { delivery: 'orchestration', construct: 'signal', name: raw.signal as string } as OrchestratedStep;
-  }
-  if ('await' in raw) {
-    const body = raw.await as Record<string, unknown>;
-    return {
-      delivery: 'orchestration', construct: 'await',
-      ...(body.signal != null ? { signal: body.signal as string } : {}),
-      ...(body.barrier != null ? { barrier: body.barrier as string } : {}),
-      ...(body.timeout != null ? { timeout: body.timeout as string } : {}),
-    } as OrchestratedStep;
-  }
-  if ('delay' in raw && !Object.keys(raw).some(k => ARIA_ACTIONS.has(k))) {
-    return { delivery: 'orchestration', construct: 'delay', duration: raw.delay as string } as OrchestratedStep;
-  }
-  if ('trigger' in raw) {
-    const trigger = raw.trigger as Record<string, unknown>;
-    const innerSteps = Array.isArray(raw.steps) ? parseSteps(raw.steps) : [];
-    return {
-      delivery: 'orchestration', construct: 'trigger',
-      trigger: { type: trigger.type as string, ...trigger },
-      steps: innerSteps,
-    } as OrchestratedStep;
-  }
-  return undefined;
+
+  return { walkerSteps, preExtracted, slotTypes };
 }
 
-function parseDeliveryStep(raw: Record<string, unknown>): ScenarioStep | undefined {
-  if ('simulated' in raw) {
-    const body = raw.simulated as Record<string, unknown>;
-    return { delivery: 'simulated', dataset: body.dataset as string, data: body.data as Record<string, unknown> } as ScenarioStep;
+function mergeSteps(resolved: ResolvedStep[], preExtracted: PreExtractedStep[], slotTypes: SlotType[]): SchedulerStep[] {
+  const result: SchedulerStep[] = [];
+  let ri = 0;
+  let pi = 0;
+  for (const slot of slotTypes) {
+    if (slot === 'walker') result.push(resolved[ri++]);
+    else if (slot === 'pre') result.push(preExtracted[pi++]);
   }
-  if ('graphql' in raw) {
-    const body = raw.graphql as Record<string, unknown>;
-    return {
-      delivery: 'graphql',
-      name: body.name as string,
-      domain: body.domain as string,
-      operation: body.operation as string,
-      ...(body.params != null ? { params: body.params as Record<string, unknown> } : {}),
-    } as ScenarioStep;
-  }
-  return undefined;
+  return result;
 }
 
-function parseSteps(rawSteps: unknown[]): OrchestratedStep[] {
-  return rawSteps.map((raw: unknown) => {
-    const step = raw as Record<string, unknown>;
-    if (step.delivery) return step as OrchestratedStep;
-
-    const orch = parseOrchestrationStep(step);
-    if (orch) return orch;
-
-    const delivery = parseDeliveryStep(step);
-    if (delivery) return delivery as OrchestratedStep;
-
-    const ariaStep = expandAriaShorthand(step) as OrchestratedStep;
-    const decorators = extractDecorators(step);
-    if (decorators) ariaStep.decorators = decorators;
-    return ariaStep;
-  });
+function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog): SchedulerStep[] {
+  const { walkerSteps, preExtracted, slotTypes } = preExtract(rawSteps);
+  const resolved = Walker.resolve(walkerSteps, catalog);
+  return mergeSteps(resolved, preExtracted, slotTypes);
 }
 
-function parseSections(rawSections: unknown[]): TutorialSection[] {
-  return rawSections.map((raw: unknown) => {
-    const sec = raw as Record<string, unknown>;
-    const title = sec.title as string;
-    const content = sec.content as SectionContent | undefined;
-    const rawSteps = Array.isArray(sec.steps) ? sec.steps : [];
-    return { title, content, steps: parseSteps(rawSteps) };
-  });
-}
-
-export function parseScenario(yamlString: string): Scenario {
+export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
   const parsed = parse(yamlString) as Record<string, unknown>;
-  if (!parsed.scenario) {
+  if (!parsed['scenario']) {
     throw new Error('Invalid scenario: must have "scenario" name');
   }
 
-  const hasSteps = Array.isArray(parsed.steps);
-  const hasSections = Array.isArray(parsed.sections);
+  const hasSteps = Array.isArray(parsed['steps']);
+  const hasSections = Array.isArray(parsed['sections']);
 
   if (hasSteps && hasSections) {
     throw new Error('Invalid scenario: "steps" and "sections" are mutually exclusive — use one or the other');
@@ -196,24 +126,29 @@ export function parseScenario(yamlString: string): Scenario {
     throw new Error('Invalid scenario: must have "steps" or "sections"');
   }
 
-  const meta = parsed.meta as TutorialMeta | undefined;
-
-  const orchestration = parsed.orchestration as OrchestrationBlock | undefined;
+  const meta = parsed['meta'] as TutorialMeta | undefined;
+  const orchestration = parsed['orchestration'] as OrchestrationBlock | undefined;
 
   if (hasSections) {
-    const result: SectionedScenario & { orchestration?: OrchestrationBlock } = {
-      scenario: parsed.scenario as string,
-      sections: parseSections(parsed.sections as unknown[]),
-    };
+    const sections = (parsed['sections'] as unknown[]).map(raw => {
+      const sec = raw as Record<string, unknown>;
+      const steps = Array.isArray(sec['steps'])
+        ? resolveStepArray(sec['steps'] as Record<string, unknown>[], catalog)
+        : [];
+      return {
+        title: sec['title'] as string,
+        content: sec['content'] as SectionContent | undefined,
+        steps,
+      };
+    });
+    const result: SectionedScenario = { scenario: parsed['scenario'] as string, sections };
     if (meta) result.meta = meta;
     if (orchestration) result.orchestration = orchestration;
     return result;
   }
 
-  const result: FlatScenario & { orchestration?: OrchestrationBlock } = {
-    scenario: parsed.scenario as string,
-    steps: parseSteps(parsed.steps as unknown[]),
-  };
+  const steps = resolveStepArray(parsed['steps'] as Record<string, unknown>[], catalog);
+  const result: FlatScenario = { scenario: parsed['scenario'] as string, steps };
   if (meta) result.meta = meta;
   if (orchestration) result.orchestration = orchestration;
   return result;

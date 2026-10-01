@@ -1,9 +1,34 @@
 import { describe, it, expect } from 'vitest';
 import { parseScenario } from './parser.js';
-import type { OrchestratedStep, OrchestrationConstruct } from './types.js';
+import type { FlatScenario, PreExtractedStep } from './types.js';
+import type { Catalog, CatalogEntry, PluginStep, ParallelStep, DelayStep, BlockStep } from '@casehubio/yaml-core/step';
+import { stepSuccess } from '@casehubio/yaml-core/step';
+
+function buildTestCatalog(actions: string[]): Catalog {
+  const entries = new Map<string, CatalogEntry>();
+  for (const name of actions) {
+    entries.set(name, {
+      qualifiedName: name,
+      definition: { name, inputs: {}, outputs: {} },
+      action: { async execute() { return stepSuccess({}); } },
+    });
+  }
+  return {
+    resolve: (n: string) => entries.get(n),
+    availableActions: () => new Set(entries.keys()),
+  };
+}
+
+const ALL_ACTIONS = [
+  'navigate', 'click', 'fill', 'select', 'expand', 'collapse', 'assert', 'wait',
+  'show-markdown', 'spotlight', 'editor-insert', 'editor-replace', 'editor-delete',
+  'editor-set-content', 'editor-cursor', 'editor-highlight', 'editor-completion',
+  'graphql', 'simulated',
+];
+const catalog = buildTestCatalog(ALL_ACTIONS);
 
 describe('Parser — orchestration constructs', () => {
-  it('parses concurrent block with named branches', () => {
+  it('transforms concurrent to parallel with named block children', () => {
     const yaml = `
 scenario: test
 steps:
@@ -13,106 +38,104 @@ steps:
       branch-b:
         - click: { role: button, name: B }
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as OrchestratedStep & OrchestrationConstruct;
-    expect(step.delivery).toBe('orchestration');
-    expect(step.construct).toBe('concurrent');
-    expect('branches' in step && Object.keys(step.branches)).toEqual(['branch-a', 'branch-b']);
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as ParallelStep;
+    expect(step.kind).toBe('parallel');
+    expect(step.steps).toHaveLength(2);
+    expect((step.steps[0] as BlockStep).kind).toBe('block');
+    expect((step.steps[0] as BlockStep).name).toBe('branch-a');
+    expect((step.steps[1] as BlockStep).kind).toBe('block');
+    expect((step.steps[1] as BlockStep).name).toBe('branch-b');
   });
 
-  it('parses signal step', () => {
+  it('pre-extracts standalone signal as signal-fire', () => {
     const yaml = `
 scenario: test
 steps:
   - signal: go
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as any;
-    expect(step.delivery).toBe('orchestration');
-    expect(step.construct).toBe('signal');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PreExtractedStep;
+    expect(step.kind).toBe('signal-fire');
     expect(step.name).toBe('go');
   });
 
-  it('parses await step with signal', () => {
+  it('pre-extracts await with signal as await-signal', () => {
     const yaml = `
 scenario: test
 steps:
-  - await: { signal: data-loaded, timeout: 30s }
+  - await: { signal: data-loaded }
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as any;
-    expect(step.delivery).toBe('orchestration');
-    expect(step.construct).toBe('await');
-    expect(step.signal).toBe('data-loaded');
-    expect(step.timeout).toBe('30s');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PreExtractedStep;
+    expect(step.kind).toBe('await-signal');
+    expect(step.name).toBe('data-loaded');
   });
 
-  it('parses await step with barrier', () => {
+  it('pre-extracts await with barrier as await-barrier', () => {
     const yaml = `
 scenario: test
 steps:
   - await: { barrier: all-ready }
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as any;
-    expect(step.delivery).toBe('orchestration');
-    expect(step.construct).toBe('await');
-    expect(step.barrier).toBe('all-ready');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PreExtractedStep;
+    expect(step.kind).toBe('await-barrier');
+    expect(step.name).toBe('all-ready');
   });
 
-  it('parses delay step', () => {
+  it('resolves standalone delay as DelayStep', () => {
     const yaml = `
 scenario: test
 steps:
   - delay: 500ms
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as any;
-    expect(step.delivery).toBe('orchestration');
-    expect(step.construct).toBe('delay');
-    expect(step.duration).toBe('500ms');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as DelayStep;
+    expect(step.kind).toBe('delay');
+    expect(step.duration).toBe(500);
   });
 
-  it('parses inline decorators on aria steps', () => {
-    const yaml = `
-scenario: test
-steps:
-  - click: { role: button, name: Submit }
-    mutex: db-write
-    retry: 3
-    `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as OrchestratedStep;
-    expect(step.delivery).toBe('aria');
-    expect(step.decorators?.mutex).toBe('db-write');
-    expect(step.decorators?.retry).toEqual({ type: 'simple', max: 3 });
-  });
-
-  it('parses delay decorator', () => {
+  it('treats delay alongside action as decorator', () => {
     const yaml = `
 scenario: test
 steps:
   - click: { role: button, name: OK }
     delay: 100ms
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as OrchestratedStep;
-    expect(step.decorators?.delay).toBe('100ms');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.decorators['delay']).toBe('100ms');
   });
 
-  it('parses when decorator', () => {
+  it('stores if decorator on action step', () => {
     const yaml = `
 scenario: test
 steps:
   - click: { role: button, name: OK }
-    when: isReady
+    if: isReady
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as OrchestratedStep;
-    expect(step.decorators?.when).toBe('isReady');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.decorators['if']).toBe('isReady');
   });
 
-  it('parses top-level orchestration block', () => {
+  it('stores retry decorator on action step', () => {
+    const yaml = `
+scenario: test
+steps:
+  - click: { role: button, name: Submit }
+    retry: 3
+    `;
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.decorators['retry']).toBe(3);
+  });
+
+  it('preserves top-level orchestration block', () => {
     const yaml = `
 scenario: test
 orchestration:
@@ -124,32 +147,31 @@ orchestration:
 steps:
   - click: { role: button, name: Start }
     `;
-    const result = parseScenario(yaml);
-    expect((result as any).orchestration?.barriers?.['all-ready']?.count).toBe(3);
-    expect((result as any).orchestration?.channels?.['trades']?.capacity).toBe(10);
-    expect((result as any).orchestration?.signals).toEqual(['go', 'stop']);
+    const result = parseScenario(yaml, catalog);
+    expect(result.orchestration?.barriers?.['all-ready']?.count).toBe(3);
+    expect(result.orchestration?.channels?.['trades']?.capacity).toBe(10);
+    expect(result.orchestration?.signals).toEqual(['go', 'stop']);
   });
 
-  it('parses triggered steps', () => {
+  it('skips trigger+steps constructs from step array', () => {
     const yaml = `
 scenario: test
 steps:
+  - click: { role: button, name: Before }
   - trigger:
       type: data
       channel: trades
     steps:
       - click: { role: button, name: Refresh }
+  - click: { role: button, name: After }
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as any;
-    expect(step.delivery).toBe('orchestration');
-    expect(step.construct).toBe('trigger');
-    expect(step.trigger.type).toBe('data');
-    expect(step.trigger.channel).toBe('trades');
-    expect(step.steps).toHaveLength(1);
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    expect(result.steps).toHaveLength(2);
+    expect((result.steps[0] as PluginStep).entry.qualifiedName).toBe('click');
+    expect((result.steps[1] as PluginStep).entry.qualifiedName).toBe('click');
   });
 
-  it('parses simulated delivery step', () => {
+  it('resolves simulated via catalog', () => {
     const yaml = `
 scenario: test
 steps:
@@ -157,39 +179,58 @@ steps:
       dataset: accounts
       data: { id: 1, name: Test }
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as any;
-    expect(step.delivery).toBe('simulated');
-    expect(step.dataset).toBe('accounts');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.entry.qualifiedName).toBe('simulated');
+    expect(step.params['dataset']).toBe('accounts');
   });
 
-  it('parses graphql delivery step', () => {
+  it('resolves graphql via catalog', () => {
     const yaml = `
 scenario: test
 steps:
   - graphql:
-      name: fetchAccounts
       domain: finance
       operation: getAccounts
     `;
-    const result = parseScenario(yaml);
-    const step = result.steps[0] as any;
-    expect(step.delivery).toBe('graphql');
-    expect(step.name).toBe('fetchAccounts');
-    expect(step.domain).toBe('finance');
-    expect(step.operation).toBe('getAccounts');
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const step = result.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.entry.qualifiedName).toBe('graphql');
+    expect(step.params['domain']).toBe('finance');
   });
 
-  it('preserves existing aria parsing', () => {
+  it('resolves aria actions via catalog', () => {
     const yaml = `
 scenario: test
 steps:
   - click: { role: button, name: OK }
   - fill: { role: textbox, name: Email, value: test@example.com }
     `;
-    const result = parseScenario(yaml);
+    const result = parseScenario(yaml, catalog) as FlatScenario;
     expect(result.steps).toHaveLength(2);
-    expect(result.steps[0].delivery).toBe('aria');
-    expect(result.steps[1].delivery).toBe('aria');
+    expect(result.steps.every(s => s.kind === 'plugin')).toBe(true);
+    expect((result.steps[0] as PluginStep).entry.qualifiedName).toBe('click');
+    expect((result.steps[1] as PluginStep).entry.qualifiedName).toBe('fill');
+  });
+
+  it('interleaves pre-extracted and Walker-resolved steps in original order', () => {
+    const yaml = `
+scenario: test
+steps:
+  - click: { role: button, name: Start }
+  - signal: checkpoint
+  - fill: { role: textbox, name: Input, value: data }
+  - await: { signal: ready }
+  - click: { role: button, name: Finish }
+    `;
+    const result = parseScenario(yaml, catalog) as FlatScenario;
+    expect(result.steps).toHaveLength(5);
+    expect(result.steps[0].kind).toBe('plugin');
+    expect(result.steps[1].kind).toBe('signal-fire');
+    expect(result.steps[2].kind).toBe('plugin');
+    expect(result.steps[3].kind).toBe('await-signal');
+    expect(result.steps[4].kind).toBe('plugin');
   });
 });

@@ -1,10 +1,35 @@
 import { describe, it, expect } from 'vitest';
 import { parseScenario } from './parser.js';
 import { isSectioned } from './types.js';
-import type { FlatScenario, SectionedScenario, ScenarioStep } from './types.js';
+import type { FlatScenario, SectionedScenario } from './types.js';
+import type { Catalog, CatalogEntry, PluginStep } from '@casehubio/yaml-core/step';
+import { stepSuccess } from '@casehubio/yaml-core/step';
+
+function buildTestCatalog(actions: string[]): Catalog {
+  const entries = new Map<string, CatalogEntry>();
+  for (const name of actions) {
+    entries.set(name, {
+      qualifiedName: name,
+      definition: { name, inputs: {}, outputs: {} },
+      action: { async execute() { return stepSuccess({}); } },
+    });
+  }
+  return {
+    resolve: (n: string) => entries.get(n),
+    availableActions: () => new Set(entries.keys()),
+  };
+}
+
+const ALL_ACTIONS = [
+  'navigate', 'click', 'fill', 'select', 'expand', 'collapse', 'assert', 'wait',
+  'show-markdown', 'spotlight', 'editor-insert', 'editor-replace', 'editor-delete',
+  'editor-set-content', 'editor-cursor', 'editor-highlight', 'editor-completion',
+  'graphql', 'simulated',
+];
+const catalog = buildTestCatalog(ALL_ACTIONS);
 
 describe('scenario parser', () => {
-  it('parses ARIA shorthand and produces delivery: aria', () => {
+  it('resolves ARIA shorthand via catalog as PluginStep', () => {
     const yaml = `
 scenario: test-form
 steps:
@@ -12,16 +37,17 @@ steps:
       role: button
       name: Submit
 `;
-    const scenario = parseScenario(yaml);
+    const scenario = parseScenario(yaml, catalog);
     expect(scenario.scenario).toBe('test-form');
-    expect(scenario.steps).toHaveLength(1);
-    const step = scenario.steps[0];
-    expect(step.delivery).toBe('aria');
-    expect((step as Extract<ScenarioStep, { delivery: 'aria' }>).action).toBe('click');
-    expect((step as Extract<ScenarioStep, { delivery: 'aria' }>).name).toBe('click-button-Submit');
+    const flat = scenario as FlatScenario;
+    expect(flat.steps).toHaveLength(1);
+    const step = flat.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.entry.qualifiedName).toBe('click');
+    expect(step.params).toEqual({ role: 'button', name: 'Submit' });
   });
 
-  it('parses scenario with multiple step types', () => {
+  it('resolves multiple step types via catalog', () => {
     const yaml = `
 scenario: full-flow
 steps:
@@ -39,12 +65,12 @@ steps:
       state:
         aria-hidden: false
 `;
-    const scenario = parseScenario(yaml);
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
     expect(scenario.steps).toHaveLength(4);
-    expect(scenario.steps.every(s => s.delivery === 'aria')).toBe(true);
+    expect(scenario.steps.every(s => s.kind === 'plugin')).toBe(true);
   });
 
-  it('parses scenario with within scoping', () => {
+  it('passes within scoping through params', () => {
     const yaml = `
 scenario: scoped-click
 steps:
@@ -55,72 +81,61 @@ steps:
         role: row
         name: "Case #42"
 `;
-    const scenario = parseScenario(yaml);
-    const step = scenario.steps[0] as Extract<ScenarioStep, { delivery: 'aria' }>;
-    expect(step.target!.within!.role).toBe('row');
-    expect(step.target!.within!.name).toBe('Case #42');
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const step = scenario.steps[0] as PluginStep;
+    expect(step.params['within']).toEqual({ role: 'row', name: 'Case #42' });
   });
 
-  it('navigate shorthand produces auto-generated name', () => {
+  it('wraps navigate string value as { value: path }', () => {
     const yaml = `
 scenario: nav
 steps:
   - navigate: /login
 `;
-    const scenario = parseScenario(yaml);
-    const step = scenario.steps[0] as Extract<ScenarioStep, { delivery: 'aria' }>;
-    expect(step.action).toBe('navigate');
-    expect(step.name).toBe('navigate-/login');
-    expect(step.value).toBe('/login');
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const step = scenario.steps[0] as PluginStep;
+    expect(step.entry.qualifiedName).toBe('navigate');
+    expect(step.params).toEqual({ value: '/login' });
   });
 
-  it('parses GraphQL step', () => {
+  it('resolves graphql shorthand via catalog', () => {
     const yaml = `
 scenario: graphql-test
 steps:
-  - name: inject-chat
-    delivery: graphql
-    domain: connectors
-    operation: injectChat
-    params:
-      platform: slack
-      sender: Alice
+  - graphql:
+      domain: connectors
+      operation: injectChat
+      params:
+        platform: slack
+        sender: Alice
 `;
-    const scenario = parseScenario(yaml);
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
     expect(scenario.steps).toHaveLength(1);
-    const step = scenario.steps[0] as Extract<ScenarioStep, { delivery: 'graphql' }>;
-    expect(step.delivery).toBe('graphql');
-    expect(step.name).toBe('inject-chat');
-    expect(step.domain).toBe('connectors');
-    expect(step.operation).toBe('injectChat');
-    expect(step.params).toEqual({ platform: 'slack', sender: 'Alice' });
+    const step = scenario.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.entry.qualifiedName).toBe('graphql');
+    expect(step.params['domain']).toBe('connectors');
+    expect(step.params['operation']).toBe('injectChat');
   });
 
-  it('parses GraphQL step with await', () => {
+  it('resolves simulated shorthand via catalog', () => {
     const yaml = `
-scenario: await-test
+scenario: simulated-test
 steps:
-  - name: check
-    delivery: graphql
-    domain: engine
-    operation: caseContext
-    params:
-      caseId: "123"
-    await:
-      match:
-        status: RESOLVED
-      timeout: 10000
-      interval: 200
+  - simulated:
+      dataset: helpdesk-tickets
+      data:
+        op: snapshot
+        columns: [id, customer]
 `;
-    const scenario = parseScenario(yaml);
-    const step = scenario.steps[0] as Extract<ScenarioStep, { delivery: 'graphql' }>;
-    expect(step.await).toBeDefined();
-    expect(step.await!.match).toEqual({ status: 'RESOLVED' });
-    expect(step.await!.timeout).toBe(10000);
-    expect(step.await!.interval).toBe(200);
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const step = scenario.steps[0] as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.entry.qualifiedName).toBe('simulated');
+    expect(step.params['dataset']).toBe('helpdesk-tickets');
   });
 
-  it('parses hybrid scenario with mixed delivery types', () => {
+  it('resolves hybrid scenario with mixed catalog entries', () => {
     const yaml = `
 scenario: hybrid
 steps:
@@ -128,53 +143,33 @@ steps:
   - click:
       role: button
       name: Submit
-  - name: inject
-    delivery: graphql
-    domain: connectors
-    operation: injectChat
-    params:
-      sender: Alice
+  - graphql:
+      domain: connectors
+      operation: injectChat
 `;
-    const scenario = parseScenario(yaml);
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
     expect(scenario.steps).toHaveLength(3);
-    expect(scenario.steps[0].delivery).toBe('aria');
-    expect(scenario.steps[1].delivery).toBe('aria');
-    expect(scenario.steps[2].delivery).toBe('graphql');
-  });
-
-  it('parses simulated step', () => {
-    const yaml = `
-scenario: simulated-test
-steps:
-  - name: inject-data
-    delivery: simulated
-    dataset: helpdesk-tickets
-    data:
-      op: snapshot
-      columns: [id, customer]
-`;
-    const scenario = parseScenario(yaml);
-    const step = scenario.steps[0] as Extract<ScenarioStep, { delivery: 'simulated' }>;
-    expect(step.delivery).toBe('simulated');
-    expect(step.dataset).toBe('helpdesk-tickets');
-    expect(step.data).toEqual({ op: 'snapshot', columns: ['id', 'customer'] });
+    expect(scenario.steps.every(s => s.kind === 'plugin')).toBe(true);
+    expect((scenario.steps[0] as PluginStep).entry.qualifiedName).toBe('navigate');
+    expect((scenario.steps[1] as PluginStep).entry.qualifiedName).toBe('click');
+    expect((scenario.steps[2] as PluginStep).entry.qualifiedName).toBe('graphql');
   });
 
   it('throws on invalid scenario — missing steps and sections', () => {
-    expect(() => parseScenario('scenario: test')).toThrow('must have');
+    expect(() => parseScenario('scenario: test', catalog)).toThrow('must have');
   });
 
   it('throws on invalid scenario — missing name', () => {
-    expect(() => parseScenario('steps: []')).toThrow('must have "scenario"');
+    expect(() => parseScenario('steps: []', catalog)).toThrow('must have "scenario"');
   });
 
-  it('throws on unknown step format', () => {
+  it('throws on unknown step key', () => {
     const yaml = `
 scenario: bad
 steps:
   - unknown: value
 `;
-    expect(() => parseScenario(yaml)).toThrow('Unknown step format');
+    expect(() => parseScenario(yaml, catalog)).toThrow();
   });
 });
 
@@ -198,7 +193,7 @@ sections:
           role: button
           name: Submit
 `;
-    const result = parseScenario(yaml);
+    const result = parseScenario(yaml, catalog);
     expect(isSectioned(result)).toBe(true);
     if (!isSectioned(result)) throw new Error('Expected sectioned');
     expect(result.sections).toHaveLength(2);
@@ -220,7 +215,7 @@ sections:
       type: inline
       markdown: Just a slide
 `;
-    const result = parseScenario(yaml);
+    const result = parseScenario(yaml, catalog);
     if (!isSectioned(result)) throw new Error('Expected sectioned');
     expect(result.sections[0].steps).toEqual([]);
   });
@@ -236,14 +231,14 @@ sections:
   - title: Section 1
     steps: []
 `;
-    expect(() => parseScenario(yaml)).toThrow('mutually exclusive');
+    expect(() => parseScenario(yaml, catalog)).toThrow('mutually exclusive');
   });
 
   it('rejects when neither steps nor sections present', () => {
     const yaml = `
 scenario: empty
 `;
-    expect(() => parseScenario(yaml)).toThrow('must have');
+    expect(() => parseScenario(yaml, catalog)).toThrow('must have');
   });
 
   it('parses template content reference', () => {
@@ -256,7 +251,7 @@ sections:
       path: content/slide.md
     steps: []
 `;
-    const result = parseScenario(yaml);
+    const result = parseScenario(yaml, catalog);
     if (!isSectioned(result)) throw new Error('Expected sectioned');
     expect(result.sections[0].content?.type).toBe('template');
     expect(result.sections[0].content?.path).toBe('content/slide.md');
@@ -274,7 +269,7 @@ steps:
       role: button
       name: Go
 `;
-    const result = parseScenario(yaml);
+    const result = parseScenario(yaml, catalog);
     expect(isSectioned(result)).toBe(false);
     expect(result.meta?.title).toBe('Flat Test');
   });
@@ -282,10 +277,7 @@ steps:
 
 describe('isSectioned type guard', () => {
   it('returns false for flat scenarios', () => {
-    const flat: FlatScenario = {
-      scenario: 'test',
-      steps: [{ delivery: 'aria', action: 'click', target: { role: 'button', name: 'Submit' } }],
-    };
+    const flat: FlatScenario = { scenario: 'test', steps: [] };
     expect(isSectioned(flat)).toBe(false);
   });
 
@@ -307,7 +299,7 @@ describe('isSectioned type guard', () => {
 });
 
 describe('editor actions', () => {
-  it('parses editor-insert shorthand', () => {
+  it('resolves editor-insert via catalog', () => {
     const yaml = `scenario: test
 sections:
   - title: Test
@@ -317,15 +309,15 @@ sections:
           name: "YAML editor"
           value: "hello"
           typing: progressive`;
-    const parsed = parseScenario(yaml) as SectionedScenario;
-    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
-    expect(step.action).toBe('editor-insert');
-    expect((step.target as any).role).toBe('textbox');
-    expect(step.value).toBe('hello');
-    expect(step.typing).toBe('progressive');
+    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.entry.qualifiedName).toBe('editor-insert');
+    expect(step.params['value']).toBe('hello');
+    expect(step.params['typing']).toBe('progressive');
   });
 
-  it('parses spotlight with nested target', () => {
+  it('resolves spotlight via catalog with nested target in params', () => {
     const yaml = `scenario: test
 sections:
   - title: Test
@@ -335,14 +327,15 @@ sections:
             role: tree
             name: "Document outline"
           content: "This is the tree view"`;
-    const parsed = parseScenario(yaml) as SectionedScenario;
-    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
-    expect(step.action).toBe('spotlight');
-    expect((step.target as any).role).toBe('tree');
-    expect(step.content).toBe('This is the tree view');
+    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.entry.qualifiedName).toBe('spotlight');
+    expect((step.params['target'] as any).role).toBe('tree');
+    expect(step.params['content']).toBe('This is the tree view');
   });
 
-  it('parses editor-highlight with from/to positions', () => {
+  it('resolves editor-highlight via catalog', () => {
     const yaml = `scenario: test
 sections:
   - title: Test
@@ -353,15 +346,15 @@ sections:
           from: {line: 1, col: 0}
           to: {line: 3, col: 10}
           style: pulse`;
-    const parsed = parseScenario(yaml) as SectionedScenario;
-    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
-    expect(step.action).toBe('editor-highlight');
-    expect(step.from).toEqual({ line: 1, col: 0 });
-    expect(step.to).toEqual({ line: 3, col: 10 });
-    expect(step.style).toBe('pulse');
+    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.params['from']).toEqual({ line: 1, col: 0 });
+    expect(step.params['to']).toEqual({ line: 3, col: 10 });
+    expect(step.params['style']).toBe('pulse');
   });
 
-  it('parses editor-set-content', () => {
+  it('resolves editor-set-content via catalog', () => {
     const yaml = `scenario: test
 sections:
   - title: Test
@@ -371,13 +364,13 @@ sections:
           name: "YAML editor"
           value: "pages:\\n  - name: test"
           typing: instant`;
-    const parsed = parseScenario(yaml) as SectionedScenario;
-    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
-    expect(step.action).toBe('editor-set-content');
-    expect(step.typing).toBe('instant');
+    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.params['typing']).toBe('instant');
   });
 
-  it('parses editor-cursor', () => {
+  it('resolves editor-cursor via catalog', () => {
     const yaml = `scenario: test
 sections:
   - title: Test
@@ -387,14 +380,14 @@ sections:
           name: "YAML editor"
           line: 5
           col: 10`;
-    const parsed = parseScenario(yaml) as SectionedScenario;
-    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
-    expect(step.action).toBe('editor-cursor');
-    expect(step.line).toBe(5);
-    expect(step.col).toBe(10);
+    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.params['line']).toBe(5);
+    expect(step.params['col']).toBe(10);
   });
 
-  it('parses editor-completion', () => {
+  it('resolves editor-completion via catalog', () => {
     const yaml = `scenario: test
 sections:
   - title: Test
@@ -403,9 +396,9 @@ sections:
           role: textbox
           name: "YAML editor"
           label: forEach`;
-    const parsed = parseScenario(yaml) as SectionedScenario;
-    const step = parsed.sections[0]!.steps[0]! as Record<string, unknown>;
-    expect(step.action).toBe('editor-completion');
-    expect(step.label).toBe('forEach');
+    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const step = parsed.sections[0]!.steps[0]! as PluginStep;
+    expect(step.kind).toBe('plugin');
+    expect(step.params['label']).toBe('forEach');
   });
 });
