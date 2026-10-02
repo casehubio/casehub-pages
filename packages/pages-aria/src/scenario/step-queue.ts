@@ -5,9 +5,9 @@ export type QueueState = 'ready' | 'suspended' | 'blocked' | 'done';
 export class StepQueue {
   state: QueueState = 'ready';
   position = 0;
-  wakeTime?: number;
-  blockReason?: Promise<void>;
-  trigger?: DataTrigger | TimeTrigger;
+  wakeTime: number | undefined = undefined;
+  blockReason: Promise<void> | undefined = undefined;
+  trigger: DataTrigger | TimeTrigger | undefined = undefined;
   children: StepQueue[] = [];
 
   constructor(

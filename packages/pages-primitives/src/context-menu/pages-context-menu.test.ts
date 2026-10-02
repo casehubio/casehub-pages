@@ -64,7 +64,7 @@ describe('PagesContextMenu', () => {
     await el.updateComplete;
 
     const actions: string[] = [];
-    el.addEventListener('menu-action', ((e: CustomEvent) => actions.push(e.detail.action)) as EventListener);
+    el.addEventListener('menu-action', (e: Event) => { actions.push((e as CustomEvent).detail.action); });
 
     const item = el.shadowRoot!.querySelector<HTMLElement>('[role="menuitem"]')!;
     item.click();
@@ -130,7 +130,7 @@ describe('PagesContextMenu', () => {
     await el.updateComplete;
 
     const actions: string[] = [];
-    el.addEventListener('menu-action', ((e: CustomEvent) => actions.push(e.detail.action)) as EventListener);
+    el.addEventListener('menu-action', (e: Event) => { actions.push((e as CustomEvent).detail.action); });
 
     el.shadowRoot!.querySelector<HTMLElement>('[role="menuitem"]')!.click();
     expect(actions).toHaveLength(0);

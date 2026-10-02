@@ -37,7 +37,7 @@ export interface SectionContent {
 export interface TutorialSection {
   title: string;
   content?: SectionContent;
-  steps: ScenarioStep[];
+  steps: OrchestratedStep[];
 }
 
 export interface ScenarioBase {
@@ -47,7 +47,7 @@ export interface ScenarioBase {
 }
 
 export interface FlatScenario extends ScenarioBase {
-  steps: ScenarioStep[];
+  steps: OrchestratedStep[];
 }
 
 export interface SectionedScenario extends ScenarioBase {
@@ -74,7 +74,7 @@ export interface StepDecorators {
 }
 
 export type OrchestrationConstruct =
-  | { delivery: 'orchestration'; construct: 'concurrent'; branches: Record<string, ScenarioStep[]> }
+  | { delivery: 'orchestration'; construct: 'concurrent'; branches: Record<string, OrchestratedStep[]> }
   | { delivery: 'orchestration'; construct: 'signal'; name: string }
   | { delivery: 'orchestration'; construct: 'await'; signal?: string; barrier?: string; timeout?: string }
   | { delivery: 'orchestration'; construct: 'delay'; duration: string }

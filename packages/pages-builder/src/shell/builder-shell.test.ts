@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { PageDocument } from '@casehubio/pages-document';
 import './builder-shell.js';
 import type { PagesBuilderShell } from './builder-shell.js';
+import type { PagesBuilderTree } from '../tree/builder-tree.js';
 
 const MINIMAL_PAGE = `pages:
 - name: Overview
@@ -108,7 +109,7 @@ describe('PagesBuilderShell', () => {
     await el.updateComplete;
 
     const undoBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
-      .find(b => b.textContent?.trim() === 'Undo') as HTMLElement;
+      .find(b => b.textContent?.trim() === 'Undo') as HTMLButtonElement;
     expect(undoBtn.disabled).toBe(false);
     undoBtn.click();
     expect(el.document.getPages()).toHaveLength(1);
@@ -659,7 +660,7 @@ describe('PagesBuilderShell', () => {
     expect(el.document.canUndo()).toBe(false);
 
     const undoBtn = Array.from(el.shadowRoot!.querySelectorAll('.toolbar-btn'))
-      .find(b => b.textContent?.trim() === 'Undo') as HTMLElement;
+      .find(b => b.textContent?.trim() === 'Undo') as HTMLButtonElement;
     expect(undoBtn.disabled).toBe(false);
     undoBtn.click();
     await el.updateComplete;
@@ -1298,7 +1299,7 @@ describe('PagesBuilderShell', () => {
     expect(yaml).toContain('type: markdown');
 
     // The selectedPath should point to the new markdown component
-    const selectedNodeType = el.shadowRoot?.querySelector('pages-builder-tree')?.selectedPath;
+    const selectedNodeType = el.shadowRoot?.querySelector<PagesBuilderTree>('pages-builder-tree')?.selectedPath;
     expect(selectedNodeType).toBeDefined();
   });
 

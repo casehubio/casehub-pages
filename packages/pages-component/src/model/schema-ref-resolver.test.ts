@@ -16,8 +16,8 @@ describe("resolveSchemaRefs", () => {
       },
     };
     const resolved = resolveSchemaRefs(schema);
-    expect(resolved.properties!.home.type).toBe("object");
-    expect(resolved.properties!.home.properties!.street.type).toBe("string");
+    expect(resolved.properties!.home!.type).toBe("object");
+    expect(resolved.properties!.home!.properties!.street!.type).toBe("string");
   });
 
   it("resolves nested references", () => {
@@ -31,7 +31,7 @@ describe("resolveSchemaRefs", () => {
       },
     };
     const resolved = resolveSchemaRefs(schema);
-    expect(resolved.properties!.owner.properties!.name.type).toBe("string");
+    expect(resolved.properties!.owner!.properties!.name!.type).toBe("string");
   });
 
   it("handles circular references with terminal empty schema", () => {
@@ -50,9 +50,9 @@ describe("resolveSchemaRefs", () => {
       },
     };
     const resolved = resolveSchemaRefs(schema);
-    expect(resolved.properties!.root.type).toBe("object");
-    expect(resolved.properties!.root.properties!.value.type).toBe("string");
-    expect(resolved.properties!.root.properties!.child).toEqual({});
+    expect(resolved.properties!.root!.type).toBe("object");
+    expect(resolved.properties!.root!.properties!.value!.type).toBe("string");
+    expect(resolved.properties!.root!.properties!.child).toEqual({});
   });
 
   it("passes through unresolvable refs", () => {
@@ -62,7 +62,7 @@ describe("resolveSchemaRefs", () => {
       },
     };
     const resolved = resolveSchemaRefs(schema);
-    expect(resolved.properties!.thing.$ref).toBe("#/$defs/nonexistent");
+    expect(resolved.properties!.thing!.$ref).toBe("#/$defs/nonexistent");
   });
 
   it("handles definitions key (legacy)", () => {
@@ -75,7 +75,7 @@ describe("resolveSchemaRefs", () => {
       },
     };
     const resolved = resolveSchemaRefs(schema);
-    expect(resolved.properties!.label.type).toBe("string");
+    expect(resolved.properties!.label!.type).toBe("string");
   });
 
   it("resolves refs inside items", () => {
@@ -86,8 +86,8 @@ describe("resolveSchemaRefs", () => {
       },
     };
     const resolved = resolveSchemaRefs(schema);
-    expect(resolved.properties!.tags.items!.type).toBe("string");
-    expect(resolved.properties!.tags.items!.minLength).toBe(1);
+    expect(resolved.properties!.tags!.items!.type).toBe("string");
+    expect(resolved.properties!.tags!.items!.minLength).toBe(1);
   });
 
   it("resolves refs inside oneOf", () => {
@@ -98,7 +98,7 @@ describe("resolveSchemaRefs", () => {
       },
     };
     const resolved = resolveSchemaRefs(schema);
-    expect(resolved.properties!.contact.oneOf![0].properties!.method.const).toBe("email");
+    expect(resolved.properties!.contact!.oneOf![0]!.properties!.method!.const).toBe("email");
   });
 
   it("returns schema unchanged when no refs present", () => {

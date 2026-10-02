@@ -494,10 +494,10 @@ describe("PagesMetric", () => {
 
   describe("static metric (no lookup)", () => {
     it("renders without a dataSet when no lookup is provided", async () => {
-      const props: MetricProps = {
+      const props = {
         label: "Total Users",
         value: "1,247",
-      };
+      } as MetricProps;
 
       el.props = props;
       document.body.appendChild(el);

@@ -55,7 +55,7 @@ describe('PagesBuilderInlinePicker', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('component-select', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('component-select', (e: Event) => { events.push(e as CustomEvent); });
 
     const item = el.shadowRoot!.querySelector<HTMLButtonElement>('.picker-item');
     item?.click();

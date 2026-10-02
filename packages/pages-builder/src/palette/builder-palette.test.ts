@@ -115,7 +115,7 @@ describe('PagesBuilderPalette', () => {
     await el.updateComplete;
 
     const events: CustomEvent<ComponentCatalogEntry>[] = [];
-    el.addEventListener('component-select', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('component-select', (e: Event) => { events.push(e as CustomEvent); });
 
     const tile = el.shadowRoot!.querySelector('.palette-tile') as HTMLElement;
     tile?.click();

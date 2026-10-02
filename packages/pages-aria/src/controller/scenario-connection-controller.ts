@@ -37,8 +37,8 @@ const IDLE_STATE: ScenarioState = {
 export class ScenarioConnectionController implements ReactiveController {
   private _host: ReactiveControllerHost;
   private _opts: ScenarioConnectionOptions;
-  private _ownConnection?: EventConnection;
-  private _ownEventTarget?: EventTarget;
+  private _ownConnection: EventConnection | undefined;
+  private _ownEventTarget: EventTarget | undefined;
 
   state: ScenarioState = { ...IDLE_STATE };
   connectionStatus: 'connected' | 'reconnecting' | 'disconnected' = 'disconnected';

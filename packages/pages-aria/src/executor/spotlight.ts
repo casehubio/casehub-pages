@@ -160,12 +160,13 @@ export function showSpotlight(config: SpotlightConfig): Promise<void> {
 
   const alsoConfigs = config.also ?? [];
   for (let i = 0; i < alsoConfigs.length; i++) {
-    if (alsoConfigs[i].content) {
+    const alsoConfig = alsoConfigs[i]!;
+    if (alsoConfig.content) {
       const c = document.createElement('div');
       c.className = 'scenario-spotlight-callout';
       c.setAttribute('role', 'status');
       c.setAttribute('aria-live', 'polite');
-      c.textContent = alsoConfigs[i].content!;
+      c.textContent = alsoConfig.content;
       callouts.push(c);
     }
   }
@@ -177,10 +178,11 @@ export function showSpotlight(config: SpotlightConfig): Promise<void> {
 
   let alsoCalloutIdx = 0;
   for (let i = 0; i < alsoConfigs.length; i++) {
-    if (alsoConfigs[i].content) {
-      const c = callouts[1 + alsoCalloutIdx++];
+    const alsoConfig = alsoConfigs[i]!;
+    if (alsoConfig.content) {
+      const c = callouts[1 + alsoCalloutIdx++]!;
       document.body.appendChild(c);
-      positionCallout(c, allRects[i + 1], alsoConfigs[i].position ?? 'auto');
+      positionCallout(c, allRects[i + 1]!, alsoConfig.position ?? 'auto');
     }
   }
 

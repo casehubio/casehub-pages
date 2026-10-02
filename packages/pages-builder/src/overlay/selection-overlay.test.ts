@@ -78,7 +78,7 @@ describe('SelectionOverlay', () => {
     const path = ['pages', 0, 'components', 0] as const;
     overlay.update(makeBounds(), 'component', path);
     const events: CustomEvent[] = [];
-    overlayRoot.addEventListener('selection-cut', ((e: CustomEvent) => events.push(e)) as EventListener);
+    overlayRoot.addEventListener('selection-cut', (e: Event) => { events.push(e as CustomEvent); });
     (overlayRoot.querySelector('.sel-cut-btn') as HTMLButtonElement).click();
     expect(events).toHaveLength(1);
     expect(events[0]!.detail.path).toEqual(path);
@@ -90,7 +90,7 @@ describe('SelectionOverlay', () => {
     const path = ['pages', 0] as const;
     overlay.update(makeBounds(), 'page', path);
     const events: CustomEvent[] = [];
-    overlayRoot.addEventListener('selection-add', ((e: CustomEvent) => events.push(e)) as EventListener);
+    overlayRoot.addEventListener('selection-add', (e: Event) => { events.push(e as CustomEvent); });
     (overlayRoot.querySelector('.sel-add-btn') as HTMLButtonElement).click();
     expect(events).toHaveLength(1);
     expect(events[0]!.detail.nodeType).toBe('page');
@@ -100,7 +100,7 @@ describe('SelectionOverlay', () => {
     setup();
     overlay.update(makeBounds(), 'row', ['pages', 0, 'rows', 0]);
     const events: CustomEvent[] = [];
-    overlayRoot.addEventListener('selection-copy', ((e: CustomEvent) => events.push(e)) as EventListener);
+    overlayRoot.addEventListener('selection-copy', (e: Event) => { events.push(e as CustomEvent); });
     (overlayRoot.querySelector('.sel-copy-btn') as HTMLButtonElement).click();
     expect(events).toHaveLength(1);
   });
@@ -109,7 +109,7 @@ describe('SelectionOverlay', () => {
     setup();
     overlay.update(makeBounds(), 'column', ['pages', 0, 'rows', 0, 'columns', 0]);
     const events: CustomEvent[] = [];
-    overlayRoot.addEventListener('selection-insert', ((e: CustomEvent) => events.push(e)) as EventListener);
+    overlayRoot.addEventListener('selection-insert', (e: Event) => { events.push(e as CustomEvent); });
     (overlayRoot.querySelector('.sel-insert-btn') as HTMLButtonElement).click();
     expect(events).toHaveLength(1);
   });
@@ -118,7 +118,7 @@ describe('SelectionOverlay', () => {
     setup();
     overlay.update(makeBounds(), 'component', ['pages', 0, 'components', 0]);
     const events: CustomEvent[] = [];
-    overlayRoot.addEventListener('selection-delete', ((e: CustomEvent) => events.push(e)) as EventListener);
+    overlayRoot.addEventListener('selection-delete', (e: Event) => { events.push(e as CustomEvent); });
     (overlayRoot.querySelector('.sel-delete-btn') as HTMLButtonElement).click();
     expect(events).toHaveLength(1);
   });
