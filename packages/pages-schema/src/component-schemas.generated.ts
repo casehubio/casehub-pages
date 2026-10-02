@@ -1593,6 +1593,7 @@ export const gridTablePropsSchema = z.object({
 });
 
 export const metricPropsSchema = z.object({
+  label: z.string().optional(),
   text: z.string().optional(),
   value: z.string().optional(),
   subtype: z.enum(["card", "card2", "plain-text", "quota"]).optional(),

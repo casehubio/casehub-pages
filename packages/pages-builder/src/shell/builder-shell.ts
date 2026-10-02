@@ -224,7 +224,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       this._editorDirty = false;
     }
     if (changed.has('_selectedPath')) {
-      if (this._compsOpen) this._refreshPaletteContext();
+      if (this._compsContainer) this._refreshPaletteContext();
     }
   }
 
@@ -447,12 +447,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const onAdd = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
-      this._handleTreeAdd(new CustomEvent('tree-add', { detail: { path: detail.path, nodeType: detail.nodeType, target } }));
+      this._handleTreeAdd(new CustomEvent('tree-add', { detail: { path: detail.path, nodeType: detail.nodeType, ...(target ? { target } : {}) } }));
     };
     const onInsert = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
-      this._handleTreeInsert(new CustomEvent('tree-insert', { detail: { path: detail.path, nodeType: detail.nodeType, target } }));
+      this._handleTreeInsert(new CustomEvent('tree-insert', { detail: { path: detail.path, nodeType: detail.nodeType, ...(target ? { target } : {}) } }));
     };
     const onCut = (e: Event) => {
       const { path, nodeType } = (e as CustomEvent).detail;
@@ -1362,7 +1362,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     litRender(html`
       <div class="editor-source${showSource ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
         <pages-code-editor
-          .extensions="${[...builderHighlightExtension, ...this._schemaExtensions]}"
+          .extensions="${[builderHighlightExtension, ...this._schemaExtensions]}"
           language="yaml"
           label="Page YAML source"
           @input="${() => this._handleEditorInput()}"

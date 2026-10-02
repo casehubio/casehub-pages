@@ -42,9 +42,10 @@ function yamlToGraphModel(yamlStr: string): GraphModel {
     })),
     edges: (parsed.edges ?? []).map((e, i) => ({
       id: `e-${e.source}-${e.target}-${i}`,
+      type: 'default',
       source: e.source,
       target: e.target,
-      label: e.label,
+      ...(e.label !== undefined ? { properties: { label: e.label } } : {}),
     })),
   };
 }

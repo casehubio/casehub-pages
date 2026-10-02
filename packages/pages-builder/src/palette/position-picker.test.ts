@@ -31,7 +31,7 @@ describe('PagesPositionPicker', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('position-select', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('position-select', (e: Event) => { events.push(e as CustomEvent); });
     el.shadowRoot!.querySelectorAll<HTMLButtonElement>('button')[0]!.click();
     expect(events).toHaveLength(1);
     expect(events[0]!.detail.position).toBe('before');
@@ -44,7 +44,7 @@ describe('PagesPositionPicker', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('position-select', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('position-select', (e: Event) => { events.push(e as CustomEvent); });
     el.shadowRoot!.querySelectorAll<HTMLButtonElement>('button')[1]!.click();
     expect(events).toHaveLength(1);
     expect(events[0]!.detail.position).toBe('after');

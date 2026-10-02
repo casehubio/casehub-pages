@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { toTypedDataSet, ColumnType } from "@casehubio/pages-data";
-import type { ColumnId, DataSet } from "@casehubio/pages-data";
+import type { ColumnId, DataSet, DataSetLookup } from "@casehubio/pages-data";
 import type { PagesSchemaForm } from "./PagesSchemaForm.js";
 import "./PagesSchemaForm.js";
 import "./PagesObjectGroup.js";

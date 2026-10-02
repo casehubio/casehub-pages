@@ -92,7 +92,9 @@ function entry(
   previewHints?: PreviewHints,
 ): ComponentCatalogEntry {
   return {
-    type, label, category, icon, description, defaultProps, prereqHint, previewHints,
+    type, label, category, icon, description, defaultProps,
+    ...(prereqHint !== undefined ? { prereqHint } : {}),
+    ...(previewHints !== undefined ? { previewHints } : {}),
     contextRelevance: relevanceFor(type),
   };
 }

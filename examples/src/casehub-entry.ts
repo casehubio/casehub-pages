@@ -52,11 +52,16 @@ import { StructuralStepEvaluator } from "@casehubio/yaml-core/step";
 import { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
 import { stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
 import type { StepAction } from "@casehubio/yaml-core/step";
+import { parseStepParameterType } from "@casehubio/yaml-core";
 
 export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<string, { type: string; required: boolean }>; outputs?: Record<string, { type: string; required: boolean }>; execute: StepAction['execute'] }>) {
   const registry = new StepPluginRegistry();
   for (const p of plugins) {
-    registry.register({ name: p.name, inputs: p.inputs ?? {}, outputs: p.outputs ?? {}, execute: p.execute });
+    const toParameters = (params: Record<string, { type: string; required: boolean }> | undefined) =>
+      Object.fromEntries(Object.entries(params ?? {}).map(([name, param]) => [
+        name, { ...param, type: parseStepParameterType(param.type) },
+      ]));
+    registry.register({ name: p.name, inputs: toParameters(p.inputs), outputs: toParameters(p.outputs), execute: p.execute });
   }
   const catalog = new CompositeStepCatalog([registry.createSource()]);
   const evaluator = new StructuralStepEvaluator();

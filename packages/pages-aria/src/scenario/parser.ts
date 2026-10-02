@@ -101,7 +101,7 @@ function extractDecorators(raw: Record<string, unknown>): StepDecorators | undef
 function parseOrchestrationStep(raw: Record<string, unknown>): OrchestratedStep | undefined {
   if ('concurrent' in raw) {
     const branches = raw.concurrent as Record<string, unknown[]>;
-    const parsed: Record<string, ScenarioStep[]> = {};
+    const parsed: Record<string, OrchestratedStep[]> = {};
     for (const [name, steps] of Object.entries(branches)) {
       parsed[name] = parseSteps(steps);
     }
@@ -176,7 +176,7 @@ function parseSections(rawSections: unknown[]): TutorialSection[] {
     const title = sec.title as string;
     const content = sec.content as SectionContent | undefined;
     const rawSteps = Array.isArray(sec.steps) ? sec.steps : [];
-    return { title, content, steps: parseSteps(rawSteps) };
+    return { title, ...(content !== undefined ? { content } : {}), steps: parseSteps(rawSteps) };
   });
 }
 

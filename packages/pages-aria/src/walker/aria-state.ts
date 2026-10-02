@@ -7,14 +7,20 @@ function parseBool(value: string | null): boolean | undefined {
 }
 
 export function getAriaState(element: Element): AriaState {
+  const busy = parseBool(element.getAttribute('aria-busy'));
+  const disabled = parseBool(element.getAttribute('aria-disabled'));
+  const expanded = parseBool(element.getAttribute('aria-expanded'));
+  const selected = parseBool(element.getAttribute('aria-selected'));
+  const checked = element.getAttribute('aria-checked') === 'mixed'
+    ? 'mixed'
+    : parseBool(element.getAttribute('aria-checked'));
+  const hidden = parseBool(element.getAttribute('aria-hidden'));
   return {
-    busy: parseBool(element.getAttribute('aria-busy')),
-    disabled: parseBool(element.getAttribute('aria-disabled')),
-    expanded: parseBool(element.getAttribute('aria-expanded')),
-    selected: parseBool(element.getAttribute('aria-selected')),
-    checked: element.getAttribute('aria-checked') === 'mixed'
-      ? 'mixed'
-      : parseBool(element.getAttribute('aria-checked')),
-    hidden: parseBool(element.getAttribute('aria-hidden')),
+    ...(busy !== undefined ? { busy } : {}),
+    ...(disabled !== undefined ? { disabled } : {}),
+    ...(expanded !== undefined ? { expanded } : {}),
+    ...(selected !== undefined ? { selected } : {}),
+    ...(checked !== undefined ? { checked } : {}),
+    ...(hidden !== undefined ? { hidden } : {}),
   };
 }

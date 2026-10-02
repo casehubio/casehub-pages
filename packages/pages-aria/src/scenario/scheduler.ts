@@ -339,7 +339,8 @@ export function createScheduler(
             const stepName = (step as { name?: string }).name ?? posKey;
             scope.resultStore().recordFailure(stepName, {
               message: (err as Error).message ?? String(err),
-              stepName,
+              exceptionClass: err instanceof Error ? err.constructor.name : 'Error',
+              stackTrace: err instanceof Error ? err.stack ?? '' : '',
             });
             const retryMax = decorators?.retry?.max ?? 0;
             const retryCount = retryState.get(posKey) ?? 0;
@@ -580,7 +581,7 @@ function resolveTemplates(
   templates: Map<number, string>,
 ): void {
   for (let i = 0; i < sections.length; i++) {
-    const content = sections[i].content;
+    const content = sections[i]?.content;
     if (content?.type === 'template' && content.path) {
       fetch(`${contentBase}/${content.path}`)
         .then(resp => resp.ok ? resp.text() : Promise.reject(new Error(`Template fetch failed: ${resp.status}`)))

@@ -24,6 +24,8 @@ export interface DataComponentCommon {
 }
 
 export interface ChartSettingsBase {
+  readonly maxWidth?: number;
+  readonly maxHeight?: number;
   readonly resizable?: boolean;
   readonly tooltip?: {
     readonly show?: boolean;
@@ -182,6 +184,7 @@ export interface MetricGridProps {
 }
 
 export interface MetricProps extends DataComponentCommon {
+  readonly label?: string;
   readonly text?: string;
   readonly value?: string;
   readonly subtype?: "card" | "card2" | "plain-text" | "quota";

@@ -287,7 +287,7 @@ describe('PagesBuilderTree interactions', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('tree-action', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('tree-action', (e: Event) => { events.push(e as CustomEvent); });
 
     const tree = el.shadowRoot!.querySelector('[role="tree"]')!;
     tree.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
@@ -304,7 +304,7 @@ describe('PagesBuilderTree interactions', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('tree-add', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('tree-add', (e: Event) => { events.push(e as CustomEvent); });
 
     const addBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.add-btn')!;
     addBtn.click();
@@ -321,7 +321,7 @@ describe('PagesBuilderTree interactions', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('tree-add', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('tree-add', (e: Event) => { events.push(e as CustomEvent); });
 
     const addBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.add-btn')!;
     addBtn.click();
@@ -364,7 +364,7 @@ describe('PagesBuilderTree interactions', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('tree-cut', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('tree-cut', (e: Event) => { events.push(e as CustomEvent); });
 
     const cutBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.cut-btn')!;
     cutBtn.click();
@@ -382,7 +382,7 @@ describe('PagesBuilderTree interactions', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('tree-copy', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('tree-copy', (e: Event) => { events.push(e as CustomEvent); });
 
     const copyBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.copy-btn')!;
     copyBtn.click();
@@ -399,7 +399,7 @@ describe('PagesBuilderTree interactions', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('tree-insert', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('tree-insert', (e: Event) => { events.push(e as CustomEvent); });
 
     const insertBtn = el.shadowRoot!.querySelector<HTMLButtonElement>('.insert-btn')!;
     insertBtn.click();
@@ -517,7 +517,7 @@ describe('PagesBuilderTree', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('node-select', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('node-select', (e: Event) => { events.push(e as CustomEvent); });
 
     const pageItem = el.shadowRoot!.querySelector('[data-node-type="page"]') as HTMLElement;
     pageItem?.click();
