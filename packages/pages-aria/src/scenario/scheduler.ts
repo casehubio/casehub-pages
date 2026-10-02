@@ -1,7 +1,7 @@
 import { DefaultScenarioScope, parseDuration } from '@casehubio/yaml-core/orchestration';
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { ConditionEvaluator } from '@casehubio/yaml-core/condition';
-import type { Scenario, OrchestratedStep, DataTrigger, TimeTrigger, StepDecorators, SectionContent } from './types.js';
+import type { Scenario, OrchestratedStep, TimeTrigger, SectionContent } from './types.js';
 import type { LoopDirective } from '@casehubio/yaml-core/orchestration';
 import { isSectioned } from './types.js';
 import type { ScenarioState, OutlineNode } from '../controller/scenario-connection-controller.js';
@@ -56,9 +56,8 @@ export function createScheduler(
   const builtInAria = new AriaExecutor(ariaExecuteStep as (step: unknown, eventTarget?: EventTarget, speed?: number) => Promise<void>);
   const executors: StepExecutor[] = [...(options.executors ?? []), builtInAria];
 
-  const binding: BindResult = bindScenario(scenario as any, scope);
+  const binding: BindResult = bindScenario(scenario, scope);
   let queues = binding.queues;
-  const triggers = binding.triggers;
 
   for (const q of queues) {
     if (q.state === 'ready' && q.isDone()) q.state = 'done';
@@ -162,8 +161,8 @@ export function createScheduler(
   }
 
   async function dispatchStep(step: OrchestratedStep, queue: StepQueue, context: ExecutionContext): Promise<void> {
-    if ((step as any).delivery === 'orchestration') {
-      await dispatchOrchestration(step as any, queue, context);
+    if (step.delivery === 'orchestration') {
+      await dispatchOrchestration(step as OrchestratedStep & { construct: string; [key: string]: unknown }, queue, context);
       return;
     }
 
@@ -193,7 +192,7 @@ export function createScheduler(
           queue.advance();
           const promise = sig.await();
           queue.block(promise);
-          promise.then(() => {
+          void promise.then(() => {
             if (!disposed) {
               queue.unblock();
               if (queue.isDone()) {
@@ -214,7 +213,7 @@ export function createScheduler(
           queue.advance();
           const promise = latch.await();
           queue.block(promise);
-          promise.then(() => {
+          void promise.then(() => {
             if (!disposed) {
               queue.unblock();
               if (queue.isDone()) {
@@ -463,9 +462,9 @@ export function createScheduler(
     switch (command) {
       case 'pause': runner.pause(); break;
       case 'resume': runner.play(); break;
-      case 'step': runner.step(); break;
-      case 'speed': if (spd != null) runner.setSpeed(spd); break;
-      case 'run-to': if (label) runner.runTo(label); break;
+      case 'step': void runner.step(); break;
+      case 'speed': if (typeof spd === 'number') runner.setSpeed(spd); break;
+      case 'run-to': if (typeof label === 'string') runner.runTo(label); break;
     }
   };
   options.eventTarget.addEventListener('scenario-command', onCommand);
@@ -512,7 +511,7 @@ export function createScheduler(
 
       scope.close();
       scope = new DefaultScenarioScope();
-      const remaining = { ...scenario, sections: scenario.sections.slice(targetIdx) } as any;
+      const remaining = { ...scenario, sections: scenario.sections.slice(targetIdx) };
       const rebind = bindScenario(remaining, scope);
       queues = rebind.queues;
 
@@ -540,7 +539,7 @@ export function createScheduler(
     },
 
     injectData(channel: string, value: unknown): void {
-      scope.channel(channel).send(value);
+      void scope.channel(channel).send(value);
     },
 
     addEventListener(type: string, handler: EventListener): void {

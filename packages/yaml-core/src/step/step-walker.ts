@@ -29,7 +29,7 @@ export interface ServiceRegistry {
 export class MapServiceRegistry implements ServiceRegistry {
   private readonly services = new Map<string, unknown>();
 
-  register<T>(type: { readonly name: string }, instance: T): MapServiceRegistry {
+  register<T>(type: { readonly name: string }, instance: T): this {
     this.services.set(type.name, instance);
     return this;
   }
@@ -169,6 +169,7 @@ const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finall
 
 const MAX_DEPTH = 32;
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class StepWalker {
   static resolve(steps: Record<string, unknown>[], catalog: StepCatalog): ResolvedStep[] {
     const seenNames = new Set<string>();

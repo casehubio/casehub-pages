@@ -739,7 +739,7 @@ export class PagesThemeDesignerElement extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this._initStorage();
+    void this._initStorage();
     document.addEventListener('keydown', this._onKeyDown);
   }
 
@@ -1153,7 +1153,7 @@ export class PagesThemeDesignerElement extends LitElement {
             <button @click=${() => { this._onExport(); }}>Export</button>
             <div class="toolbar-spacer"></div>
             <button @click=${() => { this._onClose(); }}>Close</button>
-            <button class="primary" @click=${() => { this._onSave(); }}>Save</button>
+            <button class="primary" @click=${() => { void this._onSave(); }}>Save</button>
           </div>
         </div>
       </div>
@@ -1788,9 +1788,9 @@ export class PagesThemeDesignerElement extends LitElement {
                 <span class="theme-name">${name}</span>
                 ${isBuiltin ? html`<span class="theme-tag">builtin</span>` : nothing}
                 <div class="theme-list-actions">
-                  <button title="Edit" @click=${(e: Event) => { e.stopPropagation(); this._previewThemeName = null; this._onEditTheme(name, isBuiltin); }}>✎</button>
-                  <button title="Duplicate as new" @click=${(e: Event) => { e.stopPropagation(); this._previewThemeName = null; this._onDuplicateTheme(name, isBuiltin); }}>⧉</button>
-                  ${isCustom ? html`<button class="delete-btn" title="Delete" @click=${(e: Event) => { e.stopPropagation(); this._onDelete(name); }}>✕</button>` : nothing}
+                  <button title="Edit" @click=${(e: Event) => { e.stopPropagation(); this._previewThemeName = null; void this._onEditTheme(name, isBuiltin); }}>✎</button>
+                  <button title="Duplicate as new" @click=${(e: Event) => { e.stopPropagation(); this._previewThemeName = null; void this._onDuplicateTheme(name, isBuiltin); }}>⧉</button>
+                  ${isCustom ? html`<button class="delete-btn" title="Delete" @click=${(e: Event) => { e.stopPropagation(); void this._onDelete(name); }}>✕</button>` : nothing}
                 </div>
               </div>
             `;

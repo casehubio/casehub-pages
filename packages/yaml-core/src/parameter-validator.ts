@@ -160,6 +160,7 @@ function validateConstraints(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class ParameterValidator {
   static validate(
     declared: Record<string, YamlModuleParameter>,

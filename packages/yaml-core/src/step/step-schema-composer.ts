@@ -7,6 +7,7 @@ const DECORATOR_KEYS = [
   'semaphore', 'barrier', 'quorum', 'race',
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class StepSchemaComposer {
   static compose(catalog: StepCatalog): Record<string, unknown> {
     const oneOf: Record<string, unknown>[] = [];

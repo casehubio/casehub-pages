@@ -1,0 +1,12 @@
+{
+  "extends": "@casehubio/pages-tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "experimentalDecorators": true
+  },
+  "include": [
+    "packages/pages-builder/demo/main.ts",
+    "packages/pages-schema/scripts/generate-schemas.ts"
+  ]
+}

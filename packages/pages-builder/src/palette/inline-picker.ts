@@ -36,7 +36,7 @@ export class PagesBuilderInlinePicker extends LitElement {
       this._activeCategory = undefined;
       this._recompute();
       this._positionNearAnchor();
-      this.updateComplete.then(() => {
+      void this.updateComplete.then(() => {
         this.shadowRoot?.querySelector<HTMLInputElement>('.picker-search')?.focus();
       });
     }

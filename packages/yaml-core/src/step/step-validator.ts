@@ -7,6 +7,7 @@ export interface StepViolation {
   message: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class StepValidator {
   static validateInputs(
     actionName: string,

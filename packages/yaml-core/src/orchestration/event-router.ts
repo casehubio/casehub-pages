@@ -15,7 +15,7 @@ export class EventRouter<S extends string> {
     private readonly mappings: EventMapping<S>[],
   ) {}
 
-  fire(event: string | unknown, context?: unknown): boolean {
+  fire(event: unknown, context?: unknown): boolean {
     const eventStr = typeof event === 'string' ? event : String(event);
     const currentState = this.target.currentState();
     for (const mapping of this.mappings) {

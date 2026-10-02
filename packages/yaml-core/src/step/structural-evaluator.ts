@@ -44,7 +44,7 @@ export class StructuralStepEvaluator {
     return chain.execute({ ...context, params: step.params, stepName: step.name ?? 'anonymous' });
   }
 
-  private async evaluateInvoke(step: InvokeStep, context: StepContext): Promise<StepResult> {
+  private async evaluateInvoke(step: InvokeStep, _context: StepContext): Promise<StepResult> {
     return stepFailure(`Invoke step '${step.name ?? 'anonymous'}' requires a runtime invoke handler`);
   }
 

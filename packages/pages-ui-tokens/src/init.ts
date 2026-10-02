@@ -20,9 +20,9 @@ import { LocalStorageThemeStorage } from './theme-storage.js';
 try {
   if (typeof globalThis.localStorage === 'undefined') throw new Error('no localStorage');
   const storage = new LocalStorageThemeStorage();
-  storage.list().then(names => {
+  void storage.list().then(names => {
     for (const name of names) {
-      storage.load(name).then(config => {
+      void storage.load(name).then(config => {
         if (!config) return;
         try {
           const tokens = runPipeline(config);

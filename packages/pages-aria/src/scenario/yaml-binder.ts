@@ -74,9 +74,10 @@ function buildQueueTree(
       }
       (currentQueue.steps as unknown[]).push(step);
     } else if (isOrchestration(step) && step.construct === 'trigger') {
-      const triggerQueue = new StepQueue(`trigger-${triggers.size}`, (step as any).steps);
-      triggerQueue.suspend((step as any).trigger);
-      triggers.set(triggerQueue.id, (step as any).trigger);
+      const triggerStep = step as Extract<OrchestratedStep, { construct: 'trigger' }>;
+      const triggerQueue = new StepQueue(`trigger-${triggers.size}`, triggerStep.steps);
+      triggerQueue.suspend(triggerStep.trigger);
+      triggers.set(triggerQueue.id, triggerStep.trigger);
       allQueues.push(triggerQueue);
     } else {
       if ((step as OrchestratedStep).decorators?.mutex) {

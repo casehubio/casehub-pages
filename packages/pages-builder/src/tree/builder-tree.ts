@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { RovingTabindexMixin, KeyboardShortcutMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
 import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
 import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
+import { lookupRecord } from '../data/lookup-record.js';
 import { computeMenuItems } from './tree-context-menu.js';
 
 import '@casehubio/pages-primitives/context-menu';
@@ -27,8 +28,8 @@ function componentLabel(comp: ComponentNode): string {
   if (typeof props['title'] === 'string') return props['title'];
   const lookupRaw = props['lookup'];
   if (lookupRaw != null && typeof lookupRaw === 'object') {
-    const lookup = typeof (lookupRaw as any).toJSON === 'function' ? (lookupRaw as any).toJSON() : lookupRaw as Record<string, unknown>;
-    if (typeof lookup['uuid'] === 'string') return lookup['uuid'];
+    const lookup = lookupRecord(lookupRaw);
+    if (typeof lookup?.['uuid'] === 'string') return lookup['uuid'];
   }
   return catalogByType.get(comp.type)?.label ?? comp.type;
 }
@@ -308,6 +309,13 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
 
   private _isExpanded(path: readonly (string | number)[]): boolean {
     return this._expandedPaths.has(pathKey(path));
+  }
+
+  expandPath(path: readonly (string | number)[]): void {
+    const key = pathKey(path);
+    if (!this._expandedPaths.has(key)) {
+      this._expandedPaths = new Set([...this._expandedPaths, key]);
+    }
   }
 
   private _toggleExpanded(path: readonly (string | number)[]): void {

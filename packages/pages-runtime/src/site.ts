@@ -8,9 +8,7 @@ import {ALLOW_ALL} from "@casehubio/pages-component";
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {LayoutStore} from "./layout-store.js";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
-import {createZoneLayoutEngine} from "./zone-layout-engine.js";
 import type {DockZone} from "@casehubio/pages-component";
-import type {DockWorkbenchConfig} from "@casehubio/pages-ui/dist/dsl/builders.js";
 import {renderComponent} from "@casehubio/pages-component";
 import type {CellValue, Column, ColumnId, DataSetId} from "@casehubio/pages-data";
 import type {
@@ -203,7 +201,7 @@ export async function loadSite(
   const componentViewState = createComponentViewState();
   const dockState = new Map<string, boolean>();
   const splitRatios = new Map<string, readonly number[]>();
-  let zoneEngine: ZoneLayoutEngine | undefined = options?.zoneEngine;
+  const zoneEngine: ZoneLayoutEngine | undefined = options?.zoneEngine;
   let layoutSaveTimer: ReturnType<typeof setTimeout> | undefined;
   let containerStateStash: ContainerState | undefined;
   const floatingWorkspaceRef: {

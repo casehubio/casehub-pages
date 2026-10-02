@@ -82,9 +82,6 @@ function expandAriaShorthand(raw: Record<string, unknown>): ScenarioStep {
   return step;
 }
 
-const ORCHESTRATION_KEYS = new Set(['concurrent', 'signal', 'await', 'delay', 'trigger']);
-const DECORATOR_KEYS = new Set(['mutex', 'retry', 'loop', 'when', 'timeout', 'delay']);
-const DELIVERY_KEYS = new Set(['simulated', 'graphql']);
 
 function extractDecorators(raw: Record<string, unknown>): StepDecorators | undefined {
   const decorators: StepDecorators = {};

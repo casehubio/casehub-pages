@@ -186,7 +186,7 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
           this._showPickerAtPaneClick();
           break;
         case 'graph:connect:end-on-empty':
-          this._showPickerAtConnectEnd(e.detail?.payload);
+          this._showPickerAtConnectEnd((e.detail?.payload as { sourceNodeId?: string } | undefined) ?? {});
           break;
       }
     };
@@ -375,7 +375,7 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
           if (newNode) {
             try {
               yaml = this._applyGraphEdit(yaml, { type: 'addEdge', sourceId: sourceNodeId, targetId: newNode.id });
-            } catch (_) { /* edge creation may not be supported for all type pairs */ }
+            } catch { /* edge creation may not be supported for all type pairs */ }
           }
           this._currentYaml = yaml;
           void this._fullRender(yaml);

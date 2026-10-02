@@ -1,5 +1,4 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { PageDocument } from '@casehubio/pages-document';
 import './builder-shell.js';
 import type { PagesBuilderShell } from './builder-shell.js';
 import type { PagesBuilderTree } from '../tree/builder-tree.js';

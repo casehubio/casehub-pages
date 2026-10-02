@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { FieldSchema } from "@casehubio/pages-component";
 import type { PagesObjectGroup } from "./PagesObjectGroup.js";
 import "./PagesObjectGroup.js";
 

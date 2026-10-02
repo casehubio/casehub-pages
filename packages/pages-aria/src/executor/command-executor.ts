@@ -114,20 +114,17 @@ async function progressiveInsert(
   editor: ReturnType<typeof resolveEditor>,
   text: string,
   speed: number,
-  finishFn: (remaining: string) => void,
+  _finishFn: (remaining: string) => void,
 ): Promise<void> {
-  const chars = [...text];
   const charDelay = Math.max(10, 40 / speed);
   const wordDelay = Math.max(20, 60 / speed);
   const words = text.split(/(\s+)/);
-  let charIndex = 0;
 
   const phase0End = Math.min(5, words.length);
   for (let w = 0; w < phase0End; w++) {
     const word = words[w]!;
     for (const ch of word) {
       editor.insertText(ch);
-      charIndex++;
       await new Promise(r => setTimeout(r, charDelay));
     }
   }
@@ -145,7 +142,6 @@ async function progressiveInsert(
         batch += words[wordIndex]!;
       }
       editor.insertText(batch);
-      charIndex += batch.length;
       count++;
       await new Promise(r => setTimeout(r, wordDelay));
     }

@@ -1,4 +1,4 @@
-import type { ForEachDirective, IterationGroup, VariableSource } from './types.js';
+import type { ForEachDirective, IterationGroup } from './types.js';
 import { forEachContextSource } from './types.js';
 import { isTruthy } from './truthiness.js';
 import type { VariableResolver } from './variable-resolver.js';
@@ -77,6 +77,7 @@ function extractValue(stampedId: string): string | null {
   return dot >= 0 ? stampedId.substring(dot + 1) : null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class ForEachExpander {
   static expand<E>(
     elements: Map<string, E>,

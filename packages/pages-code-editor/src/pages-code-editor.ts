@@ -1,7 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import { EditorView, lineNumbers as cmLineNumbers, keymap, drawSelection } from '@codemirror/view';
-import { EditorState, Compartment, type Extension } from '@codemirror/state';
+import { EditorState, Compartment, type ChangeSpec, type Extension } from '@codemirror/state';
 import { indentUnit, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
@@ -123,6 +123,20 @@ export class PagesCodeEditor extends LitElement {
   private _editorView: EditorView | null = null;
   private _pendingCreate = false;
   private _suppressUpdate = false;
+
+  get editorView(): EditorView | null {
+    return this._editorView;
+  }
+
+  applyChangesSilently(changes: readonly ChangeSpec[]): void {
+    if (!this._editorView || changes.length === 0) return;
+    this._suppressUpdate = true;
+    try {
+      this._editorView.dispatch({ changes });
+    } finally {
+      this._suppressUpdate = false;
+    }
+  }
 
   private _languageCompartment = new Compartment();
   private _readonlyCompartment = new Compartment();

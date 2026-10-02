@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import type {
-  StepAction, StepResult, ResolvedStep, PluginStep, BlockStep,
+  StepAction, StepResult, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
-  BarrierStep, QuorumStep, CatalogEntry, SelectStep,
+  BarrierStep, QuorumStep, CatalogEntry,
 } from './step-walker.js';
 import { stepSuccess, stepFailure, MapServiceRegistry } from './step-walker.js';
 import { StructuralStepEvaluator } from './structural-evaluator.js';

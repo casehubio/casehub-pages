@@ -3,6 +3,7 @@ import { parseStepParameterType } from '../types.js';
 import type { StepParameterType } from '../types.js';
 import { RUNTIME_PYTHON, RUNTIME_NODE } from './step-types.js';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class StepDefinitionParser {
   static parse(raw: Record<string, unknown>): StepDefinitionFile {
     const namespace = raw['namespace'] as string | undefined;

@@ -81,8 +81,9 @@ export function collectComponentsInScope(
         const props = c.getProperties();
         const lookup = props['lookup'];
         if (lookup && typeof lookup === 'object') {
-          const plain = typeof (lookup as any).toJSON === 'function' ? (lookup as any).toJSON() : lookup;
-          if (plain['uuid'] === ds.uuid) results.push(c);
+          const serializer = lookup as { toJSON?: () => unknown };
+          const plain: unknown = typeof serializer.toJSON === 'function' ? serializer.toJSON() : lookup;
+          if (typeof plain === 'object' && plain !== null && 'uuid' in plain && plain.uuid === ds.uuid) results.push(c);
         }
       };
       const mode = page.getLayoutMode();

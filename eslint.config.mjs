@@ -5,7 +5,13 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          defaultProject: 'tsconfig.eslint.json',
+          allowDefaultProject: [
+            'packages/pages-builder/demo/*.ts',
+            'packages/pages-schema/scripts/*.ts',
+          ],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },

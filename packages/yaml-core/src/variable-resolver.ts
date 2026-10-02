@@ -81,7 +81,7 @@ export class VariableResolver {
     return value;
   }
 
-  private resolveObjectValue(template: string, elementContext: string): unknown | undefined {
+  private resolveObjectValue(template: string, _elementContext: string): unknown {
     const wholeVarMatch = /^\s*\$\{([^}]+)}\s*$/.exec(template);
     if (!wholeVarMatch) return undefined;
     const key = wholeVarMatch[1]!;

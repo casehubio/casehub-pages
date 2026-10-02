@@ -1,4 +1,4 @@
-import type { LayoutRule, HardConstraint, LayoutNode, LayoutEdge, LayoutViolation } from './types.js';
+import type { LayoutRule, HardConstraint, LayoutNode, LayoutViolation } from './types.js';
 
 export const INTERNAL_PAD = 30;
 export const HEADER_HEIGHT = 68;

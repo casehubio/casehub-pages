@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { StepAction, StepResult, ServiceRegistry } from './step-walker.js';
+import type { StepAction, StepResult } from './step-walker.js';
 import { stepSuccess, stepFailure } from './step-walker.js';
 import { DecoratorChain } from './decorator-chain.js';
 import type { StepContext } from './decorator-chain.js';

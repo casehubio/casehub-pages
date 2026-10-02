@@ -1,6 +1,5 @@
 import type { DataSetLookup, ColumnSettings, ColumnId, CellValue, TypedRow, Column } from "@casehubio/pages-data";
 import type { FilterSettings, RefreshSettings } from "./component-props.js";
-import type { FieldSchema } from "./form-input-types.js";
 import type { RowAccentConfig } from "./grouped-view-types.js";
 import type { CasehubEChartsExtension } from "./echarts-extension.js";
 import type { CasehubHeatmapExtension } from "./heatmap-extension.js";

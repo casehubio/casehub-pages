@@ -108,7 +108,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     if (this._palette) {
       for (const field of Object.keys(this._resolvedSchema?.properties ?? {})) {
         if (this._compositeRefs.has(field)) continue;
-        const el = this._palette.getFieldElement(field) as any;
+        const el = this._palette.getFieldElement(field) as (HTMLElement & { checked?: boolean; value?: unknown }) | undefined;
         if (el) {
           if (el.tagName.toLowerCase() === "pages-checkbox") {
             record[field] = el.checked;
@@ -158,7 +158,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
 
     if (this._fieldsOnly) {
       const fields = Object.keys(enrichedSchema.properties ?? {});
-      this.updateComplete.then(async () => {
+      void this.updateComplete.then(async () => {
         const palette = this._palette;
         if (!palette) return;
         await palette.updateComplete;
@@ -189,7 +189,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     `;
   }
 
-  private _enrichSchema(schema: FieldSchema, props: SchemaFormProps, dataset: TypedDataSet): FieldSchema {
+  private _enrichSchema(schema: FieldSchema, props: SchemaFormProps, _dataset: TypedDataSet): FieldSchema {
     const schemaProps = schema.properties;
     if (!schemaProps) return schema;
 

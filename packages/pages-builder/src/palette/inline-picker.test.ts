@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import './inline-picker.js';
 import type { PagesBuilderInlinePicker } from './inline-picker.js';
 import type { PaletteContext } from '../catalog/palette-context.js';

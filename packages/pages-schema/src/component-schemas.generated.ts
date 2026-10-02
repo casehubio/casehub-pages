@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { lookupSchema } from "@casehubio/pages-data";
 
-const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
+const fieldSchemaZod: z.ZodType = z.lazy(() =>
   z.looseObject({
     type: z.union([z.string(), z.array(z.string())]).optional(),
     format: z.string().optional(),

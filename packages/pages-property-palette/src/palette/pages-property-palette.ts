@@ -3,7 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import type { FieldSchema } from '@casehubio/pages-component';
 import { validateField } from '@casehubio/pages-ui-components/validation';
 import { resolveEditor } from '../resolver.js';
-import type { PropertyPaletteSource, EditorDescriptor, EditorResolver, FieldRenderContext } from '../types.js';
+import type { PropertyPaletteSource, EditorResolver, FieldRenderContext } from '../types.js';
 
 interface FieldEntry {
   key: string;
@@ -12,6 +12,10 @@ interface FieldEntry {
   group: string | undefined;
   advanced: boolean;
 }
+
+type PaletteFieldElement = HTMLElement & Record<string, unknown> & {
+  error: string | undefined;
+};
 
 const MAX_NESTING_DEPTH = 5;
 
@@ -240,10 +244,12 @@ export class PagesPropertyPalette extends LitElement {
 
     const cacheKey = [...path, key].join('.');
     this._activeKeys.add(cacheKey);
-    let el = this._elementCache.get(cacheKey) as any;
-    const isNew = !el || el.tagName.toLowerCase() !== tag;
+    const cached = this._elementCache.get(cacheKey) as PaletteFieldElement | undefined;
+    const el: PaletteFieldElement = cached?.tagName.toLowerCase() === tag
+      ? cached
+      : document.createElement(tag) as PaletteFieldElement;
+    const isNew = el !== cached;
     if (isNew) {
-      el = document.createElement(tag);
       this._elementCache.set(cacheKey, el);
     }
 
