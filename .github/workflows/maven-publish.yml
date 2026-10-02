@@ -47,6 +47,9 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
+      - name: Install tmux for terminal integration tests
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
