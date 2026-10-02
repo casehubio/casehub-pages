@@ -1,6 +1,5 @@
-import type { DataSetId, TypedDataSet, Column } from "./types.js";
+import type { DataSetId, TypedDataSet } from "./types.js";
 import type { DataSetLookup } from "./lookup.js";
-import type { DataSetOp, ResolvedDataSetOp } from "./ops.js";
 import { applyOps } from "./ops.js";
 import { resolveOps } from "./ops-resolve.js";
 import { DataSetError } from "./errors.js";

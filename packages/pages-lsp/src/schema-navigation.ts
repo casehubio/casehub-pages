@@ -102,10 +102,10 @@ function getShape(schema: z.ZodType): Record<string, z.ZodType> | null {
 export function unwrap(schema: z.ZodType): z.ZodType {
   const tn = typeName(schema);
   if (tn === 'optional' || tn === 'default' || tn === 'nullable') {
-    return unwrap((schema as any)._zod.def.innerType);
+    return unwrap((schema._zod.def as unknown as { innerType: z.ZodType }).innerType);
   }
   if (tn === 'lazy') {
-    return unwrap((schema as any)._zod.def.getter());
+    return unwrap((schema._zod.def as unknown as { getter: () => z.ZodType }).getter());
   }
   return schema;
 }
@@ -114,7 +114,7 @@ function navigateObjectKey(shape: Record<string, z.ZodType>, key: string): z.Zod
   if (!(key in shape)) return null;
   let field = unwrap(shape[key] as z.ZodType);
   if (typeName(field) === 'array') {
-    field = unwrap((field as any)._zod.def.element);
+    field = unwrap((field._zod.def as unknown as { element: z.ZodType }).element);
   }
   return field;
 }
@@ -155,7 +155,7 @@ export function navigateSchema(
       if (!result) return null;
       current = result;
     } else if (tn === 'array') {
-      current = unwrap((current as any)._zod.def.element);
+      current = unwrap((current._zod.def as unknown as { element: z.ZodType }).element);
       const innerShape = getShape(current);
       if (!innerShape) return null;
       const result = navigateObjectKey(innerShape, key);
@@ -224,9 +224,9 @@ function describeType(schema: z.ZodType): string | undefined {
   if (tn === 'number') return 'number';
   if (tn === 'boolean') return 'boolean';
   if (tn === 'enum') {
-    const entries = (schema as any)._zod.def.entries;
+    const entries: unknown = (schema as any)._zod.def.entries;
     if (Array.isArray(entries)) return entries.join(' | ');
-    return Object.values(entries).filter((v: unknown) => typeof v === 'string').join(' | ');
+    return Object.values(entries as Record<string, unknown>).filter((v: unknown) => typeof v === 'string').join(' | ');
   }
   if (tn === 'array') return 'array';
   if (tn === 'object') return 'object';
@@ -253,11 +253,11 @@ export function schemaToCompletions(schema: z.ZodType, siblings?: Record<string,
   }
 
   if (tn === 'enum') {
-    const entries = (unwrapped as any)._zod.def.entries;
+    const entries: unknown = (unwrapped as any)._zod.def.entries;
     if (Array.isArray(entries)) {
       return entries.map((v: string) => ({ label: v, type: 'enum' as const }));
     }
-    const values = Object.values(entries).filter((v: unknown): v is string => typeof v === 'string');
+    const values = Object.values(entries as Record<string, unknown>).filter((v: unknown): v is string => typeof v === 'string');
     return values.map((v) => ({ label: v, type: 'enum' as const }));
   }
 

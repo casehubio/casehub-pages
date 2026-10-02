@@ -1,8 +1,8 @@
-import { LitElement, html, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { GraphCanvasProps, DataComponentCommon } from '@casehubio/pages-component';
 import { DataSourceController } from '@casehubio/pages-component';
-import type { DataSetLookup, TypedDataSet, ColumnId } from '@casehubio/pages-data';
+import type { DataSetLookup, TypedDataSet } from '@casehubio/pages-data';
 import type { GraphModel, GraphNode, GraphEdge } from '@casehubio/graph-core';
 import type { EditPolicy, GraphEdit } from '../editing/types.js';
 import type { ElkLayoutOptions } from '../layout/elk-layout.js';

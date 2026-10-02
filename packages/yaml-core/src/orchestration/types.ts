@@ -29,8 +29,7 @@ export interface OrcChannel<T> {
   receive(): Promise<T>;
   receive(timeoutMs: number): Promise<T | undefined>;
   isEmpty(): boolean;
-  close(): void;
-  close(cause: Error): void;
+  close(cause?: Error): void;
   isErrorClosed(): boolean;
   closeError(): Error | undefined;
 }

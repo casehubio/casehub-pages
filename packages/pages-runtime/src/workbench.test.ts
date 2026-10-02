@@ -1,7 +1,6 @@
 import { loadSite } from "./site.js";
 import { registerPanel, clearPanelRegistry } from "./panel-registry.js";
 import type { Component } from "@casehubio/pages-component";
-import { dockWorkbench, html } from "@casehubio/pages-ui/dist/dsl/builders.js";
 
 describe("workbench integration", () => {
   afterEach(() => {
@@ -162,4 +161,3 @@ describe.skip("applyDockState integration (uses standalone dock-bar — removed 
     document.body.removeChild(target);
   });
 });
-

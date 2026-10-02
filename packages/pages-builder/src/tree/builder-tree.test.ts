@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { PageDocument } from '@casehubio/pages-document';
-import { buildTreeModel, PagesBuilderTree, type TreeNodeInfo } from './builder-tree.js';
+import { buildTreeModel, PagesBuilderTree } from './builder-tree.js';
 import { computeMenuItems } from './tree-context-menu.js';
 
 const MINIMAL_PAGE = `pages:

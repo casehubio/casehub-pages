@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { registerTheme, listThemes, _resetThemeRegistry, _resetAppliedThemes, applyTheme } from './runtime.js';
-import { initPresets, registerCoreTransforms } from './transforms/index.js';
+import { initPresets } from './transforms/index.js';
 
 function createMockLocalStorage(): Storage {
   const store = new Map<string, string>();
@@ -81,7 +81,7 @@ describe('pages-theme-designer', () => {
   it('renders colour preview swatches', async () => {
     designer.open = true;
     await designer.updateComplete;
-    const swatches = designer.shadowRoot?.querySelectorAll('.swatch-row');
+    const swatches = designer.shadowRoot?.querySelectorAll('.swatch-section');
     expect(swatches?.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -182,7 +182,7 @@ describe('advanced mode', () => {
   });
 
   it('shows simple mode controls by default', () => {
-    const simplePanel = designer.shadowRoot?.querySelector('.simple-controls');
+    const simplePanel = designer.shadowRoot?.querySelector('.tab-bar');
     expect(simplePanel).not.toBeNull();
     const pipelinePanel = designer.shadowRoot?.querySelector('.pipeline-editor');
     expect(pipelinePanel).toBeNull();
@@ -193,7 +193,7 @@ describe('advanced mode', () => {
     await designer.updateComplete;
     const pipelinePanel = designer.shadowRoot?.querySelector('.pipeline-editor');
     expect(pipelinePanel).not.toBeNull();
-    const simplePanel = designer.shadowRoot?.querySelector('.simple-controls');
+    const simplePanel = designer.shadowRoot?.querySelector('.tab-bar');
     expect(simplePanel).toBeNull();
   });
 

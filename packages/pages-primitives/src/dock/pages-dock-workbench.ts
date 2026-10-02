@@ -280,7 +280,7 @@ export class PagesDockWorkbench extends LitElement {
         ...(this.zoneMap ? { zones: Object.fromEntries(this.zoneMap) } : {}),
       };
       if (this.layoutStore) {
-        this.layoutStore.save(this.persistKey!, state as unknown as LayoutState);
+        void this.layoutStore.save(this.persistKey!, state as unknown as LayoutState);
       } else if (typeof localStorage !== 'undefined') {
         localStorage.setItem(this.persistKey!, JSON.stringify(state));
       }

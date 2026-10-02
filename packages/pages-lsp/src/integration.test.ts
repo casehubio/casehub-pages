@@ -135,7 +135,7 @@ describe('integration: Page YAML', () => {
     expect(labels).toContain('data');
   });
 
-  it('offers forEach and when on component elements', () => {
+  it('offers forEach and if on component elements', () => {
     const registry = createSchemaRegistry();
     registry.register(pageFormat);
     const doc = 'pages:\n  - name: Home\n    components:\n      - type: title\n        ';
@@ -148,7 +148,7 @@ describe('integration: Page YAML', () => {
     );
     const labels = items.map(i => i.label);
     expect(labels).toContain('- forEach');
-    expect(labels).toContain('- when');
+    expect(labels).toContain('- if');
   });
 
   it('detects page format by modules key in content', () => {

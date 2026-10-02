@@ -22,7 +22,7 @@ export interface ScenarioEditableText {
 }
 
 const addHighlight = StateEffect.define<{ from: number; to: number; class: string }>();
-const clearAllHighlights = StateEffect.define<null>();
+const clearAllHighlights = StateEffect.define();
 
 const highlightField = StateField.define<DecorationSet>({
   create: () => Decoration.none,

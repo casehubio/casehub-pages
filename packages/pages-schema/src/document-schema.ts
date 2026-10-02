@@ -90,7 +90,7 @@ export const componentSchema: z.ZodType = z.discriminatedUnion("type", [
   componentBase.extend({ type: z.literal("submit-button"), properties: submitButtonPropsSchema.optional() }),
 ]);
 
-const navItemSchema: z.ZodType<unknown> = z.lazy(() =>
+const navItemSchema: z.ZodType = z.lazy(() =>
   z.object({
     type: z.enum(["GROUP", "ITEM"]).optional(),
     id: z.string().optional(),

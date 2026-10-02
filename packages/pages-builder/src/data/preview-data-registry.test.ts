@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createDefaultRegistry } from './preview-data-registry.js';
-import { COMPONENT_CATALOG, type PreviewHints } from '../catalog/component-catalog.js';
+import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
 import { PageDocument } from '@casehubio/pages-document';
 
 const NEEDS_DATASET_TYPES = new Set([

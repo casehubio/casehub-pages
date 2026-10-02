@@ -80,6 +80,7 @@ function coerceValue(type: ValueType, raw: string): unknown {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class TypedVariables {
   static parse(declarations: Record<string, string>): TypedMap {
     const entries: Record<string, TypedEntry> = {};

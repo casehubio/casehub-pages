@@ -1,5 +1,6 @@
 import type { DatasetNode } from '@casehubio/pages-document';
 import type { PreviewDataStrategy, DatasetSnapshot } from '../preview-data-registry.js';
+import { lookupRecord } from '../lookup-record.js';
 
 const NAMES = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve', 'Frank', 'Grace', 'Hank', 'Ivy', 'Jack', 'Kim', 'Leo'];
 const REGIONS = ['North', 'South', 'East', 'West', 'Central'];
@@ -24,7 +25,7 @@ export class TableDataStrategy implements PreviewDataStrategy {
   generate(props: Record<string, unknown>, datasets: DatasetNode[]): DatasetSnapshot[] {
     const lookupRaw = props['lookup'];
     if (!lookupRaw) return [];
-    const lookup = typeof (lookupRaw as any).toJSON === 'function' ? (lookupRaw as any).toJSON() : lookupRaw as Record<string, unknown>;
+    const lookup = lookupRecord(lookupRaw);
     if (!lookup?.['uuid']) return [];
     const uuid = String(lookup['uuid']);
     const ds = datasets.find(d => d.uuid === uuid);

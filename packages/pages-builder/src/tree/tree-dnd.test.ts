@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeDropTarget, isValidDrop, type DropTarget } from './tree-dnd.js';
+import { computeDropTarget, isValidDrop } from './tree-dnd.js';
 
 describe('tree-dnd', () => {
   describe('computeDropTarget', () => {

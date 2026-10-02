@@ -18,7 +18,7 @@ export class StepQueue {
     if (parent) parent.children.push(this);
   }
 
-  currentStep(): unknown | undefined {
+  currentStep(): unknown {
     return this.position < this.steps.length ? this.steps[this.position] : undefined;
   }
 

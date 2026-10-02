@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { StepCatalog, CatalogEntry, StepAction, StepResult } from './step-walker.js';
+import type { StepCatalog, CatalogEntry, StepAction } from './step-walker.js';
 import { StepWalker, stepSuccess } from './step-walker.js';
 
 const noopAction: StepAction = {

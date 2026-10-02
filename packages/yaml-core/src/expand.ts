@@ -3,14 +3,13 @@ import type {
   VariableSource, YamlImport, YamlModule,
 } from './types.js';
 import {
-  UnresolvedVariableError, forEachContextSource, nestedSource,
+  UnresolvedVariableError, nestedSource,
   parseForEachDirective,
 } from './types.js';
-import { isTruthy } from './truthiness.js';
 import { VariableResolver } from './variable-resolver.js';
 import { ModuleExpander } from './module-expander.js';
 import { ForEachExpander } from './foreach-expander.js';
-import type { ForEachAdapter, Reference } from './foreach-expander.js';
+import type { ForEachAdapter } from './foreach-expander.js';
 import { CsvParser } from './csv-parser.js';
 import type { CsvDataSource } from './csv-parser.js';
 import { ImportExpander } from './import-expander.js';
@@ -179,7 +178,7 @@ export function expand(
 
   const iterationGroups = parseIterationGroups(rawIterations);
 
-  let workingMap = { ...map };
+  const workingMap = { ...map };
 
   const modules = parseModules(rawModules);
   const rawParsedImports = parseImports(rawImports);
@@ -240,7 +239,7 @@ export function expand(
               };
             }
           }
-          return item;
+          return item as unknown;
         });
       } else {
         resultMap[key] = resolved;

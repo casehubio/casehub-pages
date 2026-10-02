@@ -111,7 +111,7 @@ export class PagesTutorialHost extends LitElement {
       if (this._currentSection < this._totalSections - 1) {
         this._runner.runTo(this._sectionTitles[this._currentSection + 1]);
       } else {
-        this._runner.step();
+        void this._runner.step();
       }
     }
   }

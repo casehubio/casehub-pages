@@ -1,6 +1,5 @@
 import { parse as parseYaml } from 'yaml';
 import { expand } from '@casehubio/yaml-core/expand';
-import type { YamlEditorSection } from './types.js';
 
 export interface ValidationResult {
   valid: boolean;

@@ -83,6 +83,7 @@ function parseRow(
   return row;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class CsvParser {
   static parse(name: string, csvContent: string): CsvDataSource {
     const lines = csvContent.split('\n')

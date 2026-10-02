@@ -112,7 +112,7 @@ function propToZodField(prop: MorphSymbol, depth: number): string {
 }
 
 function kebabToCamel(s: string): string {
-  return s.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  return s.replace(/-([a-z])/g, (_match: string, c: string) => c.toUpperCase());
 }
 
 const project = new Project({
@@ -127,7 +127,7 @@ const typeGuardsFile = project.getSourceFileOrThrow(
 const registry = typeGuardsFile.getInterfaceOrThrow("ComponentTypeRegistry");
 const registryType = registry.getType();
 
-const fieldSchemaBlock = `const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
+const fieldSchemaBlock = `const fieldSchemaZod: z.ZodType = z.lazy(() =>
   z.looseObject({
     type: z.union([z.string(), z.array(z.string())]).optional(),
     format: z.string().optional(),

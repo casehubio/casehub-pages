@@ -28,10 +28,10 @@ function describeSchema(schema: z.ZodType): string {
   else if (tn === 'number') parts.push('Type: `number`');
   else if (tn === 'boolean') parts.push('Type: `boolean`');
   else if (tn === 'enum') {
-    const entries = (unwrapped as any)._zod.def.entries;
+    const entries: unknown = (unwrapped as any)._zod.def.entries;
     const values = Array.isArray(entries)
       ? entries
-      : Object.values(entries).filter((v: unknown) => typeof v === 'string') as string[];
+      : Object.values(entries as Record<string, unknown>).filter((v: unknown) => typeof v === 'string') as string[];
     parts.push('Values: ' + values.map((v: string) => '`' + v + '`').join(', '));
   }
   else if (tn === 'array') parts.push('Type: `array`');

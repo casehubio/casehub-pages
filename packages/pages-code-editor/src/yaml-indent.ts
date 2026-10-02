@@ -1,4 +1,4 @@
-import { keymap, type KeyBinding, type EditorView } from '@codemirror/view';
+import { keymap, type KeyBinding } from '@codemirror/view';
 import type { Extension } from '@codemirror/state';
 
 export function computeNewlineIndent(line: string, tabSize: number): string {

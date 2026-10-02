@@ -51,7 +51,7 @@ const smartEdgeTypes: EdgeTypes = new Proxy({ default: SmartBezierEdge } as Edge
   get(target, prop) {
     if (prop === 'default' || prop === 'smart') return SmartBezierEdge;
     if (typeof prop === 'string') return AutoBezierEdge;
-    return Reflect.get(target, prop);
+    return Reflect.get(target, prop) as unknown;
   },
 });
 

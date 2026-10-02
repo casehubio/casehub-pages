@@ -410,7 +410,7 @@ export class PageNode {
       const compsSeq = doc.getIn(compsPath);
       if (!isSeq(compsSeq)) throw new Error('No components to wrap');
       const items = (compsSeq as YAMLSeq).items;
-      const collected = sorted.map(i => JSON.parse(JSON.stringify(items[i])));
+      const collected = sorted.map(i => JSON.parse(JSON.stringify(items[i])) as unknown);
       for (let i = sorted.length - 1; i >= 0; i--) {
         items.splice(sorted[i]!, 1);
       }
@@ -421,7 +421,7 @@ export class PageNode {
         const rowsPath = [...this.path, 'rows'];
         const allRows: Record<string, unknown>[] = [rowData];
         if (remaining.length > 0) {
-          allRows.push({ columns: [{ span: 12, components: remaining.map(r => JSON.parse(JSON.stringify(r))) }] });
+          allRows.push({ columns: [{ span: 12, components: remaining.map(r => JSON.parse(JSON.stringify(r)) as unknown) }] });
         }
         doc.setIn(rowsPath, doc.createNode(allRows));
       } else {
@@ -752,7 +752,8 @@ export class ComponentNode {
       const entry: Record<string, unknown> = { type: newType };
       const compatible: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(oldProps)) {
-        const jsVal = typeof (value as any)?.toJSON === 'function' ? (value as any).toJSON() : value;
+        const serializer = value as { toJSON?: () => unknown } | null;
+        const jsVal = serializer !== null && typeof serializer?.toJSON === 'function' ? serializer.toJSON() : value;
         if (targetSchema) {
           if (targetSchema instanceof z.ZodObject && !(key in targetSchema.shape)) continue;
         }
