@@ -27,6 +27,10 @@ function queryFields(form: PagesSchemaForm, selector: string): Element[] {
   return [...form.shadowRoot!.querySelectorAll(selector)];
 }
 
+function fieldLabel(input: Element): string | undefined {
+  return input.closest(".field-wrapper")?.querySelector(".field-label")?.textContent?.trim();
+}
+
 function makeDataSet(
   columns: Array<[string, string]>,
   data: (string | number | null)[][],
@@ -231,9 +235,9 @@ describe("PagesSchemaForm — field customization", () => {
 
     const inputs = queryFields(form, "pages-input");
     expect(inputs.length).toBe(3);
-    expect((inputs[0] as any).label).toBe("C");
-    expect((inputs[1] as any).label).toBe("A");
-    expect((inputs[2] as any).label).toBe("B");
+    expect(fieldLabel(inputs[0]!)).toBe("C");
+    expect(fieldLabel(inputs[1]!)).toBe("A");
+    expect(fieldLabel(inputs[2]!)).toBe("B");
   });
 
   it("labels override auto-generated labels", async () => {
@@ -247,7 +251,7 @@ describe("PagesSchemaForm — field customization", () => {
     await awaitForm(form);
 
     const numInput = queryField(form, "pages-number-input") as any;
-    expect(numInput.label).toBe("Years of Experience");
+    expect(fieldLabel(numInput)).toBe("Years of Experience");
   });
 });
 
@@ -276,7 +280,7 @@ describe("PagesSchemaForm — events and data flow", () => {
     const textInput = queryField(form, "pages-input") as any;
     expect(textInput).not.toBeNull();
     expect(textInput.value).toBe("Alice");
-    expect(textInput.label).toBe("Name");
+    expect(fieldLabel(textInput)).toBe("Name");
   });
 
   it("display mode sets children as readonly", async () => {
