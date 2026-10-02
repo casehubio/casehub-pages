@@ -541,7 +541,7 @@ public class ScenarioOrchestrator {
     }
 
     private void stopTemporalDrivers() {
-        if (!temporalDriverServiceInstance.isResolvable()) {return;}
+        if (temporalDriverServiceInstance == null || !temporalDriverServiceInstance.isResolvable()) {return;}
         var service = temporalDriverServiceInstance.get();
         for (var status : service.list()) {
             try {

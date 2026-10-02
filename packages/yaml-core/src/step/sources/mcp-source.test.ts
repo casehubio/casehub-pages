@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { McpToolSource } from './mcp-source.js';
+import { McpToolSource, type McpToolInvoker } from './mcp-source.js';
 import type { StepDefinition } from '../step-types.js';
 import type { CatalogEntry } from '../step-walker.js';
 import type { MapServiceRegistry } from '../step-walker.js';
 
 const definition: StepDefinition = { name: 'myTool', inputs: {}, outputs: {} };
 
-function makeSource(invoker = vi.fn(async () => ({ result: 'ok' }))) {
+function makeSource(invoker: McpToolInvoker = vi.fn(async () => ({ result: 'ok' }))) {
   const tools = new Map<string, StepDefinition>([['myTool', definition]]);
   return { source: new McpToolSource(tools, invoker), invoker };
 }

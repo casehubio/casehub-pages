@@ -26,7 +26,7 @@ function catalogEntry(name: string, inputs: Record<string, { type: string }>): C
 describe('StepSchemaComposer', () => {
   it('compose produces JSON Schema with oneOf', () => {
     const catalog = mockCatalog({ greet: catalogEntry('greet', {}) });
-    const schema = StepSchemaComposer.compose(catalog) as { oneOf: unknown[] };
+    const schema = StepSchemaComposer.compose(catalog) as { type: string; oneOf: unknown[] };
     expect(schema.type).toBe('object');
     expect(Array.isArray(schema.oneOf)).toBe(true);
     expect(schema.oneOf.length).toBeGreaterThan(0);

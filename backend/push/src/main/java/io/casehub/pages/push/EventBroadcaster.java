@@ -17,14 +17,7 @@ public class EventBroadcaster {
     }
 
     public long broadcast(String topic, String payloadJson) {
-        if (topic.contains("*")) {
-            throw new IllegalArgumentException(
-                    "broadcast topic must not contain wildcards: " + topic);
-        }
-        if (topic.contains("/")) {
-            throw new IllegalArgumentException(
-                    "broadcast topic must use ':' separator, not '/': " + topic);
-        }
+        validateTopic(topic);
         long   seq  = eventStore.append(topic, payloadJson);
         String wire = PushMessage.event(topic, payloadJson, seq);
         for (String connId : topicRegistry.connections(topic)) {
@@ -38,7 +31,19 @@ public class EventBroadcaster {
         return seq;
     }
 
+    private static void validateTopic(String topic) {
+        if (topic.contains("*")) {
+            throw new IllegalArgumentException(
+                    "broadcast topic must not contain wildcards: " + topic);
+        }
+        if (topic.contains("/")) {
+            throw new IllegalArgumentException(
+                    "broadcast topic must use ':' separator, not '/': " + topic);
+        }
+    }
+
     public <T> long broadcast(String topic, T event) {
+        validateTopic(topic);
         String json;
         try {
             json = jsonWriter.toJson(event);

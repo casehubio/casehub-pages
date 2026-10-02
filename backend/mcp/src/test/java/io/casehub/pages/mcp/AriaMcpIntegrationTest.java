@@ -7,7 +7,7 @@ import io.casehub.pages.push.TopicRegistry;
 import io.casehub.pages.scenario.AriaTarget;
 import io.casehub.platform.api.mcp.McpDomain;
 import io.casehub.platform.mcp.DomainModel;
-import io.casehub.platform.mcp.ModelRegistry;
+import io.casehub.platform.mcp.DomainModelRegistry;
 import io.casehub.platform.mcp.OperationDescriptor;
 import io.casehub.platform.mcp.ParameterDescriptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * casehub_model → discovers aria domain with operations
  * casehub_action → ReflectiveOperationDispatcher → AriaResolver → AriaCommandBridge → push
  *
- * Uses the real platform MCP classes (ModelRegistry, OperationDescriptor) to verify
+ * Uses the real platform MCP classes (DomainModelRegistry, OperationDescriptor) to verify
  * that the AriaResolver is correctly wired for MCP discovery and dispatch.
  */
 class AriaMcpIntegrationTest {
@@ -99,9 +99,9 @@ class AriaMcpIntegrationTest {
 
         @Test
         void modelRegistryServesAriaDomain() {
-            var registry = new ModelRegistry();
+            var registry = new DomainModelRegistry();
             List<OperationDescriptor> ops = scanOperations(AriaResolver.class);
-            var model = new DomainModel("aria",
+            var model = new DomainModel("aria", "pages",
                     "ARIA interaction model", ops, List.of(), Map.of());
             registry.register(model);
 
