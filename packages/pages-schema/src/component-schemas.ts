@@ -80,6 +80,7 @@ export const dataTablePropsSchema = dataComponentCommonSchema.extend({
   resizable: z.boolean().optional(),
   selection: z.enum(["none", "single", "multi"]).optional(),
   selectionKey: z.string().optional(),
+  hiddenColumns: z.array(z.string()).optional(),
 });
 
 export const gridTablePropsSchema = dataComponentCommonSchema.extend({

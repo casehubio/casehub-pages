@@ -72,8 +72,7 @@ function processResultColumns(
   groupSource: string | null,
   columns: readonly ResultColumn[],
 ): readonly ResultColumn[] {
-  return columns.map((col) => {
-    // If this is a select column and its source matches the group key, make it a key column
+  const mapped = columns.map((col) => {
     if (col.kind === "select" && groupSource !== null && col.sourceId === (groupSource as ColumnId)) {
       return Object.freeze({
         ...col,
@@ -82,6 +81,17 @@ function processResultColumns(
     }
     return col;
   });
+
+  if (groupSource !== null && !mapped.some(c => c.sourceId === (groupSource as ColumnId))) {
+    const keyCol: ResultColumn = Object.freeze({
+      kind: "key" as const,
+      sourceId: groupSource as ColumnId,
+      columnId: groupSource as ColumnId,
+    });
+    return [keyCol, ...mapped];
+  }
+
+  return mapped;
 }
 
 // Filter builders

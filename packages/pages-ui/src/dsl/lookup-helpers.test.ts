@@ -62,6 +62,27 @@ describe("groupBy()", () => {
     const badSource = [] as unknown as string;
     expect(() => groupBy(badSource, col("phase"))).toThrow(/groupBy source must be a string/);
   });
+
+  it("auto-injects key column when groupBy source not in result columns", () => {
+    const g = groupBy("caseId", col("prNumber"), sum("revenue"));
+    expect(g.columns.length).toBe(3);
+    expect(g.columns[0]!.kind).toBe("key");
+    expect(g.columns[0]!.sourceId).toBe("caseId");
+    expect(g.columns[0]!.columnId).toBe("caseId");
+  });
+
+  it("does not double-inject key column when already explicitly included", () => {
+    const g = groupBy("region", col("region"), sum("revenue"));
+    expect(g.columns.length).toBe(2);
+    expect(g.columns[0]!.kind).toBe("key");
+  });
+
+  it("auto-injected key column works with groupByCalendar too", () => {
+    const g = groupByCalendar("created", "MONTH", sum("revenue"));
+    expect(g.columns.length).toBe(2);
+    expect(g.columns[0]!.kind).toBe("key");
+    expect(g.columns[0]!.sourceId).toBe("created");
+  });
 });
 
 describe("groupByCalendar()", () => {

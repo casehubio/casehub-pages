@@ -1053,6 +1053,33 @@ describe("dockWorkbench builder", () => {
       const masterSlot = result.slots!["0"]![0]!;
       expect((masterSlot.props as any).selectionKey).toBeUndefined();
     });
+
+    it("auto-adds selectionKey to hiddenColumns on master table", () => {
+      const master = dataTable({ lookup: { dataSetId: dataSetId("events"), operations: [] } });
+      const detail = hostPanel("event-detail");
+      const result = masterDetail({ master, detail, selectionKey: "caseId" });
+
+      const masterSlot = result.slots!["0"]![0]!;
+      expect((masterSlot.props as any).hiddenColumns).toEqual(["caseId"]);
+    });
+
+    it("preserves existing hiddenColumns when adding selectionKey", () => {
+      const master = dataTable({ lookup: { dataSetId: dataSetId("events"), operations: [] }, hiddenColumns: ["internal"] });
+      const detail = hostPanel("event-detail");
+      const result = masterDetail({ master, detail, selectionKey: "caseId" });
+
+      const masterSlot = result.slots!["0"]![0]!;
+      expect((masterSlot.props as any).hiddenColumns).toEqual(["internal", "caseId"]);
+    });
+
+    it("does not duplicate selectionKey in hiddenColumns when already present", () => {
+      const master = dataTable({ lookup: { dataSetId: dataSetId("events"), operations: [] }, hiddenColumns: ["caseId"] });
+      const detail = hostPanel("event-detail");
+      const result = masterDetail({ master, detail, selectionKey: "caseId" });
+
+      const masterSlot = result.slots!["0"]![0]!;
+      expect((masterSlot.props as any).hiddenColumns).toEqual(["caseId"]);
+    });
   });
 
   describe("dataTable()", () => {

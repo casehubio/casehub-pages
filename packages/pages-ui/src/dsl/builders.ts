@@ -590,9 +590,18 @@ export function masterDetail(config: {
   selectionKey?: string;
 }): TypedComponent<"split"> {
   const { master, detail, direction = "horizontal", ratio = [40, 60], selectionKey } = config;
+  const existingHidden = (master.props as Record<string, unknown> | undefined)?.hiddenColumns as readonly string[] | undefined;
+  const hiddenColumns = selectionKey
+    ? [...(existingHidden ?? []), ...(existingHidden?.includes(selectionKey) ? [] : [selectionKey])]
+    : existingHidden;
   const wiredMaster = freeze({
     ...master,
-    props: { ...master.props, selection: "single" as const, ...(selectionKey ? { selectionKey } : {}) },
+    props: {
+      ...master.props,
+      selection: "single" as const,
+      ...(selectionKey ? { selectionKey } : {}),
+      ...(hiddenColumns ? { hiddenColumns } : {}),
+    },
   });
   const masterLookup = master.props!.lookup;
   const wiredDetail = freeze({

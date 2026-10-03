@@ -1506,6 +1506,7 @@ export const dataTablePropsSchema = z.object({
   }).optional(),
   selection: z.enum(["none", "single", "multi"]).optional(),
   selectionKey: z.string().optional(),
+  hiddenColumns: z.array(z.string()).optional(),
   title: z.string().optional(),
   visible: z.boolean().optional(),
   width: z.string().optional(),

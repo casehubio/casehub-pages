@@ -327,6 +327,10 @@ export function createActivationCallback(
         if (selectionKey) {
           (vizEl as unknown as Record<string, unknown>).getRowKey = (row: TypedRow) => row.text(selectionKey as ColumnId);
         }
+        const hiddenColumns = (component.props as Record<string, unknown> | undefined)?.hiddenColumns as readonly string[] | undefined;
+        if (hiddenColumns) {
+          (vizEl as unknown as Record<string, unknown>).hiddenColumns = hiddenColumns;
+        }
       }
 
       // Handle inline dataSet on displayer (legacy DashBuilder shorthand)

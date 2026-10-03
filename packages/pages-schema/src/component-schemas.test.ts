@@ -115,6 +115,14 @@ describe("component schemas", () => {
       expect(result.selection).toBe("multi");
     });
 
+    it("dataTablePropsSchema accepts hiddenColumns", () => {
+      const result = dataTablePropsSchema.parse({
+        lookup: { uuid: "ds-1" },
+        hiddenColumns: ["caseId", "internal_id"],
+      });
+      expect(result.hiddenColumns).toEqual(["caseId", "internal_id"]);
+    });
+
     it("metricPropsSchema parses card subtype and trend", () => {
       const result = metricPropsSchema.parse({
         lookup: { uuid: "ds-1" },
