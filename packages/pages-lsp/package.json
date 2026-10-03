@@ -25,7 +25,7 @@
     "build": "tsc -p tsconfig.build.json",
     "build:bundle": "node build-bundle.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "yarn build:bundle && vitest run",
     "test:watch": "vitest",
     "clean": "rimraf dist"
   },

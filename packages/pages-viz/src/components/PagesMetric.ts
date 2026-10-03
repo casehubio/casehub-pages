@@ -48,10 +48,10 @@ export class PagesMetric extends PagesElement<MetricProps> {
     this._renderGen++;
     const gen = this._renderGen;
 
-    const title = props.title ?? (props as unknown as Record<string, unknown>).label as string ?? "";
+    const title = props.title ?? props.label ?? "";
     if (dataset.columns.length === 0 || dataset.rows.length === 0) {
       if (props.value !== undefined) {
-        return this.renderCard(title, String(props.value));
+        return this.renderCard(title, props.value);
       }
       return this.renderCard(title, "—");
     }

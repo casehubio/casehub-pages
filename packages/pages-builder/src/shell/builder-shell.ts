@@ -1,5 +1,6 @@
-import { LitElement, html, css, nothing, render as litRender, type TemplateResult } from 'lit';
+import { LitElement, html, css, render as litRender, type TemplateResult } from 'lit';
 import type { DockItem } from '@casehubio/pages-component';
+import type { PagesCodeEditor } from '@casehubio/pages-code-editor';
 import type { PagesDockWorkbench } from '@casehubio/pages-primitives/dock';
 import { customElement, property, state } from 'lit/decorators.js';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
@@ -16,7 +17,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import type { PropertyPaletteSource } from '@casehubio/pages-property-palette/types';
 import type { PaletteContext } from '../catalog/palette-context.js';
 import type { ComponentCatalogEntry } from '../catalog/component-catalog.js';
-import type { TreeNodeType } from '../tree/builder-tree.js';
+import type { PagesBuilderTree, TreeNodeType } from '../tree/builder-tree.js';
 import { getClipboard } from '../clipboard/builder-clipboard.js';
 import { serializeNode, parseFragment } from '../clipboard/yaml-fragment.js';
 import { SelectionOverlay } from '../overlay/selection-overlay.js';
@@ -53,7 +54,7 @@ type EditOrigin = 'editor' | 'tree' | 'properties' | 'palette' | 'toolbar';
 export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   @property({ attribute: false }) yaml = '';
 
-  @property({ attribute: false }) renderPreview?: (container: HTMLElement, yaml: string) => void | Promise<unknown>;
+  @property({ attribute: false }) renderPreview?: (container: HTMLElement, yaml: string) => unknown;
 
   @state() private _document: PageDocument = PageDocument.empty();
   @state() private _selectedPath: readonly (string | number)[] | undefined;
@@ -174,19 +175,17 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _diffPatchEditor(): void {
-    const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
+    const editorEl = this.shadowRoot?.querySelector<PagesCodeEditor>('pages-code-editor');
     if (!editorEl) return;
     const editorText = editorEl.value ?? '';
     const modelText = this._document.toString();
     if (editorText === modelText) return;
     editorEl.value = modelText;
-    const view = editorEl._editorView;
+    const view = editorEl.editorView;
     if (!view) return;
     const changes = computeMinimalChanges(editorText, modelText);
     if (changes.length > 0) {
-      editorEl._suppressUpdate = true;
-      view.dispatch({ changes });
-      editorEl._suppressUpdate = false;
+      editorEl.applyChangesSilently(changes);
     }
   }
 
@@ -224,12 +223,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       this._editorDirty = false;
     }
     if (changed.has('_selectedPath')) {
-      if (this._compsOpen) this._refreshPaletteContext();
+      if (this._compsContainer) this._refreshPaletteContext();
     }
   }
 
   override firstUpdated(): void {
-    this.updateComplete.then(() => {
+    void this.updateComplete.then(() => {
       this._diffPatchEditor();
       this._connectEditorCursorSync();
       this._refreshPreview();
@@ -238,7 +237,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   protected override async getUpdateComplete(): Promise<boolean> {
     const result = await super.getUpdateComplete();
-    const dockEl = this.renderRoot.querySelector('pages-dock-workbench') as any;
+    const dockEl = this.renderRoot.querySelector<PagesDockWorkbench>('pages-dock-workbench');
     if (dockEl?.updateComplete) await dockEl.updateComplete;
     return result;
   }
@@ -247,7 +246,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (changed.has('_viewMode')) {
       this._syncCentre();
       if (this._viewMode !== 'source') this._refreshPreview();
-      this.updateComplete.then(() => {
+      void this.updateComplete.then(() => {
         this._diffPatchEditor();
         this._connectEditorCursorSync();
       });
@@ -301,8 +300,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       if (this.renderPreview) {
         const yamlText = this._document.toString();
         const result = this.renderPreview(container, this._expandYamlForPreview(yamlText));
-        if (result && typeof (result as any).then === 'function') {
-          (result as Promise<unknown>).then(afterRender, afterRender);
+        if (result !== null && typeof result === 'object' && 'then' in result && typeof result.then === 'function') {
+          void Promise.resolve(result).then(afterRender, afterRender);
         } else {
           afterRender();
         }
@@ -322,11 +321,11 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _connectEditorCursorSync(): void {
     this._editorClickCleanup?.();
-    const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
+    const editorEl = this.shadowRoot?.querySelector<PagesCodeEditor>('pages-code-editor');
     if (!editorEl) return;
     const handler = () => {
       if (this._suppressCursorSync) return;
-      const view = editorEl._editorView;
+      const view = editorEl.editorView;
       if (!view) return;
       const offset = view.state.selection.main.head;
       const path = findPathAtOffset(this._document, offset);
@@ -445,32 +444,32 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._selectionOverlayCleanup?.();
 
     const onAdd = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
+      const detail = (e as Parameters<typeof this._handleTreeAdd>[0]).detail;
       const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
-      this._handleTreeAdd(new CustomEvent('tree-add', { detail: { path: detail.path, nodeType: detail.nodeType, target } }));
+      this._handleTreeAdd(new CustomEvent('tree-add', { detail: { path: detail.path, nodeType: detail.nodeType, ...(target ? { target } : {}) } }));
     };
     const onInsert = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
+      const detail = (e as Parameters<typeof this._handleTreeInsert>[0]).detail;
       const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
-      this._handleTreeInsert(new CustomEvent('tree-insert', { detail: { path: detail.path, nodeType: detail.nodeType, target } }));
+      this._handleTreeInsert(new CustomEvent('tree-insert', { detail: { path: detail.path, nodeType: detail.nodeType, ...(target ? { target } : {}) } }));
     };
     const onCut = (e: Event) => {
-      const { path, nodeType } = (e as CustomEvent).detail;
+      const { path, nodeType } = (e as Parameters<typeof this._handleTreeCut>[0]).detail;
       this._handleTreeCut(new CustomEvent('tree-cut', { detail: { path, nodeType } }));
     };
     const onCopy = (e: Event) => {
-      const { path, nodeType } = (e as CustomEvent).detail;
+      const { path, nodeType } = (e as Parameters<typeof this._handleTreeCopy>[0]).detail;
       this._handleTreeCopy(new CustomEvent('tree-copy', { detail: { path, nodeType } }));
     };
     const onDelete = (e: Event) => {
-      const { path, nodeType } = (e as CustomEvent).detail;
+      const { path, nodeType } = (e as Parameters<typeof this._handleTreeCut>[0]).detail;
       this._applyEdit('toolbar', () => {
         this._deleteAtPath(path, nodeType);
       });
     };
 
     const onInsertAt = (e: Event) => {
-      this._handleInsertAt(e as CustomEvent);
+      this._handleInsertAt(e as Parameters<typeof this._handleInsertAt>[0]);
     };
 
     overlayRoot.addEventListener('selection-add', onAdd);
@@ -918,13 +917,10 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._syncTree();
   }
 
-  private _expandAfterAdd(parentPath: readonly (string | number)[], parentNodeType: TreeNodeType): void {
-    const tree = this.shadowRoot?.querySelector('pages-builder-tree') as any;
+  private _expandAfterAdd(parentPath: readonly (string | number)[], _parentNodeType: TreeNodeType): void {
+    const tree = this.shadowRoot?.querySelector<PagesBuilderTree>('pages-builder-tree');
     if (!tree) return;
-    const key = JSON.stringify(parentPath);
-    if (!tree._expandedPaths.has(key)) {
-      tree._expandedPaths = new Set([...tree._expandedPaths, key]);
-    }
+    tree.expandPath(parentPath);
   }
 
   private static _LAYOUT_TYPES = new Set(['rows', 'columns', 'grid']);
@@ -1300,25 +1296,25 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         .selectedPath="${this._selectedPath}"
         .clipboardFragmentType="${getClipboard().fragmentType ?? undefined}"
         .insertMode="${getClipboard().insertMode}"
-        @node-select="${(e: CustomEvent) => this._handleNodeSelect(e)}"
-        @tree-add="${(e: CustomEvent) => this._handleTreeAdd(e)}"
-        @tree-insert="${(e: CustomEvent) => this._handleTreeInsert(e)}"
-        @tree-insert-at="${(e: CustomEvent) => this._handleInsertAt(e)}"
-        @tree-cut="${(e: CustomEvent) => this._handleTreeCut(e)}"
-        @tree-copy="${(e: CustomEvent) => this._handleTreeCopy(e)}"
-        @tree-action="${(e: CustomEvent) => this._handleTreeAction(e)}"
+        @node-select="${(e: Event) => this._handleNodeSelect(e as Parameters<typeof this._handleNodeSelect>[0])}"
+        @tree-add="${(e: Event) => this._handleTreeAdd(e as Parameters<typeof this._handleTreeAdd>[0])}"
+        @tree-insert="${(e: Event) => this._handleTreeInsert(e as Parameters<typeof this._handleTreeInsert>[0])}"
+        @tree-insert-at="${(e: Event) => this._handleInsertAt(e as Parameters<typeof this._handleInsertAt>[0])}"
+        @tree-cut="${(e: Event) => this._handleTreeCut(e as Parameters<typeof this._handleTreeCut>[0])}"
+        @tree-copy="${(e: Event) => this._handleTreeCopy(e as Parameters<typeof this._handleTreeCopy>[0])}"
+        @tree-action="${(e: Event) => this._handleTreeAction(e as Parameters<typeof this._handleTreeAction>[0])}"
       ></pages-builder-tree>
       <pages-builder-inline-picker
         .context="${this._paletteContext}"
         .open="${this._inlinePickerOpen}"
         .anchor="${this._inlinePickerAnchor}"
-        @component-select="${(e: CustomEvent) => this._handleInlinePickerSelect(e)}"
+        @component-select="${(e: Event) => this._handleInlinePickerSelect(e as Parameters<typeof this._handleInlinePickerSelect>[0])}"
         @picker-close="${() => { this._inlinePickerOpen = false; this._insertAtIndex = undefined; this._syncTree(); }}"
       ></pages-builder-inline-picker>
       <pages-position-picker
         .open="${this._positionPickerOpen}"
         .anchor="${this._positionPickerAnchor}"
-        @position-select="${(e: CustomEvent) => this._handlePositionSelect(e)}"
+        @position-select="${(e: Event) => this._handlePositionSelect(e as Parameters<typeof this._handlePositionSelect>[0])}"
         @picker-close="${() => { this._positionPickerOpen = false; this._syncTree(); }}"
       ></pages-position-picker>
     `, this._treeContainer);
@@ -1348,7 +1344,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         <div class="dock-section-content">
           <pages-builder-palette
             .context="${this._paletteContext}"
-            @component-select="${(e: CustomEvent) => this._handleComponentSelect(e)}"
+            @component-select="${(e: Event) => this._handleComponentSelect(e as Parameters<typeof this._handleComponentSelect>[0])}"
           ></pages-builder-palette>
         </div>
       </div>
@@ -1362,7 +1358,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     litRender(html`
       <div class="editor-source${showSource ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}">
         <pages-code-editor
-          .extensions="${[...builderHighlightExtension, ...this._schemaExtensions]}"
+          .extensions="${[builderHighlightExtension, ...this._schemaExtensions]}"
           language="yaml"
           label="Page YAML source"
           @input="${() => this._handleEditorInput()}"
@@ -1467,8 +1463,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     requestAnimationFrame(() => {
       const range = this._getYamlRange(path);
       if (!range) return;
-      const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
-      const view = editorEl?._editorView;
+      const editorEl = this.shadowRoot?.querySelector<PagesCodeEditor>('pages-code-editor');
+      const view = editorEl?.editorView;
       if (!view) return;
       this._suppressCursorSync = true;
       view.dispatch({
@@ -1485,8 +1481,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (!path || path.length === 0) return;
     requestAnimationFrame(() => {
       const range = this._getYamlRange(path);
-      const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
-      const view = editorEl?._editorView;
+      const editorEl = this.shadowRoot?.querySelector<PagesCodeEditor>('pages-code-editor');
+      const view = editorEl?.editorView;
       if (!view) return;
       view.dispatch({ effects: setHighlightRange.of(range) });
     });
@@ -1568,7 +1564,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     clearTimeout(this._pendingEditorSync);
     this._pendingEditorSync = window.setTimeout(() => {
       this._pendingEditorSync = undefined;
-      const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
+      const editorEl = this.shadowRoot?.querySelector<PagesCodeEditor>('pages-code-editor');
       const text = editorEl?.value ?? '';
       const newDoc = this._parseDocument(text);
       if (newDoc.diagnostics.some(d => d.severity === 'error')) return;
@@ -1581,7 +1577,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     clearTimeout(this._pendingEditorSync);
     this._pendingEditorSync = undefined;
     if (!this._editorDirty) return;
-    const editorEl = this.shadowRoot?.querySelector('pages-code-editor') as any;
+    const editorEl = this.shadowRoot?.querySelector<PagesCodeEditor>('pages-code-editor');
     const text = editorEl?.value ?? '';
     const newDoc = this._parseDocument(text);
     if (newDoc.diagnostics.some(d => d.severity === 'error')) return;

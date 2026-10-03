@@ -29,20 +29,6 @@ function makeGrammar(type: string, outMax: number, allowedTo: string[]) {
   };
 }
 
-function makeModel(): GraphModel {
-  return {
-    nodes: [
-      { id: 'a', type: 'start', properties: {} },
-      { id: 'x', type: 'worker', properties: {} },
-      { id: 'b', type: 'end', properties: {} },
-    ],
-    edges: [
-      { id: 'e1', type: 'default', source: 'a', target: 'x' },
-      { id: 'e2', type: 'default', source: 'x', target: 'b' },
-    ],
-  };
-}
-
 function makeDisconnectedModel(): GraphModel {
   return {
     nodes: [
@@ -143,7 +129,7 @@ describe('NodeMoveCoordinator', () => {
     expect(container.classList.contains('node-move-active')).toBe(false);
   });
 
-  it('ineligible node with parentId is a no-op', () => {
+  it('ineligible nested node is a no-op', () => {
     const coord = createNodeMoveCoordinator({
       editPolicy: defaultEditPolicy(),
       containerEl: container,
@@ -153,7 +139,8 @@ describe('NodeMoveCoordinator', () => {
     const model: GraphModel = {
       nodes: [
         { id: 'x', type: 'worker', parentId: 'container1', properties: {} },
-        { id: 'container1', type: 'start', properties: {} },
+        { id: 'container1', type: 'start', parentId: 'root', properties: {} },
+        { id: 'root', type: 'start', properties: {} },
       ],
       edges: [],
     };

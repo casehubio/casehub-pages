@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import './inline-picker.js';
 import type { PagesBuilderInlinePicker } from './inline-picker.js';
 import type { PaletteContext } from '../catalog/palette-context.js';
@@ -55,7 +55,7 @@ describe('PagesBuilderInlinePicker', () => {
     await el.updateComplete;
 
     const events: CustomEvent[] = [];
-    el.addEventListener('component-select', ((e: CustomEvent) => events.push(e)) as EventListener);
+    el.addEventListener('component-select', (e: Event) => { events.push(e as CustomEvent); });
 
     const item = el.shadowRoot!.querySelector<HTMLButtonElement>('.picker-item');
     item?.click();

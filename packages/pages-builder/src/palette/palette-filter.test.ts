@@ -68,8 +68,8 @@ describe('filterCatalog', () => {
     };
     const results = filterCatalog(ctx);
     const firstPromotedIdx = results.findIndex(r => r.relevance === 'promoted');
-    const lastNormalIdx = results.findLastIndex(r => r.relevance === 'normal');
-    if (firstPromotedIdx >= 0 && lastNormalIdx >= 0) {
+    const lastNormalIdx = results.length - 1 - [...results].reverse().findIndex(r => r.relevance === 'normal');
+    if (firstPromotedIdx >= 0 && results.some(r => r.relevance === 'normal')) {
       expect(firstPromotedIdx).toBeLessThan(lastNormalIdx);
     }
   });

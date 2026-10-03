@@ -89,8 +89,6 @@ export class DefaultOrcChannel<T> implements OrcChannel<T> {
     return this._buffer.length === 0;
   }
 
-  close(): void;
-  close(cause: Error): void;
   close(cause?: Error): void {
     this._closed = true;
     if (cause) this._closeError = cause;

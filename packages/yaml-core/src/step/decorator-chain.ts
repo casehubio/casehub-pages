@@ -219,6 +219,7 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class DecoratorChain {
   static build(
     decorators: Record<string, unknown>,

@@ -27,7 +27,10 @@ export function parsePage(raw: unknown): Component {
   // 0. yaml-core expansion (variables, modules, forEach, conditionals)
   const YAML_CORE_KEYS = ['variables', 'modules', 'imports', 'iterations', 'data'];
   if (YAML_CORE_KEYS.some(k => k in input)) {
-    input = expand(input, { strict: false }).map;
+    // Resolve bare page properties first so they do not abort yaml-core's
+    // prefixed-variable expansion for the containing section.
+    const pageProperties = (input["properties"] ?? {}) as Record<string, string>;
+    input = expand(substituteProperties(input, pageProperties) as Record<string, unknown>, { strict: false }).map;
   }
 
   // 1. Extract properties for substitution

@@ -248,7 +248,7 @@ export class PagesThemePickerElement extends LitElement {
   private _openDesigner(): void {
     let designer = document.querySelector('pages-theme-designer') as any;
     if (!designer) {
-      import('./theme-designer.js');
+      void import('./theme-designer.js');
       designer = document.createElement('pages-theme-designer');
       designer.target = this.target;
       document.body.appendChild(designer);

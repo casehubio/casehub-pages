@@ -36,7 +36,7 @@ export class PagesContextMenu extends FocusTrapMixin(LitElement) {
     super.updated(changed);
     if (changed.has('open') && this.open) {
       this._activeSubmenu = undefined;
-      this.updateComplete.then(() => {
+      void this.updateComplete.then(() => {
         const firstItem = this.shadowRoot?.querySelector<HTMLElement>('[role="menuitem"]');
         firstItem?.focus();
       });

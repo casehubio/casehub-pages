@@ -1,4 +1,4 @@
-import type { YamlImport, YamlModule, YamlModuleFile, YamlModuleOutput, VariableSource } from './types.js';
+import type { YamlImport, YamlModule, YamlModuleFile, VariableSource } from './types.js';
 import { VariableResolver } from './variable-resolver.js';
 import { ParameterValidator } from './parameter-validator.js';
 
@@ -306,6 +306,7 @@ function resolveOutputs(
   return resolved;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class ModuleExpander {
   static expand(
     imports: YamlImport[],

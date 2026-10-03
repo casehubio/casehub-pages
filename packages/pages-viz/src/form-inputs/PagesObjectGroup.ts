@@ -68,7 +68,7 @@ export class PagesObjectGroup extends FormValueMixin(LitElement) {
     return record;
   }
 
-  protected propagateValue(v: unknown): void {
+  protected propagateValue(_v: unknown): void {
     this._valuePending = true;
     this.requestUpdate();
   }

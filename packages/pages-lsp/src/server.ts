@@ -62,7 +62,7 @@ export interface ServerHandler {
   onReferences(uri: string, position: Position): Array<{ uri: string; range: { start: Position; end: Position } }>;
 }
 
-export function initializeServer(registry: SchemaRegistry): ServerCapabilities {
+export function initializeServer(_registry: SchemaRegistry): ServerCapabilities {
   return {
     textDocumentSync: 1,
     completionProvider: {

@@ -33,7 +33,7 @@ const handler = createServerHandler(registry);
 log('server starting');
 
 connection.onInitialize((params) => {
-  log(`initialize: rootUri=${params.rootUri ?? 'none'}`);
+  log(`initialize: workspace=${params.workspaceFolders?.[0]?.uri ?? 'none'}`);
   return {
     capabilities: {
       textDocumentSync: {
@@ -64,13 +64,13 @@ function toLspDiagnostics(notification: ReturnType<typeof handler.onDidOpen>): P
 
 connection.onDidOpenTextDocument((params) => {
   log(`didOpen: ${params.textDocument.uri} (lang=${params.textDocument.languageId})`);
-  connection.sendDiagnostics(toLspDiagnostics(handler.onDidOpen(params.textDocument.uri, params.textDocument.text)));
+  void connection.sendDiagnostics(toLspDiagnostics(handler.onDidOpen(params.textDocument.uri, params.textDocument.text)));
 });
 
 connection.onDidChangeTextDocument((params) => {
   const content = params.contentChanges[0]?.text;
   if (content === undefined) return;
-  connection.sendDiagnostics(toLspDiagnostics(handler.onDidChange(params.textDocument.uri, content)));
+  void connection.sendDiagnostics(toLspDiagnostics(handler.onDidChange(params.textDocument.uri, content)));
 });
 
 connection.onDidCloseTextDocument((params) => {

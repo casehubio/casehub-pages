@@ -45,13 +45,13 @@ function toLspDiagnostics(notification: ReturnType<typeof handler.onDidOpen>): P
 }
 
 connection.onDidOpenTextDocument((params) => {
-  connection.sendDiagnostics(toLspDiagnostics(handler.onDidOpen(params.textDocument.uri, params.textDocument.text)));
+  void connection.sendDiagnostics(toLspDiagnostics(handler.onDidOpen(params.textDocument.uri, params.textDocument.text)));
 });
 
 connection.onDidChangeTextDocument((params) => {
   const content = params.contentChanges[0]?.text;
   if (content === undefined) return;
-  connection.sendDiagnostics(toLspDiagnostics(handler.onDidChange(params.textDocument.uri, content)));
+  void connection.sendDiagnostics(toLspDiagnostics(handler.onDidChange(params.textDocument.uri, content)));
 });
 
 connection.onDidCloseTextDocument((params) => {

@@ -46,7 +46,7 @@ describe('PagesDockWorkbench', () => {
 
     const bar = el.querySelector('.dock-bar-left');
     expect(bar).toBeTruthy();
-    const buttons = bar!.querySelectorAll('button[data-dock-panel-id]');
+    const buttons = bar!.querySelectorAll<HTMLButtonElement>('button[data-dock-panel-id]');
     expect(buttons.length).toBe(2);
     expect(buttons[0]!.dataset.dockPanelId).toBe('explorer');
     expect(buttons[1]!.dataset.dockPanelId).toBe('search');
@@ -391,8 +391,8 @@ describe('Side zone split (zones: 2)', () => {
     const botMatch = botStyle.match(/flex:\s*0\s+0\s+([\d.]+)%/);
     expect(topMatch).toBeTruthy();
     expect(botMatch).toBeTruthy();
-    expect(parseFloat(topMatch![1])).toBeCloseTo(50, 0);
-    expect(parseFloat(botMatch![1])).toBeCloseTo(50, 0);
+    expect(parseFloat(topMatch![1]!)).toBeCloseTo(50, 0);
+    expect(parseFloat(botMatch![1]!)).toBeCloseTo(50, 0);
   });
 
   it('zone sub-containers have overflow auto to prevent content bleed', async () => {
@@ -522,7 +522,7 @@ describe('Bottom zone split', () => {
 
     const separator = el.querySelector('[data-bottom-separator]') as HTMLElement;
     expect(separator?.style.display).toBe('none');
-    expect(el.querySelector('[data-component-id="console"]')!.style.display).not.toBe('none');
+    expect(el.querySelector<HTMLElement>('[data-component-id="console"]')!.style.display).not.toBe('none');
   });
 });
 

@@ -36,7 +36,7 @@ export class PagesBuilderInlinePicker extends LitElement {
       this._activeCategory = undefined;
       this._recompute();
       this._positionNearAnchor();
-      this.updateComplete.then(() => {
+      void this.updateComplete.then(() => {
         this.shadowRoot?.querySelector<HTMLInputElement>('.picker-search')?.focus();
       });
     }
@@ -64,8 +64,8 @@ export class PagesBuilderInlinePicker extends LitElement {
       this._activeCategory = undefined;
     }
     this._filtered = filterCatalog(ctx, {
-      search: this._search || undefined,
-      category: this._activeCategory,
+      ...(this._search ? { search: this._search } : {}),
+      ...(this._activeCategory ? { category: this._activeCategory } : {}),
     });
   }
 

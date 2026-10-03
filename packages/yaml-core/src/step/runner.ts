@@ -48,6 +48,7 @@ export class QuorumTracker {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class ScopeUtils {
   static buildResultScope(
     results: Record<string, Record<string, unknown>>,

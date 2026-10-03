@@ -1,12 +1,9 @@
 package io.casehub.pages.push;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,65 +15,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PushMessageTest {
 
-    private final JsonFactory factory = new JsonFactory();
+    private final ObjectMapper mapper = new ObjectMapper();
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> parse(String json) throws IOException {
-        Map<String, Object> result = new HashMap<>();
-        try (JsonParser p = factory.createParser(json)) {
-            assertEquals(JsonToken.START_OBJECT, p.nextToken());
-            while (p.nextToken() != JsonToken.END_OBJECT) {
-                String field = p.currentName();
-                p.nextToken();
-                switch (p.currentToken()) {
-                    case VALUE_STRING -> result.put(field, p.getText());
-                    case VALUE_NUMBER_INT -> result.put(field, String.valueOf(p.getLongValue()));
-                    case START_OBJECT -> {
-                        // For embedded JSON objects like payload
-                        StringBuilder sb = new StringBuilder();
-                        int depth = 1;
-                        sb.append("{");
-                        while (depth > 0) {
-                            JsonToken t = p.nextToken();
-                            if (t == JsonToken.START_OBJECT) {
-                                depth++;
-                                sb.append("{");
-                            } else if (t == JsonToken.END_OBJECT) {
-                                depth--;
-                                if (depth > 0) sb.append("}");
-                            } else if (t == JsonToken.FIELD_NAME) {
-                                if (sb.length() > 1) sb.append(",");
-                                sb.append("\"").append(p.getCurrentName()).append("\":");
-                            } else if (t == JsonToken.VALUE_STRING) {
-                                sb.append("\"").append(p.getText()).append("\"");
-                            }
-                        }
-                        sb.append("}");
-                        result.put(field, sb.toString());
-                    }
-                    case START_ARRAY -> {
-                        List<Object> arr = new java.util.ArrayList<>();
-                        while (p.nextToken() != JsonToken.END_ARRAY) {
-                            if (p.currentToken() == JsonToken.START_OBJECT) {
-                                Map<String, String> obj = new HashMap<>();
-                                while (p.nextToken() != JsonToken.END_OBJECT) {
-                                    obj.put(p.currentName(), p.nextTextValue());
-                                }
-                                arr.add(obj);
-                            } else if (p.currentToken() == JsonToken.START_ARRAY) {
-                                List<String> inner = new java.util.ArrayList<>();
-                                while (p.nextToken() != JsonToken.END_ARRAY) {
-                                    inner.add(p.currentToken() == JsonToken.VALUE_NULL ? null : p.getText());
-                                }
-                                arr.add(inner);
-                            } else {
-                                arr.add(p.getText());
-                            }
-                        }
-                        result.put(field, arr);
-                    }
-                    default -> result.put(field, p.getText());
-                }
-            }
+        Map<String, Object> result = mapper.readValue(json, Map.class);
+        // Keep the existing assertions' representation for these wire fields.
+        if (result.containsKey("seq")) result.put("seq", result.get("seq").toString());
+        if (result.get("payload") instanceof Map<?, ?>) {
+            result.put("payload", mapper.writeValueAsString(result.get("payload")));
         }
         return result;
     }

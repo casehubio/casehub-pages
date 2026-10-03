@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { lookupSchema } from "@casehubio/pages-data";
 
-const fieldSchemaZod: z.ZodType<unknown> = z.lazy(() =>
+const fieldSchemaZod: z.ZodType = z.lazy(() =>
   z.looseObject({
     type: z.union([z.string(), z.array(z.string())]).optional(),
     format: z.string().optional(),
@@ -1593,6 +1593,7 @@ export const gridTablePropsSchema = z.object({
 });
 
 export const metricPropsSchema = z.object({
+  label: z.string().optional(),
   text: z.string().optional(),
   value: z.string().optional(),
   subtype: z.enum(["card", "card2", "plain-text", "quota"]).optional(),

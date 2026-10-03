@@ -1,9 +1,9 @@
 import type { DatasetNode } from '@casehubio/pages-document';
 import type { PreviewDataStrategy, DatasetSnapshot } from '../preview-data-registry.js';
+import { lookupRecord } from '../lookup-record.js';
 
 const SAMPLE_CATEGORIES = ['North', 'South', 'East', 'West', 'Central'];
 const SAMPLE_PRODUCTS = ['Widget A', 'Widget B', 'Gadget X', 'Gadget Y', 'Tool Z'];
-const SAMPLE_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
 
 function generateValue(type: string): unknown {
   if (type === 'NUMBER' || type === 'DECIMAL') return Math.round(Math.random() * 90000 + 10000);
@@ -19,7 +19,7 @@ export class ChartDataStrategy implements PreviewDataStrategy {
   generate(props: Record<string, unknown>, datasets: DatasetNode[]): DatasetSnapshot[] {
     const lookupRaw = props['lookup'];
     if (!lookupRaw) return [];
-    const lookup = typeof (lookupRaw as any).toJSON === 'function' ? (lookupRaw as any).toJSON() : lookupRaw as Record<string, unknown>;
+    const lookup = lookupRecord(lookupRaw);
     if (!lookup?.['uuid']) return [];
     const uuid = String(lookup['uuid']);
     const ds = datasets.find(d => d.uuid === uuid);

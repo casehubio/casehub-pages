@@ -13,10 +13,12 @@ function unwrap(schema: z.ZodType, seen = new WeakSet<z.ZodType>()): z.ZodType {
   seen.add(schema);
   const tn = typeName(schema);
   if (tn === 'optional' || tn === 'default' || tn === 'nullable') {
-    return unwrap((schema as any)._zod.def.innerType, seen);
+    const innerType = (schema._zod.def as unknown as { innerType: z.ZodType }).innerType;
+    return unwrap(innerType, seen);
   }
   if (tn === 'lazy') {
-    return unwrap((schema as any)._zod.def.getter(), seen);
+    const getter = (schema._zod.def as unknown as { getter: () => z.ZodType }).getter;
+    return unwrap(getter(), seen);
   }
   return schema;
 }
@@ -65,9 +67,9 @@ function convertInner(schema: z.ZodType): FieldSchema {
   }
 
   if (tn === 'enum') {
-    const entries = (unwrapped as any)._zod.def.entries;
+    const entries: unknown = (unwrapped as any)._zod.def.entries;
     if (Array.isArray(entries)) return { type: 'string', enum: entries };
-    const values = Object.values(entries).filter((v: unknown): v is string => typeof v === 'string');
+    const values = Object.values(entries as Record<string, unknown>).filter((v: unknown): v is string => typeof v === 'string');
     return { type: 'string', enum: values };
   }
 

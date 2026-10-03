@@ -5,7 +5,7 @@ import { HttpMethod } from "./types.js";
 const externalColumnDefSchema = z.object({
   id: z.string().min(1),
   name: z.string().optional(),
-  type: z.nativeEnum(ColumnType),
+  type: z.enum(ColumnType),
 });
 
 const serverPaginationConfigSchema = z.object({
@@ -29,7 +29,7 @@ export const externalDataSetDefSchema = z.object({
   serverQuery: z.boolean().optional(),
   serverPagination: serverPaginationConfigSchema.optional(),
 
-  method: z.nativeEnum(HttpMethod).optional(),
+  method: z.enum(HttpMethod).optional(),
   headers: z.record(z.string(), z.string()).optional(),
   query: z.record(z.string(), z.string()).optional(),
   form: z.record(z.string(), z.string()).optional(),

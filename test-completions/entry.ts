@@ -9,7 +9,7 @@ const editor = document.getElementById('editor')!;
 const schemaExt = createSchemaCompletion(pageDocumentSchema);
 
 import { EditorView, keymap, lineNumbers, drawSelection } from '@codemirror/view';
-import { EditorState, type Extension } from '@codemirror/state';
+import { EditorState } from '@codemirror/state';
 import { yaml } from '@codemirror/lang-yaml';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';

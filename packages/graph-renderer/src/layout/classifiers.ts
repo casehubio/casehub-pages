@@ -1,5 +1,5 @@
-import type { GraphModel, GraphEdge, GraphNode } from '@casehubio/graph-core';
-import type { ClassificationRule, FactBase, ArchetypeName, LayoutStrategy } from './types.js';
+import type { GraphEdge, GraphNode } from '@casehubio/graph-core';
+import type { ClassificationRule, ArchetypeName, LayoutStrategy } from './types.js';
 
 const ARCHETYPE_LAYOUT: Readonly<Record<ArchetypeName, LayoutStrategy>> = {
   'simple-structure': 'star',

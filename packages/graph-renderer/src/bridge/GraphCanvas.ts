@@ -100,13 +100,15 @@ export class GraphCanvas extends LitElement {
     this._ariaLiveEl.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);';
     this.appendChild(this._ariaLiveEl);
 
-    this._container.addEventListener('graph:drill-down', ((e: CustomEvent) => {
-      void this._handleDrillDown(e.detail.nodeId);
-    }) as EventListener);
+    this._container.addEventListener('graph:drill-down', (e: Event) => {
+      const detail = (e as CustomEvent<{ nodeId: string }>).detail;
+      void this._handleDrillDown(detail.nodeId);
+    });
 
-    this._container.addEventListener('drill-down-navigate', ((e: CustomEvent) => {
-      this._drillDownNavigateTo(e.detail.depth);
-    }) as EventListener);
+    this._container.addEventListener('drill-down-navigate', (e: Event) => {
+      const detail = (e as CustomEvent<{ depth: number }>).detail;
+      this._drillDownNavigateTo(detail.depth);
+    });
   }
 
   private async _handleDrillDown(nodeId: string): Promise<void> {
@@ -150,7 +152,7 @@ export class GraphCanvas extends LitElement {
     this.model = popped.model;
 
     if (this._reactFlowInstance) {
-      this._reactFlowInstance.setViewport(popped.viewport);
+      void this._reactFlowInstance.setViewport(popped.viewport);
     }
 
     this._drillDownBars?.render(this._container, state);
@@ -176,7 +178,7 @@ export class GraphCanvas extends LitElement {
     this._edges = targetLevel.layoutEdges;
     this.model = targetLevel.model;
     if (this._reactFlowInstance) {
-      this._reactFlowInstance.setViewport(targetLevel.viewport);
+      void this._reactFlowInstance.setViewport(targetLevel.viewport);
     }
 
     this._drillDownBars?.render(this._container, state);

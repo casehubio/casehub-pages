@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { zodToFieldSchema } from './zod-to-fieldschema.js';
 import { z } from 'zod';
+import { barChartPropsSchema } from '@casehubio/pages-schema';
 
 describe('zodToFieldSchema', () => {
   it('converts string', () => {
@@ -80,7 +81,6 @@ describe('zodToFieldSchema', () => {
   });
 
   it('converts real component schema (bar-chart has subtype enum)', () => {
-    const { barChartPropsSchema } = require('@casehubio/pages-schema');
     if (!barChartPropsSchema) return;
     const fs = zodToFieldSchema(barChartPropsSchema);
     expect(fs.type).toBe('object');

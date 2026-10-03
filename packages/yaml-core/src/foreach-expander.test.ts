@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { ForEachExpander } from './foreach-expander.js';
 import type { ForEachAdapter, Reference } from './foreach-expander.js';
-import type { ForEachDirective, VariableSource } from './types.js';
-import { forEachContextSource, parseForEachDirective } from './types.js';
+import type { ForEachDirective } from './types.js';
+import { parseForEachDirective } from './types.js';
 import { VariableResolver } from './variable-resolver.js';
 import { CsvParser } from './csv-parser.js';
 

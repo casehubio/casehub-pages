@@ -32,6 +32,16 @@ describe('ImportExpander', () => {
       expect(result[1]!.parameters).toEqual({ region: 'eu' });
     });
 
+    it('preserves imports that select steps without adding a module', () => {
+      const imports: YamlImport[] = [
+        { steps: 'workflow', as: 'step', parameters: {}, forEach: { as: 'i', in: [1] } },
+      ];
+      const result = ImportExpander.expand(imports, {}, {});
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ steps: 'workflow', as: 'step.1' });
+      expect(result[0]).not.toHaveProperty('module');
+    });
+
     it('expands import with group-ref forEach', () => {
       const imports: YamlImport[] = [
         {

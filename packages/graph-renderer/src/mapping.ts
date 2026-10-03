@@ -73,33 +73,6 @@ export function toReactFlowEdge(edge: GraphEdge): Edge {
   return rfEdge;
 }
 
-const POSITIONS = ['top', 'bottom', 'left', 'right'] as const;
-
-function handlePosPoint(rect: { x: number; y: number; w: number; h: number }, pos: string): { x: number; y: number } {
-  switch (pos) {
-    case 'top': return { x: rect.x + rect.w / 2, y: rect.y };
-    case 'bottom': return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
-    case 'left': return { x: rect.x, y: rect.y + rect.h / 2 };
-    case 'right': return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
-    default: return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
-  }
-}
-
-
-function absoluteBounds(node: Node, nodeMap: Map<string, Node>): { x: number; y: number; w: number; h: number } {
-  let x = node.position.x;
-  let y = node.position.y;
-  let cur = node;
-  while (cur.parentId) {
-    const parent = nodeMap.get(cur.parentId);
-    if (!parent) break;
-    x += parent.position.x;
-    y += parent.position.y;
-    cur = parent;
-  }
-  return { x, y, w: node.width ?? 280, h: node.height ?? 50 };
-}
-
 interface HandleCandidate {
   srcSide: string;
   tgtSide: string;
@@ -410,8 +383,6 @@ function autoDetectHandleDirections(nodes: Node[], edges: Edge[], _direction?: s
     tc[tp] = (tc[tp] ?? 0) + 1;
     tgtCounts.set(edge.target, tc);
   }
-  const hasOutgoing = new Set(edges.map(e => e.source));
-  const hasIncoming = new Set(edges.map(e => e.target));
   for (const node of nodes) {
     const sc = srcCounts.get(node.id);
     const tc = tgtCounts.get(node.id);

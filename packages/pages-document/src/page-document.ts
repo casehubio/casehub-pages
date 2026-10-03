@@ -4,6 +4,7 @@ import { getContainerDescriptor, type ContainerChildDescriptor } from './contain
 import { zodToFieldSchema } from './zod-to-fieldschema.js';
 import { componentSchemaRegistry } from '@casehubio/pages-schema';
 import type { FieldSchema } from '@casehubio/pages-component';
+import { z } from 'zod';
 
 const MAX_UNDO_STACK = 50;
 
@@ -409,7 +410,7 @@ export class PageNode {
       const compsSeq = doc.getIn(compsPath);
       if (!isSeq(compsSeq)) throw new Error('No components to wrap');
       const items = (compsSeq as YAMLSeq).items;
-      const collected = sorted.map(i => JSON.parse(JSON.stringify(items[i])));
+      const collected = sorted.map(i => JSON.parse(JSON.stringify(items[i])) as unknown);
       for (let i = sorted.length - 1; i >= 0; i--) {
         items.splice(sorted[i]!, 1);
       }
@@ -420,7 +421,7 @@ export class PageNode {
         const rowsPath = [...this.path, 'rows'];
         const allRows: Record<string, unknown>[] = [rowData];
         if (remaining.length > 0) {
-          allRows.push({ columns: [{ span: 12, components: remaining.map(r => JSON.parse(JSON.stringify(r))) }] });
+          allRows.push({ columns: [{ span: 12, components: remaining.map(r => JSON.parse(JSON.stringify(r)) as unknown) }] });
         }
         doc.setIn(rowsPath, doc.createNode(allRows));
       } else {
@@ -627,7 +628,7 @@ export class ComponentNode {
 
   getChildren(): ContainerChildren {
     const desc = getContainerDescriptor(this.type);
-    if (!desc) return { slots: {}, descriptor: { type: this.type, slots: [] } };
+    if (!desc) return { slots: {}, descriptor: { type: this.type, slots: [], defaultContentSlot: '' } };
     const doc = this._doc._getDoc();
     const slots: Record<string, ComponentNode[]> = {};
 
@@ -702,7 +703,8 @@ export class ComponentNode {
         (mapNode as YAMLMap).set(doc.createNode(slot), newEntry);
         entryNode = (mapNode as YAMLMap).get(slot, true);
       }
-      const compsSeq = (entryNode as YAMLMap).get(slotDesc.childKey, true) as YAMLSeq;
+      const compsSeq = (entryNode as YAMLMap).get(slotDesc.childKey, true);
+      if (!isSeq(compsSeq)) throw new Error('Slot child array not found');
       compsSeq.add(compNode);
       const idx = compsSeq.items.length - 1;
       const compsPath = [...entryPath, slotDesc.childKey];
@@ -750,10 +752,10 @@ export class ComponentNode {
       const entry: Record<string, unknown> = { type: newType };
       const compatible: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(oldProps)) {
-        const jsVal = typeof (value as any)?.toJSON === 'function' ? (value as any).toJSON() : value;
+        const serializer = value as { toJSON?: () => unknown } | null;
+        const jsVal = serializer !== null && typeof serializer?.toJSON === 'function' ? serializer.toJSON() : value;
         if (targetSchema) {
-          const shape = targetSchema.shape as Record<string, unknown> | undefined;
-          if (shape && !(key in shape)) continue;
+          if (targetSchema instanceof z.ZodObject && !(key in targetSchema.shape)) continue;
         }
         compatible[key] = jsVal;
       }
@@ -791,16 +793,17 @@ export class ComponentNode {
         doc.setIn(mapPath, doc.createNode({}));
         mapNode = doc.getIn(mapPath);
       }
-      let entryNode = (mapNode as YAMLMap).get(target.slotName, true);
-      if (!isMap(entryNode)) {
+      const existingEntry = (mapNode as YAMLMap).get(target.slotName, true);
+      let entryNode: YAMLMap | undefined = isMap(existingEntry) ? existingEntry : undefined;
+      if (!entryNode) {
         const newEntry = doc.createNode({ [slotDesc.childKey]: [] });
         (mapNode as YAMLMap).set(doc.createNode(target.slotName), newEntry);
-        entryNode = (mapNode as YAMLMap).get(target.slotName, true);
+        entryNode = newEntry;
       }
-      const compsSeq = (entryNode as YAMLMap).get(slotDesc.childKey, true);
+      const compsSeq = entryNode.get(slotDesc.childKey, true);
       if (!isSeq(compsSeq)) throw new Error('Slot child array not found');
       const compNode = doc.createNode(sourceJson);
-      (compsSeq as YAMLSeq).items.splice(index, 0, compNode);
+      compsSeq.items.splice(index, 0, compNode);
       this._doc.commitTransaction();
     } catch (e) {
       this._doc.abortTransaction();

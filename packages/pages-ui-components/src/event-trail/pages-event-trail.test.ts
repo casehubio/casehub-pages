@@ -12,8 +12,8 @@ describe('PagesEventTrail', () => {
   describe('configure() passthrough', () => {
     it('passes through getRowDetail, getRowKey, and columnRenderers', () => {
       const el = new PagesEventTrail();
-      const detail = (row: TypedRow) => html`<div>detail</div>`;
-      const key = (row: TypedRow) => 'key';
+      const detail = (_row: TypedRow) => html`<div>detail</div>`;
+      const key = (_row: TypedRow) => 'key';
       const renderers = new Map();
 
       el.configure({ getRowDetail: detail, getRowKey: key, columnRenderers: renderers });
