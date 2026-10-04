@@ -56,7 +56,7 @@ import type { Action } from "@casehubio/yaml-core/step";
 export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<string, { type: string; required: boolean }>; outputs?: Record<string, { type: string; required: boolean }>; execute: Action['execute'] }>) {
   const registry = new PluginRegistry();
   for (const p of plugins) {
-    registry.register({ name: p.name, inputs: p.inputs ?? {}, outputs: p.outputs ?? {}, execute: p.execute });
+    registry.register({ name: p.name, inputs: (p.inputs ?? {}) as Record<string, import("@casehubio/yaml-core/step").Parameter>, outputs: (p.outputs ?? {}) as Record<string, import("@casehubio/yaml-core/step").Parameter>, execute: p.execute });
   }
   const catalog = new CompositeCatalog([registry.createSource()]);
   const evaluator = new StructuralEvaluator();

@@ -1,7 +1,7 @@
 import { DefaultScenarioScope, parseDuration, parseRetryDirective, parseLoopDirective } from '@casehubio/yaml-core/orchestration';
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { ConditionEvaluator } from '@casehubio/yaml-core/condition';
-import type { Scenario, SchedulerStep, SectionContent } from './types.js';
+import type { Scenario, SchedulerStep, SectionContent, TimeTrigger } from './types.js';
 import type { LoopDirective } from '@casehubio/yaml-core/orchestration';
 import { isSectioned } from './types.js';
 import type { ScenarioState, OutlineNode } from '../controller/scenario-connection-controller.js';
@@ -281,7 +281,7 @@ export function createScheduler(
 
           if (result && result.kind === 'failure') {
             const stepName = ('name' in step ? step.name : null) ?? posKey;
-            scope.resultStore().recordFailure(stepName, { message: result.message, stepName });
+            scope.resultStore().recordFailure(stepName, { message: result.message, exceptionClass: 'StepFailure', stackTrace: '' });
             const retryRaw = decorators['retry'];
             const retryDirective = retryRaw != null ? parseRetryDirective(retryRaw) : undefined;
             const retryMax = retryDirective?.max ?? 0;
@@ -558,7 +558,7 @@ function resolveTemplates(
   templates: Map<number, string>,
 ): void {
   for (let i = 0; i < sections.length; i++) {
-    const content = sections[i].content;
+    const content = sections[i]!.content;
     if (content?.type === 'template' && content.path) {
       fetch(`${contentBase}/${content.path}`)
         .then(resp => resp.ok ? resp.text() : Promise.reject(new Error(`Template fetch failed: ${resp.status}`)))

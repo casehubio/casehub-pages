@@ -98,8 +98,8 @@ function mergeSteps(resolved: ResolvedStep[], preExtracted: PreExtractedStep[], 
   let ri = 0;
   let pi = 0;
   for (const slot of slotTypes) {
-    if (slot === 'walker') result.push(resolved[ri++]);
-    else if (slot === 'pre') result.push(preExtracted[pi++]);
+    if (slot === 'walker') result.push(resolved[ri++]!);
+    else if (slot === 'pre') result.push(preExtracted[pi++]!);
   }
   return result;
 }
@@ -137,7 +137,7 @@ export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
         : [];
       return {
         title: sec['title'] as string,
-        content: sec['content'] as SectionContent | undefined,
+        ...(sec['content'] != null ? { content: sec['content'] as SectionContent } : {}),
         steps,
       };
     });

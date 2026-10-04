@@ -50,6 +50,8 @@ function parseValue(type: ParameterType, value: string): ParsedValue {
     case 'BOOLEAN': {
       return { type: 'boolean', raw: isTruthy(value) };
     }
+    case 'OBJECT':
+      throw new Error(`Cannot parse OBJECT from a raw string value '${value}'`);
   }
 }
 

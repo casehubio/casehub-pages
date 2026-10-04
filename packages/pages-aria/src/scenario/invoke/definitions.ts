@@ -1,10 +1,10 @@
-import type { DefinitionFile, Definition } from '@casehubio/yaml-core/step';
+import type { DefinitionFile, Definition, Parameter } from '@casehubio/yaml-core/step';
 import type { AriaBinding, GraphqlDomainBinding, SimulatedBinding } from '@casehubio/yaml-core/step';
 
 function ariaDef(action: string, inputs: Record<string, { type: string; required?: boolean }>): Definition {
-  const parsed: Record<string, { type: string; required: boolean }> = {};
+  const parsed: Record<string, Parameter> = {};
   for (const [k, v] of Object.entries(inputs)) {
-    parsed[k] = { type: v.type.toUpperCase() as any, required: v.required ?? false };
+    parsed[k] = { type: v.type.toUpperCase() as Parameter['type'], required: v.required ?? false };
   }
   return { name: action, inputs: parsed, outputs: {}, invoke: { kind: 'aria', action } as AriaBinding, portability: 'ts' };
 }

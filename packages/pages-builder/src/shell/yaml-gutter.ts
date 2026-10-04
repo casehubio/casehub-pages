@@ -38,13 +38,13 @@ const lineHighlightField = StateField.define<DecorationSet>({
     }
     return Decoration.set(decos);
   },
-  provide: f => EditorView.decorations.from(f),
+  provide: f => EditorView.decorations.from(f as any),
 });
 
 const builderGutter = gutter({
   class: 'cm-builder-gutter',
   lineMarker(view, line) {
-    const range = view.state.field(highlightRangeField);
+    const range = view.state.field(highlightRangeField as any) as { from: number; to: number } | null;
     if (!range) return null;
     const startLine = view.state.doc.lineAt(range.from).from;
     if (line.from >= startLine && line.from <= range.to) return marker;

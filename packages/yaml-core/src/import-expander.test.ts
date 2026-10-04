@@ -34,12 +34,12 @@ describe('ImportExpander', () => {
 
     it('preserves imports that select steps without adding a module', () => {
       const imports: YamlImport[] = [
-        { steps: 'workflow', as: 'step', parameters: {}, forEach: { as: 'i', in: [1] } },
+        { actions: 'workflow', as: 'step', parameters: {}, forEach: { as: 'i', in: [1] } },
       ];
       const result = ImportExpander.expand(imports, {}, {});
       expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({ steps: 'workflow', as: 'step.1' });
-      expect(result[0]).not.toHaveProperty('module');
+      expect(result[0]).toMatchObject({ actions: 'workflow', as: 'step.1' });
+      expect(result[0]!.module).toBeUndefined();
     });
 
     it('expands import with group-ref forEach', () => {

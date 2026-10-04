@@ -34,7 +34,7 @@ export class AriaInvokeHandler implements InvokeHandler {
             style: params['style'] as string | undefined,
           };
           const { executeStep } = await import('../../executor/command-executor.js');
-          await executeStep(step, eventTarget, speed);
+          await executeStep(step as Parameters<typeof executeStep>[0], eventTarget, speed);
           return stepSuccess({});
         } catch (err) {
           return stepFailure((err as Error).message ?? String(err));
