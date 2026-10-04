@@ -1,6 +1,5 @@
 package io.casehub.pages.scenario.runtime;
 
-import io.casehub.pages.scenario.ScenarioStep;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -14,11 +13,8 @@ class GraphQLDispatcherTest {
 
     @Test
     void constructsMutationQuery() {
-        var step = new ScenarioStep.GraphQLStep(
-                "inject", "connectors", "injectChat",
-                Map.of("platform", "slack", "sender", "Alice"), null);
-
-        String query = dispatcher.buildQuery(step, "mutation");
+        String query = dispatcher.buildQuery("injectChat",
+                Map.of("platform", "slack", "sender", "Alice"));
         assertThat(query).contains("mutation");
         assertThat(query).contains("injectChat");
         assertThat(query).contains("$platform");
@@ -27,12 +23,8 @@ class GraphQLDispatcherTest {
 
     @Test
     void constructsQueryWithoutParams() {
-        var step = new ScenarioStep.GraphQLStep(
-                "status", "connectors", "connectorStatus",
-                Map.of(), null);
-
-        String query = dispatcher.buildQuery(step, "query");
-        assertThat(query).contains("query");
+        String query = dispatcher.buildQuery("connectorStatus", Map.of());
+        assertThat(query).contains("mutation");
         assertThat(query).contains("connectorStatus");
         assertThat(query).doesNotContain("$");
     }

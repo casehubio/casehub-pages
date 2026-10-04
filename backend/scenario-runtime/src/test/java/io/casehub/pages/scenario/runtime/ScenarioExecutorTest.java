@@ -20,17 +20,21 @@ class ScenarioExecutorTest {
 
     @Test
     void executesGraphQLStepsSequentially() {
-        var dispatcher = stubDispatcher(Map.of(
+        var dispatcher = stubGraphQLDispatcher(Map.of(
                 "injectChat", Map.of("caseId", "C-001"),
                 "caseContext", Map.of("category", "HARDWARE")));
 
-        var executor = new ScenarioExecutor(dispatcher);
+        var executor = new ScenarioExecutor(List.of(
+                new GraphQLDeliveryHandler(dispatcher),
+                new SimulatedDeliveryHandler()));
 
         var scenario = new Scenario("test", List.of(
-                new ScenarioStep.GraphQLStep("inject", "connectors", "injectChat",
-                        Map.of("sender", "Alice"), null),
-                new ScenarioStep.GraphQLStep("check", "engine", "caseContext",
-                        Map.of("caseId", "${inject.caseId}"), null)));
+                new ScenarioStep.GenericStep("inject", "graphql", Map.of(
+                        "domain", "connectors", "operation", "injectChat",
+                        "params", Map.of("sender", "Alice"))),
+                new ScenarioStep.GenericStep("check", "graphql", Map.of(
+                        "domain", "engine", "operation", "caseContext",
+                        "params", Map.of("caseId", "${inject.caseId}")))));
 
         List<ExecutionResult> results = executor.execute(scenario, ScenarioConfig.localhost());
 
@@ -44,16 +48,20 @@ class ScenarioExecutorTest {
     void failFastOnError() {
         var dispatcher = new GraphQLDispatcher(null, null) {
             @Override
-            public Map<String, Object> dispatch(ScenarioStep.GraphQLStep step,
-                                                 String endpoint, VariableContext ctx) {
+            public Map<String, Object> dispatch(String domain, String operation,
+                                                Map<String, Object> params,
+                                                String endpoint, VariableContext ctx) {
                 throw new RuntimeException("Connection refused");
             }
         };
 
-        var executor = new ScenarioExecutor(dispatcher);
+        var executor = new ScenarioExecutor(List.of(
+                new GraphQLDeliveryHandler(dispatcher)));
         var scenario = new Scenario("test", List.of(
-                new ScenarioStep.GraphQLStep("s1", "d", "op1", Map.of(), null),
-                new ScenarioStep.GraphQLStep("s2", "d", "op2", Map.of(), null)));
+                new ScenarioStep.GenericStep("s1", "graphql", Map.of(
+                        "domain", "d", "operation", "op1", "params", Map.of())),
+                new ScenarioStep.GenericStep("s2", "graphql", Map.of(
+                        "domain", "d", "operation", "op2", "params", Map.of()))));
 
         assertThatThrownBy(() -> executor.execute(scenario, ScenarioConfig.localhost()))
                 .isInstanceOf(RuntimeException.class)
@@ -61,26 +69,9 @@ class ScenarioExecutorTest {
     }
 
     @Test
-    void variableInterpolationAcrossSteps() {
-        var dispatcher = stubDispatcher(Map.of(
-                "createCase", Map.of("caseId", "C-999"),
-                "getCase", Map.of("status", "OPEN")));
-
-        var executor = new ScenarioExecutor(dispatcher);
-        var scenario = new Scenario("test", List.of(
-                new ScenarioStep.GraphQLStep("create", "engine", "createCase",
-                        Map.of("type", "helpdesk"), null),
-                new ScenarioStep.GraphQLStep("get", "engine", "getCase",
-                        Map.of("caseId", "${create.caseId}"), null)));
-
-        List<ExecutionResult> results = executor.execute(scenario, ScenarioConfig.localhost());
-        assertThat(results).hasSize(2);
-        assertThat(results.get(1).success()).isTrue();
-    }
-
-    @Test
     void ariaStepsReturnEmptyResult() {
-        var executor = new ScenarioExecutor(new GraphQLDispatcher());
+        var executor = new ScenarioExecutor(List.of(
+                new AriaDeliveryHandler(null)));
         var scenario = new Scenario("test", List.of(
                 new ScenarioStep.AriaStep("click-btn", "click", null, null, null, null)));
 
@@ -93,7 +84,8 @@ class ScenarioExecutorTest {
     void ariaStepDelegatesToDispatcher() {
         var dispatched     = new ArrayList<ScenarioStep.AriaStep>();
         var ariaDispatcher = stubAriaDispatcher(dispatched, Map.of());
-        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+        var executor = new ScenarioExecutor(List.of(
+                new AriaDeliveryHandler(ariaDispatcher)));
 
         var scenario = new Scenario("test", List.of(
                 new ScenarioStep.AriaStep("click-btn", "click",
@@ -111,7 +103,8 @@ class ScenarioExecutorTest {
     void consecutiveUnnamedNonNavigateStepsBatched() {
         var batchSizes     = new ArrayList<Integer>();
         var ariaDispatcher = batchCapturingDispatcher(batchSizes);
-        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+        var executor = new ScenarioExecutor(List.of(
+                new AriaDeliveryHandler(ariaDispatcher)));
 
         var scenario = new Scenario("test", List.of(
                 new ScenarioStep.AriaStep(null, "click",
@@ -130,7 +123,8 @@ class ScenarioExecutorTest {
     void namedStepBreaksBatch() {
         var batchSizes     = new ArrayList<Integer>();
         var ariaDispatcher = batchCapturingDispatcher(batchSizes);
-        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+        var executor = new ScenarioExecutor(List.of(
+                new AriaDeliveryHandler(ariaDispatcher)));
 
         var scenario = new Scenario("test", List.of(
                 new ScenarioStep.AriaStep(null, "click",
@@ -149,7 +143,8 @@ class ScenarioExecutorTest {
     void navigateStepBreaksBatch() {
         var dispatched     = new ArrayList<ScenarioStep.AriaStep>();
         var ariaDispatcher = stubAriaDispatcher(dispatched, Map.of());
-        var executor       = new ScenarioExecutor(new GraphQLDispatcher(), ariaDispatcher);
+        var executor = new ScenarioExecutor(List.of(
+                new AriaDeliveryHandler(ariaDispatcher)));
 
         var scenario = new Scenario("test", List.of(
                 new ScenarioStep.AriaStep(null, "click",
@@ -162,15 +157,40 @@ class ScenarioExecutorTest {
         assertThat(dispatched).hasSize(2);
     }
 
+    @Test
+    void unknownDeliveryTypeReturnsFailure() {
+        var executor = new ScenarioExecutor(List.of(new SimulatedDeliveryHandler()));
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.GenericStep("step1", "desired-state",
+                                             Map.of("deviceId", "dev-001"))));
 
-    private static GraphQLDispatcher stubDispatcher(Map<String, Map<String, Object>> responses) {
+        assertThatThrownBy(() -> executor.execute(scenario, ScenarioConfig.localhost()))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("No DeliveryHandler registered");
+    }
+
+    @Test
+    void simulatedStepReturnsOk() {
+        var executor = new ScenarioExecutor(List.of(new SimulatedDeliveryHandler()));
+        var scenario = new Scenario("test", List.of(
+                new ScenarioStep.GenericStep("sim1", "simulated",
+                                             Map.of("dataset", "metrics", "data", Map.of("cpu", 85)))));
+
+        List<ExecutionResult> results = executor.execute(scenario, ScenarioConfig.localhost());
+        assertThat(results).hasSize(1);
+        assertThat(results.getFirst().success()).isTrue();
+    }
+
+
+    private static GraphQLDispatcher stubGraphQLDispatcher(Map<String, Map<String, Object>> responses) {
         return new GraphQLDispatcher(null, null) {
             @Override
-            public Map<String, Object> dispatch(ScenarioStep.GraphQLStep step,
-                                                 String endpoint, VariableContext ctx) {
-                Map<String, Object> result = responses.get(step.operation());
+            public Map<String, Object> dispatch(String domain, String operation,
+                                                Map<String, Object> params,
+                                                String endpoint, VariableContext ctx) {
+                Map<String, Object> result = responses.get(operation);
                 if (result == null) {
-                    throw new RuntimeException("No stub for " + step.operation());
+                    throw new RuntimeException("No stub for " + operation);
                 }
                 return result;
             }
@@ -217,5 +237,4 @@ class ScenarioExecutorTest {
             }
         };
     }
-
 }

@@ -91,12 +91,11 @@ public final class ScenarioParser {
                     "Unknown step format — must be an ARIA shorthand or have a 'delivery' field. Found keys: " + fields.keySet());
         }
 
-        return switch (delivery) {
-            case "graphql" -> buildGraphQLStep(fields);
-            case "simulated" -> buildSimulatedStep(fields);
-            case "rest" -> buildRestStep(fields);
-            default -> throw new IllegalArgumentException("Unknown delivery type: " + delivery);
-        };
+        return new ScenarioStep.GenericStep(
+                (String) fields.get("name"),
+                delivery,
+                fields
+        );
     }
 
     private static ScenarioStep.AriaStep parseAriaShorthand(String action, JsonParser p) throws IOException {
@@ -147,65 +146,6 @@ public final class ScenarioParser {
         AriaTarget target = (role != null && name != null) ? new AriaTarget(role, name, within) : null;
         String autoName = action + "-" + (role != null ? role : "unknown") + "-" + (name != null ? name : "unknown");
         return new ScenarioStep.AriaStep(autoName, action, target, value, state, timeout);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ScenarioStep.GraphQLStep buildGraphQLStep(Map<String, Object> fields) {
-        String name = (String) fields.get("name");
-        String domain = (String) fields.get("domain");
-        String operation = (String) fields.get("operation");
-        Map<String, Object> params = fields.containsKey("params")
-                ? (Map<String, Object>) fields.get("params") : Map.of();
-        AwaitCondition await = null;
-        if (fields.containsKey("await")) {
-            Map<String, Object> awaitMap = (Map<String, Object>) fields.get("await");
-            Map<String, Object> match = (Map<String, Object>) awaitMap.get("match");
-            Integer timeout = awaitMap.containsKey("timeout") ? ((Number) awaitMap.get("timeout")).intValue() : null;
-            Integer interval = awaitMap.containsKey("interval") ? ((Number) awaitMap.get("interval")).intValue() : null;
-            await = new AwaitCondition(match, timeout, interval);
-        }
-        return new ScenarioStep.GraphQLStep(name, domain, operation, params, await);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ScenarioStep.SimulatedStep buildSimulatedStep(Map<String, Object> fields) {
-        String name = (String) fields.get("name");
-        String dataset = (String) fields.get("dataset");
-        Map<String, Object> data = fields.containsKey("data")
-                ? (Map<String, Object>) fields.get("data") : Map.of();
-        return new ScenarioStep.SimulatedStep(name, dataset, data);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ScenarioStep.RestStep buildRestStep(Map<String, Object> fields) {
-        String name = (String) fields.get("name");
-        String method = (String) fields.getOrDefault("method", "POST");
-        String url = (String) fields.get("url");
-        Map<String, Object> body = fields.containsKey("body")
-                ? (Map<String, Object>) fields.get("body") : Map.of();
-        Map<String, String> headers = Map.of();
-        if (fields.containsKey("headers")) {
-            Map<String, Object> rawHeaders = (Map<String, Object>) fields.get("headers");
-            headers = new HashMap<>();
-            for (var entry : rawHeaders.entrySet()) {
-                headers.put(entry.getKey(), String.valueOf(entry.getValue()));
-            }
-        }
-        Integer expectedStatus = null;
-        AwaitCondition await = null;
-        if (fields.containsKey("await")) {
-            Map<String, Object> awaitMap = (Map<String, Object>) fields.get("await");
-            if (awaitMap.containsKey("status")) {
-                expectedStatus = ((Number) awaitMap.get("status")).intValue();
-            }
-            if (awaitMap.containsKey("match")) {
-                Map<String, Object> match = (Map<String, Object>) awaitMap.get("match");
-                Integer timeout = awaitMap.containsKey("timeout") ? ((Number) awaitMap.get("timeout")).intValue() : null;
-                Integer interval = awaitMap.containsKey("interval") ? ((Number) awaitMap.get("interval")).intValue() : null;
-                await = new AwaitCondition(match, timeout, interval);
-            }
-        }
-        return new ScenarioStep.RestStep(name, method, url, body, headers, expectedStatus, await);
     }
 
     @SuppressWarnings("unchecked")

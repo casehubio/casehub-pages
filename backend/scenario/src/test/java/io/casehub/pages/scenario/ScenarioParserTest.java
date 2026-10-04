@@ -124,15 +124,13 @@ class ScenarioParserTest {
 
         assertThat(scenario.scenario()).isEqualTo("graphql-inject-chat");
         assertThat(scenario.steps()).hasSize(1);
-        assertThat(scenario.steps().getFirst()).isInstanceOf(ScenarioStep.GraphQLStep.class);
+        assertThat(scenario.steps().getFirst()).isInstanceOf(ScenarioStep.GenericStep.class);
 
-        var step = (ScenarioStep.GraphQLStep) scenario.steps().getFirst();
+        var step = (ScenarioStep.GenericStep) scenario.steps().getFirst();
         assertThat(step.name()).isEqualTo("inject-chat");
-        assertThat(step.domain()).isEqualTo("connectors");
-        assertThat(step.operation()).isEqualTo("injectChat");
-        assertThat(step.params()).containsEntry("platform", "slack");
-        assertThat(step.params()).containsEntry("sender", "Alice");
-        assertThat(step.await()).isNull();
+        assertThat(step.delivery()).isEqualTo("graphql");
+        assertThat(step.data()).containsEntry("domain", "connectors");
+        assertThat(step.data()).containsEntry("operation", "injectChat");
     }
 
     @Test
@@ -144,14 +142,12 @@ class ScenarioParserTest {
         assertThat(scenario.steps().get(0)).isInstanceOf(ScenarioStep.AriaStep.class);
         assertThat(scenario.steps().get(1)).isInstanceOf(ScenarioStep.AriaStep.class);
         assertThat(scenario.steps().get(2)).isInstanceOf(ScenarioStep.AriaStep.class);
-        assertThat(scenario.steps().get(3)).isInstanceOf(ScenarioStep.GraphQLStep.class);
-        assertThat(scenario.steps().get(4)).isInstanceOf(ScenarioStep.GraphQLStep.class);
+        assertThat(scenario.steps().get(3)).isInstanceOf(ScenarioStep.GenericStep.class);
+        assertThat(scenario.steps().get(4)).isInstanceOf(ScenarioStep.GenericStep.class);
 
-        var await = ((ScenarioStep.GraphQLStep) scenario.steps().get(4)).await();
-        assertThat(await).isNotNull();
-        assertThat(await.match()).containsEntry("category", "HARDWARE");
-        assertThat(await.timeout()).isEqualTo(30000);
-        assertThat(await.interval()).isEqualTo(500);
+        var step4 = (ScenarioStep.GenericStep) scenario.steps().get(4);
+        assertThat(step4.delivery()).isEqualTo("graphql");
+        assertThat(step4.data()).containsKey("await");
     }
 
     @Test
@@ -172,10 +168,10 @@ class ScenarioParserTest {
                       interval: 200
                 """;
         Scenario scenario = ScenarioParser.parse(yaml);
-        var step = (ScenarioStep.GraphQLStep) scenario.steps().getFirst();
-        assertThat(step.await().match()).containsEntry("status", "RESOLVED");
-        assertThat(step.await().timeout()).isEqualTo(10000);
-        assertThat(step.await().interval()).isEqualTo(200);
+        var step = (ScenarioStep.GenericStep) scenario.steps().getFirst();
+        assertThat(step.delivery()).isEqualTo("graphql");
+        assertThat(step.data()).containsEntry("domain", "engine");
+        assertThat(step.data()).containsKey("await");
     }
 
     @Test
@@ -219,17 +215,13 @@ class ScenarioParserTest {
                 """;
         Scenario scenario = ScenarioParser.parse(yaml);
         assertThat(scenario.steps()).hasSize(1);
-        assertThat(scenario.steps().getFirst()).isInstanceOf(ScenarioStep.RestStep.class);
+        assertThat(scenario.steps().getFirst()).isInstanceOf(ScenarioStep.GenericStep.class);
 
-        var step = (ScenarioStep.RestStep) scenario.steps().getFirst();
+        var step = (ScenarioStep.GenericStep) scenario.steps().getFirst();
         assertThat(step.name()).isEqualTo("create-trial");
-        assertThat(step.method()).isEqualTo("POST");
-        assertThat(step.url()).isEqualTo("/api/trials");
-        assertThat(step.body()).containsEntry("protocolId", "DEMO-001");
-        assertThat(step.body()).containsEntry("phase", "PHASE_III");
-        assertThat(step.headers()).containsEntry("X-Custom", "test");
-        assertThat(step.expectedStatus()).isEqualTo(201);
-        assertThat(step.await()).isNull();
+        assertThat(step.delivery()).isEqualTo("rest");
+        assertThat(step.data()).containsEntry("method", "POST");
+        assertThat(step.data()).containsEntry("url", "/api/trials");
     }
 
     @Test
@@ -248,12 +240,10 @@ class ScenarioParserTest {
                       interval: 500
                 """;
         Scenario scenario = ScenarioParser.parse(yaml);
-        var step = (ScenarioStep.RestStep) scenario.steps().getFirst();
-        assertThat(step.method()).isEqualTo("GET");
-        assertThat(step.expectedStatus()).isNull();
-        assertThat(step.await()).isNotNull();
-        assertThat(step.await().match()).containsEntry("phase", "ACTIVE");
-        assertThat(step.await().timeout()).isEqualTo(10000);
+        var step = (ScenarioStep.GenericStep) scenario.steps().getFirst();
+        assertThat(step.delivery()).isEqualTo("rest");
+        assertThat(step.data()).containsEntry("method", "GET");
+        assertThat(step.data()).containsKey("await");
     }
 
     @Test
@@ -316,23 +306,40 @@ class ScenarioParserTest {
         assertThat(scenario.steps().get(1)).isInstanceOf(ScenarioStep.AriaStep.class);
         assertThat(((ScenarioStep.AriaStep) scenario.steps().get(1)).action()).isEqualTo("spotlight");
 
-        var restStep = (ScenarioStep.RestStep) scenario.steps().get(4);
+        var restStep = (ScenarioStep.GenericStep) scenario.steps().get(4);
         assertThat(restStep.name()).isEqualTo("create-case");
-        assertThat(restStep.method()).isEqualTo("POST");
-        assertThat(restStep.url()).isEqualTo("/api/cases");
-        assertThat(restStep.body()).containsEntry("customer", "Alice Chen");
-        assertThat(restStep.expectedStatus()).isEqualTo(201);
+        assertThat(restStep.delivery()).isEqualTo("rest");
+        assertThat(restStep.data()).containsEntry("method", "POST");
+        assertThat(restStep.data()).containsEntry("url", "/api/cases");
 
         var spotlightAfterRest = (ScenarioStep.AriaStep) scenario.steps().get(5);
         assertThat(spotlightAfterRest.action()).isEqualTo("spotlight");
         assertThat(spotlightAfterRest.value()).contains("REST endpoint");
 
-        var graphql = (ScenarioStep.GraphQLStep) scenario.steps().get(6);
-        assertThat(graphql.operation()).isEqualTo("injectChat");
+        var graphql = (ScenarioStep.GenericStep) scenario.steps().get(6);
+        assertThat(graphql.data()).containsEntry("operation", "injectChat");
 
         var finalSpotlight = (ScenarioStep.AriaStep) scenario.steps().get(9);
         assertThat(finalSpotlight.action()).isEqualTo("spotlight");
         assertThat(finalSpotlight.state()).containsEntry("duration", 3000);
+    }
+
+
+    @Test
+    void parsesUnknownDeliveryTypeAsGenericStep() {
+        String yaml = """
+                      scenario: custom-test
+                      steps:
+                        - name: set-thermostat
+                          delivery: desired-state
+                          deviceId: "dev-001"
+                          properties:
+                            targetTemperature: 22
+                      """;
+        Scenario scenario = ScenarioParser.parse(yaml);
+        var      step     = (ScenarioStep.GenericStep) scenario.steps().getFirst();
+        assertThat(step.delivery()).isEqualTo("desired-state");
+        assertThat(step.data()).containsEntry("deviceId", "dev-001");
     }
 
     @Test

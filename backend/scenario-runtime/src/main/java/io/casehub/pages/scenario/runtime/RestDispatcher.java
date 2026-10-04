@@ -3,7 +3,6 @@ package io.casehub.pages.scenario.runtime;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.casehub.pages.scenario.ScenarioStep;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,41 +25,38 @@ public class RestDispatcher {
         this.mapper = mapper;
     }
 
-    public Map<String, Object> dispatch(ScenarioStep.RestStep step,
-                                         String baseUrl,
-                                         VariableContext ctx) {
-        String resolvedUrl = ctx.resolve(baseUrl + step.url());
-        String method = step.method().toUpperCase();
-
+    public Map<String, Object> dispatch(String method, String resolvedUrl,
+                                        Map<String, Object> body, Map<String, String> headers,
+                                        Integer expectedStatus) {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(resolvedUrl))
-                .header("Content-Type", "application/json");
+                                                        .uri(URI.create(resolvedUrl))
+                                                        .header("Content-Type", "application/json");
 
-        for (var entry : step.headers().entrySet()) {
-            requestBuilder.header(entry.getKey(), ctx.resolve(entry.getValue()));
+        if (headers != null) {
+            for (var entry : headers.entrySet()) {
+                requestBuilder.header(entry.getKey(), entry.getValue());
+            }
         }
 
-        Map<String, Object> resolvedBody = ctx.resolveMap(step.body());
+        HttpRequest.BodyPublisher bodyPublisher = (body == null || body.isEmpty())
+                                                  ? HttpRequest.BodyPublishers.noBody()
+                                                  : bodyPublisher(body);
 
-        HttpRequest.BodyPublisher bodyPublisher = resolvedBody.isEmpty()
-                ? HttpRequest.BodyPublishers.noBody()
-                : bodyPublisher(resolvedBody);
-
-        requestBuilder.method(method, bodyPublisher);
+        requestBuilder.method(method.toUpperCase(), bodyPublisher);
 
         try {
             HttpResponse<String> response = httpClient.send(
                     requestBuilder.build(),
                     HttpResponse.BodyHandlers.ofString());
 
-            if (step.expectedStatus() != null && response.statusCode() != step.expectedStatus()) {
-                throw new RuntimeException("Expected status " + step.expectedStatus()
-                        + " but got " + response.statusCode() + ": " + response.body());
+            if (expectedStatus != null && response.statusCode() != expectedStatus) {
+                throw new RuntimeException("Expected status " + expectedStatus
+                                           + " but got " + response.statusCode() + ": " + response.body());
             }
 
             return parseResponse(response);
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("REST dispatch failed for " + method + " " + step.url(), e);
+            throw new RuntimeException("REST dispatch failed for " + method + " " + resolvedUrl, e);
         }
     }
 
