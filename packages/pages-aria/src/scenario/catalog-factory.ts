@@ -12,7 +12,7 @@ export function createScenarioCatalog(): Catalog {
       if (def.invoke) {
         const handler = handlers.find(h => h.supports(def.invoke!));
         const action = handler
-          ? handler.create(def, def.invoke!)
+          ? handler.create(def, def.invoke)
           : { async execute() { return stepSuccess({}); } };
         entries.set(name, { qualifiedName: name, definition: def, action });
       }

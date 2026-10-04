@@ -105,7 +105,7 @@ describe('pages-action-catalog', () => {
       await el.updateComplete;
       const badges = el.shadowRoot!.querySelectorAll('.source-badge');
       expect(badges.length).toBe(3);
-      expect(badges[0]!.textContent!.trim()).toBe('yaml');
+      expect(badges[0]!.textContent.trim()).toBe('yaml');
     });
 
     it('filters by search text', async () => {
@@ -193,7 +193,7 @@ describe('pages-action-catalog', () => {
       await el.updateComplete;
       const back = el.shadowRoot!.querySelector('[aria-label="Back to catalog list"]') as HTMLElement;
       expect(back).not.toBeNull();
-      back!.click();
+      back.click();
       await el.updateComplete;
       expect(el['_view']).toBe('list');
     });
@@ -248,7 +248,7 @@ describe('pages-action-catalog', () => {
 
       const btn = el.shadowRoot!.querySelector('[aria-label="Use template"]') as HTMLElement;
       expect(btn).not.toBeNull();
-      btn!.click();
+      btn.click();
       await el.updateComplete;
 
       expect(events.length).toBe(1);

@@ -52,7 +52,7 @@ export class DefaultOrcChannel<T> implements OrcChannel<T> {
         }, timeoutMs);
       }
       this._sendWaiters.push(waiter);
-    }).then((result) => (timeoutMs !== undefined ? result : undefined)) as Promise<void | boolean>;
+    }).then((result) => (timeoutMs !== undefined ? result : undefined));
   }
 
   receive(): Promise<T>;

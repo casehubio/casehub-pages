@@ -84,7 +84,7 @@ export class DefaultBlockingOrcStateMachine<S extends string> implements Blockin
 
   awaitTransition(from: S, to: S): Promise<void> {
     return new Promise(resolve => {
-      this.onTransition(from, to, () => resolve());
+      this.onTransition(from, to, () => { resolve(); });
     });
   }
 
@@ -93,7 +93,7 @@ export class DefaultBlockingOrcStateMachine<S extends string> implements Blockin
     return new Promise(resolve => {
       this.waiters.push({
         check: () => targets.has(this.state),
-        resolve: () => resolve(this.state),
+        resolve: () => { resolve(this.state); },
       });
     });
   }

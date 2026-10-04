@@ -110,12 +110,12 @@ export class ForEachExpander {
             );
           }
           const values = resolveValues(
-            group.in as unknown[], resolver, groupKey, valueExpander);
+            group.in, resolver, groupKey, valueExpander);
           groupValues.set(groupKey, values);
         }
       } else {
         groupKey = `__inline__${elementId}`;
-        const values = resolveValues(forEach.in as unknown[], resolver, elementId, valueExpander);
+        const values = resolveValues(forEach.in, resolver, elementId, valueExpander);
         groupValues.set(groupKey, values);
       }
 
@@ -215,13 +215,13 @@ export class ForEachExpander {
                 `forEach on '${elementId}' references unknown group or data source '${groupKey}'.`,
               );
             }
-            const values = resolveValues(group.in as unknown[], resolver, groupKey, null);
+            const values = resolveValues(group.in, resolver, groupKey, null);
             groupValues.set(groupKey, values);
           }
         }
       } else {
         groupKey = `__inline__${elementId}`;
-        const values = resolveValues(forEach.in as unknown[], resolver, elementId, null);
+        const values = resolveValues(forEach.in, resolver, elementId, null);
         groupValues.set(groupKey, values);
       }
 

@@ -350,7 +350,7 @@ export class ModuleExpander {
         if (!mergedSections[sectionName]) {
           mergedSections[sectionName] = {};
         }
-        const targetSection = mergedSections[sectionName]!;
+        const targetSection = mergedSections[sectionName];
 
         for (const [contentKey, value] of Object.entries(sectionContent)) {
           const resolvedContentKey = contentKey.includes('${')
@@ -421,7 +421,7 @@ export class ModuleExpander {
         if (!mergedSections[sectionName]) {
           mergedSections[sectionName] = {};
         }
-        Object.assign(mergedSections[sectionName]!, sectionContent);
+        Object.assign(mergedSections[sectionName], sectionContent);
       }
 
       result[header.name] = {
@@ -514,7 +514,7 @@ export class ModuleExpander {
         if (!mergedSections[sectionName]) {
           mergedSections[sectionName] = {};
         }
-        const targetSection = mergedSections[sectionName]!;
+        const targetSection = mergedSections[sectionName];
 
         for (const [contentKey, value] of Object.entries(sectionContent)) {
           const resolvedContentKey = contentKey.includes('${')

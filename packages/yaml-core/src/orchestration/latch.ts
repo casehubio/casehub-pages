@@ -42,7 +42,7 @@ export class DefaultOrcLatch implements OrcLatch {
         }, timeoutMs);
       }
       this._waiters.push(waiter);
-    }).then((result) => (timeoutMs !== undefined ? result : undefined)) as Promise<void | boolean>;
+    }).then((result) => (timeoutMs !== undefined ? result : undefined));
   }
 
   getCount(): number {

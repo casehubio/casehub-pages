@@ -80,7 +80,7 @@ class TimeoutDecorator implements DecoratedExecution {
   async execute(context: Context): Promise<Result> {
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
     const timeoutPromise = new Promise<Result>((resolve) =>
-      setTimeout(() => resolve(stepFailure(`Step '${context.stepName}' exceeded timeout of ${ms}ms`)), ms),
+      setTimeout(() => { resolve(stepFailure(`Step '${context.stepName}' exceeded timeout of ${ms}ms`)); }, ms),
     );
     return Promise.race([this.next.execute(context), timeoutPromise]);
   }

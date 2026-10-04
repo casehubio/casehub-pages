@@ -23,7 +23,7 @@ describe('PluginRegistry', () => {
   it('register duplicate throws', () => {
     const reg = new PluginRegistry();
     reg.register(plugin('greet'));
-    expect(() => reg.register(plugin('greet'))).toThrow("already registered");
+    expect(() => { reg.register(plugin('greet')); }).toThrow("already registered");
   });
 
   it('unregister removes plugin', () => {

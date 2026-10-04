@@ -246,7 +246,7 @@ export function forEachContextSource(
     }
     if (rows && rows[name] !== undefined) {
       throw new Error(
-        `'${name}' is a row — use field access like \${each.${name}.fieldName}. Available: ${Object.keys(rows[name]!).join(', ')}`,
+        `'${name}' is a row — use field access like \${each.${name}.fieldName}. Available: ${Object.keys(rows[name]).join(', ')}`,
       );
     }
     return undefined;

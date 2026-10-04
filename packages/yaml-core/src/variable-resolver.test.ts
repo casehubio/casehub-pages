@@ -376,7 +376,7 @@ describe('VariableSource.nested', () => {
   });
 
   it('resolves deeply nested field', () => {
-    const source = nestedSource({ step1: { result: { id: 42 } as unknown as Record<string, unknown> } });
+    const source = nestedSource({ step1: { result: { id: 42 } } });
     expect(source('step1.result.id')).toBe('42');
   });
 

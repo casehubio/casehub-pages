@@ -82,22 +82,22 @@ export async function executeStep(
   if (!step.action) return;
 
   switch (step.action) {
-    case 'click': return click(step.target!);
-    case 'fill': return fill(step.target!, step['value'] as string);
-    case 'select': return select(step.target!, step['value'] as string);
-    case 'expand': return expand(step.target!);
-    case 'collapse': return collapse(step.target!);
-    case 'assert': return assertState(step.target!, step['state'] as Partial<AriaState>);
+    case 'click': { click(step.target!); return; }
+    case 'fill': { fill(step.target!, step['value'] as string); return; }
+    case 'select': { select(step.target!, step['value'] as string); return; }
+    case 'expand': { expand(step.target!); return; }
+    case 'collapse': { collapse(step.target!); return; }
+    case 'assert': { assertState(step.target!, step['state'] as Partial<AriaState>); return; }
     case 'wait': return waitFor(step.target!, step['state'] as Partial<AriaState>, (step['timeout'] as number) ?? 5000);
     case 'navigate': window.location.href = step['value'] as string; return;
     case 'spotlight': return spotlightStep(step, _speed);
-    case 'show-markdown': return showMarkdownStep(step, _eventTarget);
+    case 'show-markdown': { showMarkdownStep(step, _eventTarget); return; }
     case 'editor-insert': return editorInsert(step.target!, step['value'] as string, step['typing'] as string ?? 'progressive', _speed, step['line'] as number, step['col'] as number);
     case 'editor-set-content': return editorSetContent(step.target!, step['value'] as string, step['typing'] as string ?? 'progressive', _speed);
     case 'editor-replace': return editorReplace(step.target!, step['from'] as Position, step['to'] as Position, step['value'] as string, step['typing'] as string ?? 'progressive', _speed);
-    case 'editor-delete': return editorDelete(step.target!, step['from'] as Position, step['to'] as Position);
-    case 'editor-cursor': return editorCursor(step.target!, step['line'] as number, step['col'] as number);
-    case 'editor-highlight': return editorHighlight(step.target!, step['from'] as Position, step['to'] as Position, step['style'] as string);
+    case 'editor-delete': { editorDelete(step.target!, step['from'] as Position, step['to'] as Position); return; }
+    case 'editor-cursor': { editorCursor(step.target!, step['line'] as number, step['col'] as number); return; }
+    case 'editor-highlight': { editorHighlight(step.target!, step['from'] as Position, step['to'] as Position, step['style'] as string); return; }
     case 'editor-completion': return editorCompletion(step.target!, step['label'] as string);
     default: throw new Error(`Unknown action: ${step.action}`);
   }
@@ -156,7 +156,7 @@ async function editorInsert(target: AriaTarget, value: string, typing: string, s
   if (typing === 'instant') {
     editor.insertText(value);
   } else {
-    await progressiveInsert(editor, value, speed, (r) => editor.insertText(r));
+    await progressiveInsert(editor, value, speed, (r) => { editor.insertText(r); });
   }
 }
 
@@ -166,7 +166,7 @@ async function editorSetContent(target: AriaTarget, value: string, typing: strin
     editor.setContent(value);
   } else {
     editor.setContent('');
-    await progressiveInsert(editor, value, speed, (r) => editor.setContent(r));
+    await progressiveInsert(editor, value, speed, (r) => { editor.setContent(r); });
   }
 }
 
@@ -176,7 +176,7 @@ async function editorReplace(target: AriaTarget, from: Position, to: Position, v
   if (typing === 'instant') {
     editor.insertText(value);
   } else {
-    await progressiveInsert(editor, value, speed, (r) => editor.insertText(r));
+    await progressiveInsert(editor, value, speed, (r) => { editor.insertText(r); });
   }
 }
 

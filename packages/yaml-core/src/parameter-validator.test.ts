@@ -103,8 +103,8 @@ describe('ParameterValidator', () => {
   });
 
   it('validateOrThrow throws on violations', () => {
-    expect(() => ParameterValidator.validateOrThrow(
-      { x: param({ required: true }) }, {}))
+    expect(() => { ParameterValidator.validateOrThrow(
+      { x: param({ required: true }) }, {}); })
       .toThrow(ParameterValidationError);
   });
 

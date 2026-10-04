@@ -28,17 +28,17 @@ describe('DefaultVirtualClock', () => {
 
   it('setSpeed rejects zero', () => {
     const clock = new DefaultVirtualClock();
-    expect(() => clock.setSpeed(0)).toThrow();
+    expect(() => { clock.setSpeed(0); }).toThrow();
   });
 
   it('setSpeed rejects negative', () => {
     const clock = new DefaultVirtualClock();
-    expect(() => clock.setSpeed(-1)).toThrow();
+    expect(() => { clock.setSpeed(-1); }).toThrow();
   });
 
   it('setSpeed rejects NaN', () => {
     const clock = new DefaultVirtualClock();
-    expect(() => clock.setSpeed(NaN)).toThrow();
+    expect(() => { clock.setSpeed(NaN); }).toThrow();
   });
 
   it('setSpeed accepts Infinity', () => {

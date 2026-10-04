@@ -107,7 +107,7 @@ export function buildStepLineMap(yamlSource: string): Map<string, LineRange> {
 
   for (const section of (root as { items: { get(k: string): unknown; items?: unknown[]; range?: [number, number, number] }[] }).items) {
     const steps = section.get('steps');
-    if (!steps || !('items' in (steps as object))) continue;
+    if (!steps || !('items' in (steps))) continue;
 
     for (const step of (steps as { items: { get(k: string): unknown; range?: [number, number, number] }[] }).items) {
       const range = step.range;
@@ -115,8 +115,8 @@ export function buildStepLineMap(yamlSource: string): Map<string, LineRange> {
 
       const label = step.get('label') as string | undefined;
       const name = step.get('name') as string | undefined;
-      const startLine = offsetToLine(yamlSource, range[0] as number);
-      const endLine = offsetToLine(yamlSource, (range[2] as number) - 1);
+      const startLine = offsetToLine(yamlSource, range[0]);
+      const endLine = offsetToLine(yamlSource, (range[2]) - 1);
 
       if (label) map.set(label, { startLine, endLine });
       if (name) map.set(name, { startLine, endLine });

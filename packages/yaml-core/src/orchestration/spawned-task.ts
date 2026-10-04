@@ -35,7 +35,7 @@ export class DefaultSpawnedTask implements SpawnedTask {
   exception(): Error | undefined { return this.error; }
   async join(): Promise<void> { await this.promise; }
   async joinWithTimeout(timeoutMs: number): Promise<boolean> {
-    const timer = new Promise<boolean>(res => setTimeout(() => res(false), timeoutMs));
+    const timer = new Promise<boolean>(res => setTimeout(() => { res(false); }, timeoutMs));
     const done = this.promise.then(() => true);
     return Promise.race([done, timer]);
   }

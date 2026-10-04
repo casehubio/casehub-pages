@@ -37,7 +37,7 @@ export class DefaultOrcSignal implements OrcSignal {
     }
     return new Promise<boolean>((resolve) => {
       const waiter: Waiter = {
-        resolve: (val) => resolve(val),
+        resolve: (val) => { resolve(val); },
       };
       if (timeoutMs !== undefined) {
         waiter.timer = setTimeout(() => {
@@ -47,7 +47,7 @@ export class DefaultOrcSignal implements OrcSignal {
         }, timeoutMs);
       }
       this._waiters.push(waiter);
-    }).then((result) => (timeoutMs !== undefined ? result : undefined)) as Promise<void | boolean>;
+    }).then((result) => (timeoutMs !== undefined ? result : undefined));
   }
 
   payload(): unknown {
