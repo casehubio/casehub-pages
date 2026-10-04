@@ -1,7 +1,7 @@
 import { DefaultScenarioScope, parseDuration, parseRetryDirective, parseLoopDirective } from '@casehubio/yaml-core/orchestration';
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { ConditionEvaluator } from '@casehubio/yaml-core/condition';
-import type { Scenario, SchedulerStep, SectionContent, TimeTrigger } from './types.js';
+import type { Scenario, SchedulerStep, SectionContent, TimeTrigger, OrchestrationBlock } from './types.js';
 import type { LoopDirective } from '@casehubio/yaml-core/orchestration';
 import { isSectioned } from './types.js';
 import type { ScenarioState, OutlineNode } from '../controller/scenario-connection-controller.js';
