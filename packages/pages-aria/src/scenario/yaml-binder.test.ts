@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DefaultScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { bindScenario } from './yaml-binder.js';
 import type { SchedulerStep } from './types.js';
-import type { ParallelStep, BlockStep } from '@casehubio/yaml-core/step';
+import type { ParallelStep } from '@casehubio/yaml-core/step';
 import { stepSuccess } from '@casehubio/yaml-core/step';
 
 function simplePlugin(name: string): SchedulerStep {
@@ -19,7 +19,7 @@ describe('YamlBinder', () => {
       steps: [simplePlugin('click'), simplePlugin('fill')],
     };
     const scope = new DefaultScenarioScope();
-    const result = bindScenario(scenario as any, scope);
+    const result = bindScenario(scenario, scope);
     expect(result.queues).toHaveLength(1);
     expect(result.queues[0].steps).toHaveLength(2);
     expect(result.queues[0].id).toBe('main');
@@ -29,13 +29,13 @@ describe('YamlBinder', () => {
     const parallel: ParallelStep = {
       kind: 'parallel', name: null, decorators: {},
       steps: [
-        { kind: 'block', name: 'branch-a', steps: [simplePlugin('click') as any], decorators: {} } as BlockStep,
-        { kind: 'block', name: 'branch-b', steps: [simplePlugin('click') as any], decorators: {} } as BlockStep,
+        { kind: 'block', name: 'branch-a', steps: [simplePlugin('click') as any], decorators: {} },
+        { kind: 'block', name: 'branch-b', steps: [simplePlugin('click') as any], decorators: {} },
       ],
     };
     const scenario = { scenario: 'test', steps: [parallel] };
     const scope = new DefaultScenarioScope();
-    const result = bindScenario(scenario as any, scope);
+    const result = bindScenario(scenario, scope);
     expect(result.queues).toHaveLength(3);
     const mainQueue = result.queues[0];
     expect(mainQueue.children).toHaveLength(2);
@@ -54,7 +54,7 @@ describe('YamlBinder', () => {
       steps: [],
     };
     const scope = new DefaultScenarioScope();
-    bindScenario(scenario as any, scope);
+    bindScenario(scenario, scope);
     expect(scope.latch('all-ready', 3).getCount()).toBe(3);
     expect(scope.channel('trades').isEmpty()).toBe(true);
     expect(scope.signal('go').isSignalled()).toBe(false);
@@ -93,7 +93,7 @@ describe('YamlBinder', () => {
       ],
     };
     const scope = new DefaultScenarioScope();
-    const result = bindScenario(scenario as any, scope);
+    const result = bindScenario(scenario, scope);
     expect(result.queues).toHaveLength(1);
     expect(result.queues[0].steps).toHaveLength(2);
   });

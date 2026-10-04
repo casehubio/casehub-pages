@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { Action, Result, ServiceRegistry } from './walker.js';
+import type { Action, Result } from './walker.js';
 import { stepSuccess, stepFailure } from './walker.js';
 import { DecoratorChain } from './decorator-chain.js';
 import type { Context } from './decorator-chain.js';
@@ -117,7 +117,7 @@ describe('DecoratorChain', () => {
 
     it('returns failure when execution exceeds timeout', async () => {
       const action: Action = {
-        execute: () => new Promise((resolve) => setTimeout(() => resolve(stepSuccess({})), 500)),
+        execute: () => new Promise((resolve) => setTimeout(() => { resolve(stepSuccess({})); }, 500)),
       };
       const chain = DecoratorChain.build({ timeout: '10ms' }, action);
       const result = await chain.execute(mockContext());

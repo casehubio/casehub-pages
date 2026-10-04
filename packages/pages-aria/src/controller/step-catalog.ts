@@ -320,7 +320,7 @@ export class PagesActionCatalog extends LitElement {
     this._tryParams = {};
     this._tryResult = null;
     if (detail.inputs) {
-      for (const [key, param] of Object.entries(detail.inputs) as [string, ParameterInfo][]) {
+      for (const [key, param] of Object.entries(detail.inputs)) {
         this._tryParams[key] = param.defaultValue ?? '';
       }
     }
@@ -342,9 +342,9 @@ export class PagesActionCatalog extends LitElement {
         }),
       });
       if (!resp.ok) return;
-      const json = await resp.json();
+      const json = await resp.json() as { data?: { catalogAction?: CatalogActionDetail } };
       const detail = json.data?.catalogAction;
-      if (detail) this._setDetail(detail);
+      if (detail) this._setDetail(detail as CatalogActionDetail);
     } catch { /* ignore */ }
   }
 
@@ -376,7 +376,7 @@ export class PagesActionCatalog extends LitElement {
   static generateTemplate(detail: CatalogActionDetail): string {
     const lines: string[] = [`- ${detail.name}:`];
     if (detail.inputs) {
-      for (const [name, param] of Object.entries(detail.inputs) as [string, ParameterInfo][]) {
+      for (const [name, param] of Object.entries(detail.inputs)) {
         const value = param.defaultValue ? `"${param.defaultValue}"` : '""';
         const comment = [param.type?.toLowerCase(), param.required ? 'required' : 'optional']
           .filter(Boolean).join(', ');
@@ -478,11 +478,11 @@ export class PagesActionCatalog extends LitElement {
               ${Object.entries(d.inputs).map(([name, p]) => html`
                 <tr>
                   <td>${name}</td>
-                  <td>${(p as ParameterInfo).type}</td>
-                  <td>${(p as ParameterInfo).required ? 'yes' : ''}</td>
-                  <td>${(p as ParameterInfo).defaultValue ?? ''}</td>
-                  <td>${(p as ParameterInfo).allowedValues?.join(', ') ?? ''}</td>
-                  <td>${(p as ParameterInfo).description ?? ''}</td>
+                  <td>${(p).type}</td>
+                  <td>${(p).required ? 'yes' : ''}</td>
+                  <td>${(p).defaultValue ?? ''}</td>
+                  <td>${(p).allowedValues?.join(', ') ?? ''}</td>
+                  <td>${(p).description ?? ''}</td>
                 </tr>
               `)}
             </tbody>
@@ -497,8 +497,8 @@ export class PagesActionCatalog extends LitElement {
               ${Object.entries(d.outputs).map(([name, p]) => html`
                 <tr>
                   <td>${name}</td>
-                  <td>${(p as ParameterInfo).type}</td>
-                  <td>${(p as ParameterInfo).description ?? ''}</td>
+                  <td>${(p).type}</td>
+                  <td>${(p).description ?? ''}</td>
                 </tr>
               `)}
             </tbody>
@@ -526,7 +526,7 @@ export class PagesActionCatalog extends LitElement {
             : nothing}
           <div class="try-form">
             ${d.inputs ? Object.entries(d.inputs).map(([name, p]) => {
-              const param = p as ParameterInfo;
+              const param = p;
               return html`
                 <div class="try-field">
                   <label>${name}${param.required ? ' *' : ''}</label>

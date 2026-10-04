@@ -75,13 +75,13 @@ export class RestCatalogSource implements CatalogDataSource {
   async fetchSummaries(): Promise<CatalogActionSummary[]> {
     const res = await fetch(`${this.baseUrl}/api/catalog/actions`);
     if (!res.ok) return [];
-    return res.json();
+    return res.json() as Promise<CatalogActionSummary[]>;
   }
 
   async fetchDetail(name: string): Promise<CatalogActionDetail | null> {
     const res = await fetch(`${this.baseUrl}/api/catalog/actions/${encodeURIComponent(name)}`);
     if (!res.ok) return null;
-    return res.json();
+    return res.json() as Promise<CatalogActionDetail | null>;
   }
 }
 
@@ -99,7 +99,7 @@ export class GraphqlCatalogSource implements CatalogDataSource {
       body: JSON.stringify({ query }),
     });
     if (!res.ok) return [];
-    const data = await res.json();
+    const data = await res.json() as { data?: { stepCatalog?: { actions?: CatalogActionSummary[] } } };
     return data?.data?.stepCatalog?.actions ?? [];
   }
 
@@ -111,7 +111,7 @@ export class GraphqlCatalogSource implements CatalogDataSource {
       body: JSON.stringify({ query }),
     });
     if (!res.ok) return null;
-    const data = await res.json();
+    const data = await res.json() as { data?: { stepCatalog?: { action?: CatalogActionDetail } } };
     return data?.data?.stepCatalog?.action ?? null;
   }
 }

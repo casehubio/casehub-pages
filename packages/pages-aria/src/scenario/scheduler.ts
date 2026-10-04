@@ -52,9 +52,9 @@ export function createScheduler(
   let scope: ScenarioScope = new DefaultScenarioScope();
   const conditionEvaluator = new ConditionEvaluator(() => false);
 
-  const binding: BindResult = bindScenario(scenario as any, scope);
+  const binding: BindResult = bindScenario(scenario, scope);
   let queues = binding.queues;
-  const triggers = binding.triggers;
+  const _triggers = binding.triggers;
 
   for (const q of queues) {
     if (q.state === 'ready' && q.isDone()) q.state = 'done';
@@ -184,7 +184,7 @@ export function createScheduler(
         queue.advance();
         const promise = sig.await();
         queue.block(promise);
-        promise.then(() => {
+        void promise.then(() => {
           if (!disposed) {
             queue.unblock();
             if (queue.isDone()) {
@@ -204,7 +204,7 @@ export function createScheduler(
         queue.advance();
         const promise = latch.await();
         queue.block(promise);
-        promise.then(() => {
+        void promise.then(() => {
           if (!disposed) {
             queue.unblock();
             if (queue.isDone()) {
@@ -436,11 +436,11 @@ export function createScheduler(
   }
 
   const onCommand = (e: Event) => {
-    const { command, speed: spd, label } = (e as CustomEvent).detail;
+    const { command, speed: spd, label } = (e as CustomEvent).detail as { command: string; speed?: number; label?: string };
     switch (command) {
       case 'pause': runner.pause(); break;
       case 'resume': runner.play(); break;
-      case 'step': runner.step(); break;
+      case 'step': void runner.step(); break;
       case 'speed': if (spd != null) runner.setSpeed(spd); break;
       case 'run-to': if (label) runner.runTo(label); break;
     }
@@ -489,7 +489,7 @@ export function createScheduler(
 
       scope.close();
       scope = new DefaultScenarioScope();
-      const remaining = { ...scenario, sections: scenario.sections.slice(targetIdx) } as any;
+      const remaining = { ...scenario, sections: scenario.sections.slice(targetIdx) } as { orchestration?: OrchestrationBlock; steps?: SchedulerStep[]; sections?: Array<{ steps: SchedulerStep[] }> };
       const rebind = bindScenario(remaining, scope);
       queues = rebind.queues;
 
@@ -517,7 +517,7 @@ export function createScheduler(
     },
 
     injectData(channel: string, value: unknown): void {
-      scope.channel(channel).send(value);
+      void scope.channel(channel).send(value);
     },
 
     addEventListener(type: string, handler: EventListener): void {

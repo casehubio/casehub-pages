@@ -38,7 +38,7 @@ describe('DefaultStepResultStore', () => {
       const store = new DefaultStepResultStore();
       const promise = store.awaitAll(['a', 'b']);
       let resolved = false;
-      promise.then(() => { resolved = true; });
+      void promise.then(() => { resolved = true; });
       store.recordSuccess('a', {});
       await Promise.resolve();
       expect(resolved).toBe(false);
@@ -60,7 +60,7 @@ describe('DefaultStepResultStore', () => {
       const store = new DefaultStepResultStore();
       const promise = store.awaitCount(['a', 'b', 'c'], 2);
       let resolved = false;
-      promise.then(() => { resolved = true; });
+      void promise.then(() => { resolved = true; });
       store.recordSuccess('a', {});
       await Promise.resolve();
       expect(resolved).toBe(false);

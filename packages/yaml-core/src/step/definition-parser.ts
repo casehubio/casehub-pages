@@ -5,6 +5,7 @@ import { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
 import { inferPortability } from './portability.js';
 import type { Portability } from './portability.js';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class DefinitionParser {
   static parse(raw: Record<string, unknown>): DefinitionFile {
     const namespace = raw['namespace'] as string | undefined;

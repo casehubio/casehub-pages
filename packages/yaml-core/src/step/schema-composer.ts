@@ -7,6 +7,7 @@ const DECORATOR_KEYS = [
   'semaphore', 'barrier', 'quorum', 'race',
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class SchemaComposer {
   static compose(catalog: Catalog): Record<string, unknown> {
     const oneOf: Record<string, unknown>[] = [];

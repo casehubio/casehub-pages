@@ -1,12 +1,11 @@
 import type { DefinitionFile, Definition, Parameter } from '@casehubio/yaml-core/step';
-import type { AriaBinding, GraphqlDomainBinding, SimulatedBinding } from '@casehubio/yaml-core/step';
 
 function ariaDef(action: string, inputs: Record<string, { type: string; required?: boolean }>): Definition {
   const parsed: Record<string, Parameter> = {};
   for (const [k, v] of Object.entries(inputs)) {
     parsed[k] = { type: v.type.toUpperCase() as Parameter['type'], required: v.required ?? false };
   }
-  return { name: action, inputs: parsed, outputs: {}, invoke: { kind: 'aria', action } as AriaBinding, portability: 'ts' };
+  return { name: action, inputs: parsed, outputs: {}, invoke: { kind: 'aria', action }, portability: 'ts' };
 }
 
 const TARGET_INPUTS = { role: { type: 'string', required: true }, name: { type: 'string', required: true }, index: { type: 'string' }, within: { type: 'object' } };
@@ -36,14 +35,14 @@ const GRAPHQL_ACTION: Definition = {
     domain: { type: 'STRING', required: true },
     operation: { type: 'STRING', required: true },
     params: { type: 'OBJECT', required: false },
-  }, outputs: {}, invoke: { kind: 'graphql-domain' } as GraphqlDomainBinding, portability: 'universal',
+  }, outputs: {}, invoke: { kind: 'graphql-domain' }, portability: 'universal',
 };
 
 const SIMULATED_ACTION: Definition = {
   name: 'simulated', inputs: {
     dataset: { type: 'STRING', required: true },
     data: { type: 'OBJECT', required: true },
-  }, outputs: {}, invoke: { kind: 'simulated' } as SimulatedBinding, portability: 'ts',
+  }, outputs: {}, invoke: { kind: 'simulated' }, portability: 'ts',
 };
 
 export function loadScenarioDefinitions(): DefinitionFile[] {

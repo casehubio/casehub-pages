@@ -38,12 +38,14 @@ const lineHighlightField = StateField.define<DecorationSet>({
     }
     return Decoration.set(decos);
   },
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   provide: f => EditorView.decorations.from(f as any),
 });
 
 const builderGutter = gutter({
   class: 'cm-builder-gutter',
   lineMarker(view, line) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const range = view.state.field(highlightRangeField as any) as { from: number; to: number } | null;
     if (!range) return null;
     const startLine = view.state.doc.lineAt(range.from).from;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Catalog, CatalogEntry, Action, Result } from './walker.js';
+import type { Catalog, CatalogEntry, Action } from './walker.js';
 import { Walker, stepSuccess } from './walker.js';
 
 const noopAction: Action = {
@@ -109,9 +109,9 @@ describe('Walker', () => {
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('match');
       if (resolved[0]!.kind === 'match') {
-        expect(resolved[0]!.cases[0]!.steps).toHaveLength(1);
-        expect(resolved[0]!.cases[1]!.pattern.type).toBe('default');
-        expect(resolved[0]!.cases[1]!.steps).toHaveLength(1);
+        expect(resolved[0].cases[0]!.steps).toHaveLength(1);
+        expect(resolved[0].cases[1]!.pattern.type).toBe('default');
+        expect(resolved[0].cases[1]!.steps).toHaveLength(1);
       }
     });
 
@@ -129,11 +129,11 @@ describe('Walker', () => {
       ];
       const resolved = Walker.resolve(steps, catalog);
       if (resolved[0]!.kind === 'match') {
-        expect(resolved[0]!.cases[0]!.pattern).toEqual({ type: 'value', value: 'hello' });
-        expect(resolved[0]!.cases[0]!.steps).toHaveLength(1);
-        expect(resolved[0]!.cases[0]!.steps[0]!.kind).toBe('plugin');
-        expect(resolved[0]!.cases[1]!.pattern).toEqual({ type: 'value', value: 'world' });
-        expect(resolved[0]!.cases[2]!.pattern.type).toBe('default');
+        expect(resolved[0].cases[0]!.pattern).toEqual({ type: 'value', value: 'hello' });
+        expect(resolved[0].cases[0]!.steps).toHaveLength(1);
+        expect(resolved[0].cases[0]!.steps[0]!.kind).toBe('plugin');
+        expect(resolved[0].cases[1]!.pattern).toEqual({ type: 'value', value: 'world' });
+        expect(resolved[0].cases[2]!.pattern.type).toBe('default');
       }
     });
 
@@ -150,10 +150,10 @@ describe('Walker', () => {
       ];
       const resolved = Walker.resolve(steps, catalog);
       if (resolved[0]!.kind === 'match') {
-        expect(resolved[0]!.cases[0]!.steps).toHaveLength(1);
-        expect(resolved[0]!.cases[0]!.steps[0]!.kind).toBe('block');
-        if (resolved[0]!.cases[0]!.steps[0]!.kind === 'block') {
-          expect(resolved[0]!.cases[0]!.steps[0]!.steps).toHaveLength(2);
+        expect(resolved[0].cases[0]!.steps).toHaveLength(1);
+        expect(resolved[0].cases[0]!.steps[0]!.kind).toBe('block');
+        if (resolved[0].cases[0]!.steps[0]!.kind === 'block') {
+          expect(resolved[0].cases[0]!.steps[0].steps).toHaveLength(2);
         }
       }
     });
@@ -171,9 +171,9 @@ describe('Walker', () => {
       ];
       const resolved = Walker.resolve(steps, catalog);
       if (resolved[0]!.kind === 'select') {
-        expect(resolved[0]!.branches[0]!.name).toBe('sig-a');
-        expect(resolved[0]!.branches[0]!.steps).toHaveLength(1);
-        expect(resolved[0]!.branches[0]!.steps[0]!.kind).toBe('plugin');
+        expect(resolved[0].branches[0]!.name).toBe('sig-a');
+        expect(resolved[0].branches[0]!.steps).toHaveLength(1);
+        expect(resolved[0].branches[0]!.steps[0]!.kind).toBe('plugin');
       }
     });
 
@@ -188,8 +188,8 @@ describe('Walker', () => {
       ];
       const resolved = Walker.resolve(steps, catalog);
       if (resolved[0]!.kind === 'select') {
-        expect(resolved[0]!.branches[0]!.steps).toHaveLength(1);
-        expect(resolved[0]!.branches[0]!.steps[0]!.kind).toBe('block');
+        expect(resolved[0].branches[0]!.steps).toHaveLength(1);
+        expect(resolved[0].branches[0]!.steps[0]!.kind).toBe('block');
       }
     });
 
@@ -200,7 +200,7 @@ describe('Walker', () => {
       ];
       const resolved = Walker.resolve(steps, catalog);
       if (resolved[0]!.kind === 'select') {
-        expect(resolved[0]!.branches[0]!.steps).toHaveLength(0);
+        expect(resolved[0].branches[0]!.steps).toHaveLength(0);
       }
     });
   });

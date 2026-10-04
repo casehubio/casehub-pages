@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import type {
-  Action, Result, ResolvedStep, PluginStep, BlockStep,
+  Action, Result, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
-  BarrierStep, QuorumStep, CatalogEntry, SelectStep, InvokeStep,
+  BarrierStep, QuorumStep, CatalogEntry, InvokeStep,
   DelayStep,
 } from './walker.js';
 import { stepSuccess, stepFailure, MapServiceRegistry } from './walker.js';

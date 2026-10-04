@@ -1,7 +1,7 @@
-import type { ForEachAdapter, Reference } from './foreach-expander.js';
+import type { ForEachAdapter } from './foreach-expander.js';
 import { ForEachExpander } from './foreach-expander.js';
 import type { ForEachDirective, IterationGroup, YamlImport } from './types.js';
-import { parseForEachDirective, forEachContextSource } from './types.js';
+import { parseForEachDirective } from './types.js';
 import { VariableResolver } from './variable-resolver.js';
 import type { CsvDataSource } from './csv-parser.js';
 import { parseLoopDirective } from './orchestration/directives.js';
@@ -49,6 +49,7 @@ function normaliseForEach(imp: YamlImport): YamlImport {
   return imp;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ImportExpander {
   static expand(
     imports: YamlImport[],

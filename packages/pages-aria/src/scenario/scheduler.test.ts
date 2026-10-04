@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createScheduler } from './scheduler.js';
 import type { SchedulerOptions } from './scheduler.js';
-import type { SchedulerStep, PreExtractedStep } from './types.js';
+import type { SchedulerStep } from './types.js';
 import type { PluginStep, ParallelStep, BlockStep, DelayStep } from '@casehubio/yaml-core/step';
 import { stepSuccess, stepFailure } from '@casehubio/yaml-core/step';
 
@@ -48,9 +48,9 @@ describe('DES Scheduler', () => {
         pluginStep('click', calls, { name: 'B' }),
       ],
     };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     runner.play();
-    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(calls).toHaveLength(2);
     expect((calls[0] as any).params.name).toBe('A');
     expect((calls[1] as any).params.name).toBe('B');
@@ -59,14 +59,14 @@ describe('DES Scheduler', () => {
   it('starts in paused state when startPaused is true', () => {
     const calls: unknown[] = [];
     const scenario = { scenario: 'test', steps: [pluginStep('click', calls)] };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     expect(runner.state).toBe('paused');
   });
 
   it('starts in idle state when startPaused is false', () => {
     const calls: unknown[] = [];
     const scenario = { scenario: 'test', steps: [pluginStep('click', calls)] };
-    const runner = createScheduler(scenario as any, { ...testOptions(), startPaused: false });
+    const runner = createScheduler(scenario, { ...testOptions(), startPaused: false });
     expect(runner.state).toBe('idle');
   });
 
@@ -76,7 +76,7 @@ describe('DES Scheduler', () => {
       scenario: 'test',
       steps: [pluginStep('click', calls, { name: 'A' }), pluginStep('click', calls, { name: 'B' })],
     };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     await runner.step();
     expect(calls).toHaveLength(1);
     expect(runner.state).toBe('paused');
@@ -91,16 +91,16 @@ describe('DES Scheduler', () => {
         'b': [pluginStep('click', calls, { name: 'B1' })],
       })],
     };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     runner.play();
-    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(calls).toHaveLength(3);
   });
 
   it('dispose stops execution and cleans up', async () => {
     const calls: unknown[] = [];
     const steps = Array.from({ length: 100 }, (_, i) => pluginStep('click', calls, { name: `btn-${i}` }));
-    const runner = createScheduler({ scenario: 'test', steps } as any, testOptions());
+    const runner = createScheduler({ scenario: 'test', steps }, testOptions());
     runner.play();
     await new Promise(r => setTimeout(r, 10));
     runner.dispose();
@@ -118,9 +118,9 @@ describe('DES Scheduler', () => {
       if (detail.topic === 'scenario:state') states.push(detail.payload);
     });
     const scenario = { scenario: 'test', steps: [pluginStep('click', calls)] };
-    const runner = createScheduler(scenario as any, { eventTarget: et, speed: Infinity, startPaused: true });
+    const runner = createScheduler(scenario, { eventTarget: et, speed: Infinity, startPaused: true });
     runner.play();
-    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(states.length).toBeGreaterThan(0);
     expect((states[0] as any).scenario).toBe('test');
   });
@@ -132,17 +132,17 @@ describe('DES Scheduler', () => {
       steps: [parallelStep({
         'sender': [
           pluginStep('click', calls, { name: 'Send' }),
-          { kind: 'signal-fire', name: 'data-ready', decorators: {} } as PreExtractedStep,
+          { kind: 'signal-fire', name: 'data-ready', decorators: {} },
         ],
         'receiver': [
-          { kind: 'await-signal', name: 'data-ready', decorators: {} } as PreExtractedStep,
+          { kind: 'await-signal', name: 'data-ready', decorators: {} },
           pluginStep('click', calls, { name: 'Receive' }),
         ],
       })],
     };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     runner.play();
-    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(calls).toHaveLength(2);
   });
 
@@ -157,23 +157,23 @@ describe('DES Scheduler', () => {
         pluginStep('click', calls, { name: 'After' }),
       ],
     };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     runner.play();
-    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(calls).toHaveLength(2);
     expect(runner.clock.now()).toBeGreaterThanOrEqual(1000);
   });
 
   it('handles empty scenario', async () => {
     const scenario = { scenario: 'empty', steps: [] };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     runner.play();
-    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
   });
 
   it('setSpeed updates clock speed', () => {
     const scenario = { scenario: 'test', steps: [] };
-    const runner = createScheduler(scenario as any, testOptions());
+    const runner = createScheduler(scenario, testOptions());
     runner.setSpeed(2);
     expect(runner.clock.speed()).toBe(2);
   });
@@ -189,9 +189,9 @@ describe('DES Scheduler', () => {
       scenario: 'test',
       steps: [failingPluginStep('bad-step', 'something broke')],
     };
-    const runner = createScheduler(scenario as any, { eventTarget: et, speed: Infinity, startPaused: true });
+    const runner = createScheduler(scenario, { eventTarget: et, speed: Infinity, startPaused: true });
     runner.play();
-    await vi.waitFor(() => expect(runner.state).toBe('done'));
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(errors).toHaveLength(1);
     expect((errors[0] as any).message).toBe('something broke');
   });

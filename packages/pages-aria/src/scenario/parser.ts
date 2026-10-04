@@ -3,7 +3,7 @@ import type { Catalog, ResolvedStep } from '@casehubio/yaml-core/step';
 import { Walker } from '@casehubio/yaml-core/step';
 import type {
   Scenario, FlatScenario, SectionedScenario,
-  TutorialMeta, TutorialSection, SectionContent,
+  TutorialMeta, SectionContent,
   SchedulerStep, PreExtractedStep,
   OrchestrationBlock,
 } from './types.js';

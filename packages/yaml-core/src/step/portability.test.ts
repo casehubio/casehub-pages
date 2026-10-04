@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { validatePortability, inferPortability, isCompatible } from './portability.js';
 import type { Definition } from './types.js';
-import type { Portability, RuntimeEnvironment } from './portability.js';
+import type { Portability } from './portability.js';
 
 describe('isCompatible', () => {
   it('universal is compatible with both runtimes', () => {

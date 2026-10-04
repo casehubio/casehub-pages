@@ -7,6 +7,7 @@ export interface Violation {
   message: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Validator {
   static validateInputs(
     actionName: string,

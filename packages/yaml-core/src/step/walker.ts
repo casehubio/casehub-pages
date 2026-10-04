@@ -29,7 +29,7 @@ export interface ServiceRegistry {
 export class MapServiceRegistry implements ServiceRegistry {
   private readonly services = new Map<string, unknown>();
 
-  register<T>(type: { readonly name: string }, instance: T): MapServiceRegistry {
+  register<T>(type: { readonly name: string }, instance: T): this {
     this.services.set(type.name, instance);
     return this;
   }
@@ -179,6 +179,7 @@ const REMOVED_KEYS = new Set(['steps', 'do']);
 
 const MAX_DEPTH = 32;
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Walker {
   static resolve(steps: Record<string, unknown>[], catalog: Catalog): ResolvedStep[] {
     const seenNames = new Set<string>();

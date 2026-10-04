@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TypedName, TypedMap, TypedVariables } from './typed-values.js';
-import type { TypedSchema, ValueType } from './typed-values.js';
+import type { TypedSchema } from './typed-values.js';
 
 describe('TypedName', () => {
   it('parses "name:TYPE" format', () => {
@@ -47,8 +47,8 @@ describe('TypedName', () => {
 describe('TypedMap', () => {
   it('stores schema and provides typeOf', () => {
     const map = TypedMap.fromEntries({
-      name: { type: 'STRING' as ValueType, value: 'Alice' },
-      age: { type: 'INTEGER' as ValueType, value: 30 },
+      name: { type: 'STRING', value: 'Alice' },
+      age: { type: 'INTEGER', value: 30 },
     });
     expect(map.typeOf('name')).toBe('STRING');
     expect(map.typeOf('age')).toBe('INTEGER');
@@ -64,8 +64,8 @@ describe('TypedMap', () => {
 
   it('exposes full schema', () => {
     const map = TypedMap.fromEntries({
-      x: { type: 'NUMBER' as ValueType, value: 3.14 },
-      y: { type: 'BOOLEAN' as ValueType, value: true },
+      x: { type: 'NUMBER', value: 3.14 },
+      y: { type: 'BOOLEAN', value: true },
     });
     const schema = map.schema();
     expect(schema).toEqual({ x: 'NUMBER', y: 'BOOLEAN' });
@@ -73,7 +73,7 @@ describe('TypedMap', () => {
 
   it('implements TypedSchema interface', () => {
     const map = TypedMap.fromEntries({
-      a: { type: 'STRING' as ValueType, value: 'test' },
+      a: { type: 'STRING', value: 'test' },
     });
     const asSchema: TypedSchema = map;
     expect(asSchema.typeOf('a')).toBe('STRING');

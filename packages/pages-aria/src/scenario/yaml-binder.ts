@@ -1,7 +1,7 @@
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { StepQueue } from './step-queue.js';
 import type { SchedulerStep, OrchestrationBlock, DataTrigger, TimeTrigger } from './types.js';
-import type { ParallelStep, BlockStep } from '@casehubio/yaml-core/step';
+
 
 export interface BindResult {
   queues: StepQueue[];
@@ -64,22 +64,22 @@ function buildQueueTree(
   steps: SchedulerStep[],
   currentQueue: StepQueue,
   allQueues: StepQueue[],
-  triggers: Map<string, DataTrigger | TimeTrigger>,
+  _triggers: Map<string, DataTrigger | TimeTrigger>,
   _scope: ScenarioScope,
 ): void {
   for (const step of steps) {
     if (step.kind === 'parallel') {
-      const parallel = step as ParallelStep;
+      const parallel = step;
       for (const child of parallel.steps) {
         if (child.kind === 'block') {
-          const block = child as BlockStep;
-          const childQueue = new StepQueue(block.name ?? `branch-${allQueues.length}`, block.steps as unknown[], currentQueue);
+          const block = child;
+          const childQueue = new StepQueue(block.name ?? `branch-${allQueues.length}`, block.steps, currentQueue);
           allQueues.push(childQueue);
         }
       }
-      (currentQueue.steps as unknown[]).push(step);
+      (currentQueue.steps).push(step);
     } else {
-      (currentQueue.steps as unknown[]).push(step);
+      (currentQueue.steps).push(step);
     }
   }
 }
