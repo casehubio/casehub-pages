@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { PaletteItem } from '../types.js';
 
 import './pages-node-chooser.js';
@@ -85,42 +85,6 @@ describe('pages-node-chooser', () => {
     el.addEventListener('pages-chooser-dismiss', () => { dismissed = true; });
     ac.abort();
     expect(dismissed).toBe(true);
-  });
-
-  it('auto-dismisses after mouseleave timeout', async () => {
-    vi.useFakeTimers();
-    const el = createElement();
-    await el.updateComplete;
-    let dismissed = false;
-    el.addEventListener('pages-chooser-dismiss', () => { dismissed = true; });
-
-    el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
-    expect(dismissed).toBe(false);
-
-    vi.advanceTimersByTime(500);
-    expect(dismissed).toBe(false);
-
-    vi.advanceTimersByTime(400);
-    expect(dismissed).toBe(true);
-
-    vi.useRealTimers();
-  });
-
-  it('cancels auto-dismiss if mouse re-enters before timeout', async () => {
-    vi.useFakeTimers();
-    const el = createElement();
-    await el.updateComplete;
-    let dismissed = false;
-    el.addEventListener('pages-chooser-dismiss', () => { dismissed = true; });
-
-    el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
-    vi.advanceTimersByTime(500);
-    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
-    vi.advanceTimersByTime(500);
-
-    expect(dismissed).toBe(false);
-
-    vi.useRealTimers();
   });
 
   it('fires pages-chooser-dismiss on click outside', async () => {

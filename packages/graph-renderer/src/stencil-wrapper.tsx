@@ -261,7 +261,7 @@ export function createStencilNodeComponent(
             <Handle key="source-full" id="source-full"
               type="source" position={Position.Bottom}
               className="stencil-source-handle"
-              style={{ ...fullNodeHandle, zIndex: 2 }} />
+              style={{ ...fullNodeHandle, zIndex: 0 }} />
             {allPositions.map(({ key, pos }) =>
               <Handle key={`source-${key}`} id={`source-${key}`}
                 type="source" position={pos} style={hiddenHandle} />

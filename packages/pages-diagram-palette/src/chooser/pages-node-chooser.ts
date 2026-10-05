@@ -55,8 +55,6 @@ export class PagesNodeChooser extends FocusTrapMixin(LitElement) {
 
   @state() private _searchQuery = '';
 
-  private _leaveTimer: ReturnType<typeof setTimeout> | null = null;
-
   override connectedCallback(): void {
     super.connectedCallback();
     if (this.abortSignal) {
@@ -65,17 +63,12 @@ export class PagesNodeChooser extends FocusTrapMixin(LitElement) {
     requestAnimationFrame(() => {
       document.addEventListener('pointerdown', this._onClickOutside, true);
     });
-    this.addEventListener('mouseleave', this._onMouseLeave);
-    this.addEventListener('mouseenter', this._onMouseEnter);
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener('pointerdown', this._onClickOutside, true);
     this.abortSignal?.removeEventListener('abort', this._onAbort);
-    this.removeEventListener('mouseleave', this._onMouseLeave);
-    this.removeEventListener('mouseenter', this._onMouseEnter);
-    if (this._leaveTimer) clearTimeout(this._leaveTimer);
   }
 
   override render(): TemplateResult {
@@ -132,15 +125,6 @@ export class PagesNodeChooser extends FocusTrapMixin(LitElement) {
     if (!e.composedPath().includes(this)) {
       this._dismiss();
     }
-  };
-
-  private _onMouseLeave = (): void => {
-    if (this._leaveTimer) clearTimeout(this._leaveTimer);
-    this._leaveTimer = setTimeout(() => { this._dismiss(); }, 800);
-  };
-
-  private _onMouseEnter = (): void => {
-    if (this._leaveTimer) { clearTimeout(this._leaveTimer); this._leaveTimer = null; }
   };
 
   private _onAbort = (): void => {
