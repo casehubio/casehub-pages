@@ -27,7 +27,7 @@ export { CompositeCatalog, ImportScopedCatalog } from './catalog.js';
 
 export { ValidatingAction } from './action.js';
 
-export { DecoratorChain } from './decorator-chain.js';
+export { DecoratorChain, withResolver } from './decorator-chain.js';
 export type { Context, DecoratedExecution } from './decorator-chain.js';
 
 export { StructuralEvaluator } from './structural-evaluator.js';
@@ -36,6 +36,13 @@ export type { Runner, DeadlineContext } from './runner.js';
 export { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './runner.js';
 
 export { SchemaComposer } from './schema-composer.js';
+
+export { ScenarioParser, ScenarioValidator, ScenarioCompiler } from './scenario/index.js';
+export type {
+  ScenarioDefinition, StateDefinition, EventTransition, MatchCase,
+  ValidationError, CompiledScenario,
+} from './scenario/index.js';
+export { terminalState, completionDrivenState, eventDrivenState } from './scenario/index.js';
 
 export type { PluginRegistration } from './plugin-registry.js';
 export { PluginRegistry } from './plugin-registry.js';

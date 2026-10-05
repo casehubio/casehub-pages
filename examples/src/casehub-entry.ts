@@ -33,8 +33,8 @@ export { defaultEditPolicy, applyGraphEdit, getAllStencils } from "@casehubio/gr
 export { createZoneLayoutEngine } from "@casehubio/pages-runtime";
 export { dockWorkbench, html, rows, split, columns, withId, dockBar, deferred, withStyle, hostPanel } from "@casehubio/pages-ui/dist/dsl/builders.js";
 export type { DockWorkbenchConfig, DockPanelConfig, DockSideConfig } from "@casehubio/pages-ui/dist/dsl/builders.js";
-export { createScheduler, parseScenario, createScenarioCatalog } from "@casehubio/pages-aria/scenario";
-export type { ScenarioRunner, SchedulerOptions } from "@casehubio/pages-aria/scenario";
+export { createScheduler, parsePlaybook, createScenarioCatalog } from "@casehubio/pages-aria/scenario";
+export type { PlaybookRunner, SchedulerOptions } from "@casehubio/pages-aria/scenario";
 export { Walker, stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
 export { StructuralEvaluator } from "@casehubio/yaml-core/step";
 export { PluginRegistry } from "@casehubio/yaml-core/step";
@@ -43,7 +43,7 @@ export type { Result, ResolvedStep } from "@casehubio/yaml-core/step";
 export { matches, valuePattern, structuralPattern, anyOfPattern, defaultPattern } from "@casehubio/yaml-core";
 export { isTruthy } from "@casehubio/yaml-core";
 export { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
-export { DefaultCorrelationScope } from "@casehubio/yaml-core/orchestration";
+export { DefaultCorrelationScope, DefaultOrcChannel } from "@casehubio/yaml-core/orchestration";
 
 import { PluginRegistry } from "@casehubio/yaml-core/step";
 import { CompositeCatalog } from "@casehubio/yaml-core/step";

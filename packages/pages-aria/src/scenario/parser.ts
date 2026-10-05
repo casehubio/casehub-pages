@@ -1,9 +1,11 @@
-import { parse } from 'yaml';
+import { parse, parseAllDocuments } from 'yaml';
 import type { Catalog, ResolvedStep } from '@casehubio/yaml-core/step';
 import { Walker } from '@casehubio/yaml-core/step';
+import { IncludeExpander, parsePlaybookFrontMatter } from '@casehubio/yaml-core';
+import type { PlaybookFrontMatter, TemplateLoader } from '@casehubio/yaml-core';
 import type {
-  Scenario, FlatScenario, SectionedScenario,
-  TutorialMeta, SectionContent,
+  Playbook, FlatPlaybook, SectionedPlaybook,
+  TutorialMeta, TutorialSection, SectionContent,
   SchedulerStep, PreExtractedStep,
   OrchestrationBlock,
 } from './types.js';
@@ -16,13 +18,14 @@ const WALKER_KNOWN_KEYS = new Set([
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'semaphore', 'barrier', 'quorum', 'race',
+  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode',
 ]);
 
 type SlotType = 'walker' | 'pre' | 'skip';
 
 function hasActionKey(step: Record<string, unknown>): boolean {
   for (const key of Object.keys(step)) {
-    if (!WALKER_KNOWN_KEYS.has(key) && key !== 'concurrent' && key !== 'await') return true;
+    if (!WALKER_KNOWN_KEYS.has(key) && key !== 'concurrent') return true;
   }
   return false;
 }
@@ -104,18 +107,85 @@ function mergeSteps(resolved: ResolvedStep[], preExtracted: PreExtractedStep[], 
   return result;
 }
 
+export function deriveStepName(step: ResolvedStep, index: number): string {
+  if (step.name) return step.name;
+  const label = step.decorators?.label as string | undefined;
+  if (label) {
+    return label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  const action = 'entry' in step ? step.entry.name : step.kind;
+  return `${action}-${index}`;
+}
+
 function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog): SchedulerStep[] {
   const { walkerSteps, preExtracted, slotTypes } = preExtract(rawSteps);
   const resolved = Walker.resolve(walkerSteps, catalog);
+  for (let i = 0; i < resolved.length; i++) {
+    if (!resolved[i].name) {
+      (resolved[i] as { name: string | null }).name = deriveStepName(resolved[i], i);
+    }
+  }
   return mergeSteps(resolved, preExtracted, slotTypes);
 }
 
-export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
-  const parsed = parse(yamlString) as Record<string, unknown>;
-  if (!parsed['scenario']) {
-    throw new Error('Invalid scenario: must have "scenario" name');
+export interface PlaybookParseResult {
+  frontMatter: PlaybookFrontMatter | null;
+  scenario: Playbook;
+}
+
+function splitMultiDoc(yamlString: string): { meta: Record<string, unknown> | null; content: Record<string, unknown> } {
+  const docs = parseAllDocuments(yamlString);
+  if (docs.length === 1) {
+    return { meta: null, content: docs[0].toJSON() as Record<string, unknown> };
   }
 
+  const firstDoc = docs[0].toJSON() as Record<string, unknown>;
+  const rawSecond = docs[1].toJSON();
+  if (typeof rawSecond !== 'object' || rawSecond === null || Array.isArray(rawSecond)) {
+    throw new Error('Second YAML document must be a mapping');
+  }
+  const secondDoc = rawSecond as Record<string, unknown>;
+
+  if ('playbook' in firstDoc) {
+    return { meta: firstDoc, content: secondDoc };
+  }
+
+  const merged = { ...firstDoc, ...secondDoc };
+  return { meta: firstDoc, content: merged };
+}
+
+export function parsePlaybook(yamlString: string, catalog: Catalog): Playbook {
+  const { meta, content } = splitMultiDoc(yamlString);
+
+  if (meta && !('playbook' in meta)) {
+    return parsePlaybookFromParsed(content, catalog);
+  }
+
+  if (meta && 'playbook' in meta) {
+    return parsePlaybookFromParsed(content, catalog);
+  }
+
+  return parsePlaybookFromParsed(content, catalog);
+}
+
+export function parsePlaybookDocument(yamlString: string, catalog: Catalog): PlaybookParseResult {
+  const { meta, content } = splitMultiDoc(yamlString);
+  const frontMatter = meta ? parsePlaybookFrontMatter(meta) : null;
+  const scenario = parsePlaybookFromParsed(content, catalog);
+  return { frontMatter, scenario };
+}
+
+export async function parsePlaybookWithIncludes(
+  yamlString: string,
+  catalog: Catalog,
+  loader: TemplateLoader,
+): Promise<Playbook> {
+  const { content } = splitMultiDoc(yamlString);
+  const expanded = await IncludeExpander.expand(content, loader);
+  return parsePlaybookFromParsed(expanded, catalog);
+}
+
+function parsePlaybookFromParsed(parsed: Record<string, unknown>, catalog: Catalog): Playbook {
   const hasSteps = Array.isArray(parsed['steps']);
   const hasSections = Array.isArray(parsed['sections']);
 
@@ -136,19 +206,22 @@ export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
         ? resolveStepArray(sec['steps'] as Record<string, unknown>[], catalog)
         : [];
       return {
-        title: sec['title'] as string,
-        ...(sec['content'] != null ? { content: sec['content'] as SectionContent } : {}),
+        title: (sec['label'] ?? sec['title']) as string,
+        content: sec['content'] as SectionContent | undefined,
+        scenarioRef: sec['scenario-ref'] as string | undefined,
         steps,
       };
     });
-    const result: SectionedScenario = { scenario: parsed['scenario'] as string, sections };
+    const result: SectionedPlaybook = { sections };
+    if (parsed['scenario']) result.scenario = parsed['scenario'] as string;
     if (meta) result.meta = meta;
     if (orchestration) result.orchestration = orchestration;
     return result;
   }
 
   const steps = resolveStepArray(parsed['steps'] as Record<string, unknown>[], catalog);
-  const result: FlatScenario = { scenario: parsed['scenario'] as string, steps };
+  const result: FlatPlaybook = { steps };
+  if (parsed['scenario']) result.scenario = parsed['scenario'] as string;
   if (meta) result.meta = meta;
   if (orchestration) result.orchestration = orchestration;
   return result;

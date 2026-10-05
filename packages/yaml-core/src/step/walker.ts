@@ -164,6 +164,7 @@ const RESERVED_KEYS = new Set([
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'parallel', 'semaphore', 'barrier', 'quorum', 'race',
+  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode',
 ]);
 
 const DECORATOR_KEYS = new Set([
@@ -171,6 +172,7 @@ const DECORATOR_KEYS = new Set([
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'semaphore', 'barrier', 'quorum', 'race',
+  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode',
 ]);
 
 const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finally']);
@@ -183,22 +185,22 @@ const MAX_DEPTH = 32;
 export class Walker {
   static resolve(steps: Record<string, unknown>[], catalog: Catalog): ResolvedStep[] {
     const seenNames = new Set<string>();
-    const resolved = Walker.resolveAtDepth(steps, catalog, 0, seenNames);
+    const resolved = Walker.resolveAtDepth(steps, catalog, 0, 'root', seenNames);
     Walker.validateRefs(resolved, seenNames);
     return resolved;
   }
 
   private static resolveAtDepth(
     steps: Record<string, unknown>[], catalog: Catalog, depth: number,
-    seenNames: Set<string> = new Set(),
+    path: string, seenNames: Set<string>,
   ): ResolvedStep[] {
-    if (depth > MAX_DEPTH) throw new Error(`Step nesting exceeds maximum depth of ${MAX_DEPTH}`);
-    return steps.map(step => Walker.resolveOne(step, catalog, depth, seenNames));
+    if (depth > MAX_DEPTH) throw new Error(`${path}: step nesting exceeds maximum depth of ${MAX_DEPTH}`);
+    return steps.map((step, i) => Walker.resolveOne(step, catalog, depth, `${path} → Step ${i}`, seenNames));
   }
 
   private static resolveOne(
     step: Record<string, unknown>, catalog: Catalog, depth: number,
-    seenNames: Set<string> = new Set(),
+    stepPath: string, seenNames: Set<string>,
   ): ResolvedStep {
     let stepName: string | null = null;
     let structuralType: string | null = null;
@@ -211,12 +213,12 @@ export class Walker {
 
     for (const [key, value] of Object.entries(step)) {
       if (REMOVED_KEYS.has(key)) {
-        throw new Error(`'${key}' is no longer valid — use inline sibling keys, or 'block' for multiple actions`);
+        throw new Error(`${stepPath}: '${key}' is no longer valid — use inline sibling keys, or 'block' for multiple actions`);
       }
       if (key === 'step') {
         stepName = value as string;
         if (stepName !== null && seenNames.has(stepName)) {
-          throw new Error(`Duplicate step name '${stepName}'`);
+          throw new Error(`${stepPath}: duplicate step name '${stepName}'`);
         }
         if (stepName !== null) seenNames.add(stepName);
       } else if (key === 'invoke') {
@@ -246,56 +248,65 @@ export class Walker {
           actionKey = key;
           actionValue = value;
         } else {
-          throw new Error(`Unknown step key '${key}' — not a reserved keyword and not found in catalog`);
+          throw new Error(`${stepPath}: unknown step key '${key}' — not a reserved keyword and not found in catalog`);
         }
       }
     }
 
     if (structuralType && actionKey) {
-      throw new Error(`Step has both structural type '${structuralType}' and action key '${actionKey}'`);
+      throw new Error(`${stepPath}: step has both structural type '${structuralType}' and action key '${actionKey}'`);
     }
     if (structuralType && invokeSpec) {
-      throw new Error(`Step has both structural type '${structuralType}' and invoke`);
+      throw new Error(`${stepPath}: step has both structural type '${structuralType}' and invoke`);
     }
 
     if (structuralType === 'block') {
-      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → block`, seenNames);
       return { kind: 'block', name: stepName, steps: substeps, decorators };
     }
 
     if (structuralType === 'parallel') {
-      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames);
       return { kind: 'parallel', name: stepName, steps: substeps, decorators };
     }
 
     if (structuralType === 'if') {
       const thenRaw = (companions['then'] as Record<string, unknown>[] | undefined) ?? [];
       const elseRaw = (companions['else'] as Record<string, unknown>[] | undefined) ?? [];
-      const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, seenNames);
-      const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, seenNames);
+      const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, `${stepPath} → then`, seenNames);
+      const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, `${stepPath} → else`, seenNames);
       return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators };
     }
 
     if (structuralType === 'match') {
       const casesRaw = companions['cases'] as Record<string, unknown>[];
-      if (!casesRaw) throw new Error('match requires cases');
+      if (!casesRaw) throw new Error(`${stepPath}: match requires cases`);
       const cases: ResolvedMatchCase[] = casesRaw.map((c, i) => {
         let pattern: MatchPattern;
         let caseSteps: ResolvedStep[];
-        if ('default' in c) {
+        const isDefault = 'default' in c;
+        const hasPattern = 'pattern' in c || 'when' in c;
+        if (isDefault && hasPattern) {
+          throw new Error(`${stepPath} → case ${i}: pattern and default are mutually exclusive`);
+        }
+        if (!isDefault && !hasPattern) {
+          throw new Error(`${stepPath} → case ${i}: case must have 'pattern', 'when', or 'default'`);
+        }
+        const casePath = isDefault ? `${stepPath} → default` : `${stepPath} → case ${i}`;
+        if (isDefault) {
           pattern = { type: 'default' };
           caseSteps = Walker.resolveAtDepth(
-            (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, seenNames);
+            (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, casePath, seenNames);
         } else {
           pattern = Walker.parsePattern(c['pattern'] ?? c['when']);
           const rest = Walker.stripKeys(c, ['pattern', 'when', 'guard']);
           caseSteps = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, casePath, seenNames)]
             : [];
         }
         const guard = (c['guard'] as string) ?? null;
         if (pattern.type === 'default' && i !== casesRaw.length - 1) {
-          throw new Error('Default case must be last in match');
+          throw new Error(`${stepPath}: default case must be last in match`);
         }
         return { pattern, guard, steps: caseSteps };
       });
@@ -303,34 +314,35 @@ export class Walker {
     }
 
     if (structuralType === 'try') {
-      const trySteps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, seenNames);
+      const trySteps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → try`, seenNames);
       const catchRaw = (companions['catch'] as Record<string, unknown>[] | undefined) ?? [];
       const finallyRaw = (companions['finally'] as Record<string, unknown>[] | undefined) ?? [];
-      const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, seenNames);
-      const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, seenNames);
+      const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, `${stepPath} → catch`, seenNames);
+      const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, `${stepPath} → finally`, seenNames);
       return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators };
     }
 
     if (structuralType === 'select') {
       const branchesRaw = structuralValue as Record<string, unknown>[];
-      const branches: SelectBranch[] = branchesRaw.map(b => {
+      const branches: SelectBranch[] = branchesRaw.map((b, i) => {
+        const branchPath = `${stepPath} → select branch ${i}`;
         if (b['subscribe']) {
           const sub = b['subscribe'] as Record<string, unknown> | string;
           const channelName = typeof sub === 'string' ? sub : (sub['channel'] as string);
           const rest = Walker.stripKeys(b, ['subscribe']);
           const branchStep = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames)]
             : [];
           return { type: 'subscribe' as const, name: channelName, steps: branchStep };
         }
         if (b['wait']) {
           const rest = Walker.stripKeys(b, ['wait']);
           const branchStep = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames)]
             : [];
           return { type: 'wait' as const, name: b['wait'] as string, steps: branchStep };
         }
-        throw new Error('Select branch must have subscribe or wait');
+        throw new Error(`${branchPath}: select branch must have subscribe or wait`);
       });
       return { kind: 'select', name: stepName, branches, decorators };
     }
@@ -370,7 +382,7 @@ export class Walker {
       return { kind: 'plugin', name: stepName, entry, params, decorators };
     }
 
-    throw new Error(`Step could not be resolved: no structural type, invoke, or catalog action found. Keys: ${Object.keys(step).join(', ')}`);
+    throw new Error(`${stepPath}: no step type identified. Keys: ${Object.keys(step).join(', ')}`);
   }
 
   private static validateRefs(steps: ResolvedStep[], knownNames: Set<string>): void {
@@ -378,13 +390,13 @@ export class Walker {
       if (step.kind === 'barrier') {
         for (const ref of step.awaitSteps) {
           if (!knownNames.has(ref)) {
-            throw new Error(`Barrier references unknown step '${ref}'`);
+            throw new Error(`barrier '${step.name ?? '(unnamed)'}' awaits unknown step '${ref}'`);
           }
         }
       } else if (step.kind === 'quorum') {
         for (const ref of step.ofSteps) {
           if (!knownNames.has(ref)) {
-            throw new Error(`Quorum references unknown step '${ref}'`);
+            throw new Error(`quorum '${step.name ?? '(unnamed)'}' references unknown step '${ref}'`);
           }
         }
       }
@@ -419,7 +431,7 @@ export class Walker {
   }
 
   private static parsePattern(raw: unknown): MatchPattern {
-    if (raw === undefined || raw === null || raw === 'default' || raw === '_') {
+    if (raw === undefined || raw === null) {
       return { type: 'default' };
     }
     if (Array.isArray(raw)) {

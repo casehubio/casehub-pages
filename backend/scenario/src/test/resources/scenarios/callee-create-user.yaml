@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 scenario: callee-create-user
 params:
   - name: userName
@@ -7,20 +10,17 @@ params:
     type: string
     default: "Viewer"
 steps:
-  - label: "Fill name"
-    target: browser
-    commands:
-      - action: fill
-        target: {role: textbox, name: "Full Name"}
-        value: "${params.userName}"
-  - label: "Select role"
-    target: browser
-    commands:
-      - action: select
-        target: {role: combobox, name: "Role"}
-        value: "${params.userRole}"
-  - label: "Submit"
-    target: browser
-    commands:
-      - action: click
-        target: {role: button, name: "Create"}
+  - fill:
+      role: textbox
+      name: "Full Name"
+      value: "${params.userName}"
+    label: "Fill name"
+  - select:
+      role: combobox
+      name: "Role"
+      value: "${params.userRole}"
+    label: "Select role"
+  - click:
+      role: button
+      name: "Create"
+    label: "Submit"

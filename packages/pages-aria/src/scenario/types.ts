@@ -28,26 +28,27 @@ export interface SectionContent {
 export interface TutorialSection {
   title: string;
   content?: SectionContent;
+  scenarioRef?: string;
   steps: SchedulerStep[];
 }
 
-export interface ScenarioBase {
-  scenario: string;
+export interface PlaybookBase {
+  scenario?: string;
   meta?: TutorialMeta;
   orchestration?: OrchestrationBlock;
 }
 
-export interface FlatScenario extends ScenarioBase {
+export interface FlatPlaybook extends PlaybookBase {
   steps: SchedulerStep[];
 }
 
-export interface SectionedScenario extends ScenarioBase {
+export interface SectionedPlaybook extends PlaybookBase {
   sections: TutorialSection[];
 }
 
-export type Scenario = FlatScenario | SectionedScenario;
+export type Playbook = FlatPlaybook | SectionedPlaybook;
 
-export function isSectioned(s: Scenario): s is SectionedScenario {
+export function isSectioned(s: Playbook): s is SectionedPlaybook {
   return 'sections' in s;
 }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { parseScenario } from './parser.js';
+import { parsePlaybook, parsePlaybookDocument } from './parser.js';
 import { isSectioned } from './types.js';
-import type { FlatScenario, SectionedScenario } from './types.js';
+import type { FlatPlaybook, SectionedPlaybook } from './types.js';
 import type { Catalog, CatalogEntry, PluginStep } from '@casehubio/yaml-core/step';
 import { stepSuccess } from '@casehubio/yaml-core/step';
 
@@ -37,9 +37,9 @@ steps:
       role: button
       name: Submit
 `;
-    const scenario = parseScenario(yaml, catalog);
+    const scenario = parsePlaybook(yaml, catalog);
     expect(scenario.scenario).toBe('test-form');
-    const flat = scenario as FlatScenario;
+    const flat = scenario as FlatPlaybook;
     expect(flat.steps).toHaveLength(1);
     const step = flat.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
@@ -65,7 +65,7 @@ steps:
       state:
         aria-hidden: false
 `;
-    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
     expect(scenario.steps).toHaveLength(4);
     expect(scenario.steps.every(s => s.kind === 'plugin')).toBe(true);
   });
@@ -81,7 +81,7 @@ steps:
         role: row
         name: "Case #42"
 `;
-    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = scenario.steps[0] as PluginStep;
     expect(step.params['within']).toEqual({ role: 'row', name: 'Case #42' });
   });
@@ -92,7 +92,7 @@ scenario: nav
 steps:
   - navigate: /login
 `;
-    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = scenario.steps[0] as PluginStep;
     expect(step.entry.qualifiedName).toBe('navigate');
     expect(step.params).toEqual({ value: '/login' });
@@ -109,7 +109,7 @@ steps:
         platform: slack
         sender: Alice
 `;
-    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
     expect(scenario.steps).toHaveLength(1);
     const step = scenario.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
@@ -128,7 +128,7 @@ steps:
         op: snapshot
         columns: [id, customer]
 `;
-    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = scenario.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.entry.qualifiedName).toBe('simulated');
@@ -147,7 +147,7 @@ steps:
       domain: connectors
       operation: injectChat
 `;
-    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
     expect(scenario.steps).toHaveLength(3);
     expect(scenario.steps.every(s => s.kind === 'plugin')).toBe(true);
     expect((scenario.steps[0] as PluginStep).entry.qualifiedName).toBe('navigate');
@@ -156,11 +156,17 @@ steps:
   });
 
   it('throws on invalid scenario — missing steps and sections', () => {
-    expect(() => parseScenario('scenario: test', catalog)).toThrow('must have');
+    expect(() => parsePlaybook('scenario: test', catalog)).toThrow('must have');
   });
 
-  it('throws on invalid scenario — missing name', () => {
-    expect(() => parseScenario('steps: []', catalog)).toThrow('must have "scenario"');
+  it('parses without scenario name — steps only', () => {
+    const yaml = `
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
+    expect(scenario.scenario).toBeUndefined();
+    expect(scenario.steps).toHaveLength(1);
   });
 
   it('throws on unknown step key', () => {
@@ -169,7 +175,7 @@ scenario: bad
 steps:
   - unknown: value
 `;
-    expect(() => parseScenario(yaml, catalog)).toThrow();
+    expect(() => parsePlaybook(yaml, catalog)).toThrow();
   });
 });
 
@@ -193,7 +199,7 @@ sections:
           role: button
           name: Submit
 `;
-    const result = parseScenario(yaml, catalog);
+    const result = parsePlaybook(yaml, catalog);
     expect(isSectioned(result)).toBe(true);
     if (!isSectioned(result)) throw new Error('Expected sectioned');
     expect(result.sections).toHaveLength(2);
@@ -215,7 +221,7 @@ sections:
       type: inline
       markdown: Just a slide
 `;
-    const result = parseScenario(yaml, catalog);
+    const result = parsePlaybook(yaml, catalog);
     if (!isSectioned(result)) throw new Error('Expected sectioned');
     expect(result.sections[0].steps).toEqual([]);
   });
@@ -231,14 +237,14 @@ sections:
   - title: Section 1
     steps: []
 `;
-    expect(() => parseScenario(yaml, catalog)).toThrow('mutually exclusive');
+    expect(() => parsePlaybook(yaml, catalog)).toThrow('mutually exclusive');
   });
 
   it('rejects when neither steps nor sections present', () => {
     const yaml = `
 scenario: empty
 `;
-    expect(() => parseScenario(yaml, catalog)).toThrow('must have');
+    expect(() => parsePlaybook(yaml, catalog)).toThrow('must have');
   });
 
   it('parses template content reference', () => {
@@ -251,7 +257,7 @@ sections:
       path: content/slide.md
     steps: []
 `;
-    const result = parseScenario(yaml, catalog);
+    const result = parsePlaybook(yaml, catalog);
     if (!isSectioned(result)) throw new Error('Expected sectioned');
     expect(result.sections[0].content?.type).toBe('template');
     expect(result.sections[0].content?.path).toBe('content/slide.md');
@@ -269,7 +275,7 @@ steps:
       role: button
       name: Go
 `;
-    const result = parseScenario(yaml, catalog);
+    const result = parsePlaybook(yaml, catalog);
     expect(isSectioned(result)).toBe(false);
     expect(result.meta?.title).toBe('Flat Test');
   });
@@ -277,12 +283,12 @@ steps:
 
 describe('isSectioned type guard', () => {
   it('returns false for flat scenarios', () => {
-    const flat: FlatScenario = { scenario: 'test', steps: [] };
+    const flat: FlatPlaybook = { scenario: 'test', steps: [] };
     expect(isSectioned(flat)).toBe(false);
   });
 
   it('returns true for sectioned scenarios', () => {
-    const sectioned: SectionedScenario = {
+    const sectioned: SectionedPlaybook = {
       scenario: 'test',
       sections: [{ title: 'Intro', steps: [] }],
     };
@@ -291,8 +297,8 @@ describe('isSectioned type guard', () => {
 
   it('preserves meta on both variants', () => {
     const meta = { title: 'T', description: 'D', area: 'a' };
-    const flat: FlatScenario = { scenario: 'test', steps: [], meta };
-    const sectioned: SectionedScenario = { scenario: 'test', sections: [], meta };
+    const flat: FlatPlaybook = { scenario: 'test', steps: [], meta };
+    const sectioned: SectionedPlaybook = { scenario: 'test', sections: [], meta };
     expect(flat.meta).toEqual(meta);
     expect(sectioned.meta).toEqual(meta);
   });
@@ -309,7 +315,7 @@ sections:
           name: "YAML editor"
           value: "hello"
           typing: progressive`;
-    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const parsed = parsePlaybook(yaml, catalog) as SectionedPlaybook;
     const step = parsed.sections[0]!.steps[0]! as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.entry.qualifiedName).toBe('editor-insert');
@@ -327,7 +333,7 @@ sections:
             role: tree
             name: "Document outline"
           content: "This is the tree view"`;
-    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const parsed = parsePlaybook(yaml, catalog) as SectionedPlaybook;
     const step = parsed.sections[0]!.steps[0]! as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.entry.qualifiedName).toBe('spotlight');
@@ -346,7 +352,7 @@ sections:
           from: {line: 1, col: 0}
           to: {line: 3, col: 10}
           style: pulse`;
-    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const parsed = parsePlaybook(yaml, catalog) as SectionedPlaybook;
     const step = parsed.sections[0]!.steps[0]! as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.params['from']).toEqual({ line: 1, col: 0 });
@@ -364,7 +370,7 @@ sections:
           name: "YAML editor"
           value: "pages:\\n  - name: test"
           typing: instant`;
-    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const parsed = parsePlaybook(yaml, catalog) as SectionedPlaybook;
     const step = parsed.sections[0]!.steps[0]! as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.params['typing']).toBe('instant');
@@ -380,7 +386,7 @@ sections:
           name: "YAML editor"
           line: 5
           col: 10`;
-    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const parsed = parsePlaybook(yaml, catalog) as SectionedPlaybook;
     const step = parsed.sections[0]!.steps[0]! as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.params['line']).toBe(5);
@@ -396,9 +402,99 @@ sections:
           role: textbox
           name: "YAML editor"
           label: forEach`;
-    const parsed = parseScenario(yaml, catalog) as SectionedScenario;
+    const parsed = parsePlaybook(yaml, catalog) as SectionedPlaybook;
     const step = parsed.sections[0]!.steps[0]! as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.params['label']).toBe('forEach');
+  });
+});
+
+describe('multi-document YAML format', () => {
+  it('parses front matter + content', () => {
+    const yaml = `
+scenario: multi-doc-test
+meta:
+  title: "Multi-Doc"
+---
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
+    expect(scenario.scenario).toBe('multi-doc-test');
+    expect(scenario.meta?.title).toBe('Multi-Doc');
+    expect(scenario.steps).toHaveLength(1);
+  });
+
+  it('parses playbook front matter + content', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+---
+scenario: playbook-test
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
+    expect(scenario.scenario).toBe('playbook-test');
+    expect(scenario.steps).toHaveLength(1);
+  });
+
+  it('parseScenarioDocument returns playbook front matter', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+name: my-playbook
+---
+scenario: playbook-test
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const doc = parsePlaybookDocument(yaml, catalog);
+    expect(doc.frontMatter).not.toBeNull();
+    expect(doc.frontMatter!.version).toBe('1.0');
+    expect(doc.frontMatter!.schema).toBe('client');
+    expect(doc.frontMatter!.name).toBe('my-playbook');
+    expect(doc.scenario.steps).toHaveLength(1);
+  });
+
+  it('parseScenarioDocument returns null frontMatter for legacy', () => {
+    const yaml = `
+scenario: legacy
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const doc = parsePlaybookDocument(yaml, catalog);
+    expect(doc.frontMatter).toBeNull();
+    expect(doc.scenario.scenario).toBe('legacy');
+  });
+
+  it('multi-doc sections format', () => {
+    const yaml = `
+scenario: multi-doc-sections
+meta:
+  title: "Sections"
+---
+sections:
+  - title: Intro
+    steps:
+      - click: { role: button, name: "A" }
+`;
+    const scenario = parsePlaybook(yaml, catalog);
+    expect(isSectioned(scenario)).toBe(true);
+    if (isSectioned(scenario)) {
+      expect(scenario.sections).toHaveLength(1);
+      expect(scenario.meta?.title).toBe('Sections');
+    }
+  });
+
+  it('rejects non-map second document', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+---
+- item1
+- item2
+`;
+    expect(() => parsePlaybook(yaml, catalog)).toThrow('must be a mapping');
   });
 });

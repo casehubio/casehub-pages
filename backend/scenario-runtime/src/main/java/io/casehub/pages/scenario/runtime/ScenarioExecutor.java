@@ -1,10 +1,9 @@
 package io.casehub.pages.scenario.runtime;
 
 import io.casehub.pages.scenario.AwaitCondition;
+import io.casehub.pages.scenario.CompactStep;
 import io.casehub.pages.scenario.DeliveryContext;
 import io.casehub.pages.scenario.DeliveryHandler;
-import io.casehub.pages.scenario.Scenario;
-import io.casehub.pages.scenario.ScenarioStep;
 import io.casehub.pages.scenario.StepOutcome;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
@@ -22,6 +21,9 @@ public class ScenarioExecutor {
 
     private static final Set<String> NON_BATCHABLE_ACTIONS =
             Set.of("navigate", "wait", "assert");
+    private static final Set<String> GRAPHQL_ACTIONS = Set.of("graphql");
+    private static final Set<String> REST_ACTIONS = Set.of("rest");
+    private static final Set<String> SIMULATED_ACTIONS = Set.of("simulate");
 
     private final Map<String, DeliveryHandler> handlers;
     private final AriaDeliveryHandler          ariaHandler;
@@ -42,17 +44,17 @@ public class ScenarioExecutor {
         this.ariaHandler = foundAria;
     }
 
-    public List<ExecutionResult> execute(Scenario scenario, ScenarioConfig config) {
+    public List<ExecutionResult> execute(List<CompactStep> steps, ScenarioConfig config) {
         var context = new VariableContext();
         var results = new ArrayList<ExecutionResult>();
-        var steps   = scenario.steps();
+
 
         int i = 0;
         while (i < steps.size()) {
-            ScenarioStep step = steps.get(i);
+            CompactStep step = steps.get(i);
 
-            if (step instanceof ScenarioStep.AriaStep as && isBatchable(as)) {
-                var             batch  = collectBatch(steps, i);
+            if (isAriaAction(step) && isBatchable(step)) {
+                var batch = collectBatch(steps, i);
                 ExecutionResult result = executeBatch(batch);
                 results.add(result);
                 if (!result.success()) {
@@ -60,15 +62,16 @@ public class ScenarioExecutor {
                 }
                 i += batch.size();
             } else {
+                String stepName = step.decorator("step");
                 ExecutionResult result = executeStep(step, config, context);
                 results.add(result);
                 if (!result.success()) {
-                    throw new RuntimeException("Step '" + step.name()
+                    throw new RuntimeException("Step '" + stepName
                                                + "' failed: " + result.error());
                 }
                 if (result.result() != null && !result.result().isEmpty()
-                    && step.name() != null) {
-                    context.put(step.name(), result.result());
+                        && stepName != null) {
+                    context.put(stepName, result.result());
                 }
                 i++;
             }
@@ -77,23 +80,21 @@ public class ScenarioExecutor {
         return results;
     }
 
-    private ExecutionResult executeStep(ScenarioStep step, ScenarioConfig config,
-                                        VariableContext context) {
-        String              delivery;
-        String              stepName;
-        Map<String, Object> data;
+    private boolean isAriaAction(CompactStep step) {
+        String action = step.action();
+        return !GRAPHQL_ACTIONS.contains(action)
+                && !REST_ACTIONS.contains(action)
+                && !SIMULATED_ACTIONS.contains(action);
+    }
 
-        switch (step) {
-            case ScenarioStep.AriaStep as -> {
-                delivery = "aria";
-                stepName = as.name();
-                data     = ariaStepToMap(as);
-            }
-            case ScenarioStep.GenericStep gs -> {
-                delivery = gs.delivery();
-                stepName = gs.name();
-                data     = new HashMap<>(gs.data());
-            }
+    private ExecutionResult executeStep(CompactStep step, ScenarioConfig config,
+                                        VariableContext context) {
+        String delivery = isAriaAction(step) ? "aria" : step.action();
+        String stepName = step.decorator("step");
+        Map<String, Object> data = new HashMap<>(step.params());
+        data.put("action", step.action());
+        if (step.decorators() != null) {
+            data.putAll(step.decorators());
         }
 
         DeliveryHandler handler = handlers.get(delivery);
@@ -136,19 +137,7 @@ public class ScenarioExecutor {
         return null;
     }
 
-    private Map<String, Object> ariaStepToMap(ScenarioStep.AriaStep as) {
-        var map = new HashMap<String, Object>();
-        map.put("action", as.action());
-        if (as.target() != null) {
-            map.put("target", Map.of("role", as.target().role(), "name", as.target().name()));
-        }
-        if (as.value() != null) {map.put("value", as.value());}
-        if (as.state() != null) {map.put("state", as.state());}
-        if (as.timeout() != null) {map.put("timeout", as.timeout());}
-        return map;
-    }
-
-    private ExecutionResult executeBatch(List<ScenarioStep.AriaStep> batch) {
+    private ExecutionResult executeBatch(List<CompactStep> batch) {
         if (ariaHandler == null) {
             return ExecutionResult.ok(null, Map.of());
         }
@@ -161,16 +150,17 @@ public class ScenarioExecutor {
         }
     }
 
-    private boolean isBatchable(ScenarioStep.AriaStep step) {
-        return step.name() == null
-               && !NON_BATCHABLE_ACTIONS.contains(step.action());
+    private boolean isBatchable(CompactStep step) {
+        return step.decorator("step") == null
+                && !NON_BATCHABLE_ACTIONS.contains(step.action());
     }
 
-    private List<ScenarioStep.AriaStep> collectBatch(List<ScenarioStep> steps, int start) {
-        var batch = new ArrayList<ScenarioStep.AriaStep>();
+    private List<CompactStep> collectBatch(List<CompactStep> steps, int start) {
+        var batch = new ArrayList<CompactStep>();
         for (int j = start; j < steps.size(); j++) {
-            if (steps.get(j) instanceof ScenarioStep.AriaStep as && isBatchable(as)) {
-                batch.add(as);
+            CompactStep s = steps.get(j);
+            if (isAriaAction(s) && isBatchable(s)) {
+                batch.add(s);
             } else {
                 break;
             }
