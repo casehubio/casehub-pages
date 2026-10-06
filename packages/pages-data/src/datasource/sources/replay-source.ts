@@ -1,6 +1,6 @@
 import type { DataSource, DataSink, Disposable } from "../types.js";
 import type { DataSetEvent } from "../../dataset/events.js";
-import type { ScenarioController } from "../controller.js";
+import type { PlaybookController } from "../controller.js";
 
 export interface RecordedEvent {
   readonly offsetMs: number;
@@ -13,7 +13,7 @@ export interface ReplayOptions {
 
 export function replay(
   events: readonly RecordedEvent[],
-  controller: ScenarioController,
+  controller: PlaybookController,
   options?: ReplayOptions,
 ): DataSource {
   const disposables: Disposable[] = [];

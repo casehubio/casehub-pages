@@ -16,7 +16,7 @@ class YamlMultiDocSplitterTest {
                 """;
         var result = YamlMultiDocSplitter.split(yaml);
         assertNull(result.frontMatter());
-        assertEquals("demo", result.content().path("scenario").asText());
+        assertEquals("demo", result.content().path("playbook").asText());
         assertTrue(result.content().has("steps"));
     }
 
@@ -36,7 +36,7 @@ class YamlMultiDocSplitterTest {
         assertEquals("1.0", result.frontMatter().version());
         assertEquals("client", result.frontMatter().schema());
         assertEquals("helpdesk-intake", result.frontMatter().name());
-        assertEquals("helpdesk-intake", result.content().path("scenario").asText());
+        assertEquals("helpdesk-intake", result.content().path("playbook").asText());
         assertTrue(result.content().has("steps"));
     }
 
@@ -51,7 +51,7 @@ class YamlMultiDocSplitterTest {
                 """;
         var result = YamlMultiDocSplitter.split(yaml);
         assertNull(result.frontMatter());
-        assertEquals("demo", result.content().path("scenario").asText());
+        assertEquals("demo", result.content().path("playbook").asText());
     }
 
     @Test
@@ -72,7 +72,7 @@ class YamlMultiDocSplitterTest {
     }
 
     @Test
-    void frontMatterRequiresSchemaField() {
+    void multiDocWithoutSchemaFieldTreatsFirstAsContent() {
         var yaml = """
                 playbook: "1.0"
                 ---
@@ -80,7 +80,9 @@ class YamlMultiDocSplitterTest {
                 steps:
                   - navigate: /test
                 """;
-        assertThrows(IllegalArgumentException.class, () -> YamlMultiDocSplitter.split(yaml));
+        var result = YamlMultiDocSplitter.split(yaml);
+        assertNull(result.frontMatter());
+        assertEquals("1.0", result.content().path("playbook").asText());
     }
 
     @Test

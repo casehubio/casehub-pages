@@ -537,7 +537,7 @@ describe('dimension constraints', () => {
     });
 
     const events: CustomEvent[] = [];
-    container.addEventListener('graph:drill-down', ((e: CustomEvent) => events.push(e)) as EventListener);
+    container.addEventListener('graph:drill-down', ((e: Event) => events.push(e as CustomEvent)));
 
     const btn = container.querySelector('.stencil-action') as HTMLElement;
     act(() => { btn.click(); });

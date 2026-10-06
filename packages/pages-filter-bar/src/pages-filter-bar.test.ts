@@ -85,7 +85,7 @@ describe('PagesFilterBar', () => {
       await el.updateComplete;
 
       expect(handler).toHaveBeenCalledOnce();
-      const detail = handler.mock.calls[0][0].detail as FilterState;
+      const detail = handler.mock.calls[0]![0].detail as FilterState;
       expect(detail.selectedChips.includes('COMMAND')).toBe(true);
     });
 
@@ -103,7 +103,7 @@ describe('PagesFilterBar', () => {
       await el.updateComplete;
 
       expect(handler).toHaveBeenCalledTimes(2);
-      const detail = handler.mock.calls[1][0].detail as FilterState;
+      const detail = handler.mock.calls[1]![0].detail as FilterState;
       expect(detail.selectedChips.includes('COMMAND')).toBe(false);
     });
 
@@ -189,7 +189,7 @@ describe('PagesFilterBar', () => {
       await el.updateComplete;
 
       expect(handler).toHaveBeenCalledOnce();
-      const detail = handler.mock.calls[0][0].detail as FilterState;
+      const detail = handler.mock.calls[0]![0].detail as FilterState;
       expect(detail.selectedEntity).toBe('alice');
     });
 
@@ -303,7 +303,7 @@ describe('PagesFilterBar', () => {
       await el.updateComplete;
 
       expect(handler).toHaveBeenCalledOnce();
-      const detail = handler.mock.calls[0][0].detail as FilterState;
+      const detail = handler.mock.calls[0]![0].detail as FilterState;
       expect(detail.dateFrom).toBe('2026-01-01');
     });
 
@@ -318,7 +318,7 @@ describe('PagesFilterBar', () => {
       await el.updateComplete;
 
       expect(handler).toHaveBeenCalledOnce();
-      const detail = handler.mock.calls[0][0].detail as FilterState;
+      const detail = handler.mock.calls[0]![0].detail as FilterState;
       expect(detail.dateTo).toBe('2026-12-31');
     });
 

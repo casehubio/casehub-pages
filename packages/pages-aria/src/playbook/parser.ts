@@ -113,7 +113,7 @@ export function deriveStepName(step: ResolvedStep, index: number): string {
   if (label) {
     return label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
-  const action = 'entry' in step ? step.entry.name : step.kind;
+  const action = 'entry' in step ? step.entry.qualifiedName : step.kind;
   return `${action}-${index}`;
 }
 
@@ -121,8 +121,9 @@ function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog)
   const { walkerSteps, preExtracted, slotTypes } = preExtract(rawSteps);
   const resolved = Walker.resolve(walkerSteps, catalog);
   for (let i = 0; i < resolved.length; i++) {
-    if (!resolved[i].name) {
-      (resolved[i] as { name: string | null }).name = deriveStepName(resolved[i], i);
+    const step = resolved[i]!;
+    if (!step.name) {
+      (step as { name: string | null }).name = deriveStepName(step, i);
     }
   }
   return mergeSteps(resolved, preExtracted, slotTypes);
@@ -136,11 +137,11 @@ export interface PlaybookParseResult {
 function splitMultiDoc(yamlString: string): { meta: Record<string, unknown> | null; content: Record<string, unknown> } {
   const docs = parseAllDocuments(yamlString);
   if (docs.length === 1) {
-    return { meta: null, content: docs[0].toJSON() as Record<string, unknown> };
+    return { meta: null, content: docs[0]!.toJSON() as Record<string, unknown> };
   }
 
-  const firstDoc = docs[0].toJSON() as Record<string, unknown>;
-  const rawSecond = docs[1].toJSON();
+  const firstDoc = docs[0]!.toJSON() as Record<string, unknown>;
+  const rawSecond = docs[1]!.toJSON();
   if (typeof rawSecond !== 'object' || rawSecond === null || Array.isArray(rawSecond)) {
     throw new Error('Second YAML document must be a mapping');
   }
@@ -171,8 +172,8 @@ export function parsePlaybook(yamlString: string, catalog: Catalog): Playbook {
 export function parsePlaybookDocument(yamlString: string, catalog: Catalog): PlaybookParseResult {
   const { meta, content } = splitMultiDoc(yamlString);
   const frontMatter = meta ? parsePlaybookFrontMatter(meta) : null;
-  const scenario = parsePlaybookFromParsed(content, catalog);
-  return { frontMatter, scenario };
+  const playbook = parsePlaybookFromParsed(content, catalog);
+  return { frontMatter, playbook };
 }
 
 export async function parsePlaybookWithIncludes(
@@ -207,8 +208,8 @@ function parsePlaybookFromParsed(parsed: Record<string, unknown>, catalog: Catal
         : [];
       return {
         title: (sec['label'] ?? sec['title']) as string,
-        content: sec['content'] as SectionContent | undefined,
-        scenarioRef: sec['scenario-ref'] as string | undefined,
+        ...(sec['content'] !== undefined && { content: sec['content'] as SectionContent }),
+        ...(sec['scenario-ref'] !== undefined && { scenarioRef: sec['scenario-ref'] as string }),
         steps,
       };
     });

@@ -32,7 +32,7 @@ class ScriptRegistryTest {
             """;
 
     static final String SAMPLE_YAML = """
-            scenario: sample-script
+            playbook: sample-script
             meta:
               description: "A sample automation"
               labels:

@@ -47,5 +47,5 @@ export function parsePlaybookFrontMatter(
     }
   }
 
-  return { version, schema, name, metadata };
+  return { version, schema, metadata, ...(name !== undefined && { name }) };
 }

@@ -1,7 +1,7 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {simulated} from "./simulated-source.js";
 import {inlineSource} from "../inline-source.js";
-import {createScenarioController} from "../../controller.js";
+import {createPlaybookController} from "../../controller.js";
 import {increment, removeRow, transition, when} from "./mutations.js";
 import type {DataSink, DataSource} from "../../types.js";
 import type {DataSetEvent, RemoveEvent, ReplaceEvent} from "../../../dataset/events.js";
@@ -42,7 +42,7 @@ describe("simulated source", () => {
   afterEach(() => { vi.useRealTimers(); });
 
   it("emits initial snapshot then starts ticking", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "PENDING"]], COLS),
       controller: ctrl,
@@ -59,7 +59,7 @@ describe("simulated source", () => {
   });
 
   it("applies mutations on tick", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "PENDING"]], COLS),
       controller: ctrl,
@@ -83,7 +83,7 @@ describe("simulated source", () => {
   });
 
   it("dispatch() applies DataAction and emits replace event", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "PENDING"]], COLS),
       controller: ctrl,
@@ -108,7 +108,7 @@ describe("simulated source", () => {
   });
 
   it("dispatch() create appends a new row", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "PENDING"]], COLS),
       controller: ctrl,
@@ -124,7 +124,7 @@ describe("simulated source", () => {
   });
 
   it("dispatch() delete removes a row", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "PENDING"], [2, "DONE"]], COLS),
       controller: ctrl,
@@ -146,7 +146,7 @@ describe("simulated source", () => {
       { id: columnId("id"), type: ColumnType.NUMBER },
       { id: columnId("val"), type: ColumnType.TEXT },
     ];
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "X"]], extraCols),
       controller: ctrl,
@@ -170,7 +170,7 @@ describe("simulated source", () => {
       disconnect() { /* no-op */ },
     };
 
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: failingSource,
       controller: ctrl,
@@ -204,7 +204,7 @@ describe("simulated source", () => {
       disconnect() { /* no-op */ },
     };
 
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: partialSource,
       controller: ctrl,
@@ -220,7 +220,7 @@ describe("simulated source", () => {
   });
 
   it("uses default interval of 5000 when not specified", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const countCols: ExternalColumnDef[] = [
       { id: columnId("id"), type: ColumnType.NUMBER },
       { id: columnId("count"), type: ColumnType.NUMBER },
@@ -246,7 +246,7 @@ describe("simulated source", () => {
   });
 
   it("multiple ticks accumulate mutations", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const countCols: ExternalColumnDef[] = [
       { id: columnId("id"), type: ColumnType.NUMBER },
       { id: columnId("count"), type: ColumnType.NUMBER },
@@ -276,7 +276,7 @@ describe("simulated source", () => {
   });
 
   it("removeRow mutation removes rows and emits remove events", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "DONE"], [2, "PENDING"]], COLS),
       controller: ctrl,
@@ -294,7 +294,7 @@ describe("simulated source", () => {
   });
 
   it("dispatch update for non-existent key emits no event", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "PENDING"]], COLS),
       controller: ctrl,
@@ -310,7 +310,7 @@ describe("simulated source", () => {
   });
 
   it("dispatch delete for non-existent key emits no event", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "PENDING"]], COLS),
       controller: ctrl,
@@ -326,7 +326,7 @@ describe("simulated source", () => {
   });
 
   it("dispatch returns a Promise", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const source = simulated({
       initial: makeInitial([[1, "OPEN"]], COLS),
       controller: ctrl,
@@ -342,7 +342,7 @@ describe("simulated source", () => {
   });
 
   it("when() with transition applies conditional state change", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const countCols: ExternalColumnDef[] = [
       { id: columnId("id"), type: ColumnType.NUMBER },
       { id: columnId("status"), type: ColumnType.TEXT },

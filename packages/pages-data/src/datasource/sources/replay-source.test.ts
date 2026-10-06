@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { replay } from "./replay-source.js";
-import { createScenarioController } from "../controller.js";
+import { createPlaybookController } from "../controller.js";
 import type { DataSink } from "../types.js";
 import type { RecordedEvent } from "./replay-source.js";
 import { col, ColumnType, makeDataset } from "./test-helpers.js";
@@ -44,7 +44,7 @@ describe("replay", () => {
       { offsetMs: 250, event: { type: "append", rows: [textRow("b")] } },
     ];
 
-    const controller = createScenarioController({ playing: true, speed: 1 });
+    const controller = createPlaybookController({ playing: true, speed: 1 });
     const source = replay(events, controller);
     const sink = createMockSink();
 
@@ -72,7 +72,7 @@ describe("replay", () => {
       { offsetMs: 1000, event: { type: "append", rows: [textRow("a")] } },
     ];
 
-    const controller = createScenarioController({ playing: true, speed: 2 });
+    const controller = createPlaybookController({ playing: true, speed: 2 });
     const source = replay(events, controller);
     const sink = createMockSink();
 
@@ -91,7 +91,7 @@ describe("replay", () => {
       { offsetMs: 100, event: { type: "append", rows: [textRow("a")] } },
     ];
 
-    const controller = createScenarioController({ playing: true, speed: 1 });
+    const controller = createPlaybookController({ playing: true, speed: 1 });
     const source = replay(events, controller, { loop: true });
     const sink = createMockSink();
 
@@ -122,7 +122,7 @@ describe("replay", () => {
       { offsetMs: 200, event: { type: "append", rows: [textRow("b")] } },
     ];
 
-    const controller = createScenarioController({ playing: false, speed: 1 });
+    const controller = createPlaybookController({ playing: false, speed: 1 });
     const source = replay(events, controller);
     const sink = createMockSink();
 
@@ -146,7 +146,7 @@ describe("replay", () => {
 
   it("handles empty sequence gracefully", () => {
     const events: readonly RecordedEvent[] = [];
-    const controller = createScenarioController({ playing: true });
+    const controller = createPlaybookController({ playing: true });
     const source = replay(events, controller);
     const sink = createMockSink();
 
@@ -162,7 +162,7 @@ describe("replay", () => {
       { offsetMs: 2000, event: { type: "append", rows: [textRow("b")] } },
     ];
 
-    const controller = createScenarioController({ playing: true, speed: 1 });
+    const controller = createPlaybookController({ playing: true, speed: 1 });
     const source = replay(events, controller);
     const sink = createMockSink();
 
@@ -188,7 +188,7 @@ describe("replay", () => {
       { offsetMs: 100, event: { type: "append", rows: [textRow("c")] } },
     ];
 
-    const controller = createScenarioController({ playing: true, speed: 1 });
+    const controller = createPlaybookController({ playing: true, speed: 1 });
     const source = replay(events, controller);
     const sink = createMockSink();
 

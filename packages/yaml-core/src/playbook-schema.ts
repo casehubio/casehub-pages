@@ -40,7 +40,7 @@ const SHARED_CAPABILITIES = new Set([
 ]);
 
 function builtIn(name: string, extra: string[]): PlaybookSchemaDescriptor {
-  const capabilities = new Set(SHARED_CAPABILITIES);
+  const capabilities: Set<string> = new Set(SHARED_CAPABILITIES);
   for (const cap of extra) capabilities.add(cap);
   return { name, baseSchema: null, capabilities };
 }

@@ -82,7 +82,7 @@ class PlaybookOrchestratorTest {
                 List.of("create-ticket")));
 
         var yaml = """
-            scenario: progress-test
+            playbook: progress-test
             steps:
               - label: "Create"
                 target: helpdesk
@@ -110,7 +110,7 @@ class PlaybookOrchestratorTest {
                 List.of("create-ticket", "verify-ticket")));
 
         var yaml = """
-            scenario: progress-test
+            playbook: progress-test
             steps:
               - label: "Create"
                 target: helpdesk
@@ -150,7 +150,7 @@ class PlaybookOrchestratorTest {
                 List.of("create-ticket")));
 
         var yaml = """
-            scenario: control-test
+            playbook: control-test
             steps:
               - label: "Click"
                 target: browser
@@ -183,7 +183,7 @@ class PlaybookOrchestratorTest {
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));
 
         orchestrator.start("""
-            scenario: resume-test
+            playbook: resume-test
             steps:
               - label: "Click"
                 target: browser
@@ -211,7 +211,7 @@ class PlaybookOrchestratorTest {
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));
 
         orchestrator.start("""
-            scenario: speed-test
+            playbook: speed-test
             steps:
               - label: "Click"
                 target: browser
@@ -241,7 +241,7 @@ class PlaybookOrchestratorTest {
                 List.of("create-ticket")));
 
         var yaml = """
-            scenario: multi-test
+            playbook: multi-test
             steps:
               - label: "Click"
                 target: browser
@@ -279,7 +279,7 @@ class PlaybookOrchestratorTest {
             new PushRequest.ExecutorRegister("1", "browser", List.of("click")));
 
         orchestrator.start("""
-            scenario: step-test
+            playbook: step-test
             steps:
               - label: "A"
                 target: browser
@@ -311,7 +311,7 @@ class PlaybookOrchestratorTest {
                 List.of("create-ticket")));
 
         var yaml = """
-            scenario: section-test
+            playbook: section-test
             sections:
               - label: "Submit"
                 steps:
@@ -346,7 +346,7 @@ class PlaybookOrchestratorTest {
                 List.of("click", "fill")));
 
         var yaml = """
-            scenario: re-register-test
+            playbook: re-register-test
             steps:
               - label: "Click"
                 target: browser
@@ -404,7 +404,7 @@ class PlaybookOrchestratorTest {
                 List.of("click", "fill")));
 
         var yaml = """
-            scenario: run-to-test
+            playbook: run-to-test
             speed: 1.0
             steps:
               - click: {}
@@ -448,7 +448,7 @@ class PlaybookOrchestratorTest {
                 List.of("click", "fill", "spotlight")));
 
         var yaml = """
-            scenario: run-to-trigger-test
+            playbook: run-to-trigger-test
             sections:
               - label: "Section A"
                 steps:
@@ -497,7 +497,7 @@ class PlaybookOrchestratorTest {
                                                                          List.of("create-ticket", "verify-ticket")));
 
         var yaml = """
-                   scenario: callback-test
+                   playbook: callback-test
                    steps:
                      - label: "Create"
                        target: helpdesk
@@ -552,7 +552,7 @@ class PlaybookOrchestratorTest {
                                                                          List.of("create-ticket")));
 
         var yaml = """
-                   scenario: no-callback-test
+                   playbook: no-callback-test
                    steps:
                      - label: "Create"
                        target: helpdesk
@@ -579,7 +579,7 @@ class PlaybookOrchestratorTest {
                                                                          List.of("create-ticket", "verify-ticket")));
 
         var yaml = """
-                   scenario: fault-test
+                   playbook: fault-test
                    on-error: stop
                    steps:
                      - label: "Create"
@@ -631,7 +631,7 @@ class PlaybookOrchestratorTest {
                                                                          List.of("create-ticket", "verify-ticket")));
 
         var yaml = """
-                   scenario: mixed-result-test
+                   playbook: mixed-result-test
                    steps:
                      - label: "Create"
                        target: helpdesk

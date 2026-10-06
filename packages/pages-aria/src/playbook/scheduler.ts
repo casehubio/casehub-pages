@@ -78,7 +78,7 @@ export function createScheduler(
   function emitState(): void {
     const completedSteps = countCompletedSteps(queues);
     const state: PlaybookState = {
-      scenario: scenario.playbook,
+      scenario: scenario.playbook ?? null,
       chapter: scenario.meta?.title ?? null,
       section: null,
       step: null,
@@ -294,7 +294,7 @@ export function createScheduler(
               emitQueueEvent(queue, 'error');
               options.eventTarget.dispatchEvent(new CustomEvent('pages-event', {
                 detail: { topic: 'scenario:state', payload: {
-                  scenario: scenario.playbook, chapter: null, section: null,
+                  scenario: scenario.playbook ?? null, chapter: null, section: null,
                   step: stepName, paused: true, speed: clock.speed(),
                   progress: totalSteps > 0 ? countCompletedSteps(queues) / totalSteps : 0,
                   content: null, slides: null,
@@ -385,7 +385,7 @@ export function createScheduler(
             runnerState = 'done';
             options.eventTarget.dispatchEvent(new CustomEvent('pages-event', {
               detail: { topic: 'scenario:state', payload: {
-                scenario: scenario.playbook, chapter: null, section: null,
+                scenario: scenario.playbook ?? null, chapter: null, section: null,
                 step: null, paused: false, speed: clock.speed(),
                 progress: totalSteps > 0 ? countCompletedSteps(queues) / totalSteps : 0,
                 content: null, slides: null,
@@ -423,7 +423,7 @@ export function createScheduler(
 
     runnerState = 'done';
     emitState();
-    options.onComplete?.(scenario.playbook);
+    if (scenario.playbook) options.onComplete?.(scenario.playbook);
   }
 
   function startLoop(): void {

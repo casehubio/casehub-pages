@@ -28,9 +28,9 @@ public final class PlaybookContentParser {
         var split = YamlMultiDocSplitter.split(yaml);
         JsonNode root = split.content();
 
-            String scenario = root.path("scenario").asText(null);
+            String scenario = root.path("playbook").asText(null);
             if (scenario == null || scenario.isBlank()) {
-                throw new IllegalArgumentException("Missing or empty 'scenario' name");
+                throw new IllegalArgumentException("Missing or empty 'playbook' name");
             }
 
             String description = root.path("description").asText(null);

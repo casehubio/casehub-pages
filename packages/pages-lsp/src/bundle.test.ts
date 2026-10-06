@@ -28,7 +28,7 @@ function readMessage(proc: ChildProcess, timeoutMs = 5000): Promise<Record<strin
         if (headerEnd >= 0) {
           const match = header.match(/Content-Length: (\d+)/);
           if (!match) { clearTimeout(timer); reject(new Error('No Content-Length')); return; }
-          contentLength = parseInt(match[1], 10);
+          contentLength = parseInt(match[1]!, 10);
           body = header.slice(headerEnd + 4);
           readingBody = true;
           if (body.length >= contentLength) {

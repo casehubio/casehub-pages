@@ -28,7 +28,7 @@ export class DefaultScenarioScope implements ScenarioScope {
     this._speedMultiplier = sm ?? parent?._speedMultiplier ?? new DefaultSpeedMultiplier();
   }
 
-  private readonly _parent?: DefaultScenarioScope;
+  private readonly _parent: DefaultScenarioScope | undefined;
   private _deadlineMs?: number;
   private _deadlineStart?: number;
   private _deadlineExpired = false;

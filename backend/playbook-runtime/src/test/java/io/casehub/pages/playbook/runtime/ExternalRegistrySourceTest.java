@@ -36,7 +36,7 @@ class ExternalRegistrySourceTest {
             """;
 
     static final String SAMPLE_YAML = """
-            scenario: onboard-team
+            playbook: onboard-team
             steps:
               - label: "Onboard"
                 target: browser
@@ -91,7 +91,7 @@ class ExternalRegistrySourceTest {
                 }, Duration.ofMinutes(5));
         var yaml = source.getYaml("onboard-team");
         assertThat(yaml).isPresent();
-        assertThat(yaml.get()).contains("scenario: onboard-team");
+        assertThat(yaml.get()).contains("playbook: onboard-team");
     }
 
     @Test

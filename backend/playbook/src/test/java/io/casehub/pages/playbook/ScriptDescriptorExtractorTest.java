@@ -13,7 +13,7 @@ class ScriptDescriptorExtractorTest {
     @Test
     void extract_minimalScript() {
         var desc = ScriptDescriptorExtractor.extract("""
-                scenario: simple-test
+                playbook: simple-test
                 steps:
                   - label: "Click button"
                     target: browser
@@ -34,7 +34,7 @@ class ScriptDescriptorExtractorTest {
     @Test
     void extract_withMeta() {
         var desc = ScriptDescriptorExtractor.extract("""
-                scenario: onboard-team
+                playbook: onboard-team
                 meta:
                   description: "Onboard team members"
                   labels:
@@ -58,7 +58,7 @@ class ScriptDescriptorExtractorTest {
     @Test
     void extract_withParams() {
         var desc = ScriptDescriptorExtractor.extract("""
-                scenario: create-project
+                playbook: create-project
                 params:
                   - name: projectName
                     type: string
@@ -86,7 +86,7 @@ class ScriptDescriptorExtractorTest {
     @Test
     void extract_detectsCalls() {
         var desc = ScriptDescriptorExtractor.extract("""
-                scenario: caller
+                playbook: caller
                 steps:
                   - label: "Call create-user"
                     target: browser
@@ -141,7 +141,7 @@ class ScriptDescriptorExtractorTest {
                         target: {role: button, name: Go}
                 """, ScriptProvenance.BUNDLED))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("scenario");
+                .hasMessageContaining("playbook");
     }
 
     @Test

@@ -20,7 +20,7 @@
  */
 
 import type {DataAction, DataSink, DataSource, Disposable, MutableDataSource} from "../../types.js";
-import type {ScenarioController} from "../../controller.js";
+import type {PlaybookController} from "../../controller.js";
 import type {CellValue, Column, ColumnId, TypedRow} from "../../../dataset/types.js";
 import {ColumnType} from "../../../dataset/types.js";
 import type {DataSetEvent, RemoveEvent, ReplaceEvent} from "../../../dataset/events.js";
@@ -30,7 +30,7 @@ import {createTypedRow} from "../../../dataset/conversion.js";
 
 export interface SimulatedConfig {
   readonly initial: DataSource;
-  readonly controller: ScenarioController;
+  readonly controller: PlaybookController;
   readonly interval?: number;
   readonly mutations: readonly Mutation[];
   readonly keyColumn?: string;

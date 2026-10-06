@@ -19,7 +19,7 @@ class StepCatalogResolverTest {
 
     @BeforeEach
     void setUp() {
-        var testDir = Path.of("../scenario-runtime/src/test/resources/step-definitions");
+        var testDir = Path.of("../playbook-runtime/src/test/resources/step-definitions");
         var service = new StepCatalogService(testDir);
         resolver = new StepCatalogResolver();
         resolver.catalog = service;

@@ -14,6 +14,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -21,6 +23,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JdbcEventStoreTest {
 
     @Inject EventStore eventStore;
+    @Inject DataSource dataSource;
+
+    @org.junit.jupiter.api.BeforeEach
+    void cleanDatabase() throws java.sql.SQLException {
+        try (var conn = dataSource.getConnection(); var stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM push_events");
+            stmt.execute("DELETE FROM push_topic_seq");
+        }
+    }
 
     @Test
     void is_jdbc_implementation() {

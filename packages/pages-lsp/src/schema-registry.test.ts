@@ -69,7 +69,7 @@ describe('SchemaRegistry', () => {
       variantDispatchers: new Map([
         ['spec.bindings.target', {
           strategy: 'key-presence' as const,
-          variants: new Map([
+          variants: new Map<string, z.ZodType>([
             ['capability', capabilitySchema],
             ['subCase', subCaseSchema],
           ]),

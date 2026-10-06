@@ -27,8 +27,8 @@ function toModuleParams(
     result[p.name] = {
       type,
       required: p.required ?? false,
-      defaultValue: p.default !== undefined ? String(p.default) : undefined,
-      allowedValues: p.enum?.map(String),
+      ...(p.default !== undefined && { defaultValue: String(p.default) }),
+      ...(p.enum && { allowedValues: p.enum.map(String) }),
     };
   }
   return result;

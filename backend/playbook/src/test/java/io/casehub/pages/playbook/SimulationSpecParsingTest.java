@@ -9,7 +9,7 @@ class SimulationSpecParsingTest {
     @Test
     void parsesSimulationBlock() {
         String yaml = """
-                scenario: Test with simulation
+                playbook: Test with simulation
                 simulation:
                   strategies:
                     agent-provider.invoke: sequential
@@ -35,7 +35,7 @@ class SimulationSpecParsingTest {
     @Test
     void parsesPlaybookWithoutSimulationBlock() {
         String yaml = """
-                scenario: Plain scenario
+                playbook: Plain scenario
                 steps:
                   - label: step1
                     target: browser
@@ -48,7 +48,7 @@ class SimulationSpecParsingTest {
     @Test
     void parsesSimulationWithStrategiesOnly() {
         String yaml = """
-                scenario: Strategies only
+                playbook: Strategies only
                 simulation:
                   strategies:
                     agent-provider.invoke: random

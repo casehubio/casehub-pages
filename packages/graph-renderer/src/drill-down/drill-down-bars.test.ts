@@ -53,7 +53,7 @@ describe('DrillDownBars', () => {
   it('click bar dispatches drill-down-navigate event', () => {
     setup(2);
     const events: CustomEvent[] = [];
-    container.addEventListener('drill-down-navigate', ((e: CustomEvent) => events.push(e)) as EventListener);
+    container.addEventListener('drill-down-navigate', ((e: Event) => events.push(e as CustomEvent)));
     (container.querySelector('[role="button"]') as HTMLElement).click();
     expect(events).toHaveLength(1);
     expect(events[0]!.detail.depth).toBe(0);

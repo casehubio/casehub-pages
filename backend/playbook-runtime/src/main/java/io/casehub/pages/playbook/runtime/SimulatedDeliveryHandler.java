@@ -12,7 +12,7 @@ public class SimulatedDeliveryHandler implements DeliveryHandler {
 
     @Override
     public String name() {
-        return "simulated";
+        return "simulate";
     }
 
     @Override

@@ -32,7 +32,7 @@ class PlaybookOrchestratorBroadcastTest {
             """;
 
     private static final String CHAPTERS_YAML = """
-            scenario: chapter-demo
+            playbook: chapter-demo
             chapters:
               - label: "Chapter 1"
                 sections:

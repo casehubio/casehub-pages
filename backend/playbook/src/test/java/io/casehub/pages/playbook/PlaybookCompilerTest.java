@@ -79,7 +79,7 @@ class PlaybookCompilerTest {
     @Test
     void compile_noParams_noForEach_passesThrough() {
         var compiled = PlaybookCompiler.compile("""
-                scenario: simple
+                playbook: simple
                 steps:
                   - click:
                       role: button
@@ -93,7 +93,7 @@ class PlaybookCompilerTest {
     @Test
     void compile_iterationGroup_expandsSimpleValues() {
         var compiled = PlaybookCompiler.compile("""
-                scenario: regions-test
+                playbook: regions-test
                 iterations:
                   regions:
                     as: region
@@ -113,7 +113,7 @@ class PlaybookCompilerTest {
     @Test
     void compile_forEachCsv_providesIterationIndex() {
         var compiled = PlaybookCompiler.compile("""
-                scenario: index-test
+                playbook: index-test
                 data:
                   items:
                     inline: |
@@ -139,7 +139,7 @@ class PlaybookCompilerTest {
     @Test
     void compile_forEachCsv_resolvesVariablesInParams() {
         var compiled = PlaybookCompiler.compile("""
-                scenario: param-resolve-test
+                playbook: param-resolve-test
                 data:
                   members:
                     inline: |
@@ -163,7 +163,7 @@ class PlaybookCompilerTest {
     @Test
     void compile_forEachCsv_resolvesNestedMapParams() {
         var compiled = PlaybookCompiler.compile("""
-                scenario: nested-test
+                playbook: nested-test
                 data:
                   members:
                     inline: |
@@ -188,7 +188,7 @@ class PlaybookCompilerTest {
     @Test
     void compile_forEachCsv_multiStepWithWhenFilter() {
         var compiled = PlaybookCompiler.compile("""
-                scenario: table-populate
+                playbook: table-populate
                 data:
                   team:
                     inline: |

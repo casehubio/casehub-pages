@@ -47,7 +47,7 @@ class PlaybookResolverTest {
     @Test
     void submitStartsPlaybookAndReturnsState() {
         var yaml = """
-            scenario: mcp-test
+            playbook: mcp-test
             steps:
               - label: "Click"
                 target: browser
@@ -65,7 +65,7 @@ class PlaybookResolverTest {
         assertThat(state.playbook()).isNull();
 
         resolver.submit("""
-            scenario: status-test
+            playbook: status-test
             steps:
               - label: "Ready"
                 target: browser
@@ -80,7 +80,7 @@ class PlaybookResolverTest {
     @Test
     void pauseAndResumeToggleState() {
         resolver.submit("""
-            scenario: pause-test
+            playbook: pause-test
             steps:
               - label: "Step"
                 target: browser
@@ -98,7 +98,7 @@ class PlaybookResolverTest {
     @Test
     void speedChangesState() {
         resolver.submit("""
-            scenario: speed-test
+            playbook: speed-test
             steps:
               - label: "Step"
                 target: browser
@@ -113,7 +113,7 @@ class PlaybookResolverTest {
     @Test
     void runToWithUnknownLabelThrows() {
         resolver.submit("""
-            scenario: runTo-test
+            playbook: runTo-test
             steps:
               - label: "Step"
                 target: browser
@@ -129,7 +129,7 @@ class PlaybookResolverTest {
     @Test
     void stepSendsControlMessage() {
         resolver.submit("""
-            scenario: step-test
+            playbook: step-test
             steps:
               - label: "A"
                 target: browser

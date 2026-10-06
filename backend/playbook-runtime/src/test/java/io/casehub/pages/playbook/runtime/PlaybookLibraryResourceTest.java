@@ -31,7 +31,7 @@ class PlaybookLibraryResourceTest {
             """;
 
     static final String UPLOAD_YAML = """
-            scenario: my-automation
+            playbook: my-automation
             meta:
               description: "Custom automation"
               labels: [domain:ops]
@@ -150,7 +150,7 @@ class PlaybookLibraryResourceTest {
                 new UploadedScriptSource(java.nio.file.Path.of(System.getProperty("java.io.tmpdir"), "test-scripts-" + System.nanoTime())));
         var graphql = new PlaybookLibraryGraphQL(registry);
 
-        String yaml = "scenario: graphql-test\nsteps:\n  - label: test\n    target: browser\n    commands:\n      - action: click\n        target: {role: button, name: Go}\n";
+        String yaml = "playbook: graphql-test\nsteps:\n  - label: test\n    target: browser\n    commands:\n      - action: click\n        target: {role: button, name: Go}\n";
         var    desc = graphql.uploadScript(yaml);
         assertThat(desc.name()).isEqualTo("graphql-test");
     }

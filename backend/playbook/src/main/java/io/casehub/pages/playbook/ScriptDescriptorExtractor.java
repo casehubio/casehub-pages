@@ -19,9 +19,9 @@ public final class ScriptDescriptorExtractor {
         var split = YamlMultiDocSplitter.split(yaml);
         JsonNode root = split.content();
 
-            String name = root.path("scenario").asText(null);
+            String name = root.path("playbook").asText(null);
             if (name == null || name.isBlank()) {
-                throw new IllegalArgumentException("Missing or empty 'scenario' name");
+                throw new IllegalArgumentException("Missing or empty 'playbook' name");
             }
 
             String description = null;

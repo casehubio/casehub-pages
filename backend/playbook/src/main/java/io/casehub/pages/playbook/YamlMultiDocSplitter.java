@@ -45,7 +45,7 @@ public final class YamlMultiDocSplitter {
                 return new SplitResult(null, first);
             }
 
-            if (first.has(PLAYBOOK_KEY)) {
+            if (first.has(PLAYBOOK_KEY) && first.has(SCHEMA_KEY)) {
                 PlaybookFrontMatter fm = extractFrontMatter(first);
                 return new SplitResult(fm, documents.get(1));
             }

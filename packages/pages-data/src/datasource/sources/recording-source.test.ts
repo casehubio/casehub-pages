@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { recording } from "./recording-source.js";
 import { replay } from "./replay-source.js";
-import { createScenarioController } from "../controller.js";
+import { createPlaybookController } from "../controller.js";
 import type { DataSink, DataSource } from "../types.js";
 import type { DataSetEvent } from "../../dataset/events.js";
 import { col, ColumnType, makeDataset } from "./test-helpers.js";
@@ -157,7 +157,7 @@ describe("recording", () => {
     expect(recorded[2]?.offsetMs).toBe(150);
 
     // Replay
-    const controller = createScenarioController({ playing: true, speed: 1 });
+    const controller = createPlaybookController({ playing: true, speed: 1 });
     const replaySource = replay(recorded, controller);
     const replaySink = createMockSink();
 
