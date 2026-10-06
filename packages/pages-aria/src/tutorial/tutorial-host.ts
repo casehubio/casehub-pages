@@ -1,13 +1,13 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { TutorialDescriptor, LearningPath, YamlEditorSection } from './types.js';
-import { isSectioned } from '../scenario/types.js';
-import { parsePlaybook as parse } from '../scenario/parser.js';
-import { createScheduler, type PlaybookRunner } from '../scenario/scheduler.js';
+import { isSectioned } from '../playbook/types.js';
+import { parsePlaybook as parse } from '../playbook/parser.js';
+import { createScheduler, type PlaybookRunner } from '../playbook/scheduler.js';
 import { validateYamlStep } from './yaml-editor-runner.js';
 import './tutorial-catalog.js';
-import '../controller/scenario-controller.js';
-import '../controller/scenario-narrative.js';
+import '../controller/playbook-controller';
+import '../controller/playbook-narrative';
 
 export class PagesTutorialHost extends LitElement {
   static override styles = css`
@@ -96,7 +96,7 @@ export class PagesTutorialHost extends LitElement {
   private _sectionTitles: string[] = [];
   private _scenarioRefCache: Map<string, string> = new Map();
   @state() private _scenarioRefYaml: string | null = null;
-  private _parsedSections: import('../scenario/types.js').TutorialSection[] = [];
+  private _parsedSections: import('../playbook/types.js').TutorialSection[] = [];
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -226,7 +226,7 @@ export class PagesTutorialHost extends LitElement {
   private async _loadScenarioRef(ref: string): Promise<string | null> {
     if (this._scenarioRefCache.has(ref)) return this._scenarioRefCache.get(ref)!;
     try {
-      const base = this.contentBase ? `${this.contentBase}/../../scenarios/` : 'scenarios/';
+      const base = this.contentBase ? `${this.contentBase}/../../playbooks/` : 'playbooks/';
       const resp = await fetch(`${base}${ref}`);
       if (!resp.ok) return null;
       const text = await resp.text();
@@ -312,10 +312,10 @@ export class PagesTutorialHost extends LitElement {
               <div class="scenario-ref-yaml">${this._scenarioRefYaml}</div>
             </div>
           ` : nothing}
-          <pages-scenario-narrative
+          <pages-playbook-narrative
             .eventTarget=${this._eventTarget}
             htmlMode="sanitized"
-          ></pages-scenario-narrative>
+          ></pages-playbook-narrative>
           <div class="slide-nav">
             <button ?disabled=${this._currentSection <= 0}
                     @click=${() => { this._onPrev(); }}>← Previous</button>
@@ -324,16 +324,16 @@ export class PagesTutorialHost extends LitElement {
                     @click=${() => { this._onNext(); }}>Next →</button>
           </div>
           ${hasTarget ? html`
-            <pages-scenario-controller
+            <pages-playbook-controller
               .eventTarget=${this._eventTarget}
-            ></pages-scenario-controller>
+            ></pages-playbook-controller>
           ` : nothing}
         </div>
         ${hasTarget ? nothing : html`
           <div class="tutorial-sidebar">
-            <pages-scenario-controller
+            <pages-playbook-controller
               .eventTarget=${this._eventTarget}
-            ></pages-scenario-controller>
+            ></pages-playbook-controller>
           </div>
         `}
       </div>

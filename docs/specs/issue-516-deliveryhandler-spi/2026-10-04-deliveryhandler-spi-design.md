@@ -6,7 +6,7 @@
 
 ## Summary
 
-Replace the hardcoded delivery-mode dispatch in `ScenarioExecutor` and
+Replace the hardcoded delivery-mode dispatch in `PlaybookExecutor` and
 `ScenarioParser` with a CDI-discovered `DeliveryHandler` SPI. Plugin
 modules (e.g. IoT) implement the interface to add new delivery modes
 (e.g. `desired-state`) without modifying Pages. Existing delivery types
@@ -23,14 +23,14 @@ dispatch.
 - Four `DeliveryHandler` implementations in `backend/scenario-runtime/`:
   `GraphQLDeliveryHandler`, `RestDeliveryHandler`, `SimulatedDeliveryHandler`,
   `AriaDeliveryHandler`
-- `ScenarioExecutor` refactored to use CDI `Instance<DeliveryHandler>` discovery
+- `PlaybookExecutor` refactored to use CDI `Instance<DeliveryHandler>` discovery
 - Batching and await logic remain in the executor
 - Unit tests for handler dispatch, unknown-type handling, handler priority
 
 **Out of scope:**
 - TypeScript `StepExecutor` changes (already extensible via interface)
 - `DesiredStateDeliveryHandler` implementation (downstream: casehubio/iot#126)
-- `ScenarioOrchestrator` changes (uses HierarchicalStep/ScenarioCommand, not ScenarioStep)
+- `PlaybookOrchestrator` changes (uses HierarchicalStep/ScenarioCommand, not ScenarioStep)
 - YAML schema changes (the `delivery:` field already exists and is free-form)
 
 ## Architecture
@@ -212,7 +212,7 @@ public class ScenarioExecutor {
 ```
 
 `RuntimeDeliveryContext` is a package-private adapter in scenario-runtime
-that wraps `ScenarioConfig` + `VariableContext`:
+that wraps `PlaybookConfig` + `VariableContext`:
 
 ```java
 class RuntimeDeliveryContext implements DeliveryContext {

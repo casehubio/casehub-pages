@@ -2,7 +2,7 @@ import type { DataSetId } from "../dataset/types.js";
 import type { DataSetEvent } from "../dataset/events.js";
 import type { Disposable } from "./types.js";
 
-export interface ScenarioAnnotation {
+export interface PlaybookAnnotation {
   readonly text: string;
   readonly target?: string;
   readonly style: AnnotationStyle;
@@ -26,7 +26,7 @@ export interface EventLogEntry {
   readonly source: string;
 }
 
-export interface ScenarioController {
+export interface PlaybookController {
   readonly speed: number;
   setSpeed(multiplier: number): void;
   play(): void;
@@ -36,13 +36,13 @@ export interface ScenarioController {
   readonly pending: number;
   schedule(delayMs: number, callback: () => void): Disposable;
   readonly elapsed: number;
-  readonly activeAnnotations: readonly ScenarioAnnotation[];
-  onAnnotation(listener: (annotations: readonly ScenarioAnnotation[]) => void): Disposable;
+  readonly activeAnnotations: readonly PlaybookAnnotation[];
+  onAnnotation(listener: (annotations: readonly PlaybookAnnotation[]) => void): Disposable;
   onEvent(listener: (entry: EventLogEntry) => void): Disposable;
   logEvent(entry: EventLogEntry): void;
 }
 
-export interface ScenarioControllerOptions {
+export interface PlaybookControllerOptions {
   readonly speed?: number;
   readonly playing?: boolean;
 }
@@ -53,9 +53,9 @@ interface ScheduledEntry {
   cancelled: boolean;
 }
 
-export function createScenarioController(
-  options?: ScenarioControllerOptions,
-): ScenarioController {
+export function createPlaybookController(
+  options?: PlaybookControllerOptions,
+): PlaybookController {
   let speed = options?.speed ?? 1;
   let playing = options?.playing ?? true;
   let elapsed = 0;
@@ -65,8 +65,8 @@ export function createScenarioController(
   let activeTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const eventListeners = new Set<(entry: EventLogEntry) => void>();
-  const annotationListeners = new Set<(annotations: readonly ScenarioAnnotation[]) => void>();
-  const annotations: ScenarioAnnotation[] = [];
+  const annotationListeners = new Set<(annotations: readonly PlaybookAnnotation[]) => void>();
+  const annotations: PlaybookAnnotation[] = [];
 
   function reschedule(): void {
     if (activeTimeout !== null) {
@@ -184,9 +184,9 @@ export function createScenarioController(
 
     get elapsed() { return elapsed; },
 
-    get activeAnnotations() { return annotations as readonly ScenarioAnnotation[]; },
+    get activeAnnotations() { return annotations as readonly PlaybookAnnotation[]; },
 
-    onAnnotation(listener: (annotations: readonly ScenarioAnnotation[]) => void): Disposable {
+    onAnnotation(listener: (annotations: readonly PlaybookAnnotation[]) => void): Disposable {
       annotationListeners.add(listener);
       return { dispose() { annotationListeners.delete(listener); } };
     },

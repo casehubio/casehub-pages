@@ -2,12 +2,12 @@
   "name": "@casehubio/pages-aria",
   "version": "0.1.0",
   "type": "module",
-  "sideEffects": ["dist/*.js", "src/controller/standalone.ts", "src/controller/step-catalog.ts", "src/controller/scenario-controller.ts", "src/controller/scenario-narrative.ts", "src/controller/scenario-yaml-viewer.ts", "src/controller/library-view.ts", "src/tutorial/tutorial-host.ts"],
+  "sideEffects": ["dist/*.js", "src/controller/standalone.ts", "src/controller/step-catalog.ts", "src/controller/playbook-controller.ts", "src/controller/playbook-narrative.ts", "src/controller/playbook-yaml-viewer.ts", "src/controller/library-view.ts", "src/tutorial/tutorial-host.ts"],
   "exports": {
     "./walker": "./src/walker/index.ts",
     "./executor": "./src/executor/index.ts",
     "./server": "./src/server/index.ts",
-    "./scenario": "./src/scenario/index.ts",
+    "./playbook": "./src/playbook/index.ts",
     "./controller": "./src/controller/index.ts",
     "./tutorial": "./src/tutorial/index.ts"
   },

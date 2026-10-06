@@ -320,7 +320,7 @@ The pages monorepo has three existing editor/viewer components:
 |-----------|---------|------|-----------------------------------|
 | `PagesPromptEditor` | `pages-diagram-core` | Lightweight textarea for diagram property editing | Stays as-is. Zero third-party deps, serves its purpose. The code editor is an upgrade path for cases needing syntax highlighting, not a replacement. |
 | `PagesJsonViewer` | `pages-diagram-core` | Read-only `<pre>` JSON display | Stays as-is. Trivially simple, no CodeMirror needed. |
-| `PagesScenarioYamlViewer` | `pages-aria` | Scenario-aware YAML viewer with step highlighting, drag/resize, guide tab | Could use `pages-code-editor` as its rendering engine in a future refactor, but this is a separate effort — the viewer is deeply coupled to the scenario system (`ScenarioConnectionController`, step line mapping, guide tab). |
+| `PagesScenarioYamlViewer` | `pages-aria` | Scenario-aware YAML viewer with step highlighting, drag/resize, guide tab | Could use `pages-code-editor` as its rendering engine in a future refactor, but this is a separate effort — the viewer is deeply coupled to the scenario system (`PlaybookConnectionController`, step line mapping, guide tab). |
 
 `yaml-highlighter.ts` (in `pages-aria`) provides the custom YAML tokenizer used by `PagesScenarioYamlViewer`. It remains until any future migration of that component to CodeMirror.
 

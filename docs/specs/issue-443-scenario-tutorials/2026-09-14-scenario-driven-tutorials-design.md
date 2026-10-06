@@ -367,8 +367,8 @@ Each deferred item is tracked as a GitHub issue (filed during implementation):
 - `packages/pages-aria/src/executor/spotlight.ts` — showSpotlight, SpotlightConfig
 - `packages/pages-aria/src/scenario/sectioned-runner.ts` — TutorialRunner, step progression
 - `packages/pages-aria/src/tutorial/tutorial-host.ts` — tutorial catalog and rendering
-- `packages/pages-aria/src/controller/scenario-controller.ts` — outline, transport controls
-- `packages/pages-aria/src/controller/scenario-narrative.ts` — markdown rendering
+- `../../../packages/pages-aria/src/controller/playbook-controller.ts` — outline, transport controls
+- `../../../packages/pages-aria/src/controller/playbook-narrative.ts` — markdown rendering
 - `packages/pages-builder/src/shell/builder-shell.ts` — builder-change event, tutorial target host
 - `packages/pages-code-editor/src/pages-code-editor.ts` — CodeMirror 6 component, SPI host (owns EditorView)
 - GE-20260905-3e4256 — drawSelection() required for cursor in shadow DOM

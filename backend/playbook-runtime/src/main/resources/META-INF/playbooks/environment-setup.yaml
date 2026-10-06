@@ -1,0 +1,47 @@
+playbook: "1.0"
+schema: client
+---
+playbook: environment-setup
+meta:
+  description: "Provision environments across regions with parameterized configuration"
+  labels:
+    - capability:provisioning
+  tags:
+    - operations
+    - multi-region
+params:
+  - name: project
+    type: string
+    required: true
+  - name: tier
+    type: integer
+    default: 1
+    enum: [1, 2, 3]
+iterations:
+  regions:
+    as: region
+    in: ["us-east", "eu-west"]
+steps:
+  - fill:
+      role: textbox
+      name: "Project Name"
+      value: "${params.project}"
+    label: "Fill project name"
+  - click:
+      role: button
+      name: "Create"
+    label: "Create project"
+  - navigate: "#deploy/${each.region}"
+    label: "Navigate to region"
+    forEach: regions
+  - select:
+      role: combobox
+      name: "Tier"
+      value: "${params.tier}"
+    label: "Select tier"
+    forEach: regions
+  - click:
+      role: button
+      name: "Deploy"
+    label: "Deploy"
+    forEach: regions

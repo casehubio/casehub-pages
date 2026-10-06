@@ -36,7 +36,7 @@ public class AriaCommandBridge {
 
         try {
             var payload = new CommandPayload(id, action, target, value, state, timeout);
-            broadcaster.broadcast("scenario/cmd-" + id, payload);
+            broadcaster.broadcast("playbook/cmd-" + id, payload);
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             throw new AriaCommandException("Command timed out after " + timeoutMs + "ms: " + action);

@@ -1,4 +1,4 @@
-scenario: architecture-concepts
+playbook: architecture-concepts
 meta:
   title: "Architecture & Concepts"
   description: "How the scenario engine works — orchestrator, executors, ARIA targeting, compilation"

@@ -43,19 +43,19 @@ class AriaCommandBridgeTest {
     }
 
     @Test
-    void sendBroadcastsOnScenarioTopic() {
+    void sendBroadcastsOnPlaybookTopic() {
         CompletableFuture.runAsync(() -> {
             try { Thread.sleep(50); } catch (InterruptedException ignored) {}
             String topic = broadcastedTopic.get();
             if (topic != null) {
-                String cmdId = topic.replace("scenario/cmd-", "");
+                String cmdId = topic.replace("playbook/cmd-", "");
                 bridge.handleResult(new PushRequest.CommandResult(cmdId, true, null));
             }
         });
 
         var result = bridge.send("click", null, null, null, null);
         assertThat(result.ok()).isTrue();
-        assertThat(broadcastedTopic.get()).startsWith("scenario/cmd-");
+        assertThat(broadcastedTopic.get()).startsWith("playbook/cmd-");
     }
 
     @Test
@@ -63,7 +63,7 @@ class AriaCommandBridgeTest {
         CompletableFuture.runAsync(() -> {
             try { Thread.sleep(20); } catch (InterruptedException ignored) {}
             String topic = broadcastedTopic.get();
-            String cmdId = topic.replace("scenario/cmd-", "");
+            String cmdId = topic.replace("playbook/cmd-", "");
             bridge.handleResult(new PushRequest.CommandResult(cmdId, false, "Element not found"));
         });
 

@@ -14,15 +14,15 @@ export type {
 } from "./types.js";
 
 export type {
-  ScenarioController,
-  ScenarioControllerOptions,
-  ScenarioAnnotation,
+  PlaybookController,
+  PlaybookControllerOptions,
+  PlaybookAnnotation,
   AnnotationStyle,
   AnchorPosition,
   EventLogEntry,
 } from "./controller.js";
 
-export { createScenarioController } from "./controller.js";
+export { createPlaybookController } from "./controller.js";
 
 export { inlineSource } from "./sources/inline-source.js";
 export type { InlineData, InlineSourceOptions } from "./sources/inline-source.js";

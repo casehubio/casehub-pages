@@ -1,8 +1,8 @@
 package io.casehub.pages.mcp;
 
-import io.casehub.pages.scenario.runtime.CatalogActionDetail;
-import io.casehub.pages.scenario.runtime.CatalogActionSummary;
-import io.casehub.pages.scenario.runtime.StepCatalogService;
+import io.casehub.pages.playbook.runtime.CatalogActionDetail;
+import io.casehub.pages.playbook.runtime.CatalogActionSummary;
+import io.casehub.pages.playbook.runtime.StepCatalogService;
 import io.casehub.platform.api.mcp.McpDomain;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

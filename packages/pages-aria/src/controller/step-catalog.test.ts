@@ -56,7 +56,7 @@ function mockFetch() {
         json: async () => ({ data: { catalogActions: MOCK_ACTIONS } }),
       });
     }
-    if (typeof url === 'string' && url.includes('/scenario/catalog/execute')) {
+    if (typeof url === 'string' && url.includes('/playbook/catalog/execute')) {
       return Promise.resolve({
         ok: true,
         json: async () => ({ kind: 'success', output: { compliant: true }, executionMetadata: {} }),

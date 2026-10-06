@@ -285,7 +285,7 @@ Per `aria-interaction-contract.md`:
 - `packages/yaml-core/src/step/sources/script-source.ts` — ScriptSource
 - `packages/yaml-core/src/step/structural-evaluator.ts` — StructuralEvaluator (renamed from StructuralStepEvaluator)
 - `packages/pages-aria/src/controller/library-view.ts` — PagesLibraryView (UI pattern reference)
-- `packages/pages-aria/src/controller/scenario-controller.ts` — PagesScenarioController (integration point)
+- `../../../packages/pages-aria/src/controller/playbook-controller.ts` — PagesScenarioController (integration point)
 - `backend/mcp/src/main/java/io/casehub/pages/mcp/ScenarioResolver.java` — @McpDomain pattern
 - `docs/protocols/casehub/aria-interaction-contract.md` — ARIA requirements
 - `docs/protocols/casehub/css-design-tokens.md` — --pages-* token convention

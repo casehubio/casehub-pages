@@ -189,7 +189,7 @@ export class PagesLibraryView extends LitElement {
 
   async loadLibrary(): Promise<void> {
     try {
-      const resp = await fetch(`${this.baseUrl}/scenario/library`);
+      const resp = await fetch(`${this.baseUrl}/playbook/library`);
       if (!resp.ok) return;
       this.scripts = await resp.json() as ScriptDescriptor[];
     } catch { /* ignore */ }
@@ -379,7 +379,7 @@ steps:
   private async _submitUpload(): Promise<void> {
     if (!this._uploadYaml.trim()) return;
     try {
-      const resp = await fetch(`${this.baseUrl}/scenario/library`, {
+      const resp = await fetch(`${this.baseUrl}/playbook/library`, {
         method: 'POST',
         headers: { 'Content-Type': 'text/yaml' },
         body: this._uploadYaml,
@@ -415,7 +415,7 @@ steps:
     const labels = this._editLabels.split(',').map(s => s.trim()).filter(Boolean);
     const tags = this._editTags.split(',').map(s => s.trim()).filter(Boolean);
     try {
-      const resp = await fetch(`${this.baseUrl}/scenario/library/${name}/meta`, {
+      const resp = await fetch(`${this.baseUrl}/playbook/library/${name}/meta`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: this._editDesc, labels, tags }),

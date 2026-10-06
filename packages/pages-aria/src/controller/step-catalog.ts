@@ -353,7 +353,7 @@ export class PagesActionCatalog extends LitElement {
     this._tryLoading = true;
     this._tryResult = null;
     try {
-      const resp = await fetch(`${this.execBaseUrl}/scenario/catalog/execute`, {
+      const resp = await fetch(`${this.execBaseUrl}/playbook/catalog/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

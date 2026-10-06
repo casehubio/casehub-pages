@@ -276,7 +276,7 @@ Scenarios are hierarchical YAML documents (chapters → sections → steps → c
 ### Scenario Execution
 
 1. Host loads a scenario YAML document. Backend `HierarchicalParser` produces a `HierarchicalScenario` (chapters → sections → steps → commands)
-2. `ScenarioOrchestrator` walks the tree, dispatching each command via push wire protocol to registered executors
+2. `PlaybookOrchestrator` walks the tree, dispatching each command via push wire protocol to registered executors
 3. Executor receives dispatch, routes to matching `@ScenarioAction` CDI handler, executes, reports `StepResult`
 4. Browser executor (`pages-aria`) resolves ARIA targets via tree walker, executes UI commands (`click`, `fill`, `select`), overlays visual feedback
 5. Stepping protocol — orchestrator supports pause/resume/step/speed. Controller UI renders transport controls

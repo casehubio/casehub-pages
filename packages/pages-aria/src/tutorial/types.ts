@@ -1,4 +1,4 @@
-import type { SectionContent, PlaybookBase } from '../scenario/types.js';
+import type { SectionContent, PlaybookBase } from '../playbook/types.js';
 
 export interface TutorialDescriptor {
   scenario: string;

@@ -45,7 +45,7 @@ describe('pages-library-view', () => {
   beforeEach(() => {
     document.body.innerHTML = '<button aria-label="Submit">Submit</button>';
     vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
-      if (opts?.method === 'POST' && url.includes('/scenario/library')) {
+      if (opts?.method === 'POST' && url.includes('/playbook/library')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ name: 'new-script', labels: [], tags: [], params: [], calls: [], provenance: 'UPLOADED', firstStepTargets: [] }),
@@ -57,7 +57,7 @@ describe('pages-library-view', () => {
           json: () => Promise.resolve({ name: 'onboard-team', description: 'Updated', labels: [], tags: [], params: [], calls: [], provenance: 'BUNDLED', firstStepTargets: [] }),
         });
       }
-      if (url.includes('/scenario/library') && !url.includes('/yaml')) {
+      if (url.includes('/playbook/library') && !url.includes('/yaml')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(MOCK_LIBRARY),
@@ -251,7 +251,7 @@ describe('pages-library-view', () => {
     await el.updateComplete;
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:8080/scenario/library',
+      'http://localhost:8080/playbook/library',
       expect.objectContaining({ method: 'POST' }),
     );
     el.remove();
@@ -293,7 +293,7 @@ describe('pages-library-view', () => {
     await el.updateComplete;
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:8080/scenario/library/onboard-team/meta',
+      'http://localhost:8080/playbook/library/onboard-team/meta',
       expect.objectContaining({ method: 'PUT' }),
     );
     el.remove();

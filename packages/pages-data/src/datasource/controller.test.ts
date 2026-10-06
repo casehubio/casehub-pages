@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createScenarioController } from "./controller.js";
+import { createPlaybookController } from "./controller.js";
 
-describe("ScenarioController", () => {
+describe("PlaybookController", () => {
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { vi.useRealTimers(); });
 
   it("schedules callback at delay / speed real ms", () => {
-    const ctrl = createScenarioController({ speed: 2 });
+    const ctrl = createPlaybookController({ speed: 2 });
     const fn = vi.fn();
     ctrl.schedule(1000, fn);
     vi.advanceTimersByTime(499);
@@ -16,7 +16,7 @@ describe("ScenarioController", () => {
   });
 
   it("tracks elapsed in scenario time, not real time", () => {
-    const ctrl = createScenarioController({ speed: 2 });
+    const ctrl = createPlaybookController({ speed: 2 });
     const fn = vi.fn();
     ctrl.schedule(1000, fn);
     vi.advanceTimersByTime(500);
@@ -24,7 +24,7 @@ describe("ScenarioController", () => {
   });
 
   it("pause() prevents scheduled callbacks from firing", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const fn = vi.fn();
     ctrl.schedule(1000, fn);
     ctrl.pause();
@@ -34,7 +34,7 @@ describe("ScenarioController", () => {
   });
 
   it("play() resumes from paused position", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const fn = vi.fn();
     ctrl.schedule(1000, fn);
     vi.advanceTimersByTime(500);
@@ -47,7 +47,7 @@ describe("ScenarioController", () => {
   });
 
   it("step() fires next callback then pauses", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const fn1 = vi.fn();
     const fn2 = vi.fn();
     ctrl.schedule(100, fn1);
@@ -61,7 +61,7 @@ describe("ScenarioController", () => {
   });
 
   it("setSpeed() recalculates active timeout delay", () => {
-    const ctrl = createScenarioController({ speed: 1 });
+    const ctrl = createPlaybookController({ speed: 1 });
     const fn = vi.fn();
     ctrl.schedule(1000, fn);
     vi.advanceTimersByTime(200);
@@ -72,7 +72,7 @@ describe("ScenarioController", () => {
   });
 
   it("dispose() from schedule cancels the callback", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const fn = vi.fn();
     const disposable = ctrl.schedule(1000, fn);
     disposable.dispose();
@@ -81,7 +81,7 @@ describe("ScenarioController", () => {
   });
 
   it("onEvent() receives entries when logged", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const entries: unknown[] = [];
     ctrl.onEvent((e) => entries.push(e));
     // onEvent is used by sources to log — tested via simulated source
@@ -90,7 +90,7 @@ describe("ScenarioController", () => {
   });
 
   it("defaults: speed=1, playing=true", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     expect(ctrl.speed).toBe(1);
     expect(ctrl.playing).toBe(true);
     expect(ctrl.elapsed).toBe(0);
@@ -98,7 +98,7 @@ describe("ScenarioController", () => {
   });
 
   it("fires multiple callbacks scheduled at the same time", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const order: number[] = [];
     ctrl.schedule(100, () => { order.push(1); });
     ctrl.schedule(100, () => { order.push(2); });
@@ -110,7 +110,7 @@ describe("ScenarioController", () => {
   });
 
   it("logEvent notifies all onEvent listeners", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const entries1: unknown[] = [];
     const entries2: unknown[] = [];
     ctrl.onEvent((e) => entries1.push(e));
@@ -131,7 +131,7 @@ describe("ScenarioController", () => {
   });
 
   it("onEvent dispose removes listener", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const entries: unknown[] = [];
     const disposable = ctrl.onEvent((e) => entries.push(e));
 
@@ -152,7 +152,7 @@ describe("ScenarioController", () => {
   });
 
   it("step on empty queue is a no-op", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     ctrl.pause();
     ctrl.step();
     expect(ctrl.elapsed).toBe(0);
@@ -160,7 +160,7 @@ describe("ScenarioController", () => {
   });
 
   it("multiple schedule-dispose cycles don't leak", () => {
-    const ctrl = createScenarioController();
+    const ctrl = createPlaybookController();
     const fns = Array.from({ length: 10 }, () => vi.fn());
     const disposables = fns.map((fn, i) => ctrl.schedule((i + 1) * 100, fn));
 

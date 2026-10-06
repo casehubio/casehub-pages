@@ -1,0 +1,22 @@
+playbook: "1.0"
+schema: client
+---
+playbook: parameterized-onboard
+params:
+  - name: projectName
+    type: string
+    required: true
+  - name: enableCI
+    type: boolean
+    default: true
+steps:
+  - fill:
+      role: textbox
+      name: "Project Name"
+      value: "${params.projectName}"
+    label: "Create project"
+  - click:
+      role: button
+      name: "Enable CI"
+    label: "Enable CI"
+    when: "${params.enableCI}"

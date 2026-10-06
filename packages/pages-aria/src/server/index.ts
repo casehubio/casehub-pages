@@ -1,3 +1,3 @@
-export { createScenarioHandler } from './scenario-handler.js';
-export type { ScenarioHandler } from './scenario-handler.js';
+export { createPlaybookHandler } from './playbook-handler.js';
+export type { PlaybookHandler } from './playbook-handler.js';
 export { createCatalogExecuteHandler, type CatalogExecuteRequest } from './catalog-execute-handler.js';
