@@ -127,10 +127,10 @@ describe('DecoratorChain', () => {
         }),
       };
       const resolver = new VariableResolver({}, new Set());
-      const chain = DecoratorChain.build({
+      DecoratorChain.build({
         forEach: { as: 'env', in: '${items}' },
       }, action);
-      const scopedResolver = resolver.withScope('items', () => undefined);
+      resolver.withScope('items', () => undefined);
       const ctx = mockContext({
         resolver: new VariableResolver({}, new Set()),
       });

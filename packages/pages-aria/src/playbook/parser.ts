@@ -1,11 +1,11 @@
-import { parse, parseAllDocuments } from 'yaml';
+import { parseAllDocuments } from 'yaml';
 import type { Catalog, ResolvedStep } from '@casehubio/yaml-core/step';
 import { Walker } from '@casehubio/yaml-core/step';
 import { IncludeExpander, parsePlaybookFrontMatter } from '@casehubio/yaml-core';
 import type { PlaybookFrontMatter, TemplateLoader } from '@casehubio/yaml-core';
 import type {
   Playbook, FlatPlaybook, SectionedPlaybook,
-  TutorialMeta, TutorialSection, SectionContent,
+  TutorialMeta, SectionContent,
   SchedulerStep, PreExtractedStep,
   OrchestrationBlock,
 } from './types.js';

@@ -11,6 +11,7 @@ export interface CompiledScenario {
   readonly stateSteps: Map<string, Array<Record<string, unknown>>>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ScenarioCompiler {
   static compile(definition: ScenarioDefinition): CompiledScenario {
     const errors = ScenarioValidator.validate(definition);
@@ -46,7 +47,7 @@ function registerTransitions(
   builder: StateMachineBuilder<string>,
   name: string,
   state: StateDefinition,
-  definition: ScenarioDefinition,
+  _definition: ScenarioDefinition,
 ): void {
   if (state.isTerminal) return;
 

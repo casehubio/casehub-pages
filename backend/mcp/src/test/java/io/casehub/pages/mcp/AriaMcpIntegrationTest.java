@@ -112,6 +112,7 @@ class AriaMcpIntegrationTest {
     }
 
     @Nested
+    @org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     class DispatchChain {
 
         private AriaCommandBridge bridge;

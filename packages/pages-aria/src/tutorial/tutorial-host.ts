@@ -237,6 +237,7 @@ export class PagesTutorialHost extends LitElement {
     }
   }
 
+  /* eslint-disable @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-unsafe-call */
   private _runScenarioRef(yamlText: string): void {
     const cp = (window as unknown as Record<string, unknown>)['casehubPages'] as
       Record<string, Function> | undefined;
@@ -247,6 +248,7 @@ export class PagesTutorialHost extends LitElement {
     const runner = (cp.createScheduler as Function)(scenario, { eventTarget: et, speed: 1, startPaused: false });
     runner.play();
   }
+  /* eslint-enable @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-unsafe-call */
 
   private _onBack(): void {
     this._disposeRunner();

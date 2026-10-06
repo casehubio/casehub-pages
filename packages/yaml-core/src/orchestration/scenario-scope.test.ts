@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DefaultScenarioScope } from './scenario-scope.js';
-import { DefaultSpeedMultiplier, FixedSpeedMultiplier } from './speed-multiplier.js';
+import { FixedSpeedMultiplier } from './speed-multiplier.js';
 
 describe('DefaultScenarioScope', () => {
   it('creates semaphore by name', () => {

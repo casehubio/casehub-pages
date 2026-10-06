@@ -238,13 +238,15 @@ async function scrollToRowStep(step: Record<string, unknown>): Promise<void> {
   const idx = step['index'] as number | undefined;
 
   if (key != null) {
-    predicate = (row: any) => {
-      if (typeof el.getRowKey === 'function') return el.getRowKey(row) === key;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+    predicate = (row: unknown) => {
+      if (typeof (el as Record<string, unknown>).getRowKey === 'function') return (el as Record<string, (...args: unknown[]) => unknown>).getRowKey(row) === key;
       return false;
     };
   } else if (column != null && value != null) {
-    predicate = (row: any) => {
-      const cell = row.cell(column);
+    predicate = (row: unknown) => {
+      const r = row as Record<string, (...args: unknown[]) => Record<string, unknown>>;
+      const cell = r.cell(column);
       return cell && cell.type !== 'NULL' && String(cell.value) === value;
     };
   } else if (idx != null) {
@@ -254,7 +256,7 @@ async function scrollToRowStep(step: Record<string, unknown>): Promise<void> {
     throw new Error('scroll-to-row requires key, column+value, or index');
   }
 
-  const found = await el.scrollToRow(predicate);
+  const found = await (el as Record<string, (p: unknown) => Promise<boolean>>).scrollToRow(predicate);
   if (!found) {
     throw new Error(`No matching row found in ${target.role} "${target.name}"`);
   }

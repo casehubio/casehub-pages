@@ -7,6 +7,7 @@ export interface ValidationError {
 
 const DEADLINE_PATTERN = /^(.+)\s*->\s*(\S+)$/;
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ScenarioValidator {
   static validate(definition: ScenarioDefinition): ValidationError[] {
     const errors: ValidationError[] = [];

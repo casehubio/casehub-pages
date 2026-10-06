@@ -3,6 +3,7 @@ import { terminalState, completionDrivenState, eventDrivenState } from './types.
 
 const METADATA_KEYS = new Set(['next', 'on-failure', 'deadline', 'on', 'terminal']);
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ScenarioParser {
   static parse(name: string, raw: Record<string, unknown>): ScenarioDefinition {
     if (!name || !name.trim()) {
