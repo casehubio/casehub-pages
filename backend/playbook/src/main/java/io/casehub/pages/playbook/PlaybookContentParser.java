@@ -2,8 +2,8 @@ package io.casehub.pages.playbook;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.casehub.yaml.core.foreach.ForEachDirective;
+import io.casehub.yaml.jackson.YamlMappers;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,7 +14,7 @@ import java.util.Set;
 
 public final class PlaybookContentParser {
 
-    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper YAML = YamlMappers.create();
 
     private static final Set<String> KNOWN_KEYS = Set.of(
             "label", "step", "target", "actor", "delay", "when",
