@@ -159,7 +159,7 @@ sections:
       markdown: "# Welcome"
     steps: []
   - title: Demo
-    scenario-ref: flow-control/sequential.scenario.yaml
+    scenario-ref: flow-control/sequential.playbook.yaml
     content:
       type: inline
       markdown: "# Watch this"
@@ -173,7 +173,7 @@ steps:
 `;
 
     global.fetch = vi.fn().mockImplementation((url: string) => {
-      if (url.includes('sequential.scenario.yaml')) {
+      if (url.includes('sequential.playbook.yaml')) {
         return Promise.resolve({ ok: true, text: () => Promise.resolve(SCENARIO_YAML) });
       }
       return Promise.resolve({ ok: true, text: () => Promise.resolve(SCENARIO_REF_YAML) });
