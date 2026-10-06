@@ -2,8 +2,8 @@ package io.casehub.pages.playbook;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.casehub.yaml.core.playbook.PlaybookFrontMatter;
+import io.casehub.yaml.jackson.YamlMappers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.Map;
 
 public final class YamlMultiDocSplitter {
 
-    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper YAML = YamlMappers.create();
     private static final String PLAYBOOK_KEY = "playbook";
     private static final String SCHEMA_KEY = "schema";
     private static final String NAME_KEY = "name";

@@ -1,13 +1,12 @@
 package io.casehub.pages.playbook;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.casehub.yaml.core.data.CsvDataSource;
 import io.casehub.yaml.core.foreach.ForEachExpander;
 import io.casehub.yaml.core.foreach.IterationGroup;
 import io.casehub.yaml.core.resolver.VariableResolver;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.casehub.yaml.jackson.YamlMappers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ public final class PlaybookCompiler {
                                            IncludeExpander.TemplateLoader templateLoader) {
         if (templateLoader != null) {
             try {
-                ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+                ObjectMapper yamlMapper = YamlMappers.create();
                 var split = YamlMultiDocSplitter.split(yaml);
                 JsonNode root = split.content();
                 if (root.has("includes")) {

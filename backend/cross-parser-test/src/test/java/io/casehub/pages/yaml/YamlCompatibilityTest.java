@@ -2,7 +2,7 @@ package io.casehub.pages.yaml;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.casehub.yaml.jackson.YamlMappers;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -17,7 +17,7 @@ class YamlCompatibilityTest {
 
     private static final Path FIXTURES = Path.of("../../test/cross-parser/fixtures");
     private static final Path OUTPUT = Path.of("../../test/cross-parser/output");
-    private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+    private final ObjectMapper yamlMapper = YamlMappers.create();
 
     @Test
     void roundTrippedYamlParsesIdenticallyWithJackson() throws IOException {
