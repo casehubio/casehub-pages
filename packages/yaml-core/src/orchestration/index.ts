@@ -29,6 +29,7 @@ export { DefaultOrcGauge } from './gauge.js';
 export type { OrcFlag } from './flag.js';
 export { DefaultOrcFlag } from './flag.js';
 export type { OrcNumericPrimitive } from './numeric-primitive.js';
+export { ThresholdCondition } from './threshold-condition.js';
 export type { OrcAccumulator } from './accumulator.js';
 export { DefaultOrcAccumulator } from './accumulator.js';
 export type { OrcMap } from './orc-map.js';
