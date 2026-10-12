@@ -629,4 +629,14 @@ describe('Keyboard shortcuts', () => {
     pressAlt('9');
     expect(Object.values(el.dockState).filter(v => v).length).toBe(0);
   });
+
+  it('does not render empty bottom placeholder when no bottom items exist', async () => {
+    el = createDock({ leftPanels: leftItems });
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const leftBar = el.querySelector('.dock-bar-left') as HTMLElement;
+    expect(leftBar).toBeTruthy();
+    expect(leftBar.querySelector('[data-dock-empty]')).toBeNull();
+  });
 });

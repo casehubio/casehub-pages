@@ -44,7 +44,7 @@ pages:
                 properties:
                   content: "<div style='padding:12px'><h3>Bookmarks</h3><p>Left-bottom zone panel.</p></div>"
         right:
-          zones: 1
+          zones: 2
           panels:
             - key: agent
               label: Agent
@@ -63,7 +63,7 @@ pages:
                 properties:
                   content: "<div style='padding:12px'><h3>Inspector</h3><p>Drag anywhere.</p></div>"
         bottom:
-          zones: 1
+          zones: 2
           panels:
             - key: console
               label: Console

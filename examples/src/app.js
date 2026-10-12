@@ -453,7 +453,7 @@ async function loadSampleInTarget(samplePath) {
         currentSite.setTheme(currentTheme.endsWith('-dark') ? 'dark' : 'light');
         casehubPages.applyTheme(currentTheme, sampleTarget);
 
-        if (sampleTarget.querySelector('.pages-dock-workbench, [data-frame-sandbox], pages-graph-canvas')) {
+        if (sampleTarget.querySelector('pages-dock-workbench, [data-frame-sandbox], pages-graph-canvas')) {
             sampleTarget.classList.add('full-bleed');
         }
 

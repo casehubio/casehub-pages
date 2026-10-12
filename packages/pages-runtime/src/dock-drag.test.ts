@@ -157,6 +157,45 @@ describe("dock drag", () => {
     expect(events[0]!.detail.toZone).toBe("right-top");
   });
 
+  it("shows horizontal insert indicator in vertical dock bar", () => {
+    const button = document.createElement("button");
+    button.dataset.dockPanelId = "files";
+    container.appendChild(button);
+
+    const bar = document.createElement("div");
+    bar.dataset.componentType = "dock-bar";
+    bar.dataset.componentProps = JSON.stringify({ side: "right" });
+    bar.setAttribute("aria-orientation", "vertical");
+    const zoneGroup = document.createElement("div");
+    zoneGroup.dataset.dockZone = "top";
+    zoneGroup.style.display = "flex";
+    const existingBtn = document.createElement("button");
+    existingBtn.dataset.dockPanelId = "agent";
+    existingBtn.textContent = "Agent";
+    Object.defineProperty(existingBtn, "getBoundingClientRect", {
+      value: () => ({ left: 10, right: 40, top: 50, bottom: 80, width: 30, height: 30 }),
+    });
+    zoneGroup.appendChild(existingBtn);
+    Object.defineProperty(zoneGroup, "getBoundingClientRect", {
+      value: () => ({ left: 10, right: 40, top: 50, bottom: 200, width: 30, height: 150 }),
+    });
+    bar.appendChild(zoneGroup);
+    container.appendChild(bar);
+
+    const engine = createMockEngine("files", "left-top", ["left-top", "right-top"]);
+    attachDockDrag(button, engine, container);
+
+    button.dispatchEvent(new MouseEvent("mousedown", { clientX: 20, clientY: 60, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("mousemove", { clientX: 25, clientY: 120, bubbles: true }));
+
+    const indicator = document.querySelector("[data-drop-indicator]") as HTMLElement;
+    expect(indicator).not.toBeNull();
+    expect(indicator!.style.height).toBe("2px");
+    expect(indicator!.style.width).toBe("100%");
+
+    document.dispatchEvent(new MouseEvent("mouseup", { clientX: 25, clientY: 120, bubbles: true }));
+  });
+
   it("does not dispatch event when no valid zone is hit", () => {
     const button = document.createElement("button");
     button.dataset.dockPanelId = "test-panel";

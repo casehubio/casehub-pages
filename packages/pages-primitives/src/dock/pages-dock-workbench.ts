@@ -3,25 +3,25 @@ import { property, state } from 'lit/decorators.js';
 import type { DockItem, DockZone, LayoutStore, LayoutState } from '@casehubio/pages-component';
 
 const DOCK_STYLES = `
-  pages-dock-workbench { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+  pages-dock-workbench { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--pages-neutral-3, #1e293b); }
   pages-dock-workbench .dock-layout { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
   pages-dock-workbench .dock-main { display: flex; flex: 1; overflow: hidden; }
   pages-dock-workbench .dock-zone { overflow: auto; }
-  pages-dock-workbench .dock-zone-left, pages-dock-workbench .dock-zone-right { flex-shrink: 0; transition: width 0.15s ease-out; }
-  pages-dock-workbench .dock-zone-centre { flex: 1; min-width: 0; }
-  pages-dock-workbench .dock-zone-bottom { flex-shrink: 0; border-top: 1px solid var(--pages-neutral-5, #555); display: flex; transition: height 0.15s ease-out; }
+  pages-dock-workbench .dock-zone-left, pages-dock-workbench .dock-zone-right { flex-shrink: 0; transition: width 0.15s ease-out; background: var(--pages-neutral-2, #162032); }
+  pages-dock-workbench .dock-zone-centre { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  pages-dock-workbench .dock-zone-bottom { flex-shrink: 0; display: flex; transition: height 0.15s ease-out; background: var(--pages-neutral-2, #162032); }
   pages-dock-workbench .resize-handle { flex-shrink: 0; background: transparent; transition: background 0.15s, opacity 0.15s; touch-action: none; }
   pages-dock-workbench .resize-handle:hover, pages-dock-workbench .resize-handle:active { background: var(--pages-primary, #1967d2); }
   pages-dock-workbench .resize-left, pages-dock-workbench .resize-right { width: 4px; cursor: col-resize; }
   pages-dock-workbench .resize-bottom { height: 4px; cursor: row-resize; }
-  pages-dock-workbench .dock-bar { display: flex; gap: 0; padding: 4px; flex-shrink: 0; }
+  pages-dock-workbench .dock-bar { display: flex; gap: 0; padding: 4px 2px; flex-shrink: 0; background: var(--pages-neutral-1, #0f172a); }
   pages-dock-workbench .dock-bar-left, pages-dock-workbench .dock-bar-right { flex-direction: column; }
-  pages-dock-workbench .dock-bar-bottom { flex-direction: row; border-top: 1px solid var(--pages-border-color, #dadce0); }
+  pages-dock-workbench .dock-bar-bottom { flex-direction: row; }
   pages-dock-workbench .dock-bar [data-dock-zone] { display: flex; flex-direction: inherit; gap: 2px; min-width: 24px; min-height: 24px; }
   pages-dock-workbench .dock-bar [data-dock-spacer] { flex: 1; }
-  pages-dock-workbench .dock-bar button { border: none; background: transparent; cursor: pointer; padding: 6px; border-radius: var(--pages-radius-sm, 4px); font-size: 16px; color: var(--pages-text-secondary, #5f6368); }
-  pages-dock-workbench .dock-bar button:hover { background: var(--pages-hover-bg, rgba(0, 0, 0, 0.04)); }
-  pages-dock-workbench .dock-bar button[data-active] { color: var(--pages-primary, #1967d2); background: rgba(25, 103, 210, 0.08); }
+  pages-dock-workbench .dock-bar button { border: none; background: transparent; cursor: pointer; padding: 6px; border-radius: var(--pages-radius-sm, 4px); font-size: 16px; color: var(--pages-neutral-8, #94a3b8); }
+  pages-dock-workbench .dock-bar button:hover { background: var(--pages-neutral-3, #1e293b); color: var(--pages-neutral-11, #e2e8f0); }
+  pages-dock-workbench .dock-bar button[data-active] { color: var(--pages-primary, #1967d2); background: rgba(25, 103, 210, 0.12); }
 `;
 
 export class PagesDockWorkbench extends LitElement {
@@ -53,6 +53,10 @@ export class PagesDockWorkbench extends LitElement {
 
   get dockState(): Readonly<Record<string, boolean>> {
     return this._dockState;
+  }
+
+  resetPanelContent(panelId: string): void {
+    this._renderedPanels.delete(panelId);
   }
 
   private _keyHandler = (e: KeyboardEvent): void => {
@@ -146,7 +150,7 @@ export class PagesDockWorkbench extends LitElement {
 
     for (const item of allPanels) {
       const side = this._findPanelSide(item.panelId);
-      const zone = item.zone ?? 'top';
+      const zone = item.zone ?? (side === 'bottom' ? 'bottom' : 'top');
       const zoneKey = `${side}:${zone}`;
       const panelId = item.panelId;
 
@@ -205,11 +209,16 @@ export class PagesDockWorkbench extends LitElement {
 
     if (zone) {
       const side = this._findPanelSide(panelId);
+      const panelActualZone = this.zoneMap?.get(panelId);
       const allPanels = this._getAllPanels();
       for (const item of allPanels) {
-        const itemZone = item.zone ?? 'top';
         const itemSide = this._findPanelSide(item.panelId);
+        const itemZone = item.zone ?? (itemSide === 'bottom' ? 'bottom' : 'top');
         if (itemSide === side && itemZone === zone && item.panelId !== panelId && newState[item.panelId]) {
+          if (panelActualZone && this.zoneMap) {
+            const itemActualZone = this.zoneMap.get(item.panelId);
+            if (itemActualZone && itemActualZone !== panelActualZone) continue;
+          }
           newState[item.panelId] = false;
           this._hidePanelDom(item.panelId);
         }
@@ -304,6 +313,7 @@ export class PagesDockWorkbench extends LitElement {
     const topGroup = zoneEntries.filter(([z]) => z === 'top');
     const midGroup = zoneEntries.filter(([z]) => z === 'top-second');
     const bottomGroup = zoneEntries.filter(([z]) => z === 'bottom');
+    const hasNoMid = midGroup.length === 0;
     const renderGroup = ([zone, zoneItems]: [string, DockItem[]]) => html`
       <div data-dock-zone="${zone}">
         ${zoneItems.map(item => html`
@@ -322,12 +332,14 @@ export class PagesDockWorkbench extends LitElement {
 
     return html`
       <div class="dock-bar dock-bar-${side}"
+           data-component-type="dock-bar"
+           data-component-props=${JSON.stringify({side})}
            role="toolbar"
            aria-label="${side.charAt(0).toUpperCase() + side.slice(1)} dock bar"
            aria-orientation="${orientation}">
-        ${topGroup.map(renderGroup)}
-        ${midGroup.length > 0 ? html`<div style="border-top: 1px solid var(--pages-neutral-5, #555); margin: 4px 0; align-self: stretch;"></div>${midGroup.map(renderGroup)}` : nothing}
-        ${bottomGroup.length > 0 ? html`<div data-dock-spacer style="flex: 1; min-height: 8px;"></div>${bottomGroup.map(renderGroup)}` : nothing}
+        ${topGroup.map((g) => renderGroup(g))}
+        ${midGroup.length > 0 ? html`<div style="border-top: 1px solid var(--pages-neutral-5, #555); margin: 4px 0; align-self: stretch;"></div>${midGroup.map((g) => renderGroup(g))}` : hasNoMid && orientation === 'vertical' ? html`<div style="border-top: 1px solid var(--pages-neutral-5, #555); margin: 4px 0; align-self: stretch; opacity: 0.4;"></div><div data-dock-zone="top-second" data-dock-empty="" style="flex: 1; min-height: 24px;"></div>` : nothing}
+        ${bottomGroup.length > 0 ? html`<div data-dock-spacer style="flex: 1; min-height: 8px;"></div>${bottomGroup.map((g) => renderGroup(g))}` : nothing}
       </div>
     `;
   }

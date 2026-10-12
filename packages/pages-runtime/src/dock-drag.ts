@@ -53,10 +53,13 @@ function buildDropTargetMap(siteContainer: HTMLElement, validZones: readonly Doc
       }
     }
 
-    if (zoneGroups.length === 0 && validZones.some(z => z.startsWith(side))) {
-      const zone = resolveDockZone(side, side === "bottom" ? "left" : "top");
-      if (validZones.includes(zone)) {
-        targets.push({ zone, element: bar });
+    const coveredZones = new Set(targets.map(t => t.zone));
+    for (const vz of validZones) {
+      if (coveredZones.has(vz)) continue;
+      if (side !== "bottom" && vz === `bottom-${side}`) {
+        targets.push({ zone: vz, element: bar });
+      } else if (side === "bottom" && vz.startsWith("bottom-")) {
+        targets.push({ zone: vz, element: bar });
       }
     }
   }
@@ -68,6 +71,7 @@ export function attachDockDrag(
   button: HTMLElement,
   engine: ZoneLayoutEngine,
   siteContainer: HTMLElement,
+  signal?: AbortSignal,
 ): void {
   const panelId: string | undefined = button.dataset.dockPanelId;
   if (!panelId) return;
@@ -112,7 +116,13 @@ export function attachDockDrag(
 
     function clearInsertPreview(): void {
       if (insertLine) { insertLine.remove(); insertLine = null; }
-      for (const b of shiftedButtons) { b.style.transform = ""; }
+      for (const b of shiftedButtons) {
+        b.style.transform = "";
+        if (b.hasAttribute("data-dock-empty")) {
+          b.style.background = "";
+          b.style.borderRadius = "";
+        }
+      }
       shiftedButtons = [];
     }
 
@@ -120,7 +130,25 @@ export function attachDockDrag(
       clearInsertPreview();
       const group = target.element;
       const buttons = Array.from(group.querySelectorAll<HTMLElement>("button[data-dock-panel-id]"));
-      const isVertical = group.style.flexDirection === "column";
+      const bar = group.closest("[data-component-type='dock-bar']");
+      const isVertical = bar?.getAttribute("aria-orientation") === "vertical";
+      const isFallbackTarget = (group as HTMLElement).hasAttribute("data-component-type");
+      const isEmpty = (group as HTMLElement).hasAttribute("data-dock-empty");
+
+      if (isEmpty || isFallbackTarget) {
+        const line = document.createElement("div");
+        line.dataset.dropIndicator = "";
+        line.style.pointerEvents = "none";
+        line.style.zIndex = "9999";
+        line.style.height = "2px";
+        line.style.width = "100%";
+        line.style.background = "var(--pages-accent-7, #6366f1)";
+        line.style.borderRadius = "1px";
+        if (isFallbackTarget) line.style.marginTop = "auto";
+        group.appendChild(line);
+        insertLine = line;
+        return 0;
+      }
 
       let idx = buttons.length;
       for (let i = 0; i < buttons.length; i++) {
@@ -228,5 +256,5 @@ export function attachDockDrag(
 
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
-  });
+  }, signal ? { signal } : undefined);
 }

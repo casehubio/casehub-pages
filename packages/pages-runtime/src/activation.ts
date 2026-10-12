@@ -58,6 +58,7 @@ import {createContainer} from "./frame-sandbox/index.js";
 import type {Container} from "./frame-sandbox/types.js";
 import {createFrameKeyboardHandler} from "./frame-keyboard.js";
 import {configToContainerState} from "./layout-migration.js";
+import {attachDockDrag} from "./dock-drag.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -116,6 +117,7 @@ export interface LazyPageOptions {
     rootContainer: Container | undefined;
     stash: ContainerState | undefined;
   };
+  readonly zoneEngineRef?: { current: ZoneLayoutEngine | undefined };
   readonly nestingDepth?: number;
   readonly layoutStore?: LayoutStore | undefined;
   readonly layoutKey?: string | undefined;
@@ -563,6 +565,9 @@ export function createActivationCallback(
     if (component.type === "dock-workbench" && component.props) {
       const config = (component.props as Record<string, unknown>).__dockConfig as DockWorkbenchConfig;
       const dwZoneEngine = createZoneLayoutEngine(config, options?.seedLayout?.zones);
+      if (options?.zoneEngineRef) {
+        options.zoneEngineRef.current = dwZoneEngine;
+      }
 
       const panelMap = new Map<string, DockPanelConfig>();
       function extractPanels(side: readonly DockPanelConfig[] | DockSideConfig | undefined): DockItem[] | undefined {
@@ -621,7 +626,81 @@ export function createActivationCallback(
       el.style.height = "100%";
       el.style.display = "flex";
       el.style.flexDirection = "column";
+
+      let dwAncestor: HTMLElement | null = el.parentElement;
+      while (dwAncestor) {
+        if (dwAncestor.dataset?.componentType === "page") {
+          dwAncestor.style.padding = "0";
+        }
+        dwAncestor = dwAncestor.parentElement;
+      }
+
       el.appendChild(dockEl);
+
+      const dockSiteTarget = options?.siteTarget ?? el;
+
+      function rebuildPanelLists(): { left: DockItem[]; right: DockItem[]; bottom: DockItem[] } {
+        const left: DockItem[] = [];
+        const right: DockItem[] = [];
+        const bottom: DockItem[] = [];
+        for (const [key, zone] of dwZoneEngine.zoneMap) {
+          const p = panelMap.get(key);
+          if (!p) continue;
+          const rec: Record<string, unknown> = { icon: p.icon, label: p.label, panelId: p.key };
+          if (p.defaultOpen !== undefined) rec.defaultOpen = p.defaultOpen;
+          if (p.fixed !== undefined) rec.fixed = p.fixed;
+          if (zone.endsWith("-bottom") && !zone.startsWith("bottom")) rec.zone = "bottom";
+          else if (zone.endsWith("-top") && !zone.startsWith("top")) rec.zone = "top";
+          const base = rec as unknown as DockItem;
+          if (zone.startsWith("left")) left.push(base);
+          else if (zone.startsWith("right")) right.push(base);
+          else if (zone.startsWith("bottom")) bottom.push(base);
+        }
+        return { left, right, bottom };
+      }
+
+      let dragAbort: AbortController | undefined;
+      function wireDragHandlers(): void {
+        if (dragAbort) dragAbort.abort();
+        dragAbort = new AbortController();
+        const signal = dragAbort.signal;
+        void dockEl.updateComplete.then(() => {
+          if (signal.aborted) return;
+          const buttons = dockEl.querySelectorAll<HTMLElement>("button[data-dock-panel-id]");
+          for (const btn of buttons) {
+            attachDockDrag(btn, dwZoneEngine, dockSiteTarget, signal);
+          }
+        });
+      }
+
+      dockSiteTarget.addEventListener("pages-dock-rearrange", ((e: Event) => {
+        e.stopImmediatePropagation();
+        const { panelKey, toZone, insertIndex } = (e as CustomEvent<{ panelKey: string; toZone: string; insertIndex?: number }>).detail;
+        dwZoneEngine.movePanel(panelKey, toZone as DockZone, insertIndex);
+        for (const key of panelMap.keys()) {
+          dockEl.resetPanelContent(key);
+        }
+        const lists = rebuildPanelLists();
+        dockEl.leftPanels = lists.left;
+        dockEl.rightPanels = lists.right;
+        dockEl.bottomPanels = lists.bottom;
+        dockEl.zoneMap = dwZoneEngine.zoneMap;
+        void dockEl.updateComplete.then(() => {
+          dockEl.showPanel(panelKey);
+          for (const [key] of panelMap) {
+            if (dockEl.dockState[key]) {
+              const container = dockEl.querySelector<HTMLElement>(`[data-component-id="${key}"]`);
+              if (container && container.children.length === 0 && dockEl.renderContent) {
+                dockEl.renderContent(container, key);
+              }
+            }
+          }
+          wireDragHandlers();
+        });
+      }) as EventListener, true);
+
+      wireDragHandlers();
+
       return;
     }
 

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 108,
+  "totalSamples": 107,
   "categories": [
     {
       "category": "Charts",
@@ -712,7 +712,6 @@
           "path": "Custom Components/Drift Badge.page.yaml",
           "category": "Custom Components",
           "file": "Drift Badge.page.yaml",
-          "tags": ["iot", "drift", "topology", "badge", "sse"],
           "tsPath": "Custom Components/Drift Badge.ts"
         },
         {

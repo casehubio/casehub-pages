@@ -201,7 +201,7 @@ export async function loadSite(
   const componentViewState = createComponentViewState();
   const dockState = new Map<string, boolean>();
   const splitRatios = new Map<string, readonly number[]>();
-  const zoneEngine: ZoneLayoutEngine | undefined = options?.zoneEngine;
+  const zoneEngineRef: { current: ZoneLayoutEngine | undefined } = { current: options?.zoneEngine };
   let layoutSaveTimer: ReturnType<typeof setTimeout> | undefined;
   let containerStateStash: ContainerState | undefined;
   const floatingWorkspaceRef: {
@@ -1061,9 +1061,9 @@ export async function loadSite(
 
   target.addEventListener("pages-dock-rearrange", ((e: Event) => {
     const { panelKey, toZone, insertIndex } = (e as CustomEvent<{ panelKey: string; fromZone: string; toZone: string; insertIndex?: number }>).detail;
-    if (!zoneEngine) return;
+    if (!zoneEngineRef.current) return;
 
-    const newTree = zoneEngine.movePanel(panelKey, toZone as DockZone, insertIndex);
+    const newTree = zoneEngineRef.current.movePanel(panelKey, toZone as DockZone, insertIndex);
     dockState.set(panelKey, true);
 
     if (floatingWorkspaceRef.rootContainer) {
@@ -1195,7 +1195,7 @@ export async function loadSite(
       : containerStateStash;
     const capturedZones: Readonly<Record<string, DockZone>> | undefined = dockEl?.zoneMap
       ? Object.freeze(Object.fromEntries(dockEl.zoneMap))
-      : zoneEngine ? Object.freeze(Object.fromEntries(zoneEngine.zoneMap)) : undefined;
+      : zoneEngineRef.current ? Object.freeze(Object.fromEntries(zoneEngineRef.current.zoneMap)) : undefined;
     return Object.freeze({
       splits: Object.freeze(Object.fromEntries(splitRatios)),
       docks: capturedDocks,
@@ -1246,7 +1246,8 @@ export async function loadSite(
     dataScopeRegistry,
     saveConfigRegistry,
     lazyPageResolutions,
-    zoneEngine,
+    zoneEngine: zoneEngineRef.current,
+    zoneEngineRef,
     siteTarget: target,
     floatingWorkspaceRef,
     layoutStore: options?.layoutStore,
@@ -1255,7 +1256,7 @@ export async function loadSite(
   }, contextManager);
   renderComponent(target, root, { permissions, onNode });
 
-  if (zoneEngine && !target.querySelector('style[data-pages-dock]')) {
+  if (zoneEngineRef.current && !target.querySelector('style[data-pages-dock]')) {
     target.style.background = "var(--pages-neutral-3)";
     const dockStyle = document.createElement('style');
     dockStyle.setAttribute('data-pages-dock', '');
