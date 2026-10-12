@@ -37,6 +37,9 @@ export { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './runner.js';
 
 export { SchemaComposer } from './schema-composer.js';
 
+export { OnCompleteExpander, SourceLocationMap } from './on-complete-expander.js';
+export type { ExpandedSteps } from './on-complete-expander.js';
+
 export { ScenarioParser, ScenarioValidator, ScenarioCompiler } from './scenario/index.js';
 export type {
   ScenarioDefinition, StateDefinition, EventTransition, MatchCase,
