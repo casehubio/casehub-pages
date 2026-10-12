@@ -16,6 +16,9 @@ import { DefaultOrcMap } from './orc-map.js';
 import { DefaultSpawnedTask } from './spawned-task.js';
 import type { SpeedMultiplier } from './speed-multiplier.js';
 import { DefaultSpeedMultiplier } from './speed-multiplier.js';
+import type { OrcNumericPrimitive } from './numeric-primitive.js';
+import type { PriorityOrcSemaphore } from './priority-semaphore.js';
+import { DefaultPriorityOrcSemaphore } from './priority-semaphore.js';
 
 export class DefaultScenarioScope implements ScenarioScope {
   private readonly _primitives = new Map<string, unknown>();
@@ -96,6 +99,27 @@ export class DefaultScenarioScope implements ScenarioScope {
 
   spawn(name: string, task: () => Promise<void>): import('./spawned-task.js').SpawnedTask {
     return this._getOrCreate(name, () => new DefaultSpawnedTask(name, task));
+  }
+
+  numericPrimitive(name: string): OrcNumericPrimitive {
+    const existing = this._primitives.get(name);
+    if (existing === undefined) {
+      if (this._parent) {
+        const parentVal = this._parent._primitives.get(name);
+        if (parentVal !== undefined && typeof (parentVal as Record<string, unknown>).doubleValue === 'function') {
+          return parentVal as OrcNumericPrimitive;
+        }
+      }
+      throw new Error(`No primitive named '${name}' exists`);
+    }
+    if (typeof (existing as Record<string, unknown>).doubleValue === 'function') {
+      return existing as OrcNumericPrimitive;
+    }
+    throw new Error(`Primitive '${name}' is not a numeric primitive`);
+  }
+
+  prioritySemaphore(name: string, permits: number): PriorityOrcSemaphore {
+    return this._getOrCreate(name, () => new DefaultPriorityOrcSemaphore(permits));
   }
 
   childScope(name: string): ScenarioScope {

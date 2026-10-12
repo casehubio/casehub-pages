@@ -6,6 +6,9 @@ import { parseDuration } from '../orchestration/duration-parser.js';
 import { isTruthy } from '../truthiness.js';
 import { VariableResolver } from '../variable-resolver.js';
 import type { ObjectVariableSource } from '../types.js';
+import { ThresholdCondition } from '../orchestration/threshold-condition.js';
+import type { OrcNumericPrimitive } from '../orchestration/numeric-primitive.js';
+import { parsePriority, Priority } from '../orchestration/priority.js';
 
 export interface Context {
   readonly params: Record<string, unknown>;
@@ -391,6 +394,100 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+class AtDecorator implements DecoratedExecution {
+  constructor(
+    private readonly next: DecoratedExecution,
+    private readonly raw: unknown,
+  ) {}
+  async execute(context: Context): Promise<Result> {
+    if (typeof this.raw === 'object' && this.raw !== null && !Array.isArray(this.raw)) {
+      const map = this.raw as Record<string, unknown>;
+      if (map['mode'] === 'guard') {
+        return this.executeGuard(map, context);
+      }
+    }
+    const conditions = this.parseConditions();
+    await this.waitForConditions(conditions, context);
+    return this.next.execute(context);
+  }
+
+  private async executeGuard(map: Record<string, unknown>, context: Context): Promise<Result> {
+    const condStr = String(map['metric']);
+    const cond = ThresholdCondition.parse(condStr);
+    const prim = context.scope.numericPrimitive(cond.metricName);
+    if (!cond.test(prim.doubleValue())) {
+      return stepSuccess({});
+    }
+    return this.next.execute(context);
+  }
+
+  private parseConditions(): ThresholdCondition[] {
+    if (typeof this.raw === 'string') return [ThresholdCondition.parse(this.raw)];
+    if (Array.isArray(this.raw)) return this.raw.map(s => ThresholdCondition.parse(String(s)));
+    if (typeof this.raw === 'object' && this.raw !== null) {
+      const map = this.raw as Record<string, unknown>;
+      const metric = map['metric'];
+      if (typeof metric === 'string') return [ThresholdCondition.parse(metric)];
+    }
+    throw new Error(`Invalid at: specification: ${JSON.stringify(this.raw)}`);
+  }
+
+  private waitForConditions(conditions: ThresholdCondition[], context: Context): Promise<void> {
+    const met = new Set<number>();
+    for (let i = 0; i < conditions.length; i++) {
+      const prim = context.scope.numericPrimitive(conditions[i]!.metricName);
+      if (conditions[i]!.test(prim.doubleValue())) met.add(i);
+    }
+    if (met.size === conditions.length) return Promise.resolve();
+
+    return new Promise<void>((resolve) => {
+      const listeners: Array<{ prim: OrcNumericPrimitive; listener: (v: number) => void }> = [];
+      const cleanup = () => { for (const { prim, listener } of listeners) prim.removeThresholdListener(listener); };
+
+      for (let i = 0; i < conditions.length; i++) {
+        if (met.has(i)) continue;
+        const cond = conditions[i]!;
+        const prim = context.scope.numericPrimitive(cond.metricName);
+        const listener = (value: number) => {
+          if (cond.test(value)) {
+            met.add(i);
+            if (met.size === conditions.length) { cleanup(); resolve(); }
+          }
+        };
+        listeners.push({ prim, listener });
+        prim.onThresholdChange(listener);
+      }
+    });
+  }
+}
+
+class PrioritySemaphoreDecorator implements DecoratedExecution {
+  constructor(
+    private readonly next: DecoratedExecution,
+    private readonly name: string,
+    private readonly priority: Priority,
+  ) {}
+  async execute(context: Context): Promise<Result> {
+    const sem = context.scope.prioritySemaphore(this.name, 1);
+    const remaining = context.scope.remainingTime();
+    if (remaining != null) {
+      const acquired = await sem.tryAcquire(this.priority, remaining);
+      if (!acquired) {
+        return stepFailure(`Resource '${this.name}' acquire exceeded deadline`);
+      }
+    } else {
+      await sem.acquire(this.priority);
+    }
+    try {
+      return await this.next.execute(context);
+    } catch (e) {
+      return stepFailure(e instanceof Error ? e.message : String(e));
+    } finally {
+      sem.release();
+    }
+  }
+}
+
 function parseSemaphoreSpec(raw: unknown): { name: string; permits: number } {
   if (typeof raw === 'string') return { name: raw, permits: 1 };
   if (typeof raw === 'object' && raw !== null) {
@@ -443,11 +540,21 @@ export class DecoratorChain {
         execution = new SemaphoreDecorator(execution, spec.name, spec.permits);
       }
     }
+    const resourceRaw = decorators['resource'];
+    if (resourceRaw != null) {
+      const resourceName = typeof resourceRaw === 'string' ? resourceRaw : String((resourceRaw as Record<string, unknown>)['name']);
+      const priorityRaw = decorators['priority'] as string | undefined;
+      const priority = priorityRaw != null ? parsePriority(priorityRaw) : Priority.NORMAL;
+      execution = new PrioritySemaphoreDecorator(execution, resourceName, priority);
+    }
     if (decorators['retry'] != null) {
       execution = new RetryDecorator(execution, decorators['retry']);
     }
     if (decorators['wait'] != null) {
       execution = new WaitDecorator(execution, String(decorators['wait']));
+    }
+    if (decorators['at'] != null) {
+      execution = new AtDecorator(execution, decorators['at']);
     }
     if (decorators['timeout'] != null) {
       execution = new TimeoutDecorator(execution, decorators['timeout']);

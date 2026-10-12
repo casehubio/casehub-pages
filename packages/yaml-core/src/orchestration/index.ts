@@ -33,6 +33,8 @@ export { ThresholdCondition } from './threshold-condition.js';
 export { Priority, parsePriority } from './priority.js';
 export type { PriorityOrcSemaphore } from './priority-semaphore.js';
 export { DefaultPriorityOrcSemaphore } from './priority-semaphore.js';
+export type { ResourceDeclaration } from './resource-declaration.js';
+export { parseResourceDeclaration } from './resource-declaration.js';
 export type { OrcAccumulator } from './accumulator.js';
 export { DefaultOrcAccumulator } from './accumulator.js';
 export type { OrcMap } from './orc-map.js';

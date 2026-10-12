@@ -66,6 +66,8 @@ export interface ScenarioScope {
   accumulator(name: string, op: (a: number, b: number) => number, identity: number): import('./accumulator.js').OrcAccumulator;
   map<K, V>(name: string): import('./orc-map.js').OrcMap<K, V>;
   spawn(name: string, task: () => Promise<void>): import('./spawned-task.js').SpawnedTask;
+  numericPrimitive(name: string): import('./numeric-primitive.js').OrcNumericPrimitive;
+  prioritySemaphore(name: string, permits: number): import('./priority-semaphore.js').PriorityOrcSemaphore;
   childScope(name: string): ScenarioScope;
   withDeadline(deadlineMs: number, onDeadline?: () => void): ScenarioScope;
   isDeadlineExpired(): boolean;

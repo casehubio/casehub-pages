@@ -84,4 +84,46 @@ describe('DefaultScenarioScope', () => {
     scope.close();
     deadline.close();
   });
+
+  describe('numericPrimitive', () => {
+    it('returns counter as OrcNumericPrimitive', () => {
+      const scope = new DefaultScenarioScope();
+      scope.counter('supply');
+      const np = scope.numericPrimitive('supply');
+      expect(np.doubleValue()).toBe(0);
+    });
+
+    it('returns accumulator as OrcNumericPrimitive', () => {
+      const scope = new DefaultScenarioScope();
+      scope.accumulator('total', (a, b) => a + b, 0);
+      const np = scope.numericPrimitive('total');
+      expect(np.doubleValue()).toBe(0);
+    });
+
+    it('throws for non-numeric primitive', () => {
+      const scope = new DefaultScenarioScope();
+      scope.flag('ready');
+      expect(() => scope.numericPrimitive('ready')).toThrow();
+    });
+
+    it('throws for unknown primitive', () => {
+      const scope = new DefaultScenarioScope();
+      expect(() => scope.numericPrimitive('missing')).toThrow();
+    });
+  });
+
+  describe('prioritySemaphore', () => {
+    it('creates and returns a PriorityOrcSemaphore', () => {
+      const scope = new DefaultScenarioScope();
+      const sem = scope.prioritySemaphore('pool', 3);
+      expect(sem.availablePermits()).toBe(3);
+    });
+
+    it('returns same instance on subsequent calls', () => {
+      const scope = new DefaultScenarioScope();
+      const sem1 = scope.prioritySemaphore('pool', 3);
+      const sem2 = scope.prioritySemaphore('pool', 3);
+      expect(sem1).toBe(sem2);
+    });
+  });
 });

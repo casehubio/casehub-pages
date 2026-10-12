@@ -4,7 +4,8 @@ const DECORATOR_KEYS = [
   'if', 'on-success', 'on-failure', 'forEach', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'semaphore', 'barrier', 'quorum', 'race',
+  'semaphore', 'mutex', 'barrier', 'quorum', 'race',
+  'at', 'on-complete', 'resource', 'priority', 'wait',
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class

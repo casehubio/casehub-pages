@@ -449,4 +449,94 @@ describe('DecoratorChain', () => {
       expect(action.execute).not.toHaveBeenCalled();
     });
   });
+
+  describe('at decorator', () => {
+    it('blocks until threshold met then executes', async () => {
+      const scope = new DefaultScenarioScope();
+      const counter = scope.counter('supply');
+      const action = mockAction(stepSuccess({ v: 1 }));
+      const chain = DecoratorChain.build({ at: '>=14 supply' }, action);
+      const ctx = mockContext({ scope });
+      const resultPromise = chain.execute(ctx);
+      counter.add(14);
+      const result = await resultPromise;
+      expect(result.kind).toBe('success');
+      expect(action.execute).toHaveBeenCalled();
+    });
+
+    it('executes immediately when threshold already met', async () => {
+      const scope = new DefaultScenarioScope();
+      const counter = scope.counter('supply');
+      counter.add(20);
+      const action = mockAction(stepSuccess({}));
+      const chain = DecoratorChain.build({ at: '>=14 supply' }, action);
+      const result = await chain.execute(mockContext({ scope }));
+      expect(result.kind).toBe('success');
+      expect(action.execute).toHaveBeenCalled();
+    });
+
+    it('supports list of threshold conditions (all must be met)', async () => {
+      const scope = new DefaultScenarioScope();
+      const supply = scope.counter('supply');
+      const workers = scope.counter('workers');
+      const action = mockAction(stepSuccess({}));
+      const chain = DecoratorChain.build({ at: ['>=10 supply', '>=5 workers'] }, action);
+      const resultPromise = chain.execute(mockContext({ scope }));
+      supply.add(10);
+      workers.add(5);
+      const result = await resultPromise;
+      expect(result.kind).toBe('success');
+    });
+
+    it('guard mode checks immediately and skips if not met', async () => {
+      const scope = new DefaultScenarioScope();
+      scope.counter('supply');
+      const action = mockAction(stepSuccess({}));
+      const chain = DecoratorChain.build({ at: { metric: '>=14 supply', mode: 'guard' } }, action);
+      const result = await chain.execute(mockContext({ scope }));
+      expect(result.kind).toBe('success');
+      expect(action.execute).not.toHaveBeenCalled();
+    });
+
+    it('guard mode executes when threshold already met', async () => {
+      const scope = new DefaultScenarioScope();
+      scope.counter('supply').add(20);
+      const action = mockAction(stepSuccess({}));
+      const chain = DecoratorChain.build({ at: { metric: '>=14 supply', mode: 'guard' } }, action);
+      const result = await chain.execute(mockContext({ scope }));
+      expect(result.kind).toBe('success');
+      expect(action.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('resource decorator with priority', () => {
+    it('acquires priority semaphore with default normal priority', async () => {
+      const scope = new DefaultScenarioScope();
+      const sem = scope.prioritySemaphore('api-pool', 2);
+      const action = mockAction(stepSuccess({}));
+      const chain = DecoratorChain.build({ resource: 'api-pool' }, action);
+      await chain.execute(mockContext({ scope }));
+      expect(sem.availablePermits()).toBe(2);
+      expect(action.execute).toHaveBeenCalled();
+    });
+
+    it('acquires with specified priority', async () => {
+      const scope = new DefaultScenarioScope();
+      const sem = scope.prioritySemaphore('api-pool', 1);
+      const action = mockAction(stepSuccess({}));
+      const chain = DecoratorChain.build({ resource: 'api-pool', priority: 'high' }, action);
+      await chain.execute(mockContext({ scope }));
+      expect(sem.availablePermits()).toBe(1);
+    });
+
+    it('releases priority semaphore on error', async () => {
+      const scope = new DefaultScenarioScope();
+      const sem = scope.prioritySemaphore('err-pool', 1);
+      const action: Action = { execute: () => { throw new Error('boom'); } };
+      const chain = DecoratorChain.build({ resource: 'err-pool' }, action);
+      const result = await chain.execute(mockContext({ scope }));
+      expect(result.kind).toBe('failure');
+      expect(sem.availablePermits()).toBe(1);
+    });
+  });
 });
