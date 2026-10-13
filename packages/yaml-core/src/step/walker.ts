@@ -164,7 +164,7 @@ const RESERVED_KEYS = new Set([
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'parallel', 'semaphore', 'barrier', 'quorum', 'race',
-  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode',
+  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
 ]);
 
 const DECORATOR_KEYS = new Set([
@@ -172,7 +172,7 @@ const DECORATOR_KEYS = new Set([
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'semaphore', 'barrier', 'quorum', 'race',
-  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode',
+  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
 ]);
 
 const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finally']);

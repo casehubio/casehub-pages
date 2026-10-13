@@ -38,7 +38,7 @@ function collectDecorators(step: Record<string, unknown>, exclude: Set<string>):
   return decorators;
 }
 
-function preExtract(rawSteps: Record<string, unknown>[]): {
+function preExtract(rawSteps: Record<string, unknown>[], catalog?: Catalog): {
   walkerSteps: Record<string, unknown>[];
   preExtracted: PreExtractedStep[];
   slotTypes: SlotType[];
@@ -61,6 +61,19 @@ function preExtract(rawSteps: Record<string, unknown>[]): {
         slotTypes.push('pre');
         continue;
       }
+    }
+
+    if ('concurrent' in step && catalog) {
+      const branches = step['concurrent'] as Record<string, unknown[]>;
+      const resolvedBranches: SchedulerStep[] = [];
+      for (const [name, branchSteps] of Object.entries(branches)) {
+        const branchResolved = resolveStepArray(branchSteps as Record<string, unknown>[], catalog);
+        resolvedBranches.push({ kind: 'block', name, steps: branchResolved, decorators: {} } as SchedulerStep);
+      }
+      const stepName = step['step'] as string | undefined ?? null;
+      preExtracted.push({ kind: 'parallel', name: stepName, steps: resolvedBranches, decorators: {} } as SchedulerStep as PreExtractedStep);
+      slotTypes.push('pre');
+      continue;
     }
 
     if ('concurrent' in step) {
@@ -118,7 +131,7 @@ export function deriveStepName(step: ResolvedStep, index: number): string {
 }
 
 function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog): SchedulerStep[] {
-  const { walkerSteps, preExtracted, slotTypes } = preExtract(rawSteps);
+  const { walkerSteps, preExtracted, slotTypes } = preExtract(rawSteps, catalog);
   const resolved = Walker.resolve(walkerSteps, catalog);
   for (let i = 0; i < resolved.length; i++) {
     const step = resolved[i]!;

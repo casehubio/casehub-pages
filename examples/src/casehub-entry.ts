@@ -55,8 +55,9 @@ import { CompositeCatalog } from "@casehubio/yaml-core/step";
 import { Walker } from "@casehubio/yaml-core/step";
 import { StructuralEvaluator } from "@casehubio/yaml-core/step";
 import { DefaultScenarioScope } from "@casehubio/yaml-core/orchestration";
-import { stepSuccess, stepFailure } from "@casehubio/yaml-core/step";
+import { stepSuccess, stepFailure, MapServiceRegistry } from "@casehubio/yaml-core/step";
 import type { Action } from "@casehubio/yaml-core/step";
+import { VariableResolver } from "@casehubio/yaml-core";
 
 export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<string, { type: string; required: boolean }>; outputs?: Record<string, { type: string; required: boolean }>; execute: Action['execute'] }>) {
   const registry = new PluginRegistry();
@@ -66,14 +67,18 @@ export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<
   const catalog = new CompositeCatalog([registry.createSource()]);
   const evaluator = new StructuralEvaluator();
   const scope = new DefaultScenarioScope();
+  const services = new MapServiceRegistry();
+  const resolver = new VariableResolver();
 
   return {
     resolve(steps: Record<string, unknown>[]) { return Walker.resolve(steps, catalog); },
     async run(steps: Record<string, unknown>[]) {
       const resolved = Walker.resolve(steps, catalog);
       const results = [];
-      for (const step of resolved) {
-        const result = await evaluator.evaluate(step, { scope } as never);
+      for (let i = 0; i < resolved.length; i++) {
+        const step = resolved[i]!;
+        const ctx = { scope, services, resolver, params: {}, stepName: step.name ?? `step-${i}` };
+        const result = await evaluator.evaluate(step, ctx);
         results.push(result);
       }
       return results;
