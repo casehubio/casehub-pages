@@ -595,12 +595,12 @@
         },
         {
           "file": "step-workflows/select.playbook.yaml",
-          "title": "Select (first-to-complete)",
-          "description": "Select races multiple branches — the first to complete wins. Wait branches block on named signals; the first signal to fire determines which branch executes.",
+          "title": "Select",
+          "description": "Channel and signal multiplexing — wait on multiple named signals, the first signal to fire determines which branch executes. For first-to-complete over arbitrary concurrent blocks, use race: instead.",
           "tags": [
             "select",
-            "race",
-            "first-to-complete",
+            "signal",
+            "multiplexing",
             "step-workflows"
           ],
           "runnable": false
