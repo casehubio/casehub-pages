@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 107,
+  "totalSamples": 108,
   "categories": [
     {
       "category": "Charts",
@@ -1046,6 +1046,13 @@
             "reuse"
           ],
           "tsPath": "Scenarios/Parameterized Script.ts"
+        },
+        {
+          "name": "Playbook Primitives",
+          "path": "Scenarios/Playbook Primitives.page.yaml",
+          "category": "Scenarios",
+          "file": "Playbook Primitives.page.yaml",
+          "tsPath": "Scenarios/Playbook Primitives.ts"
         },
         {
           "name": "Scenario Controller",
