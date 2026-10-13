@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 108,
+  "totalSamples": 105,
   "categories": [
     {
       "category": "Charts",
@@ -932,18 +932,127 @@
       "category": "Scenarios",
       "samples": [
         {
-          "name": "Composable Workflow",
-          "path": "Scenarios/Composable Workflow.page.yaml",
+          "name": "UI Automation",
+          "path": "Scenarios/UI Automation.page.yaml",
           "category": "Scenarios",
-          "file": "Composable Workflow.page.yaml",
+          "file": "UI Automation.page.yaml",
           "tags": [
             "scenario",
             "fill",
             "select",
             "click",
-            "composition"
+            "call",
+            "params",
+            "grid"
           ],
-          "tsPath": "Scenarios/Composable Workflow.ts"
+          "tsPath": "Scenarios/UI Automation.ts"
+        },
+        {
+          "name": "External Calls",
+          "path": "Scenarios/External Calls.page.yaml",
+          "category": "Scenarios",
+          "file": "External Calls.page.yaml",
+          "tags": [
+            "scenario",
+            "rest",
+            "graphql",
+            "mcp",
+            "script",
+            "agent",
+            "process"
+          ],
+          "tsPath": "Scenarios/External Calls.ts"
+        },
+        {
+          "name": "Data Injection",
+          "path": "Scenarios/Data Injection.page.yaml",
+          "category": "Scenarios",
+          "file": "Data Injection.page.yaml",
+          "tags": [
+            "scenario",
+            "simulated",
+            "graphql",
+            "data injection"
+          ],
+          "tsPath": "Scenarios/Data Injection.ts"
+        },
+        {
+          "name": "Step Modifiers",
+          "path": "Scenarios/Step Modifiers.page.yaml",
+          "category": "Scenarios",
+          "file": "Step Modifiers.page.yaml",
+          "tags": [
+            "scenario",
+            "delay",
+            "loop",
+            "retry",
+            "timeout",
+            "when",
+            "concurrent"
+          ],
+          "tsPath": "Scenarios/Step Modifiers.ts"
+        },
+        {
+          "name": "Control Flow",
+          "path": "Scenarios/Control Flow.page.yaml",
+          "category": "Scenarios",
+          "file": "Control Flow.page.yaml",
+          "tags": [
+            "scenario",
+            "if-else",
+            "match",
+            "try-catch",
+            "parallel",
+            "barrier",
+            "quorum",
+            "select"
+          ],
+          "tsPath": "Scenarios/Control Flow.ts"
+        },
+        {
+          "name": "Synchronization",
+          "path": "Scenarios/Synchronization.page.yaml",
+          "category": "Scenarios",
+          "file": "Synchronization.page.yaml",
+          "tags": [
+            "scenario",
+            "signal",
+            "await",
+            "mutex",
+            "barrier",
+            "handshake"
+          ],
+          "tsPath": "Scenarios/Synchronization.ts"
+        },
+        {
+          "name": "Concurrency Patterns",
+          "path": "Scenarios/Concurrency Patterns.page.yaml",
+          "category": "Scenarios",
+          "file": "Concurrency Patterns.page.yaml",
+          "tags": [
+            "scenario",
+            "semaphore",
+            "channel",
+            "spawn",
+            "correlation",
+            "deadline"
+          ],
+          "tsPath": "Scenarios/Concurrency Patterns.ts"
+        },
+        {
+          "name": "Shared State",
+          "path": "Scenarios/Shared State.page.yaml",
+          "category": "Scenarios",
+          "file": "Shared State.page.yaml",
+          "tags": [
+            "scenario",
+            "counter",
+            "flag",
+            "gauge",
+            "latch",
+            "state-machine"
+          ],
+          "tsPath": "Scenarios/Shared State.ts"
         },
         {
           "name": "Composition",
@@ -954,105 +1063,24 @@
             "scenario",
             "trigger",
             "module",
-            "forEach"
+            "forEach",
+            "orchestration"
           ],
           "tsPath": "Scenarios/Composition.ts"
         },
         {
-          "name": "Concurrency Patterns",
-          "path": "Scenarios/Concurrency Patterns.page.yaml",
+          "name": "Scheduling Primitives",
+          "path": "Scenarios/Scheduling Primitives.page.yaml",
           "category": "Scenarios",
-          "file": "Concurrency Patterns.page.yaml",
-          "tsPath": "Scenarios/Concurrency Patterns.ts"
-        },
-        {
-          "name": "Coordination",
-          "path": "Scenarios/Coordination.page.yaml",
-          "category": "Scenarios",
-          "file": "Coordination.page.yaml",
+          "file": "Scheduling Primitives.page.yaml",
           "tags": [
             "scenario",
-            "signal",
-            "barrier",
-            "mutex",
-            "concurrent"
+            "threshold",
+            "priority",
+            "on-complete",
+            "resource"
           ],
-          "tsPath": "Scenarios/Coordination.ts"
-        },
-        {
-          "name": "Coordination Primitives",
-          "path": "Scenarios/Coordination Primitives.page.yaml",
-          "category": "Scenarios",
-          "file": "Coordination Primitives.page.yaml",
-          "tsPath": "Scenarios/Coordination Primitives.ts"
-        },
-        {
-          "name": "Data Delivery",
-          "path": "Scenarios/Data Delivery.page.yaml",
-          "category": "Scenarios",
-          "file": "Data Delivery.page.yaml",
-          "tags": [
-            "scenario",
-            "simulated",
-            "graphql",
-            "data injection"
-          ],
-          "tsPath": "Scenarios/Data Delivery.ts"
-        },
-        {
-          "name": "Flow Control",
-          "path": "Scenarios/Flow Control.page.yaml",
-          "category": "Scenarios",
-          "file": "Flow Control.page.yaml",
-          "tags": [
-            "scenario",
-            "loop",
-            "retry",
-            "timeout",
-            "when",
-            "delay"
-          ],
-          "tsPath": "Scenarios/Flow Control.ts"
-        },
-        {
-          "name": "Form Automation",
-          "path": "Scenarios/Form Automation.page.yaml",
-          "category": "Scenarios",
-          "file": "Form Automation.page.yaml",
-          "tags": [
-            "scenario",
-            "fill",
-            "select",
-            "assert",
-            "click"
-          ],
-          "tsPath": "Scenarios/Form Automation.ts"
-        },
-        {
-          "name": "Invoke Bindings",
-          "path": "Scenarios/Invoke Bindings.page.yaml",
-          "category": "Scenarios",
-          "file": "Invoke Bindings.page.yaml",
-          "tsPath": "Scenarios/Invoke Bindings.ts"
-        },
-        {
-          "name": "Parameterized Script",
-          "path": "Scenarios/Parameterized Script.page.yaml",
-          "category": "Scenarios",
-          "file": "Parameterized Script.page.yaml",
-          "tags": [
-            "scenario",
-            "parameters",
-            "reuse"
-          ],
-          "tsPath": "Scenarios/Parameterized Script.ts"
-        },
-        {
-          "name": "Playbook Primitives",
-          "path": "Scenarios/Playbook Primitives.page.yaml",
-          "category": "Scenarios",
-          "file": "Playbook Primitives.page.yaml",
-          "tsPath": "Scenarios/Playbook Primitives.ts"
+          "tsPath": "Scenarios/Scheduling Primitives.ts"
         },
         {
           "name": "Scenario Controller",
@@ -1084,36 +1112,13 @@
           "path": "Scenarios/Step Catalog.page.yaml",
           "category": "Scenarios",
           "file": "Step Catalog.page.yaml",
-          "tsPath": "Scenarios/Step Catalog.ts"
-        },
-        {
-          "name": "Step Workflows",
-          "path": "Scenarios/Step Workflows.page.yaml",
-          "category": "Scenarios",
-          "file": "Step Workflows.page.yaml",
-          "tags": [
-            "step",
-            "if-else",
-            "match",
-            "try-catch",
-            "barrier",
-            "quorum",
-            "parallel"
-          ],
-          "tsPath": "Scenarios/Step Workflows.ts"
-        },
-        {
-          "name": "Table Population",
-          "path": "Scenarios/Table Population.page.yaml",
-          "category": "Scenarios",
-          "file": "Table Population.page.yaml",
           "tags": [
             "scenario",
-            "fill",
-            "click",
-            "data injection"
+            "catalog",
+            "schema",
+            "try-it"
           ],
-          "tsPath": "Scenarios/Table Population.ts"
+          "tsPath": "Scenarios/Step Catalog.ts"
         }
       ]
     },

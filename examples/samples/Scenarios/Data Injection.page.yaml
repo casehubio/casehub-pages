@@ -1,5 +1,5 @@
 pages:
-- name: Data Delivery
+- name: Data Injection
   properties:
     margin: 20px
   rows:
@@ -10,7 +10,7 @@ pages:
         properties:
           content: |
             <div>
-              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Data Delivery</h2>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Data Injection</h2>
               <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                 <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
                   <div style="font-size: 10px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">State</div>

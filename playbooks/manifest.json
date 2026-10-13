@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "categories": [
     {
-      "name": "Flow Control",
+      "name": "Step Modifiers",
       "key": "flow-control",
       "scenarios": [
         {
@@ -104,7 +104,7 @@
       ]
     },
     {
-      "name": "Coordination",
+      "name": "Synchronization",
       "key": "coordination",
       "scenarios": [
         {
@@ -123,7 +123,7 @@
         },
         {
           "file": "coordination/channel.playbook.yaml",
-          "title": "Channel (via Signal)",
+          "title": "Signal Handshake",
           "description": "Two-way handshake. Producer signals data-ready, consumer processes and acks — round-trip coordination using signal pairs.",
           "tags": [
             "signal",
@@ -161,7 +161,7 @@
       ]
     },
     {
-      "name": "Coordination Primitives",
+      "name": "Shared State",
       "key": "coordination-primitives",
       "scenarios": [
         {
@@ -400,7 +400,7 @@
       ]
     },
     {
-      "name": "Data Delivery",
+      "name": "Data Injection",
       "key": "data-delivery",
       "scenarios": [
         {
@@ -442,7 +442,7 @@
       ]
     },
     {
-      "name": "Invoke Bindings",
+      "name": "External Calls",
       "key": "invoke-bindings",
       "scenarios": [
         {
@@ -520,7 +520,7 @@
       ]
     },
     {
-      "name": "Step Workflows",
+      "name": "Control Flow",
       "key": "step-workflows",
       "scenarios": [
         {

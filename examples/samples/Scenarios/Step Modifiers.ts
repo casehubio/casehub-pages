@@ -117,11 +117,11 @@ function runExample(idx) {
   var ex = EXAMPLES[idx];
   if (!ex) return;
 
-  var parseScenario = window.casehubPages && window.casehubPages.parseScenario;
+  var parsePlaybook = window.casehubPages && window.casehubPages.parsePlaybook;
   var createScheduler = window.casehubPages && window.casehubPages.createScheduler;
   var createScenarioCatalog = window.casehubPages && window.casehubPages.createScenarioCatalog;
 
-  if (!parseScenario || !createScheduler || !createScenarioCatalog) {
+  if (!parsePlaybook || !createScheduler || !createScenarioCatalog) {
     log(0, 'system', 'error', 'scheduler not in bundle');
     return;
   }
@@ -129,7 +129,7 @@ function runExample(idx) {
   var catalog = createScenarioCatalog();
   var scenario;
   try {
-    scenario = parseScenario(ex.yaml, catalog);
+    scenario = parsePlaybook(ex.yaml, catalog);
   } catch (e) {
     log(0, 'system', 'parse error', e.message || String(e));
     return;

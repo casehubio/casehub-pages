@@ -220,7 +220,7 @@ function compRunExample(key) {
 
   try {
     var catalog = casehubPages.createScenarioCatalog();
-    var scenario = casehubPages.parseScenario(example.yaml, catalog);
+    var scenario = casehubPages.parsePlaybook(example.yaml, catalog);
     var runner = casehubPages.createScheduler(scenario, {
       eventTarget: et,
       speed: 1,

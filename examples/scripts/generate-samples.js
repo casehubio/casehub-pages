@@ -28,6 +28,16 @@ const SERVER_CATEGORIES = new Set(['Server']);
 const DISPLAY_NAMES = {
 };
 
+const SAMPLE_ORDER = {
+  'Scenarios': [
+    'UI Automation', 'External Calls', 'Data Injection',
+    'Step Modifiers', 'Control Flow',
+    'Synchronization', 'Concurrency Patterns', 'Shared State',
+    'Composition', 'Scheduling Primitives',
+    'Scenario Controller', 'Script Library', 'Step Catalog',
+  ],
+};
+
 const SAMPLE_TAGS = {
   'Charts/Charts.page.yaml': ['echarts', 'bar', 'line', 'pie', 'scatter'],
   'Charts/Decal Pattern.page.yaml': ['echarts', 'accessibility', 'pattern'],
@@ -106,17 +116,19 @@ const SAMPLE_TAGS = {
   'Monitoring/Quarkus Monitoring.page.yaml': ['monitoring', 'quarkus', 'micrometer'],
   'Monitoring/Real Time JVM Monitoring.page.yaml': ['monitoring', 'jvm', 'real-time'],
   'Monitoring/Triton Inference Server.page.yaml': ['monitoring', 'triton', 'inference'],
-  'Scenarios/Composable Workflow.page.yaml': ['scenario', 'fill', 'select', 'click', 'composition'],
-  'Scenarios/Composition.page.yaml': ['scenario', 'trigger', 'module', 'forEach'],
-  'Scenarios/Coordination.page.yaml': ['scenario', 'signal', 'barrier', 'mutex', 'concurrent'],
-  'Scenarios/Data Delivery.page.yaml': ['scenario', 'simulated', 'graphql', 'data injection'],
-  'Scenarios/Flow Control.page.yaml': ['scenario', 'loop', 'retry', 'timeout', 'when', 'delay'],
-  'Scenarios/Form Automation.page.yaml': ['scenario', 'fill', 'select', 'assert', 'click'],
-  'Scenarios/Parameterized Script.page.yaml': ['scenario', 'parameters', 'reuse'],
+  'Scenarios/UI Automation.page.yaml': ['scenario', 'fill', 'select', 'click', 'call', 'params', 'grid'],
+  'Scenarios/External Calls.page.yaml': ['scenario', 'rest', 'graphql', 'mcp', 'script', 'agent', 'process'],
+  'Scenarios/Data Injection.page.yaml': ['scenario', 'simulated', 'graphql', 'data injection'],
+  'Scenarios/Step Modifiers.page.yaml': ['scenario', 'delay', 'loop', 'retry', 'timeout', 'when', 'concurrent'],
+  'Scenarios/Control Flow.page.yaml': ['scenario', 'if-else', 'match', 'try-catch', 'parallel', 'barrier', 'quorum', 'select'],
+  'Scenarios/Synchronization.page.yaml': ['scenario', 'signal', 'await', 'mutex', 'barrier', 'handshake'],
+  'Scenarios/Concurrency Patterns.page.yaml': ['scenario', 'semaphore', 'channel', 'spawn', 'correlation', 'deadline'],
+  'Scenarios/Shared State.page.yaml': ['scenario', 'counter', 'flag', 'gauge', 'latch', 'state-machine'],
+  'Scenarios/Composition.page.yaml': ['scenario', 'trigger', 'module', 'forEach', 'orchestration'],
+  'Scenarios/Scheduling Primitives.page.yaml': ['scenario', 'threshold', 'priority', 'on-complete', 'resource'],
   'Scenarios/Scenario Controller.page.yaml': ['scenario', 'controller', 'playback'],
   'Scenarios/Script Library.page.yaml': ['scenario', 'library', 'search', 'labels'],
-  'Scenarios/Step Workflows.page.yaml': ['step', 'if-else', 'match', 'try-catch', 'barrier', 'quorum', 'parallel'],
-  'Scenarios/Table Population.page.yaml': ['scenario', 'fill', 'click', 'data injection'],
+  'Scenarios/Step Catalog.page.yaml': ['scenario', 'catalog', 'schema', 'try-it'],
   'Domain Showcases/FIFA 2022 Goals.page.yaml': ['showcase', 'sports', 'charts'],
   'Domain Showcases/Fleet Monitor.page.yaml': ['showcase', 'iot', 'monitoring'],
   'Domain Showcases/Github Repositories.page.yaml': ['showcase', 'github', 'api'],
@@ -193,7 +205,17 @@ const sortedCategories = [...knownKeys, ...unknownKeys];
 const categorized = sortedCategories.map(category => {
   const entry = {
     category: DISPLAY_NAMES[category] || category,
-    samples: categories[category].sort((a, b) => a.name.localeCompare(b.name)).map(s => {
+    samples: categories[category].sort((a, b) => {
+      const order = SAMPLE_ORDER[category];
+      if (order) {
+        const ai = order.indexOf(a.name);
+        const bi = order.indexOf(b.name);
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
+      }
+      return a.name.localeCompare(b.name);
+    }).map(s => {
       if (DISPLAY_NAMES[s.category]) {
         return { ...s, category: DISPLAY_NAMES[s.category] };
       }

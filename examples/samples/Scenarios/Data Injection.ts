@@ -103,15 +103,15 @@ function ddRunExample(idx) {
   var ex = DD_EXAMPLES[idx];
   if (!ex) return;
 
-  var parseScenario = window.casehubPages && window.casehubPages.parseScenario;
+  var parsePlaybook = window.casehubPages && window.casehubPages.parsePlaybook;
   var createScheduler = window.casehubPages && window.casehubPages.createScheduler;
   var createScenarioCatalog = window.casehubPages && window.casehubPages.createScenarioCatalog;
-  if (!parseScenario || !createScheduler || !createScenarioCatalog) return;
+  if (!parsePlaybook || !createScheduler || !createScenarioCatalog) return;
 
   var catalog = createScenarioCatalog();
   var scenario;
   try {
-    scenario = parseScenario(ex.yaml, catalog);
+    scenario = parsePlaybook(ex.yaml, catalog);
   } catch (e) {
     ddLog(0, 'system', 'parse error', e.message || String(e));
     return;
@@ -146,6 +146,25 @@ function ddRunExample(idx) {
 
       if (ddStepEl) ddStepEl.textContent = label;
       ddLog(sp.virtualTime, sp.queue || 'main', label, '✓');
+
+      if (kind === 'plugin' && step.entry && step.params) {
+        var qn2 = step.entry.qualifiedName;
+        if (qn2 === 'simulated') {
+          var ds = step.params.dataset || 'unknown';
+          if (!ddInjectedData[ds]) ddInjectedData[ds] = [];
+          if (step.params.data) ddInjectedData[ds].push(step.params.data);
+          ddInjectionCount++;
+          if (ddInjectionsEl) ddInjectionsEl.textContent = '' + ddInjectionCount;
+          ddRenderData();
+        } else if (qn2 === 'graphql') {
+          var domain = step.params.domain || 'graphql';
+          if (!ddInjectedData[domain]) ddInjectedData[domain] = [];
+          ddInjectedData[domain].push({ operation: step.params.operation || step.params.name, params: step.params.params });
+          ddInjectionCount++;
+          if (ddInjectionsEl) ddInjectionsEl.textContent = '' + ddInjectionCount;
+          ddRenderData();
+        }
+      }
     }
   });
 

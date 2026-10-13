@@ -1,5 +1,5 @@
 pages:
-- name: Coordination
+- name: Synchronization
   properties:
     margin: 20px
   rows:
@@ -10,7 +10,7 @@ pages:
         properties:
           content: |
             <div>
-              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Coordination Primitives</h2>
+              <h2 style="margin: 0 0 16px; color: var(--pages-neutral-12);">Synchronization</h2>
               <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                 <div style="flex: 1; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
                   <div style="font-size: 11px; color: var(--pages-neutral-9); text-transform: uppercase; letter-spacing: 0.5px;">State</div>
@@ -58,7 +58,7 @@ pages:
                   <option value="signal-await">Signal / Await</option>
                   <option value="mutex">Mutex</option>
                   <option value="barrier">Barrier</option>
-                  <option value="channel">Channel (via Signal)</option>
+                  <option value="channel">Signal Handshake</option>
                 </select>
               </div>
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">

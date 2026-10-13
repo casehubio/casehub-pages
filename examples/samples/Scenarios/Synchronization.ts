@@ -126,7 +126,7 @@ function runExample(key) {
 
   var et = new EventTarget();
   var catalog = casehubPages.createScenarioCatalog();
-  var scenario = casehubPages.parseScenario(example.yaml, catalog);
+  var scenario = casehubPages.parsePlaybook(example.yaml, catalog);
 
   et.addEventListener('pages-event', function(e) {
     var detail = e.detail;
