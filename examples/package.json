@@ -33,6 +33,7 @@
     "@casehubio/pages-ui": "workspace:*",
     "@casehubio/pages-ui-tokens": "workspace:*",
     "@casehubio/pages-viz": "workspace:*",
+    "@casehubio/topology-viewer": "workspace:*",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
