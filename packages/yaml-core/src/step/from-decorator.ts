@@ -20,14 +20,14 @@ function parseFromSpec(raw: unknown): FromSpec {
   if (typeof raw === 'string') return { channel: raw };
   if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) {
     const map = raw as Record<string, unknown>;
-    return {
-      channel: map['channel'] as string | undefined,
-      channels: map['channels'] as string[] | undefined,
-      as: map['as'] as string | undefined,
-      filter: map['filter'] as string | undefined,
-      until: map['until'] as string | undefined,
-      name: map['name'] as string | undefined,
-    };
+    const spec: FromSpec = {};
+    if (map['channel'] !== undefined) spec.channel = map['channel'] as string;
+    if (map['channels'] !== undefined) spec.channels = map['channels'] as string[];
+    if (map['as'] !== undefined) spec.as = map['as'] as string;
+    if (map['filter'] !== undefined) spec.filter = map['filter'] as string;
+    if (map['until'] !== undefined) spec.until = map['until'] as string;
+    if (map['name'] !== undefined) spec.name = map['name'] as string;
+    return spec;
   }
   throw new Error(`Invalid from: spec — expected string or object, got ${typeof raw}`);
 }
@@ -80,7 +80,7 @@ export class FromDecorator implements DecoratedExecution {
     let item: unknown;
 
     try {
-      item = await this.receiveItem(spec, { ...context, signal: effectiveSignal });
+      item = await this.receiveItem(spec, effectiveSignal ? { ...context, signal: effectiveSignal } : context);
     } catch (e) {
       if (e instanceof ChannelClosedError) {
         return stepSuccess({ '__from.closed': true });

@@ -241,8 +241,8 @@ describe('Walker', () => {
     });
 
     it('wraps number action value as { value: number }', () => {
-      const catalog = makeCatalog({ wait: makeEntry('wait') });
-      const steps = [{ wait: 500 }];
+      const catalog = makeCatalog({ pause: makeEntry('pause') });
+      const steps = [{ pause: 500 }];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('plugin');
       expect((resolved[0] as any).params).toEqual({ value: 500 });

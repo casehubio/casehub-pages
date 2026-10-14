@@ -68,7 +68,7 @@ export function createStepRunner(plugins: Array<{ name: string; inputs?: Record<
   const evaluator = new StructuralEvaluator();
   const scope = new DefaultScenarioScope();
   const services = new MapServiceRegistry();
-  const resolver = new VariableResolver();
+  const resolver = new VariableResolver({}, new Set());
 
   return {
     resolve(steps: Record<string, unknown>[]) { return Walker.resolve(steps, catalog); },
