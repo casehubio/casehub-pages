@@ -118,8 +118,8 @@
         {
           "file": "flow-control/pause-resume.playbook.yaml",
           "title": "Pause / Resume",
-          "description": "Consumer lifecycle — a named consumer reads from a channel, is stopped by a control step.",
-          "tags": ["from", "consumer", "stop", "flow-control"],
+          "description": "Consumer lifecycle — a named consumer is paused by a control step, then resumed. Items buffer during the pause.",
+          "tags": ["from", "consumer", "pause", "resume", "flow-control"],
           "runnable": false
         }
       ]

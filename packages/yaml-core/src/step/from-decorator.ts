@@ -71,6 +71,7 @@ export class FromDecorator implements DecoratedExecution {
     if (spec.name) {
       const consumer = context.scope.consumer(spec.name);
       if (consumer.isStopped()) return stepSuccess({ '__from.terminated': true });
+      if (consumer.isPaused()) await consumer.awaitResume();
       effectiveSignal = effectiveSignal
         ? AbortSignal.any([effectiveSignal, consumer.signal])
         : consumer.signal;

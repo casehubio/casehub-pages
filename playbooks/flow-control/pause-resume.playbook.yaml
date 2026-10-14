@@ -3,11 +3,12 @@ schema: client
 ---
 meta:
   title: "Pause / Resume"
-  description: "Consumer lifecycle — a named consumer reads from a channel, is stopped by a control step, and a new consumer restarts consumption."
+  description: "Consumer lifecycle — a named consumer reads from a channel, is paused by a control step, then resumed. Items buffer during the pause."
   tags:
     - from
     - consumer
-    - stop
+    - pause
+    - resume
     - lifecycle
     - flow-control
 ---
@@ -30,5 +31,8 @@ meta:
 
     controller:
       - delay: 200ms
-      - stop: primary-reader
-      - log: { message: "Consumer stopped" }
+      - pause: primary-reader
+      - log: { message: "Consumer paused — items buffer" }
+      - delay: 300ms
+      - resume: primary-reader
+      - log: { message: "Consumer resumed — buffered items drain" }
