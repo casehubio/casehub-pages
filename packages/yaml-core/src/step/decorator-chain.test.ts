@@ -539,4 +539,41 @@ describe('DecoratorChain', () => {
       expect(sem.availablePermits()).toBe(1);
     });
   });
+
+  describe('forEach collect: all', () => {
+    it('collects all results into an array', async () => {
+      let callCount = 0;
+      const action: Action = { execute: async () => stepSuccess({ n: ++callCount }) };
+      const chain = DecoratorChain.build({
+        forEach: { in: [1, 2, 3], as: 'item', collect: 'all' },
+      }, action);
+      const result = await chain.execute(mockContext({}));
+      expect(result.kind).toBe('success');
+      const collected = (result as any).output['__forEach.collected'];
+      expect(collected).toHaveLength(3);
+    });
+
+    it('returns failure when all items fail', async () => {
+      const action: Action = { execute: async () => stepFailure('bad') };
+      const chain = DecoratorChain.build({
+        forEach: { in: [1, 2], as: 'item', collect: 'all' },
+      }, action);
+      const result = await chain.execute(mockContext({}));
+      expect(result.kind).toBe('failure');
+    });
+
+    it('succeeds with partial results when some items fail', async () => {
+      let callCount = 0;
+      const action: Action = {
+        execute: async () => ++callCount === 2 ? stepFailure('bad') : stepSuccess({ n: callCount }),
+      };
+      const chain = DecoratorChain.build({
+        forEach: { in: [1, 2, 3], as: 'item', collect: 'all' },
+      }, action);
+      const result = await chain.execute(mockContext({}));
+      expect(result.kind).toBe('success');
+      const collected = (result as any).output['__forEach.collected'];
+      expect(collected).toHaveLength(2);
+    });
+  });
 });

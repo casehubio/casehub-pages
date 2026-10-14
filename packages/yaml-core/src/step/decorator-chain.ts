@@ -77,10 +77,26 @@ class ForEachDecorator implements DecoratedExecution {
     }
     if (items.length === 0) return stepSuccess({});
 
+    if (spec['collect'] === 'all') {
+      return this.executeCollectAll(items, as, context);
+    }
     if (parallel) {
       return this.executeParallel(items, as, context);
     }
     return this.executeSequential(items, as, context);
+  }
+
+  private async executeCollectAll(items: unknown[], as: string, ctx: Context): Promise<Result> {
+    const results: unknown[] = [];
+    let failures = 0;
+    for (let i = 0; i < items.length; i++) {
+      const scoped = pushEachContext(ctx.resolver, as, items[i], i);
+      const r = await this.next.execute(withResolver(ctx, scoped));
+      if (r.kind === 'success') results.push(r.output);
+      else failures++;
+    }
+    if (failures === items.length) return stepFailure('forEach collect: all items failed');
+    return stepSuccess({ '__forEach.collected': results });
   }
 
   private async executeSequential(items: unknown[], as: string, ctx: Context): Promise<Result> {
