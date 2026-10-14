@@ -3,7 +3,7 @@ import type {
   Action, Result, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
   BarrierStep, QuorumStep, CatalogEntry, InvokeStep,
-  DelayStep,
+  DelayStep, RaceStep,
 } from './walker.js';
 import { stepSuccess, stepFailure, MapServiceRegistry } from './walker.js';
 import { StructuralEvaluator } from './structural-evaluator.js';
@@ -395,6 +395,46 @@ describe('StructuralEvaluator', () => {
       const result = await new StructuralEvaluator().evaluate(step, makeContext({ scope }));
       expect(result.kind).toBe('success');
       expect(scope.resultStore().hasCompleted('pause')).toBe(true);
+    });
+  });
+
+  describe('race', () => {
+    it('first branch to complete wins', async () => {
+      const scope = new DefaultScenarioScope();
+      const evaluator = new StructuralEvaluator();
+      const slowAction = makeAction(stepSuccess({ branch: 'slow' }));
+      const fastAction = makeAction(stepSuccess({ branch: 'fast' }));
+      const step: RaceStep = {
+        kind: 'race',
+        name: null,
+        steps: [
+          { kind: 'plugin', name: 'slow', entry: makeEntry('slow', stepSuccess({ branch: 'slow' })), params: {}, decorators: {} },
+          { kind: 'plugin', name: 'fast', entry: makeEntry('fast', stepSuccess({ branch: 'fast' })), params: {}, decorators: {} },
+        ],
+        decorators: {},
+      };
+      const ctx = makeContext({ scope });
+      const result = await evaluator.evaluate(step, ctx);
+      expect(result.kind).toBe('success');
+      scope.close();
+    });
+
+    it('handles branch exceptions gracefully', async () => {
+      const scope = new DefaultScenarioScope();
+      const evaluator = new StructuralEvaluator();
+      const throwAction: Action = { execute: () => { throw new Error('boom'); } };
+      const step: RaceStep = {
+        kind: 'race',
+        name: null,
+        steps: [
+          { kind: 'plugin', name: 'thrower', entry: { qualifiedName: 'thrower', definition: { name: 'thrower', inputs: {}, outputs: {} }, action: throwAction }, params: {}, decorators: {} },
+        ],
+        decorators: {},
+      };
+      const ctx = makeContext({ scope });
+      const result = await evaluator.evaluate(step, ctx);
+      expect(result.kind).toBe('failure');
+      scope.close();
     });
   });
 });

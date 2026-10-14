@@ -73,7 +73,8 @@ export type ResolvedStep =
   | SelectStep
   | BarrierStep
   | QuorumStep
-  | DelayStep;
+  | DelayStep
+  | RaceStep;
 
 export interface PluginStep {
   kind: 'plugin';
@@ -161,6 +162,13 @@ export interface DelayStep {
   decorators: Record<string, unknown>;
 }
 
+export interface RaceStep {
+  kind: 'race';
+  name: string | null;
+  steps: ResolvedStep[];
+  decorators: Record<string, unknown>;
+}
+
 const RESERVED_KEYS = new Set([
   'step', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
   'try', 'catch', 'finally', 'select',
@@ -230,7 +238,7 @@ export class Walker {
         if (stepName !== null) seenNames.add(stepName);
       } else if (key === 'invoke') {
         invokeSpec = value as Record<string, unknown>;
-      } else if (key === 'block' || key === 'parallel' || key === 'try' || key === 'select') {
+      } else if (key === 'block' || key === 'parallel' || key === 'try' || key === 'select' || key === 'race') {
         structuralType = key;
         structuralValue = value;
       } else if (key === 'if' && step['then'] !== undefined) {
@@ -358,6 +366,11 @@ export class Walker {
         throw new Error(`${branchPath}: select branch must have subscribe or wait`);
       });
       return { kind: 'select', name: stepName, branches, decorators };
+    }
+
+    if (structuralType === 'race') {
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → race`, seenNames);
+      return { kind: 'race', name: stepName, steps: substeps, decorators };
     }
 
     if (structuralType === 'barrier') {

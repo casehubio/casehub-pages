@@ -1,9 +1,10 @@
 import type {
   ResolvedStep, Result, PluginStep, BlockStep, ParallelStep,
   IfElseStep, MatchStep, TryCatchFinallyStep, SelectStep,
-  BarrierStep, QuorumStep, InvokeStep, DelayStep,
+  BarrierStep, QuorumStep, InvokeStep, DelayStep, RaceStep,
 } from './walker.js';
 import { stepSuccess, stepFailure } from './walker.js';
+import { mergeAbortSignals } from './abort-utils.js';
 import type { Context } from './decorator-chain.js';
 import { DecoratorChain } from './decorator-chain.js';
 import { isTruthy } from '../truthiness.js';
@@ -44,6 +45,7 @@ export class StructuralEvaluator {
       case 'barrier': return this.evaluateBarrier(step, context);
       case 'quorum': return this.evaluateQuorum(step, context);
       case 'delay': return this.evaluateDelay(step);
+      case 'race': return this.evaluateRace(step, context);
     }
   }
 
@@ -181,5 +183,27 @@ export class StructuralEvaluator {
   private async evaluateDelay(step: DelayStep): Promise<Result> {
     await new Promise(resolve => setTimeout(resolve, step.duration));
     return stepSuccess({});
+  }
+
+  private async evaluateRace(step: RaceStep, context: Context): Promise<Result> {
+    const controllers = step.steps.map(() => new AbortController());
+    const promises = step.steps.map((child, i) => {
+      const branchCtx: Context = {
+        ...context,
+        signal: mergeAbortSignals(context.signal, controllers[i]!.signal),
+      };
+      return this.evaluate(child, branchCtx)
+        .then(result => ({ index: i, result }))
+        .catch(err => ({
+          index: i,
+          result: stepFailure(err instanceof Error ? err.message : String(err)),
+        }));
+    });
+
+    const winner = await Promise.race(promises);
+    for (let i = 0; i < controllers.length; i++) {
+      if (i !== winner.index) controllers[i]!.abort();
+    }
+    return winner.result;
   }
 }
