@@ -15,6 +15,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-platform-yaml-jackson</artifactId>
+      <version>${casehub.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
       <version>2.18.2</version>
