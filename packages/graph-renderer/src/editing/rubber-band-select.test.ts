@@ -278,6 +278,34 @@ describe('RubberBandSelect', () => {
     rb.dispose();
   });
 
+  it('isSelectable filter excludes non-selectable nodes from candidates', () => {
+    // A→B→C, rectangle covers all three but B is non-selectable
+    const model = createGraph(
+      [node('A'), node('B'), node('C')],
+      [edge('e1', 'A', 'B'), edge('e2', 'B', 'C')],
+    );
+    const nodes = [rfNode('A', 0, 0), rfNode('B', 200, 0), rfNode('C', 400, 0)];
+
+    const rb = createRubberBandSelect({
+      containerEl: container,
+      screenToFlow: (x, y) => ({ x, y }),
+      getNodes: () => nodes,
+      getModel: () => model,
+      isSelectable: (nodeId) => nodeId !== 'B',
+      onComplete,
+    });
+    rb.attach();
+
+    shiftDragStart(container, -10, -10);
+    fire(container, 'pointermove', { clientX: 550, clientY: 100, shiftKey: true });
+    fire(container, 'pointerup', { clientX: 550, clientY: 100 });
+
+    // B excluded → only A and C in candidates → validateSelection returns empty
+    // because A→C is not a contiguous selection without B
+    expect(onComplete).toHaveBeenCalledWith({ type: 'empty' });
+    rb.dispose();
+  });
+
   it('does not start rubber-band without Shift key (allows pan)', () => {
     const model = createGraph(
       [node('A'), node('B'), node('C')],

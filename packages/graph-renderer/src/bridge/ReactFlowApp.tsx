@@ -246,6 +246,7 @@ export function ReactFlowApp({
       edgesReconnectable
       nodesDraggable={false}
       nodesConnectable={nodesConnectable ?? true}
+      selectionKeyCode={null}
       multiSelectionKeyCode={null}
       connectionRadius={0}
       {...editingProps}

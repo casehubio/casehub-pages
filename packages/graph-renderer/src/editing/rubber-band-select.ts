@@ -18,6 +18,7 @@ export interface RubberBandOptions {
   readonly getNodes: () => readonly FlowNode[];
   readonly getModel: () => GraphModel;
   readonly onComplete: (result: RubberBandResult) => void;
+  readonly isSelectable?: (nodeId: string) => boolean;
 }
 
 export interface RubberBandSelect {
@@ -27,7 +28,7 @@ export interface RubberBandSelect {
 }
 
 export function createRubberBandSelect(opts: RubberBandOptions): RubberBandSelect {
-  const { containerEl, screenToFlow, getNodes, getModel, onComplete } = opts;
+  const { containerEl, screenToFlow, getNodes, getModel, onComplete, isSelectable } = opts;
 
   let active = false;
   let startFlow = { x: 0, y: 0 };
@@ -44,6 +45,7 @@ export function createRubberBandSelect(opts: RubberBandOptions): RubberBandSelec
   function nodesInFlowRect(fr: {x:number;y:number;w:number;h:number}): Set<string> {
     const candidates = new Set<string>();
     for (const n of getNodes()) {
+      if (isSelectable && !isSelectable(n.id)) continue;
       const nw = n.measured?.width ?? 100;
       const nh = n.measured?.height ?? 50;
       if (
@@ -130,7 +132,7 @@ export function createRubberBandSelect(opts: RubberBandOptions): RubberBandSelec
 
     rectEl = document.createElement('div');
     rectEl.className = 'multi-select-rect';
-    rectEl.style.cssText = 'position:absolute;pointer-events:none;z-index:10000;border:1.5px solid rgba(37,99,235,0.8);background:rgba(37,99,235,0.1);border-radius:2px;';
+    rectEl.style.cssText = 'position:absolute;pointer-events:none;z-index:10000;border:1.5px solid var(--pages-accent-9);background:var(--pages-accent-a3);border-radius:2px;box-shadow:0 0 6px var(--pages-accent-a3);';
     viewport.appendChild(rectEl);
 
     containerEl.setPointerCapture(e.pointerId);

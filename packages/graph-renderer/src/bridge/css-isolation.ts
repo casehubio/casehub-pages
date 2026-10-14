@@ -117,7 +117,7 @@ ${pluginStyles}
 }
 .react-flow__nodesselection,
 .react-flow__nodesselection-rect {
-  pointer-events: none !important;
+  display: none !important;
 }
 .multi-select-valid .stencil-decoration-wrapper {
   outline: 2px solid var(--pages-accent-9, #2563eb);

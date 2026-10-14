@@ -321,6 +321,11 @@ export class GraphCanvas extends LitElement {
       screenToFlow: (x, y) => this.screenToFlow(x, y) ?? { x, y },
       getNodes: () => this._nodes,
       getModel: () => this.model ?? { nodes: [], edges: [] },
+      isSelectable: (nodeId) => {
+        if (!this.editPolicy || !this.model) return true;
+        const node = nodeById(this.model, nodeId);
+        return node ? this.editPolicy.canDelete(node, this.model) : true;
+      },
       onComplete: (result) => {
         if (result.type === 'selected') {
           this._setMultiSelect({
@@ -576,6 +581,10 @@ export class GraphCanvas extends LitElement {
         edges: this.edges ?? this._edges,
         nodeTypes: getNodeTypes(),
         onNodeClick: (nodeId: string, node: Node, event?: React.MouseEvent) => {
+          emitPagesEvent(this, 'graph:node:click', {
+            nodeId,
+            nodeType: node.type ?? '',
+          });
           if (event?.shiftKey && this.model) {
             this._handleShiftClick(nodeId);
           } else {
@@ -583,10 +592,6 @@ export class GraphCanvas extends LitElement {
             this._nodes = this._nodes.map(n => ({ ...n, selected: n.id === nodeId }));
             this._renderReact();
           }
-          emitPagesEvent(this, 'graph:node:click', {
-            nodeId,
-            nodeType: node.type ?? '',
-          });
         },
         onEdgeClick: (edgeId: string, edge: Edge) => {
           emitPagesEvent(this, 'graph:edge:click', {
