@@ -4,8 +4,10 @@ const DECORATOR_KEYS = [
   'if', 'on-success', 'on-failure', 'forEach', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'semaphore', 'mutex', 'barrier', 'quorum', 'race',
+  'semaphore', 'mutex', 'barrier', 'quorum',
   'at', 'on-complete', 'resource', 'priority', 'wait',
+  'from', 'cancel', 'background',
+  'advance-after', 'cancel-remaining', 'collection-timeout',
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -43,7 +45,18 @@ export class SchemaComposer {
       properties: { match: { type: 'string' }, cases: { type: 'array' }, step: { type: 'string' } },
       required: ['match', 'cases'],
     });
-    oneOf.push({ type: 'object', properties: { parallel: { type: 'array' }, step: { type: 'string' } }, required: ['parallel'] });
+    oneOf.push({
+      type: 'object',
+      properties: {
+        parallel: { oneOf: [{ type: 'array' }, { type: 'object' }] },
+        step: { type: 'string' },
+        'advance-after': { type: 'integer' },
+        'cancel-remaining': { type: 'boolean' },
+        'collection-timeout': { type: 'string' },
+      },
+      required: ['parallel'],
+    });
+    oneOf.push({ type: 'object', properties: { race: { type: 'array' }, step: { type: 'string' } }, required: ['race'] });
 
     const sharedProps: Record<string, unknown> = { step: { type: 'string' } };
     for (const dk of DECORATOR_KEYS) sharedProps[dk] = {};
