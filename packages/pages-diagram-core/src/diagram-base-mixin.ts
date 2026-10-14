@@ -318,6 +318,11 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
     };
 
     protected _showPickerAtPaneClick(): void {
+      if (this._selectedNodeId !== '') {
+        this._selectedNodeId = '';
+        this._selectedData = {};
+        this._selectedSchema = {};
+      }
       if (this.readonly) return;
       this._chooserState = { x: this._lastPointerX, y: this._lastPointerY };
     }
