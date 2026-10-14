@@ -5,6 +5,7 @@ import type {
 } from './walker.js';
 import { stepSuccess, stepFailure } from './walker.js';
 import { mergeAbortSignals } from './abort-utils.js';
+import { ParallelCompletionTracker } from './parallel-completion-tracker.js';
 import type { Context } from './decorator-chain.js';
 import { DecoratorChain } from './decorator-chain.js';
 import { isTruthy } from '../truthiness.js';
@@ -82,6 +83,9 @@ export class StructuralEvaluator {
   }
 
   private async evaluateParallel(step: ParallelStep, context: Context): Promise<Result> {
+    if (step.advanceAfter) {
+      return this.evaluateParallelDiscriminator(step, context);
+    }
     const results = await Promise.allSettled(
       step.steps.map((child) => this.evaluate(child, context)),
     );
@@ -96,6 +100,42 @@ export class StructuralEvaluator {
       }
       Object.assign(outputs, result.value.output);
     }
+    return stepSuccess(outputs);
+  }
+
+  private async evaluateParallelDiscriminator(step: ParallelStep, context: Context): Promise<Result> {
+    const branchSteps = step.branches
+      ? step.branches.map(b => ({ name: b.name, steps: b.steps }))
+      : step.steps.map((s, i) => ({ name: s.name ?? `branch-${i}`, steps: [s] }));
+
+    const tracker = new ParallelCompletionTracker(
+      branchSteps.length,
+      step.advanceAfter!,
+      step.cancelRemaining ?? false,
+    );
+
+    const outputs: Record<string, unknown> = {};
+    const promises = branchSteps.map(async (branch, i) => {
+      const branchCtx: Context = {
+        ...context,
+        signal: mergeAbortSignals(context.signal, tracker.signalFor(i)),
+      };
+      for (const child of branch.steps) {
+        const result = await this.evaluate(child, branchCtx);
+        if (result.kind === 'success') {
+          Object.assign(outputs, result.output);
+        }
+      }
+      tracker.branchDone(i);
+    });
+
+    void Promise.allSettled(promises);
+    await tracker.awaitAdvancement();
+
+    if (step.collectionTimeout) {
+      await new Promise(resolve => setTimeout(resolve, step.collectionTimeout));
+    }
+
     return stepSuccess(outputs);
   }
 

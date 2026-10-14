@@ -115,10 +115,19 @@ export interface MatchStep {
   decorators: Record<string, unknown>;
 }
 
+export interface NamedBranch {
+  name: string;
+  steps: ResolvedStep[];
+}
+
 export interface ParallelStep {
   kind: 'parallel';
   name: string | null;
   steps: ResolvedStep[];
+  branches?: NamedBranch[];
+  advanceAfter?: number;
+  cancelRemaining?: boolean;
+  collectionTimeout?: number;
   decorators: Record<string, unknown>;
 }
 
@@ -287,8 +296,32 @@ export class Walker {
     }
 
     if (structuralType === 'parallel') {
-      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames);
-      return { kind: 'parallel', name: stepName, steps: substeps, decorators };
+      let steps: ResolvedStep[];
+      let branches: NamedBranch[] | undefined;
+      if (Array.isArray(structuralValue)) {
+        steps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames);
+      } else if (typeof structuralValue === 'object' && structuralValue !== null) {
+        const namedBranches = Object.entries(structuralValue as Record<string, unknown>).map(([bName, bSteps]) => ({
+          name: bName,
+          steps: Walker.resolveAtDepth(bSteps as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel:${bName}`, seenNames),
+        }));
+        branches = namedBranches;
+        steps = namedBranches.flatMap(b => b.steps);
+      } else {
+        throw new Error(`${stepPath}: parallel: must be an array or object`);
+      }
+      const advanceAfter = step['advance-after'] as number | undefined;
+      const cancelRemaining = step['cancel-remaining'] as boolean | undefined;
+      const collectionTimeoutRaw = step['collection-timeout'] as string | undefined;
+      const collectionTimeout = collectionTimeoutRaw ? parseDurationMs(collectionTimeoutRaw) : undefined;
+      return {
+        kind: 'parallel', name: stepName, steps,
+        ...(branches ? { branches } : {}),
+        ...(advanceAfter !== undefined ? { advanceAfter } : {}),
+        ...(cancelRemaining !== undefined ? { cancelRemaining } : {}),
+        ...(collectionTimeout !== undefined ? { collectionTimeout } : {}),
+        decorators,
+      };
     }
 
     if (structuralType === 'if') {
