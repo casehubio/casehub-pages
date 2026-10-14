@@ -17,11 +17,10 @@ public class PlaybookResource {
             return Response.status(404).build();
         }
         String classpathPath = "/playbooks/" + path;
-        InputStream stream = getClass().getResourceAsStream(classpathPath);
-        if (stream == null) {
-            return Response.status(404).build();
-        }
-        try {
+        try (InputStream stream = getClass().getResourceAsStream(classpathPath)) {
+            if (stream == null) {
+                return Response.status(404).build();
+            }
             byte[] content = stream.readAllBytes();
             String contentType = path.endsWith(".json") ? "application/json" : "text/yaml";
             return Response.ok(content, contentType)
