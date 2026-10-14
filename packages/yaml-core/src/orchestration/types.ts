@@ -5,12 +5,14 @@ export interface OrcSignal {
   signal(payload?: unknown): void;
   await(): Promise<void>;
   await(timeoutMs: number): Promise<boolean>;
+  await(signal: AbortSignal): Promise<void>;
   payload(): unknown;
   isSignalled(): boolean;
 }
 
 export interface OrcSemaphore {
   acquire(): Promise<void>;
+  acquire(signal: AbortSignal): Promise<void>;
   tryAcquire(timeoutMs: number): Promise<boolean>;
   release(): void;
   availablePermits(): number;
@@ -20,6 +22,7 @@ export interface OrcLatch {
   countDown(): void;
   await(): Promise<void>;
   await(timeoutMs: number): Promise<boolean>;
+  await(signal: AbortSignal): Promise<void>;
   getCount(): number;
 }
 
@@ -28,6 +31,7 @@ export interface OrcChannel<T> {
   send(value: T, timeoutMs: number): Promise<boolean>;
   receive(): Promise<T>;
   receive(timeoutMs: number): Promise<T | undefined>;
+  receive(signal: AbortSignal): Promise<T>;
   isEmpty(): boolean;
   close(cause?: Error): void;
   isErrorClosed(): boolean;
@@ -65,7 +69,7 @@ export interface ScenarioScope {
   flag(name: string): import('./flag.js').OrcFlag;
   accumulator(name: string, op: (a: number, b: number) => number, identity: number): import('./accumulator.js').OrcAccumulator;
   map<K, V>(name: string): import('./orc-map.js').OrcMap<K, V>;
-  spawn(name: string, task: () => Promise<void>): import('./spawned-task.js').SpawnedTask;
+  spawn(name: string, task: (signal: AbortSignal) => Promise<void>): import('./spawned-task.js').SpawnedTask;
   numericPrimitive(name: string): import('./numeric-primitive.js').OrcNumericPrimitive;
   prioritySemaphore(name: string, permits: number): import('./priority-semaphore.js').PriorityOrcSemaphore;
   childScope(name: string): ScenarioScope;

@@ -56,4 +56,28 @@ describe('DefaultOrcSignal', () => {
       expect(s.payload()).toBe('second');
     });
   });
+
+  describe('AbortSignal', () => {
+    it('await rejects with AbortError when signal aborts while waiting', async () => {
+      const s = new DefaultOrcSignal();
+      const controller = new AbortController();
+      const p = s.await(controller.signal);
+      controller.abort();
+      await expect(p).rejects.toThrow('aborted');
+    });
+
+    it('await rejects immediately if signal already aborted', async () => {
+      const s = new DefaultOrcSignal();
+      const controller = new AbortController();
+      controller.abort();
+      await expect(s.await(controller.signal)).rejects.toThrow('aborted');
+    });
+
+    it('await resolves normally when signal fires before abort', async () => {
+      const s = new DefaultOrcSignal();
+      const controller = new AbortController();
+      s.signal('data');
+      await expect(s.await(controller.signal)).resolves.toBeUndefined();
+    });
+  });
 });

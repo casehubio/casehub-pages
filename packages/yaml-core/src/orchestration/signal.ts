@@ -31,7 +31,12 @@ export class DefaultOrcSignal implements OrcSignal {
 
   await(): Promise<void>;
   await(timeoutMs: number): Promise<boolean>;
-  await(timeoutMs?: number): Promise<void | boolean> {
+  await(signal: AbortSignal): Promise<void>;
+  await(timeoutOrSignal?: number | AbortSignal): Promise<void | boolean> {
+    if (timeoutOrSignal instanceof AbortSignal) {
+      return this._awaitWithSignal(timeoutOrSignal);
+    }
+    const timeoutMs = timeoutOrSignal;
     if (this._signalled && !this._repeatable) {
       return timeoutMs !== undefined ? Promise.resolve(true) : Promise.resolve();
     }
@@ -48,6 +53,27 @@ export class DefaultOrcSignal implements OrcSignal {
       }
       this._waiters.push(waiter);
     }).then((result) => (timeoutMs !== undefined ? result : undefined));
+  }
+
+  private _awaitWithSignal(signal: AbortSignal): Promise<void> {
+    if (signal.aborted) {
+      return Promise.reject(new DOMException('The operation was aborted', 'AbortError'));
+    }
+    if (this._signalled && !this._repeatable) {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve, reject) => {
+      const waiter: Waiter = {
+        resolve: () => { resolve(); },
+      };
+      const onAbort = () => {
+        const idx = this._waiters.indexOf(waiter);
+        if (idx >= 0) this._waiters.splice(idx, 1);
+        reject(new DOMException('The operation was aborted', 'AbortError'));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      this._waiters.push(waiter);
+    });
   }
 
   payload(): unknown {

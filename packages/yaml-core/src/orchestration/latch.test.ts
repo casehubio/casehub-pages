@@ -45,4 +45,28 @@ describe('DefaultOrcLatch', () => {
     latch.countDown();
     expect(await p).toBe(true);
   });
+
+  describe('AbortSignal', () => {
+    it('await rejects with AbortError when signal aborts while waiting', async () => {
+      const latch = new DefaultOrcLatch(5);
+      const controller = new AbortController();
+      const p = latch.await(controller.signal);
+      controller.abort();
+      await expect(p).rejects.toThrow('aborted');
+    });
+
+    it('await rejects immediately if signal already aborted', async () => {
+      const latch = new DefaultOrcLatch(5);
+      const controller = new AbortController();
+      controller.abort();
+      await expect(latch.await(controller.signal)).rejects.toThrow('aborted');
+    });
+
+    it('await resolves normally when count reaches zero before abort', async () => {
+      const latch = new DefaultOrcLatch(1);
+      const controller = new AbortController();
+      latch.countDown();
+      await expect(latch.await(controller.signal)).resolves.toBeUndefined();
+    });
+  });
 });

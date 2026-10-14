@@ -50,4 +50,38 @@ describe('DefaultOrcSemaphore', () => {
     sem.release();
     expect(await p).toBe(true);
   });
+
+  describe('AbortSignal', () => {
+    it('acquire rejects with AbortError when signal aborts while waiting', async () => {
+      const sem = new DefaultOrcSemaphore(0);
+      const controller = new AbortController();
+      const p = sem.acquire(controller.signal);
+      controller.abort();
+      await expect(p).rejects.toThrow('aborted');
+    });
+
+    it('acquire rejects immediately if signal already aborted', async () => {
+      const sem = new DefaultOrcSemaphore(0);
+      const controller = new AbortController();
+      controller.abort();
+      await expect(sem.acquire(controller.signal)).rejects.toThrow('aborted');
+    });
+
+    it('acquire resolves normally when permit available before abort', async () => {
+      const sem = new DefaultOrcSemaphore(1);
+      const controller = new AbortController();
+      await expect(sem.acquire(controller.signal)).resolves.toBeUndefined();
+      expect(sem.availablePermits()).toBe(0);
+    });
+
+    it('acquire removes waiter from queue on abort', async () => {
+      const sem = new DefaultOrcSemaphore(0);
+      const controller = new AbortController();
+      const p = sem.acquire(controller.signal).catch(() => {});
+      controller.abort();
+      await p;
+      sem.release();
+      expect(sem.availablePermits()).toBe(1);
+    });
+  });
 });

@@ -16,6 +16,7 @@ export interface Context {
   readonly scope: ScenarioScope;
   readonly stepName: string;
   readonly resolver: VariableResolver;
+  readonly signal?: AbortSignal;
 }
 
 export function withResolver(ctx: Context, resolver: VariableResolver): Context {
@@ -183,6 +184,7 @@ class TimeoutDecorator implements DecoratedExecution {
     private readonly raw: unknown,
   ) {}
   async execute(context: Context): Promise<Result> {
+    if (context.signal?.aborted) return stepFailure('Cancelled');
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
     const speed = context.scope.speedMultiplier().currentSpeed();
     const adjustedMs = Math.max(1, Math.round(ms / speed));
@@ -201,17 +203,25 @@ class WaitDecorator implements DecoratedExecution {
     private readonly signalName: string,
   ) {}
   async execute(context: Context): Promise<Result> {
-    const signal = context.scope.signal(this.signalName);
+    if (context.signal?.aborted) return stepFailure('Cancelled');
+    const orcSignal = context.scope.signal(this.signalName);
     const remaining = context.scope.remainingTime();
-    if (remaining != null) {
-      const acquired = await signal.await(remaining);
-      if (!acquired) {
-        return stepFailure(`Wait for signal '${this.signalName}' exceeded deadline`);
+    try {
+      if (context.signal) {
+        await orcSignal.await(context.signal);
+      } else if (remaining != null) {
+        const acquired = await orcSignal.await(remaining);
+        if (!acquired) {
+          return stepFailure(`Wait for signal '${this.signalName}' exceeded deadline`);
+        }
+      } else {
+        await orcSignal.await();
       }
-    } else {
-      await signal.await();
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return stepFailure('Cancelled');
+      throw e;
     }
-    const payload = signal.payload();
+    const payload = orcSignal.payload();
     if (payload != null && typeof payload === 'object') {
       const scoped = context.resolver.withScope('signal', (key) => {
         const val = (payload as Record<string, unknown>)[key];
@@ -255,6 +265,7 @@ class DelayDecorator implements DecoratedExecution {
     private readonly raw: unknown,
   ) {}
   async execute(context: Context): Promise<Result> {
+    if (context.signal?.aborted) return stepFailure('Cancelled');
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
     const speed = context.scope.speedMultiplier().currentSpeed();
     const adjustedMs = Math.max(1, Math.round(ms / speed));
@@ -270,15 +281,23 @@ class SemaphoreDecorator implements DecoratedExecution {
     private readonly permits: number,
   ) {}
   async execute(context: Context): Promise<Result> {
+    if (context.signal?.aborted) return stepFailure('Cancelled');
     const sem = context.scope.semaphore(this.name, this.permits);
     const remaining = context.scope.remainingTime();
-    if (remaining != null) {
-      const acquired = await sem.tryAcquire(remaining);
-      if (!acquired) {
-        return stepFailure(`Semaphore '${this.name}' acquire exceeded deadline`);
+    try {
+      if (context.signal) {
+        await sem.acquire(context.signal);
+      } else if (remaining != null) {
+        const acquired = await sem.tryAcquire(remaining);
+        if (!acquired) {
+          return stepFailure(`Semaphore '${this.name}' acquire exceeded deadline`);
+        }
+      } else {
+        await sem.acquire();
       }
-    } else {
-      await sem.acquire();
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return stepFailure('Cancelled');
+      throw e;
     }
     try {
       return await this.next.execute(context);

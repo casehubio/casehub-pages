@@ -5,6 +5,7 @@ export interface SpawnedTask {
   exception(): Error | undefined;
   join(): Promise<void>;
   joinWithTimeout(timeoutMs: number): Promise<boolean>;
+  cancel(): void;
 }
 
 export class DefaultSpawnedTask implements SpawnedTask {
@@ -14,11 +15,12 @@ export class DefaultSpawnedTask implements SpawnedTask {
   private readonly promise: Promise<void>;
   private resolve!: () => void;
   private readonly taskName: string;
+  private readonly controller = new AbortController();
 
-  constructor(taskName: string, task: () => Promise<void>) {
+  constructor(taskName: string, task: (signal: AbortSignal) => Promise<void>) {
     this.taskName = taskName;
     this.promise = new Promise<void>(res => { this.resolve = res; });
-    task().then(() => {
+    task(this.controller.signal).then(() => {
       this.done = true;
       this.resolve();
     }).catch((err: Error) => {
@@ -33,6 +35,7 @@ export class DefaultSpawnedTask implements SpawnedTask {
   isDone(): boolean { return this.done; }
   isFailed(): boolean { return this.failed; }
   exception(): Error | undefined { return this.error; }
+  cancel(): void { this.controller.abort(); }
   async join(): Promise<void> { await this.promise; }
   async joinWithTimeout(timeoutMs: number): Promise<boolean> {
     const timer = new Promise<boolean>(res => setTimeout(() => { res(false); }, timeoutMs));

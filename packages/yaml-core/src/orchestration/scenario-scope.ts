@@ -97,7 +97,7 @@ export class DefaultScenarioScope implements ScenarioScope {
     return this._getOrCreate(name, () => new DefaultOrcMap<K, V>());
   }
 
-  spawn(name: string, task: () => Promise<void>): import('./spawned-task.js').SpawnedTask {
+  spawn(name: string, task: (signal: AbortSignal) => Promise<void>): import('./spawned-task.js').SpawnedTask {
     return this._getOrCreate(name, () => new DefaultSpawnedTask(name, task));
   }
 
@@ -163,6 +163,9 @@ export class DefaultScenarioScope implements ScenarioScope {
         if (prim instanceof DefaultScenarioScope) {
           prim.close();
         } else if ('joinWithTimeout' in prim && typeof (prim as Record<string, unknown>).joinWithTimeout === 'function') {
+          if ('cancel' in prim && typeof (prim as Record<string, unknown>).cancel === 'function') {
+            (prim as { cancel(): void }).cancel();
+          }
           tasks.push(prim as { joinWithTimeout(ms: number): Promise<boolean> });
         } else if ('close' in prim && typeof (prim as Record<string, unknown>).close === 'function') {
           (prim as { close(): void }).close();

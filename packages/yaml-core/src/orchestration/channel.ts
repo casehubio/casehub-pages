@@ -57,7 +57,12 @@ export class DefaultOrcChannel<T> implements OrcChannel<T> {
 
   receive(): Promise<T>;
   receive(timeoutMs: number): Promise<T | undefined>;
-  receive(timeoutMs?: number): Promise<T | undefined> {
+  receive(signal: AbortSignal): Promise<T>;
+  receive(timeoutOrSignal?: number | AbortSignal): Promise<T | undefined> {
+    if (timeoutOrSignal instanceof AbortSignal) {
+      return this._receiveWithSignal(timeoutOrSignal);
+    }
+    const timeoutMs = timeoutOrSignal;
     if (this._buffer.length > 0) {
       const value = this._buffer.shift()!;
       const sender = this._sendWaiters.shift();
@@ -81,6 +86,35 @@ export class DefaultOrcChannel<T> implements OrcChannel<T> {
           resolve(undefined as T);
         }, timeoutMs);
       }
+      this._recvWaiters.push(waiter);
+    });
+  }
+
+  private _receiveWithSignal(signal: AbortSignal): Promise<T> {
+    if (signal.aborted) {
+      return Promise.reject(new DOMException('The operation was aborted', 'AbortError'));
+    }
+    if (this._buffer.length > 0) {
+      const value = this._buffer.shift()!;
+      const sender = this._sendWaiters.shift();
+      if (sender) {
+        if (sender.timer) clearTimeout(sender.timer);
+        this._buffer.push(sender.value);
+        sender.resolve(true);
+      }
+      return Promise.resolve(value);
+    }
+    if (this._closed) {
+      return Promise.reject(new ChannelClosedError('channel', this._closeError));
+    }
+    return new Promise<T>((resolve, reject) => {
+      const waiter: RecvWaiter<T> = { resolve, reject };
+      const onAbort = () => {
+        const idx = this._recvWaiters.indexOf(waiter);
+        if (idx >= 0) this._recvWaiters.splice(idx, 1);
+        reject(new DOMException('The operation was aborted', 'AbortError'));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
       this._recvWaiters.push(waiter);
     });
   }

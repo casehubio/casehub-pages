@@ -13,7 +13,10 @@ export class DefaultOrcSemaphore implements OrcSemaphore {
     this._permits = permits;
   }
 
-  acquire(): Promise<void> {
+  acquire(): Promise<void>;
+  acquire(signal: AbortSignal): Promise<void>;
+  acquire(signal?: AbortSignal): Promise<void> {
+    if (signal) return this._acquireWithSignal(signal);
     if (this._permits > 0) {
       this._permits--;
       return Promise.resolve();
@@ -21,6 +24,28 @@ export class DefaultOrcSemaphore implements OrcSemaphore {
     return new Promise<boolean>((resolve) => {
       this._waiters.push({ resolve });
     }).then(() => undefined);
+  }
+
+  private _acquireWithSignal(signal: AbortSignal): Promise<void> {
+    if (signal.aborted) {
+      return Promise.reject(new DOMException('The operation was aborted', 'AbortError'));
+    }
+    if (this._permits > 0) {
+      this._permits--;
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve, reject) => {
+      const waiter: Waiter = {
+        resolve: () => { resolve(); },
+      };
+      const onAbort = () => {
+        const idx = this._waiters.indexOf(waiter);
+        if (idx >= 0) this._waiters.splice(idx, 1);
+        reject(new DOMException('The operation was aborted', 'AbortError'));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      this._waiters.push(waiter);
+    });
   }
 
   tryAcquire(timeoutMs: number): Promise<boolean> {

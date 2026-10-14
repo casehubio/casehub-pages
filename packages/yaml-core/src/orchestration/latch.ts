@@ -28,7 +28,12 @@ export class DefaultOrcLatch implements OrcLatch {
 
   await(): Promise<void>;
   await(timeoutMs: number): Promise<boolean>;
-  await(timeoutMs?: number): Promise<void | boolean> {
+  await(signal: AbortSignal): Promise<void>;
+  await(timeoutOrSignal?: number | AbortSignal): Promise<void | boolean> {
+    if (timeoutOrSignal instanceof AbortSignal) {
+      return this._awaitWithSignal(timeoutOrSignal);
+    }
+    const timeoutMs = timeoutOrSignal;
     if (this._count === 0) {
       return timeoutMs !== undefined ? Promise.resolve(true) : Promise.resolve();
     }
@@ -43,6 +48,27 @@ export class DefaultOrcLatch implements OrcLatch {
       }
       this._waiters.push(waiter);
     }).then((result) => (timeoutMs !== undefined ? result : undefined));
+  }
+
+  private _awaitWithSignal(signal: AbortSignal): Promise<void> {
+    if (signal.aborted) {
+      return Promise.reject(new DOMException('The operation was aborted', 'AbortError'));
+    }
+    if (this._count === 0) {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve, reject) => {
+      const waiter: Waiter = {
+        resolve: () => { resolve(); },
+      };
+      const onAbort = () => {
+        const idx = this._waiters.indexOf(waiter);
+        if (idx >= 0) this._waiters.splice(idx, 1);
+        reject(new DOMException('The operation was aborted', 'AbortError'));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      this._waiters.push(waiter);
+    });
   }
 
   getCount(): number {

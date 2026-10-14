@@ -86,4 +86,38 @@ describe('DefaultOrcChannel', () => {
       expect(await ch.receive(10)).toBeUndefined();
     });
   });
+
+  describe('AbortSignal', () => {
+    it('receive rejects with AbortError when signal aborts while waiting', async () => {
+      const ch = new DefaultOrcChannel<number>();
+      const controller = new AbortController();
+      const p = ch.receive(controller.signal);
+      controller.abort();
+      await expect(p).rejects.toThrow('aborted');
+    });
+
+    it('receive rejects immediately if signal already aborted', async () => {
+      const ch = new DefaultOrcChannel<number>();
+      const controller = new AbortController();
+      controller.abort();
+      await expect(ch.receive(controller.signal)).rejects.toThrow('aborted');
+    });
+
+    it('receive resolves normally when data arrives before abort', async () => {
+      const ch = new DefaultOrcChannel<number>();
+      const controller = new AbortController();
+      await ch.send(42);
+      expect(await ch.receive(controller.signal)).toBe(42);
+    });
+
+    it('receive removes waiter from queue on abort', async () => {
+      const ch = new DefaultOrcChannel<number>();
+      const controller = new AbortController();
+      const p = ch.receive(controller.signal).catch(() => {});
+      controller.abort();
+      await p;
+      await ch.send(99);
+      expect(await ch.receive()).toBe(99);
+    });
+  });
 });
