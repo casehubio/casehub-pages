@@ -12,6 +12,8 @@ interface FromSpec {
   channels?: string[];
   as?: string;
   filter?: string;
+  until?: string;
+  name?: string;
 }
 
 function parseFromSpec(raw: unknown): FromSpec {
@@ -23,6 +25,8 @@ function parseFromSpec(raw: unknown): FromSpec {
       channels: map['channels'] as string[] | undefined,
       as: map['as'] as string | undefined,
       filter: map['filter'] as string | undefined,
+      until: map['until'] as string | undefined,
+      name: map['name'] as string | undefined,
     };
   }
   throw new Error(`Invalid from: spec — expected string or object, got ${typeof raw}`);
@@ -55,10 +59,27 @@ export class FromDecorator implements DecoratedExecution {
     if (context.signal?.aborted) return stepFailureWithCategory('Cancelled', 'CANCELLED');
 
     const spec = parseFromSpec(this.raw);
+
+    if (spec.until) {
+      const resolved = context.resolver.resolveString(spec.until, 'from-until');
+      if (isTruthy(resolved)) {
+        return stepSuccess({ '__from.terminated': true });
+      }
+    }
+
+    let effectiveSignal = context.signal;
+    if (spec.name) {
+      const consumer = context.scope.consumer(spec.name);
+      if (consumer.isStopped()) return stepSuccess({ '__from.terminated': true });
+      effectiveSignal = effectiveSignal
+        ? AbortSignal.any([effectiveSignal, consumer.signal])
+        : consumer.signal;
+    }
+
     let item: unknown;
 
     try {
-      item = await this.receiveItem(spec, context);
+      item = await this.receiveItem(spec, { ...context, signal: effectiveSignal });
     } catch (e) {
       if (e instanceof ChannelClosedError) {
         return stepSuccess({ '__from.closed': true });

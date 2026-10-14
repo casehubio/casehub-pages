@@ -14,6 +14,7 @@ import { DefaultOrcFlag } from './flag.js';
 import { DefaultOrcAccumulator } from './accumulator.js';
 import { DefaultOrcMap } from './orc-map.js';
 import { DefaultSpawnedTask } from './spawned-task.js';
+import { DefaultConsumerHandle } from './consumer-handle.js';
 import type { SpeedMultiplier } from './speed-multiplier.js';
 import { DefaultSpeedMultiplier } from './speed-multiplier.js';
 import type { OrcNumericPrimitive } from './numeric-primitive.js';
@@ -99,6 +100,10 @@ export class DefaultScenarioScope implements ScenarioScope {
 
   spawn(name: string, task: (signal: AbortSignal) => Promise<void>): import('./spawned-task.js').SpawnedTask {
     return this._getOrCreate(name, () => new DefaultSpawnedTask(name, task));
+  }
+
+  consumer(name: string): import('./consumer-handle.js').ConsumerHandle {
+    return this._getOrCreate(name, () => new DefaultConsumerHandle(name));
   }
 
   numericPrimitive(name: string): OrcNumericPrimitive {

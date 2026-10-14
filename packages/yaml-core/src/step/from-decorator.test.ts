@@ -93,6 +93,35 @@ describe('FromDecorator', () => {
     scope.close();
   });
 
+  it('until: terminates when condition is true', async () => {
+    const scope = new DefaultScenarioScope();
+    scope.flag('shutdown').set();
+    const resolver = VariableResolver.forParams({}, {}, new Set())
+      .withScope('flag', (name) => { try { return String(scope.flag(name).get()); } catch { return undefined; } });
+    const action = mockAction();
+    const decorator = new FromDecorator(action, { channel: 'events', until: '${flag.shutdown}' });
+    const ctx: Context = { ...makeContext(scope), resolver };
+    const result = await decorator.execute(ctx);
+    expect(result.kind).toBe('success');
+    expect((result as any).output['__from.terminated']).toBe(true);
+    scope.close();
+  });
+
+  it('named consumer: stop terminates the from:', async () => {
+    const scope = new DefaultScenarioScope();
+    const ch = scope.channel<unknown>('events');
+    const consumer = scope.consumer('enricher');
+    consumer.stop();
+
+    const action = mockAction();
+    const decorator = new FromDecorator(action, { channel: 'events', name: 'enricher' });
+    const controller = new AbortController();
+    const result = await decorator.execute(makeContext(scope, controller.signal));
+    expect(result.kind).toBe('success');
+    expect((result as any).output['__from.terminated']).toBe(true);
+    scope.close();
+  });
+
   it('fan-in: first channel with data wins', async () => {
     const scope = new DefaultScenarioScope();
     scope.channel<unknown>('a');
