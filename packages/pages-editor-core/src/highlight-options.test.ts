@@ -51,7 +51,7 @@ describe('highlightOptionsToCSS', () => {
 
   it('converts border and borderRadius', () => {
     const css = highlightOptionsToCSS({ border: '1px solid red', borderRadius: '3px' });
-    expect(css).toContain('border: 1px solid red');
+    expect(css).toContain('outline: 1px solid red');
     expect(css).toContain('border-radius: 3px');
   });
 

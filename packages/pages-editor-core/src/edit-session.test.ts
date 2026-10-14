@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Position, HighlightStyle } from './types.js';
+import type { Position, HighlightOptions } from './types.js';
 import { EditSessionActiveError } from './types.js';
 import { EditableTextBridge } from './editable-text-bridge.js';
 
@@ -36,7 +36,7 @@ class RollbackTestBridge extends EditableTextBridge {
   setCursor() {}
   getCursor() { return { line: 0, col: 0 }; }
 
-  protected applyHighlight(id: string, from: Position, to: Position) {
+  protected applyHighlight(id: string, from: Position, to: Position, _style: HighlightOptions) {
     this.appliedHighlights.push({ id, from, to });
   }
   protected removeHighlightDecoration(id: string) {

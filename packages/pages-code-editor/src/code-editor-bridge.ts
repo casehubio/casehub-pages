@@ -1,9 +1,9 @@
 import { EditorView, Decoration, type DecorationSet } from '@codemirror/view';
 import { StateEffect, StateField } from '@codemirror/state';
-import { EditableTextBridge } from '@casehubio/pages-editor-core';
-import type { Position, HighlightStyle } from '@casehubio/pages-editor-core';
+import { EditableTextBridge, highlightOptionsToCSS } from '@casehubio/pages-editor-core';
+import type { Position, HighlightOptions } from '@casehubio/pages-editor-core';
 
-const addHighlight = StateEffect.define<{ id: string; from: number; to: number; class: string }>();
+const addHighlight = StateEffect.define<{ id: string; from: number; to: number; style: string }>();
 const removeHighlightById = StateEffect.define<string>();
 const clearAllHighlights = StateEffect.define();
 
@@ -27,7 +27,7 @@ const highlightField = StateField.define<{ decorations: DecorationSet; tracked: 
     for (const e of tr.effects) {
       if (e.is(addHighlight)) {
         decorations = decorations.update({
-          add: [Decoration.mark({ class: e.value.class }).range(e.value.from, e.value.to)],
+          add: [Decoration.mark({ attributes: { style: e.value.style } }).range(e.value.from, e.value.to)],
         });
         tracked = [...tracked, { id: e.value.id, from: e.value.from, to: e.value.to }];
       } else if (e.is(removeHighlightById)) {
@@ -130,14 +130,14 @@ export class CodeEditorBridge extends EditableTextBridge {
     }
   }
 
-  protected override applyHighlight(id: string, from: Position, to: Position, style?: HighlightStyle): void {
+  protected override applyHighlight(id: string, from: Position, to: Position, style: HighlightOptions): void {
     this._ensureHighlightField();
     this.view.dispatch({
       effects: addHighlight.of({
         id,
         from: this.toOffset(from),
         to: this.toOffset(to),
-        class: `editor-highlight-${style ?? 'pulse'}`,
+        style: highlightOptionsToCSS(style),
       }),
     });
   }

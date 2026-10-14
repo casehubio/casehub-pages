@@ -1792,7 +1792,7 @@ export const mapPropsSchema = z.object({
   mapName: z.string().optional(),
   roam: z.union([z.boolean(), z.boolean(), z.string(), z.string()]).optional(),
   center: z.object({
-    "__@unscopables@99": z.object({}),
+    "__@unscopables@101": z.object({}),
   }).optional(),
   zoom: z.number().optional(),
   scaleLimit: z.object({
@@ -2242,7 +2242,7 @@ export const graphCanvasPropsSchema = z.object({
     zoomOnPinch: z.boolean().optional(),
     snapToGrid: z.boolean().optional(),
     snapGrid: z.object({
-      "__@unscopables@99": z.object({}),
+      "__@unscopables@101": z.object({}),
     }).optional(),
     colorMode: z.enum(["light", "dark", "system"]).optional(),
     defaultMarkerColor: z.string().optional(),
