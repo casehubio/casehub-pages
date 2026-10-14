@@ -100,6 +100,27 @@
             "flow-control"
           ],
           "runnable": true
+        },
+        {
+          "file": "flow-control/from-until.playbook.yaml",
+          "title": "From Until",
+          "description": "from: with exit condition — reads from a channel repeatedly until a flag is set.",
+          "tags": ["from", "until", "channel", "flow-control"],
+          "runnable": false
+        },
+        {
+          "file": "flow-control/from-channel-close.playbook.yaml",
+          "title": "From Channel Close",
+          "description": "from: with channel close detection — the consumer exits cleanly when the producer closes the channel.",
+          "tags": ["from", "channel", "close", "flow-control"],
+          "runnable": false
+        },
+        {
+          "file": "flow-control/pause-resume.playbook.yaml",
+          "title": "Pause / Resume",
+          "description": "Consumer lifecycle — a named consumer reads from a channel, is stopped by a control step.",
+          "tags": ["from", "consumer", "stop", "flow-control"],
+          "runnable": false
         }
       ]
     },
@@ -325,6 +346,13 @@
             "concurrency-patterns"
           ],
           "runnable": false
+        },
+        {
+          "file": "concurrency-patterns/named-consumer.playbook.yaml",
+          "title": "Named Consumer",
+          "description": "Named consumer with lifecycle control — register a consumer handle via from: name, then stop it from a separate branch.",
+          "tags": ["from", "consumer", "named", "lifecycle", "concurrency-patterns"],
+          "runnable": false
         }
       ]
     },
@@ -396,6 +424,34 @@
             "composition"
           ],
           "runnable": true
+        },
+        {
+          "file": "composition/timed-absence.playbook.yaml",
+          "title": "Timed Absence",
+          "description": "A then !B[window] — detect the absence of an event within a time window.",
+          "tags": ["temporal", "absence", "timeout", "from", "composition"],
+          "runnable": false
+        },
+        {
+          "file": "composition/delayed-sequence.playbook.yaml",
+          "title": "Delayed Sequence",
+          "description": "Sequential from: reads with a delay between them — models delayed causality.",
+          "tags": ["temporal", "sequence", "delay", "from", "composition"],
+          "runnable": false
+        },
+        {
+          "file": "composition/heartbeat-monitor.playbook.yaml",
+          "title": "Heartbeat Monitor",
+          "description": "Periodic absence check — loop continuously, reading heartbeats with a timeout.",
+          "tags": ["temporal", "heartbeat", "monitor", "loop", "from", "composition"],
+          "runnable": false
+        },
+        {
+          "file": "composition/recursive-pattern.playbook.yaml",
+          "title": "Recursive Pattern",
+          "description": "((A then B) or (A then C))* — nested composition of race, block, and loop.",
+          "tags": ["temporal", "recursive", "race", "loop", "composition"],
+          "runnable": false
         }
       ]
     },
@@ -603,6 +659,13 @@
             "multiplexing",
             "step-workflows"
           ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/race.playbook.yaml",
+          "title": "Race",
+          "description": "First-to-complete over arbitrary blocks — two branches execute concurrently, the first to finish wins, the loser is cancelled.",
+          "tags": ["race", "first-to-complete", "cancellation", "step-workflows"],
           "runnable": false
         },
         {
