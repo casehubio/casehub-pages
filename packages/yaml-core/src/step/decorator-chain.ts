@@ -10,6 +10,8 @@ import { ThresholdCondition } from '../orchestration/threshold-condition.js';
 import type { OrcNumericPrimitive } from '../orchestration/numeric-primitive.js';
 import { parsePriority, Priority } from '../orchestration/priority.js';
 import { FromDecorator } from './from-decorator.js';
+import { CancelDecorator } from './cancel-decorator.js';
+import { BackgroundDecorator } from './background-decorator.js';
 
 export interface Context {
   readonly params: Record<string, unknown>;
@@ -610,6 +612,12 @@ export class DecoratorChain {
     }
     if (decorators['loop'] != null) {
       execution = new LoopDecorator(execution, decorators['loop']);
+    }
+    if (decorators['cancel'] != null) {
+      execution = new CancelDecorator(execution, String(decorators['cancel']));
+    }
+    if (decorators['background'] === true) {
+      execution = new BackgroundDecorator(execution);
     }
     if (decorators['forEach'] != null) {
       execution = new ForEachDecorator(execution, decorators['forEach']);
