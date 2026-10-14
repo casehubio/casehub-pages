@@ -626,7 +626,7 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
   private async _startDemo(): Promise<void> {
     if (!this.scenario || !this._conn) return;
     try {
-      const resp = await fetch(`${this._conn.restBase}/playbooks/${this.scenario}.yaml`, { cache: 'no-store' });
+      const resp = await fetch(`${this._conn.restBase}/api/playbooks/${this.scenario}.yaml`, { cache: 'no-store' });
       if (!resp.ok) return;
       const yaml = await resp.text();
       await this._conn.sendCommand('/start', { yaml, paused: true });

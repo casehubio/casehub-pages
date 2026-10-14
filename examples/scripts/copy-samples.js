@@ -44,13 +44,6 @@ if (fs.existsSync(srcDir)) {
   }
 }
 
-// Copy playbooks (shared scenario YAML files)
-const playbooksDir = path.join(__dirname, '../../playbooks');
-if (fs.existsSync(playbooksDir)) {
-  console.log('Copying playbooks...');
-  copyRecursive(playbooksDir, path.join(targetDir, 'playbooks'));
-}
-
 // Copy mock data
 const mockDataDir = path.join(__dirname, '../mock-data');
 if (fs.existsSync(mockDataDir)) {

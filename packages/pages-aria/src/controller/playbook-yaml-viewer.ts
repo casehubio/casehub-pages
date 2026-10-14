@@ -241,7 +241,7 @@ export class PagesPlaybookYamlViewer extends LitElement {
     if (!this.scenario) return;
     try {
       const base = this._conn?.restBase ?? this.baseUrl ?? '';
-      const resp = await fetch(`${base}/playbooks/${this.scenario}.yaml`);
+      const resp = await fetch(`${base}/api/playbooks/${this.scenario}.yaml`);
       if (resp.ok) {
         this._yamlSource = await resp.text();
         this._stepMap = buildStepLineMap(this._yamlSource);

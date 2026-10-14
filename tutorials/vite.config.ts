@@ -5,6 +5,9 @@ export default defineConfig({
   server: {
     port: 5174,
     open: true,
+    proxy: {
+      '/api/playbooks': 'http://localhost:8080',
+    },
   },
   esbuild: {
     target: 'es2022',

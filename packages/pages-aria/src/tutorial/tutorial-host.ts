@@ -226,8 +226,7 @@ export class PagesTutorialHost extends LitElement {
   private async _loadScenarioRef(ref: string): Promise<string | null> {
     if (this._scenarioRefCache.has(ref)) return this._scenarioRefCache.get(ref)!;
     try {
-      const base = this.contentBase ? `${this.contentBase}/../../playbooks/` : 'playbooks/';
-      const resp = await fetch(`${base}${ref}`);
+      const resp = await fetch(`/api/playbooks/${ref}`);
       if (!resp.ok) return null;
       const text = await resp.text();
       this._scenarioRefCache.set(ref, text);

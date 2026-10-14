@@ -194,7 +194,7 @@ if (ddRunBtn) {
 }
 
 // Load scenarios from shared files
-fetch('../../playbooks/manifest.json')
+fetch('/api/playbooks/manifest.json')
   .then(function(r) { return r.json(); })
   .then(function(manifest) {
     var cat = null;
@@ -203,7 +203,7 @@ fetch('../../playbooks/manifest.json')
     }
     if (!cat) return;
     var fetches = cat.scenarios.map(function(entry) {
-      return fetch('../../playbooks/' + entry.file)
+      return fetch('/api/playbooks/' + entry.file)
         .then(function(r) { return r.text(); })
         .then(function(yamlText) {
           return { name: entry.title, tags: entry.tags, description: entry.description, yaml: yamlText };
