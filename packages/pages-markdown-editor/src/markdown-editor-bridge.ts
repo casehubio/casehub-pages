@@ -1,12 +1,13 @@
 import { EditableTextBridge, highlightOptionsToCSS, resolveHighlightStyle } from '@casehubio/pages-editor-core';
 import type { Position, HighlightStyle, HighlightOptions, LineReader } from '@casehubio/pages-editor-core';
 import type { EditorView } from '@milkdown/kit/prose/view';
+import type { Node as ProsemirrorNode } from '@milkdown/kit/prose/model';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
 import { HighlightRenderer } from './overlay/highlight-renderer.js';
 
-type Serializer = (doc: any) => string;
-type Parser = (text: string) => any;
+type Serializer = (doc: ProsemirrorNode) => string;
+type Parser = (text: string) => ProsemirrorNode | null;
 
 export class MarkdownEditorBridge extends EditableTextBridge {
   private _lineOffsets: number[] | null = null;
@@ -52,8 +53,9 @@ export class MarkdownEditorBridge extends EditableTextBridge {
       }
     }
     const set = DecorationSet.create(this.view.state.doc, decos);
-    if (typeof (this.view as any).setProps === 'function') {
-      (this.view as any).setProps({ decorations: () => set });
+    const viewWithProps = this.view as EditorView & { setProps?: (props: { decorations: () => DecorationSet }) => void };
+    if (typeof viewWithProps.setProps === 'function') {
+      viewWithProps.setProps({ decorations: () => set });
     }
   }
 
@@ -345,6 +347,7 @@ export class MarkdownEditorBridge extends EditableTextBridge {
     let docPos = 1;
     let hlId: string | null = null;
     let lastMode: 'sentence' | 'line' = 'sentence';
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- needed for returned object methods
     const self = this;
 
     function rehighlight(): void {

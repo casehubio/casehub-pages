@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
-import { EDITABLE_TEXT } from '@casehubio/pages-editor-core';
+import { describe, it, expect } from 'vitest';
 import { PagesMarkdownEditor } from './pages-markdown-editor.js';
 
 class TestableEditor extends PagesMarkdownEditor {

@@ -1,20 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Position } from '@casehubio/pages-editor-core';
+import { describe, it, expect, vi } from 'vitest';
 import { EditSessionActiveError } from '@casehubio/pages-editor-core';
 import { editableTextComplianceTests } from '@casehubio/pages-editor-core/dist/compliance.js';
 import { MarkdownEditorBridge } from './markdown-editor-bridge.js';
 
 function mockEditorView(doc: string) {
-  const lines = doc.split('\n');
   let content = doc;
-
-  const lineOffsets = (): number[] => {
-    const offsets = [0];
-    for (let i = 0; i < content.length; i++) {
-      if (content[i] === '\n') offsets.push(i + 1);
-    }
-    return offsets;
-  };
 
   const view = {
     state: {

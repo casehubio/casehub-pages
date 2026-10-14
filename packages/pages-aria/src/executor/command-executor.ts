@@ -121,7 +121,7 @@ async function invokeMethod(step: { action?: string; target?: AriaTarget; [key: 
   if (typeof method !== 'function') {
     throw new Error(`Target ${step.target.role} "${step.target.name}" has no method '${step.action}'`);
   }
-  const result = method.call(el, ...extractArgs(step));
+  const result = (method as (...args: unknown[]) => unknown).call(el, ...extractArgs(step));
   if (result instanceof Promise) await result;
 }
 

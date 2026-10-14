@@ -1,4 +1,4 @@
-import type { EditableText, Position, AnnotationOptions, EditSession, LineReader } from './types.js';
+import type { EditableText, Position, HighlightStyle, HighlightOptions, AnnotationOptions, EditSession, LineReader } from './types.js';
 import { EditSessionActiveError } from './types.js';
 
 export class McpToolAdapter {
@@ -7,13 +7,13 @@ export class McpToolAdapter {
 
   constructor(private readonly editor: EditableText) {}
 
-  async handleToolCall(name: string, params: Record<string, any>): Promise<any> {
+  async handleToolCall(name: string, params: Record<string, unknown>): Promise<unknown> {
     switch (name) {
       case 'editor_get_content':
         return { content: this.editor.getText() };
 
       case 'editor_set_content':
-        this.editor.setContent(params.text);
+        this.editor.setContent(params.text as string);
         return { success: true };
 
       case 'editor_get_line': {
@@ -25,47 +25,51 @@ export class McpToolAdapter {
       }
 
       case 'editor_find_text': {
-        const matches = this.editor.findText(params.query);
+        const matches = this.editor.findText(params.query as string);
         return { matches };
       }
 
       case 'editor_find_heading':
-        return this._findHeading(params.heading);
+        return this._findHeading(params.heading as string);
 
       case 'editor_replace_range':
-        this.editor.replaceRange(params.from as Position, params.to as Position, params.text);
+        this.editor.replaceRange(params.from as Position, params.to as Position, params.text as string);
         return { success: true };
 
       case 'editor_insert_text':
-        this.editor.insertText(params.text);
+        this.editor.insertText(params.text as string);
         return { success: true };
 
       case 'editor_get_cursor':
         return this.editor.getCursor();
 
       case 'editor_set_cursor':
-        this.editor.setCursor(params.line, params.col);
+        this.editor.setCursor(params.line as number, params.col as number);
         return { success: true };
 
       case 'editor_highlight': {
-        const id = this.editor.highlight(params.from as Position, params.to as Position, params.style);
+        const id = this.editor.highlight(
+          params.from as Position,
+          params.to as Position,
+          params.style as HighlightStyle | HighlightOptions | undefined,
+        );
         return { id };
       }
 
       case 'editor_remove_highlight':
-        this.editor.removeHighlight(params.id);
+        this.editor.removeHighlight(params.id as string);
         return { success: true };
 
       case 'editor_annotate': {
-        const opts: AnnotationOptions = { type: params.type };
-        if (params.text) opts.text = params.text;
-        if (params.style) opts.style = params.style;
+        const opts: AnnotationOptions = { type: params.type as AnnotationOptions['type'] };
+        if (params.text) opts.text = params.text as string;
+        if (params.style) opts.style = params.style as Record<string, string>;
         const id = this.editor.addAnnotation(params.anchor as Position, opts);
         return { id };
       }
 
       case 'editor_remove_annotation':
-        this.editor.removeAnnotation(params.id);
+        this.editor.removeAnnotation(params.id as string);
         return { success: true };
 
       case 'editor_clear_overlays':
@@ -76,23 +80,30 @@ export class McpToolAdapter {
       case 'editor_highlight_sentence': {
         const id = this.editor.highlightSentence(
           params.pos as Position | undefined,
-          params.style,
+          params.style as HighlightStyle | HighlightOptions | undefined,
         );
         return { id };
       }
 
       case 'editor_highlight_text': {
-        const ids = this.editor.highlightText(params.query, params.style);
+        const ids = this.editor.highlightText(
+          params.query as string,
+          params.style as HighlightStyle | HighlightOptions | undefined,
+        );
         return { ids };
       }
 
       case 'editor_highlight_line': {
-        const id = this.editor.highlightLine(params.line, params.count, params.style);
+        const id = this.editor.highlightLine(
+          params.line as number,
+          params.count as number | undefined,
+          params.style as HighlightStyle | HighlightOptions | undefined,
+        );
         return { id };
       }
 
       case 'editor_get_highlight_text': {
-        const text = this.editor.getHighlightText(params.id);
+        const text = this.editor.getHighlightText(params.id as string);
         if (text === undefined) return { error: 'not_found', id: params.id };
         return { text };
       }
@@ -101,12 +112,12 @@ export class McpToolAdapter {
         return { highlights: this.editor.listHighlights() };
 
       case 'editor_clear_highlight_group':
-        this.editor.clearHighlightGroup(params.group);
+        this.editor.clearHighlightGroup(params.group as string);
         return { success: true };
 
       case 'editor_reader_start': {
         if (this._reader) this._reader.dispose();
-        this._reader = this.editor.createReader(params.style);
+        this._reader = this.editor.createReader(params.style as HighlightStyle | HighlightOptions | undefined);
         return { position: this._reader.position() };
       }
 
@@ -137,7 +148,7 @@ export class McpToolAdapter {
       }
 
       case 'editor_begin_session':
-        return this._beginSession(params.owner);
+        return this._beginSession(params.owner as string);
 
       case 'editor_end_session':
         return this._endSession();
@@ -147,7 +158,7 @@ export class McpToolAdapter {
     }
   }
 
-  private _findHeading(heading: string): any {
+  private _findHeading(heading: string): unknown {
     const text = this.editor.getText();
     const lines = text.split('\n');
     const positions: Position[] = [];
@@ -183,7 +194,7 @@ export class McpToolAdapter {
     };
   }
 
-  private _beginSession(owner: string): any {
+  private _beginSession(owner: string): unknown {
     try {
       this._session = this.editor.beginEditSession(owner);
       return {
@@ -199,7 +210,7 @@ export class McpToolAdapter {
     }
   }
 
-  private _endSession(): any {
+  private _endSession(): unknown {
     if (this._session) {
       this.editor.endEditSession(this._session);
       this._session = null;

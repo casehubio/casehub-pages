@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Position, HighlightStyle, HighlightOptions } from './types.js';
+import type { Position, HighlightOptions } from './types.js';
 import { EditSessionActiveError } from './types.js';
 import { EditableTextBridge } from './editable-text-bridge.js';
 

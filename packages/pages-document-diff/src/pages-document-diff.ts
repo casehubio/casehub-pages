@@ -310,8 +310,8 @@ export class PagesDocumentDiff extends LitElement {
     if (this._connected) {
       this._syncPanelMeta('a');
       this._syncPanelMeta('b');
-      if (props.pathA) this.loadFile('a', props.pathA as string);
-      if (props.pathB) this.loadFile('b', props.pathB as string);
+      if (props.pathA) void this.loadFile('a', props.pathA as string);
+      if (props.pathB) void this.loadFile('b', props.pathB as string);
     } else {
       this._pendingPathA = (props.pathA as string) || null;
       this._pendingPathB = (props.pathB as string) || null;
@@ -348,8 +348,8 @@ export class PagesDocumentDiff extends LitElement {
 
     this._onConnected();
 
-    if (this._pendingPathA) this.loadFile('a', this._pendingPathA);
-    if (this._pendingPathB) this.loadFile('b', this._pendingPathB);
+    if (this._pendingPathA) void this.loadFile('a', this._pendingPathA);
+    if (this._pendingPathB) void this.loadFile('b', this._pendingPathB);
     this._pendingPathA = null;
     this._pendingPathB = null;
   }
@@ -497,11 +497,11 @@ export class PagesDocumentDiff extends LitElement {
   }
 
   async selectFile(panel: 'a' | 'b'): Promise<void> {
-    const isElectron = typeof (window as any).compare !== 'undefined';
-    const path = isElectron
-      ? await (window as any).compare.selectFile()
+    const compareApi = (window as unknown as Record<string, unknown>).compare as { selectFile(): Promise<string> } | undefined;
+    const path = compareApi
+      ? await compareApi.selectFile()
       : prompt('Enter file path:');
-    if (path) await this.loadFile(panel, path);
+    if (path) await this.loadFile(panel, path as string);
   }
 
   currentPath(slot: 'a' | 'b'): string | null {
@@ -1042,7 +1042,8 @@ export class PagesDocumentDiff extends LitElement {
       e.stopPropagation();
       body.classList.remove('drag-over');
       const file = (e as DragEvent).dataTransfer?.files[0];
-      if (file && (file as any).path) this.loadFile(panel, (file as any).path);
+      const filePath = file ? (file as File & { path?: string }).path : undefined;
+      if (filePath) void this.loadFile(panel, filePath);
     });
   }
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { FromDecorator, pushFromContext } from './from-decorator.js';
 import type { DecoratedExecution, Context } from './decorator-chain.js';
 import type { Result } from './walker.js';
-import { stepSuccess, stepFailure } from './walker.js';
+import { stepSuccess } from './walker.js';
 import { DefaultScenarioScope } from '../orchestration/scenario-scope.js';
 import { VariableResolver } from '../variable-resolver.js';
 import { MapServiceRegistry } from './walker.js';
@@ -109,7 +109,7 @@ describe('FromDecorator', () => {
 
   it('named consumer: stop terminates the from:', async () => {
     const scope = new DefaultScenarioScope();
-    const ch = scope.channel<unknown>('events');
+    const _ch = scope.channel<unknown>('events');
     const consumer = scope.consumer('enricher');
     consumer.stop();
 

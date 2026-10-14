@@ -26,9 +26,8 @@ export class DefaultOrcLatch implements OrcLatch {
     }
   }
 
-  await(): Promise<void>;
+  await(signal?: AbortSignal): Promise<void>;
   await(timeoutMs: number): Promise<boolean>;
-  await(signal: AbortSignal): Promise<void>;
   await(timeoutOrSignal?: number | AbortSignal): Promise<void | boolean> {
     if (timeoutOrSignal instanceof AbortSignal) {
       return this._awaitWithSignal(timeoutOrSignal);

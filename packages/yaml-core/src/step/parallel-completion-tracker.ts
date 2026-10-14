@@ -1,5 +1,3 @@
-import type { ScenarioScope } from '../orchestration/types.js';
-
 export class ParallelCompletionTracker {
   private readonly advancementCount: number;
   private readonly controllers: AbortController[];

@@ -13,12 +13,12 @@ export function withPrimitiveVariables(
       try { return String(scope.counter(name).get()); } catch { return undefined; }
     })
     .withScope('gauge', (name) => {
-      try { return String(scope.gauge(name, 0).doubleValue()); } catch { return undefined; }
+      try { return String(scope.gauge(name, 0).get()); } catch { return undefined; }
     })
     .withScope('signal', (name) => {
       try { return String(scope.signal(name).isSignalled()); } catch { return undefined; }
     })
     .withScope('accumulator', (name) => {
-      try { return String(scope.accumulator(name, (a, b) => a + b, 0).doubleValue()); } catch { return undefined; }
+      try { return String(scope.accumulator(name, (a, b) => a + b, 0).get()); } catch { return undefined; }
     });
 }

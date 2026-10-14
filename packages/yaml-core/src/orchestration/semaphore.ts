@@ -13,8 +13,6 @@ export class DefaultOrcSemaphore implements OrcSemaphore {
     this._permits = permits;
   }
 
-  acquire(): Promise<void>;
-  acquire(signal: AbortSignal): Promise<void>;
   acquire(signal?: AbortSignal): Promise<void> {
     if (signal) return this._acquireWithSignal(signal);
     if (this._permits > 0) {

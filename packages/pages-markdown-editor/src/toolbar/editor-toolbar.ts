@@ -66,6 +66,7 @@ export class EditorToolbar extends LitElement {
 
   private _dispatchCommand(item: ToolbarItem): void {
     if (!this.editor) return;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- commandKey is a dynamic CmdKey string
     this.editor.action(callCommand(item.commandKey as any, item.payload));
   }
 }

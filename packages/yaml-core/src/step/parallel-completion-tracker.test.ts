@@ -5,7 +5,7 @@ describe('ParallelCompletionTracker', () => {
   it('resolves advancement after N branches complete', async () => {
     const tracker = new ParallelCompletionTracker(3, 1, false);
     let advanced = false;
-    tracker.awaitAdvancement().then(() => { advanced = true; });
+    void tracker.awaitAdvancement().then(() => { advanced = true; });
     tracker.branchDone(0);
     await new Promise(r => setTimeout(r, 0));
     expect(advanced).toBe(true);
@@ -14,7 +14,7 @@ describe('ParallelCompletionTracker', () => {
   it('waits for all N when advanceAfter equals branchCount', async () => {
     const tracker = new ParallelCompletionTracker(3, 3, false);
     let advanced = false;
-    tracker.awaitAdvancement().then(() => { advanced = true; });
+    void tracker.awaitAdvancement().then(() => { advanced = true; });
     tracker.branchDone(0);
     tracker.branchDone(1);
     await new Promise(r => setTimeout(r, 0));

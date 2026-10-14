@@ -55,9 +55,8 @@ export class DefaultOrcChannel<T> implements OrcChannel<T> {
     }).then((result) => (timeoutMs !== undefined ? result : undefined));
   }
 
-  receive(): Promise<T>;
+  receive(signal?: AbortSignal): Promise<T>;
   receive(timeoutMs: number): Promise<T | undefined>;
-  receive(signal: AbortSignal): Promise<T>;
   receive(timeoutOrSignal?: number | AbortSignal): Promise<T | undefined> {
     if (timeoutOrSignal instanceof AbortSignal) {
       return this._receiveWithSignal(timeoutOrSignal);

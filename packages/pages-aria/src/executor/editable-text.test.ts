@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { EDITABLE_TEXT, findEditableText, isEditableText } from './editable-text.js';
-import type { ScenarioEditableText } from './editable-text.js';
+import type { EditableText } from './editable-text.js';
 
-function mockEditor(): ScenarioEditableText {
+function mockEditor(): EditableText {
   return {
     insertText: () => {},
     replaceRange: () => {},

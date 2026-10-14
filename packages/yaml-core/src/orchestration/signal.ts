@@ -29,9 +29,8 @@ export class DefaultOrcSignal implements OrcSignal {
     }
   }
 
-  await(): Promise<void>;
+  await(signal?: AbortSignal): Promise<void>;
   await(timeoutMs: number): Promise<boolean>;
-  await(signal: AbortSignal): Promise<void>;
   await(timeoutOrSignal?: number | AbortSignal): Promise<void | boolean> {
     if (timeoutOrSignal instanceof AbortSignal) {
       return this._awaitWithSignal(timeoutOrSignal);

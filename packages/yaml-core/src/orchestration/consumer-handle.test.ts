@@ -34,7 +34,7 @@ describe('DefaultConsumerHandle', () => {
     expect(handle.isPaused()).toBe(true);
 
     let resumed = false;
-    handle.awaitResume().then(() => { resumed = true; });
+    void handle.awaitResume().then(() => { resumed = true; });
     await new Promise(r => setTimeout(r, 0));
     expect(resumed).toBe(false);
 
@@ -47,7 +47,7 @@ describe('DefaultConsumerHandle', () => {
   it('awaitResume resolves immediately when not paused', async () => {
     const handle = new DefaultConsumerHandle('enricher');
     let resolved = false;
-    handle.awaitResume().then(() => { resolved = true; });
+    void handle.awaitResume().then(() => { resolved = true; });
     await new Promise(r => setTimeout(r, 0));
     expect(resolved).toBe(true);
   });

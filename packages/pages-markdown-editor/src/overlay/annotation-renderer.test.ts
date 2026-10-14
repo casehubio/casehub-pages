@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { AnnotationRenderer } from './annotation-renderer.js';
-import type { AnnotationOptions, Position } from '@casehubio/pages-editor-core';
 
 function createOverlayDiv(): HTMLDivElement {
   const div = document.createElement('div');

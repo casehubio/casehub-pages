@@ -12,6 +12,15 @@ import { buildScrollAnchors, interpolateScroll } from './scroll-sync.js';
 import type { HeadingInfo } from './scroll-sync.js';
 import './toolbar/editor-toolbar.js';
 
+interface CodeEditorElement extends HTMLElement {
+  value: string;
+  language: string;
+  label: string;
+  updateComplete?: Promise<unknown>;
+  shadowRoot: ShadowRoot | null;
+  [key: symbol]: unknown;
+}
+
 export class PagesMarkdownEditor extends LitElement {
   @property({ type: String }) value = '';
   @property({ type: String }) mode: 'wysiwyg' | 'source' | 'split' = 'wysiwyg';
@@ -206,7 +215,7 @@ export class PagesMarkdownEditor extends LitElement {
       (doc) => serializer(doc),
       (text) => parser(text),
     );
-    (this as any)[EDITABLE_TEXT] = this._bridge;
+    (this as unknown as Record<symbol, unknown>)[EDITABLE_TEXT] = this._bridge;
   }
 
   async setMode(newMode: 'wysiwyg' | 'source' | 'split'): Promise<void> {
@@ -226,7 +235,7 @@ export class PagesMarkdownEditor extends LitElement {
   }
 
   getActiveBridge(): EditableText | null {
-    return (this as any)[EDITABLE_TEXT] ?? null;
+    return ((this as unknown as Record<symbol, unknown>)[EDITABLE_TEXT] as EditableText | undefined) ?? null;
   }
 
   protected async _importSourceEditor(): Promise<void> {
@@ -271,7 +280,7 @@ export class PagesMarkdownEditor extends LitElement {
       this._sourceElement.parentNode.removeChild(this._sourceElement);
     }
 
-    const codeEditor = document.createElement('pages-code-editor') as any;
+    const codeEditor = document.createElement('pages-code-editor') as unknown as CodeEditorElement;
     codeEditor.value = markdown;
     codeEditor.language = 'markdown';
     codeEditor.setAttribute('style', 'height: 100%; border: none; resize: none;');
@@ -293,7 +302,7 @@ export class PagesMarkdownEditor extends LitElement {
     }
 
     if (codeEditor[EDITABLE_TEXT]) {
-      (this as any)[EDITABLE_TEXT] = codeEditor[EDITABLE_TEXT];
+      (this as unknown as Record<symbol, unknown>)[EDITABLE_TEXT] = codeEditor[EDITABLE_TEXT];
     }
 
     this.dispatchEvent(new CustomEvent('mode-changed', {
@@ -305,7 +314,7 @@ export class PagesMarkdownEditor extends LitElement {
 
   private _switchToWysiwyg(): void {
     const markdown = this._sourceElement
-      ? (this._sourceElement as any).value ?? this.value
+      ? (this._sourceElement as unknown as CodeEditorElement).value ?? this.value
       : this.value;
 
     if (this._sourceElement?.parentNode) {
@@ -315,7 +324,7 @@ export class PagesMarkdownEditor extends LitElement {
 
     if (this._bridge) {
       this._bridge.setContent(markdown);
-      (this as any)[EDITABLE_TEXT] = this._bridge;
+      (this as unknown as Record<symbol, unknown>)[EDITABLE_TEXT] = this._bridge;
     }
 
     this.mode = 'wysiwyg';
@@ -366,7 +375,7 @@ export class PagesMarkdownEditor extends LitElement {
       this._sourceElement.parentNode.removeChild(this._sourceElement);
     }
 
-    const codeEditor = document.createElement('pages-code-editor') as any;
+    const codeEditor = document.createElement('pages-code-editor') as unknown as CodeEditorElement;
     codeEditor.value = markdown;
     codeEditor.language = 'markdown';
     codeEditor.setAttribute('style', 'height: 100%; border: none; resize: none; outline: none;');
@@ -382,7 +391,7 @@ export class PagesMarkdownEditor extends LitElement {
       }
     };
     if (codeEditor.updateComplete) {
-      codeEditor.updateComplete.then(suppressCodeEditorFocus);
+      void codeEditor.updateComplete.then(suppressCodeEditorFocus);
     } else {
       requestAnimationFrame(suppressCodeEditorFocus);
     }
@@ -396,7 +405,7 @@ export class PagesMarkdownEditor extends LitElement {
     }));
   }
 
-  private _setupSplitSync(codeEditor: any): void {
+  private _setupSplitSync(codeEditor: CodeEditorElement): void {
     const wysiwygListener = () => {
       if (this._syncing) return;
       this._debouncedSync(() => {
@@ -453,7 +462,7 @@ export class PagesMarkdownEditor extends LitElement {
     this._syncTimer = setTimeout(fn, 150);
   }
 
-  private _setupScrollSync(codeEditor: any): void {
+  private _setupScrollSync(codeEditor: CodeEditorElement): void {
     const editorHost = this.renderRoot?.querySelector('.editor-host') as HTMLElement | null;
     if (!editorHost) return;
 
@@ -480,7 +489,7 @@ export class PagesMarkdownEditor extends LitElement {
 
     const extractSourceHeadings = (): HeadingInfo[] => {
       if (!codeEditor.value) return [];
-      const lines = (codeEditor.value as string).split('\n');
+      const lines = codeEditor.value.split('\n');
       const headings: HeadingInfo[] = [];
       const lineHeight = getSourceLineHeight();
       for (let i = 0; i < lines.length; i++) {
@@ -552,7 +561,7 @@ export class PagesMarkdownEditor extends LitElement {
     };
 
     if (codeEditor.updateComplete) {
-      codeEditor.updateComplete.then(attachSourceScroll);
+      void codeEditor.updateComplete.then(attachSourceScroll);
     } else {
       requestAnimationFrame(attachSourceScroll);
     }
@@ -582,7 +591,7 @@ export class PagesMarkdownEditor extends LitElement {
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this._teardownSplit();
-    this._editor?.destroy();
+    void this._editor?.destroy();
     this._editor = null;
     this._sourceElement = null;
   }

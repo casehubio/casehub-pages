@@ -402,8 +402,8 @@ describe('StructuralEvaluator', () => {
     it('first branch to complete wins', async () => {
       const scope = new DefaultScenarioScope();
       const evaluator = new StructuralEvaluator();
-      const slowAction = makeAction(stepSuccess({ branch: 'slow' }));
-      const fastAction = makeAction(stepSuccess({ branch: 'fast' }));
+      const _slowAction = makeAction(stepSuccess({ branch: 'slow' }));
+      const _fastAction = makeAction(stepSuccess({ branch: 'fast' }));
       const step: RaceStep = {
         kind: 'race',
         name: null,
