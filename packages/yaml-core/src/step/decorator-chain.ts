@@ -9,6 +9,7 @@ import type { ObjectVariableSource } from '../types.js';
 import { ThresholdCondition } from '../orchestration/threshold-condition.js';
 import type { OrcNumericPrimitive } from '../orchestration/numeric-primitive.js';
 import { parsePriority, Priority } from '../orchestration/priority.js';
+import { FromDecorator } from './from-decorator.js';
 
 export interface Context {
   readonly params: Record<string, unknown>;
@@ -600,6 +601,9 @@ export class DecoratorChain {
     }
     if (decorators['timeout'] != null) {
       execution = new TimeoutDecorator(execution, decorators['timeout']);
+    }
+    if (decorators['from'] != null) {
+      execution = new FromDecorator(execution, decorators['from']);
     }
     if (decorators['on-error'] != null) {
       execution = new OnErrorDecorator(execution, String(decorators['on-error']));
