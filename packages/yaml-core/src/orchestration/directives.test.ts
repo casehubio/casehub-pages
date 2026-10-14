@@ -76,3 +76,29 @@ describe('StepError', () => {
     expect(err.message).toBe('failed');
   });
 });
+
+describe('parseLoopDirective — continuous', () => {
+  it('parses continuous string', () => {
+    expect(parseLoopDirective('continuous')).toEqual({ type: 'continuous' });
+  });
+});
+
+describe('parseRetryDirective — conditional', () => {
+  it('parses conditional retry with on categories', () => {
+    expect(parseRetryDirective({ max: 3, on: ['TIMEOUT', 'TRANSIENT'] })).toEqual({
+      type: 'conditional', max: 3, on: ['TIMEOUT', 'TRANSIENT'],
+    });
+  });
+
+  it('parses conditional retry with except categories', () => {
+    expect(parseRetryDirective({ max: 2, except: ['PERMANENT'] })).toEqual({
+      type: 'conditional', max: 2, except: ['PERMANENT'],
+    });
+  });
+
+  it('parses conditional retry with backoff and delay', () => {
+    expect(parseRetryDirective({ max: 3, on: ['TIMEOUT'], backoff: 'exponential', delay: '1s' })).toEqual({
+      type: 'conditional', max: 3, on: ['TIMEOUT'], backoff: 'exponential', delayMs: 1000,
+    });
+  });
+});

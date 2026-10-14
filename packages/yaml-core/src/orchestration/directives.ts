@@ -9,10 +9,12 @@ export interface StepError {
 export type LoopDirective =
   | { type: 'count'; count: number }
   | { type: 'count-until'; count: number; until: string }
-  | { type: 'until'; until: string };
+  | { type: 'until'; until: string }
+  | { type: 'continuous' };
 
 export function parseLoopDirective(raw: unknown): LoopDirective {
   if (raw == null) throw new Error('LoopDirective cannot be null');
+  if (raw === 'continuous') return { type: 'continuous' };
   if (typeof raw === 'number') return { type: 'count', count: raw };
   if (typeof raw === 'object' && !Array.isArray(raw)) {
     const map = raw as Record<string, unknown>;
@@ -28,7 +30,8 @@ export function parseLoopDirective(raw: unknown): LoopDirective {
 
 export type RetryDirective =
   | { type: 'simple'; max: number }
-  | { type: 'full'; max: number; backoff: string; delayMs: number };
+  | { type: 'full'; max: number; backoff: string; delayMs: number }
+  | { type: 'conditional'; max: number; on?: string[]; except?: string[]; backoff?: string; delayMs?: number };
 
 export function parseRetryDirective(raw: unknown): RetryDirective {
   if (raw == null) throw new Error('RetryDirective cannot be null');
@@ -38,8 +41,14 @@ export function parseRetryDirective(raw: unknown): RetryDirective {
     if ('type' in map) return map as RetryDirective;
     const max = map['max'] as number | undefined;
     if (max == null) throw new Error('RetryDirective requires max');
+    const on = map['on'] as string[] | undefined;
+    const except = map['except'] as string[] | undefined;
     const backoff = map['backoff'] as string | undefined;
     const delay = map['delay'] as string | undefined;
+    if (on || except) {
+      const delayMs = delay ? parseDuration(delay) : undefined;
+      return { type: 'conditional', max, ...(on ? { on } : {}), ...(except ? { except } : {}), ...(backoff ? { backoff } : {}), ...(delayMs !== undefined ? { delayMs } : {}) };
+    }
     if (backoff && delay) return { type: 'full', max, backoff, delayMs: parseDuration(delay) };
     return { type: 'simple', max };
   }

@@ -12,10 +12,14 @@ export interface Action {
 
 export type Result =
   | { kind: 'success'; output: Record<string, unknown>; executionMetadata: Record<string, unknown> }
-  | { kind: 'failure'; message: string };
+  | { kind: 'failure'; message: string; failureCategory?: string };
 
 export function stepSuccess(output: Record<string, unknown>, metadata?: Record<string, unknown>): Result {
   return { kind: 'success', output, executionMetadata: metadata ?? {} };
+}
+
+export function stepFailureWithCategory(message: string, category: string): Result {
+  return { kind: 'failure', message, failureCategory: category };
 }
 
 export function stepFailure(message: string): Result {
@@ -165,14 +169,17 @@ const RESERVED_KEYS = new Set([
   'transform', 'signal', 'publish', 'transition',
   'parallel', 'semaphore', 'barrier', 'quorum', 'race',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
+  'from', 'cancel', 'background',
+  'advance-after', 'cancel-remaining', 'collection-timeout',
 ]);
 
 const DECORATOR_KEYS = new Set([
   'if', 'on-success', 'on-failure', 'forEach', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'semaphore', 'barrier', 'quorum', 'race',
+  'semaphore', 'barrier', 'quorum',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
+  'from', 'cancel', 'background',
 ]);
 
 const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finally']);
@@ -251,6 +258,12 @@ export class Walker {
           throw new Error(`${stepPath}: unknown step key '${key}' — not a reserved keyword and not found in catalog`);
         }
       }
+    }
+
+    if (decorators['loop'] === 'continuous'
+        && !decorators['cancel'] && !decorators['timeout']
+        && !decorators['background']) {
+      throw new Error(`${stepPath}: loop: continuous requires cancel:, timeout:, or background:`);
     }
 
     if (structuralType && actionKey) {

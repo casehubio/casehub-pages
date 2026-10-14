@@ -1,5 +1,5 @@
 import type { Action, Result, ServiceRegistry } from './walker.js';
-import { stepSuccess, stepFailure } from './walker.js';
+import { stepSuccess, stepFailure, stepFailureWithCategory } from './walker.js';
 import type { ScenarioScope } from '../orchestration/types.js';
 import { parseLoopDirective, parseRetryDirective } from '../orchestration/directives.js';
 import { parseDuration } from '../orchestration/duration-parser.js';
@@ -126,11 +126,22 @@ class LoopDecorator implements DecoratedExecution {
   ) {}
   async execute(context: Context): Promise<Result> {
     const directive = parseLoopDirective(this.raw);
+
+    if (directive.type === 'continuous') {
+      let lastResult: Result = stepSuccess({});
+      while (true) {
+        if (context.signal?.aborted) return stepFailureWithCategory('Cancelled', 'CANCELLED');
+        lastResult = await this.next.execute(context);
+        if (lastResult.kind === 'failure') return lastResult;
+      }
+    }
+
     const maxIterations = 'count' in directive ? directive.count : 1000;
     const untilCondition = 'until' in directive ? directive.until : null;
 
     let lastResult: Result = stepSuccess({});
     for (let i = 0; i < maxIterations; i++) {
+      if (context.signal?.aborted) return stepFailureWithCategory('Cancelled', 'CANCELLED');
       lastResult = await this.next.execute(context);
       if (lastResult.kind === 'failure') return lastResult;
 
@@ -153,13 +164,25 @@ class RetryDecorator implements DecoratedExecution {
     const speed = context.scope.speedMultiplier().currentSpeed();
     let lastResult: Result = stepFailure('no attempts');
     for (let attempt = 0; attempt < directive.max; attempt++) {
-      if (attempt > 0 && directive.type === 'full' && directive.delayMs > 0) {
-        const delayMs = computeDelay(directive.delayMs, directive.backoff, attempt - 1);
-        const adjustedMs = Math.max(1, Math.round(delayMs / speed));
-        await sleep(adjustedMs);
+      if (attempt > 0) {
+        const backoff = 'backoff' in directive ? directive.backoff : undefined;
+        const delayMs = 'delayMs' in directive ? directive.delayMs : undefined;
+        if (backoff && delayMs && delayMs > 0) {
+          const delay = computeDelay(delayMs, backoff, attempt - 1);
+          const adjustedMs = Math.max(1, Math.round(delay / speed));
+          await sleep(adjustedMs);
+        }
       }
       lastResult = await this.next.execute(context);
       if (lastResult.kind === 'success') return lastResult;
+      if (lastResult.kind === 'failure') {
+        const category = lastResult.failureCategory ?? 'UNKNOWN';
+        if (category === 'CANCELLED') break;
+        if (directive.type === 'conditional') {
+          if (directive.on && !directive.on.includes(category)) break;
+          if (directive.except && directive.except.includes(category)) break;
+        }
+      }
     }
     return lastResult;
   }
@@ -184,14 +207,14 @@ class TimeoutDecorator implements DecoratedExecution {
     private readonly raw: unknown,
   ) {}
   async execute(context: Context): Promise<Result> {
-    if (context.signal?.aborted) return stepFailure('Cancelled');
+    if (context.signal?.aborted) return stepFailureWithCategory('Cancelled', 'CANCELLED');
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
     const speed = context.scope.speedMultiplier().currentSpeed();
     const adjustedMs = Math.max(1, Math.round(ms / speed));
     const deadlineScope = context.scope.withDeadline(adjustedMs);
     const deadlineCtx: Context = { ...context, scope: deadlineScope };
     const timeoutPromise = new Promise<Result>((resolve) =>
-      setTimeout(() => resolve(stepFailure(`Step '${context.stepName}' exceeded timeout of ${ms}ms`)), adjustedMs),
+      setTimeout(() => resolve(stepFailureWithCategory(`Step '${context.stepName}' exceeded timeout of ${ms}ms`, 'TIMEOUT')), adjustedMs),
     );
     return Promise.race([this.next.execute(deadlineCtx), timeoutPromise]);
   }
@@ -203,7 +226,7 @@ class WaitDecorator implements DecoratedExecution {
     private readonly signalName: string,
   ) {}
   async execute(context: Context): Promise<Result> {
-    if (context.signal?.aborted) return stepFailure('Cancelled');
+    if (context.signal?.aborted) return stepFailureWithCategory('Cancelled', 'CANCELLED');
     const orcSignal = context.scope.signal(this.signalName);
     const remaining = context.scope.remainingTime();
     try {
@@ -212,13 +235,13 @@ class WaitDecorator implements DecoratedExecution {
       } else if (remaining != null) {
         const acquired = await orcSignal.await(remaining);
         if (!acquired) {
-          return stepFailure(`Wait for signal '${this.signalName}' exceeded deadline`);
+          return stepFailureWithCategory(`Wait for signal '${this.signalName}' exceeded deadline`, 'TIMEOUT');
         }
       } else {
         await orcSignal.await();
       }
     } catch (e) {
-      if (e instanceof DOMException && e.name === 'AbortError') return stepFailure('Cancelled');
+      if (e instanceof DOMException && e.name === 'AbortError') return stepFailureWithCategory('Cancelled', 'CANCELLED');
       throw e;
     }
     const payload = orcSignal.payload();
@@ -265,7 +288,7 @@ class DelayDecorator implements DecoratedExecution {
     private readonly raw: unknown,
   ) {}
   async execute(context: Context): Promise<Result> {
-    if (context.signal?.aborted) return stepFailure('Cancelled');
+    if (context.signal?.aborted) return stepFailureWithCategory('Cancelled', 'CANCELLED');
     const ms = typeof this.raw === 'number' ? this.raw : parseDuration(String(this.raw));
     const speed = context.scope.speedMultiplier().currentSpeed();
     const adjustedMs = Math.max(1, Math.round(ms / speed));
@@ -281,7 +304,7 @@ class SemaphoreDecorator implements DecoratedExecution {
     private readonly permits: number,
   ) {}
   async execute(context: Context): Promise<Result> {
-    if (context.signal?.aborted) return stepFailure('Cancelled');
+    if (context.signal?.aborted) return stepFailureWithCategory('Cancelled', 'CANCELLED');
     const sem = context.scope.semaphore(this.name, this.permits);
     const remaining = context.scope.remainingTime();
     try {
@@ -290,13 +313,13 @@ class SemaphoreDecorator implements DecoratedExecution {
       } else if (remaining != null) {
         const acquired = await sem.tryAcquire(remaining);
         if (!acquired) {
-          return stepFailure(`Semaphore '${this.name}' acquire exceeded deadline`);
+          return stepFailureWithCategory(`Semaphore '${this.name}' acquire exceeded deadline`, 'TIMEOUT');
         }
       } else {
         await sem.acquire();
       }
     } catch (e) {
-      if (e instanceof DOMException && e.name === 'AbortError') return stepFailure('Cancelled');
+      if (e instanceof DOMException && e.name === 'AbortError') return stepFailureWithCategory('Cancelled', 'CANCELLED');
       throw e;
     }
     try {
