@@ -10,6 +10,8 @@ interface FlowNode {
   readonly id: string;
   readonly position: { readonly x: number; readonly y: number };
   readonly measured?: { readonly width?: number; readonly height?: number };
+  readonly width?: number;
+  readonly height?: number;
 }
 
 export interface RubberBandOptions {
@@ -44,17 +46,21 @@ export function createRubberBandSelect(opts: RubberBandOptions): RubberBandSelec
 
   function nodesInFlowRect(fr: {x:number;y:number;w:number;h:number}): Set<string> {
     const candidates = new Set<string>();
-    for (const n of getNodes()) {
-      if (isSelectable && !isSelectable(n.id)) continue;
-      const nw = n.measured?.width ?? 100;
-      const nh = n.measured?.height ?? 50;
+    const nodeEls = containerEl.querySelectorAll('.react-flow__node');
+    for (const el of nodeEls) {
+      const nodeId = (el as HTMLElement).dataset['id'] ?? '';
+      if (!nodeId) continue;
+      if (isSelectable && !isSelectable(nodeId)) continue;
+      const rect = el.getBoundingClientRect();
+      const topLeft = screenToFlow(rect.x, rect.y);
+      const bottomRight = screenToFlow(rect.x + rect.width, rect.y + rect.height);
       if (
-        n.position.x + nw > fr.x &&
-        n.position.x < fr.x + fr.w &&
-        n.position.y + nh > fr.y &&
-        n.position.y < fr.y + fr.h
+        bottomRight.x > fr.x &&
+        topLeft.x < fr.x + fr.w &&
+        bottomRight.y > fr.y &&
+        topLeft.y < fr.y + fr.h
       ) {
-        candidates.add(n.id);
+        candidates.add(nodeId);
       }
     }
     return candidates;

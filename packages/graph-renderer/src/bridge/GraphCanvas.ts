@@ -319,7 +319,7 @@ export class GraphCanvas extends LitElement {
     this._rubberBand = createRubberBandSelect({
       containerEl: this._container,
       screenToFlow: (x, y) => this.screenToFlow(x, y) ?? { x, y },
-      getNodes: () => this._nodes,
+      getNodes: () => this.nodes ?? this._nodes,
       getModel: () => this.model ?? { nodes: [], edges: [] },
       isSelectable: (nodeId) => {
         if (!this.editPolicy || !this.model) return true;
