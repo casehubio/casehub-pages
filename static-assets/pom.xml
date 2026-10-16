@@ -7,12 +7,12 @@
     <parent>
         <groupId>io.casehub</groupId>
         <artifactId>casehub-parent</artifactId>
-        <version>0.3</version>
+        <version>0.4-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
     <artifactId>casehub-pages-ui-static</artifactId>
-    <version>0.3</version>
+    <version>0.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>CaseHub Pages UI Static Assets</name>
     <description>Pre-built design system assets — theme CSS and component ESM bundle served from META-INF/resources/pages/</description>

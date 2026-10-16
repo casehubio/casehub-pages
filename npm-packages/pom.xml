@@ -7,12 +7,12 @@
     <parent>
         <groupId>io.casehub</groupId>
         <artifactId>casehub-parent</artifactId>
-        <version>0.3</version>
+        <version>0.4-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
     <artifactId>casehub-pages-npm</artifactId>
-    <version>0.3</version>
+    <version>0.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>CaseHub Pages NPM Packages</name>
     <description>Packed @casehubio/pages-* npm packages with resolved versions — consumed by CaseHub apps via Maven</description>

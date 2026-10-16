@@ -7,12 +7,12 @@
     <parent>
         <groupId>io.casehub</groupId>
         <artifactId>casehub-parent</artifactId>
-        <version>0.3</version>
+        <version>0.4-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
     <artifactId>casehub-pages-webapp</artifactId>
-    <version>0.3</version>
+    <version>0.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>CaseHub Pages Webapp</name>
     <description>Pre-built Pages frontend — serves from META-INF/resources/ on the Quarkus classpath</description>
