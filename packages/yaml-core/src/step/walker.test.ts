@@ -485,5 +485,145 @@ describe('Walker', () => {
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/structural.*action/i);
     });
+
+    it('resolves combined-key form: forEach member in members', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill'), click: makeEntry('click') });
+      const steps = [
+        { 'forEach member in members': [{ fill: {} }, { click: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].steps).toHaveLength(2);
+        expect(resolved[0].decorators['forEach']).toBe('member in members');
+      }
+    });
+
+    it('resolves combined-key form: retry 3', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { 'retry 3': [{ fill: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].steps).toHaveLength(1);
+        expect(resolved[0].decorators['retry']).toBe('3');
+      }
+    });
+
+    it('resolves combined-key form: when ${params.enabled}', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { 'when ${params.enabled}': [{ fill: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].steps).toHaveLength(1);
+        expect(resolved[0].decorators['when']).toBe('${params.enabled}');
+      }
+    });
+
+    it('resolves combined-key form: timeout 30s', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { 'timeout 30s': [{ fill: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].decorators['timeout']).toBe('30s');
+      }
+    });
+
+    it('resolves combined-key form: mutex order-lock', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { 'mutex order-lock': [{ fill: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].decorators['mutex']).toBe('order-lock');
+      }
+    });
+
+    it('resolves combined-key form: loop continuous', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { 'loop continuous': [{ fill: {} }], cancel: 'done', timeout: '1m' },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].decorators['loop']).toBe('continuous');
+        expect(resolved[0].decorators['cancel']).toBe('done');
+      }
+    });
+
+    it('combined-key form with scalar decorators', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { 'forEach item in items': [{ fill: {} }], retry: 3, timeout: '30s' },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].decorators['forEach']).toBe('item in items');
+        expect(resolved[0].decorators['retry']).toBe(3);
+        expect(resolved[0].decorators['timeout']).toBe('30s');
+      }
+    });
+
+    it('rejects combined-key with non-array value', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { 'forEach item in items': 'not-an-array' },
+      ];
+      expect(() => Walker.resolve(steps, catalog)).toThrow(/unknown step key/i);
+    });
+
+    it('combined-key form: block with name', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill'), click: makeEntry('click') });
+      const steps = [
+        { 'block setup': [{ fill: {} }, { click: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('block');
+      expect(resolved[0]!.name).toBe('setup');
+      if (resolved[0]!.kind === 'block') {
+        expect(resolved[0].steps).toHaveLength(2);
+      }
+    });
+
+    it('combined-key form: parallel with name', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill'), click: makeEntry('click') });
+      const steps = [
+        { 'parallel fast-path': [{ fill: {} }, { click: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('parallel');
+      expect(resolved[0]!.name).toBe('fast-path');
+    });
+
+    it('combined-key form: race with name', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill'), click: makeEntry('click') });
+      const steps = [
+        { 'race winner': [{ fill: {} }, { click: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('race');
+      expect(resolved[0]!.name).toBe('winner');
+    });
+
+    it('combined-key step name does not override explicit step key', () => {
+      const catalog = makeCatalog({ fill: makeEntry('fill') });
+      const steps = [
+        { step: 'explicit', 'block setup': [{ fill: {} }] },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.name).toBe('explicit');
+    });
   });
 });

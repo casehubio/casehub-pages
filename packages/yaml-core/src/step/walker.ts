@@ -205,6 +205,18 @@ const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finall
 
 const REMOVED_KEYS = new Set(['steps', 'do']);
 
+const COMBINED_KEY_PREFIXES = new Set([
+  ...PROMOTABLE_DECORATORS,
+  'block', 'parallel', 'try', 'select', 'race', 'if', 'match',
+]);
+
+function matchCombinedKey(key: string): string | null {
+  const spaceIdx = key.indexOf(' ');
+  if (spaceIdx < 0) return null;
+  const prefix = key.substring(0, spaceIdx);
+  return COMBINED_KEY_PREFIXES.has(prefix) ? prefix : null;
+}
+
 const MAX_DEPTH = 32;
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -274,6 +286,21 @@ export class Walker {
         structuralValue = value;
       } else if (DECORATOR_KEYS.has(key) && !(key === 'if' && step['then'] !== undefined)) {
         decorators[key] = value;
+      } else if (matchCombinedKey(key) && Array.isArray(value)) {
+        if (structuralType) {
+          throw new Error(`${stepPath}: step has both structural type '${structuralType}' and structural decorator '${key}'`);
+        }
+        const spaceIdx = key.indexOf(' ');
+        const prefix = key.substring(0, spaceIdx);
+        const param = key.substring(spaceIdx + 1);
+        if (PROMOTABLE_DECORATORS.has(prefix)) {
+          structuralType = prefix;
+          structuralValue = { [param]: value };
+        } else {
+          stepName = stepName ?? param;
+          structuralType = prefix;
+          structuralValue = value;
+        }
       } else if (!RESERVED_KEYS.has(key)) {
         const entry = catalog.resolve(key);
         if (entry) {
