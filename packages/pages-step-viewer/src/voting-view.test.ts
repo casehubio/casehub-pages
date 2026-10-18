@@ -54,11 +54,10 @@ describe('voting-view', () => {
     expect(el.shadowRoot!.querySelectorAll('agent-card').length).toBe(3);
   });
 
-  it('renders convergence arrows', () => {
-    const svg = el.shadowRoot!.querySelector('svg');
-    expect(svg).toBeTruthy();
-    const paths = svg!.querySelectorAll('path:not(marker path)');
-    expect(paths.length).toBe(3);
+  it('renders flow indicator between agents and aggregation', () => {
+    const flow = el.shadowRoot!.querySelector('.flow-indicator');
+    expect(flow).toBeTruthy();
+    expect(flow!.querySelector('.flow-arrow')?.textContent).toBe('▼');
   });
 
   it('renders prominent aggregation card', () => {
