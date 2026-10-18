@@ -1205,18 +1205,39 @@ agents:
     capabilities: [critical-analysis]
 `;
 
-  const combinedYaml = viewerDescriptorYaml + '\n' + viewerPatternYaml;
-  renderComponentSection('viewer-section', combinedYaml, () => {
-    const descriptor = parse(viewerDescriptorYaml);
-    const pattern = parse(viewerPatternYaml);
-    const el = document.createElement('agent-viewer');
-    el.data = {
-      agent: descriptor,
-      pattern: pattern,
-      breadcrumb: [pattern.name ?? 'Pattern', descriptor.name],
-    };
-    return el;
+  const combinedYaml = `# --- descriptor (eidos) ---\n${viewerDescriptorYaml.trim()}\n\n# --- pattern (blocks) ---\n${viewerPatternYaml.trim()}`;
+  const viewerContainer = document.getElementById('viewer-section');
+  const viewerPanel = document.createElement('div');
+  viewerPanel.className = 'tab-panel';
+  const vpId = panelId++;
+  viewerPanel.innerHTML = `
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="rendered-${vpId}">Rendered</button>
+      <button class="tab-btn" data-tab="yaml-${vpId}">YAML</button>
+    </div>
+    <div class="tab-content active" id="rendered-${vpId}"></div>
+    <div class="tab-content yaml-tab" id="yaml-${vpId}">
+      <pre>${highlightYaml(combinedYaml)}</pre>
+    </div>
+  `;
+  viewerContainer.appendChild(viewerPanel);
+  viewerPanel.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      viewerPanel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      viewerPanel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
   });
+  const descriptor = parse(viewerDescriptorYaml);
+  const pattern = parse(viewerPatternYaml);
+  const agentViewer = document.createElement('agent-viewer');
+  agentViewer.data = {
+    agent: descriptor,
+    pattern: pattern,
+    breadcrumb: [pattern.name ?? 'Pattern', descriptor.name],
+  };
+  document.getElementById(`rendered-${vpId}`).appendChild(agentViewer);
 </script>
 
 </body>
