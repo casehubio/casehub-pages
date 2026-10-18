@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, svg, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { PatternSpec } from './pattern-types.js';
 import { fanInPaths } from '@casehubio/pages-ui-tokens';
@@ -70,7 +70,7 @@ export class VotingView extends LitElement {
     .arrows {
       display: flex;
       justify-content: center;
-      padding-bottom: 8px;
+      padding: 8px 0 12px;
     }
     .aggregation {
       display: flex;
@@ -219,24 +219,24 @@ export class VotingView extends LitElement {
     const agents = this.pattern.agents ?? [];
     if (agents.length === 0 || !this.pattern.aggregation) return nothing;
     const count = agents.length;
-    const width = Math.max(200, count * 80);
+    const width = 600;
     const cx = width / 2;
     const spacing = width / (count + 1);
     const sources = agents.map((_, i) => ({ x: spacing * (i + 1), y: 0 }));
-    const target = { x: cx, y: 25 };
+    const target = { x: cx, y: 45 };
     const paths = fanInPaths(sources, target);
     return html`
       <div class="arrows">
-        <svg width="${width}" height="30" style="overflow:visible">
-          ${paths.map(d => html`<path d="${d}" fill="none"
-            stroke="#7f849c" stroke-width="1.5"
+        <svg width="${width}" height="50" style="display:block;margin:0 auto">
+          ${paths.map(d => svg`<path d="${d}" fill="none"
+            stroke="#9399b2" stroke-width="1.5"
             marker-end="url(#voting-arrow)"/>`)}
-          <defs>
-            <marker id="voting-arrow" markerWidth="6" markerHeight="6"
-              refX="5" refY="3" orient="auto">
-              <path d="M0,0 L6,3 L0,6 Z" fill="#7f849c"/>
+          ${svg`<defs>
+            <marker id="voting-arrow" markerWidth="8" markerHeight="8"
+              refX="7" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#9399b2"/>
             </marker>
-          </defs>
+          </defs>`}
         </svg>
       </div>
     `;
