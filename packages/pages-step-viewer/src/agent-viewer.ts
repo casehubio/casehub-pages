@@ -6,7 +6,7 @@ import './eidos-view.js';
 import './voting-view.js';
 import './debate-view.js';
 
-export type AgentTab = 'eidos' | 'pattern' | 'steps';
+export type AgentTab = 'eidos' | 'pattern';
 
 export interface AgentViewerData {
   agent: AgentDescriptor;
@@ -130,8 +130,6 @@ export class AgentViewer extends LitElement {
              @click=${() => this.selectTab('eidos')}>Eidos</div>
         <div class="tab ${this.activeTab === 'pattern' ? 'active' : ''} ${hasPattern ? '' : 'disabled'}"
              @click=${() => hasPattern && this.selectTab('pattern')}>Pattern</div>
-        <div class="tab ${this.activeTab === 'steps' ? 'active' : ''} disabled"
-             @click=${() => {}}>Steps</div>
       </div>
     `;
   }
@@ -146,8 +144,7 @@ export class AgentViewer extends LitElement {
         return html`<eidos-view .agent=${this.data.agent}></eidos-view>`;
       case 'pattern':
         return this.renderPattern();
-      case 'steps':
-        return html`<div class="empty-state">Steps view — requires runtime step data</div>`;
+
     }
   }
 

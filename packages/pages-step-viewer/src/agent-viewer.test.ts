@@ -48,12 +48,11 @@ describe('agent-viewer', () => {
     expect(segments[0]?.textContent).toBe('Pattern');
   });
 
-  it('renders tab bar with 3 tabs', () => {
+  it('renders tab bar with 2 tabs', () => {
     const tabs = el.shadowRoot!.querySelectorAll('.tab');
-    expect(tabs.length).toBe(3);
+    expect(tabs.length).toBe(2);
     expect(tabs[0]?.textContent).toBe('Eidos');
     expect(tabs[1]?.textContent).toBe('Pattern');
-    expect(tabs[2]?.textContent).toBe('Steps');
   });
 
   it('defaults to eidos tab', () => {
@@ -70,13 +69,7 @@ describe('agent-viewer', () => {
     expect(el.shadowRoot!.querySelector('voting-view')).toBeTruthy();
   });
 
-  it('steps tab shows empty state', async () => {
-    const tabs = el.shadowRoot!.querySelectorAll('.tab');
-    (tabs[2] as HTMLElement).click();
-    await el.updateComplete;
-    // Steps tab is disabled, so it should stay on eidos
-    expect(el.shadowRoot!.querySelector('.tab.active')?.textContent).toBe('Eidos');
-  });
+
 
   it('pattern tab disabled when no pattern data', async () => {
     el.data = { ...fixture(), pattern: undefined };
