@@ -58,6 +58,17 @@ export class SchemaComposer {
     });
     oneOf.push({ type: 'object', properties: { race: { type: 'array' }, step: { type: 'string' } }, required: ['race'] });
 
+    for (const dk of ['forEach', 'retry', 'timeout', 'when', 'mutex', 'loop']) {
+      const structuralProps: Record<string, unknown> = {
+        [dk]: { oneOf: [{ type: 'object' }, { type: 'array' }] },
+        step: { type: 'string' },
+      };
+      for (const otherDk of DECORATOR_KEYS) {
+        if (otherDk !== dk) structuralProps[otherDk] = {};
+      }
+      oneOf.push({ type: 'object', properties: structuralProps, required: [dk] });
+    }
+
     const sharedProps: Record<string, unknown> = { step: { type: 'string' } };
     for (const dk of DECORATOR_KEYS) sharedProps[dk] = {};
 
