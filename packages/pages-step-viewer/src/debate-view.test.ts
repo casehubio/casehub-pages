@@ -65,8 +65,16 @@ describe('debate-view', () => {
     expect(el.shadowRoot!.querySelector('.judge-detail')?.textContent).toContain('Evaluates arguments');
   });
 
-  it('renders maxRounds hint', () => {
-    expect(el.shadowRoot!.querySelector('.rounds-hint')?.textContent).toContain('max 7 rounds');
+  it('renders round structure from agents and maxRounds', () => {
+    const entries = el.shadowRoot!.querySelectorAll('.round-entry');
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries[0]?.querySelector('.round-speaker')?.textContent).toBe('proponent');
+    expect(entries[1]?.querySelector('.round-speaker')?.textContent).toBe('opponent');
+  });
+
+  it('renders rounds ellipsis with termination', () => {
+    expect(el.shadowRoot!.querySelector('.rounds-ellipsis')?.textContent).toContain('max 7 rounds');
+    expect(el.shadowRoot!.querySelector('.rounds-ellipsis')?.textContent).toContain('convergence');
   });
 
   it('renders termination specs', () => {

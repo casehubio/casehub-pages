@@ -1,7 +1,6 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { PatternSpec } from './pattern-types.js';
-import { fanInPaths } from '@casehubio/pages-ui-tokens';
 import './agent-card.js';
 
 @customElement('debate-view')
@@ -100,16 +99,57 @@ export class DebateView extends LitElement {
       font-size: 20px;
       color: #7f849c;
     }
-    .rounds-hint {
+    .rounds {
+      display: grid;
+      gap: 6px;
+      max-width: 500px;
+      margin: 0 auto 12px;
+    }
+    .round-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      border-left: 3px solid;
+    }
+    .round-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #7f849c;
+      min-width: 50px;
+    }
+    .round-speaker {
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .round-capability {
+      font-size: 10px;
+      color: #7f849c;
+      font-style: italic;
+    }
+    .rounds-ellipsis {
       text-align: center;
       font-size: 11px;
       color: #7f849c;
-      padding: 8px 0;
+      padding: 4px;
     }
-    .topology-connectors {
+    .flow-indicator {
       display: flex;
-      justify-content: center;
-      padding-bottom: 4px;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 0;
+      color: #585b70;
+    }
+    .flow-line {
+      width: 1px;
+      height: 16px;
+      background: #585b70;
+    }
+    .flow-arrow {
+      font-size: 10px;
+      line-height: 1;
     }
     .judge-section {
       display: flex;
@@ -181,8 +221,8 @@ export class DebateView extends LitElement {
       </div>
       <div class="body">
         ${this.renderDebaters()}
-        ${this.renderRoundsHint()}
-        ${this.renderTopologyConnectors()}
+        ${this.renderRounds()}
+        ${this.renderFlowIndicator()}
         ${this.renderJudge()}
         ${this.renderMetadata()}
       </div>
@@ -234,36 +274,42 @@ export class DebateView extends LitElement {
     `;
   }
 
-  private renderRoundsHint(): TemplateResult | typeof nothing {
-    if (!this.pattern.maxRounds) return nothing;
+  private renderRounds(): TemplateResult | typeof nothing {
+    const agents = this.pattern.agents ?? [];
+    const maxRounds = this.pattern.maxRounds;
+    if (agents.length < 2 || !maxRounds) return nothing;
+    const previewRounds = Math.min(maxRounds, 3);
+    const entries: TemplateResult[] = [];
+    for (let r = 1; r <= previewRounds; r++) {
+      for (let a = 0; a < agents.length; a++) {
+        const agent = agents[a]!;
+        const color = DebateView.DEBATER_COLORS[a] ?? '#7f849c';
+        const cap = agent.capabilities?.[r % (agent.capabilities?.length ?? 1)] ?? agent.capabilities?.[0];
+        entries.push(html`
+          <div class="round-entry" style="border-left-color:${color}">
+            <span class="round-label">Round ${r}</span>
+            <span class="round-speaker" style="color:${color}">${agent.name}</span>
+            ${cap ? html`<span class="round-capability">${cap}</span>` : nothing}
+          </div>
+        `);
+      }
+    }
+    const termDesc = this.pattern.termination?.find(t => t.type === 'all-agreed')
+      ? 'convergence' : 'completion';
     return html`
-      <div class="rounds-hint">⋮ until convergence or max ${this.pattern.maxRounds} rounds</div>
+      <div class="rounds">${entries}</div>
+      ${maxRounds > previewRounds
+        ? html`<div class="rounds-ellipsis">⋮ until ${termDesc} or max ${maxRounds} rounds</div>`
+        : nothing}
     `;
   }
 
-  private renderTopologyConnectors(): TemplateResult | typeof nothing {
-    const agents = this.pattern.agents ?? [];
-    if (agents.length === 0 || !this.pattern.judge) return nothing;
-    const count = agents.length;
-    const width = Math.max(160, count * 80);
-    const cx = width / 2;
-    const spacing = width / (count + 1);
-    const sources = agents.map((_, i) => ({ x: spacing * (i + 1), y: 0 }));
-    const target = { x: cx, y: 20 };
-    const paths = fanInPaths(sources, target);
+  private renderFlowIndicator(): TemplateResult | typeof nothing {
+    if (!this.pattern.judge) return nothing;
     return html`
-      <div class="topology-connectors">
-        <svg width="${width}" height="24" style="overflow:visible">
-          ${paths.map(d => html`<path d="${d}" fill="none"
-            stroke="#7f849c" stroke-width="1.5"
-            marker-end="url(#debate-arrow)"/>`)}
-          <defs>
-            <marker id="debate-arrow" markerWidth="6" markerHeight="6"
-              refX="5" refY="3" orient="auto">
-              <path d="M0,0 L6,3 L0,6 Z" fill="#7f849c"/>
-            </marker>
-          </defs>
-        </svg>
+      <div class="flow-indicator">
+        <div class="flow-line"></div>
+        <span class="flow-arrow">▼</span>
       </div>
     `;
   }
