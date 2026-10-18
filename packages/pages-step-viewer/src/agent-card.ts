@@ -19,7 +19,7 @@ export class AgentCard extends LitElement {
       padding: 10px 16px;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       color: #cdd6f4;
-      width: 100%;
+      width: 280px;
       cursor: pointer;
       transition: background 0.15s;
     }
