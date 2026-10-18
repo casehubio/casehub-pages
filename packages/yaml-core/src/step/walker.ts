@@ -266,7 +266,7 @@ export class Walker {
       } else if (key === 'quorum' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
         structuralType = 'quorum';
         structuralValue = value;
-      } else if (PROMOTABLE_DECORATORS.has(key) && (Array.isArray(value) || (typeof value === 'object' && value !== null))) {
+      } else if (PROMOTABLE_DECORATORS.has(key) && (Array.isArray(value) || (typeof value === 'object' && value !== null && Object.keys(value as Record<string, unknown>).length === 1 && Array.isArray(Object.values(value as Record<string, unknown>)[0])))) {
         if (structuralType) {
           throw new Error(`${stepPath}: step has both structural type '${structuralType}' and structural decorator '${key}'`);
         }

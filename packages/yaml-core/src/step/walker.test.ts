@@ -458,20 +458,24 @@ describe('Walker', () => {
       expect(() => Walker.resolve(steps, catalog)).toThrow(/structural.*structural/i);
     });
 
-    it('throws when structural decorator has object with multiple keys', () => {
+    it('treats object with multiple keys as decorator (not structural)', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { forEach: { 'a in b': [{ fill: {} }], 'c in d': [{ fill: {} }] } },
+        { fill: {}, forEach: { 'a in b': [{ fill: {} }], 'c in d': [{ fill: {} }] } },
       ];
-      expect(() => Walker.resolve(steps, catalog)).toThrow(/exactly one key/i);
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('plugin');
+      expect(resolved[0]!.decorators['forEach']).toEqual({ 'a in b': [{ fill: {} }], 'c in d': [{ fill: {} }] });
     });
 
-    it('throws when structural decorator object value is not an array', () => {
+    it('treats object with non-array value as decorator (not structural)', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { forEach: { 'a in b': 'not-an-array' } },
+        { fill: {}, forEach: { 'a in b': 'not-an-array' } },
       ];
-      expect(() => Walker.resolve(steps, catalog)).toThrow(/steps array/i);
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0]!.kind).toBe('plugin');
+      expect(resolved[0]!.decorators['forEach']).toEqual({ 'a in b': 'not-an-array' });
     });
 
     it('throws when structural decorator conflicts with action key', () => {
