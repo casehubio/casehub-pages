@@ -199,6 +199,8 @@ const DECORATOR_KEYS = new Set([
   'from', 'cancel', 'background',
 ]);
 
+const PROMOTABLE_DECORATORS = new Set(['forEach', 'retry', 'timeout', 'when', 'mutex', 'loop']);
+
 const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finally']);
 
 const REMOVED_KEYS = new Set(['steps', 'do']);
@@ -263,6 +265,12 @@ export class Walker {
         structuralValue = value;
       } else if (key === 'quorum' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
         structuralType = 'quorum';
+        structuralValue = value;
+      } else if (PROMOTABLE_DECORATORS.has(key) && (Array.isArray(value) || (typeof value === 'object' && value !== null))) {
+        if (structuralType) {
+          throw new Error(`${stepPath}: step has both structural type '${structuralType}' and structural decorator '${key}'`);
+        }
+        structuralType = key;
         structuralValue = value;
       } else if (DECORATOR_KEYS.has(key) && !(key === 'if' && step['then'] !== undefined)) {
         decorators[key] = value;
@@ -421,6 +429,26 @@ export class Walker {
       const timeoutRaw = quorumVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
       return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
+    }
+
+    if (structuralType && PROMOTABLE_DECORATORS.has(structuralType)) {
+      let substeps: ResolvedStep[];
+      if (Array.isArray(structuralValue)) {
+        substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames);
+        decorators[structuralType] = true;
+      } else {
+        const entries = Object.entries(structuralValue as Record<string, unknown>);
+        if (entries.length !== 1) {
+          throw new Error(`${stepPath}: structural '${structuralType}' must have exactly one key (the parameter), got ${entries.length}`);
+        }
+        const [param, stepsRaw] = entries[0]!;
+        if (!Array.isArray(stepsRaw)) {
+          throw new Error(`${stepPath}: structural '${structuralType}' parameter '${param}' must map to a steps array`);
+        }
+        substeps = Walker.resolveAtDepth(stepsRaw as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames);
+        decorators[structuralType] = param;
+      }
+      return { kind: 'block', name: stepName, steps: substeps, decorators };
     }
 
     if (!structuralType && !actionKey && !invokeSpec && decorators['delay'] !== undefined) {
