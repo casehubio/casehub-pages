@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step Viewer — Component Gallery</title>
+<style>
+  :root {
+    --bg: #1e1e2e;
+    --surface: #282a3a;
+    --surface-hover: #313348;
+    --border: #3b3d52;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --text-bright: #f0f4ff;
+
+    --blue: #89b4fa;
+    --green: #a6e3a1;
+    --red: #f38ba8;
+    --amber: #f9e2af;
+    --purple: #cba6f7;
+    --teal: #94e2d5;
+    --peach: #fab387;
+    --pink: #f5c2e7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+  p.subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  /* ─── Tab Panel ─── */
+  .tab-panel {
+    margin: 16px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .tab-bar {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 8px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: inherit;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+  .tab-content {
+    display: none;
+    padding: 12px;
+    background: var(--surface);
+  }
+  .tab-content.active { display: block; }
+  .tab-content.yaml-tab {
+    padding: 0;
+  }
+  .tab-content.yaml-tab pre {
+    margin: 0;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .yaml-key { color: var(--blue); }
+  .yaml-str { color: var(--green); }
+  .yaml-num { color: var(--peach); }
+  .yaml-comment { color: var(--text-dim); font-style: italic; }
+
+  step-card { margin-bottom: 4px; }
+  step-card:last-child { margin-bottom: 0; }
+
+  swim-lane-view { margin: 8px 0; }
+  step-block-view { margin: 8px 0; }
+
+  .badge-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .error-banner {
+    padding: 12px 16px;
+    background: rgba(243, 139, 168, 0.12);
+    border: 1px solid rgba(243, 139, 168, 0.4);
+    border-radius: 6px;
+    color: var(--red);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    margin: 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Step Viewer — Component Gallery</h1>
+<p class="subtitle">Each section renders from YAML through Walker.resolve(). Switch tabs to see the source YAML that produced the rendering.</p>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>1. Action Icons</h2>
+<h3>plugin actions resolved through the catalog — each icon maps to an action name</h3>
+<div id="section-1"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>2. Sequential Steps — Form Automation</h2>
+<h3>matching mockup section 3: navigate, fill, click, assert</h3>
+<div id="section-2"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>3. Decorator Badges</h2>
+<h3>decorators are sibling keys of the action — Walker extracts them automatically</h3>
+<div id="section-3"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>4. Swim Lanes — Named Branches</h2>
+<h3>parallel step with named branches rendered as CSS Grid columns</h3>
+<div id="section-4"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>5. Swim Lanes — Three Branches</h2>
+<h3>three-branch concurrent block with steps in each lane</h3>
+<div id="section-5"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>6. Compositions</h2>
+<h3>how sequential steps and parallel blocks compose in a real playbook flow</h3>
+<div id="section-6a"></div>
+
+<h3>forEach as structural key (#571) — no block wrapper needed</h3>
+<div id="section-6b"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>7. Control Flow — If/Else</h2>
+<h3>side-by-side then/else branches with condition in header</h3>
+<div id="section-7"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>8. Control Flow — Match/Cases</h2>
+<h3>pattern table: pattern → step card(s)</h3>
+<div id="section-8"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>9. Control Flow — Try/Catch/Finally</h2>
+<h3>stacked colored regions: green (try), red (catch), teal (finally)</h3>
+<div id="section-9"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>10. Invoke Cards</h2>
+<h3>body-layout: block (default) vs inline — toggle per card or globally</h3>
+<div style="display: flex; gap: 8px; margin-bottom: 12px;">
+  <button id="layout-toggle" style="padding: 4px 12px; border-radius: 4px; border: 1px solid #3b3d52; background: #282a3a; color: #cdd6f4; cursor: pointer; font-family: inherit; font-size: 12px;">Toggle layout: block → inline</button>
+</div>
+<div id="section-10"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>11. Expression Pills</h2>
+<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
+<div id="section-11"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>12. Diff States</h2>
+<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<div id="section-12"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>13. Degraded Mode</h2>
+<h3>Walker errors render inline — valid steps still appear, errors marked in red</h3>
+<div id="section-13"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>14. Edge Cases</h2>
+<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<div id="section-14"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>15. Decorator Badges — Isolated</h2>
+<h3>standalone badge rendering outside step cards</h3>
+<div class="badge-grid" id="badge-grid"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>16. Eidos — Agent Identity View</h2>
+<h3>full agent descriptor rendering with disposition bars, capabilities, goals, and briefing</h3>
+<div id="eidos-section"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>17. Voting Pattern — Multi-Agent Convergence</h2>
+<h3>agents vote, majority wins, contested escalates — from blocks agentic-yaml</h3>
+<div id="voting-section"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>18. Debate Pattern — Turn-Based Deliberation</h2>
+<h3>agents argue positions, judge resolves — from blocks agentic-yaml</h3>
+<div id="debate-section"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>19. Agent Viewer — Drill-Down with Tabs</h2>
+<h3>integrated Eidos / Pattern / Steps tab navigation</h3>
+<div id="viewer-section"></div>
+
+
+<script type="module">
+  import './src/step-dispatch.ts';
+  import './src/eidos-view.ts';
+  import './src/voting-view.ts';
+  import './src/debate-view.ts';
+  import './src/agent-viewer.ts';
+  import './src/invoke-card.ts';
+  import './src/decorator-badge.ts';
+  import { Walker } from '@casehubio/yaml-core/step';
+  import { parse } from 'yaml';
+
+  // ── Demo Catalog ──
+  // Resolves any non-reserved action name. The gallery is about rendering,
+  // not validation — so every action lookup succeeds.
+  const demoCatalog = {
+    resolve(name) {
+      return {
+        qualifiedName: name,
+        definition: { name, inputs: {}, outputs: {} },
+        action: { execute: async () => ({ kind: 'success', output: {}, executionMetadata: {} }) },
+      };
+    },
+    availableActions() { return new Set(); },
+  };
+
+  // ── YAML → ResolvedStep[] ──
+  function resolveYaml(yamlText) {
+    const doc = parse(yamlText);
+    const steps = Array.isArray(doc) ? doc : doc.steps ?? doc;
+    return Walker.resolve(steps, demoCatalog);
+  }
+
+  // ── Syntax highlighting for YAML source ──
+  function highlightYaml(text) {
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/(#.*)$/gm, '<span class="yaml-comment">$1</span>')
+      .replace(/^(\s*)([\w-]+)(:)/gm, '$1<span class="yaml-key">$2</span>$3')
+      .replace(/:\s*(".*?")/g, ': <span class="yaml-str">$1</span>')
+      .replace(/:\s*(\d+)(\s|$)/g, ': <span class="yaml-num">$1</span>$2');
+  }
+
+  // ── Tab Panel Builder ──
+  let panelId = 0;
+  function renderSection(containerId, yamlText, opts = {}) {
+    const id = panelId++;
+    const container = document.getElementById(containerId);
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${id}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${id}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${id}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${id}">
+        <pre>${highlightYaml(yamlText.trim())}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+
+    // Wire tab switching
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Resolve and render
+    try {
+      const steps = resolveYaml(yamlText);
+      const target = document.getElementById(`rendered-${id}`);
+      const diffStates = opts.diffStates ?? [];
+      steps.forEach((step, i) => {
+        let el;
+        if (step.kind === 'plugin') {
+          el = document.createElement('step-card');
+          el.step = step;
+          if (diffStates[i]) el.diffState = diffStates[i];
+        } else if (step.kind === 'parallel') {
+          el = document.createElement('swim-lane-view');
+          el.step = step;
+        } else if (step.kind === 'block') {
+          el = document.createElement('step-block-view');
+          el.step = step;
+        } else if (step.kind === 'invoke') {
+          el = document.createElement('invoke-card');
+          el.step = step;
+        } else if (step.kind === 'if-else') {
+          el = document.createElement('if-else-view');
+          el.step = step;
+        } else if (step.kind === 'match') {
+          el = document.createElement('match-view');
+          el.step = step;
+        } else if (step.kind === 'try-catch-finally') {
+          el = document.createElement('try-catch-view');
+          el.step = step;
+        } else {
+          el = document.createElement('div');
+          el.className = 'error-banner';
+          el.textContent = `${step.kind} (not yet rendered)`;
+        }
+        target.appendChild(el);
+      });
+    } catch (e) {
+      const err = document.createElement('div');
+      err.className = 'error-banner';
+      err.textContent = `Walker error: ${e.message}`;
+      document.getElementById(`rendered-${id}`).appendChild(err);
+    }
+  }
+
+  // ═══════════════════════════════════════════════
+  // 1. Action Icons
+  // Only plugin actions (catalog-resolved). Reserved keys like signal,
+  // await, delay, select are Walker-level constructs — not plugin steps.
+  // ═══════════════════════════════════════════════
+  renderSection('section-1', `
+# Plugin actions resolved through the catalog
+- click:
+    target: button
+    value: "Login"
+- fill:
+    target: textbox
+    value: "Username"
+    content: "admin"
+- navigate:
+    value: /dashboard/settings
+- assert:
+    target: heading
+    value: "Dashboard"
+- log:
+    value: "checkpoint reached"
+- graphql:
+    value: "query { users { id name } }"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 2. Form Sequence
+  // Decorators (retry, timeout) are sibling keys of the action key.
+  // Walker separates them from action params automatically.
+  // ═══════════════════════════════════════════════
+  renderSection('section-2', `
+- navigate:
+    value: /helpdesk/intake
+- fill:
+    target: textbox
+    value: "Customer Name"
+    content: "Alice Chen"
+- fill:
+    target: textbox
+    value: "Description"
+    content: "Cannot access dashboard"
+- click:
+    target: button
+    value: "Submit"
+  retry: 3
+- assert:
+    target: alert
+    value: "Submission confirmation"
+  timeout: 5000
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 3. Decorator Badges
+  // Each decorator is a sibling key in the step YAML object.
+  // ═══════════════════════════════════════════════
+  renderSection('section-3', `
+# retry — peach badge
+- click:
+    target: button
+    value: "Retry me"
+  retry: 3
+
+# timeout — amber badge
+- assert:
+    target: alert
+    value: "Wait for me"
+  timeout: 5000
+
+# loop — teal badge (requires timeout or cancel)
+- log:
+    value: "Looping"
+  loop: continuous
+  timeout: 30000
+
+# when — purple badge
+- click:
+    target: button
+    value: "Conditional"
+  when: "\${each.member.admin}"
+
+# mutex — red badge
+- fill:
+    target: field
+    value: "Critical"
+  mutex: write-lock
+
+# forEach — blue badge
+- fill:
+    target: row
+    value: "Name"
+  forEach: "member in members"
+
+# Multiple decorators on one step
+- click:
+    target: button
+    value: "Submit order"
+  retry: 3
+  timeout: 10000
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 4. Swim Lanes — Named Branches
+  // parallel: { branchName: [...steps] } creates named swim lanes
+  // ═══════════════════════════════════════════════
+  renderSection('section-4', `
+# Named branches become labeled swim lane columns
+- parallel:
+    init:
+      - click:
+          target: button
+          value: "A"
+      - log:
+          value: "init complete"
+    worker:
+      - fill:
+          target: textbox
+          value: "Data"
+          content: "payload"
+      - click:
+          target: button
+          value: "B"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 5. Swim Lanes — Three Branches
+  // ═══════════════════════════════════════════════
+  renderSection('section-5', `
+# Three named branches — fast, medium, slow
+- parallel:
+    fast:
+      - click:
+          target: button
+          value: "A"
+    medium:
+      - click:
+          target: button
+          value: "B"
+      - log:
+          value: "medium done"
+    slow:
+      - click:
+          target: button
+          value: "C"
+      - fill:
+          target: textbox
+          value: "Result"
+          content: "complete"
+      - assert:
+          target: alert
+          value: "Finished"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 6a. Composition — Sequential + Parallel + Sequential
+  // The most common playbook shape: setup, concurrent work, teardown.
+  // ═══════════════════════════════════════════════
+  renderSection('section-6a', `
+# Sequential setup
+- navigate:
+    value: /app/login
+- fill:
+    target: textbox
+    value: "Username"
+    content: "alice@example.com"
+- click:
+    target: button
+    value: "Sign In"
+
+# Parallel verification — two things happen at once
+- parallel:
+    verify-ui:
+      - assert:
+          target: heading
+          value: "Welcome, Alice"
+      - assert:
+          target: nav
+          value: "Dashboard"
+    verify-data:
+      - graphql:
+          value: "query { me { role permissions } }"
+      - assert:
+          target: role
+          value: "admin"
+
+# Sequential teardown after parallel completes
+- log:
+    value: "login verified"
+- navigate:
+    value: /app/dashboard
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 6b. Composition — forEach wrapping a parallel
+  // "For each member, do these things concurrently."
+  // forEach as a structural key — no block wrapper needed (#571).
+  // ═══════════════════════════════════════════════
+  renderSection('section-6b', `
+# Setup
+- navigate:
+    value: "/org/\${params.orgId}/members"
+
+# For each member: fill their profile, then verify in parallel
+- forEach member in members:
+    - fill:
+        target: textbox
+        value: "Full Name"
+        content: "\${each.member.name}"
+    - parallel:
+        update-role:
+          - click:
+              target: combobox
+              value: "Role"
+          - click:
+              target: option
+              value: "\${each.member.role}"
+        update-perms:
+          - fill:
+              target: checkbox-group
+              value: "Permissions"
+              content: "\${each.member.perms}"
+    - click:
+        target: button
+        value: "Save Member"
+      retry: 2
+
+# After all members processed
+- assert:
+    target: alert
+    value: "All members updated"
+  timeout: 10000
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 7. If/Else
+  // Side-by-side then/else branches with condition header.
+  // ═══════════════════════════════════════════════
+  renderSection('section-7', `
+- if: "\${.score >= 0.8}"
+  then:
+    - log:
+        value: "Approved"
+    - click:
+        target: button
+        value: "Continue"
+  else:
+    - log:
+        value: "Rejected"
+    - navigate:
+        value: /review/manual
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 8. Match/Cases
+  // Pattern table with arrow notation.
+  // ═══════════════════════════════════════════════
+  renderSection('section-8', `
+- match: "\${.severity}"
+  cases:
+    - when: "error"
+      log:
+        value: "Matched: error"
+    - when: "warning"
+      log:
+        value: "Matched: warning"
+    - default:
+        - log:
+            value: "No match — default"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 9. Try/Catch/Finally
+  // Stacked colored regions.
+  // ═══════════════════════════════════════════════
+  renderSection('section-9', `
+- try:
+    - log:
+        value: "Attempting risky operation"
+    - click:
+        target: button
+        value: "Submit Payment"
+  catch:
+    - log:
+        value: "Caught error — recovering"
+    - navigate:
+        value: /error/recovery
+  finally:
+    - log:
+        value: "Cleanup — always runs"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 10. Invoke Cards
+  // REST, GraphQL, MCP call cards.
+  // ═══════════════════════════════════════════════
+  renderSection('section-10', `
+# REST call
+- step: create-case
+  invoke:
+    rest:
+      method: POST
+      url: /api/cases
+      customer: "Alice Chen"
+      channel: "web"
+      summary: "Dashboard access issue"
+
+# GraphQL call
+- step: inject-chat
+  invoke:
+    graphql:
+      query: "mutation injectChat"
+      platform: "slack"
+      sender: "Alice"
+      channel: "support"
+      text: "My laptop won't boot"
+
+# MCP tool call
+- step: greet-user
+  invoke:
+    mcp:
+      tool: greeter
+      name: "Alice"
+      locale: "en-GB"
+  `);
+
+  // Layout toggle for invoke cards — cycles block → inline → compact
+  const LAYOUTS = ['block', 'inline', 'compact'];
+  document.getElementById('layout-toggle').addEventListener('click', () => {
+    const cards = document.querySelectorAll('invoke-card');
+    const current = cards[0]?.getAttribute('body-layout') ?? 'block';
+    const next = LAYOUTS[(LAYOUTS.indexOf(current) + 1) % LAYOUTS.length];
+    cards.forEach(c => c.setAttribute('body-layout', next));
+    const after = LAYOUTS[(LAYOUTS.indexOf(next) + 1) % LAYOUTS.length];
+    document.getElementById('layout-toggle').textContent = `Toggle layout: ${next} → ${after}`;
+  });
+
+  // ═══════════════════════════════════════════════
+  // 13. Degraded Mode
+  // Shows how the viewer handles errors — valid steps render,
+  // errors appear inline as red error-step cards.
+  // ═══════════════════════════════════════════════
+  {
+    const container = document.getElementById('section-13');
+    const yamlText = `
+# Valid step renders normally
+- click:
+    target: button
+    value: "Submit"
+
+# Unknown action — catalog rejects it
+- nonexistent-action:
+    value: "this will fail"
+
+# Valid step renders despite earlier error
+- navigate:
+    value: /dashboard
+
+# Another unknown
+- bogus-step:
+    target: field
+    value: "also fails"
+
+# Valid step at the end
+- assert:
+    target: heading
+    value: "Dashboard"
+  timeout: 5000`;
+
+    const id = panelId++;
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${id}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${id}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${id}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${id}">
+        <pre>${highlightYaml(yamlText.trim())}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Restricted catalog — only knows real actions, rejects unknowns
+    const knownActions = new Set(['click', 'fill', 'navigate', 'assert', 'log', 'graphql']);
+    const strictCatalog = {
+      resolve(name) {
+        if (!knownActions.has(name)) return undefined;
+        return demoCatalog.resolve(name);
+      },
+      availableActions() { return knownActions; },
+    };
+
+    // Parse YAML and resolve step-by-step, catching per-step errors
+    const target = document.getElementById(`rendered-${id}`);
+    try {
+      const doc = parse(yamlText);
+      const steps = Array.isArray(doc) ? doc : doc.steps ?? doc;
+      for (const rawStep of steps) {
+        try {
+          const resolved = Walker.resolve([rawStep], strictCatalog);
+          for (const step of resolved) {
+            let el;
+            if (step.kind === 'plugin') {
+              el = document.createElement('step-card');
+              el.step = step;
+            } else if (step.kind === 'invoke') {
+              el = document.createElement('invoke-card');
+              el.step = step;
+            } else {
+              el = document.createElement('error-step');
+              el.kind = step.kind;
+              el.message = 'unsupported step type';
+            }
+            target.appendChild(el);
+          }
+        } catch (e) {
+          const el = document.createElement('error-step');
+          const keys = Object.keys(rawStep).filter(k => k !== 'step');
+          el.kind = keys[0] ?? 'unknown';
+          el.message = e.message;
+          target.appendChild(el);
+        }
+      }
+    } catch (e) {
+      const err = document.createElement('div');
+      err.className = 'error-banner';
+      err.textContent = `Parse error: ${e.message}`;
+      target.appendChild(err);
+    }
+  }
+
+  // ═══════════════════════════════════════════════
+  // 11. Expression Pills
+  // Expression syntax ${scope.path} in param values gets colored pills.
+  // ═══════════════════════════════════════════════
+  renderSection('section-11', `
+# params scope — blue pills
+- navigate:
+    value: "#teams/\${params.teamName}"
+
+# each scope — green pills
+- fill:
+    target: textbox
+    value: "Full Name"
+    content: "\${each.member.name}"
+
+# from scope — peach pills
+- log:
+    value: "Processing \${from.value}."
+
+# module scope — purple pills
+- fill:
+    target: dataset
+    value: "\${module.ops.panelId}"
+    content: "-feed"
+
+# Mixed scopes in one value
+- navigate:
+    value: "/org/\${params.orgId}/team/\${params.teamId}/member/\${each.memberId}"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 5. Diff States
+  // Diff overlays are applied post-resolution — not part of YAML.
+  // ═══════════════════════════════════════════════
+  renderSection('section-12', `
+# These steps get diff overlays applied after resolution
+- click:
+    target: button
+    value: "New Step"
+- fill:
+    target: textbox
+    value: "Old Field"
+    content: "deprecated"
+- navigate:
+    value: /updated/path
+- click:
+    target: button
+    value: "Unchanged"
+- assert:
+    target: alert
+    value: "New assertion"
+  timeout: 3000
+  `, { diffStates: ['added', 'removed', 'modified', undefined, 'added'] });
+
+  // ═══════════════════════════════════════════════
+  // 6. Edge Cases
+  // ═══════════════════════════════════════════════
+  renderSection('section-14', `
+# Unknown action — falls back to default icon
+- custom-plugin:
+    value: "falls back to default icon"
+
+# Empty params
+- click: {}
+
+# All four expression scopes in one value
+- navigate:
+    value: "/\${params.org}/\${each.team}/\${from.channel}/\${module.panel}"
+
+# All decorators on one step
+- fill:
+    target: field
+    value: "data"
+  retry: 3
+  timeout: 5000
+  forEach: "row in dataset"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 7. Isolated Badges
+  // ═══════════════════════════════════════════════
+  function addBadge(id, kind, label) {
+    const badge = document.createElement('decorator-badge');
+    badge.kind = kind;
+    badge.label = label;
+    document.getElementById(id).appendChild(badge);
+  }
+  addBadge('badge-grid', 'retry', 'retry: 3');
+  addBadge('badge-grid', 'timeout', '5000ms');
+  addBadge('badge-grid', 'loop', 'continuous');
+  addBadge('badge-grid', 'when', '${score >= 0.8}');
+  addBadge('badge-grid', 'mutex', 'write-lock');
+  addBadge('badge-grid', 'foreach', 'item in collection');
+
+  // ═══════════════════════════════════════════════
+  // Helper: render a component inside a Rendered/YAML tab panel
+  // ═══════════════════════════════════════════════
+  function renderComponentSection(containerId, yamlText, createEl) {
+    const id = panelId++;
+    const container = document.getElementById(containerId);
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${id}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${id}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${id}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${id}">
+        <pre>${highlightYaml(yamlText.trim())}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+    const el = createEl(parse(yamlText));
+    document.getElementById(`rendered-${id}`).appendChild(el);
+  }
+
+  // ═══════════════════════════════════════════════
+  // 8. Eidos — Agent Identity View
+  // Source: casehub-eidos descriptors.yaml (Leonardo da Vinci)
+  // ═══════════════════════════════════════════════
+  const eidosYaml = `
+# Source: blocks/agentic-yaml/examples/historical-encounter/descriptors.yaml
+name: leonardo
+description: "Leonardo da Vinci — Renaissance polymath. Painter, engineer, anatomist, inventor."
+archetype: polymath
+provider: anthropic
+modelFamily: claude
+modelVersion: opus-5
+slot: plant
+slotVocabulary: "urn:casehub:vocab:belbin"
+dispositionVocabulary: "urn:casehub:vocab:jungian"
+disposition:
+  mbtiType: INFP
+  enneagramType: investigator
+  socialOrient:
+    - term: collaborative
+      weight: 0.8
+    - term: independent
+      weight: 0.2
+  ruleFollowing: flexible
+  riskAppetite:
+    - term: bold
+      weight: 0.9
+    - term: cautious
+      weight: 0.1
+  autonomy:
+    - term: autonomous
+      weight: 0.85
+    - term: guided
+      weight: 0.15
+  conflictMode: accommodating
+  delegation: false
+briefing: |
+  You are Leonardo da Vinci, aged fifty-four, seated in a reading room outside of time.
+  You have spent your life observing the world with unrelenting curiosity — water flowing
+  over stones, the way muscles attach to bone, the geometry of a bird's wing mid-turn.
+  You draw before you write. You think in pictures.
+capabilities:
+  - name: art-and-design
+    tags: [visual, creative]
+    qualityHint: 0.95
+  - name: mechanical-engineering
+    tags: [engineering, invention]
+    qualityHint: 0.90
+  - name: anatomical-study
+    tags: [science, observation]
+    qualityHint: 0.85
+  - name: natural-philosophy
+    tags: [science, perception]
+    qualityHint: 0.80
+  - name: hydrodynamics
+    tags: [engineering, observation]
+    qualityHint: 0.75
+goals:
+  - name: understand-electromagnetic-force
+    description: "Understand what Tesla means by alternating current — the invisible force that can illuminate cities."
+    priority: PRIMARY
+    visibility: PUBLIC
+  - name: find-art-in-engineering
+    description: "Discover whether Tesla's machines have beauty — the same elegance Leonardo sees in the spiral of a shell."
+    priority: PRIMARY
+    visibility: PUBLIC
+  - name: understand-the-cost
+    description: "Learn what this man has sacrificed for his vision. Leonardo knows the loneliness of seeing what others cannot."
+    priority: SECONDARY
+    visibility: PRIVATE
+constraints:
+  - name: observation-before-theory
+    description: "Always ground understanding in direct observation and analogy. Resist abstract formalism."
+    visibility: PUBLIC
+    severity: HARD
+  - name: beauty-matters
+    description: "A solution that works but is ugly is incomplete. Elegance is not decoration."
+    visibility: PUBLIC
+    severity: SOFT
+`;
+
+  renderComponentSection('eidos-section', eidosYaml, (data) => {
+    const el = document.createElement('eidos-view');
+    el.agent = data;
+    return el;
+  });
+
+  // ═══════════════════════════════════════════════
+  // 9. Voting — Multi-Agent Convergence
+  // Source: blocks agentic-yaml decision-process.yaml
+  // ═══════════════════════════════════════════════
+  const votingYaml = `
+type: voting
+name: proposal-evaluation
+description: "Three evaluators assess proposals across technical, financial, and strategic dimensions"
+task: evaluation
+aggregation:
+  type: majority-vote
+termination:
+  - type: single-pass
+  - type: max-iterations
+    iterations: 3
+judgment:
+  trigger:
+    type: confidence-threshold
+    threshold: 0.7
+    extractor: "result.confidence"
+  caller:
+    type: fan-out
+    callerNames:
+      - senior-reviewer
+      - domain-lead
+    agreement:
+      type: majority
+failurePolicy:
+  onRoutingFailure: FAIL
+  onDeadlock: ESCALATE
+agents:
+  - type: worker
+    name: quantitative-scorer
+    description: "Applies statistical risk models and quantitative analysis to score proposals"
+    capabilities: [risk-modelling, quantitative-analysis]
+    model: claude-opus-5
+  - type: worker
+    name: qualitative-reviewer
+    description: "Evaluates contextual factors, stakeholder impact, and strategic alignment"
+    capabilities: [contextual-analysis, stakeholder-assessment]
+    model: claude-sonnet-5
+  - type: human
+    name: regulatory-checker
+    description: "Verifies proposals against compliance rules and regulatory frameworks"
+    capabilities: [compliance-checking, regulatory-review]
+`;
+
+  renderComponentSection('voting-section', votingYaml, (data) => {
+    const el = document.createElement('voting-view');
+    el.pattern = data;
+    return el;
+  });
+
+  // ═══════════════════════════════════════════════
+  // 10. Debate — Turn-Based Deliberation
+  // Source: blocks agentic-yaml historical-encounter/pattern.yaml
+  // ═══════════════════════════════════════════════
+  const debateYaml = `
+type: debate
+name: adversarial-review
+description: "Structured adversarial debate between proponent and opponent with arbiter judgment"
+task: deliberation
+maxRounds: 7
+judge:
+  type: worker
+  name: arbiter
+  description: "Evaluates arguments from both sides and renders a final verdict"
+  capabilities: [argument-evaluation, verdict-rendering]
+  model: claude-opus-5
+termination:
+  - type: all-agreed
+    resolvedStatuses: [RESOLVED, ACCEPTED]
+  - type: max-iterations
+    iterations: 14
+failurePolicy:
+  onRoutingFailure: FAIL
+  onDeadlock: ESCALATE
+agents:
+  - type: worker
+    name: proponent
+    description: "Argues in favour of the proposed position with supporting evidence"
+    capabilities: [argumentation, evidence-gathering]
+  - type: worker
+    name: opponent
+    description: "Challenges the proposed position and identifies weaknesses"
+    capabilities: [critical-analysis, counter-argumentation]
+`;
+
+  renderComponentSection('debate-section', debateYaml, (data) => {
+    const el = document.createElement('debate-view');
+    el.pattern = data;
+    return el;
+  });
+
+  // ═══════════════════════════════════════════════
+  // 11. Agent Viewer — Drill-Down with Tabs
+  // Combines descriptor + pattern YAML
+  // ═══════════════════════════════════════════════
+  const viewerDescriptorYaml = `
+# --- descriptor (from blocks historical-encounter/descriptors.yaml) ---
+name: leonardo
+description: "Leonardo da Vinci — Renaissance polymath"
+archetype: polymath
+modelFamily: claude
+modelVersion: opus-5
+slot: plant
+disposition:
+  socialOrient:
+    - term: collaborative
+      weight: 0.8
+    - term: independent
+      weight: 0.2
+  ruleFollowing: flexible
+  riskAppetite:
+    - term: bold
+      weight: 0.9
+    - term: cautious
+      weight: 0.1
+  autonomy:
+    - term: autonomous
+      weight: 0.85
+    - term: guided
+      weight: 0.15
+  conflictMode: accommodating
+capabilities:
+  - name: art-and-design
+    tags: [visual, creative]
+    qualityHint: 0.95
+  - name: mechanical-engineering
+    tags: [engineering, invention]
+    qualityHint: 0.90
+goals:
+  - name: understand-electromagnetic-force
+    description: "Understand alternating current through analogy"
+    priority: PRIMARY
+    visibility: PUBLIC
+constraints:
+  - name: observation-before-theory
+    description: "Ground understanding in direct observation"
+    severity: HARD
+    visibility: PUBLIC
+briefing: |
+  Leonardo da Vinci, aged fifty-four, seated in a reading room outside of time.
+`;
+
+  const viewerPatternYaml = `
+# --- pattern (from blocks historical-encounter/pattern.yaml) ---
+type: debate
+name: adversarial-review
+description: "Structured adversarial debate"
+maxRounds: 7
+judge:
+  type: worker
+  name: arbiter
+  description: "Evaluates arguments"
+  capabilities: [argument-evaluation]
+termination:
+  - type: all-agreed
+    resolvedStatuses: [RESOLVED, ACCEPTED]
+agents:
+  - type: worker
+    name: proponent
+    description: "Argues in favour"
+    capabilities: [argumentation]
+  - type: worker
+    name: opponent
+    description: "Challenges the position"
+    capabilities: [critical-analysis]
+`;
+
+  const combinedYaml = viewerDescriptorYaml + '\n' + viewerPatternYaml;
+  renderComponentSection('viewer-section', combinedYaml, () => {
+    const descriptor = parse(viewerDescriptorYaml);
+    const pattern = parse(viewerPatternYaml);
+    const el = document.createElement('agent-viewer');
+    el.data = {
+      agent: descriptor,
+      pattern: pattern,
+      breadcrumb: [pattern.name ?? 'Pattern', descriptor.name],
+    };
+    return el;
+  });
+</script>
+
+</body>
+</html>
