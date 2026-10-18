@@ -224,7 +224,7 @@ export class VotingView extends LitElement {
     const spacing = width / (count + 1);
     const sources = agents.map((_, i) => ({ x: spacing * (i + 1), y: 0 }));
     const target = { x: cx, y: 45 };
-    const paths = fanInPaths(sources, target);
+    const paths = fanInPaths(sources, target, { curve: 'step' });
     return html`
       <div class="arrows">
         <svg width="${width}" height="50" style="display:block;margin:0 auto">
