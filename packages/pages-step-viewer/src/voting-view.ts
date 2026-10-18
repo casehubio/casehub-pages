@@ -1,7 +1,7 @@
-import { LitElement, html, svg, css, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { PatternSpec } from './pattern-types.js';
-import { fanInPaths } from '@casehubio/pages-ui-tokens';
+// flow is vertical through levels — CSS indicators, not SVG arrows
 import './agent-card.js';
 
 @customElement('voting-view')
@@ -67,10 +67,21 @@ export class VotingView extends LitElement {
       letter-spacing: 0.5px;
       margin-bottom: 6px;
     }
-    .arrows {
+    .flow-indicator {
       display: flex;
-      justify-content: center;
-      padding: 8px 0 12px;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 0;
+      color: #585b70;
+    }
+    .flow-line {
+      width: 1px;
+      height: 16px;
+      background: #585b70;
+    }
+    .flow-arrow {
+      font-size: 10px;
+      line-height: 1;
     }
     .aggregation {
       display: flex;
@@ -206,7 +217,7 @@ export class VotingView extends LitElement {
         <div class="agents-row">
           ${(p.agents ?? []).map(a => html`<agent-card .agent=${a}></agent-card>`)}
         </div>
-        ${this.renderArrows()}
+        ${this.renderFlowIndicator()}
         ${this.renderAggregation()}
         ${this.renderOutcomes()}
         ${this.renderMetadata()}
@@ -215,29 +226,11 @@ export class VotingView extends LitElement {
     `;
   }
 
-  private renderArrows(): TemplateResult | typeof nothing {
-    const agents = this.pattern.agents ?? [];
-    if (agents.length === 0 || !this.pattern.aggregation) return nothing;
-    const count = agents.length;
-    const width = 600;
-    const cx = width / 2;
-    const spacing = width / (count + 1);
-    const sources = agents.map((_, i) => ({ x: spacing * (i + 1), y: 0 }));
-    const target = { x: cx, y: 45 };
-    const paths = fanInPaths(sources, target, { curve: 'step' });
+  private renderFlowIndicator(): TemplateResult {
     return html`
-      <div class="arrows">
-        <svg width="${width}" height="50" style="display:block;margin:0 auto">
-          ${paths.map(d => svg`<path d="${d}" fill="none"
-            stroke="#9399b2" stroke-width="1.5"
-            marker-end="url(#voting-arrow)"/>`)}
-          ${svg`<defs>
-            <marker id="voting-arrow" markerWidth="8" markerHeight="8"
-              refX="7" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#9399b2"/>
-            </marker>
-          </defs>`}
-        </svg>
+      <div class="flow-indicator">
+        <div class="flow-line"></div>
+        <span class="flow-arrow">▼</span>
       </div>
     `;
   }
