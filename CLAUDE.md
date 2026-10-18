@@ -44,3 +44,15 @@ Three packages provide the editor infrastructure:
 - `packages/pages-document-diff/` — generic LCS diff, word highlights, canvas minimap, scroll sync (extracted from blocks-ui)
 
 `pages-code-editor` extends `EditableTextBridge` from editor-core. `pages-aria` re-exports types from editor-core (deprecated `ScenarioEditableText` alias remains for backward compat).
+
+## Step Viewer
+
+`packages/pages-step-viewer/` — Lit web components for rendering playbook step YAML as visual cards, swim lanes, and control flow diagrams. Gallery at `gallery.html` (run via Vite).
+
+v1 components (pages-owned, render playbook steps via yaml-core):
+- `step-card`, `swim-lane-view`, `step-block-view`, `if-else-view`, `match-view`, `try-catch-view`, `invoke-card`, `error-step`, `decorator-badge`
+
+v2 components (moving to blocks-ui per #578 — render blocks/eidos YAML):
+- `eidos-view`, `voting-view`, `debate-view`, `agent-card`, `agent-viewer`
+
+Design mockup: `docs/mockups/step-review-viewer.html` (24 sections). Spec: `docs/specs/2026-10-17-step-review-viewer-design.md`.
