@@ -53,10 +53,9 @@ export class VotingView extends LitElement {
     }
     .body { padding: 24px; }
     .agents-row {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
       margin-bottom: 20px;
     }
     .section-label {
