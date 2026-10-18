@@ -57,8 +57,8 @@ describe('voting-view', () => {
   it('renders convergence arrows', () => {
     const svg = el.shadowRoot!.querySelector('svg');
     expect(svg).toBeTruthy();
-    const lines = svg!.querySelectorAll('line');
-    expect(lines.length).toBe(3);
+    const paths = svg!.querySelectorAll('path:not(marker path)');
+    expect(paths.length).toBe(3);
   });
 
   it('renders prominent aggregation card', () => {
