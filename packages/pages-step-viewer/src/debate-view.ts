@@ -284,12 +284,10 @@ export class DebateView extends LitElement {
       for (let a = 0; a < agents.length; a++) {
         const agent = agents[a]!;
         const color = DebateView.DEBATER_COLORS[a] ?? '#7f849c';
-        const cap = agent.capabilities?.[r % (agent.capabilities?.length ?? 1)] ?? agent.capabilities?.[0];
         entries.push(html`
           <div class="round-entry" style="border-left-color:${color}">
             <span class="round-label">Round ${r}</span>
             <span class="round-speaker" style="color:${color}">${agent.name}</span>
-            ${cap ? html`<span class="round-capability">${cap}</span>` : nothing}
           </div>
         `);
       }
