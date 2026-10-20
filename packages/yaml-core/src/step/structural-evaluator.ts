@@ -2,6 +2,7 @@ import type {
   ResolvedStep, Result, PluginStep, BlockStep, ParallelStep,
   IfElseStep, MatchStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, InvokeStep, DelayStep, RaceStep,
+  EmitEventStep,
 } from './walker.js';
 import { stepSuccess, stepFailure } from './walker.js';
 import { mergeAbortSignals } from './abort-utils.js';
@@ -47,6 +48,7 @@ export class StructuralEvaluator {
       case 'quorum': return this.evaluateQuorum(step, context);
       case 'delay': return this.evaluateDelay(step);
       case 'race': return this.evaluateRace(step, context);
+      case 'emit-event': return this.evaluateEmitEvent(step, context);
     }
   }
 
@@ -223,6 +225,50 @@ export class StructuralEvaluator {
   private async evaluateDelay(step: DelayStep): Promise<Result> {
     await new Promise(resolve => setTimeout(resolve, step.duration));
     return stepSuccess({});
+  }
+
+  private async evaluateEmitEvent(step: EmitEventStep, context: Context): Promise<Result> {
+    let emitter: import('./emit-event-emitter.js').EventEmitter;
+    try {
+      emitter = context.services.lookup({ name: 'EventEmitter' });
+    } catch {
+      return stepFailure(`emit-event '${step.name ?? 'anonymous'}': EventEmitter service not registered`);
+    }
+
+    const resolved = step.events.map(e => emitter.emit(e));
+
+    if (step.emitTo === 'scope' || step.emitTo === 'both') {
+      try {
+        const routers = context.services.lookup<Array<{ fire(event: unknown, context?: unknown): boolean }>>({ name: 'EventRouterRegistry' });
+        for (const event of resolved) {
+          for (const router of routers) {
+            router.fire(event.type, event);
+          }
+        }
+      } catch {
+        // No EventRouterRegistry — emit to log only
+      }
+    }
+
+    if (step.emitTo === 'pages-event' || step.emitTo === 'both') {
+      try {
+        const dispatch = context.services.lookup<(topic: string, payload: unknown) => void>({ name: 'PagesEventDispatch' });
+        for (const event of resolved) {
+          const topic = event.type.replace(/\./g, ':');
+          dispatch(topic, event);
+        }
+      } catch {
+        if (step.emitTo === 'pages-event') {
+          return stepFailure(`emit-event '${step.name ?? 'anonymous'}': pages-event dispatch not available (no DOM host)`);
+        }
+      }
+    }
+
+    return stepSuccess({
+      emittedCount: resolved.length,
+      emittedIds: resolved.map(e => e.id),
+      emittedTypes: resolved.map(e => e.type),
+    });
   }
 
   private async evaluateRace(step: RaceStep, context: Context): Promise<Result> {

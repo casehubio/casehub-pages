@@ -437,4 +437,104 @@ describe('StructuralEvaluator', () => {
       scope.close();
     });
   });
+
+  describe('emit-event step', () => {
+    function makeEmitStep(
+      events: Array<{ type: string; data: Record<string, unknown>; [k: string]: unknown }>,
+      emitTo: 'scope' | 'pages-event' | 'both' = 'both',
+      name: string | null = null,
+    ): import('./walker.js').EmitEventStep {
+      return { kind: 'emit-event', name, events, emitTo, decorators: {} };
+    }
+
+    it('emits a single event and returns success', async () => {
+      const { DefaultEventEmitter } = await import('./emit-event-emitter.js');
+      const emitter = new DefaultEventEmitter();
+      const services = new MapServiceRegistry();
+      services.register({ name: 'EventEmitter' }, emitter);
+      const evaluator = new StructuralEvaluator();
+      const step = makeEmitStep([{ type: 'test.alert', data: { level: 'HIGH' } }]);
+      const result = await evaluator.evaluate(step, makeContext({ services }));
+      expect(result.kind).toBe('success');
+      expect(emitter.emittedEvents).toHaveLength(1);
+      expect(emitter.emittedEvents[0].type).toBe('test.alert');
+      if (result.kind === 'success') {
+        expect(result.output.emittedCount).toBe(1);
+        expect(result.output.emittedTypes).toEqual(['test.alert']);
+      }
+    });
+
+    it('emits batch events', async () => {
+      const { DefaultEventEmitter } = await import('./emit-event-emitter.js');
+      const emitter = new DefaultEventEmitter();
+      const services = new MapServiceRegistry();
+      services.register({ name: 'EventEmitter' }, emitter);
+      const evaluator = new StructuralEvaluator();
+      const step = makeEmitStep([
+        { type: 'a.b', data: { x: 1 } },
+        { type: 'c.d', data: { y: 2 } },
+      ]);
+      const result = await evaluator.evaluate(step, makeContext({ services }));
+      expect(result.kind).toBe('success');
+      expect(emitter.emittedEvents).toHaveLength(2);
+      if (result.kind === 'success') {
+        expect(result.output.emittedCount).toBe(2);
+        expect(result.output.emittedTypes).toEqual(['a.b', 'c.d']);
+      }
+    });
+
+    it('routes to EventRouter when emitTo includes scope', async () => {
+      const { DefaultEventEmitter } = await import('./emit-event-emitter.js');
+      const emitter = new DefaultEventEmitter();
+      const services = new MapServiceRegistry();
+      services.register({ name: 'EventEmitter' }, emitter);
+      let firedEvent: unknown = null;
+      let firedContext: unknown = null;
+      const mockRouter = {
+        fire(event: unknown, context?: unknown) {
+          firedEvent = event;
+          firedContext = context;
+          return true;
+        },
+      };
+      services.register({ name: 'EventRouterRegistry' }, [mockRouter]);
+      const evaluator = new StructuralEvaluator();
+      const step = makeEmitStep([{ type: 'test.alert', data: {} }], 'scope');
+      await evaluator.evaluate(step, makeContext({ services }));
+      expect(firedEvent).toBe('test.alert');
+      expect((firedContext as { type: string }).type).toBe('test.alert');
+    });
+
+    it('does not fail when no EventRouterRegistry is registered', async () => {
+      const { DefaultEventEmitter } = await import('./emit-event-emitter.js');
+      const emitter = new DefaultEventEmitter();
+      const services = new MapServiceRegistry();
+      services.register({ name: 'EventEmitter' }, emitter);
+      const evaluator = new StructuralEvaluator();
+      const step = makeEmitStep([{ type: 'a.b', data: {} }], 'scope');
+      const result = await evaluator.evaluate(step, makeContext({ services }));
+      expect(result.kind).toBe('success');
+    });
+
+    it('result contains emittedIds', async () => {
+      const { DefaultEventEmitter } = await import('./emit-event-emitter.js');
+      const emitter = new DefaultEventEmitter();
+      const services = new MapServiceRegistry();
+      services.register({ name: 'EventEmitter' }, emitter);
+      const evaluator = new StructuralEvaluator();
+      const step = makeEmitStep([{ type: 'a.b', data: {} }]);
+      const result = await evaluator.evaluate(step, makeContext({ services }));
+      if (result.kind === 'success') {
+        expect(result.output.emittedIds).toHaveLength(1);
+        expect(typeof (result.output.emittedIds as string[])[0]).toBe('string');
+      }
+    });
+
+    it('fails when EventEmitter service is not registered', async () => {
+      const evaluator = new StructuralEvaluator();
+      const step = makeEmitStep([{ type: 'a.b', data: {} }]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('failure');
+    });
+  });
 });
