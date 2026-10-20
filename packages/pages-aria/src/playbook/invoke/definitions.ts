@@ -46,10 +46,21 @@ const SIMULATED_ACTION: Definition = {
   }, outputs: {}, invoke: { kind: 'simulated' }, portability: 'ts',
 };
 
+const REST_ACTION: Definition = {
+  name: 'rest', inputs: {
+    method: { type: 'STRING', required: true },
+    url: { type: 'STRING', required: true },
+    headers: { type: 'OBJECT', required: false },
+    body: { type: 'OBJECT', required: false },
+    expectedStatus: { type: 'INTEGER', required: false },
+  }, outputs: {}, invoke: { kind: 'rest' }, portability: 'universal',
+};
+
 export function loadScenarioDefinitions(): DefinitionFile[] {
   const actions: Record<string, Definition> = {};
   for (const def of ARIA_ACTIONS) actions[def.name] = def;
   actions['graphql'] = GRAPHQL_ACTION;
   actions['simulated'] = SIMULATED_ACTION;
+  actions['rest'] = REST_ACTION;
   return [{ actions }];
 }
