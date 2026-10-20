@@ -6,6 +6,9 @@ export type {
   CloudEventSpec,
 } from './types.js';
 export { CE_NAMED_FIELDS } from './types.js';
+
+export type { EventEmitter } from './emit-event-emitter.js';
+export { DefaultEventEmitter } from './emit-event-emitter.js';
 export { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
 
 export type { Portability, RuntimeEnvironment, PortabilityViolation } from './portability.js';
