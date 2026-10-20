@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { diffSteps } from './diff.js';
 import type { PluginStep, BlockStep, ParallelStep, BarrierStep, QuorumStep,
   IfElseStep, DelayStep, RaceStep, TryCatchFinallyStep, MatchStep,
-  CatalogEntry } from './walker.js';
+  EmitEventStep, CatalogEntry } from './walker.js';
 
 const entry = (name = 'click'): CatalogEntry => ({
   qualifiedName: name,
@@ -251,6 +251,84 @@ describe('diffSteps', () => {
       const steps = [plugin('a')];
       const result = diffSteps(steps, steps);
       expect(result.summary).toEqual([]);
+    });
+  });
+
+  describe('emit-event diff', () => {
+    const emitEvent = (
+      name: string | null,
+      events: Array<{ type: string; data: Record<string, unknown>; [k: string]: unknown }>,
+      emitTo: 'scope' | 'pages-event' | 'both' = 'both',
+      decorators: Record<string, unknown> = {},
+    ): EmitEventStep => ({
+      kind: 'emit-event', name, events, emitTo, decorators,
+    });
+
+    it('marks identical steps as unchanged', () => {
+      const step = emitEvent('a', [{ type: 'x.y', data: { v: 1 } }]);
+      const result = diffSteps([step], [step]);
+      expect(result.root[0].state).toBe('unchanged');
+    });
+
+    it('detects emitTo change', () => {
+      const old = emitEvent('a', [{ type: 'x.y', data: {} }], 'scope');
+      const neu = emitEvent('a', [{ type: 'x.y', data: {} }], 'both');
+      const result = diffSteps([old], [neu]);
+      expect(result.root[0].state).toBe('modified');
+      expect(result.root[0].fieldChanges).toContainEqual({
+        field: 'emitTo', oldValue: 'scope', newValue: 'both',
+      });
+    });
+
+    it('detects events length change', () => {
+      const old = emitEvent('a', [{ type: 'x', data: {} }]);
+      const neu = emitEvent('a', [{ type: 'x', data: {} }, { type: 'y', data: {} }]);
+      const result = diffSteps([old], [neu]);
+      expect(result.root[0].fieldChanges).toContainEqual({
+        field: 'events.length', oldValue: 1, newValue: 2,
+      });
+    });
+
+    it('detects event type change (single event)', () => {
+      const old = emitEvent('a', [{ type: 'old.type', data: {} }]);
+      const neu = emitEvent('a', [{ type: 'new.type', data: {} }]);
+      const result = diffSteps([old], [neu]);
+      expect(result.root[0].fieldChanges).toContainEqual({
+        field: 'type', oldValue: 'old.type', newValue: 'new.type',
+      });
+    });
+
+    it('detects event data change', () => {
+      const old = emitEvent('a', [{ type: 'x', data: { a: 1 } }]);
+      const neu = emitEvent('a', [{ type: 'x', data: { a: 2 } }]);
+      const result = diffSteps([old], [neu]);
+      expect(result.root[0].fieldChanges).toContainEqual({
+        field: 'data', oldValue: { a: 1 }, newValue: { a: 2 },
+      });
+    });
+
+    it('detects per-event changes in batch (prefixed with index)', () => {
+      const old = emitEvent('a', [
+        { type: 'x', data: {} },
+        { type: 'y', data: { v: 1 } },
+      ]);
+      const neu = emitEvent('a', [
+        { type: 'x', data: {} },
+        { type: 'z', data: { v: 1 } },
+      ]);
+      const result = diffSteps([old], [neu]);
+      expect(result.root[0].fieldChanges).toContainEqual({
+        field: 'events[1].type', oldValue: 'y', newValue: 'z',
+      });
+    });
+
+    it('detects source change', () => {
+      const old = emitEvent('a', [{ type: 'x', data: {}, source: '/old' }]);
+      const neu = emitEvent('a', [{ type: 'x', data: {}, source: '/new' }]);
+      const result = diffSteps([old], [neu]);
+      expect(result.root[0].fieldChanges).toContainEqual({
+        field: 'source', oldValue: '/old', newValue: '/new',
+      });
     });
   });
 });

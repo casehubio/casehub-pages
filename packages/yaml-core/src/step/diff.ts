@@ -1,6 +1,6 @@
 import type { ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
-  BarrierStep, QuorumStep, DelayStep, RaceStep, NamedBranch, SelectBranch } from './walker.js';
+  BarrierStep, QuorumStep, DelayStep, RaceStep, EmitEventStep, NamedBranch, SelectBranch } from './walker.js';
 
 export type DiffState = 'added' | 'removed' | 'modified' | 'unchanged';
 export type DiffStatState = Exclude<DiffState, 'unchanged'>;
@@ -227,6 +227,29 @@ function computeFieldChanges(oldStep: ResolvedStep, newStep: ResolvedStep): Fiel
     if (oldStep.required !== newStep.required) changes.push({ field: 'required', oldValue: oldStep.required, newValue: newStep.required });
     if (oldStep.ofSteps.length !== newStep.ofSteps.length) {
       changes.push({ field: 'ofSteps.length', oldValue: oldStep.ofSteps.length, newValue: newStep.ofSteps.length });
+    }
+  }
+  if (oldStep.kind === 'emit-event' && newStep.kind === 'emit-event') {
+    if (oldStep.emitTo !== newStep.emitTo) {
+      changes.push({ field: 'emitTo', oldValue: oldStep.emitTo, newValue: newStep.emitTo });
+    }
+    if (oldStep.events.length !== newStep.events.length) {
+      changes.push({ field: 'events.length', oldValue: oldStep.events.length, newValue: newStep.events.length });
+    }
+    const minLen = Math.min(oldStep.events.length, newStep.events.length);
+    for (let i = 0; i < minLen; i++) {
+      const oe = oldStep.events[i], ne = newStep.events[i];
+      const prefix = oldStep.events.length === 1 && newStep.events.length === 1 ? '' : `events[${i}].`;
+      if (oe.type !== ne.type)
+        changes.push({ field: `${prefix}type`, oldValue: oe.type, newValue: ne.type });
+      if (JSON.stringify(oe.data) !== JSON.stringify(ne.data))
+        changes.push({ field: `${prefix}data`, oldValue: oe.data, newValue: ne.data });
+      if (oe.source !== ne.source)
+        changes.push({ field: `${prefix}source`, oldValue: oe.source, newValue: ne.source });
+      if (oe.subject !== ne.subject)
+        changes.push({ field: `${prefix}subject`, oldValue: oe.subject, newValue: ne.subject });
+      if (oe.datacontenttype !== ne.datacontenttype)
+        changes.push({ field: `${prefix}datacontenttype`, oldValue: oe.datacontenttype, newValue: ne.datacontenttype });
     }
   }
 
