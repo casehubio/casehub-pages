@@ -4,42 +4,9 @@ import { progressiveEmit } from '@casehubio/pages-editor-core';
 import { showSpotlight, dismissAllSpotlights } from '../executor/spotlight.js';
 import type { AriaTarget, AriaState } from '@casehubio/pages-primitives';
 import type { EventConnection } from '@casehubio/pages-data';
+import type { CommandPayload, DispatchStep, DispatchSequence, ExecutorControl } from '../playbook/types.js';
 
 const PLAYBOOK_TOPIC = 'playbook:exec';
-
-interface CommandPayload {
-  id: string;
-  action: string;
-  target?: AriaTarget;
-  value?: string;
-  state?: Record<string, unknown>;
-  timeout?: number;
-}
-
-interface DispatchStep {
-  name: string;
-  label?: string;
-  actor?: string;
-  action: string;
-  params: Record<string, unknown>;
-  await?: { match?: Record<string, unknown>; timeout?: number; interval?: number; status?: number };
-  mode?: string;
-}
-
-interface DispatchSequence {
-  op: 'dispatch-sequence';
-  sessionId: string;
-  steps: DispatchStep[];
-  speed: number;
-  paused: boolean;
-}
-
-interface ExecutorControl {
-  op: 'executor-control';
-  sessionId: string;
-  command: 'pause' | 'resume' | 'step' | 'speed' | 'stop';
-  speed?: number;
-}
 
 export interface PlaybookHandler {
   dispose(): void;
@@ -706,7 +673,7 @@ export function createPlaybookHandler(
 
   let paused = false;
   let stopped = false;
-  let speed = 1.0;
+  let speed = 0;
   let sessionId: string | null = null;
   let stepQueue: DispatchStep[] = [];
   let executing = false;
@@ -775,9 +742,13 @@ export function createPlaybookHandler(
           sendStepResult(connection, sessionId!, step.name, false, 'step execution error');
         }
 
-        if (stepQueue.length > 0 && !paused && speed > 0 && speed < 1000) {
-          const delay = Math.max(10, 1000 / speed);
-          await new Promise<void>((resolve) => setTimeout(resolve, delay));
+        if (stepQueue.length > 0 && !paused) {
+          const stepDelay = step.delay;
+          const speedDelay = (speed > 0 && speed < 1000) ? Math.max(10, 1000 / speed) : 0;
+          const effectiveDelay = stepDelay ?? speedDelay;
+          if (effectiveDelay > 0) {
+            await new Promise<void>((resolve) => setTimeout(resolve, effectiveDelay));
+          }
         }
       }
     } finally {
@@ -791,7 +762,7 @@ export function createPlaybookHandler(
     sessionId = detail.sessionId;
     if (isNewSession) {
       paused = detail.paused;
-      speed = detail.speed;
+      speed = detail.speed ?? 0;
       stopped = false;
     }
     stepQueue.push(...detail.steps);
@@ -857,9 +828,9 @@ export function createPlaybookHandler(
     if (!cmd?.id || !cmd?.action) return;
 
     const flatParams: Record<string, unknown> = {};
-    if (cmd.target) {
-      flatParams.role = cmd.target.role;
-      flatParams.name = cmd.target.name;
+    if (cmd.element) {
+      flatParams.role = cmd.element.role;
+      flatParams.name = cmd.element.name;
     }
     if (cmd.value !== undefined) flatParams.value = cmd.value;
     if (cmd.state) Object.assign(flatParams, cmd.state);

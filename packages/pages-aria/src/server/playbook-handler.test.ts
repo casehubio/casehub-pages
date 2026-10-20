@@ -54,7 +54,7 @@ describe('PlaybookHandler', () => {
     fireCommand(eventTarget, {
       id: 'cmd-1',
       action: 'click',
-      target: { role: 'button', name: 'Submit' },
+      element: { role: 'button', name: 'Submit' },
     });
 
     await vi.advanceTimersByTimeAsync(1000);
@@ -85,7 +85,7 @@ describe('PlaybookHandler', () => {
     fireCommand(eventTarget, {
       id: 'cmd-2',
       action: 'fill',
-      target: { role: 'textbox', name: 'Name' },
+      element: { role: 'textbox', name: 'Name' },
       value: 'Alice',
     });
 
@@ -114,7 +114,7 @@ describe('PlaybookHandler', () => {
     fireCommand(eventTarget, {
       id: 'cmd-3',
       action: 'click',
-      target: { role: 'button', name: 'Nonexistent' },
+      element: { role: 'button', name: 'Nonexistent' },
     });
 
     expect(conn.commandResults).toHaveLength(1);
@@ -135,7 +135,7 @@ describe('PlaybookHandler', () => {
     fireCommand(eventTarget, {
       id: 'cmd-4',
       action: 'hover',
-      target: { role: 'button', name: 'X' },
+      element: { role: 'button', name: 'X' },
     });
 
     expect(conn.commandResults[0]).toMatchObject({
@@ -726,6 +726,64 @@ describe('PlaybookHandler sequence protocol', () => {
           { name: 'step-2', label: 'Second', action: 'ready', params: {} },
         ],
         speed: -1,
+        paused: false,
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const results = conn.sent.filter(
+        (m) => (m as Record<string, unknown>).op === 'step-result');
+      expect(results).toHaveLength(2);
+    });
+
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(500);
+  });
+
+  it('step-level delay overrides speed-based delay', async () => {
+    vi.useFakeTimers();
+    const conn = mockConnection();
+    createPlaybookHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-delay',
+        steps: [
+          { name: 'step-1', label: 'First', action: 'ready', params: {}, delay: 50 },
+          { name: 'step-2', label: 'Second', action: 'ready', params: {} },
+        ],
+        speed: 1,
+        paused: false,
+      },
+    }));
+
+    await vi.advanceTimersByTimeAsync(10);
+    let results = conn.sent.filter(
+      (m) => (m as Record<string, unknown>).op === 'step-result');
+    expect(results).toHaveLength(1);
+
+    await vi.advanceTimersByTimeAsync(50);
+    results = conn.sent.filter(
+      (m) => (m as Record<string, unknown>).op === 'step-result');
+    expect(results).toHaveLength(2);
+
+    vi.useRealTimers();
+  });
+
+  it('omitted speed means no inter-step delay', async () => {
+    const conn = mockConnection();
+    createPlaybookHandler(conn, eventTarget);
+
+    const start = performance.now();
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-nospeed',
+        steps: [
+          { name: 'step-1', label: 'First', action: 'ready', params: {} },
+          { name: 'step-2', label: 'Second', action: 'ready', params: {} },
+        ],
         paused: false,
       },
     }));

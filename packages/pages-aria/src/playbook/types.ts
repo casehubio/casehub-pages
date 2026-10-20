@@ -1,4 +1,5 @@
 import type { ResolvedStep } from '@casehubio/yaml-core/step';
+import type { AriaTarget } from '@casehubio/pages-primitives';
 
 export type PreExtractedStep =
   | { kind: 'signal-fire'; name: string; decorators: Record<string, unknown> }
@@ -80,4 +81,41 @@ export interface OrchestrationBlock {
   quorums?: Record<string, { required: number; of: string[] }>;
   channels?: Record<string, { capacity?: number }>;
   signals?: string[];
+}
+
+// --- Dispatch protocol types (executor ↔ orchestrator) ---
+
+export interface CommandPayload {
+  id: string;
+  action: string;
+  element?: AriaTarget;
+  value?: string;
+  state?: Record<string, unknown>;
+  timeout?: number;
+}
+
+export interface DispatchStep {
+  name: string;
+  label?: string;
+  actor?: string;
+  action: string;
+  params: Record<string, unknown>;
+  await?: { match?: Record<string, unknown>; timeout?: number; interval?: number; status?: number };
+  mode?: string;
+  delay?: number;
+}
+
+export interface DispatchSequence {
+  op: 'dispatch-sequence';
+  sessionId: string;
+  steps: DispatchStep[];
+  speed?: number;
+  paused: boolean;
+}
+
+export interface ExecutorControl {
+  op: 'executor-control';
+  sessionId: string;
+  command: 'pause' | 'resume' | 'step' | 'speed' | 'stop';
+  speed?: number;
 }
