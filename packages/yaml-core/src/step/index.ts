@@ -2,7 +2,7 @@ export type {
   Parameter, Definition, DefinitionFile,
   InvokeBinding, McpBinding, RestBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
-  AriaBinding, GraphqlDomainBinding, SimulatedBinding,
+  AriaBinding, GraphqlDomainBinding, SimulatedBinding, ElementMethodBinding,
   CloudEventSpec,
 } from './types.js';
 export { CE_NAMED_FIELDS } from './types.js';

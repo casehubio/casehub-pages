@@ -559,7 +559,7 @@ function buildAriaTarget(params: Record<string, unknown>): AriaTarget | undefine
   };
 }
 
-function executeAriaAction(action: string, params: Record<string, unknown>, currentSpeed: number, isPaused: boolean, calloutMsPerChar: number, narrativeTarget: EventTarget): void | Promise<void> {
+async function executeAriaAction(action: string, params: Record<string, unknown>, currentSpeed: number, isPaused: boolean, calloutMsPerChar: number, narrativeTarget: EventTarget): Promise<void> {
   const target = buildAriaTarget(params);
   const value = params.value as string | undefined;
   const fastMode = currentSpeed >= 100;
