@@ -46,14 +46,14 @@ function diffScope(oldSteps: ResolvedStep[], newSteps: ResolvedStep[]): DiffNode
   // Pass 1: match named steps by name
   const oldByName = new Map<string, { step: ResolvedStep; index: number }>();
   for (let i = 0; i < oldSteps.length; i++) {
-    const name = oldSteps[i].name;
-    if (name !== null) oldByName.set(name, { step: oldSteps[i], index: i });
+    const name = oldSteps[i]!.name;
+    if (name !== null) oldByName.set(name, { step: oldSteps[i]!, index: i });
   }
   for (let i = 0; i < newSteps.length; i++) {
-    const name = newSteps[i].name;
+    const name = newSteps[i]!.name;
     if (name !== null && oldByName.has(name)) {
       const old = oldByName.get(name)!;
-      pairs.push({ oldStep: old.step, newStep: newSteps[i], oldIndex: old.index, newIndex: i });
+      pairs.push({ oldStep: old.step, newStep: newSteps[i]!, oldIndex: old.index, newIndex: i });
       oldMatched.add(old.index);
       newMatched.add(i);
       oldByName.delete(name);
@@ -64,19 +64,19 @@ function diffScope(oldSteps: ResolvedStep[], newSteps: ResolvedStep[]): DiffNode
   const unmatchedOld: { step: ResolvedStep; index: number }[] = [];
   const unmatchedNew: { step: ResolvedStep; index: number }[] = [];
   for (let i = 0; i < oldSteps.length; i++) {
-    if (!oldMatched.has(i)) unmatchedOld.push({ step: oldSteps[i], index: i });
+    if (!oldMatched.has(i)) unmatchedOld.push({ step: oldSteps[i]!, index: i });
   }
   for (let i = 0; i < newSteps.length; i++) {
-    if (!newMatched.has(i)) unmatchedNew.push({ step: newSteps[i], index: i });
+    if (!newMatched.has(i)) unmatchedNew.push({ step: newSteps[i]!, index: i });
   }
   const positionPairs = Math.min(unmatchedOld.length, unmatchedNew.length);
   for (let i = 0; i < positionPairs; i++) {
     pairs.push({
-      oldStep: unmatchedOld[i].step, newStep: unmatchedNew[i].step,
-      oldIndex: unmatchedOld[i].index, newIndex: unmatchedNew[i].index,
+      oldStep: unmatchedOld[i]!.step, newStep: unmatchedNew[i]!.step,
+      oldIndex: unmatchedOld[i]!.index, newIndex: unmatchedNew[i]!.index,
     });
-    oldMatched.add(unmatchedOld[i].index);
-    newMatched.add(unmatchedNew[i].index);
+    oldMatched.add(unmatchedOld[i]!.index);
+    newMatched.add(unmatchedNew[i]!.index);
   }
 
   // Build merged sequence in new-tree order with removed interleaved
@@ -87,7 +87,7 @@ function diffScope(oldSteps: ResolvedStep[], newSteps: ResolvedStep[]): DiffNode
   for (let i = 0; i < oldSteps.length; i++) {
     if (!oldMatched.has(i)) {
       removedByOldIndex.set(i, {
-        state: 'removed', step: oldSteps[i], fieldChanges: [],
+        state: 'removed', step: oldSteps[i]!, fieldChanges: [],
       });
     }
   }
@@ -101,8 +101,8 @@ function diffScope(oldSteps: ResolvedStep[], newSteps: ResolvedStep[]): DiffNode
 
   // Unmatched new → added
   for (let i = positionPairs; i < unmatchedNew.length; i++) {
-    pairByNewIndex.set(unmatchedNew[i].index, [{
-      state: 'added', step: unmatchedNew[i].step, fieldChanges: [],
+    pairByNewIndex.set(unmatchedNew[i]!.index, [{
+      state: 'added', step: unmatchedNew[i]!.step, fieldChanges: [],
     }]);
   }
 

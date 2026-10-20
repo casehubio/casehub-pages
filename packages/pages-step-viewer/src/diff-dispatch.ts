@@ -50,6 +50,6 @@ export function renderDiffContent(node: DiffNode): TemplateResult {
     case 'emit-event':
       return html`<emit-event-step .step=${step} .diffState=${ds} .fieldChanges=${fc}></emit-event-step>`;
     default:
-      return html`<error-step kind="${step.kind}" message="unsupported step type" .diffState=${ds}></error-step>`;
+      return html`<error-step kind="${(step as { kind: string }).kind}" message="unsupported step type" .diffState=${ds}></error-step>`;
   }
 }

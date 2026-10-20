@@ -99,7 +99,7 @@ export class MatchView extends LitElement {
             <span class="arrow">→</span>
             <div class="case-steps">
               ${this.diffNode?.scopes?.[`case-${i}`]
-                ? this.diffNode.scopes[`case-${i}`].map(n => renderDiffContent(n))
+                ? this.diffNode.scopes[`case-${i}`]!.map(n => renderDiffContent(n))
                 : c.steps.map(s => renderStepContent(s))}
             </div>
           </div>

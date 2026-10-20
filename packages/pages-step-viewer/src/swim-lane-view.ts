@@ -151,7 +151,7 @@ export class SwimLaneView extends LitElement {
       <div class="lane">
         <div class="lane-name">${branch.name}</div>
         ${this.diffNode?.scopes?.[branch.name]
-          ? this.diffNode.scopes[branch.name].map(n => renderDiffContent(n))
+          ? this.diffNode.scopes[branch.name]!.map(n => renderDiffContent(n))
           : branch.steps.map(step => renderStepContent(step))}
       </div>
     `;

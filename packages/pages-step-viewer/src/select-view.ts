@@ -104,7 +104,7 @@ export class SelectView extends LitElement {
             <span class="arrow">→</span>
             <div class="branch-steps">
               ${this.diffNode?.scopes?.[branch.name]
-                ? this.diffNode.scopes[branch.name].map(n => renderDiffContent(n))
+                ? this.diffNode.scopes[branch.name]!.map(n => renderDiffContent(n))
                 : branch.steps.length > 0
                   ? branch.steps.map(s => renderStepContent(s))
                   : html`<div style="color: #7f849c; font-size: 12px; font-style: italic; margin-top: 8px;">no steps</div>`
