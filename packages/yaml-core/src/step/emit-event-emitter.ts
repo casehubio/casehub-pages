@@ -23,13 +23,13 @@ export class DefaultEventEmitter implements EventEmitter {
   }
 
   emit(event: CloudEventSpec): CloudEventSpec {
-    const resolved: CloudEventSpec = {
-      ...event,
-      id: event.id ?? generateId(),
-      specversion: event.specversion ?? '1.0',
-      source: event.source ?? this.defaultSource,
-      time: event.time ?? new Date().toISOString(),
-    };
+    const source = event.source ?? this.defaultSource;
+    const base: Record<string, unknown> = { ...event };
+    base.id = event.id ?? generateId();
+    base.specversion = event.specversion ?? '1.0';
+    if (source !== undefined) base.source = source;
+    base.time = event.time ?? new Date().toISOString();
+    const resolved = base as unknown as CloudEventSpec;
     this.events.push(resolved);
     return resolved;
   }

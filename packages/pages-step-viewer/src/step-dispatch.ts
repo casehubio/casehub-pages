@@ -13,6 +13,7 @@ import './barrier-bar.js';
 import './race-view.js';
 import './select-view.js';
 import './delay-step.js';
+import './emit-event-step.js';
 
 const SM_ACTIONS = new Set(['sm-create']);
 
@@ -44,6 +45,8 @@ export function renderStepContent(step: ResolvedStep): TemplateResult {
       return html`<race-view .step=${step}></race-view>`;
     case 'select':
       return html`<select-view .step=${step}></select-view>`;
+    case 'emit-event':
+      return html`<emit-event-step .step=${step}></emit-event-step>`;
     default:
       return html`<error-step kind="${(step as ResolvedStep).kind}" message="unsupported step type"></error-step>`;
   }

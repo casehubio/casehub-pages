@@ -12,6 +12,7 @@ import { DecoratorChain } from './decorator-chain.js';
 import { isTruthy } from '../truthiness.js';
 import { matches } from '../match.js';
 import type { InvokeHandler } from './invoke/invoke-handler.js';
+import type { EventEmitter } from './emit-event-emitter.js';
 import { DefinitionParser } from './definition-parser.js';
 
 export class StructuralEvaluator {
@@ -228,7 +229,7 @@ export class StructuralEvaluator {
   }
 
   private async evaluateEmitEvent(step: EmitEventStep, context: Context): Promise<Result> {
-    let emitter: import('./emit-event-emitter.js').EventEmitter;
+    let emitter: EventEmitter;
     try {
       emitter = context.services.lookup({ name: 'EventEmitter' });
     } catch {

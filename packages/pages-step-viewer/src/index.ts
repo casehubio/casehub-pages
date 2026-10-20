@@ -35,5 +35,7 @@ export { renderDiffMarker, renderFieldChanges, diffTokenStyles, diffMarkerStyles
 
 export { PagesDelayStep } from './delay-step.js';
 
+export { EmitEventStepComponent } from './emit-event-step.js';
+
 export { PagesStepViewer } from './pages-step-viewer.js';
 export { renderDiffContent } from './diff-dispatch.js';

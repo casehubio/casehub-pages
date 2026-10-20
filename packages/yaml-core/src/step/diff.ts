@@ -238,7 +238,7 @@ function computeFieldChanges(oldStep: ResolvedStep, newStep: ResolvedStep): Fiel
     }
     const minLen = Math.min(oldStep.events.length, newStep.events.length);
     for (let i = 0; i < minLen; i++) {
-      const oe = oldStep.events[i], ne = newStep.events[i];
+      const oe = oldStep.events[i]!, ne = newStep.events[i]!;
       const prefix = oldStep.events.length === 1 && newStep.events.length === 1 ? '' : `events[${i}].`;
       if (oe.type !== ne.type)
         changes.push({ field: `${prefix}type`, oldValue: oe.type, newValue: ne.type });

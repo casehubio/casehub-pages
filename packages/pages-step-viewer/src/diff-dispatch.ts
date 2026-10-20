@@ -13,6 +13,7 @@ import './barrier-bar.js';
 import './race-view.js';
 import './select-view.js';
 import './delay-step.js';
+import './emit-event-step.js';
 
 const SM_ACTIONS = new Set(['sm-create']);
 
@@ -46,6 +47,8 @@ export function renderDiffContent(node: DiffNode): TemplateResult {
       return html`<race-view .step=${step} .diffState=${ds} .fieldChanges=${fc} .diffNode=${node}></race-view>`;
     case 'select':
       return html`<select-view .step=${step} .diffState=${ds} .fieldChanges=${fc} .diffNode=${node}></select-view>`;
+    case 'emit-event':
+      return html`<emit-event-step .step=${step} .diffState=${ds} .fieldChanges=${fc}></emit-event-step>`;
     default:
       return html`<error-step kind="${step.kind}" message="unsupported step type" .diffState=${ds}></error-step>`;
   }
