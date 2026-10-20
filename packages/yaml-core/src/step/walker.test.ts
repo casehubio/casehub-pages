@@ -626,4 +626,120 @@ describe('Walker', () => {
       expect(resolved[0]!.name).toBe('explicit');
     });
   });
+
+  describe('emit-event', () => {
+    const catalog = makeCatalog();
+
+    it('parses single event', () => {
+      const steps = Walker.resolve([{
+        step: 'alert',
+        'emit-event': { type: 'pathology.alert', data: { severity: 'HIGH' } },
+      }], catalog);
+      expect(steps).toHaveLength(1);
+      expect(steps[0].kind).toBe('emit-event');
+      const s = steps[0] as import('./walker.js').EmitEventStep;
+      expect(s.name).toBe('alert');
+      expect(s.events).toHaveLength(1);
+      expect(s.events[0].type).toBe('pathology.alert');
+      expect(s.events[0].data).toEqual({ severity: 'HIGH' });
+      expect(s.emitTo).toBe('both');
+    });
+
+    it('parses batch events', () => {
+      const steps = Walker.resolve([{
+        'emit-event': [
+          { type: 'a.b', data: { x: 1 } },
+          { type: 'c.d', data: { y: 2 } },
+        ],
+      }], catalog);
+      const s = steps[0] as import('./walker.js').EmitEventStep;
+      expect(s.events).toHaveLength(2);
+      expect(s.events[0].type).toBe('a.b');
+      expect(s.events[1].type).toBe('c.d');
+    });
+
+    it('parses all CloudEvent fields', () => {
+      const steps = Walker.resolve([{
+        'emit-event': {
+          type: 'test.event',
+          data: { key: 'val' },
+          source: '/test',
+          id: 'evt-001',
+          specversion: '1.0',
+          time: '2026-10-20T00:00:00Z',
+          subject: 'patient-123',
+          datacontenttype: 'application/json',
+        },
+      }], catalog);
+      const evt = (steps[0] as import('./walker.js').EmitEventStep).events[0];
+      expect(evt.source).toBe('/test');
+      expect(evt.id).toBe('evt-001');
+      expect(evt.specversion).toBe('1.0');
+      expect(evt.time).toBe('2026-10-20T00:00:00Z');
+      expect(evt.subject).toBe('patient-123');
+      expect(evt.datacontenttype).toBe('application/json');
+    });
+
+    it('collects extension attributes as top-level properties', () => {
+      const steps = Walker.resolve([{
+        'emit-event': {
+          type: 'test.event',
+          data: {},
+          priority: 'urgent',
+          traceid: 'abc-123',
+        },
+      }], catalog);
+      const evt = (steps[0] as import('./walker.js').EmitEventStep).events[0];
+      expect((evt as Record<string, unknown>).priority).toBe('urgent');
+      expect((evt as Record<string, unknown>).traceid).toBe('abc-123');
+    });
+
+    it('throws on missing type', () => {
+      expect(() => Walker.resolve([{
+        'emit-event': { data: { x: 1 } },
+      }], catalog)).toThrow(/type.*required/i);
+    });
+
+    it('throws on missing data', () => {
+      expect(() => Walker.resolve([{
+        'emit-event': { type: 'a.b' },
+      }], catalog)).toThrow(/data.*required/i);
+    });
+
+    it('extracts emit-to field', () => {
+      const steps = Walker.resolve([{
+        'emit-to': 'scope',
+        'emit-event': { type: 'a.b', data: {} },
+      }], catalog);
+      expect((steps[0] as import('./walker.js').EmitEventStep).emitTo).toBe('scope');
+    });
+
+    it('defaults emit-to to both', () => {
+      const steps = Walker.resolve([{
+        'emit-event': { type: 'a.b', data: {} },
+      }], catalog);
+      expect((steps[0] as import('./walker.js').EmitEventStep).emitTo).toBe('both');
+    });
+
+    it('throws on emit-to without emit-event', () => {
+      const cat = makeCatalog({ doA: makeEntry('doA') });
+      expect(() => Walker.resolve([{
+        'emit-to': 'scope',
+        doA: {},
+      }], cat)).toThrow(/emit-to.*requires.*emit-event/i);
+    });
+
+    it('works with decorators', () => {
+      const steps = Walker.resolve([{
+        step: 'retry-emit',
+        'emit-event': { type: 'a.b', data: {} },
+        retry: 3,
+        timeout: '5s',
+      }], catalog);
+      const s = steps[0] as import('./walker.js').EmitEventStep;
+      expect(s.kind).toBe('emit-event');
+      expect(s.decorators.retry).toBe(3);
+      expect(s.decorators.timeout).toBe('5s');
+    });
+  });
 });

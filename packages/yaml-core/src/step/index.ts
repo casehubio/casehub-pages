@@ -3,7 +3,9 @@ export type {
   InvokeBinding, McpBinding, RestBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
   AriaBinding, GraphqlDomainBinding, SimulatedBinding,
+  CloudEventSpec,
 } from './types.js';
+export { CE_NAMED_FIELDS } from './types.js';
 export { RUNTIME_PYTHON, RUNTIME_NODE } from './types.js';
 
 export type { Portability, RuntimeEnvironment, PortabilityViolation } from './portability.js';
@@ -18,6 +20,7 @@ export type {
   ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, DelayStep, RaceStep, SelectBranch, ResolvedMatchCase,
+  EmitEventStep,
   Action, Result, ServiceRegistry, Catalog, CatalogEntry,
 } from './walker.js';
 export { Walker, MapServiceRegistry, stepSuccess, stepFailure } from './walker.js';

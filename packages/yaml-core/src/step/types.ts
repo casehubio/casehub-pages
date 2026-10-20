@@ -94,5 +94,22 @@ export interface SimulatedBinding {
   kind: 'simulated';
 }
 
+export const CE_NAMED_FIELDS = new Set([
+  'type', 'data', 'source', 'id', 'specversion',
+  'time', 'subject', 'datacontenttype',
+]);
+
+export interface CloudEventSpec {
+  readonly type: string;
+  readonly data: Record<string, unknown>;
+  readonly source?: string;
+  readonly id?: string;
+  readonly specversion?: string;
+  readonly time?: string;
+  readonly subject?: string;
+  readonly datacontenttype?: string;
+  readonly [extensionKey: string]: unknown;
+}
+
 export const RUNTIME_PYTHON = 'python3';
 export const RUNTIME_NODE = 'node';

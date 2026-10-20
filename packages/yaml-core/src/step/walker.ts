@@ -1,4 +1,5 @@
 import type { MatchPattern } from '../match.js';
+import type { CloudEventSpec } from './types.js';
 
 export interface CatalogEntry {
   qualifiedName: string;
@@ -74,7 +75,8 @@ export type ResolvedStep =
   | BarrierStep
   | QuorumStep
   | DelayStep
-  | RaceStep;
+  | RaceStep
+  | EmitEventStep;
 
 export interface PluginStep {
   kind: 'plugin';
@@ -178,6 +180,14 @@ export interface RaceStep {
   decorators: Record<string, unknown>;
 }
 
+export interface EmitEventStep {
+  kind: 'emit-event';
+  name: string | null;
+  events: CloudEventSpec[];
+  emitTo: 'scope' | 'pages-event' | 'both';
+  decorators: Record<string, unknown>;
+}
+
 const RESERVED_KEYS = new Set([
   'step', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
   'try', 'catch', 'finally', 'select',
@@ -188,6 +198,7 @@ const RESERVED_KEYS = new Set([
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'advance-after', 'cancel-remaining', 'collection-timeout',
+  'emit-event', 'emit-to',
 ]);
 
 const DECORATOR_KEYS = new Set([
@@ -278,6 +289,11 @@ export class Walker {
       } else if (key === 'quorum' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
         structuralType = 'quorum';
         structuralValue = value;
+      } else if (key === 'emit-event') {
+        structuralType = 'emit-event';
+        structuralValue = value;
+      } else if (key === 'emit-to') {
+        // consumed after the key loop when structuralType === 'emit-event'
       } else if (PROMOTABLE_DECORATORS.has(key) && (Array.isArray(value) || (typeof value === 'object' && value !== null && Object.keys(value as Record<string, unknown>).length === 1 && Array.isArray(Object.values(value as Record<string, unknown>)[0])))) {
         if (structuralType) {
           throw new Error(`${stepPath}: step has both structural type '${structuralType}' and structural decorator '${key}'`);
@@ -318,11 +334,36 @@ export class Walker {
       throw new Error(`${stepPath}: loop: continuous requires cancel:, timeout:, or background:`);
     }
 
+    if (step['emit-to'] !== undefined && structuralType !== 'emit-event') {
+      throw new Error(`${stepPath}: 'emit-to' requires 'emit-event' in the same step`);
+    }
+
     if (structuralType && actionKey) {
       throw new Error(`${stepPath}: step has both structural type '${structuralType}' and action key '${actionKey}'`);
     }
     if (structuralType && invokeSpec) {
       throw new Error(`${stepPath}: step has both structural type '${structuralType}' and invoke`);
+    }
+
+    if (structuralType === 'emit-event') {
+      const emitTo = (step['emit-to'] as string | undefined) ?? 'both';
+      if (emitTo !== 'scope' && emitTo !== 'pages-event' && emitTo !== 'both') {
+        throw new Error(`${stepPath}: invalid emit-to value '${emitTo}' — must be 'scope', 'pages-event', or 'both'`);
+      }
+      const rawEvents = Array.isArray(structuralValue)
+        ? structuralValue as Record<string, unknown>[]
+        : [structuralValue as Record<string, unknown>];
+      const events: CloudEventSpec[] = rawEvents.map((raw, i) => {
+        const evtPath = `${stepPath} → event ${i}`;
+        if (!raw['type']) throw new Error(`${evtPath}: 'type' is required in emit-event`);
+        if (!('data' in raw)) throw new Error(`${evtPath}: 'data' is required in emit-event`);
+        const spec: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(raw)) {
+          spec[k] = v;
+        }
+        return spec as unknown as CloudEventSpec;
+      });
+      return { kind: 'emit-event', name: stepName, events, emitTo: emitTo as 'scope' | 'pages-event' | 'both', decorators };
     }
 
     if (structuralType === 'block') {
