@@ -31,8 +31,8 @@ describe('generateThemeCSS spacing tokens', () => {
   });
 });
 
-describe('blocks-ui coverage', () => {
-  const BLOCKS_VARS = [
+describe('mosaic coverage', () => {
+  const MOSAIC_VARS = [
     'accent-1','accent-3','accent-6','accent-9','accent-10','accent-11',
     'danger-2','danger-3','danger-4','danger-6','danger-8','danger-9','danger-10','danger-11',
     'neutral-1','neutral-2','neutral-3','neutral-4','neutral-5','neutral-6','neutral-7','neutral-8','neutral-9','neutral-10','neutral-11','neutral-12',
@@ -45,9 +45,9 @@ describe('blocks-ui coverage', () => {
     'shadow-1','surface-1',
   ];
 
-  it('pages-ui-tokens generates every CSS var blocks-ui consumes', () => {
+  it('pages-ui-tokens generates every CSS var mosaic consumes', () => {
     const css = generateThemeCSS(DEFAULT_THEME);
-    for (const suffix of BLOCKS_VARS) {
+    for (const suffix of MOSAIC_VARS) {
       expect(css, `missing --pages-${suffix}`).toContain(`--pages-${suffix}`);
     }
   });
