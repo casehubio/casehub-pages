@@ -32,7 +32,7 @@
     "@xyflow/react": "^12.4.0",
     "jsdom": "^29.1.1",
     "rimraf": "^6.1.0",
-    "typescript": "^5.6.0",
+    "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
   "license": "Apache-2.0"
