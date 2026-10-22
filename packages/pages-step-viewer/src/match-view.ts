@@ -112,7 +112,7 @@ export class MatchView extends LitElement {
 
   private formatPattern(c: { pattern: { type: string; value?: unknown }; guard: string | null }): string {
     if (c.pattern.type === 'default') return 'default';
-    const val = c.pattern.value != null ? `"${c.pattern.value}"` : String(c.pattern.type);
+    const val = c.pattern.value != null ? `"${c.pattern.value}"` : c.pattern.type;
     return c.guard ? `${val} when ${c.guard}` : val;
   }
 }

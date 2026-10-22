@@ -39,18 +39,20 @@ export class InferredMethodHandler implements InvokeHandler {
           );
         }
 
-        const method = (el as any)[methodName];
+        const method = (el as Record<string, unknown>)[methodName];
         if (typeof method !== 'function') {
           return stepFailure(`Target declares '${methodName}' but has no such method`);
         }
 
         try {
           const args = mapParams(params, desc);
-          const result = method.call(el, ...args);
+          const fn = method as (...a: unknown[]) => unknown;
+          const result = fn.call(el, ...args);
           if (result instanceof Promise) await result;
           return { kind: 'success', output: result ?? {}, executionMetadata: {} };
-        } catch (e: any) {
-          return stepFailure(e.message ?? String(e));
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          return stepFailure(msg);
         }
       },
     };

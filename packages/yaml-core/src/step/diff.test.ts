@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { diffSteps } from './diff.js';
 import type { PluginStep, BlockStep, ParallelStep, BarrierStep, QuorumStep,
-  IfElseStep, DelayStep, RaceStep, TryCatchFinallyStep, MatchStep,
+  IfElseStep, DelayStep, RaceStep,
   EmitEventStep, CatalogEntry } from './walker.js';
 
 const entry = (name = 'click'): CatalogEntry => ({

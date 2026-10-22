@@ -30,7 +30,7 @@ export interface RubberBandSelect {
 }
 
 export function createRubberBandSelect(opts: RubberBandOptions): RubberBandSelect {
-  const { containerEl, screenToFlow, getNodes, getModel, onComplete, isSelectable } = opts;
+  const { containerEl, screenToFlow, getNodes: _getNodes, getModel, onComplete, isSelectable } = opts;
 
   let active = false;
   let startFlow = { x: 0, y: 0 };

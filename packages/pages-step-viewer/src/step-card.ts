@@ -5,7 +5,7 @@ import { getActionIcon } from './icons.js';
 import { parseExpressions } from './expression.js';
 import './decorator-badge.js';
 import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
-import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
+import { diffTokenStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 const TARGET_KEYS = new Set(['target', 'selector', 'element', 'role']);
 

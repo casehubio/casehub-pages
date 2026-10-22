@@ -130,13 +130,14 @@ async function invokePlaybookMethod(
     );
   }
 
-  const method = (el as any)[methodName];
+  const method = (el as Record<string, unknown>)[methodName];
   if (typeof method !== 'function') {
     throw new Error(`Target declares '${methodName}' as playbook-callable but has no such method`);
   }
 
   const args = mapParams(step, desc);
-  const result = method.call(el, ...args);
+  const fn = method as (...a: unknown[]) => unknown;
+  const result = fn.call(el, ...args);
   if (result instanceof Promise) await result;
 }
 

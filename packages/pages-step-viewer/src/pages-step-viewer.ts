@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { ResolvedStep } from '@casehubio/yaml-core/step';
 import { diffSteps, type DiffResult } from '@casehubio/yaml-core/step/diff';

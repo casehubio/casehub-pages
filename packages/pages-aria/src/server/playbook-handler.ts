@@ -670,12 +670,13 @@ async function executeAriaAction(action: string, params: Record<string, unknown>
       if (!cap || !cap[methodName]) {
         throw new Error(`Unknown action: ${action}`);
       }
-      const method = (elem as any)[methodName];
+      const method = (elem as Record<string, unknown>)[methodName];
       if (typeof method !== 'function') {
         throw new Error(`Target declares '${methodName}' but has no such method`);
       }
       const args = mapParams(params, cap[methodName]);
-      const result = method.call(elem, ...args);
+      const fn = method as (...a: unknown[]) => unknown;
+      const result = fn.call(elem, ...args);
       if (result instanceof Promise) await result;
       break;
     }

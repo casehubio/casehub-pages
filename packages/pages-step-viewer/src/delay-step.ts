@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { DelayStep as DelayStepType } from '@casehubio/yaml-core/step';
 import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';

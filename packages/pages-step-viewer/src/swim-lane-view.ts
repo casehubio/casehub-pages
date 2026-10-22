@@ -4,7 +4,7 @@ import type { ParallelStep, ResolvedStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
 import { renderDiffContent } from './diff-dispatch.js';
 import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
-import { diffTokenStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
+import { diffTokenStyles, renderDiffMarker } from './diff-shared.js';
 
 interface SignalPair {
   name: string;

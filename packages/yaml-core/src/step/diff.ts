@@ -1,6 +1,6 @@
-import type { ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
+import type { ResolvedStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
-  BarrierStep, QuorumStep, DelayStep, RaceStep, EmitEventStep, NamedBranch, SelectBranch } from './walker.js';
+  BarrierStep, QuorumStep, RaceStep, NamedBranch, SelectBranch } from './walker.js';
 
 export type DiffState = 'added' | 'removed' | 'modified' | 'unchanged';
 export type DiffStatState = Exclude<DiffState, 'unchanged'>;
@@ -411,7 +411,7 @@ function buildSummary(root: DiffNode[], context = 'step'): DiffStat[] {
       }
       if (node.children) walk(node.children, childContext(node));
       if (node.scopes) {
-        for (const [scopeKey, scopeNodes] of Object.entries(node.scopes)) {
+        for (const [_scopeKey, scopeNodes] of Object.entries(node.scopes)) {
           walk(scopeNodes, childContext(node));
         }
       }

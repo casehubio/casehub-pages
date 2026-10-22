@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { BlockStep, ResolvedStep } from '@casehubio/yaml-core/step';
+import type { BlockStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
 import { renderDiffContent } from './diff-dispatch.js';
 import './decorator-badge.js';
