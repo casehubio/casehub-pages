@@ -8,7 +8,7 @@ export function kebabToCamel(name: string): string {
 }
 
 export function resolvePlaybookCapability(el: Element): PlaybookCapability | null {
-  if (PLAYBOOK_ACTIONS in el) return (el as unknown as Record<symbol, PlaybookCapability>)[PLAYBOOK_ACTIONS];
+  if (PLAYBOOK_ACTIONS in el) return (el as unknown as Record<symbol, PlaybookCapability>)[PLAYBOOK_ACTIONS] ?? null;
   const ctor = el.constructor as unknown as Record<symbol, PlaybookCapability | undefined>;
   if (ctor && PLAYBOOK_ACTIONS in ctor) return ctor[PLAYBOOK_ACTIONS] ?? null;
   return null;
