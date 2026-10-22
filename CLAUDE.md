@@ -52,7 +52,7 @@ Three packages provide the editor infrastructure:
 v1 components (pages-owned, render playbook steps via yaml-core):
 - `step-card`, `swim-lane-view`, `step-block-view`, `if-else-view`, `match-view`, `try-catch-view`, `invoke-card`, `error-step`, `decorator-badge`
 
-v2 components (moving to casehub-mosaic per #578 — render blocks/eidos YAML):
+v2 components (moving to casehub-mosaic per #578 — render agency/eidos YAML):
 - `eidos-view`, `voting-view`, `debate-view`, `agent-card`, `agent-viewer`
 
 Design mockup: `docs/mockups/step-review-viewer.html` (24 sections). Spec: `docs/specs/2026-10-17-step-review-viewer-design.md`.
