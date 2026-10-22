@@ -96,6 +96,9 @@ jobs:
         env:
           GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Rewrite exports for Maven artifact (src → dist)
+        run: node scripts/rewrite-exports-for-maven.mjs
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
