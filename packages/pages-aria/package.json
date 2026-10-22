@@ -13,12 +13,30 @@
     "src/tutorial/tutorial-host.ts"
   ],
   "exports": {
-    "./walker": "./src/walker/index.ts",
-    "./executor": "./src/executor/index.ts",
-    "./server": "./src/server/index.ts",
-    "./playbook": "./src/playbook/index.ts",
-    "./controller": "./src/controller/index.ts",
-    "./tutorial": "./src/tutorial/index.ts"
+    "./walker": {
+      "types": "./dist/walker/index.d.ts",
+      "default": "./dist/walker/index.js"
+    },
+    "./executor": {
+      "types": "./dist/executor/index.d.ts",
+      "default": "./dist/executor/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "default": "./dist/server/index.js"
+    },
+    "./playbook": {
+      "types": "./dist/playbook/index.d.ts",
+      "default": "./dist/playbook/index.js"
+    },
+    "./controller": {
+      "types": "./dist/controller/index.d.ts",
+      "default": "./dist/controller/index.js"
+    },
+    "./tutorial": {
+      "types": "./dist/tutorial/index.d.ts",
+      "default": "./dist/tutorial/index.js"
+    }
   },
   "scripts": {
     "test": "vitest run",
