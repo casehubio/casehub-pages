@@ -320,7 +320,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
-      expect(cells[0]!.textContent.trim()).toBe('');
+      expect(cells[0]!.textContent!.trim()).toBe('');
       expect(cells[1]!.textContent).toContain('42');
     });
   });

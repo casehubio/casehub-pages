@@ -53,7 +53,7 @@ const REST_ACTION: Definition = {
     headers: { type: 'OBJECT', required: false },
     body: { type: 'OBJECT', required: false },
     expectedStatus: { type: 'INTEGER', required: false },
-  }, outputs: {}, invoke: { kind: 'rest' }, portability: 'universal',
+  }, outputs: {}, invoke: { kind: 'rest', method: '', url: '', headers: {}, body: {} }, portability: 'universal',
 };
 
 export function loadScenarioDefinitions(): DefinitionFile[] {
