@@ -2,41 +2,17 @@
   "name": "@casehubio/yaml-core",
   "version": "0.2.0",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./expand": {
-      "types": "./dist/expand.d.ts",
-      "default": "./dist/expand.js"
-    },
-    "./schema": {
-      "types": "./dist/schema.d.ts",
-      "default": "./dist/schema.js"
-    },
-    "./orchestration": {
-      "types": "./dist/orchestration/index.d.ts",
-      "default": "./dist/orchestration/index.js"
-    },
-    "./condition": {
-      "types": "./dist/condition/condition-evaluator.d.ts",
-      "default": "./dist/condition/condition-evaluator.js"
-    },
-    "./step": {
-      "types": "./dist/step/index.d.ts",
-      "default": "./dist/step/index.js"
-    },
-    "./step/diff": {
-      "types": "./dist/step/diff.d.ts",
-      "default": "./dist/step/diff.js"
-    },
-    "./patterns": {
-      "types": "./dist/patterns.d.ts",
-      "default": "./dist/patterns.js"
-    }
+    ".": "./src/index.ts",
+    "./expand": "./src/expand.ts",
+    "./schema": "./src/schema.ts",
+    "./orchestration": "./src/orchestration/index.ts",
+    "./condition": "./src/condition/condition-evaluator.ts",
+    "./step": "./src/step/index.ts",
+    "./step/diff": "./src/step/diff.ts",
+    "./patterns": "./src/patterns.ts"
   },
   "devDependencies": {
     "@casehubio/pages-tsconfig": "workspace:*",
