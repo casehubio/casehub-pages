@@ -5,7 +5,7 @@ Status: Accepted
 
 ## Context and Problem Statement
 
-CaseHub application repos (aml, openclaw, clinical, etc.) consume frontend packages from casehub-pages and blocks-ui. The dependency mechanism has gone through three iterations, each solving one problem while creating another. A stable, long-term approach is needed that works identically in local development, CI, and releases.
+CaseHub application repos (aml, openclaw, clinical, etc.) consume frontend packages from casehub-pages and mosaic. The dependency mechanism has gone through three iterations, each solving one problem while creating another. A stable, long-term approach is needed that works identically in local development, CI, and releases.
 
 ## Decision Drivers
 
@@ -29,8 +29,8 @@ Three consumption tiers:
 
 | Boundary | Mechanism | Rationale |
 |----------|-----------|-----------|
-| Within monorepo (pages or blocks-ui) | Yarn `workspace:*` | Instant linking, hot reload, unchanged |
-| Cross-repo (CaseHub apps ← pages/blocks-ui) | Maven SNAPSHOT | Same mechanism everywhere, no path fragility |
+| Within monorepo (pages or mosaic) | Yarn `workspace:*` | Instant linking, hot reload, unchanged |
+| Cross-repo (CaseHub apps ← pages/mosaic) | Maven SNAPSHOT | Same mechanism everywhere, no path fragility |
 | External consumers (non-CaseHub) | Published npm packages | Standard npm registry, unchanged |
 | Releases | Maven release artifact + published npm | Stable versions, drop `-SNAPSHOT` |
 
@@ -45,7 +45,7 @@ Three consumption tiers:
 ### Negative Consequences / Tradeoffs
 
 * Adds `mvn install` step to local cross-repo development workflow (but `yarn build` was already required)
-* Requires a Maven module in casehub-pages and blocks-ui to package the webapp JAR
+* Requires a Maven module in casehub-pages and mosaic to package the webapp JAR
 * Two publishing pipelines to maintain (Maven for CaseHub, npm for external)
 
 ## Pros and Cons of the Options

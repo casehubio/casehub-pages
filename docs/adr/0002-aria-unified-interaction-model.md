@@ -5,7 +5,7 @@ Status: Accepted
 
 ## Context and Problem Statement
 
-CaseHub platform components span two repos (pages, blocks-ui) and serve three consumers that need to identify and interact with UI elements: screen readers, a scenario automation tool (YAML-driven), and LLM agents (via MCP). Historically, accessibility and test automation are treated as separate concerns — ARIA attributes for screen readers, `data-testid` / `data-automation` for automation. This creates two parallel targeting systems that drift independently, doubling maintenance and hiding accessibility bugs that automation tests don't surface.
+CaseHub platform components span two repos (pages, mosaic) and serve three consumers that need to identify and interact with UI elements: screen readers, a scenario automation tool (YAML-driven), and LLM agents (via MCP). Historically, accessibility and test automation are treated as separate concerns — ARIA attributes for screen readers, `data-testid` / `data-automation` for automation. This creates two parallel targeting systems that drift independently, doubling maintenance and hiding accessibility bugs that automation tests don't surface.
 
 ## Decision Drivers
 
@@ -13,7 +13,7 @@ CaseHub platform components span two repos (pages, blocks-ui) and serve three co
 * Parallel attribute systems (`data-testid` alongside ARIA) create drift — automation passes while accessibility is broken
 * The platform already has a11y mixins in pages-primitives (FocusTrapMixin, RovingTabindexMixin, LiveRegionMixin, KeyboardShortcutMixin) handling behavioural accessibility; ARIA attribute declaration is the missing layer
 * Shadow DOM complicates both ARIA tree walking and automated element location — one solution is better than two
-* Components exist across pages and blocks-ui — enforcement must work cross-repo
+* Components exist across pages and mosaic — enforcement must work cross-repo
 
 ## Considered Options
 
@@ -50,7 +50,7 @@ Consumers (screen readers, scenario tool, LLM/MCP)
         ▲
   AriaInteractive contract (pages-primitives)
         ▲
-  pages widgets  ·  blocks-ui widgets
+  pages widgets  ·  mosaic widgets
 ```
 
 The in-browser navigation API (`@casehubio/pages-aria`) provides tree walking and command execution against the ARIA tree, consumed by the scenario tool and MCP server. Screen readers consume the ARIA tree directly via the browser's accessibility API.
@@ -67,7 +67,7 @@ The in-browser navigation API (`@casehubio/pages-aria`) provides tree walking an
 
 * No runtime enforcement — a component can satisfy the TypeScript interface but fail to reflect attributes to DOM. axe-core CI catches this, but only when test fixtures render the component
 * Some interactions don't map cleanly to ARIA roles (drag-and-drop, hover tooltips, canvas-internal interactions) — these need escape hatches or future command vocabulary extensions
-* Requires all interactive components across both repos to be audited and remediated — substantial upfront work (~40 blocks-ui components, ~20 pages components)
+* Requires all interactive components across both repos to be audited and remediated — substantial upfront work (~40 mosaic components, ~20 pages components)
 
 ## Pros and Cons of the Options
 
