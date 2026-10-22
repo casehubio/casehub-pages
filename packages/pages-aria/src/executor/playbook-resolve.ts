@@ -8,8 +8,8 @@ export function kebabToCamel(name: string): string {
 }
 
 export function resolvePlaybookCapability(el: Element): PlaybookCapability | null {
-  if (PLAYBOOK_ACTIONS in el) return (el as Record<symbol, PlaybookCapability>)[PLAYBOOK_ACTIONS];
-  const ctor = el.constructor as Record<symbol, PlaybookCapability | undefined>;
+  if (PLAYBOOK_ACTIONS in el) return (el as unknown as Record<symbol, PlaybookCapability>)[PLAYBOOK_ACTIONS];
+  const ctor = el.constructor as unknown as Record<symbol, PlaybookCapability | undefined>;
   if (ctor && PLAYBOOK_ACTIONS in ctor) return ctor[PLAYBOOK_ACTIONS] ?? null;
   return null;
 }
@@ -38,7 +38,7 @@ export function validateDescriptor(
   const cap = resolvePlaybookCapability(el);
   if (!cap) return;
   for (const [name, desc] of Object.entries(cap)) {
-    const method = (el as Record<string, unknown>)[name];
+    const method = (el as unknown as Record<string, unknown>)[name];
     if (typeof method !== 'function') {
       warn(`[PLAYBOOK_ACTIONS] ${el.tagName}: declares '${name}' but element has no such method`);
       continue;
