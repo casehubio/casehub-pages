@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { InvocationJournal, SimulationRuntime } from './simulation-runtime.js';
+import { InvocationJournal, SimulationOverlay, SimulationRuntime } from './simulation-runtime.js';
 import type { SimulationConfig } from './simulation-runtime.js';
 
 describe('InvocationJournal', () => {
@@ -94,5 +94,157 @@ describe('SimulationRuntime', () => {
 
     expect(runtime.fallthroughRealism('agent-provider.invoke')).toBe('PLACEHOLDER');
     expect(runtime.fallthroughRealism('unknown')).toBe('RECORDED_REAL');
+  });
+
+  it('resolve with sequential strategy returns corpus entries in order', () => {
+    const runtime = new SimulationRuntime();
+    const config: SimulationConfig = {
+      strategies: { 'cases.startCase': 'sequential' },
+      corpus: [{ inline: { 'cases.startCase': [
+        { input: {}, output: { caseId: 'case-1' } },
+        { input: {}, output: { caseId: 'case-2' } },
+      ] } }],
+      capture: [],
+    };
+    runtime.pushOverlay(config);
+
+    const r1 = runtime.resolve('cases.startCase', {});
+    expect(r1).toEqual({ output: { caseId: 'case-1' }, realism: 'STRUCTURALLY_VALID' });
+
+    const r2 = runtime.resolve('cases.startCase', {});
+    expect(r2).toEqual({ output: { caseId: 'case-2' }, realism: 'STRUCTURALLY_VALID' });
+
+    const r3 = runtime.resolve('cases.startCase', {});
+    expect(r3).toEqual({ output: { caseId: 'case-1' }, realism: 'STRUCTURALLY_VALID' });
+  });
+
+  it('resolve with key-lookup strategy matches by input', () => {
+    const runtime = new SimulationRuntime();
+    const config: SimulationConfig = {
+      strategies: { 'agent.invoke': 'key-lookup' },
+      corpus: [{ inline: { 'agent.invoke': [
+        { input: { prompt: 'hello' }, output: { response: 'hi' } },
+        { input: { prompt: 'bye' }, output: { response: 'goodbye' } },
+      ] } }],
+      capture: [],
+    };
+    runtime.pushOverlay(config);
+
+    const r1 = runtime.resolve('agent.invoke', { prompt: 'bye' });
+    expect(r1).toEqual({ output: { response: 'goodbye' }, realism: 'DOMAIN_PLAUSIBLE' });
+
+    const r2 = runtime.resolve('agent.invoke', { prompt: 'unknown' });
+    expect(r2).toEqual({ output: {}, realism: 'PLACEHOLDER' });
+  });
+
+  it('resolve with passthrough strategy returns undefined', () => {
+    const runtime = new SimulationRuntime();
+    const config: SimulationConfig = {
+      strategies: { 'spi.method': 'passthrough' }, corpus: [], capture: [],
+    };
+    runtime.pushOverlay(config);
+
+    expect(runtime.resolve('spi.method', {})).toBeUndefined();
+  });
+
+  it('resolve returns undefined when no strategy matches', () => {
+    const runtime = new SimulationRuntime();
+    const config: SimulationConfig = {
+      strategies: { 'a': 'sequential' }, corpus: [], capture: [],
+    };
+    runtime.pushOverlay(config);
+
+    expect(runtime.resolve('b', {})).toBeUndefined();
+  });
+
+  it('allEntriesFor collects from all overlays', () => {
+    const runtime = new SimulationRuntime();
+    const config1: SimulationConfig = { strategies: {}, corpus: [], capture: [] };
+    const config2: SimulationConfig = { strategies: {}, corpus: [], capture: [] };
+    runtime.pushOverlay(config1);
+    runtime.recordJournal('spi.method', 't', {}, { v: 1 }, 'RECORDED_REAL');
+    runtime.pushOverlay(config2);
+    runtime.recordJournal('spi.method', 't', {}, { v: 2 }, 'DOMAIN_PLAUSIBLE');
+
+    const all = runtime.allEntriesFor('spi.method');
+    expect(all).toHaveLength(2);
+    expect(all[0]!.output).toEqual({ v: 1 });
+    expect(all[1]!.output).toEqual({ v: 2 });
+  });
+});
+
+describe('SimulationOverlay', () => {
+  it('inlineCorpusFor returns entries for qualified name', () => {
+    const config: SimulationConfig = {
+      strategies: {},
+      corpus: [
+        { inline: { 'a': [{ input: {}, output: { x: 1 } }] } },
+        { inline: { 'a': [{ input: {}, output: { x: 2 } }], 'b': [{ input: {}, output: { y: 1 } }] } },
+      ],
+      capture: [],
+    };
+    const overlay = new SimulationOverlay(config);
+
+    expect(overlay.inlineCorpusFor('a')).toHaveLength(2);
+    expect(overlay.inlineCorpusFor('b')).toHaveLength(1);
+    expect(overlay.inlineCorpusFor('c')).toHaveLength(0);
+  });
+
+  it('nextSequential cycles through entries', () => {
+    const config: SimulationConfig = {
+      strategies: {},
+      corpus: [{ inline: { 'a': [
+        { input: {}, output: { v: 1 } },
+        { input: {}, output: { v: 2 } },
+      ] } }],
+      capture: [],
+    };
+    const overlay = new SimulationOverlay(config);
+
+    expect(overlay.nextSequential('a')!.output).toEqual({ v: 1 });
+    expect(overlay.nextSequential('a')!.output).toEqual({ v: 2 });
+    expect(overlay.nextSequential('a')!.output).toEqual({ v: 1 });
+  });
+
+  it('nextSequential returns undefined for empty corpus', () => {
+    const config: SimulationConfig = { strategies: {}, corpus: [], capture: [] };
+    const overlay = new SimulationOverlay(config);
+    expect(overlay.nextSequential('a')).toBeUndefined();
+  });
+});
+
+describe('discriminated corpus format', () => {
+  it('resolve uses per-entry realism when provided', () => {
+    const runtime = new SimulationRuntime();
+    const config: SimulationConfig = {
+      strategies: { 'agent.invoke': 'sequential' },
+      corpus: [{ inline: { 'agent.invoke': [
+        { input: {}, output: { r: 1 }, realism: 'RECORDED_REAL' },
+        { input: {}, output: { r: 2 }, realism: 'DOMAIN_PLAUSIBLE' },
+      ] } }],
+      capture: [],
+    };
+    runtime.pushOverlay(config);
+
+    const r1 = runtime.resolve('agent.invoke', {});
+    expect(r1!.realism).toBe('RECORDED_REAL');
+
+    const r2 = runtime.resolve('agent.invoke', {});
+    expect(r2!.realism).toBe('DOMAIN_PLAUSIBLE');
+  });
+
+  it('resolve falls back to strategy default when entry has no realism', () => {
+    const runtime = new SimulationRuntime();
+    const config: SimulationConfig = {
+      strategies: { 'a': 'key-lookup' },
+      corpus: [{ inline: { 'a': [
+        { input: { k: 1 }, output: { v: 1 } },
+      ] } }],
+      capture: [],
+    };
+    runtime.pushOverlay(config);
+
+    const r = runtime.resolve('a', { k: 1 });
+    expect(r!.realism).toBe('DOMAIN_PLAUSIBLE');
   });
 });

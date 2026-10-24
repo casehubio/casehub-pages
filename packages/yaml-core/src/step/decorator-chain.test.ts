@@ -1,10 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Action, Result } from './walker.js';
-import { stepSuccess, stepFailure } from './walker.js';
+import { stepSuccess, stepFailure, MapServiceRegistry } from './walker.js';
 import { DecoratorChain } from './decorator-chain.js';
 import type { Context } from './decorator-chain.js';
 import { DefaultScenarioScope } from '../orchestration/scenario-scope.js';
 import { VariableResolver } from '../variable-resolver.js';
+import { SimulationRuntime } from './simulation-runtime.js';
 
 function mockAction(result: Result = stepSuccess({})): Action {
   return { execute: vi.fn().mockResolvedValue(result) };
@@ -574,6 +575,38 @@ describe('DecoratorChain', () => {
       expect(result.kind).toBe('success');
       const collected = (result as any).output['__forEach.collected'];
       expect(collected).toHaveLength(2);
+    });
+  });
+
+  describe('simulation decorator', () => {
+    it('pushes overlay when SimulationRuntime is available', async () => {
+      const runtime = new SimulationRuntime();
+      const services = new MapServiceRegistry()
+        .register({ name: 'SimulationRuntime' }, runtime);
+
+      const action = mockAction(stepSuccess({ done: true }));
+      const chain = DecoratorChain.build({
+        simulation: {
+          strategies: { 'agent.invoke': 'sequential' },
+          corpus: [{ inline: { 'agent.invoke': [{ input: {}, output: { r: 1 } }] } }],
+        },
+      }, action);
+
+      expect(runtime.hasActiveOverlay()).toBe(false);
+      const result = await chain.execute(mockContext({ services }));
+      expect(result.kind).toBe('success');
+      expect(runtime.hasActiveOverlay()).toBe(true);
+      expect(runtime.strategyFor('agent.invoke')).toBe('sequential');
+    });
+
+    it('executes action normally when no SimulationRuntime', async () => {
+      const action = mockAction(stepSuccess({ v: 1 }));
+      const chain = DecoratorChain.build({
+        simulation: { strategies: { 'a': 'sequential' } },
+      }, action);
+      const result = await chain.execute(mockContext());
+      expect(result.kind).toBe('success');
+      expect(action.execute).toHaveBeenCalled();
     });
   });
 });

@@ -3,9 +3,15 @@ import type { ElementMethodBinding } from '@casehubio/yaml-core/step';
 import { stepSuccess } from '@casehubio/yaml-core/step';
 import { AriaInvokeHandler } from './invoke/aria-handler.js';
 import { InferredMethodHandler } from './invoke/inferred-method-handler.js';
+import { SimulationAwareInvokeHandler } from './invoke/simulation-aware-handler.js';
+import { VerifySimulationHandler } from './invoke/verify-simulation-handler.js';
 import { loadScenarioDefinitions } from './invoke/definitions.js';
 
-const handlers: InvokeHandler[] = [new AriaInvokeHandler()];
+const handlers: InvokeHandler[] = [
+  new AriaInvokeHandler(),
+  new SimulationAwareInvokeHandler(),
+  new VerifySimulationHandler(),
+];
 const inferredHandler = new InferredMethodHandler();
 
 export function createScenarioCatalog(): Catalog {

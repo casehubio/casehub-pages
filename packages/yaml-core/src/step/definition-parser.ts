@@ -148,6 +148,9 @@ export class DefinitionParser {
     if (raw['simulated'] != null) {
       return { kind: 'simulated' };
     }
-    throw new Error(`Unknown invoke binding type. Expected one of: mcp, python, node, script, graphql, rest, agent, process, aria, graphql-domain, simulated`);
+    if (raw['verify-simulation'] != null) {
+      return { kind: 'verify-simulation' };
+    }
+    throw new Error(`Unknown invoke binding type. Expected one of: mcp, python, node, script, graphql, rest, agent, process, aria, graphql-domain, simulated, verify-simulation`);
   }
 }

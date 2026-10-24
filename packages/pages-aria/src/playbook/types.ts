@@ -33,9 +33,13 @@ export interface TutorialSection {
   steps: SchedulerStep[];
 }
 
+export interface InlineCorpus {
+  inline: Record<string, Array<{ input: unknown; output: unknown; realism?: string }>>;
+}
+
 export interface SimulationBlock {
   strategies: Record<string, string>;
-  corpus?: string[];
+  corpus?: Array<string | InlineCorpus>;
   capture?: string[];
 }
 

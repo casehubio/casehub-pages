@@ -2,7 +2,7 @@ export type {
   Parameter, Definition, DefinitionFile,
   InvokeBinding, McpBinding, RestBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
-  AriaBinding, GraphqlDomainBinding, SimulatedBinding, ElementMethodBinding,
+  AriaBinding, GraphqlDomainBinding, SimulatedBinding, VerifySimulationBinding, ElementMethodBinding,
   CloudEventSpec,
 } from './types.js';
 export { CE_NAMED_FIELDS } from './types.js';
@@ -70,7 +70,7 @@ export { RuntimePluginSource } from './sources/plugin-source.js';
 export { ScriptSource } from './sources/script-source.js';
 export type { ScriptFileEntry } from './sources/script-source.js';
 
-export type { DataRealism, JournalEntry, CorpusEntry, SimulationConfig } from './simulation-runtime.js';
-export { InvocationJournal, SimulationOverlay, SimulationRuntime } from './simulation-runtime.js';
+export type { DataRealism, JournalEntry, CorpusDatum, CorpusEntry, SimulationConfig } from './simulation-runtime.js';
+export { InvocationJournal, SimulationOverlay, SimulationRuntime, inputContains } from './simulation-runtime.js';
 
 export { ChainedServiceRegistry } from './chained-service-registry.js';

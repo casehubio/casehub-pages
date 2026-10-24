@@ -11,9 +11,15 @@ export interface JournalEntry {
   readonly dataRealism: DataRealism;
 }
 
+export interface CorpusDatum {
+  input: unknown;
+  output: unknown;
+  realism?: DataRealism;
+}
+
 export type CorpusEntry =
   | { file: string }
-  | { inline: Record<string, Array<{ input: unknown; output: unknown }>> };
+  | { inline: Record<string, CorpusDatum[]> };
 
 export interface SimulationConfig {
   strategies: Record<string, string>;
@@ -46,7 +52,27 @@ export class InvocationJournal {
 
 export class SimulationOverlay {
   readonly journal = new InvocationJournal();
+  private readonly sequentialCounters = new Map<string, number>();
+
   constructor(readonly config: SimulationConfig) {}
+
+  inlineCorpusFor(qualifiedName: string): CorpusDatum[] {
+    const result: CorpusDatum[] = [];
+    for (const entry of this.config.corpus) {
+      if ('inline' in entry && entry.inline[qualifiedName]) {
+        result.push(...entry.inline[qualifiedName]);
+      }
+    }
+    return result;
+  }
+
+  nextSequential(qualifiedName: string): CorpusDatum | undefined {
+    const entries = this.inlineCorpusFor(qualifiedName);
+    if (entries.length === 0) return undefined;
+    const idx = this.sequentialCounters.get(qualifiedName) ?? 0;
+    this.sequentialCounters.set(qualifiedName, idx + 1);
+    return entries[idx % entries.length];
+  }
 }
 
 export class SimulationRuntime {
@@ -94,4 +120,51 @@ export class SimulationRuntime {
     }
     return 'RECORDED_REAL';
   }
+
+  resolve(qualifiedName: string, input: unknown): { output: unknown; realism: DataRealism } | undefined {
+    for (let i = this.overlayStack.length - 1; i >= 0; i--) {
+      const overlay = this.overlayStack[i]!;
+      const strategy = overlay.config.strategies[qualifiedName];
+      if (strategy === undefined) continue;
+
+      switch (strategy) {
+        case 'sequential': {
+          const entry = overlay.nextSequential(qualifiedName);
+          if (entry) return { output: entry.output, realism: entry.realism ?? 'STRUCTURALLY_VALID' };
+          return { output: {}, realism: 'PLACEHOLDER' };
+        }
+        case 'key-lookup': {
+          const corpus = overlay.inlineCorpusFor(qualifiedName);
+          const match = corpus.find(e => inputContains(input, e.input));
+          if (match) return { output: match.output, realism: match.realism ?? 'DOMAIN_PLAUSIBLE' };
+          return { output: {}, realism: 'PLACEHOLDER' };
+        }
+        case 'passthrough':
+          return undefined;
+        default:
+          return { output: {}, realism: 'PLACEHOLDER' };
+      }
+    }
+    return undefined;
+  }
+
+  allEntriesFor(qualifiedName: string): readonly JournalEntry[] {
+    const result: JournalEntry[] = [];
+    for (const overlay of this.overlayStack) {
+      result.push(...overlay.journal.entriesFor(qualifiedName));
+    }
+    return result;
+  }
+}
+
+export function inputContains(actual: unknown, pattern: unknown): boolean {
+  if (pattern === null || pattern === undefined) return true;
+  if (typeof pattern !== 'object' || typeof actual !== 'object') return actual === pattern;
+  if (actual === null) return false;
+  const patObj = pattern as Record<string, unknown>;
+  const actObj = actual as Record<string, unknown>;
+  for (const key of Object.keys(patObj)) {
+    if (!inputContains(actObj[key], patObj[key])) return false;
+  }
+  return true;
 }

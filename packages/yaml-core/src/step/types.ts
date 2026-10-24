@@ -20,7 +20,8 @@ export type InvokeBinding =
   | AriaBinding
   | GraphqlDomainBinding
   | SimulatedBinding
-  | ElementMethodBinding;
+  | ElementMethodBinding
+  | VerifySimulationBinding;
 
 export interface McpBinding {
   kind: 'mcp';
@@ -71,6 +72,10 @@ export interface ProcessBinding {
 export interface ElementMethodBinding {
   kind: 'element-method';
   method: string;
+}
+
+export interface VerifySimulationBinding {
+  kind: 'verify-simulation';
 }
 
 export interface Definition {

@@ -828,5 +828,20 @@ describe('Walker', () => {
         block: [{ 'test-action': {} }],
       }], catalog)).not.toThrow();
     });
+
+    it('standalone simulation step resolves to zero-delay step', () => {
+      const steps = Walker.resolve([{
+        step: 'switch-to-simulated',
+        simulation: {
+          strategies: { 'agent-provider.invoke': 'key-lookup' },
+          corpus: ['fixtures/llm-responses.yaml'],
+        },
+      }], catalog);
+
+      expect(steps).toHaveLength(1);
+      expect(steps[0]!.kind).toBe('delay');
+      expect((steps[0] as any).duration).toBe(0);
+      expect(steps[0]!.decorators['simulation']).toBeDefined();
+    });
   });
 });

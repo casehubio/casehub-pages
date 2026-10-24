@@ -12,6 +12,8 @@ import { parsePriority, Priority } from '../orchestration/priority.js';
 import { FromDecorator } from './from-decorator.js';
 import { CancelDecorator } from './cancel-decorator.js';
 import { BackgroundDecorator } from './background-decorator.js';
+import { SimulationRuntime } from './simulation-runtime.js';
+import type { SimulationConfig, CorpusEntry } from './simulation-runtime.js';
 
 export interface Context {
   readonly params: Record<string, unknown>;
@@ -549,6 +551,33 @@ class PrioritySemaphoreDecorator implements DecoratedExecution {
   }
 }
 
+class SimulationDecorator implements DecoratedExecution {
+  constructor(
+    private readonly next: DecoratedExecution,
+    private readonly raw: unknown,
+  ) {}
+  async execute(context: Context): Promise<Result> {
+    let runtime: SimulationRuntime;
+    try {
+      runtime = context.services.lookup<SimulationRuntime>({ name: 'SimulationRuntime' });
+    } catch {
+      return this.next.execute(context);
+    }
+
+    const block = this.raw as Record<string, unknown>;
+    const corpus: CorpusEntry[] = (Array.isArray(block['corpus']) ? block['corpus'] : []).map(
+      (entry: unknown) => typeof entry === 'string' ? { file: entry } : entry as CorpusEntry,
+    );
+    const config: SimulationConfig = {
+      strategies: (block['strategies'] as Record<string, string>) ?? {},
+      corpus,
+      capture: (block['capture'] as string[]) ?? [],
+    };
+    runtime.pushOverlay(config);
+    return this.next.execute(context);
+  }
+}
+
 function parseSemaphoreSpec(raw: unknown): { name: string; permits: number } {
   if (typeof raw === 'string') return { name: raw, permits: 1 };
   if (typeof raw === 'object' && raw !== null) {
@@ -637,6 +666,9 @@ export class DecoratorChain {
     }
     if (decorators['forEach'] != null) {
       execution = new ForEachDecorator(execution, decorators['forEach']);
+    }
+    if (decorators['simulation'] != null) {
+      execution = new SimulationDecorator(execution, decorators['simulation']);
     }
     if (decorators['if'] != null) {
       execution = new WhenDecorator(execution, String(decorators['if']));

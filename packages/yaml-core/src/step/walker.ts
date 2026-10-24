@@ -530,6 +530,10 @@ export class Walker {
       return { kind: 'delay', name: stepName, duration, decorators: rest };
     }
 
+    if (!structuralType && !actionKey && !invokeSpec && decorators['simulation'] !== undefined) {
+      return { kind: 'delay', name: stepName, duration: 0, decorators };
+    }
+
     if (invokeSpec) {
       return { kind: 'invoke', name: stepName, invokeSpec, decorators };
     }

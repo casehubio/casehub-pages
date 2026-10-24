@@ -46,6 +46,15 @@ const SIMULATED_ACTION: Definition = {
   }, outputs: {}, invoke: { kind: 'simulated' }, portability: 'ts',
 };
 
+const VERIFY_SIMULATION_ACTION: Definition = {
+  name: 'verify-simulation', inputs: {
+    invoked: { type: 'STRING', required: true },
+    count: { type: 'INTEGER', required: false },
+    'all-simulated': { type: 'STRING', required: false },
+    'input-contains': { type: 'OBJECT', required: false },
+  }, outputs: {}, invoke: { kind: 'verify-simulation' }, portability: 'ts',
+};
+
 const REST_ACTION: Definition = {
   name: 'rest', inputs: {
     method: { type: 'STRING', required: true },
@@ -62,5 +71,6 @@ export function loadScenarioDefinitions(): DefinitionFile[] {
   actions['graphql'] = GRAPHQL_ACTION;
   actions['simulated'] = SIMULATED_ACTION;
   actions['rest'] = REST_ACTION;
+  actions['verify-simulation'] = VERIFY_SIMULATION_ACTION;
   return [{ actions }];
 }

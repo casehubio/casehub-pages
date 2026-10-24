@@ -9,7 +9,7 @@ import { DefaultVirtualClock } from './virtual-clock.js';
 import type { VirtualClock } from './virtual-clock.js';
 import { StepQueue } from './step-queue.js';
 import { MapServiceRegistry, SimulationRuntime } from '@casehubio/yaml-core/step';
-import type { Result, SimulationConfig } from '@casehubio/yaml-core/step';
+import type { Result, SimulationConfig, CorpusEntry } from '@casehubio/yaml-core/step';
 import { bindPlaybook } from './yaml-binder.js';
 import type { BindResult } from './yaml-binder.js';
 import { evaluateTrigger } from './trigger-evaluator.js';
@@ -568,9 +568,12 @@ function countCompletedSteps(queues: StepQueue[]): number {
 }
 
 function simulationBlockToConfig(block: SimulationBlock): SimulationConfig {
+  const corpus: CorpusEntry[] = (block.corpus ?? []).map(entry =>
+    typeof entry === 'string' ? { file: entry } : entry,
+  );
   return {
     strategies: block.strategies,
-    corpus: (block.corpus ?? []).map(path => ({ file: path })),
+    corpus,
     capture: block.capture ?? [],
   };
 }
