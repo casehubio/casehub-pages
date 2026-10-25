@@ -290,23 +290,13 @@ export class MarkdownEditorBridge extends EditableTextBridge {
 
     const blockStart = resolved.start();
     const blockEnd = resolved.end();
-    const selCoords = this.view.coordsAtPos(sel);
-    const lineHeight = selCoords.bottom - selCoords.top;
-    const threshold = Math.max(lineHeight * 0.4, 8);
+    const midY = (cursorLine.top + cursorLine.bottom) / 2;
 
-    let startPos = sel;
-    for (let p = sel - 1; p >= blockStart; p--) {
-      const c = this.view.coordsAtPos(p);
-      if (Math.abs(c.top - selCoords.top) > threshold) break;
-      startPos = p;
-    }
+    const startHit = this.view.posAtCoords({ left: cursorLine.left, top: midY });
+    const endHit = this.view.posAtCoords({ left: cursorLine.right - 1, top: midY });
 
-    let endPos = sel;
-    for (let p = sel; p <= blockEnd; p++) {
-      const c = this.view.coordsAtPos(p);
-      if (Math.abs(c.top - selCoords.top) > threshold) break;
-      endPos = p;
-    }
+    const startPos = startHit ? Math.max(startHit.pos, blockStart) : blockStart;
+    const endPos = endHit ? Math.min(endHit.pos + 1, blockEnd) : blockEnd;
 
     return this._highlightDocRange(startPos, endPos, style);
   }

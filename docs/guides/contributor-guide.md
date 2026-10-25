@@ -173,7 +173,15 @@ Generation counter pattern for ECharts rendering. Each render tagged with a gene
 
 | Module | Purpose |
 |--------|---------|
-| `plugins/intellij` | Kotlin/Gradle IntelliJ plugin — thin LSP client shell via LSP4IJ (Red Hat). Bundles `server-node.bundle.cjs` as a plugin resource, extracts on first run, launches via Node.js stdio. File pattern: `*.page.yaml`. Requires JDK 21 to build, IntelliJ 2024.2+, LSP4IJ plugin installed. Build: `JAVA_HOME=<jdk21> ./gradlew buildPlugin`. |
+| `plugins/intellij` | Kotlin/Gradle IntelliJ plugin — thin LSP client shell via LSP4IJ (Red Hat). Bundles `server-node.bundle.cjs` as a plugin resource, extracts on first run, launches via Node.js stdio. File pattern: `*.page.yaml`. Requires JDK 21 to build, IntelliJ 2024.2+, LSP4IJ plugin installed. |
+
+**Build chain:** The plugin depends on the LSP server bundle. The full build sequence is:
+
+1. `yarn workspace @casehubio/pages-lsp run build` — TypeScript compilation
+2. `yarn workspace @casehubio/pages-lsp run build:bundle` — esbuild → `dist/server-node.bundle.cjs`
+3. `plugins/intellij/gradlew -p plugins/intellij buildPlugin` — Gradle copies the bundle into plugin resources and builds the `.zip`
+
+The shortcut `yarn build:plugin` runs all three steps. CI runs `buildPlugin` + `verifyPlugin` after the main build (which already produces the LSP bundle via `build:packages`).
 
 ### Graph Packages (`packages/`) -- Visual Diagram Editor
 

@@ -187,6 +187,11 @@ function renderCategories() {
         categoryDiv.appendChild(categoryItems);
         categoriesNav.appendChild(categoryDiv);
     });
+
+    if (currentSample) {
+        const activeItem = document.querySelector(`[data-path="${currentSample.path}"]`);
+        if (activeItem) activeItem.classList.add('active');
+    }
 }
 
 // Render statistics

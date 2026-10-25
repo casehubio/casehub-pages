@@ -31,7 +31,8 @@
     "build:tutorials": "node scripts/build-tutorial-registry.mjs",
     "lint": "npx eslint .",
     "clean": "yarn workspaces foreach -Apt run clean || true",
-    "test": "yarn workspaces foreach -Apt run test"
+    "test": "yarn workspaces foreach -Apt run test",
+    "build:plugin": "yarn workspace @casehubio/pages-lsp run build && yarn workspace @casehubio/pages-lsp run build:bundle && plugins/intellij/gradlew -p plugins/intellij buildPlugin"
   },
   "devDependencies": {
     "eslint": "^10.5.0",
