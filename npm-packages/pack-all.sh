@@ -37,4 +37,32 @@ for pkg_json in "$REPO_ROOT"/packages/*/package.json "$REPO_ROOT"/components/*/p
     tar xzf "$tarball" -C "$OUTPUT_DIR/packages/$pkg_name" --strip-components=1
 done
 
+# Rewrite exports/main from src/ to dist/ — consumers need compiled JS, not TS source
+echo "=== Rewriting src/ → dist/ in exports and main fields ==="
+python3 -c '
+import json, sys
+from pathlib import Path
+
+packages_dir = Path(sys.argv[1]) / "packages"
+count = 0
+for pkg_json in sorted(packages_dir.glob("*/package.json")):
+    with open(pkg_json) as f:
+        pkg = json.load(f)
+    changed = False
+    if "main" in pkg and "/src/" in pkg["main"]:
+        pkg["main"] = pkg["main"].replace("/src/", "/dist/").replace(".ts", ".js")
+        changed = True
+    if "exports" in pkg and isinstance(pkg["exports"], dict):
+        for key, val in pkg["exports"].items():
+            if isinstance(val, str) and "/src/" in val:
+                pkg["exports"][key] = val.replace("/src/", "/dist/").replace(".ts", ".js")
+                changed = True
+    if changed:
+        with open(pkg_json, "w") as f:
+            json.dump(pkg, f, indent=2)
+            f.write("\n")
+        count += 1
+print(f"  Rewrote {count} package.json files")
+' "$OUTPUT_DIR"
+
 echo "=== Done — $(ls "$OUTPUT_DIR/packages/" | wc -l | tr -d ' ') packages unpacked to $OUTPUT_DIR/packages/ ==="
