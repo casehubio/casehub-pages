@@ -17,6 +17,16 @@
     <name>CaseHub Pages UI Static Assets</name>
     <description>Pre-built design system assets — theme CSS and component ESM bundle served from META-INF/resources/pages/</description>
 
+    <dependencies>
+        <dependency>
+            <groupId>io.casehub</groupId>
+            <artifactId>casehub-pages</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
     <repositories>
         <repository>
             <id>github</id>
