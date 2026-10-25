@@ -844,16 +844,15 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .column-picker-dropdown {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: var(--pages-space-1, 4px);
-      background: var(--pages-surface-secondary, #fafafa);
+      position: fixed;
+      margin: 0;
+      padding: 0;
       border: 1px solid var(--pages-border-default, #d4d4d4);
+      background: var(--pages-surface-secondary, #fafafa);
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      z-index: 10;
       min-width: 200px;
+      inset: unset;
     }
 
     .column-picker-item {
@@ -1797,18 +1796,41 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   private _toggleColumnPicker = (): void => {
     this._columnPickerOpen = !this._columnPickerOpen;
     if (this._columnPickerOpen) {
+      this.updateComplete.then(() => this._positionPickerDropdown());
       setTimeout(() => {
         document.addEventListener('click', this._handleClickOutsidePicker, true);
       }, 0);
     } else {
+      const dropdown = this.renderRoot.querySelector('.column-picker-dropdown') as HTMLElement | null;
+      if (dropdown && typeof dropdown.hidePopover === 'function') dropdown.hidePopover();
       document.removeEventListener('click', this._handleClickOutsidePicker, true);
       this._cancelPickerClose();
     }
   };
 
+  private _positionPickerDropdown(): void {
+    const dropdown = this.renderRoot.querySelector('.column-picker-dropdown') as HTMLElement | null;
+    const trigger = this.renderRoot.querySelector('.column-picker-trigger') as HTMLElement | null;
+    if (!dropdown || !trigger) return;
+    if (typeof dropdown.showPopover === 'function') dropdown.showPopover();
+    const rect = trigger.getBoundingClientRect();
+    const dropdownHeight = dropdown.offsetHeight;
+    const spaceBelow = window.innerHeight - rect.bottom - 4;
+    if (spaceBelow >= dropdownHeight) {
+      dropdown.style.top = `${rect.bottom + 4}px`;
+      dropdown.style.bottom = '';
+    } else {
+      dropdown.style.top = '';
+      dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+    }
+    dropdown.style.right = `${window.innerWidth - rect.right}px`;
+  }
+
   private _handleClickOutsidePicker = (e: MouseEvent): void => {
-    if (!this.contains(e.target as Node)) {
+    const dropdown = this.renderRoot.querySelector('.column-picker-dropdown') as HTMLElement | null;
+    if (!this.contains(e.target as Node) && !dropdown?.contains(e.target as Node)) {
       this._columnPickerOpen = false;
+      if (dropdown && typeof dropdown.hidePopover === 'function') dropdown.hidePopover();
       document.removeEventListener('click', this._handleClickOutsidePicker, true);
       this._cancelPickerClose();
     }
@@ -1818,6 +1840,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     this._cancelPickerClose();
     this._pickerCloseTimer = window.setTimeout(() => {
       this._columnPickerOpen = false;
+      const dropdown = this.renderRoot.querySelector('.column-picker-dropdown') as HTMLElement | null;
+      if (dropdown && typeof dropdown.hidePopover === 'function') dropdown.hidePopover();
       document.removeEventListener('click', this._handleClickOutsidePicker, true);
     }, 400);
   };
@@ -2429,7 +2453,9 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
           ⋮
         </button>
         ${this._columnPickerOpen ? html`
-          <div class="column-picker-dropdown">
+          <div class="column-picker-dropdown" popover="manual"
+            @mouseenter="${this._handlePickerMouseEnter}"
+            @mouseleave="${this._handlePickerMouseLeave}">
             ${showFilterOption ? html`
               <button class="filter-toggle" @click="${this._toggleFilter}">
                 ${this._filterVisible ? 'Hide filter' : 'Show filter'}
