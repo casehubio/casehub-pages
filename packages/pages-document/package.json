@@ -23,5 +23,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
-  }
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

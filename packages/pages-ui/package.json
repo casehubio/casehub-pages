@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-ui",
   "version": "0.2.3",
-  "description": "CaseHub Pages UI — component model, layout primitives, DSL, YAML parser",
+  "description": "CaseHub Pages UI \u2014 component model, layout primitives, DSL, YAML parser",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -35,5 +35,9 @@
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

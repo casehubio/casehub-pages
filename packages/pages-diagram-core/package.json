@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-diagram-core",
   "version": "0.1.0",
-  "description": "Diagram editing infrastructure — DiagramBaseMixin, toolbar, export, YAML primitives",
+  "description": "Diagram editing infrastructure \u2014 DiagramBaseMixin, toolbar, export, YAML primitives",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -35,5 +35,9 @@
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

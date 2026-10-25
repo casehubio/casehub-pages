@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-viz",
   "version": "0.2.3",
-  "description": "CaseHub Pages Viz — Web Component visualization wrappers",
+  "description": "CaseHub Pages Viz \u2014 Web Component visualization wrappers",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -34,5 +34,9 @@
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

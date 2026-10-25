@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-ui-components",
   "version": "0.2.3",
-  "description": "CaseHub Pages standalone UI components — Lit web components styled with design tokens",
+  "description": "CaseHub Pages standalone UI components \u2014 Lit web components styled with design tokens",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -161,5 +161,9 @@
     "typescript": "~5.8.0",
     "vitest": "^3.2.1"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

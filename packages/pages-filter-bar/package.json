@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-filter-bar",
   "version": "0.1.0",
-  "description": "CaseHub Pages filter bar — type chips, entity dropdown, date range",
+  "description": "CaseHub Pages filter bar \u2014 type chips, entity dropdown, date range",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -31,5 +31,9 @@
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

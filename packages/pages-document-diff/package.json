@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-document-diff",
   "version": "0.1.0",
-  "description": "Generic document diff viewer — LCS diff, word highlights, canvas minimap, scroll sync, split/unified views",
+  "description": "Generic document diff viewer \u2014 LCS diff, word highlights, canvas minimap, scroll sync, split/unified views",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -35,5 +35,9 @@
     "typescript": "~5.8.0",
     "vitest": "^3.2.1"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

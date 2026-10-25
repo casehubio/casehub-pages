@@ -36,5 +36,9 @@
     "test:watch": "vitest",
     "dev": "vite dev",
     "clean": "rimraf dist"
-  }
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

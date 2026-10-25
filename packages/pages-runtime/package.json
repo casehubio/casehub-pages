@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-runtime",
   "version": "0.2.3",
-  "description": "CaseHub Pages Runtime — site loading, data pipeline, navigation, cross-filtering",
+  "description": "CaseHub Pages Runtime \u2014 site loading, data pipeline, navigation, cross-filtering",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -38,5 +38,9 @@
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }
