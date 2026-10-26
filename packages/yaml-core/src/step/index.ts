@@ -73,4 +73,7 @@ export type { ScriptFileEntry } from './sources/script-source.js';
 export type { DataRealism, JournalEntry, CorpusDatum, CorpusEntry, SimulationConfig } from './simulation-runtime.js';
 export { InvocationJournal, SimulationOverlay, SimulationRuntime, inputContains } from './simulation-runtime.js';
 
+export type { StepOutcomeEntry, OutcomeSummary, ExecutionOutcome } from './outcome.js';
+export { OutcomeCollector } from './outcome.js';
+
 export { ChainedServiceRegistry } from './chained-service-registry.js';

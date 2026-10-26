@@ -155,6 +155,14 @@ export class SimulationRuntime {
     }
     return result;
   }
+
+  allEntries(): readonly JournalEntry[] {
+    const result: JournalEntry[] = [];
+    for (const overlay of this.overlayStack) {
+      result.push(...overlay.journal.entries());
+    }
+    return result;
+  }
 }
 
 export function inputContains(actual: unknown, pattern: unknown): boolean {

@@ -157,6 +157,22 @@ describe('SimulationRuntime', () => {
     expect(runtime.resolve('b', {})).toBeUndefined();
   });
 
+  it('allEntries collects entries across all overlays', () => {
+    const runtime = new SimulationRuntime();
+    const config1: SimulationConfig = { strategies: {}, corpus: [], capture: [] };
+    const config2: SimulationConfig = { strategies: {}, corpus: [], capture: [] };
+
+    runtime.pushOverlay(config1);
+    runtime.recordJournal('a.op', '', {}, {}, 'DOMAIN_PLAUSIBLE');
+    runtime.pushOverlay(config2);
+    runtime.recordJournal('b.op', '', {}, {}, 'RECORDED_REAL');
+
+    const all = runtime.allEntries();
+    expect(all).toHaveLength(2);
+    expect(all[0]!.qualifiedName).toBe('a.op');
+    expect(all[1]!.qualifiedName).toBe('b.op');
+  });
+
   it('allEntriesFor collects from all overlays', () => {
     const runtime = new SimulationRuntime();
     const config1: SimulationConfig = { strategies: {}, corpus: [], capture: [] };

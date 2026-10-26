@@ -118,7 +118,7 @@ describe('DES Scheduler', () => {
       const detail = (e as CustomEvent).detail;
       if (detail.topic === 'scenario:state') states.push(detail.payload);
     });
-    const scenario = { scenario: 'test', steps: [pluginStep('click', calls)] };
+    const scenario = { playbook: 'test', steps: [pluginStep('click', calls)] };
     const runner = createScheduler(scenario, { eventTarget: et, speed: Infinity, startPaused: true });
     runner.play();
     await vi.waitFor(() => { expect(runner.state).toBe('done'); });
@@ -311,5 +311,137 @@ describe('DES Scheduler', () => {
     await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(capturedRuntime).toBeDefined();
     expect(capturedRuntime!.hasActiveOverlay()).toBe(false);
+  });
+});
+
+describe('outcome emission', () => {
+  it('emits scenario:outcome with completed on normal finish', async () => {
+    const calls: unknown[] = [];
+    const scenario = {
+      playbook: 'test-playbook',
+      steps: [pluginStep('click', calls)],
+    };
+    const opts = testOptions();
+    const outcomes: any[] = [];
+    opts.eventTarget.addEventListener('pages-event', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.topic === 'scenario:outcome') outcomes.push(detail.payload);
+    });
+
+    const runner = createScheduler(scenario, opts);
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0].scenarioName).toBe('test-playbook');
+    expect(outcomes[0].finalState).toBe('completed');
+    expect(outcomes[0].summary.stepsExecuted).toBe(1);
+    expect(outcomes[0].summary.stepsFailed).toBe(0);
+    expect(outcomes[0].steps).toHaveLength(1);
+    expect(outcomes[0].journal).toBeUndefined();
+  });
+
+  it('emits scenario:outcome with failed on step failure', async () => {
+    const scenario = {
+      playbook: 'fail-playbook',
+      steps: [failingPluginStep('bad-step', 'something broke')],
+    };
+    const opts = testOptions();
+    const outcomes: any[] = [];
+    opts.eventTarget.addEventListener('pages-event', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.topic === 'scenario:outcome') outcomes.push(detail.payload);
+    });
+
+    const runner = createScheduler(scenario, opts);
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0].finalState).toBe('failed');
+    expect(outcomes[0].summary.stepsFailed).toBe(1);
+    expect(outcomes[0].steps[0].error.message).toBe('something broke');
+  });
+
+  it('includes journal entries when simulation is active', async () => {
+    const scenario = {
+      playbook: 'sim-playbook',
+      simulation: {
+        strategies: { 'domain.op': 'sequential' },
+        corpus: [{ inline: { 'domain.op': [{ input: {}, output: { v: 1 } }] } }],
+      },
+      steps: [{
+        kind: 'plugin' as const,
+        name: null,
+        params: { domain: 'domain', operation: 'op' },
+        decorators: {},
+        entry: {
+          qualifiedName: 'graphql-domain',
+          definition: { name: 'graphql-domain', inputs: {}, outputs: {} },
+          action: {
+            async execute(p: Record<string, unknown>, services: ServiceRegistry) {
+              const rt = services.lookup<SimulationRuntime>({ name: 'SimulationRuntime' });
+              const resolved = rt.resolve('domain.op', p.params ?? {});
+              if (resolved) rt.recordJournal('domain.op', '', p.params ?? {}, resolved.output, resolved.realism);
+              return stepSuccess(resolved?.output as Record<string, unknown> ?? {});
+            },
+          },
+        },
+      }],
+    };
+    const opts = testOptions();
+    const outcomes: any[] = [];
+    opts.eventTarget.addEventListener('pages-event', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.topic === 'scenario:outcome') outcomes.push(detail.payload);
+    });
+
+    const runner = createScheduler(scenario, opts);
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0].journal).toBeDefined();
+    expect(outcomes[0].journal.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('outcome event fires exactly once per run', async () => {
+    const calls: unknown[] = [];
+    const scenario = {
+      playbook: 'multi-step',
+      steps: [
+        pluginStep('a', calls),
+        pluginStep('b', calls),
+        pluginStep('c', calls),
+      ],
+    };
+    const opts = testOptions();
+    let outcomeCount = 0;
+    opts.eventTarget.addEventListener('pages-event', (e: Event) => {
+      if ((e as CustomEvent).detail.topic === 'scenario:outcome') outcomeCount++;
+    });
+
+    const runner = createScheduler(scenario, opts);
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+
+    expect(outcomeCount).toBe(1);
+  });
+
+  it('uses unnamed when playbook has no name', async () => {
+    const calls: unknown[] = [];
+    const scenario = { steps: [pluginStep('click', calls)] };
+    const opts = testOptions();
+    const outcomes: any[] = [];
+    opts.eventTarget.addEventListener('pages-event', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.topic === 'scenario:outcome') outcomes.push(detail.payload);
+    });
+
+    const runner = createScheduler(scenario, opts);
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+
+    expect(outcomes[0].scenarioName).toBe('unnamed');
   });
 });

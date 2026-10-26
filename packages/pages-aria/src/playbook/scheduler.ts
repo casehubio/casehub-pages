@@ -8,8 +8,8 @@ import type { PlaybookState, OutlineNode } from '../controller/playbook-connecti
 import { DefaultVirtualClock } from './virtual-clock.js';
 import type { VirtualClock } from './virtual-clock.js';
 import { StepQueue } from './step-queue.js';
-import { MapServiceRegistry, SimulationRuntime } from '@casehubio/yaml-core/step';
-import type { Result, SimulationConfig, CorpusEntry } from '@casehubio/yaml-core/step';
+import { MapServiceRegistry, SimulationRuntime, OutcomeCollector } from '@casehubio/yaml-core/step';
+import type { Result, SimulationConfig, CorpusEntry, JournalEntry } from '@casehubio/yaml-core/step';
 import { bindPlaybook } from './yaml-binder.js';
 import type { BindResult } from './yaml-binder.js';
 import { evaluateTrigger } from './trigger-evaluator.js';
@@ -65,6 +65,9 @@ export function createScheduler(
     simulationRuntime.pushOverlay(simulationBlockToConfig(scenario.simulation));
   }
 
+  const collector = new OutcomeCollector(scenario.playbook ?? 'unnamed');
+  let hadFailure = false;
+
   let runnerState: RunnerState = options.startPaused ? 'paused' : 'idle';
   let disposed = false;
   let loopRunning = false;
@@ -109,6 +112,17 @@ export function createScheduler(
   function emitQueueEvent(queue: StepQueue, reason?: string): void {
     options.eventTarget.dispatchEvent(new CustomEvent('pages-event', {
       detail: { topic: 'scenario:queue', payload: { queueId: queue.id, state: queue.state, reason } },
+    }));
+  }
+
+  function emitOutcome(finalState: 'completed' | 'failed' | 'deadlocked'): void {
+    const journal = simulationRuntime
+      ? simulationRuntime.allEntries() as JournalEntry[]
+      : undefined;
+    const outcome = collector.finalize(finalState,
+      journal && journal.length > 0 ? journal : undefined);
+    options.eventTarget.dispatchEvent(new CustomEvent('pages-event', {
+      detail: { topic: 'scenario:outcome', payload: outcome },
     }));
   }
 
@@ -288,6 +302,7 @@ export function createScheduler(
             );
           }
 
+          collector.stepStarted(posKey, step.kind, queue.id);
           const result = await dispatchStep(step, queue);
           emitStepEvent(queue, step);
 
@@ -302,6 +317,11 @@ export function createScheduler(
               retryState.set(posKey, retryCount + 1);
             } else {
               retryState.delete(posKey);
+              const failDecNames = Object.keys(decorators).filter(k => decorators[k] != null);
+              collector.stepCompleted(posKey, stepName, 'failure',
+                { message: result.message, failureCategory: result.failureCategory },
+                failDecNames.length > 0 ? failDecNames : undefined);
+              hadFailure = true;
               queue.state = 'done';
               emitQueueEvent(queue, 'error');
               options.eventTarget.dispatchEvent(new CustomEvent('pages-event', {
@@ -321,6 +341,13 @@ export function createScheduler(
           if (queue.state !== 'ready') {
             emitQueueEvent(queue);
             return;
+          }
+
+          {
+            const completedStepName = ('name' in step ? step.name : null) ?? posKey;
+            const decoratorNames = Object.keys(decorators).filter(k => decorators[k] != null);
+            collector.stepCompleted(posKey, completedStepName, 'success', undefined,
+              decoratorNames.length > 0 ? decoratorNames : undefined);
           }
 
           let advancePosition = true;
@@ -396,6 +423,7 @@ export function createScheduler(
           staleTicks++;
           if (staleTicks > 100) {
             runnerState = 'done';
+            emitOutcome('deadlocked');
             options.eventTarget.dispatchEvent(new CustomEvent('pages-event', {
               detail: { topic: 'scenario:state', payload: {
                 scenario: scenario.playbook ?? null, chapter: null, section: null,
@@ -435,6 +463,7 @@ export function createScheduler(
     }
 
     runnerState = 'done';
+    emitOutcome(hadFailure ? 'failed' : 'completed');
     simulationRuntime?.popAll();
     emitState();
     if (scenario.playbook) options.onComplete?.(scenario.playbook);
