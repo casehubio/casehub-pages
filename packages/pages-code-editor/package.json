@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-code-editor",
   "version": "0.1.0",
-  "description": "CaseHub Pages code editor \u2014 Lit Web Component wrapping CodeMirror 6 with syntax highlighting",
+  "description": "CaseHub Pages code editor — Lit Web Component wrapping CodeMirror 6 with syntax highlighting",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"

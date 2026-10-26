@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-data",
   "version": "0.2.3",
-  "description": "CaseHub Pages data engine \u2014 dataset model, operations, schemas",
+  "description": "CaseHub Pages data engine — dataset model, operations, schemas",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"

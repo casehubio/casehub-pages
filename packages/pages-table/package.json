@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-table",
   "version": "0.2.3",
-  "description": "CaseHub Pages table \u2014 CSS Grid rendering, virtual scroll, sorting, filtering, selection, tree rows, keyboard navigation",
+  "description": "CaseHub Pages table — CSS Grid rendering, virtual scroll, sorting, filtering, selection, tree rows, keyboard navigation",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"

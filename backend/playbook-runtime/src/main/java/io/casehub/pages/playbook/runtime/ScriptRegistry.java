@@ -1,6 +1,7 @@
 package io.casehub.pages.playbook.runtime;
 
 import io.casehub.pages.playbook.ScriptDescriptor;
+import io.casehub.pages.playbook.LifecycleEngine;
 import io.casehub.pages.playbook.ScriptMeta;
 import io.casehub.pages.playbook.ScriptProvenance;
 
@@ -13,6 +14,7 @@ public class ScriptRegistry {
     private final BundledScriptSource bundled;
     private final UploadedScriptSource uploaded;
     private final List<ScriptSource> externalSources;
+    private final LifecycleEngine lifecycleEngine = LifecycleEngine.defaultEngine();
 
     public ScriptRegistry(BundledScriptSource bundled, UploadedScriptSource uploaded) {
         this(bundled, uploaded, List.of());
@@ -71,10 +73,11 @@ public class ScriptRegistry {
             throw new IllegalArgumentException(
                     "Cannot update metadata for '" + name + "': not an uploaded script");
         }
-        io.casehub.pages.playbook.ScriptLifecycleState state = uploaded.stateOf(name);
-        if (state != null && state != io.casehub.pages.playbook.ScriptLifecycleState.DRAFT) {
+        String state = uploaded.stateOf(name);
+        if (state != null && !state.equals(lifecycleEngine.initialState())) {
             throw new IllegalStateException(
-                    "Cannot update metadata for '" + name + "': script is " + state + ", must be DRAFT");
+                    "Cannot update metadata for '" + name + "': script is " + state
+                    + ", must be " + lifecycleEngine.initialState());
         }
         return uploaded.updateMeta(name, meta);
     }
@@ -84,33 +87,23 @@ public class ScriptRegistry {
         return uploaded.delete(name);
     }
 
-    public ScriptDescriptor activate(String name) {
+    public ScriptDescriptor transition(String name, String targetState) {
         if (!uploaded.contains(name)) {
-            throw new IllegalArgumentException("Cannot activate '" + name + "': not an uploaded script");
+            throw new IllegalArgumentException(
+                    "Cannot transition '" + name + "': not an uploaded script");
         }
-        return uploaded.transition(name, io.casehub.pages.playbook.ScriptLifecycleState.ACTIVE);
+        String current = uploaded.stateOf(name);
+        lifecycleEngine.validateTransition(current, targetState);
+        return uploaded.setState(name, targetState);
     }
 
-    public ScriptDescriptor archive(String name) {
-        if (!uploaded.contains(name)) {
-            throw new IllegalArgumentException("Cannot archive '" + name + "': not an uploaded script");
-        }
-        return uploaded.transition(name, io.casehub.pages.playbook.ScriptLifecycleState.ARCHIVED);
-    }
-
-    public ScriptDescriptor revise(String name) {
-        if (!uploaded.contains(name)) {
-            throw new IllegalArgumentException("Cannot revise '" + name + "': not an uploaded script");
-        }
-        return uploaded.transition(name, io.casehub.pages.playbook.ScriptLifecycleState.DRAFT);
-    }
-
-    public java.util.List<ScriptDescriptor> listActive(java.util.List<String> labels, java.util.List<String> tags) {
+    public List<ScriptDescriptor> listByState(String state,
+            List<String> labels, List<String> tags) {
         return allDescriptors()
-                       .filter(d -> d.state() == io.casehub.pages.playbook.ScriptLifecycleState.ACTIVE)
-                       .filter(d -> matchesLabels(d, labels))
-                       .filter(d -> matchesTags(d, tags))
-                       .toList();
+                .filter(d -> state.equals(d.state()))
+                .filter(d -> matchesLabels(d, labels))
+                .filter(d -> matchesTags(d, tags))
+                .toList();
     }
 
 

@@ -7,7 +7,7 @@ public record ScriptDescriptor(String name, String description,
                                 List<String> labels, List<String> tags,
                                 List<ParamDescriptor> params, List<String> calls,
                                 ScriptProvenance provenance,
-                                ScriptLifecycleState state,
+                                String state,
                                 List<Map<String, String>> firstStepTargets) {
     public ScriptDescriptor {
         if (labels == null) labels = List.of();
@@ -15,7 +15,7 @@ public record ScriptDescriptor(String name, String description,
         if (params == null) params = List.of();
         if (calls == null) calls = List.of();
         if (firstStepTargets == null) firstStepTargets = List.of();
-        if (state == null) state = ScriptLifecycleState.ACTIVE;
+        if (state == null) state = "active";
     }
 
     public ScriptDescriptor(String name, String description,

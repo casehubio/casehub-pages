@@ -1,0 +1,11 @@
+name: script-lifecycle
+states:
+  draft:
+    - next: active
+  active:
+    - on:
+        archive: archived
+        revise: draft
+  archived:
+    - on:
+        resurrect: draft

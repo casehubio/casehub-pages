@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-markdown-editor",
   "version": "0.1.0",
-  "description": "Milkdown-based rich markdown editor \u2014 Lit Web Component",
+  "description": "Milkdown-based rich markdown editor — Lit Web Component",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"

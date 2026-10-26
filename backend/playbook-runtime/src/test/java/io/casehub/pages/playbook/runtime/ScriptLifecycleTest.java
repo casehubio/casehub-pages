@@ -1,9 +1,7 @@
 package io.casehub.pages.playbook.runtime;
 
 import io.casehub.pages.playbook.ScriptDescriptor;
-import io.casehub.pages.playbook.ScriptLifecycleState;
 import io.casehub.pages.playbook.ScriptMeta;
-import io.casehub.yaml.core.orchestration.IllegalTransitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -43,70 +41,70 @@ class ScriptLifecycleTest {
     @Test
     void uploaded_startsAsDraft() {
         ScriptDescriptor desc = registry.upload(SAMPLE_YAML);
-        assertThat(desc.state()).isEqualTo(ScriptLifecycleState.DRAFT);
+        assertThat(desc.state()).isEqualTo("draft");
     }
 
     @Test
-    void activate_movesToActive() {
+    void transition_movesToActive() {
         registry.upload(SAMPLE_YAML);
-        ScriptDescriptor activated = registry.activate("test-script");
-        assertThat(activated.state()).isEqualTo(ScriptLifecycleState.ACTIVE);
+        ScriptDescriptor activated = registry.transition("test-script", "active");
+        assertThat(activated.state()).isEqualTo("active");
     }
 
     @Test
-    void archive_movesToArchived() {
+    void transition_movesToArchived() {
         registry.upload(SAMPLE_YAML);
-        registry.activate("test-script");
-        ScriptDescriptor archived = registry.archive("test-script");
-        assertThat(archived.state()).isEqualTo(ScriptLifecycleState.ARCHIVED);
+        registry.transition("test-script", "active");
+        ScriptDescriptor archived = registry.transition("test-script", "archived");
+        assertThat(archived.state()).isEqualTo("archived");
     }
 
     @Test
-    void revise_movesActiveBackToDraft() {
+    void transition_revise_movesActiveBackToDraft() {
         registry.upload(SAMPLE_YAML);
-        registry.activate("test-script");
-        ScriptDescriptor revised = registry.revise("test-script");
-        assertThat(revised.state()).isEqualTo(ScriptLifecycleState.DRAFT);
+        registry.transition("test-script", "active");
+        ScriptDescriptor revised = registry.transition("test-script", "draft");
+        assertThat(revised.state()).isEqualTo("draft");
     }
 
     @Test
-    void activate_fromArchived_throws() {
+    void transition_fromArchived_toActive_throws() {
         registry.upload(SAMPLE_YAML);
-        registry.activate("test-script");
-        registry.archive("test-script");
-        assertThatThrownBy(() -> registry.activate("test-script"))
-                .isInstanceOf(IllegalTransitionException.class);
+        registry.transition("test-script", "active");
+        registry.transition("test-script", "archived");
+        assertThatThrownBy(() -> registry.transition("test-script", "active"))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void archive_fromDraft_throws() {
+    void transition_archive_fromDraft_throws() {
         registry.upload(SAMPLE_YAML);
-        assertThatThrownBy(() -> registry.archive("test-script"))
-                .isInstanceOf(IllegalTransitionException.class);
+        assertThatThrownBy(() -> registry.transition("test-script", "archived"))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void activate_nonUploaded_throws() {
-        assertThatThrownBy(() -> registry.activate("nonexistent"))
+    void transition_nonUploaded_throws() {
+        assertThatThrownBy(() -> registry.transition("nonexistent", "active"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void listActive_excludesDraftAndArchived() {
+    void listByState_excludesDraftAndArchived() {
         registry.upload(SAMPLE_YAML);
-        assertThat(registry.listActive(List.of(), List.of())).isEmpty();
+        assertThat(registry.listByState("active", List.of(), List.of())).isEmpty();
 
-        registry.activate("test-script");
-        assertThat(registry.listActive(List.of(), List.of())).hasSize(1);
+        registry.transition("test-script", "active");
+        assertThat(registry.listByState("active", List.of(), List.of())).hasSize(1);
 
-        registry.archive("test-script");
-        assertThat(registry.listActive(List.of(), List.of())).isEmpty();
+        registry.transition("test-script", "archived");
+        assertThat(registry.listByState("active", List.of(), List.of())).isEmpty();
     }
 
     @Test
     void updateMeta_onlyAllowedOnDraft() {
         registry.upload(SAMPLE_YAML);
-        registry.activate("test-script");
+        registry.transition("test-script", "active");
         assertThatThrownBy(() -> registry.updateMeta("test-script",
                 new ScriptMeta("new desc", List.of(), List.of())))
                 .isInstanceOf(IllegalStateException.class);
@@ -116,10 +114,10 @@ class ScriptLifecycleTest {
     void get_reflectsCurrentState() {
         registry.upload(SAMPLE_YAML);
         assertThat(registry.get("test-script").orElseThrow().state())
-                .isEqualTo(ScriptLifecycleState.DRAFT);
+                .isEqualTo("draft");
 
-        registry.activate("test-script");
+        registry.transition("test-script", "active");
         assertThat(registry.get("test-script").orElseThrow().state())
-                .isEqualTo(ScriptLifecycleState.ACTIVE);
+                .isEqualTo("active");
     }
 }

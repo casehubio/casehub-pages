@@ -151,6 +151,65 @@ class ScriptRegistryTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void transition_draftToActive() {
+        registry.upload(SAMPLE_YAML);
+        var desc = registry.transition("sample-script", "active");
+        assertThat(desc.state()).isEqualTo("active");
+    }
+
+    @Test
+    void transition_activeToArchived() {
+        registry.upload(SAMPLE_YAML);
+        registry.transition("sample-script", "active");
+        var desc = registry.transition("sample-script", "archived");
+        assertThat(desc.state()).isEqualTo("archived");
+    }
+
+    @Test
+    void transition_activeToDraft_revise() {
+        registry.upload(SAMPLE_YAML);
+        registry.transition("sample-script", "active");
+        var desc = registry.transition("sample-script", "draft");
+        assertThat(desc.state()).isEqualTo("draft");
+    }
+
+    @Test
+    void transition_archivedToActive_rejected() {
+        registry.upload(SAMPLE_YAML);
+        registry.transition("sample-script", "active");
+        registry.transition("sample-script", "archived");
+        assertThatThrownBy(() -> registry.transition("sample-script", "active"))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void transition_rejectsNonUploaded() {
+        assertThatThrownBy(() -> registry.transition("helpdesk-intake", "active"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not an uploaded script");
+    }
+
+    @Test
+    void listByState_filtersCorrectly() {
+        registry.upload(SAMPLE_YAML);
+        registry.transition("sample-script", "active");
+        var active = registry.listByState("active", List.of(), List.of());
+        assertThat(active).extracting("name").contains("sample-script");
+        var drafts = registry.listByState("draft", List.of(), List.of());
+        assertThat(drafts).extracting("name").doesNotContain("sample-script");
+    }
+
+    @Test
+    void updateMeta_rejectedInActive() {
+        registry.upload(SAMPLE_YAML);
+        registry.transition("sample-script", "active");
+        assertThatThrownBy(() -> registry.updateMeta("sample-script",
+                new ScriptMeta("Updated", List.of(), List.of())))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("must be draft");
+    }
+
     static class TestBundledSource extends BundledScriptSource {
         TestBundledSource(String yaml) {
             super(List.of());

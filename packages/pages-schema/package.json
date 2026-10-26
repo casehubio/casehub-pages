@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-schema",
   "version": "0.1.0",
-  "description": "CaseHub Pages YAML schema \u2014 Zod schemas for component types, document structure, and validation",
+  "description": "CaseHub Pages YAML schema — Zod schemas for component types, document structure, and validation",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"

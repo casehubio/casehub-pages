@@ -33,23 +33,23 @@ class ScriptDescriptorTest {
     void descriptor_hasState() {
         var desc = new ScriptDescriptor("test", "desc", List.of(), List.of(),
                                         List.of(), List.of(), ScriptProvenance.UPLOADED,
-                                        ScriptLifecycleState.DRAFT, List.of());
-        assertThat(desc.state()).isEqualTo(ScriptLifecycleState.DRAFT);
+                                        "draft", List.of());
+        assertThat(desc.state()).isEqualTo("draft");
     }
 
     @Test
     void descriptor_defaultsStateToActive_whenNull() {
         var desc = new ScriptDescriptor("test", "desc", List.of(), List.of(),
                                         List.of(), List.of(), ScriptProvenance.BUNDLED,
-                                        null, List.of());
-        assertThat(desc.state()).isEqualTo(ScriptLifecycleState.ACTIVE);
+                                        (String) null, List.of());
+        assertThat(desc.state()).isEqualTo("active");
     }
 
     @Test
     void descriptor_backwardCompatConstructor_defaultsToActive() {
         var desc = new ScriptDescriptor("test", "desc", List.of(), List.of(),
                                         List.of(), List.of(), ScriptProvenance.BUNDLED, List.of());
-        assertThat(desc.state()).isEqualTo(ScriptLifecycleState.ACTIVE);
+        assertThat(desc.state()).isEqualTo("active");
     }
 
 

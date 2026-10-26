@@ -42,8 +42,8 @@ public final class ScriptDescriptorExtractor {
             List<String> calls = extractCalls(root);
             List<Map<String, String>> firstStepTargets = extractFirstStepTargets(root);
 
-            ScriptLifecycleState state = provenance == ScriptProvenance.UPLOADED
-                    ? ScriptLifecycleState.DRAFT : ScriptLifecycleState.ACTIVE;
+            String state = provenance == ScriptProvenance.UPLOADED
+                    ? "draft" : "active";
 
         return new ScriptDescriptor(name, description, labels, tags,
                 params, calls, provenance, state, firstStepTargets);

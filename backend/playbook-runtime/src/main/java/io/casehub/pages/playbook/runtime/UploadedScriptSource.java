@@ -2,11 +2,8 @@ package io.casehub.pages.playbook.runtime;
 
 import io.casehub.pages.playbook.ScriptDescriptor;
 import io.casehub.pages.playbook.ScriptDescriptorExtractor;
-import io.casehub.pages.playbook.ScriptLifecycleState;
 import io.casehub.pages.playbook.ScriptMeta;
 import io.casehub.pages.playbook.ScriptProvenance;
-import io.casehub.yaml.core.orchestration.DefaultOrcStateMachine;
-import io.casehub.yaml.core.orchestration.OrcStateMachine;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +18,7 @@ public class UploadedScriptSource implements ScriptSource {
     private final Path libraryPath;
     private final Map<String, ScriptDescriptor> descriptors = new LinkedHashMap<>();
     private final Map<String, String> yamlContent = new LinkedHashMap<>();
-    private final Map<String, OrcStateMachine<ScriptLifecycleState>> stateMachines = new LinkedHashMap<>();
+    private final Map<String, String> scriptStates = new LinkedHashMap<>();
 
     public UploadedScriptSource(Path libraryPath) {
         this.libraryPath = libraryPath;
@@ -49,7 +46,7 @@ public class UploadedScriptSource implements ScriptSource {
         ScriptDescriptor desc = ScriptDescriptorExtractor.extract(yaml, ScriptProvenance.UPLOADED);
         descriptors.put(desc.name(), desc);
         yamlContent.put(desc.name(), yaml);
-        stateMachines.put(desc.name(), createStateMachine(desc.name()));
+        scriptStates.put(desc.name(), desc.state());
         persistToDisk(desc.name(), yaml);
         return desc;
     }
@@ -68,39 +65,28 @@ public class UploadedScriptSource implements ScriptSource {
         if (!descriptors.containsKey(name)) return false;
         descriptors.remove(name);
         yamlContent.remove(name);
-        stateMachines.remove(name);
+        scriptStates.remove(name);
         try {
             Files.deleteIfExists(libraryPath.resolve(name + ".yaml"));
         } catch (IOException ignored) {}
         return true;
     }
 
-    public ScriptDescriptor transition(String name, ScriptLifecycleState target) {
-        OrcStateMachine<ScriptLifecycleState> sm = stateMachines.get(name);
-        if (sm == null) {throw new IllegalArgumentException("Not an uploaded script: " + name);}
-        ScriptLifecycleState current = sm.currentState();
-        sm.transition(current, target);
+    public ScriptDescriptor setState(String name, String state) {
+        if (!descriptors.containsKey(name)) {
+            throw new IllegalArgumentException("Not an uploaded script: " + name);
+        }
+        scriptStates.put(name, state);
         ScriptDescriptor existing = descriptors.get(name);
         ScriptDescriptor updated = new ScriptDescriptor(existing.name(), existing.description(),
-                                                        existing.labels(), existing.tags(), existing.params(), existing.calls(),
-                                                        existing.provenance(), target, existing.firstStepTargets());
+                existing.labels(), existing.tags(), existing.params(), existing.calls(),
+                existing.provenance(), state, existing.firstStepTargets());
         descriptors.put(name, updated);
         return updated;
     }
 
-    public ScriptLifecycleState stateOf(String name) {
-        OrcStateMachine<ScriptLifecycleState> sm = stateMachines.get(name);
-        return sm != null ? sm.currentState() : null;
-    }
-
-    private OrcStateMachine<ScriptLifecycleState> createStateMachine(String name) {
-        return DefaultOrcStateMachine.<ScriptLifecycleState>builder(
-                                             "script:" + name, ScriptLifecycleState.class, ScriptLifecycleState.DRAFT)
-                                     .transition(ScriptLifecycleState.DRAFT, ScriptLifecycleState.ACTIVE)
-                                     .transition(ScriptLifecycleState.ACTIVE, ScriptLifecycleState.ARCHIVED)
-                                     .transition(ScriptLifecycleState.ACTIVE, ScriptLifecycleState.DRAFT)
-                                     .terminal(ScriptLifecycleState.ARCHIVED)
-                                     .build();
+    public String stateOf(String name) {
+        return scriptStates.get(name);
     }
 
 
@@ -113,7 +99,7 @@ public class UploadedScriptSource implements ScriptSource {
                             ScriptDescriptor desc = ScriptDescriptorExtractor.extract(yaml, ScriptProvenance.UPLOADED);
                             descriptors.put(desc.name(), desc);
                             yamlContent.put(desc.name(), yaml);
-                            stateMachines.put(desc.name(), createStateMachine(desc.name()));
+                            scriptStates.put(desc.name(), desc.state());
                         } catch (IOException | IllegalArgumentException ignored) {}
                     });
         } catch (IOException ignored) {}
