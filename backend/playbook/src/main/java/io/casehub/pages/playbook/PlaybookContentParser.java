@@ -47,6 +47,8 @@ public final class PlaybookContentParser {
                     ? root.get("content").get("slides").asText() : null;
             SimulationSpec simulation = root.has("simulation")
                     ? parseSimulation(root.get("simulation")) : null;
+            List<ActivationTrigger> triggers = root.has("triggers")
+                    ? parseActivationTriggers(root.get("triggers")) : null;
 
             boolean hasChapters = root.has("chapters");
             boolean hasSections = root.has("sections");
@@ -65,7 +67,7 @@ public final class PlaybookContentParser {
                     ? parseSteps(root.get("steps"), actor) : null;
 
             var envelope = new PlaybookEnvelope(scenario, description, speed, actor, onError,
-                    params, meta, data, iterations, slides, simulation, chapters, sections, steps);
+                    params, meta, data, iterations, slides, simulation, triggers, chapters, sections, steps);
 
         validateStepNameUniqueness(envelope.allSteps());
         return envelope;
@@ -267,6 +269,41 @@ public final class PlaybookContentParser {
                 ? YAML.convertValue(node.get("capture"), List.class) : List.of();
         return new SimulationSpec(strategies, corpus, capture);
     }
+
+    private static List<ActivationTrigger> parseActivationTriggers(JsonNode node) {
+        List<ActivationTrigger> triggers = new ArrayList<>();
+        for (JsonNode t : node) {
+            String type = t.path("type").asText();
+            ActivationTrigger.RetriggerPolicy policy =
+                    "queue".equals(t.path("on-retrigger").asText(null))
+                    ? ActivationTrigger.RetriggerPolicy.QUEUE
+                    : ActivationTrigger.RetriggerPolicy.SKIP;
+            int maxQueued = t.path("max-queued").asInt(10);
+
+            switch (type) {
+                case "cloud-event" -> {
+                    String              eventType = t.path("event-type").asText();
+                    Map<String, String> filter    = new LinkedHashMap<>();
+                    if (t.has("filter")) {
+                        t.get("filter").fields().forEachRemaining(
+                                f -> filter.put(f.getKey(), f.getValue().asText()));
+                    }
+                    String source = t.path("source").asText(null);
+                    triggers.add(new ActivationTrigger.CloudEventTrigger(
+                            eventType, filter, source, policy, maxQueued));
+                }
+                case "scheduled" -> {
+                    String cron = t.path("cron").asText();
+                    triggers.add(new ActivationTrigger.ScheduledTrigger(
+                            cron, policy, maxQueued));
+                }
+                default -> throw new IllegalArgumentException(
+                        "Unknown activation trigger type: " + type);
+            }
+        }
+        return triggers;
+    }
+
 
     private static List<ParamDescriptor> parseParams(JsonNode paramsNode) {
         List<ParamDescriptor> params = new ArrayList<>();

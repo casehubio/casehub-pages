@@ -11,3 +11,9 @@ export type { ValidationError } from './validator.js';
 export { ScenarioCompiler } from './compiler.js';
 export type { CompiledScenario } from './compiler.js';
 export { LifecycleEngine, defaultLifecycleEngine } from './lifecycle/index.js';
+export type {
+  ActivationTrigger,
+  CloudEventActivationTrigger,
+  ScheduledActivationTrigger,
+} from './activation-trigger.js';
+export { parseActivationTriggers } from './activation-trigger.js';

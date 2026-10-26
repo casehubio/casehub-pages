@@ -17,6 +17,7 @@ public record PlaybookEnvelope(
         Map<String, Object> iterations,
         String slides,
         SimulationSpec simulation,
+        List<ActivationTrigger> triggers,
         List<Chapter> chapters,
         List<Section> sections,
         List<CompactStep> steps
@@ -26,6 +27,7 @@ public record PlaybookEnvelope(
         params = params != null ? List.copyOf(params) : List.of();
         data = data != null ? Map.copyOf(data) : Map.of();
         iterations = iterations != null ? Map.copyOf(iterations) : Map.of();
+        triggers = triggers != null ? List.copyOf(triggers) : List.of();
         chapters = chapters != null ? List.copyOf(chapters) : List.of();
         sections = sections != null ? List.copyOf(sections) : List.of();
         steps = steps != null ? List.copyOf(steps) : List.of();

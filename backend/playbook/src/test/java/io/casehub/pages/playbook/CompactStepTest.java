@@ -55,7 +55,7 @@ class CompactStepTest {
                 new CompactStep("navigate", Map.of("value", "/home"), null, null, null, Map.of()),
                 new CompactStep("click", Map.of("name", "Submit"), null, null, null, Map.of()));
         var envelope = new PlaybookEnvelope("demo", null, -1, null, null,
-                null, null, null, null, null, null, null, null, steps);
+                null, null, null, null, null, null, null, null, null, steps);
         assertEquals(2, envelope.allSteps().size());
         assertEquals("navigate", envelope.allSteps().get(0).action());
     }
@@ -66,7 +66,7 @@ class CompactStepTest {
                 new CompactStep("fill", Map.of("role", "textbox"), null, null, null, Map.of()));
         var section = new PlaybookEnvelope.Section("Section 1", "content", steps);
         var envelope = new PlaybookEnvelope("demo", null, -1, null, null,
-                null, null, null, null, null, null, null, List.of(section), null);
+                null, null, null, null, null, null, null, null, List.of(section), null);
         assertEquals(1, envelope.allSteps().size());
         assertEquals("fill", envelope.allSteps().get(0).action());
     }
@@ -78,7 +78,7 @@ class CompactStepTest {
         var section = new PlaybookEnvelope.Section("Sec 1", null, steps);
         var chapter = new PlaybookEnvelope.Chapter("Ch 1", null, List.of(section));
         var envelope = new PlaybookEnvelope("demo", null, -1, null, null,
-                null, null, null, null, null, null, List.of(chapter), null, null);
+                null, null, null, null, null, null, null, List.of(chapter), null, null);
         assertEquals(1, envelope.allSteps().size());
         assertEquals("click", envelope.allSteps().get(0).action());
     }
@@ -91,7 +91,7 @@ class CompactStepTest {
                 new CompactStep("fill", Map.of(), null, null, null, Map.of()));
         var section = new PlaybookEnvelope.Section("Sec", null, sectionSteps);
         var envelope = new PlaybookEnvelope("demo", null, -1, null, null,
-                null, null, null, null, null, null, null, List.of(section), flatSteps);
+                null, null, null, null, null, null, null, null, List.of(section), flatSteps);
         assertEquals(1, envelope.allSteps().size());
         assertEquals("navigate", envelope.allSteps().get(0).action());
     }

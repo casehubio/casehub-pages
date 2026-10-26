@@ -1,7 +1,7 @@
 package io.casehub.pages.playbook.runtime;
 
-import io.casehub.pages.playbook.ScriptDescriptor;
 import io.casehub.pages.playbook.LifecycleEngine;
+import io.casehub.pages.playbook.ScriptDescriptor;
 import io.casehub.pages.playbook.ScriptMeta;
 import io.casehub.pages.playbook.ScriptProvenance;
 
@@ -15,6 +15,7 @@ public class ScriptRegistry {
     private final UploadedScriptSource uploaded;
     private final List<ScriptSource> externalSources;
     private final LifecycleEngine lifecycleEngine = LifecycleEngine.defaultEngine();
+    private volatile java.util.function.Consumer<ScriptRegistryChangeEvent> changeListener;
 
     public ScriptRegistry(BundledScriptSource bundled, UploadedScriptSource uploaded) {
         this(bundled, uploaded, List.of());
@@ -65,7 +66,9 @@ public class ScriptRegistry {
                         + "': an external registry script with the same name exists");
             }
         }
-        return uploaded.upload(yaml);
+        var result = uploaded.upload(yaml);
+        notifyChange(result.name(), ScriptRegistryChangeEvent.ChangeType.UPLOADED);
+        return result;
     }
 
     public ScriptDescriptor updateMeta(String name, ScriptMeta meta) {
@@ -84,7 +87,11 @@ public class ScriptRegistry {
 
     public boolean delete(String name) {
         if (bundled.contains(name)) return false;
-        return uploaded.delete(name);
+        boolean deleted = uploaded.delete(name);
+        if (deleted) {
+            notifyChange(name, ScriptRegistryChangeEvent.ChangeType.DELETED);
+        }
+        return deleted;
     }
 
     public ScriptDescriptor transition(String name, String targetState) {
@@ -104,6 +111,19 @@ public class ScriptRegistry {
                 .filter(d -> matchesLabels(d, labels))
                 .filter(d -> matchesTags(d, tags))
                 .toList();
+    }
+
+    public void setChangeListener(java.util.function.Consumer<ScriptRegistryChangeEvent> listener) {
+        this.changeListener = listener;
+    }
+
+    private void notifyChange(String name, ScriptRegistryChangeEvent.ChangeType type) {
+        var listener = this.changeListener;
+        if (listener != null) {
+            try {
+                listener.accept(new ScriptRegistryChangeEvent(name, type));
+            } catch (Exception ignored) {}
+        }
     }
 
 

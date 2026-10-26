@@ -27,6 +27,7 @@ export const PLAYBOOK_CAPABILITIES = {
   MCP_INVOKE: 'mcp-invoke',
   GRAPHQL_INVOKE: 'graphql-invoke',
   CODEGEN: 'codegen',
+  TRIGGERS: 'triggers',
 } as const;
 
 const SHARED_CAPABILITIES = new Set([
@@ -82,6 +83,7 @@ export function createPlaybookSchemaRegistry(): PlaybookSchemaRegistry {
       PLAYBOOK_CAPABILITIES.MCP_INVOKE,
       PLAYBOOK_CAPABILITIES.GRAPHQL_INVOKE,
       PLAYBOOK_CAPABILITIES.CODEGEN,
+      PLAYBOOK_CAPABILITIES.TRIGGERS,
     ]),
   );
 

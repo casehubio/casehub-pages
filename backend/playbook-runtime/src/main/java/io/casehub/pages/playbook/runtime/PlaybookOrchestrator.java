@@ -22,6 +22,7 @@ import io.casehub.platform.simulation.event.quarkus.TemporalDriverStartRequest;
 import io.casehub.platform.simulation.event.quarkus.TemporalEventInput;
 import io.casehub.platform.simulation.inmem.InMemorySimulationCorpus;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
@@ -51,6 +52,7 @@ public class PlaybookOrchestrator {
     private volatile List<CompactStep>                  allSteps;
     private final    ConcurrentHashMap<String, Boolean> completedSteps = new ConcurrentHashMap<>();
     private final    AtomicBoolean                      callbackFired  = new AtomicBoolean(false);
+    private final    AtomicBoolean                      completionFired = new AtomicBoolean(false);
     private volatile boolean                            paused;
     private volatile double                             speed          = 1.0;
     private volatile String                             runToTarget;
@@ -58,7 +60,9 @@ public class PlaybookOrchestrator {
     private volatile String                             dispatchId;
     private volatile String                             callbackToken;
     private final    ConcurrentHashMap<String, Map<String, Object>> stepResults = new ConcurrentHashMap<>();
+    private volatile String                             triggerSource;
 
+    @Inject Event<PlaybookCompletionEvent> completionEvent;
 
     @Inject
     public PlaybookOrchestrator(SessionSender sender, EventBroadcaster broadcaster) {
@@ -70,12 +74,18 @@ public class PlaybookOrchestrator {
         start(yaml, false);
     }
 
+    public void start(String yaml, String triggerSource) {
+        this.triggerSource = triggerSource;
+        start(yaml, false);
+    }
+
     public void start(String yaml, boolean startPaused) {
         this.envelope  = PlaybookContentParser.parse(yaml);
         this.allSteps  = envelope.allSteps();
         this.sessionId = UUID.randomUUID().toString();
         this.completedSteps.clear();
         this.callbackFired.set(false);
+        this.completionFired.set(false);
         this.paused      = startPaused;
         this.speed       = envelope.speed();
         this.runToTarget = null;
@@ -98,6 +108,8 @@ public class PlaybookOrchestrator {
 
     public void stop() {
         if (this.sessionId == null) {return;}
+        String name = envelope != null ? envelope.playbook() : null;
+        String source = triggerSource;
         deactivateSimulation();
         stopTemporalDrivers();
         broadcastControl("stop", null);
@@ -112,7 +124,11 @@ public class PlaybookOrchestrator {
         this.paused        = false;
         this.speed         = 1.0;
         this.runToTarget   = null;
+        this.triggerSource = null;
         broadcastState();
+        if (completionEvent != null && completionFired.compareAndSet(false, true)) {
+            completionEvent.fireAsync(new PlaybookCompletionEvent(name, source, false));
+        }
     }
 
     public void pause() {
@@ -181,7 +197,7 @@ public class PlaybookOrchestrator {
 
         return new PlaybookState(envelope.playbook(), currentChapter,
                                  currentSection, currentStep, paused, speed, progress,
-                                 content, envelope.slides());
+                                 content, envelope.slides(), triggerSource);
     }
 
     public String sessionId() {
@@ -256,6 +272,10 @@ public class PlaybookOrchestrator {
         if (completedSteps.size() == allSteps.size() && callbackFired.compareAndSet(false, true)) {
             boolean anyFailed = completedSteps.values().stream().anyMatch(ok -> !ok);
             fireCallback(anyFailed, anyFailed ? "One or more steps failed" : null);
+            if (completionEvent != null && completionFired.compareAndSet(false, true)) {
+                completionEvent.fireAsync(new PlaybookCompletionEvent(
+                        envelope.playbook(), triggerSource, anyFailed));
+            }
         }
     }
 
