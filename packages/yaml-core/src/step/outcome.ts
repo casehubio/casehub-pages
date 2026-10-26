@@ -8,8 +8,8 @@ export interface StepOutcomeEntry {
   readonly completedAt: number;
   readonly duration: number;
   readonly result: 'success' | 'failure' | 'skipped';
-  readonly error?: { readonly message: string; readonly failureCategory?: string };
-  readonly decorators?: readonly string[];
+  readonly error?: { readonly message: string; readonly failureCategory?: string | undefined } | undefined;
+  readonly decorators?: readonly string[] | undefined;
 }
 
 export interface OutcomeSummary {
@@ -27,7 +27,7 @@ export interface ExecutionOutcome {
   readonly triggerSource?: string;
   readonly summary: OutcomeSummary;
   readonly steps: readonly StepOutcomeEntry[];
-  readonly journal?: readonly JournalEntry[];
+  readonly journal?: readonly JournalEntry[] | undefined;
 }
 
 export class OutcomeCollector {
