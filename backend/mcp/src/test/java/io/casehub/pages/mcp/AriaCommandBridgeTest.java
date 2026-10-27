@@ -45,12 +45,13 @@ class AriaCommandBridgeTest {
     @Test
     void sendBroadcastsOnPlaybookTopic() {
         CompletableFuture.runAsync(() -> {
-            try { Thread.sleep(50); } catch (InterruptedException ignored) {}
-            String topic = broadcastedTopic.get();
-            if (topic != null) {
-                String cmdId = topic.replace("playbook/cmd-", "");
-                bridge.handleResult(new PushRequest.CommandResult(cmdId, true, null));
+            String topic = null;
+            while (topic == null) {
+                topic = broadcastedTopic.get();
+                try { Thread.sleep(10); } catch (InterruptedException ignored) {}
             }
+            String cmdId = topic.replace("playbook/cmd-", "");
+            bridge.handleResult(new PushRequest.CommandResult(cmdId, true, null));
         });
 
         var result = bridge.send("click", null, null, null, null);
@@ -61,8 +62,11 @@ class AriaCommandBridgeTest {
     @Test
     void handleResultCompletesWithError() {
         CompletableFuture.runAsync(() -> {
-            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
-            String topic = broadcastedTopic.get();
+            String topic = null;
+            while (topic == null) {
+                topic = broadcastedTopic.get();
+                try { Thread.sleep(10); } catch (InterruptedException ignored) {}
+            }
             String cmdId = topic.replace("playbook/cmd-", "");
             bridge.handleResult(new PushRequest.CommandResult(cmdId, false, "Element not found"));
         });
