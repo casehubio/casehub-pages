@@ -108,6 +108,11 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
+      - name: Install parent POM locally
+        run: mvn -f backend/pom.xml --batch-mode -N install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install webapp artifact
         run: mvn -f webapp/pom.xml --batch-mode -U install
         env:
