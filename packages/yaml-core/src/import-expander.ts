@@ -56,17 +56,15 @@ export class ImportExpander {
     iterationGroups: Record<string, IterationGroup>,
     dataSources: Record<string, CsvDataSource>,
   ): YamlImport[] {
-    const moduleImports = imports.filter(imp => imp.steps == null);
-
-    const hasExpansion = moduleImports.some(imp => imp.forEach != null || imp.loop != null);
-    if (!hasExpansion) return moduleImports;
+    const hasExpansion = imports.some(imp => imp.forEach != null || imp.loop != null);
+    if (!hasExpansion) return imports;
 
     const result: YamlImport[] = [];
     const seenAliases = new Set<string>();
     const resolver = new VariableResolver({}, new Set());
     const hasCsv = Object.keys(dataSources).length > 0;
 
-    for (const rawImp of moduleImports) {
+    for (const rawImp of imports) {
       const imp = normaliseForEach(rawImp);
 
       if (imp.forEach == null) {

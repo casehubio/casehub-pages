@@ -487,6 +487,42 @@ sections:
     }
   });
 
+  it('parses 3-doc format: front matter + metadata + bare action array', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+---
+meta:
+  title: "Three Doc"
+  description: "Test three-document format"
+---
+- click: { role: button, name: "A" }
+- click: { role: button, name: "B" }
+`;
+    const doc = parsePlaybookDocument(yaml, catalog);
+    expect(doc.frontMatter).not.toBeNull();
+    expect(doc.frontMatter!.version).toBe('1.0');
+    expect(doc.frontMatter!.schema).toBe('client');
+    const flat = doc.playbook as FlatPlaybook;
+    expect(flat.steps).toHaveLength(2);
+    expect(flat.meta?.title).toBe('Three Doc');
+  });
+
+  it('parses 3-doc format via parsePlaybook', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+---
+meta:
+  title: "Bare Actions"
+---
+- click: { role: button, name: "X" }
+`;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
+    expect(result.steps).toHaveLength(1);
+    expect(result.meta?.title).toBe('Bare Actions');
+  });
+
   it('rejects non-map second document', () => {
     const yaml = `
 playbook: "1.0"

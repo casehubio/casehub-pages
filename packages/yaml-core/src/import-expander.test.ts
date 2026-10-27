@@ -32,7 +32,7 @@ describe('ImportExpander', () => {
       expect(result[1]!.parameters).toEqual({ region: 'eu' });
     });
 
-    it('preserves imports that select steps without adding a module', () => {
+    it('preserves imports that select actions without adding a module', () => {
       const imports: YamlImport[] = [
         { actions: 'workflow', as: 'step', parameters: {}, forEach: { as: 'i', in: [1] } },
       ];
@@ -184,28 +184,29 @@ describe('ImportExpander', () => {
       expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/nonexistent/);
     });
 
-    it('filters out steps-based imports', () => {
+    it('preserves action-based imports alongside module imports', () => {
       const imports: YamlImport[] = [
         { module: 'dashboard', as: 'dash', parameters: {} },
-        { steps: 'login-flow', as: 'login', parameters: {} },
+        { actions: 'login-flow', as: 'login', parameters: {} },
         { module: 'footer', as: 'footer', parameters: {} },
       ];
       const result = ImportExpander.expand(imports, {}, {});
-      expect(result).toHaveLength(2);
-      expect(result.map(r => r.as)).toEqual(['dash', 'footer']);
+      expect(result).toHaveLength(3);
+      expect(result.map(r => r.as)).toEqual(['dash', 'login', 'footer']);
     });
 
-    it('filters out steps-based imports with forEach', () => {
+    it('expands action-based imports with forEach', () => {
       const imports: YamlImport[] = [
         {
-          steps: 'flow',
+          actions: 'flow',
           as: 'flow',
           parameters: { env: '${each.env}' },
           forEach: { as: 'env', in: ['us', 'eu'] },
         },
       ];
       const result = ImportExpander.expand(imports, {}, {});
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(2);
+      expect(result.map(r => r.as)).toEqual(['flow.us', 'flow.eu']);
     });
 
     it('throws when forEach value contains dot separator', () => {

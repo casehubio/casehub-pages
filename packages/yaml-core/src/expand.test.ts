@@ -294,7 +294,7 @@ describe('expand', () => {
       },
       imports: [
         { module: 'dashboard', as: 'dash', parameters: { title: 'Home' } },
-        { steps: 'login-flow', as: 'login', parameters: {} },
+        { actions: 'login-flow', as: 'login', parameters: {} },
       ],
       pages: {},
     };
