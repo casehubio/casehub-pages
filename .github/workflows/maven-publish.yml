@@ -109,18 +109,18 @@ jobs:
           server-password: GITHUB_TOKEN
 
       - name: Install webapp artifact
-        run: mvn -f webapp/pom.xml --batch-mode install
+        run: mvn -f webapp/pom.xml --batch-mode -U install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install npm-packages artifact
-        run: mvn -f npm-packages/pom.xml --batch-mode install
+        run: mvn -f npm-packages/pom.xml --batch-mode -U install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install static-assets artifact
-        run: mvn -f static-assets/pom.xml --batch-mode install
+        run: mvn -f static-assets/pom.xml --batch-mode -U install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
