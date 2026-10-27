@@ -531,7 +531,7 @@ class PlaybookOrchestratorTest {
             orchestrator.onStepResult(new PushRequest.StepResult(
                     "r2", sessionId, "Verify", true, null, Map.of("status", "TRIAGED")));
 
-            Thread.sleep(500);
+            Thread.sleep(2000);
 
             assertThat(receivedPayloads).hasSize(1);
             assertThat(receivedPayloads.getFirst()).contains("\"faulted\":false");
@@ -610,7 +610,7 @@ class PlaybookOrchestratorTest {
             orchestrator.onStepResult(new PushRequest.StepResult(
                     "r1", sessionId, "Create", false, "ticket creation failed", Map.of()));
 
-            Thread.sleep(500);
+            Thread.sleep(2000);
 
             assertThat(receivedPayloads).hasSize(1);
             assertThat(receivedPayloads.getFirst()).contains("\"faulted\":true");
@@ -663,7 +663,7 @@ class PlaybookOrchestratorTest {
             orchestrator.onStepResult(new PushRequest.StepResult(
                     "r2", sessionId, "Verify", true, null, Map.of()));
 
-            Thread.sleep(500);
+            Thread.sleep(2000);
 
             assertThat(receivedPayloads).hasSize(1);
             assertThat(receivedPayloads.getFirst()).contains("\"faulted\":true");

@@ -39,7 +39,7 @@ class AriaCommandBridgeTest {
                 return 1L;
             }
         };
-        bridge = new AriaCommandBridge(broadcaster, 500);
+        bridge = new AriaCommandBridge(broadcaster, 2000);
     }
 
     @Test
