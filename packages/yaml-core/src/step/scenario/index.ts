@@ -10,7 +10,7 @@ export { ScenarioValidator } from './validator.js';
 export type { ValidationError } from './validator.js';
 export { ScenarioCompiler } from './compiler.js';
 export type { CompiledScenario } from './compiler.js';
-export { LifecycleEngine, defaultLifecycleEngine } from './lifecycle/index.js';
+export { LifecycleEngine } from './lifecycle/index.js';
 export type {
   ActivationTrigger,
   CloudEventActivationTrigger,
