@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { LifecycleEngine, defaultLifecycleEngine } from './lifecycle-engine.js';
+import { LifecycleEngine } from './lifecycle-engine.js';
+import { defaultLifecycleEngine } from './default-lifecycle-engine.js';
 import { ScenarioParser } from '../parser.js';
 
 describe('LifecycleEngine', () => {
