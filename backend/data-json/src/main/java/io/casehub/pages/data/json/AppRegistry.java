@@ -18,6 +18,10 @@ import java.util.Set;
 
 @ApplicationScoped
 public class AppRegistry {
+    @jakarta.inject.Inject
+    io.casehub.pages.sqlite.SqliteConnectionFactory connectionFactory;
+    private JsonCollectionStore store;
+
 
     private static final Logger LOG = Logger.getLogger(AppRegistry.class);
     static final String APPS_PREFIX = "org/apps/";
@@ -27,6 +31,7 @@ public class AppRegistry {
 
     @PostConstruct
     void init() {
+        store = new JsonCollectionStore(connectionFactory);
         scanClasspath();
     }
 
@@ -51,6 +56,79 @@ public class AppRegistry {
         }
         return Optional.empty();
     }
+
+    public void ensureSeeded(io.casehub.pages.data.DataContext ctx, String appId, String collection) {
+        AppDescriptor descriptor = descriptors.get(appId);
+        if (descriptor == null) {return;}
+
+        CollectionDef colDef = descriptor.collections().stream()
+                                         .filter(c -> c.name().equals(collection))
+                                         .findFirst().orElse(null);
+        if (colDef == null || colDef.dataFiles().isEmpty()) {return;}
+
+        String storeAppId = ctx.tenantId();
+        if (store.countDocuments(ctx.tenantId(), storeAppId, collection) > 0) {return;}
+
+        loadSeedData(ctx, appId, storeAppId, collection, colDef.dataFiles());
+    }
+
+    private void loadSeedData(io.casehub.pages.data.DataContext ctx, String descriptorAppId,
+                              String storeAppId, String collection, java.util.List<String> dataFiles) {
+        try (java.sql.Connection conn = connectionFactory.getConnection()) {
+            try (var stmt = conn.createStatement()) {
+                stmt.execute("BEGIN IMMEDIATE");
+            }
+
+            String countSql = "SELECT COUNT(*) FROM json_documents WHERE tenant_id = ? AND app_id = ? AND collection = ?";
+            try (var ps = conn.prepareStatement(countSql)) {
+                ps.setString(1, ctx.tenantId());
+                ps.setString(2, storeAppId);
+                ps.setString(3, collection);
+                try (var rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        conn.createStatement().execute("ROLLBACK");
+                        return;
+                    }
+                }
+            }
+
+            String                                      insertSql = "INSERT INTO json_documents (tenant_id, app_id, collection, doc_id, data, _version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)";
+            com.fasterxml.jackson.databind.ObjectMapper mapper    = new com.fasterxml.jackson.databind.ObjectMapper();
+            String                                      now       = java.time.Instant.now().toString();
+
+            for (String dataFile : dataFiles) {
+                String resourcePath = APPS_PREFIX + descriptorAppId + "/" + dataFile;
+                try (java.io.InputStream is = Thread.currentThread().getContextClassLoader()
+                                                    .getResourceAsStream(resourcePath)) {
+                    if (is == null) {
+                        LOG.warnf("Seed data file not found: %s", resourcePath);
+                        continue;
+                    }
+                    com.fasterxml.jackson.databind.JsonNode array = mapper.readTree(is);
+                    if (!array.isArray()) {continue;}
+                    for (com.fasterxml.jackson.databind.JsonNode doc : array) {
+                        String docId = io.casehub.pages.data.SlugUtils.resolveSlug(doc, "title")
+                                                                      .orElse(java.util.UUID.randomUUID().toString());
+                        String json = mapper.writeValueAsString(doc);
+                        try (var ps = conn.prepareStatement(insertSql)) {
+                            ps.setString(1, ctx.tenantId());
+                            ps.setString(2, storeAppId);
+                            ps.setString(3, collection);
+                            ps.setString(4, docId);
+                            ps.setString(5, json);
+                            ps.setString(6, now);
+                            ps.setString(7, now);
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+            }
+            conn.createStatement().execute("COMMIT");
+        } catch (Exception e) {
+            LOG.warnf(e, "Failed to load seed data for %s/%s", descriptorAppId, collection);
+        }
+    }
+
 
     private void scanClasspath() {
         try {

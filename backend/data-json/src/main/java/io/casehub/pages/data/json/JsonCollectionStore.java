@@ -168,6 +168,22 @@ public class JsonCollectionStore {
         }
     }
 
+    public int countDocuments(String tenantId, String appId, String collection) {
+        String sql = "SELECT COUNT(*) FROM json_documents WHERE tenant_id = ? AND app_id = ? AND collection = ?";
+        try (Connection conn = connectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tenantId);
+            ps.setString(2, appId);
+            ps.setString(3, collection);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new MutationException("STORAGE_ERROR", "Count query failed: " + e.getMessage(), e);
+        }
+    }
+
+
     @FunctionalInterface
     interface ResultSetProcessor<T> {
         T process(ResultSet rs) throws SQLException;
