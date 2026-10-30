@@ -66,6 +66,9 @@ export class PagesSelect extends LitElement {
                 this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
               }}
             >
+              ${!this.value && !this.options.some(o => o.value === this.value) ? html`
+                <option value="" selected disabled>${this.required ? '— select —' : ''}</option>
+              ` : nothing}
               ${this.options.map((opt) => html`
                 <option value=${opt.value} ?selected=${this.value === opt.value}>
                   ${opt.label}

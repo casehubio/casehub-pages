@@ -380,6 +380,121 @@ describe("PagesSchemaForm — create mode", () => {
     expect(submitBtn).not.toBeNull();
   });
 
+  it("create mode preserves typed values across re-renders", async () => {
+    const ds = makeDataSet([], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      forceCreate: true,
+      schema: {
+        properties: {
+          subject: { type: "string", minLength: 1 },
+          category: { type: "string", enum: ["HARDWARE", "SOFTWARE"] },
+        },
+        required: ["subject"],
+      },
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await awaitForm(form);
+
+    const textInput = queryField(form, "pages-input") as any;
+    expect(textInput).not.toBeNull();
+    textInput.value = "Printer jammed";
+    textInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    await awaitForm(form);
+
+    form.requestUpdate();
+    await awaitForm(form);
+
+    const textInputAfter = queryField(form, "pages-input") as any;
+    expect(textInputAfter.value).toBe("Printer jammed");
+  });
+
+  it("submit POSTs to submitUrl when configured", async () => {
+    const ds = makeDataSet([], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      forceCreate: true,
+      schema: {
+        properties: {
+          subject: { type: "string", minLength: 1 },
+          category: { type: "string", enum: ["HARDWARE", "SOFTWARE"] },
+        },
+        required: ["subject"],
+      },
+      submitUrl: "/api/apps/helpdesk/tickets",
+      submitMethod: "POST",
+    } as any;
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await awaitForm(form);
+
+    const textInput = queryField(form, "pages-input") as any;
+    textInput.value = "New ticket";
+    textInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+
+    const selectInput = queryField(form, "pages-select") as any;
+    selectInput.value = "HARDWARE";
+    selectInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    await awaitForm(form);
+
+    let fetchCalled = false;
+    let fetchUrl = "";
+    let fetchBody: any = null;
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async (url: any, init: any) => {
+      fetchCalled = true;
+      fetchUrl = String(url);
+      fetchBody = JSON.parse(init.body);
+      return new Response(JSON.stringify({ _id: "new-1" }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      });
+    };
+
+    try {
+      form.submit();
+      await new Promise(r => setTimeout(r, 50));
+      expect(fetchCalled).toBe(true);
+      expect(fetchUrl).toBe("/api/apps/helpdesk/tickets");
+      expect(fetchBody.subject).toBe("New ticket");
+      expect(fetchBody.category).toBe("HARDWARE");
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
+  it("create mode enum selects show blank placeholder visually", async () => {
+    const ds = makeDataSet([], []);
+    const form = document.createElement("pages-schema-form") as PagesSchemaForm;
+    form.props = {
+      forceCreate: true,
+      schema: {
+        properties: {
+          category: { type: "string", enum: ["HARDWARE", "SOFTWARE", "ACCESS"] },
+        },
+        required: ["category"],
+      },
+    };
+    form.editable = true;
+    container.appendChild(form);
+    await form.updateComplete;
+    form.dataSet = ds;
+    await awaitForm(form);
+
+    const pagesSelect = queryField(form, "pages-select") as any;
+    expect(pagesSelect).not.toBeNull();
+    expect(pagesSelect.value).toBe("");
+    const nativeSelect = pagesSelect.shadowRoot!.querySelector("select") as HTMLSelectElement;
+    expect(nativeSelect).not.toBeNull();
+    expect(nativeSelect.value).toBe("");
+    expect(nativeSelect.options[0]!.value).toBe("");
+  });
+
   it("validateOnBlur sets error on required empty field after blur", async () => {
     const ds = makeDataSet([["name", "TEXT"]], []);
     const form = document.createElement("pages-schema-form") as PagesSchemaForm;
