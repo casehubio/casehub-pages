@@ -1,0 +1,26 @@
+collections:
+  tickets:
+    fields:
+      - name: title
+        type: string
+      - name: priority
+        type: enum
+        values: [low, medium, high, critical]
+      - name: assignee
+        type: ref
+        ref: agents
+      - name: tags
+        type: array
+      - name: created
+        type: date
+    data:
+      - data/tickets.json
+  agents:
+    fields:
+      - name: name
+        type: string
+      - name: email
+        type: string
+      - name: active
+        type: boolean
+        default: true
