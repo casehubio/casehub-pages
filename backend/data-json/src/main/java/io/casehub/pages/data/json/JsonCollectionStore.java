@@ -183,6 +183,28 @@ public class JsonCollectionStore {
         }
     }
 
+    public boolean hasDocumentReferencing(String tenantId, String appId,
+                                          String sourceCollection, String fieldName,
+                                          String targetDocId) {
+        String sql = "SELECT COUNT(*) FROM json_documents " +
+                     "WHERE tenant_id = ? AND app_id = ? AND collection = ? " +
+                     "AND json_extract(data, '$.' || ?) = ?";
+        try (Connection conn = connectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tenantId);
+            ps.setString(2, appId);
+            ps.setString(3, sourceCollection);
+            ps.setString(4, fieldName);
+            ps.setString(5, targetDocId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new MutationException("STORAGE_ERROR",
+                                        "Reference check failed: " + e.getMessage(), e);
+        }
+    }
+
 
     @FunctionalInterface
     interface ResultSetProcessor<T> {

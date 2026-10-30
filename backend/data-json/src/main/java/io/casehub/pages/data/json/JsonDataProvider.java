@@ -30,7 +30,7 @@ import java.util.Set;
 public class JsonDataProvider implements MutableDataProvider {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final String PREFIX = "json:";
+    private static final String       PREFIX = "json:";
 
     @Inject
     SqliteConnectionFactory connectionFactory;
@@ -57,29 +57,29 @@ public class JsonDataProvider implements MutableDataProvider {
 
     @Override
     public QueryResult query(DataSetLookup lookup) {
-        String[] parts = parseDataSetId(lookup.dataSetId());
-        String appId = parts[0];
-        String collection = parts[1];
+        String[] parts      = parseDataSetId(lookup.dataSetId());
+        String   appId      = parts[0];
+        String   collection = parts[1];
 
-        PreparedQuery pq = JsonQueryTranslator.translate(appId, appId, collection, lookup.operations());
+        PreparedQuery   pq        = JsonQueryTranslator.translate(appId, appId, collection, lookup.operations());
         List<DataSetOp> remaining = JsonQueryTranslator.remainingOps(lookup.operations());
 
         DataSetResult result = store.executeQuery(pq, rs -> {
-            Set<String> columnNames = new LinkedHashSet<>();
-            List<Map<String, String>> rows = new ArrayList<>();
+            Set<String>               columnNames = new LinkedHashSet<>();
+            List<Map<String, String>> rows        = new ArrayList<>();
 
             try {
                 while (rs.next()) {
-                    String dataStr = rs.getString("data");
-                    ObjectNode doc = (ObjectNode) MAPPER.readTree(dataStr);
-                    Map<String, String> row = new LinkedHashMap<>();
+                    String              dataStr = rs.getString("data");
+                    ObjectNode          doc     = (ObjectNode) MAPPER.readTree(dataStr);
+                    Map<String, String> row     = new LinkedHashMap<>();
                     doc.fields().forEachRemaining(entry -> {
                         columnNames.add(entry.getKey());
                         JsonNode val = entry.getValue();
                         row.put(entry.getKey(), val.isTextual() ? val.asText() :
-                                val.isNumber() ? String.valueOf(val.numberValue()) :
-                                val.isBoolean() ? String.valueOf(val.booleanValue()) :
-                                val.toString());
+                                                val.isNumber() ? String.valueOf(val.numberValue()) :
+                                                val.isBoolean() ? String.valueOf(val.booleanValue()) :
+                                                val.toString());
                     });
                     rows.add(row);
                 }
@@ -88,14 +88,14 @@ public class JsonDataProvider implements MutableDataProvider {
             }
 
             List<ColumnDef> columns = columnNames.stream()
-                .map(name -> new ColumnDef(name, name, "TEXT"))
-                .toList();
+                                                 .map(name -> new ColumnDef(name, name, "TEXT"))
+                                                 .toList();
 
             List<List<String>> tableRows = rows.stream()
-                .map(row -> columns.stream()
-                    .map(col -> row.getOrDefault(col.id(), ""))
-                    .toList())
-                .toList();
+                                               .map(row -> columns.stream()
+                                                                  .map(col -> row.getOrDefault(col.id(), ""))
+                                                                  .toList())
+                                               .toList();
 
             return new DataSetResult(columns, tableRows);
         });
@@ -128,12 +128,23 @@ public class JsonDataProvider implements MutableDataProvider {
 
     @Override
     public boolean hasReferences(DataContext ctx, String collection, String docId) {
+        Map<String, String> referencing = appRegistry.getReferencingCollections(collection);
+        if (referencing.isEmpty()) {return false;}
+
+        for (Map.Entry<String, String> entry : referencing.entrySet()) {
+            String sourceCollection = entry.getKey();
+            String fieldName        = entry.getValue();
+            if (store.hasDocumentReferencing(ctx.tenantId(), ctx.tenantId(),
+                                             sourceCollection, fieldName, docId)) {
+                return true;
+            }
+        }
         return false;
     }
 
     private String[] parseDataSetId(String dataSetId) {
-        String rest = dataSetId.substring(PREFIX.length());
-        int slash = rest.indexOf('/');
+        String rest  = dataSetId.substring(PREFIX.length());
+        int    slash = rest.indexOf('/');
         if (slash < 0) {
             return new String[]{rest, rest};
         }
@@ -142,7 +153,7 @@ public class JsonDataProvider implements MutableDataProvider {
 
     private void validateAndApplyDefaults(String collection, JsonNode document) {
         appRegistry.getSchemaForCollection(collection).ifPresent(schema -> {
-            if (document instanceof com.fasterxml.jackson.databind.node.ObjectNode obj) {
+            if (document instanceof ObjectNode obj) {
                 schema.applyDefaults(obj);
             }
             schema.validate(document);
