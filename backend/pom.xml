@@ -19,6 +19,7 @@
     <modules>
         <module>auth</module>
         <module>layout</module>
+        <module>pages-sqlite</module>
         <module>layout-sqlite</module>
         <module>data</module>
         <module>data-sql</module>
@@ -71,6 +72,11 @@
             <dependency>
                 <groupId>io.casehub</groupId>
                 <artifactId>casehub-pages-layout</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.casehub</groupId>
+                <artifactId>casehub-pages-sqlite</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
