@@ -327,7 +327,21 @@ export function createActivationCallback(
         }
         const selectionKey = (component.props as Record<string, unknown> | undefined)?.selectionKey as string | undefined;
         if (selectionKey) {
-          (vizEl as unknown as Record<string, unknown>).getRowKey = (row: TypedRow) => row.text(selectionKey as ColumnId);
+          let resolvedKey: ColumnId = selectionKey as ColumnId;
+          if (lookup) {
+            for (const op of lookup.operations) {
+              if (op.type === "group") {
+                const match = (op as { columns: readonly { sourceId: ColumnId; columnId: ColumnId }[] }).columns
+                  .find(rc => rc.sourceId === (selectionKey as ColumnId) && rc.columnId !== (selectionKey as ColumnId));
+                if (match) { resolvedKey = match.columnId; break; }
+              }
+            }
+          }
+          (vizEl as unknown as Record<string, unknown>).getRowKey = (row: TypedRow) => {
+            const cv = row.cell(resolvedKey);
+            if (cv.type === "NULL") return "";
+            return String(cv.value);
+          };
         }
         const hiddenColumns = (component.props as Record<string, unknown> | undefined)?.hiddenColumns as readonly string[] | undefined;
         if (hiddenColumns) {

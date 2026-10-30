@@ -450,6 +450,55 @@ describe.skip("exclusive dock-bar (removed — renderDockBar deleted #441)", () 
   });
 });
 
+describe("selectionKey alias resolution", () => {
+  it("resolves selectionKey through column alias when source ID differs", () => {
+    const registry: ComponentRegistry = new Map();
+    const component: Component = {
+      type: "data-table",
+      props: {
+        lookup: {
+          dataSetId: "catalogue",
+          operations: [
+            {
+              type: "group",
+              groupingKey: null,
+              columns: [
+                { kind: "select", sourceId: "name", columnId: "Topology" },
+                { kind: "select", sourceId: "description", columnId: "Description" },
+              ],
+            },
+          ],
+        },
+        selection: "single",
+        selectionKey: "name",
+      },
+    };
+    const pagePathMap: PagePathMap = new Map([[component, "TestPage"]]);
+    const callback = createActivationCallback(registry, pagePathMap);
+    const el = document.createElement("div");
+    el.dataset.componentId = "sel-test";
+    el.dataset.componentType = "data-table";
+    callback(el, component);
+
+    const vizEl = el.firstElementChild as unknown as Record<string, unknown>;
+    expect(vizEl).toBeTruthy();
+    expect(typeof vizEl.getRowKey).toBe("function");
+
+    const { createTypedRow } = require("@casehubio/pages-data");
+    const columns = [
+      { id: "Topology", name: "Topology", type: "TEXT" },
+      { id: "Description", name: "Description", type: "TEXT" },
+    ];
+    const cells = [
+      { type: "TEXT", value: "01-hello-llm" },
+      { type: "TEXT", value: "Hello LLM topology" },
+    ];
+    const mockRow = createTypedRow(cells, columns);
+    const getRowKey = vizEl.getRowKey as (row: unknown) => string;
+    expect(getRowKey(mockRow)).toBe("01-hello-llm");
+  });
+});
+
 describe("nested workspace depth limit", () => {
   it("throws when nesting depth exceeds 1", () => {
     const registry: ComponentRegistry = new Map();
