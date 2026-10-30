@@ -25,6 +25,7 @@
         <module>data-sql</module>
         <module>data-prometheus</module>
         <module>data-iotdb</module>
+        <module>data-json</module>
         <module>push</module>
         <module>push-runtime</module>
         <module>push-store-jdbc</module>
@@ -74,6 +75,11 @@
             <dependency>
                 <groupId>io.casehub</groupId>
                 <artifactId>casehub-pages-data-backend</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.casehub</groupId>
+                <artifactId>casehub-pages-data-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
