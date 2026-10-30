@@ -11,6 +11,8 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -509,6 +511,7 @@ class PlaybookOrchestratorTest {
                          - action: verify-ticket
                    """;
 
+        var callbackLatch    = new CountDownLatch(1);
         var server           = HttpServer.create(new InetSocketAddress(0), 0);
         var receivedPayloads = new ArrayList<String>();
         var receivedHeaders  = new ArrayList<String>();
@@ -517,6 +520,7 @@ class PlaybookOrchestratorTest {
             receivedHeaders.add(exchange.getRequestHeaders().getFirst("X-Casehub-Callback-Token"));
             exchange.sendResponseHeaders(200, 0);
             exchange.close();
+            callbackLatch.countDown();
         });
         server.start();
         int port = server.getAddress().getPort();
@@ -531,7 +535,8 @@ class PlaybookOrchestratorTest {
             orchestrator.onStepResult(new PushRequest.StepResult(
                     "r2", sessionId, "Verify", true, null, Map.of("status", "TRIAGED")));
 
-            Thread.sleep(2000);
+            assertThat(callbackLatch.await(5, TimeUnit.SECONDS))
+                    .as("callback should fire within 5s").isTrue();
 
             assertThat(receivedPayloads).hasSize(1);
             assertThat(receivedPayloads.getFirst()).contains("\"faulted\":false");
@@ -592,12 +597,14 @@ class PlaybookOrchestratorTest {
                          - action: verify-ticket
                    """;
 
+        var callbackLatch    = new CountDownLatch(1);
         var server           = HttpServer.create(new InetSocketAddress(0), 0);
         var receivedPayloads = new ArrayList<String>();
         server.createContext("/workers/complete/", exchange -> {
             receivedPayloads.add(new String(exchange.getRequestBody().readAllBytes()));
             exchange.sendResponseHeaders(200, 0);
             exchange.close();
+            callbackLatch.countDown();
         });
         server.start();
         int port = server.getAddress().getPort();
@@ -610,7 +617,8 @@ class PlaybookOrchestratorTest {
             orchestrator.onStepResult(new PushRequest.StepResult(
                     "r1", sessionId, "Create", false, "ticket creation failed", Map.of()));
 
-            Thread.sleep(2000);
+            assertThat(callbackLatch.await(5, TimeUnit.SECONDS))
+                    .as("callback should fire within 5s").isTrue();
 
             assertThat(receivedPayloads).hasSize(1);
             assertThat(receivedPayloads.getFirst()).contains("\"faulted\":true");
@@ -643,12 +651,14 @@ class PlaybookOrchestratorTest {
                          - action: verify-ticket
                    """;
 
+        var callbackLatch    = new CountDownLatch(1);
         var server           = HttpServer.create(new InetSocketAddress(0), 0);
         var receivedPayloads = new ArrayList<String>();
         server.createContext("/workers/complete/", exchange -> {
             receivedPayloads.add(new String(exchange.getRequestBody().readAllBytes()));
             exchange.sendResponseHeaders(200, 0);
             exchange.close();
+            callbackLatch.countDown();
         });
         server.start();
         int port = server.getAddress().getPort();
@@ -663,7 +673,8 @@ class PlaybookOrchestratorTest {
             orchestrator.onStepResult(new PushRequest.StepResult(
                     "r2", sessionId, "Verify", true, null, Map.of()));
 
-            Thread.sleep(2000);
+            assertThat(callbackLatch.await(5, TimeUnit.SECONDS))
+                    .as("callback should fire within 5s").isTrue();
 
             assertThat(receivedPayloads).hasSize(1);
             assertThat(receivedPayloads.getFirst()).contains("\"faulted\":true");
