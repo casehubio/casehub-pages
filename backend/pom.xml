@@ -42,18 +42,10 @@
         <jandex-maven-plugin.version>3.3.1</jandex-maven-plugin.version>
         <sqlite-jdbc.version>3.53.1.0</sqlite-jdbc.version>
         <hikaricp.version>7.0.2</hikaricp.version>
-        <assertj.version>3.27.7</assertj.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.quarkus.platform</groupId>
-                <artifactId>quarkus-bom</artifactId>
-                <version>${quarkus.platform.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <dependency>
                 <groupId>org.xerial</groupId>
                 <artifactId>sqlite-jdbc</artifactId>
@@ -63,11 +55,6 @@
                 <groupId>com.zaxxer</groupId>
                 <artifactId>HikariCP</artifactId>
                 <version>${hikaricp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <version>${assertj.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.casehub</groupId>
@@ -128,14 +115,6 @@
     </dependencyManagement>
 
     <build>
-        <plugins>
-<plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <parameters>true</parameters>
-                </configuration>
-            </plugin>
-        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -152,19 +131,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <repositories>
-        <repository>
-            <id>github</id>
-            <name>casehubio GitHub Packages</name>
-            <url>https://maven.pkg.github.com/casehubio/*</url>
-            <releases><enabled>false</enabled></releases>
-
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <distributionManagement>
         <repository>
