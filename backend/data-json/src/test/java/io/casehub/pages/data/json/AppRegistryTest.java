@@ -31,8 +31,8 @@ class AppRegistryTest {
     void returns_schema_for_collection() {
         Optional<CollectionSchema> schema = registry.getSchema("helpdesk", "tickets");
         assertThat(schema).isPresent();
-        assertThat(schema.get().fieldTypes()).containsKey("title");
-        assertThat(schema.get().fieldTypes().get("title")).isEqualTo("string");
+        assertThat(schema.get().fieldTypes()).containsKey("subject");
+        assertThat(schema.get().fieldTypes().get("subject")).isEqualTo("string");
     }
 
     @Test
@@ -47,7 +47,7 @@ class AppRegistryTest {
     void returns_schema_with_ref_mapping() {
         Optional<CollectionSchema> schema = registry.getSchema("helpdesk", "tickets");
         assertThat(schema).isPresent();
-        assertThat(schema.get().refs()).containsEntry("assignee", "agents");
+        assertThat(schema.get().refs()).containsEntry("assigneeId", "agents");
     }
 
     @Test

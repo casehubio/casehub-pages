@@ -144,7 +144,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     this._dataMirror = { ...sourceData };
 
     const isCreateMode = props.forceCreate === true || dataset.rows.length === 0;
-    const isDisplay = props.mode === "display" || !this._editable;
+    const isDisplay = props.mode === "display" || (!this._editable && !isCreateMode);
 
     const source: PropertyPaletteSource = {
       schema: enrichedSchema,

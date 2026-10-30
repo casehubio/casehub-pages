@@ -29,6 +29,10 @@ public final class SlugUtils {
         if (idNode != null && idNode.isTextual() && !idNode.asText().isBlank()) {
             return Optional.of(idNode.asText());
         }
+        JsonNode plainIdNode = document.get("id");
+        if (plainIdNode != null && plainIdNode.isTextual() && !plainIdNode.asText().isBlank()) {
+            return Optional.of(plainIdNode.asText());
+        }
         if (slugField != null) {
             JsonNode fieldNode = document.get(slugField);
             if (fieldNode != null && fieldNode.isTextual() && !fieldNode.asText().isBlank()) {

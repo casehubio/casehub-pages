@@ -129,6 +129,7 @@ const SAMPLE_TAGS = {
   'Scenarios/Scenario Controller.page.yaml': ['scenario', 'controller', 'playback'],
   'Scenarios/Script Library.page.yaml': ['scenario', 'library', 'search', 'labels'],
   'Scenarios/Step Catalog.page.yaml': ['scenario', 'catalog', 'schema', 'try-it'],
+  'Domain Showcases/helpdesk/helpdesk.page.yaml': ['showcase', 'helpdesk', 'json app', 'collections', 'crud'],
   'Domain Showcases/FIFA 2022 Goals.page.yaml': ['showcase', 'sports', 'charts'],
   'Domain Showcases/Fleet Monitor.page.yaml': ['showcase', 'iot', 'monitoring'],
   'Domain Showcases/Github Repositories.page.yaml': ['showcase', 'github', 'api'],

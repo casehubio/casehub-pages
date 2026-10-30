@@ -63,6 +63,24 @@ class SlugUtilsTest {
     }
 
     @Test
+    void resolveSlugUsesPlainIdField() {
+        ObjectNode doc = mapper.createObjectNode();
+        doc.put("id", "my-explicit-id");
+        doc.put("title", "Some Title");
+        assertThat(SlugUtils.resolveSlug(doc, "title")).isEqualTo(Optional.of("my-explicit-id"));
+    }
+
+    @Test
+    void resolveSlugPrefersUnderscoreIdOverPlainId() {
+        ObjectNode doc = mapper.createObjectNode();
+        doc.put("_id", "underscore-wins");
+        doc.put("id", "plain-loses");
+        doc.put("title", "Some Title");
+        assertThat(SlugUtils.resolveSlug(doc, "title")).isEqualTo(Optional.of("underscore-wins"));
+    }
+
+
+    @Test
     void resolveSlugDerivesFromSlugField() {
         ObjectNode doc = mapper.createObjectNode();
         doc.put("title", "My Great Article!");

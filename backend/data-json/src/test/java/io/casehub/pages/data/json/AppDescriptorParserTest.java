@@ -23,21 +23,21 @@ class AppDescriptorParserTest {
             .filter(c -> c.name().equals("tickets"))
             .findFirst().orElseThrow();
 
-        assertThat(tickets.fields()).hasSize(5);
+        assertThat(tickets.fields()).hasSize(8);
 
-        FieldDef title = tickets.fields().stream()
-            .filter(f -> f.name().equals("title")).findFirst().orElseThrow();
-        assertThat(title.type()).isEqualTo(FieldType.STRING);
+        FieldDef subject = tickets.fields().stream()
+            .filter(f -> f.name().equals("subject")).findFirst().orElseThrow();
+        assertThat(subject.type()).isEqualTo(FieldType.STRING);
 
         FieldDef priority = tickets.fields().stream()
             .filter(f -> f.name().equals("priority")).findFirst().orElseThrow();
         assertThat(priority.type()).isEqualTo(FieldType.ENUM);
-        assertThat(priority.enumValues()).containsExactly("low", "medium", "high", "critical");
+        assertThat(priority.enumValues()).containsExactly("LOW", "MEDIUM", "HIGH", "URGENT");
 
-        FieldDef assignee = tickets.fields().stream()
-            .filter(f -> f.name().equals("assignee")).findFirst().orElseThrow();
-        assertThat(assignee.type()).isEqualTo(FieldType.REF);
-        assertThat(assignee.ref()).isEqualTo("agents");
+        FieldDef assigneeId = tickets.fields().stream()
+            .filter(f -> f.name().equals("assigneeId")).findFirst().orElseThrow();
+        assertThat(assigneeId.type()).isEqualTo(FieldType.REF);
+        assertThat(assigneeId.ref()).isEqualTo("agents");
 
         assertThat(tickets.dataFiles()).containsExactly("data/tickets.json");
     }
