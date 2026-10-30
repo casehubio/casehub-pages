@@ -3,6 +3,7 @@ import { mutableRestSource } from "./mutable-rest-source.js";
 import type { DataSink, SourceError, DataAction } from "../types.js";
 import type { DataSetEvent } from "../../dataset/events.js";
 import { ColumnType, col } from "./test-helpers.js";
+import { ValidationError, ConflictError } from "../errors.js";
 
 function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -222,5 +223,96 @@ describe("mutableRestSource", () => {
 
     await source.dispatch({ type: "update", key: "1", changes: { name: "X" } });
     expect(writeFetch.mock.calls[0]![1].method).toBe("PUT");
+  });
+
+  it("sends If-Match header when action has version", async () => {
+    const writeFetch = vi.fn().mockResolvedValue(jsonResponse({ id: "1", name: "X", status: "Y" }));
+    const source = mutableRestSource(READ_URL, {
+      update: { url: "https://api.example.com/items/:key" },
+      keyColumn: "id",
+    }, { columns: COLUMNS, fetchFn: snapshotFetch(), writeFetchFn: writeFetch });
+
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
+
+    await source.dispatch({ type: "update", key: "1", changes: { name: "X" }, version: "3" });
+
+    const headers = writeFetch.mock.calls[0]![1].headers;
+    expect(headers["If-Match"]).toBe("3");
+  });
+
+  it("sends If-Match header on delete when version provided", async () => {
+    const writeFetch = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
+    const source = mutableRestSource(READ_URL, {
+      delete: { url: "https://api.example.com/items/:key" },
+      keyColumn: "id",
+    }, { columns: COLUMNS, fetchFn: snapshotFetch(), writeFetchFn: writeFetch });
+
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
+
+    await source.dispatch({ type: "delete", key: "2", version: "5" });
+
+    const headers = writeFetch.mock.calls[0]![1].headers;
+    expect(headers["If-Match"]).toBe("5");
+  });
+
+  it("omits If-Match header when version not provided", async () => {
+    const writeFetch = vi.fn().mockResolvedValue(jsonResponse({ id: "1", name: "X", status: "Y" }));
+    const source = mutableRestSource(READ_URL, {
+      update: { url: "https://api.example.com/items/:key" },
+      keyColumn: "id",
+    }, { columns: COLUMNS, fetchFn: snapshotFetch(), writeFetchFn: writeFetch });
+
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
+
+    await source.dispatch({ type: "update", key: "1", changes: { name: "X" } });
+
+    const headers = writeFetch.mock.calls[0]![1].headers;
+    expect(headers["If-Match"]).toBeUndefined();
+  });
+
+  it("422 response throws ValidationError with field errors", async () => {
+    const body = JSON.stringify({ errors: { title: ["required"], priority: ["invalid value"] } });
+    const writeFetch = vi.fn().mockResolvedValue(new Response(body, {
+      status: 422,
+      headers: { "content-type": "application/json" },
+    }));
+    const source = mutableRestSource(READ_URL, {
+      create: { url: "https://api.example.com/items" },
+      keyColumn: "id",
+    }, { columns: COLUMNS, fetchFn: snapshotFetch(), writeFetchFn: writeFetch });
+
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
+
+    const err = await source.dispatch({ type: "create", data: {} }).catch(e => e);
+    expect(err).toBeInstanceOf(ValidationError);
+    expect(err.fieldErrors).toEqual({ title: ["required"], priority: ["invalid value"] });
+  });
+
+  it("409 response throws ConflictError with current version", async () => {
+    const body = JSON.stringify({ currentVersion: "7" });
+    const writeFetch = vi.fn().mockResolvedValue(new Response(body, {
+      status: 409,
+      headers: { "content-type": "application/json" },
+    }));
+    const source = mutableRestSource(READ_URL, {
+      update: { url: "https://api.example.com/items/:key" },
+      keyColumn: "id",
+    }, { columns: COLUMNS, fetchFn: snapshotFetch(), writeFetchFn: writeFetch });
+
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => { expect(events.length).toBe(1); });
+
+    const err = await source.dispatch({ type: "update", key: "1", changes: {}, version: "5" }).catch(e => e);
+    expect(err).toBeInstanceOf(ConflictError);
+    expect(err.currentVersion).toBe("7");
   });
 });

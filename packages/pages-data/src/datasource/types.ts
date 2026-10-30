@@ -22,9 +22,9 @@ export interface DataSource {
 }
 
 export type DataAction =
-  | { type: "update"; key: string; changes: Record<string, unknown> }
+  | { type: "update"; key: string; changes: Record<string, unknown>; version?: string }
   | { type: "create"; data: Record<string, unknown> }
-  | { type: "delete"; key: string };
+  | { type: "delete"; key: string; version?: string };
 
 export interface MutableDataSource extends DataSource {
   dispatch(action: DataAction): Promise<void>;

@@ -7,6 +7,7 @@ import { restSource } from "./rest-source.js";
 import { createTypedRow } from "../../dataset/conversion.js";
 import type { CellValue } from "../../dataset/types.js";
 import { ColumnType } from "../../dataset/types.js";
+import { ValidationError, ConflictError } from "../errors.js";
 
 export type UrlTemplate = string | ((action: DataAction) => string);
 
@@ -120,6 +121,9 @@ export function mutableRestSource(
       "Content-Type": "application/json",
       ...writeConfig.headers,
     };
+    if ("version" in action && action.version !== undefined) {
+      headers["If-Match"] = action.version;
+    }
 
     const init: RequestInit = { method, headers };
     if (action.type !== "delete") {
@@ -129,6 +133,15 @@ export function mutableRestSource(
     const response = await writeFetchFn(url, init);
 
     if (!response.ok) {
+      if (response.status === 422) {
+        const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+        const fieldErrors = (body.errors ?? {}) as Record<string, string[]>;
+        throw new ValidationError(fieldErrors);
+      }
+      if (response.status === 409) {
+        const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+        throw new ConflictError(body.currentVersion as string | undefined);
+      }
       const text = await response.text().catch(() => "");
       throw new Error(`${String(response.status)}: ${text}`);
     }
