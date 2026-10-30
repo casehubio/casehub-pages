@@ -74,6 +74,8 @@ export type { SourceFactoryDeps } from "./sources/source-factory.js";
 export { defToBinding } from "./sources/def-to-binding.js";
 export type { DefToBindingDeps } from "./sources/def-to-binding.js";
 export { ValidationError, ConflictError } from "./errors.js";
+export { collectionBindings } from "./sources/collection-bindings.js";
+export type { CollectionMeta } from "./sources/collection-bindings.js";
 export { defaultSsePushPool, defaultWsPushPool, defaultWsTriggerPool } from "./sources/default-pools.js";
 export { WsTriggerPool, type WsTriggerEvent, type WsTriggerHandler } from "./sources/ws-trigger-pool.js";
 export { fetchSource, type FetchSourceOptions } from "./sources/fetch-source.js";
