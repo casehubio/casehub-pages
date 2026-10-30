@@ -34,6 +34,9 @@ public class JsonDataProvider implements MutableDataProvider {
 
     @Inject
     SqliteConnectionFactory connectionFactory;
+    @Inject
+    AppRegistry             appRegistry;
+
 
     private JsonCollectionStore store;
 
@@ -107,12 +110,14 @@ public class JsonDataProvider implements MutableDataProvider {
 
     @Override
     public String create(DataContext ctx, String collection, JsonNode document, String slugField) {
+        validateAndApplyDefaults(collection, document);
         return store.create(ctx, ctx.tenantId(), collection, document, slugField);
     }
 
     @Override
     public void update(DataContext ctx, String collection, String docId,
                        JsonNode changes, OptionalInt expectedVersion) {
+        validateSchema(collection, changes);
         store.update(ctx, ctx.tenantId(), collection, docId, changes, expectedVersion, MergeStrategy.RFC_7396);
     }
 
@@ -134,4 +139,19 @@ public class JsonDataProvider implements MutableDataProvider {
         }
         return new String[]{rest.substring(0, slash), rest.substring(slash + 1)};
     }
+
+    private void validateAndApplyDefaults(String collection, JsonNode document) {
+        appRegistry.getSchemaForCollection(collection).ifPresent(schema -> {
+            if (document instanceof com.fasterxml.jackson.databind.node.ObjectNode obj) {
+                schema.applyDefaults(obj);
+            }
+            schema.validate(document);
+        });
+    }
+
+    private void validateSchema(String collection, JsonNode document) {
+        appRegistry.getSchemaForCollection(collection).ifPresent(schema ->
+                                                                         schema.validate(document));
+    }
+
 }
