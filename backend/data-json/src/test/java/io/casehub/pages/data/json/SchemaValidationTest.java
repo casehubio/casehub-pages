@@ -25,10 +25,10 @@ class SchemaValidationTest {
     void create_validates_against_schema() {
         DataContext ctx = new DataContext("schema-test");
         ObjectNode doc = MAPPER.createObjectNode()
-            .put("title", "Valid Ticket")
-            .put("priority", "high");
+            .put("subject", "Valid Ticket")
+            .put("priority", "HIGH");
 
-        String id = provider.create(ctx, "tickets", doc, "title");
+        String id = provider.create(ctx, "tickets", doc, "subject");
         assertThat(id).isNotBlank();
     }
 
@@ -36,10 +36,10 @@ class SchemaValidationTest {
     void create_rejects_invalid_enum_value() {
         DataContext ctx = new DataContext("schema-test-enum");
         ObjectNode doc = MAPPER.createObjectNode()
-            .put("title", "Bad Priority")
+            .put("subject", "Bad Priority")
             .put("priority", "extreme");
 
-        assertThatThrownBy(() -> provider.create(ctx, "tickets", doc, "title"))
+        assertThatThrownBy(() -> provider.create(ctx, "tickets", doc, "subject"))
             .isInstanceOf(SchemaViolationException.class)
             .hasMessageContaining("priority");
     }
@@ -60,9 +60,9 @@ class SchemaValidationTest {
     void update_validates_against_schema() {
         DataContext ctx = new DataContext("schema-test-update");
         ObjectNode doc = MAPPER.createObjectNode()
-            .put("title", "Update Test")
-            .put("priority", "low");
-        String id = provider.create(ctx, "tickets", doc, "title");
+            .put("subject", "Update Test")
+            .put("priority", "LOW");
+        String id = provider.create(ctx, "tickets", doc, "subject");
 
         ObjectNode badPatch = MAPPER.createObjectNode().put("priority", "extreme");
         assertThatThrownBy(() ->

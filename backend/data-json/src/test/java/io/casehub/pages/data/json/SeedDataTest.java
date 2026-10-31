@@ -27,9 +27,9 @@ class SeedDataTest {
         DataContext ctx = new DataContext("seed-test");
         registry.ensureSeeded(ctx, "helpdesk", "tickets");
 
-        Optional<JsonNode> ticket = provider.get(ctx, "tickets", "welcome-ticket");
+        Optional<JsonNode> ticket = provider.get(ctx, "tickets", "t-001");
         assertThat(ticket).isPresent();
-        assertThat(ticket.get().get("title").asText()).isEqualTo("Welcome Ticket");
+        assertThat(ticket.get().get("subject").asText()).isEqualTo("Laptop won't boot");
     }
 
     @Test
@@ -38,19 +38,19 @@ class SeedDataTest {
         registry.ensureSeeded(ctx, "helpdesk", "tickets");
         registry.ensureSeeded(ctx, "helpdesk", "tickets");
 
-        Optional<JsonNode> ticket = provider.get(ctx, "tickets", "welcome-ticket");
+        Optional<JsonNode> ticket = provider.get(ctx, "tickets", "t-001");
         assertThat(ticket).isPresent();
     }
 
     @Test
     void seed_skips_if_collection_has_data() {
         DataContext ctx = new DataContext("seed-existing");
-        var doc = MAPPER.createObjectNode().put("title", "Existing").put("priority", "low");
-        provider.create(ctx, "tickets", doc, "title");
+        var doc = MAPPER.createObjectNode().put("subject", "Existing").put("priority", "LOW");
+        provider.create(ctx, "tickets", doc, "subject");
 
         registry.ensureSeeded(ctx, "helpdesk", "tickets");
 
-        Optional<JsonNode> seeded = provider.get(ctx, "tickets", "welcome-ticket");
+        Optional<JsonNode> seeded = provider.get(ctx, "tickets", "t-001");
         assertThat(seeded).isEmpty();
     }
 

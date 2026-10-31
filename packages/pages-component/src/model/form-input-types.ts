@@ -93,4 +93,6 @@ export interface SchemaFormProps {
   fields?: string[];
   labels?: Record<string, string>;
   fieldsOnly?: boolean;
+  submitUrl?: string;
+  submitMethod?: string;
 }

@@ -30,10 +30,10 @@ class ReferentialIntegrityTest {
         String agentId = provider.create(ctx, "agents", agent, "name");
 
         ObjectNode ticket = MAPPER.createObjectNode()
-            .put("title", "Ref Test Ticket")
-            .put("priority", "low")
-            .put("assignee", agentId);
-        provider.create(ctx, "tickets", ticket, "title");
+            .put("subject", "Ref Test Ticket")
+            .put("priority", "LOW")
+            .put("assigneeId", agentId);
+        provider.create(ctx, "tickets", ticket, "subject");
 
         assertThat(provider.hasReferences(ctx, "agents", agentId)).isTrue();
     }

@@ -1,0 +1,40 @@
+collections:
+  tickets:
+    fields:
+      - name: subject
+        type: string
+      - name: description
+        type: string
+      - name: category
+        type: enum
+        values: [HARDWARE, SOFTWARE, ACCESS, OTHER]
+      - name: priority
+        type: enum
+        values: [LOW, MEDIUM, HIGH, URGENT]
+      - name: status
+        type: enum
+        values: [OPEN, TRIAGED, ASSIGNED, RESOLVED, CLOSED]
+      - name: customerRef
+        type: string
+      - name: assigneeId
+        type: ref
+        ref: agents
+      - name: resolution
+        type: string
+    data:
+      - data/tickets.json
+
+  agents:
+    fields:
+      - name: name
+        type: string
+      - name: email
+        type: string
+      - name: speciality
+        type: enum
+        values: [HARDWARE, SOFTWARE, ACCESS, GENERAL]
+      - name: active
+        type: boolean
+        default: true
+    data:
+      - data/agents.json

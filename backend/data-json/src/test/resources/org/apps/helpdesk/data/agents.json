@@ -1,0 +1,7 @@
+[
+  { "id": "agent-hw-1", "name": "Carlos Rivera", "email": "carlos@example.com", "speciality": "HARDWARE", "active": true },
+  { "id": "agent-hw-2", "name": "Priya Nair", "email": "priya@example.com", "speciality": "HARDWARE", "active": true },
+  { "id": "agent-sw-1", "name": "Jordan Lee", "email": "jordan@example.com", "speciality": "SOFTWARE", "active": true },
+  { "id": "agent-sw-2", "name": "Mei Zhang", "email": "mei@example.com", "speciality": "SOFTWARE", "active": false },
+  { "id": "agent-access-1", "name": "Alex Thompson", "email": "alex@example.com", "speciality": "ACCESS", "active": true }
+]

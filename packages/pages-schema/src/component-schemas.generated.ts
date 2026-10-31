@@ -2645,6 +2645,8 @@ export const schemaFormPropsSchema = z.object({
   fields: z.array(z.string()).optional(),
   labels: z.record(z.string(), z.string()).optional(),
   fieldsOnly: z.boolean().optional(),
+  submitUrl: z.string().optional(),
+  submitMethod: z.string().optional(),
 });
 
 export const actionButtonPropsSchema = z.object({

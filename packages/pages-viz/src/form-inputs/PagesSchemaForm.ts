@@ -141,14 +141,19 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
 
     const enrichedSchema = this._enrichSchema(schema, props, dataset);
     const sourceData = this._extractData(enrichedSchema, dataset);
-    this._dataMirror = { ...sourceData };
-
     const isCreateMode = props.forceCreate === true || dataset.rows.length === 0;
-    const isDisplay = props.mode === "display" || !this._editable;
+    if (isCreateMode && Object.keys(this._dataMirror).length > 0) {
+      for (const [k, v] of Object.entries(sourceData)) {
+        if (!(k in this._dataMirror)) this._dataMirror[k] = v;
+      }
+    } else {
+      this._dataMirror = { ...sourceData };
+    }
+    const isDisplay = props.mode === "display" || (!this._editable && !isCreateMode);
 
     const source: PropertyPaletteSource = {
       schema: enrichedSchema,
-      data: sourceData,
+      data: isCreateMode ? this._dataMirror : sourceData,
       readonly: isDisplay,
       onChange: (fieldPath, value) => {
         const key = typeof fieldPath[0] === "string" ? fieldPath[0] : String(fieldPath[0]);
@@ -327,6 +332,12 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     }
 
     const record = this.currentValue;
+    const props = this.props as (SchemaFormProps & { submitUrl?: string; submitMethod?: string }) | undefined;
+
+    if (props?.submitUrl) {
+      void this._submitToUrl(props.submitUrl, props.submitMethod ?? "POST", record);
+    }
+
     this.dispatchEvent(
       new CustomEvent("pages-record-create", {
         bubbles: true, composed: true,
@@ -334,8 +345,27 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       }),
     );
 
-    this.announce("Record submitted successfully");
     return record;
+  }
+
+  private async _submitToUrl(url: string, method: string, record: Record<string, unknown>): Promise<void> {
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      });
+      if (response.ok) {
+        this._dataMirror = {};
+        this.requestUpdate();
+        this.announce("Record created successfully");
+      } else {
+        const text = await response.text().catch(() => "");
+        this.announce(`Submit failed: ${response.status} ${text}`, "assertive");
+      }
+    } catch (err) {
+      this.announce(`Submit failed: ${err instanceof Error ? err.message : String(err)}`, "assertive");
+    }
   }
 }
 

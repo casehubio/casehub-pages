@@ -47,21 +47,21 @@ class JsonDataProviderTest {
     @Test
     void crud_through_provider() {
         DataContext ctx = new DataContext("integration-test");
-        ObjectNode doc = MAPPER.createObjectNode().put("title", "Integration Test").put("status", "open");
+        ObjectNode doc = MAPPER.createObjectNode().put("subject", "Integration Test").put("status", "OPEN");
 
-        String id = provider.create(ctx, "tickets", doc, "title");
+        String id = provider.create(ctx, "tickets", doc, "subject");
         assertThat(id).isEqualTo("integration-test");
 
         Optional<JsonNode> loaded = provider.get(ctx, "tickets", id);
         assertThat(loaded).isPresent();
-        assertThat(loaded.get().get("title").asText()).isEqualTo("Integration Test");
+        assertThat(loaded.get().get("subject").asText()).isEqualTo("Integration Test");
         assertThat(loaded.get().get("_version").asInt()).isEqualTo(1);
 
-        ObjectNode patch = MAPPER.createObjectNode().put("status", "closed");
+        ObjectNode patch = MAPPER.createObjectNode().put("status", "CLOSED");
         provider.update(ctx, "tickets", id, patch, OptionalInt.of(1));
 
         JsonNode updated = provider.get(ctx, "tickets", id).orElseThrow();
-        assertThat(updated.get("status").asText()).isEqualTo("closed");
+        assertThat(updated.get("status").asText()).isEqualTo("CLOSED");
         assertThat(updated.get("_version").asInt()).isEqualTo(2);
 
         provider.delete(ctx, "tickets", id);
