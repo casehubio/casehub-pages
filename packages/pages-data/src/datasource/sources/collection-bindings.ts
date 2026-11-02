@@ -7,7 +7,7 @@ import { mutableRestSource } from "./mutable-rest-source.js";
 
 export interface CollectionMeta {
   readonly name: string;
-  readonly fields: readonly { name: string; type: string }[];
+  readonly fields: readonly { name: string; type: string; ref?: string }[];
 }
 
 const TYPE_MAP: Record<string, ColumnType> = {
@@ -20,13 +20,16 @@ const TYPE_MAP: Record<string, ColumnType> = {
   array: ColumnType.TEXT,
 };
 
-function toColumns(fields: readonly { name: string; type: string }[]): ExternalColumnDef[] {
+function toColumns(fields: readonly { name: string; type: string; ref?: string }[]): ExternalColumnDef[] {
   const cols: ExternalColumnDef[] = [
     { id: columnId("id"), type: ColumnType.TEXT },
     { id: columnId("_version"), type: ColumnType.TEXT },
   ];
   for (const f of fields) {
-    cols.push({ id: columnId(f.name), type: TYPE_MAP[f.type] ?? ColumnType.TEXT });
+    const colType = f.ref?.startsWith("labels/")
+      ? ColumnType.LABEL
+      : (TYPE_MAP[f.type] ?? ColumnType.TEXT);
+    cols.push({ id: columnId(f.name), type: colType });
   }
   return cols;
 }

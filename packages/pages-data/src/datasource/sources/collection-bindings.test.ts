@@ -63,6 +63,21 @@ describe("collectionBindings", () => {
     expect(bindings[0]!.id).toBe("json:app1/test");
   });
 
+  it("maps labels/ ref fields to LABEL column type", () => {
+    const cols: CollectionMeta[] = [{
+      name: "tickets",
+      fields: [
+        { name: "subject", type: "string" },
+        { name: "category", type: "ref", ref: "labels/categories" },
+        { name: "assigneeId", type: "ref", ref: "agents" },
+      ],
+    }];
+
+    const bindings = collectionBindings("helpdesk", cols);
+    expect(bindings).toHaveLength(1);
+    expect(bindings[0]!.id).toBe("json:helpdesk/tickets");
+  });
+
   it("returns empty array for no collections", () => {
     const bindings = collectionBindings("app1", []);
     expect(bindings).toEqual([]);

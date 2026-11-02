@@ -96,6 +96,7 @@ const navItemSchema: z.ZodType = z.lazy(() =>
     id: z.string().optional(),
     children: z.array(navItemSchema).optional(),
     page: z.string().optional(),
+    labelSource: z.string().optional(),
   })
 );
 

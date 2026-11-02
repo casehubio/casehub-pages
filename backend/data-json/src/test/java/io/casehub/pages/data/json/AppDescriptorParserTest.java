@@ -59,6 +59,37 @@ class AppDescriptorParserTest {
     }
 
     @Test
+    void parses_label_trees() {
+        InputStream yaml = getClass().getClassLoader()
+            .getResourceAsStream("org/apps/helpdesk/app.yaml");
+
+        AppDescriptor descriptor = AppDescriptorParser.parse("helpdesk", yaml);
+
+        assertThat(descriptor.labelTrees()).hasSize(2);
+
+        LabelTreeDef categories = descriptor.labelTrees().stream()
+            .filter(t -> t.name().equals("categories"))
+            .findFirst().orElseThrow();
+        assertThat(categories.paths()).containsExactly(
+            "HARDWARE/Laptops", "HARDWARE/Monitors",
+            "SOFTWARE/OS", "SOFTWARE/Applications");
+
+        LabelTreeDef priorities = descriptor.labelTrees().stream()
+            .filter(t -> t.name().equals("priorities"))
+            .findFirst().orElseThrow();
+        assertThat(priorities.paths()).hasSize(5);
+    }
+
+    @Test
+    void parses_app_without_labels() {
+        String yaml = "collections:\n  things:\n    fields:\n      - name: title\n        type: string\n";
+        AppDescriptor descriptor = AppDescriptorParser.parse("nolabels",
+            new java.io.ByteArrayInputStream(yaml.getBytes()));
+
+        assertThat(descriptor.labelTrees()).isEmpty();
+    }
+
+    @Test
     void rejects_null_input() {
         assertThatThrownBy(() -> AppDescriptorParser.parse("test", null))
             .isInstanceOf(IllegalArgumentException.class);

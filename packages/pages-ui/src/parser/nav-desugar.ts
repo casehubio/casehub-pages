@@ -4,6 +4,7 @@ interface NavTreeGroup {
   readonly type: string;
   readonly id: string;
   readonly children?: readonly NavTreeChild[];
+  readonly labelSource?: string;
 }
 
 interface NavTreeChild {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mapFieldToComponentType } from "./schema-types.js";
+import { mapFieldToComponentType, isLabelRef, labelRefToPath } from "./schema-types.js";
 
 describe("mapFieldToComponentType — composite types", () => {
   it("x-renderer takes highest priority", () => {
@@ -47,6 +47,24 @@ describe("mapFieldToComponentType — composite types", () => {
     })).toBe("object-group");
   });
 
+});
+
+describe("label ref utilities", () => {
+  it("isLabelRef detects labels/ prefix", () => {
+    expect(isLabelRef("labels/categories")).toBe(true);
+    expect(isLabelRef("labels/priorities")).toBe(true);
+    expect(isLabelRef("agents")).toBe(false);
+    expect(isLabelRef(undefined)).toBe(false);
+  });
+
+  it("labelRefToPath extracts tree name", () => {
+    expect(labelRefToPath("labels/categories")).toBe("categories");
+    expect(labelRefToPath("labels/priorities")).toBe("priorities");
+    expect(labelRefToPath("labels/a/b")).toBe("a/b");
+  });
+});
+
+describe("mapFieldToComponentType — leaf types", () => {
   it("existing leaf mappings unchanged", () => {
     expect(mapFieldToComponentType({ type: "string" })).toBe("input");
     expect(mapFieldToComponentType({ type: "number" })).toBe("number-input");

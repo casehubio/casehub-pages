@@ -24,7 +24,8 @@ public final class AppDescriptorParser {
         try {
             JsonNode root = YAML.readTree(yaml);
             List<CollectionDef> collections = parseCollections(root.get("collections"));
-            return new AppDescriptor(appId, collections);
+            List<LabelTreeDef> labelTrees = parseLabelTrees(root.get("labels"));
+            return new AppDescriptor(appId, collections, labelTrees);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to parse app.yaml for app: " + appId, e);
         }
@@ -85,6 +86,20 @@ public final class AppDescriptorParser {
         List<String> result = new ArrayList<>();
         for (JsonNode item : node) {
             result.add(item.asText());
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<LabelTreeDef> parseLabelTrees(JsonNode labelsNode) {
+        if (labelsNode == null || !labelsNode.isObject()) return List.of();
+
+        List<LabelTreeDef> result = new ArrayList<>();
+        Iterator<Map.Entry<String, JsonNode>> it = labelsNode.fields();
+        while (it.hasNext()) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            String name = entry.getKey();
+            List<String> paths = parseStringArray(entry.getValue());
+            result.add(new LabelTreeDef(name, paths));
         }
         return List.copyOf(result);
     }

@@ -3,11 +3,13 @@ package io.casehub.pages.data.json;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.casehub.pages.data.DataContext;
+import io.casehub.pages.data.CollectionSchema;
 import io.casehub.pages.data.SchemaViolationException;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.OptionalInt;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,6 +70,19 @@ class SchemaValidationTest {
         assertThatThrownBy(() ->
             provider.update(ctx, "tickets", id, badPatch, OptionalInt.empty()))
             .isInstanceOf(SchemaViolationException.class);
+    }
+
+    @Test
+    void label_ref_field_accepts_path_strings() {
+        CollectionSchema schema = new CollectionSchema("tickets",
+            Map.of("category", "ref"),
+            Map.of(),
+            Map.of("category", "labels/categories"));
+
+        ObjectNode doc = MAPPER.createObjectNode();
+        doc.put("category", "HARDWARE/Laptops");
+
+        schema.validate(doc);
     }
 
     @Test

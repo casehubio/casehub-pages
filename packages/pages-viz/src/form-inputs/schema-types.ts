@@ -59,4 +59,12 @@ export function mapFieldToComponentType(fieldSchema: FieldSchema): string {
   return "input";
 }
 
+export function isLabelRef(ref: string | undefined): boolean {
+  return ref != null && ref.startsWith("labels/");
+}
+
+export function labelRefToPath(ref: string): string {
+  return ref.substring("labels/".length);
+}
+
 export { validateField } from "@casehubio/pages-component";

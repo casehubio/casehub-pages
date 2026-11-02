@@ -6,8 +6,13 @@ import io.casehub.pages.data.CollectionSchema;
 import io.casehub.pages.data.DataContext;
 import io.casehub.pages.data.SlugUtils;
 import io.casehub.pages.sqlite.SqliteConnectionFactory;
+import io.casehub.platform.api.identity.TenancyConstants;
+import io.casehub.platform.api.label.LabelDescriptor;
+import io.casehub.platform.api.label.LabelRegistry;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
@@ -36,6 +41,8 @@ public class AppRegistry {
     private final Map<String, Map<String, CollectionSchema>> schemas     = new LinkedHashMap<>();
     @Inject
     SqliteConnectionFactory connectionFactory;
+    @Inject
+    Instance<LabelRegistry> labelRegistryInstance;
     private JsonCollectionStore store;
 
     @PostConstruct
@@ -64,6 +71,10 @@ public class AppRegistry {
             if (schema != null) {return Optional.of(schema);}
         }
         return Optional.empty();
+    }
+
+    public static boolean isLabelRef(String ref) {
+        return ref != null && ref.startsWith("labels/");
     }
 
     public Map<String, String> getReferencingCollections(String targetCollection) {
@@ -158,6 +169,23 @@ public class AppRegistry {
     }
 
 
+    private void registerLabelTrees(AppDescriptor descriptor) {
+        if (labelRegistryInstance.isUnsatisfied()) {
+            LOG.debug("No LabelRegistry available — skipping label registration");
+            return;
+        }
+        LabelRegistry labelRegistry = labelRegistryInstance.get();
+        String tenancyId = TenancyConstants.PLATFORM_TENANT_ID;
+        for (LabelTreeDef tree : descriptor.labelTrees()) {
+            for (String leafPath : tree.paths()) {
+                String fullPath = descriptor.appId() + "/" + tree.name() + "/" + leafPath;
+                io.casehub.platform.api.path.Path path = io.casehub.platform.api.path.Path.parse(fullPath);
+                LabelDescriptor desc = new LabelDescriptor(tenancyId, path, null, 0);
+                labelRegistry.register(tenancyId, desc);
+            }
+        }
+    }
+
     private void scanClasspath() {
         try {
             Enumeration<URL> resources = Thread.currentThread().getContextClassLoader()
@@ -188,7 +216,9 @@ public class AppRegistry {
             AppDescriptor descriptor = AppDescriptorParser.parse(appId, is);
             descriptors.put(appId, descriptor);
             registerSchemas(descriptor);
-            LOG.infof("Registered app '%s' with %d collections", appId, descriptor.collections().size());
+            registerLabelTrees(descriptor);
+            LOG.infof("Registered app '%s' with %d collections, %d label trees",
+                appId, descriptor.collections().size(), descriptor.labelTrees().size());
         } catch (IOException e) {
             LOG.warnf(e, "Failed to load app descriptor for '%s'", appId);
         }

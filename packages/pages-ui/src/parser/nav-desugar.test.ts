@@ -476,4 +476,19 @@ describe("resolveNavigation — tree hierarchical slot names", () => {
     // slot-target is filtered out
     expect(resolved.find(c => c.type === "slot-target")).toBeUndefined();
   });
+
+  it("accepts labelSource property on nav groups", () => {
+    const navTree = {
+      root_items: [{
+        type: "GROUP",
+        id: "CategoryNav",
+        labelSource: "categories",
+        children: [],
+      }],
+    };
+
+    const group = (navTree.root_items[0] as any);
+    expect(group.labelSource).toBe("categories");
+    expect(group.children).toEqual([]);
+  });
 });

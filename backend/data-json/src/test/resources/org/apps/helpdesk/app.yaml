@@ -38,3 +38,16 @@ collections:
         default: true
     data:
       - data/agents.json
+
+labels:
+  categories:
+    - HARDWARE/Laptops
+    - HARDWARE/Monitors
+    - SOFTWARE/OS
+    - SOFTWARE/Applications
+  priorities:
+    - P1/Critical
+    - P1/Blocker
+    - P2/High
+    - P3/Medium
+    - P4/Low
