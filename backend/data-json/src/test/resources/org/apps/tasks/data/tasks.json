@@ -1,0 +1,10 @@
+[
+  { "id": "task-001", "title": "Implement user authentication", "description": "Add OAuth2 login flow with JWT tokens", "priority": "HIGH", "status": "IN_PROGRESS", "assignee": "alice", "dueDate": "2026-11-15", "tags": "security,backend" },
+  { "id": "task-002", "title": "Design landing page", "description": "Create responsive landing page mockups", "priority": "MEDIUM", "status": "REVIEW", "assignee": "bob", "dueDate": "2026-11-10", "tags": "design,frontend" },
+  { "id": "task-003", "title": "Set up CI pipeline", "description": "Configure GitHub Actions for build, test, and deploy", "priority": "HIGH", "status": "DONE", "assignee": "carol", "dueDate": "2026-11-01", "tags": "devops" },
+  { "id": "task-004", "title": "Write API documentation", "description": "Document all REST endpoints with OpenAPI spec", "priority": "LOW", "status": "TODO", "assignee": null, "dueDate": "2026-11-30", "tags": "docs" },
+  { "id": "task-005", "title": "Database migration script", "description": "Create Flyway migration for user preferences table", "priority": "CRITICAL", "status": "TODO", "assignee": "alice", "dueDate": "2026-11-08", "tags": "backend,database" },
+  { "id": "task-006", "title": "Fix notification timing", "description": "Notifications arrive 30s late due to polling interval", "priority": "MEDIUM", "status": "IN_PROGRESS", "assignee": "david", "dueDate": "2026-11-12", "tags": "backend,bug" },
+  { "id": "task-007", "title": "Add dark mode support", "description": "Implement dark mode toggle with persisted preference", "priority": "LOW", "status": "TODO", "assignee": null, "dueDate": null, "tags": "frontend,ux" },
+  { "id": "task-008", "title": "Performance audit", "description": "Profile and optimize slow queries on dashboard load", "priority": "HIGH", "status": "TODO", "assignee": "carol", "dueDate": "2026-11-20", "tags": "performance,backend" }
+]

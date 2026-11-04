@@ -1,0 +1,7 @@
+[
+  { "id": "note-001", "title": "Sprint planning decisions", "content": "Agreed to prioritize auth flow over dark mode. Database migration must land before Nov 15.", "category": "DECISION", "author": "alice", "pinned": true },
+  { "id": "note-002", "title": "API versioning approach", "content": "Use URL-based versioning (v1, v2) rather than header-based. Simpler for client integrations.", "category": "DECISION", "author": "carol", "pinned": false },
+  { "id": "note-003", "title": "Explore GraphQL", "content": "Consider GraphQL for dashboard queries — multiple round trips currently slow down initial load.", "category": "IDEA", "author": "david", "pinned": false },
+  { "id": "note-004", "title": "Follow up with design team", "content": "Need final color palette sign-off before implementing dark mode tokens.", "category": "FOLLOW_UP", "author": "bob", "pinned": true },
+  { "id": "note-005", "title": "Standup recap", "content": "Carol blocked on staging access. Alice investigating intermittent test failure in auth module.", "category": "MEETING", "author": "alice", "pinned": false }
+]

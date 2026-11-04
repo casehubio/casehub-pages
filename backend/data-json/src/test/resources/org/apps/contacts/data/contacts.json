@@ -1,0 +1,10 @@
+[
+  { "id": "c-001", "firstName": "Alice", "lastName": "Chen", "email": "alice.chen@example.com", "phone": "+1-555-0101", "company": "Acme Corp", "role": "CTO", "category": "CUSTOMER", "status": "ACTIVE" },
+  { "id": "c-002", "firstName": "Bob", "lastName": "Martinez", "email": "bob.m@partner.io", "phone": "+1-555-0102", "company": "TechBridge", "role": "Account Manager", "category": "PARTNER", "status": "ACTIVE" },
+  { "id": "c-003", "firstName": "Carol", "lastName": "Okonkwo", "email": "carol.o@example.com", "phone": "+44-20-7946-0103", "company": "Acme Corp", "role": "VP Engineering", "category": "CUSTOMER", "status": "ACTIVE" },
+  { "id": "c-004", "firstName": "David", "lastName": "Kim", "email": "d.kim@vendor.co", "phone": "+82-2-555-0104", "company": "CloudWorks", "role": "Sales Director", "category": "VENDOR", "status": "ACTIVE" },
+  { "id": "c-005", "firstName": "Eva", "lastName": "Johansson", "email": "eva.j@internal.dev", "phone": "+46-8-555-0105", "company": "CaseHub", "role": "Staff Engineer", "category": "INTERNAL", "status": "ACTIVE" },
+  { "id": "c-006", "firstName": "Frank", "lastName": "Dubois", "email": "frank.d@example.com", "phone": "+33-1-555-0106", "company": "EuroTech", "role": "Procurement", "category": "VENDOR", "status": "INACTIVE" },
+  { "id": "c-007", "firstName": "Grace", "lastName": "Patel", "email": "grace.p@partner.io", "phone": "+1-555-0107", "company": "DataFlow", "role": "Integration Lead", "category": "PARTNER", "status": "ACTIVE" },
+  { "id": "c-008", "firstName": "Hassan", "lastName": "Al-Rashid", "email": "hassan.ar@example.com", "phone": "+971-4-555-0108", "company": "Gulf Systems", "role": "Managing Director", "category": "CUSTOMER", "status": "ARCHIVED" }
+]

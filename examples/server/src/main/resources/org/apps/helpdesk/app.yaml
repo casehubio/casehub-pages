@@ -38,3 +38,14 @@ collections:
         default: true
     data:
       - data/agents.json
+
+params:
+  - name: ticketId
+    type: string
+    required: false
+
+access:
+  read:
+    roles: [authenticated]
+  write:
+    roles: [admin, developer]

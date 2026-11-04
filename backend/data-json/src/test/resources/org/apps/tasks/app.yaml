@@ -1,0 +1,44 @@
+collections:
+  tasks:
+    fields:
+      - name: title
+        type: string
+      - name: description
+        type: string
+      - name: priority
+        type: enum
+        values: [LOW, MEDIUM, HIGH, CRITICAL]
+      - name: status
+        type: enum
+        values: [TODO, IN_PROGRESS, REVIEW, DONE, CANCELLED]
+      - name: assignee
+        type: string
+      - name: dueDate
+        type: string
+      - name: tags
+        type: string
+    data:
+      - data/tasks.json
+
+  notes:
+    fields:
+      - name: title
+        type: string
+      - name: content
+        type: string
+      - name: category
+        type: enum
+        values: [MEETING, DECISION, IDEA, FOLLOW_UP]
+      - name: author
+        type: string
+      - name: pinned
+        type: boolean
+        default: false
+    data:
+      - data/notes.json
+
+access:
+  read:
+    roles: [authenticated]
+  write:
+    roles: [admin, developer]

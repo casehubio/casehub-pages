@@ -35,6 +35,38 @@ import java.util.UUID;
 @ApplicationScoped
 public class AppRegistry {
     static final         String       APPS_PREFIX = "org/apps/";
+
+    static final CollectionSchema PAGES_SCHEMA = new CollectionSchema("_pages",
+                                                                      Map.of(
+                                                                              "name", "string",
+                                                                              "yaml", "string",
+                                                                              "description", "string",
+                                                                              "icon", "string",
+                                                                              "order", "number",
+                                                                              "author", "string",
+                                                                              "labels", "array",
+                                                                              "source", "string",
+                                                                              "sourceHash", "string"
+                                                                            ),
+                                                                      Map.of("order", (Object) 0),
+                                                                      Map.of()
+    );
+    static final CollectionSchema APPS_SCHEMA  = new CollectionSchema("_apps",
+                                                                      Map.of(
+                                                                              "appId", "string",
+                                                                              "name", "string",
+                                                                              "description", "string",
+                                                                              "icon", "string",
+                                                                              "order", "number",
+                                                                              "route", "string",
+                                                                              "labels", "array",
+                                                                              "source", "string"
+                                                                            ),
+                                                                      Map.of("order", (Object) 0),
+                                                                      Map.of()
+    );
+
+
     private static final Logger       LOG         = Logger.getLogger(AppRegistry.class);
     private static final ObjectMapper MAPPER      = new ObjectMapper();
     private final Map<String, AppDescriptor>                 descriptors = new LinkedHashMap<>();
@@ -49,6 +81,11 @@ public class AppRegistry {
     void init() {
         store = new JsonCollectionStore(connectionFactory);
         scanClasspath();
+    }
+
+
+    public JsonCollectionStore getStore() {
+        return store;
     }
 
     public Set<String> getRegisteredApps() {
@@ -205,6 +242,7 @@ public class AppRegistry {
         } catch (Exception e) {
             LOG.warn("Failed to scan classpath for app descriptors", e);
         }
+        AppBootstrap.seedKnownApps(store, TenancyConstants.PLATFORM_TENANT_ID, descriptors);
     }
 
     private void loadApp(Path appDir) {
@@ -217,8 +255,9 @@ public class AppRegistry {
             descriptors.put(appId, descriptor);
             registerSchemas(descriptor);
             registerLabelTrees(descriptor);
+            PageBootstrap.seed(store, TenancyConstants.PLATFORM_TENANT_ID, appId, appDir);
             LOG.infof("Registered app '%s' with %d collections, %d label trees",
-                appId, descriptor.collections().size(), descriptor.labelTrees().size());
+                      appId, descriptor.collections().size(), descriptor.labelTrees().size());
         } catch (IOException e) {
             LOG.warnf(e, "Failed to load app descriptor for '%s'", appId);
         }
@@ -230,6 +269,8 @@ public class AppRegistry {
             CollectionSchema schema = toSchema(col);
             appSchemas.put(col.name(), schema);
         }
+        appSchemas.put("_pages", PAGES_SCHEMA);
+        appSchemas.put("_apps", APPS_SCHEMA);
         schemas.put(descriptor.appId(), appSchemas);
     }
 
