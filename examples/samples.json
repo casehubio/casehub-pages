@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 110,
+  "totalSamples": 111,
   "categories": [
     {
       "category": "Charts",
@@ -1125,6 +1125,12 @@
     {
       "category": "Domain Showcases",
       "samples": [
+        {
+          "name": "apps-management",
+          "path": "Domain Showcases/apps-management/apps-management.page.yaml",
+          "category": "Domain Showcases",
+          "file": "apps-management.page.yaml"
+        },
         {
           "name": "contacts",
           "path": "Domain Showcases/contacts/contacts.page.yaml",

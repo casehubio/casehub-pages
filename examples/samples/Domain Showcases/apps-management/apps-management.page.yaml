@@ -1,0 +1,113 @@
+datasets:
+- uuid: apps
+  url: /api/apps
+  columns:
+  - id: appId
+    type: TEXT
+  - id: name
+    type: TEXT
+  - id: displayName
+    type: TEXT
+  - id: source
+    type: LABEL
+  - id: enabled
+    type: LABEL
+  - id: collectionCount
+    type: NUMBER
+  - id: totalDocuments
+    type: NUMBER
+
+pages:
+- name: Apps
+  components:
+  - title: App Management
+  - type: metric
+    properties:
+      lookup:
+        uuid: apps
+      columns:
+      - field: appId
+        accumulate: COUNT
+        label: Total Apps
+  - type: data-table
+    properties:
+      pageSize: 20
+      sortable: true
+      filter:
+        enabled: true
+      lookup:
+        uuid: apps
+      columns:
+      - field: appId
+        label: ID
+      - field: name
+        label: Name
+      - field: source
+        label: Source
+      - field: enabled
+        label: Status
+      - field: collectionCount
+        label: Collections
+      - field: totalDocuments
+        label: Documents
+  - page: App Settings
+  - page: Lifecycle
+
+- name: App Settings
+  dataScope:
+    dataset: apps
+    idColumn: appId
+  save:
+    trigger: auto
+    delay: 1500
+    adapter: rest
+  components:
+  - title: "#{appId} Settings"
+  - schema-form:
+      schema:
+        properties:
+          displayName: { type: string }
+          enabled: { type: boolean }
+          autoSeed: { type: boolean }
+          maxDocuments: { type: integer, minimum: -1 }
+        required: []
+      excludeFields: [appId, name, description, icon, order, route, labels, source, collectionCount, totalDocuments]
+      labels:
+        displayName: Display Name
+        enabled: Enabled
+        autoSeed: Auto-Seed Data
+        maxDocuments: Max Documents (-1 = unlimited)
+
+- name: Lifecycle
+  dataScope:
+    dataset: apps
+    idColumn: appId
+  components:
+  - title: "#{appId} — Lifecycle"
+  - type: markdown
+    properties:
+      content: |
+        Current status: **#{enabled}**
+  - type: action-button
+    properties:
+      label: Stop App
+      style: danger
+      url: /api/apps/#{appId}/lifecycle
+      method: POST
+      body: { action: stop }
+      confirm: "Stop app #{appId}? Collections will return 404."
+      disabledWhen: "#{enabled} == false"
+      onSuccess:
+        refresh: [apps]
+        message: "App #{appId} stopped"
+  - type: action-button
+    properties:
+      label: Start App
+      style: primary
+      url: /api/apps/#{appId}/lifecycle
+      method: POST
+      body: { action: start }
+      disabledWhen: "#{enabled} == true"
+      onSuccess:
+        refresh: [apps]
+        message: "App #{appId} started"
