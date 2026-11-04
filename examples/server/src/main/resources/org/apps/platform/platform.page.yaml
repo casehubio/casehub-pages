@@ -1,11 +1,11 @@
 datasets:
 - uuid: apps
-  url: /api/apps/platform/apps
+  url: /api/apps/platform/_apps
   mutable:
     keyColumn: appId
-    createUrl: /api/apps/platform/apps
-    updateUrl: /api/apps/platform/apps/{appId}
-    deleteUrl: /api/apps/platform/apps/{appId}
+    createUrl: /api/apps/platform/_apps
+    updateUrl: /api/apps/platform/_apps/{appId}
+    deleteUrl: /api/apps/platform/_apps/{appId}
   columns:
   - id: appId
     type: TEXT
@@ -16,7 +16,7 @@ datasets:
   - id: icon
     type: TEXT
   - id: order
-    type: NUMBER
+    type: TEXT
   - id: route
     type: TEXT
   - id: source
@@ -87,7 +87,7 @@ pages:
           route: { type: string }
         required: [appId, name]
       forceCreate: true
-      submitUrl: /api/apps/platform/apps
+      submitUrl: /api/apps/platform/_apps
       submitMethod: POST
 
 navTree:

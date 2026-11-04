@@ -4,6 +4,7 @@ let currentSample = null;
 let currentSite = null;
 let suppressHashChange = false;
 let galleryThemeMode = 'dark';
+let discoveredAppsCategory = null;
 
 // Strip TypeScript syntax for companion script execution
 function stripTs(src) {
@@ -42,6 +43,9 @@ let loadingPath = null;
 // Tab switching
 function setActiveTab(tab) {
     activeTab = tab;
+    if (tab !== 'server') {
+        discoveredAppsCategory = null;
+    }
     document.querySelectorAll('.gallery-tab').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === tab);
     });
@@ -63,9 +67,11 @@ function checkServerHealth() {
         .then(() => {
             serverStatus.className = 'server-status connected';
             removeBanner();
+            discoverApps();
         })
         .catch(() => {
             serverStatus.className = 'server-status disconnected';
+            discoveredAppsCategory = null;
             showBanner();
         });
 }
@@ -83,10 +89,37 @@ function removeBanner() {
     document.getElementById('server-banner')?.remove();
 }
 
+async function discoverApps() {
+    try {
+        const res = await fetch(`${SERVER_URL}/api/apps/platform/_apps`);
+        if (!res.ok) { discoveredAppsCategory = null; return; }
+        const apps = await res.json();
+        const samples = apps
+            .filter(a => a.enabled !== false)
+            .map(a => ({
+                name: a.displayName || a.name || a.appId,
+                path: `app://${a.appId}`,
+                appId: a.appId,
+                category: 'Apps',
+                tags: ['json app', a.source || 'dynamic'],
+            }));
+        if (samples.length === 0) { discoveredAppsCategory = null; return; }
+        discoveredAppsCategory = { category: 'Apps', requiresServer: true, samples };
+        renderCategories();
+        renderStats();
+        updateSampleCount();
+    } catch {
+        discoveredAppsCategory = null;
+    }
+}
+
 function updateSampleCount() {
     const filtered = samplesData.categories.filter(c =>
         activeTab === 'server' ? c.requiresServer === true : !c.requiresServer
     );
+    if (activeTab === 'server' && discoveredAppsCategory) {
+        filtered.push(discoveredAppsCategory);
+    }
     const count = filtered.reduce((sum, c) => sum + c.samples.length, 0);
     sampleCount.textContent = `${count} samples`;
 }
@@ -150,6 +183,10 @@ function renderCategories() {
         activeTab === 'server' ? c.requiresServer === true : !c.requiresServer
     );
 
+    if (activeTab === 'server' && discoveredAppsCategory) {
+        filtered.push(discoveredAppsCategory);
+    }
+
     filtered.forEach(category => {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'category';
@@ -199,6 +236,9 @@ function renderStats() {
     const filtered = samplesData.categories.filter(c =>
         activeTab === 'server' ? c.requiresServer === true : !c.requiresServer
     );
+    if (activeTab === 'server' && discoveredAppsCategory) {
+        filtered.push(discoveredAppsCategory);
+    }
     const categoryCount = filtered.length;
     const totalSamples = filtered.reduce((sum, c) => sum + c.samples.length, 0);
 
@@ -273,7 +313,10 @@ function loadSampleFromHash(category, samplePath) {
     const decodedPath = decodeURIComponent(samplePath);
     if (loadingPath === decodedPath) return;
 
-    for (const cat of samplesData.categories) {
+    const allCategories = discoveredAppsCategory
+        ? [...samplesData.categories, discoveredAppsCategory]
+        : samplesData.categories;
+    for (const cat of allCategories) {
         for (const sample of cat.samples) {
             if (sample.path === decodedPath) {
                 loadSample(sample);
@@ -405,6 +448,29 @@ async function loadSampleInTarget(samplePath) {
             return;
         }
 
+        // Server-connected app rendering — fetch YAML from samples, data from backend
+        if (samplePath.startsWith('app://')) {
+            if (currentSite) { currentSite.dispose(); currentSite = null; }
+            sampleTarget.innerHTML = '';
+            sampleTarget.className = '';
+            renderConfigBar([], samplePath, null);
+
+            const appId = samplePath.slice(6);
+            const yamlPath = `samples/Domain Showcases/${appId}/${appId}.page.yaml`;
+            const yamlRes = await fetch(yamlPath);
+            if (!yamlRes.ok) throw new Error(`Sample not found: ${yamlPath}`);
+            const yamlText = await yamlRes.text();
+
+            currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, {
+                baseUrl: SERVER_URL,
+                fetch: (url, opts) => fetch(url, { ...opts, mode: 'cors' }),
+            });
+            const currentTheme = casehubPages.getTheme() || 'casehub-dark';
+            currentSite.setTheme(currentTheme.endsWith('-dark') ? 'dark' : 'light');
+            casehubPages.applyTheme(currentTheme, sampleTarget);
+            return;
+        }
+
         const response = await fetch(`samples/${samplePath}`);
         let yamlText = await response.text();
 
@@ -506,6 +572,25 @@ let showingTs = true; // default to TS
 
 // Load and display sample source code
 async function loadSampleSourceCode(samplePath) {
+    if (samplePath.startsWith('app://')) {
+        const appId = samplePath.slice(6);
+        currentTsSource = '';
+        try {
+            const yamlPath = `samples/Domain Showcases/${appId}/${appId}.page.yaml`;
+            const res = await fetch(yamlPath);
+            currentYamlSource = res.ok
+                ? await res.text()
+                : `# Server-connected app: ${appId}\n# Data served from ${SERVER_URL}`;
+        } catch {
+            currentYamlSource = `# Server-connected app: ${appId}\n# Data served from ${SERVER_URL}`;
+        }
+        sourceCodeElement.textContent = currentYamlSource;
+        showingTs = false;
+        updateSourceToggle();
+        codeToggleBtn.style.display = 'flex';
+        return;
+    }
+
     try {
         const response = await fetch(`samples/${samplePath}`);
         currentYamlSource = await response.text();
@@ -585,6 +670,22 @@ function setupEventListeners() {
     galleryTabs.addEventListener('click', (e) => {
         const tab = e.target.closest('.gallery-tab');
         if (tab) setActiveTab(tab.dataset.tab);
+    });
+
+    // Platform catalogue → child app navigation via row double-click
+    sampleTarget.addEventListener('dblclick', (e) => {
+        if (!discoveredAppsCategory) return;
+        const path = e.composedPath();
+        const row = path.find(el => el.getAttribute?.('role') === 'row');
+        if (!row) return;
+        const cells = row.querySelectorAll('[role="gridcell"]');
+        if (cells.length === 0) return;
+        const appId = cells[0]?.textContent?.trim();
+        if (!appId) return;
+        const appEntry = discoveredAppsCategory.samples.find(s => s.appId === appId);
+        if (appEntry) {
+            loadSample(appEntry);
+        }
     });
 
     // Sidebar toggle
