@@ -229,12 +229,24 @@ const categorized = sortedCategories.map(category => {
   return entry;
 });
 
+// Inject apps-demo into Server category
+const serverCat = categorized.find(c => c.category === 'Server');
+if (serverCat) {
+  serverCat.samples.unshift({
+    name: 'Apps Within Apps',
+    path: 'apps-demo.html',
+    category: 'Server',
+    file: 'apps-demo.html',
+    tags: ['server', 'apps', 'composition', 'catalogue'],
+  });
+}
+
 const output = {
   version: '2.0.0',
   description: 'CaseHub Pages Examples Gallery',
-  totalSamples: samples.length,
+  totalSamples: samples.length + 1,
   categories: categorized
 };
 
 fs.writeFileSync(outputFile, JSON.stringify(output, null, 2));
-console.log(`Generated samples.json with ${samples.length} samples in ${sortedCategories.length} categories`);
+console.log(`Generated samples.json with ${samples.length + 1} samples in ${sortedCategories.length} categories`);

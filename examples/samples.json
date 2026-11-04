@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 105,
+  "totalSamples": 110,
   "categories": [
     {
       "category": "Charts",
@@ -1126,6 +1126,12 @@
       "category": "Domain Showcases",
       "samples": [
         {
+          "name": "contacts",
+          "path": "Domain Showcases/contacts/contacts.page.yaml",
+          "category": "Domain Showcases",
+          "file": "contacts.page.yaml"
+        },
+        {
           "name": "FIFA 2022 Goals",
           "path": "Domain Showcases/FIFA 2022 Goals.page.yaml",
           "category": "Domain Showcases",
@@ -1159,6 +1165,19 @@
           ]
         },
         {
+          "name": "helpdesk",
+          "path": "Domain Showcases/helpdesk/helpdesk.page.yaml",
+          "category": "Domain Showcases",
+          "file": "helpdesk.page.yaml",
+          "tags": [
+            "showcase",
+            "helpdesk",
+            "json app",
+            "collections",
+            "crud"
+          ]
+        },
+        {
           "name": "Most Spoken Languages",
           "path": "Domain Showcases/Most Spoken Languages.page.yaml",
           "category": "Domain Showcases",
@@ -1179,6 +1198,12 @@
             "clinical",
             "tracker"
           ]
+        },
+        {
+          "name": "platform",
+          "path": "Domain Showcases/platform/platform.page.yaml",
+          "category": "Domain Showcases",
+          "file": "platform.page.yaml"
         },
         {
           "name": "Podman Stats",
@@ -1203,6 +1228,12 @@
           ]
         },
         {
+          "name": "tasks",
+          "path": "Domain Showcases/tasks/tasks.page.yaml",
+          "category": "Domain Showcases",
+          "file": "tasks.page.yaml"
+        },
+        {
           "name": "Workforce Analytics",
           "path": "Domain Showcases/Workforce Analytics.page.yaml",
           "category": "Domain Showcases",
@@ -1218,6 +1249,18 @@
     {
       "category": "Server",
       "samples": [
+        {
+          "name": "Apps Within Apps",
+          "path": "apps-demo.html",
+          "category": "Server",
+          "file": "apps-demo.html",
+          "tags": [
+            "server",
+            "apps",
+            "composition",
+            "catalogue"
+          ]
+        },
         {
           "name": "Live Event Stream",
           "path": "Server/Live Event Stream.page.yaml",

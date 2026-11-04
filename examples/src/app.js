@@ -393,6 +393,18 @@ function applyPropertyOverrides(yamlText) {
 // Load sample in target div using pages loadSite
 async function loadSampleInTarget(samplePath) {
     try {
+        // HTML samples load via iframe
+        if (samplePath.endsWith('.html')) {
+            if (currentSite) { currentSite.dispose(); currentSite = null; }
+            sampleTarget.innerHTML = '';
+            renderConfigBar([], samplePath, null);
+            const iframe = document.createElement('iframe');
+            iframe.src = samplePath;
+            iframe.style.cssText = 'width:100%;height:100%;border:none;min-height:600px;';
+            sampleTarget.appendChild(iframe);
+            return;
+        }
+
         const response = await fetch(`samples/${samplePath}`);
         let yamlText = await response.text();
 

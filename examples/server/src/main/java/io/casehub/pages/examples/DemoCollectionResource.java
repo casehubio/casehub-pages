@@ -63,6 +63,12 @@ public class DemoCollectionResource {
     @GET
     public Response list(@PathParam("appId") String appId,
                          @PathParam("collection") String collection) {
+        if (collection.startsWith("_")) {
+            var store = registry.getStore();
+            var docs = store.listAll("platform", "platform", collection);
+            return Response.ok(docs).build();
+        }
+
         DataContext ctx = new DataContext(appId);
         MutableDataProvider provider = resolveProvider(appId, collection);
         if (provider == null) return noProviderResponse(appId, collection);
@@ -91,6 +97,13 @@ public class DemoCollectionResource {
     public Response get(@PathParam("appId") String appId,
                         @PathParam("collection") String collection,
                         @PathParam("id") String id) {
+        if (collection.startsWith("_")) {
+            DataContext ctx = new DataContext("platform");
+            return registry.getStore().get(ctx, "platform", collection, id)
+                .map(doc -> Response.ok(doc).build())
+                .orElseThrow(() -> new MutationException("NOT_FOUND", "Not found"));
+        }
+
         DataContext ctx = new DataContext(appId);
         MutableDataProvider provider = resolveProvider(appId, collection);
         if (provider == null) return noProviderResponse(appId, collection);
