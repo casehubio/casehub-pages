@@ -1,0 +1,27 @@
+pages:
+- name: Dashboard
+  components:
+  - type: title
+    properties:
+      text: Open Tickets
+      size: h3
+  - type: metric
+    properties:
+      lookup:
+        uuid: tickets
+
+- name: Ticket Queue
+  components:
+  - type: data-table
+    properties:
+      sortable: true
+      lookup:
+        uuid: tickets
+
+- name: Agents
+  components:
+  - type: data-table
+    properties:
+      sortable: true
+      lookup:
+        uuid: agents

@@ -168,6 +168,26 @@ public class JsonCollectionStore {
         }
     }
 
+
+    public java.util.List<JsonNode> listAll(String tenantId, String appId, String collection) {
+        String                   sql     = "SELECT data FROM json_documents WHERE tenant_id = ? AND app_id = ? AND collection = ? ORDER BY json_extract(data, '$.order') ASC, json_extract(data, '$.name') ASC";
+        java.util.List<JsonNode> results = new java.util.ArrayList<>();
+        try (Connection conn = connectionFactory.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tenantId);
+            ps.setString(2, appId);
+            ps.setString(3, collection);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    results.add(MAPPER.readTree(rs.getString("data")));
+                }
+            }
+        } catch (Exception e) {
+            throw new MutationException("STORAGE_ERROR", "Failed to list documents: " + e.getMessage(), e);
+        }
+        return results;
+    }
+
     public int countDocuments(String tenantId, String appId, String collection) {
         String sql = "SELECT COUNT(*) FROM json_documents WHERE tenant_id = ? AND app_id = ? AND collection = ?";
         try (Connection conn = connectionFactory.getConnection();

@@ -22,10 +22,12 @@ public final class AppDescriptorParser {
             throw new IllegalArgumentException("YAML input must not be null for app: " + appId);
         }
         try {
-            JsonNode root = YAML.readTree(yaml);
+            JsonNode            root        = YAML.readTree(yaml);
             List<CollectionDef> collections = parseCollections(root.get("collections"));
-            List<LabelTreeDef> labelTrees = parseLabelTrees(root.get("labels"));
-            return new AppDescriptor(appId, collections, labelTrees);
+            List<LabelTreeDef>  labelTrees  = parseLabelTrees(root.get("labels"));
+            List<ParamDef>      params      = parseParams(root.get("params"));
+            AppAccessPolicy     access      = parseAccess(root.get("access"));
+            return new AppDescriptor(appId, collections, labelTrees, params, access);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to parse app.yaml for app: " + appId, e);
         }
@@ -88,6 +90,37 @@ public final class AppDescriptorParser {
             result.add(item.asText());
         }
         return List.copyOf(result);
+    }
+
+
+    private static List<ParamDef> parseParams(JsonNode paramsNode) {
+        if (paramsNode == null || !paramsNode.isArray()) {return List.of();}
+
+        List<ParamDef> result = new ArrayList<>();
+        for (JsonNode paramNode : paramsNode) {
+            String  name         = paramNode.get("name").asText();
+            String  type         = paramNode.has("type") ? paramNode.get("type").asText() : "string";
+            boolean required     = paramNode.has("required") && paramNode.get("required").asBoolean();
+            String  defaultValue = paramNode.has("default") ? paramNode.get("default").asText() : null;
+            result.add(new ParamDef(name, type, required, defaultValue));
+        }
+        return List.copyOf(result);
+    }
+
+    private static AppAccessPolicy parseAccess(JsonNode accessNode) {
+        if (accessNode == null || !accessNode.isObject()) {return AppAccessPolicy.DEFAULT;}
+
+        AppAccessPolicy.AccessRule read  = parseAccessRule(accessNode.get("read"));
+        AppAccessPolicy.AccessRule write = parseAccessRule(accessNode.get("write"));
+        if (write == null) {write = new AppAccessPolicy.AccessRule(List.of("admin", "developer"));}
+        if (read == null) {read = new AppAccessPolicy.AccessRule(List.of());}
+        return new AppAccessPolicy(read, write);
+    }
+
+    private static AppAccessPolicy.AccessRule parseAccessRule(JsonNode ruleNode) {
+        if (ruleNode == null || !ruleNode.isObject()) {return null;}
+        List<String> roles = parseStringArray(ruleNode.get("roles"));
+        return new AppAccessPolicy.AccessRule(roles);
     }
 
     private static List<LabelTreeDef> parseLabelTrees(JsonNode labelsNode) {

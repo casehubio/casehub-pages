@@ -52,7 +52,14 @@ public class JsonDataProvider implements MutableDataProvider {
 
     @Override
     public boolean canHandle(String dataSetId) {
-        return dataSetId != null && dataSetId.startsWith(PREFIX);
+        if (dataSetId == null || !dataSetId.startsWith(PREFIX)) {return false;}
+        String rest  = dataSetId.substring(PREFIX.length());
+        int    slash = rest.indexOf('/');
+        if (slash >= 0) {
+            String collection = rest.substring(slash + 1);
+            if (collection.startsWith("_")) {return false;}
+        }
+        return true;
     }
 
     @Override

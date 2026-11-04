@@ -269,7 +269,7 @@ export function parsePage(raw: unknown): Component {
  * ```
  * Items are placed left-to-right within rows, top-to-bottom across rows.
  */
-function parsePageContent(
+export function parsePageContent(
   pageRaw: Record<string, unknown>,
   pageIndex: number,
   displayerDefaults?: Record<string, unknown>,

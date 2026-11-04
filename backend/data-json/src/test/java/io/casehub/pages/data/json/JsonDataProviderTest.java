@@ -45,6 +45,16 @@ class JsonDataProviderTest {
     }
 
     @Test
+    void canHandle_rejects_system_collections() {
+        assertThat(provider.canHandle("json:helpdesk/_pages")).isFalse();
+        assertThat(provider.canHandle("json:helpdesk/_apps")).isFalse();
+        assertThat(provider.canHandle("json:any/_system")).isFalse();
+        assertThat(provider.canHandle("json:helpdesk/tickets")).isTrue();
+        assertThat(provider.canHandle("json:helpdesk/pages_public")).isTrue();
+    }
+
+
+    @Test
     void crud_through_provider() {
         DataContext ctx = new DataContext("integration-test");
         ObjectNode doc = MAPPER.createObjectNode().put("subject", "Integration Test").put("status", "OPEN");
@@ -89,19 +99,19 @@ class JsonDataProviderTest {
     @Test
     void query_with_filter_and_sort() {
         DataContext ctx = new DataContext("filter-sort-test");
-        provider.create(ctx, "tasks",
-            MAPPER.createObjectNode().put("title", "Task A").put("priority", 3), "title");
-        provider.create(ctx, "tasks",
-            MAPPER.createObjectNode().put("title", "Task B").put("priority", 1), "title");
-        provider.create(ctx, "tasks",
-            MAPPER.createObjectNode().put("title", "Task C").put("priority", 2), "title");
+        provider.create(ctx, "work_items",
+                        MAPPER.createObjectNode().put("title", "Task A").put("priority", 3), "title");
+        provider.create(ctx, "work_items",
+                        MAPPER.createObjectNode().put("title", "Task B").put("priority", 1), "title");
+        provider.create(ctx, "work_items",
+                        MAPPER.createObjectNode().put("title", "Task C").put("priority", 2), "title");
 
         FilterExpression filter = new FilterExpression.Numeric("priority", Map.of("gte", 2));
-        SortOp sort = new SortOp(List.of(new SortColumn("priority", true)));
+        SortOp           sort   = new SortOp(List.of(new SortColumn("priority", true)));
         DataSetLookup lookup = new DataSetLookup(
-            "json:filter-sort-test/tasks",
-            List.of(new FilterOp(List.of(filter)), sort),
-            null);
+                "json:filter-sort-test/work_items",
+                List.of(new FilterOp(List.of(filter)), sort),
+                null);
 
         QueryResult result = provider.query(lookup);
 
