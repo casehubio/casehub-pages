@@ -1,0 +1,224 @@
+datasets:
+- uuid: contacts
+  url: /api/apps/contacts/contacts
+  mutable:
+    keyColumn: id
+    createUrl: /api/apps/contacts/contacts
+    updateUrl: /api/apps/contacts/contacts/{id}
+    deleteUrl: /api/apps/contacts/contacts/{id}
+  columns:
+  - id: id
+    type: TEXT
+  - id: firstName
+    type: TEXT
+  - id: lastName
+    type: TEXT
+  - id: email
+    type: TEXT
+  - id: phone
+    type: TEXT
+  - id: company
+    type: TEXT
+  - id: role
+    type: TEXT
+  - id: category
+    type: LABEL
+  - id: status
+    type: LABEL
+
+pages:
+- name: index
+  components:
+  - type: tabs
+    properties:
+      navGroupId: ContactsNav
+      width: 100%
+
+- name: All Contacts
+  rows:
+  - columns:
+    - span: 4
+      components:
+      - type: selector
+        properties:
+          subtype: labels
+          filter:
+            selfApply: true
+            notification: true
+          lookup:
+            uuid: contacts
+            group:
+            - columnGroup:
+                source: category
+              functions:
+              - source: category
+    - span: 4
+      components:
+      - type: selector
+        properties:
+          subtype: labels
+          filter:
+            selfApply: true
+            notification: true
+          lookup:
+            uuid: contacts
+            group:
+            - columnGroup:
+                source: status
+              functions:
+              - source: status
+  - columns:
+    - components:
+      - type: data-table
+        properties:
+          pageSize: 15
+          sortable: true
+          filter:
+            listening: true
+            notification: true
+          lookup:
+            uuid: contacts
+          columns:
+          - id: firstName
+          - id: lastName
+          - id: email
+          - id: company
+          - id: category
+          - id: status
+
+- name: Contact Detail
+  dataScope:
+    dataset: contacts
+    idColumn: id
+  save:
+    trigger: auto
+    delay: 2000
+    adapter: rest
+  components:
+  - type: title
+    properties:
+      text: Contact Detail
+      size: h2
+  - input:
+      field: firstName
+      label: First Name
+      required: true
+  - input:
+      field: lastName
+      label: Last Name
+      required: true
+  - input:
+      field: email
+      label: Email
+  - input:
+      field: phone
+      label: Phone
+  - input:
+      field: company
+      label: Company
+  - input:
+      field: role
+      label: Role
+  - select:
+      field: category
+      label: Category
+      options:
+        values:
+        - CUSTOMER
+        - PARTNER
+        - VENDOR
+        - INTERNAL
+  - select:
+      field: status
+      label: Status
+      options:
+        values:
+        - ACTIVE
+        - INACTIVE
+        - ARCHIVED
+
+- name: New Contact
+  components:
+  - type: title
+    properties:
+      text: Add Contact
+      size: h2
+  - schema-form:
+      schema:
+        properties:
+          firstName: { type: string, minLength: 1 }
+          lastName: { type: string, minLength: 1 }
+          email: { type: string }
+          phone: { type: string }
+          company: { type: string }
+          role: { type: string }
+          category: { type: string, enum: [CUSTOMER, PARTNER, VENDOR, INTERNAL] }
+        required: [firstName, lastName, category]
+      forceCreate: true
+      labels:
+        firstName: First Name
+        lastName: Last Name
+      submitUrl: /api/apps/contacts/contacts
+      submitMethod: POST
+
+- name: By Company
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: title
+        properties:
+          text: Contacts by Company
+          size: h3
+      - type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: contacts
+            filter:
+            - column: status
+              function: EQUALS_TO
+              args:
+              - ACTIVE
+            group:
+            - columnGroup:
+                source: company
+              functions:
+              - source: company
+              - source: id
+                function: COUNT
+    - span: 6
+      components:
+      - type: title
+        properties:
+          text: By Category
+          size: h3
+      - type: pie-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: contacts
+            filter:
+            - column: status
+              function: EQUALS_TO
+              args:
+              - ACTIVE
+            group:
+            - columnGroup:
+                source: category
+              functions:
+              - source: category
+              - source: id
+                function: COUNT
+
+navTree:
+  root_items:
+  - type: GROUP
+    id: ContactsNav
+    children:
+    - page: All Contacts
+    - page: Contact Detail
+    - page: New Contact
+    - page: By Company

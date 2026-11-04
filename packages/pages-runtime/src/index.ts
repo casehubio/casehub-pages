@@ -45,3 +45,13 @@ export { injectAnimationStyles, animateFrameEnter, animateFrameExit, animateFram
 export type { WireOptions } from "./wire-floating-workspace.js";
 export { renderAccordion } from "./frame-accordion.js";
 export type { AccordionHandle, AccordionState } from "./frame-accordion.js";
+
+export { PageApiClient } from "./page-api.js";
+export type { PageMetadata, PageDocument } from "./page-api.js";
+export { DynamicPageLoader } from "./dynamic-page-loader.js";
+export type { DynamicPageLoaderOptions } from "./dynamic-page-loader.js";
+export { LruCache } from "./lru-cache.js";
+export type { LruCacheOptions } from "./lru-cache.js";
+export { extractUrlParams } from "./url-params.js";
+export type { ParamDef } from "./url-params.js";
+export { renderErrorBoundary } from "./error-boundary.js";

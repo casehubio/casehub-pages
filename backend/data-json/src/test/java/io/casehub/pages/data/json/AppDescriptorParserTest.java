@@ -89,6 +89,53 @@ class AppDescriptorParserTest {
         assertThat(descriptor.labelTrees()).isEmpty();
     }
 
+
+    @Test
+    void parses_params_declaration() {
+        InputStream yaml = getClass().getClassLoader()
+                                     .getResourceAsStream("org/apps/helpdesk/app.yaml");
+
+        AppDescriptor descriptor = AppDescriptorParser.parse("helpdesk", yaml);
+
+        assertThat(descriptor.params()).hasSize(1);
+        ParamDef ticketId = descriptor.params().get(0);
+        assertThat(ticketId.name()).isEqualTo("ticketId");
+        assertThat(ticketId.type()).isEqualTo("string");
+        assertThat(ticketId.required()).isFalse();
+        assertThat(ticketId.defaultValue()).isNull();
+    }
+
+    @Test
+    void parses_access_policy() {
+        InputStream yaml = getClass().getClassLoader()
+                                     .getResourceAsStream("org/apps/helpdesk/app.yaml");
+
+        AppDescriptor descriptor = AppDescriptorParser.parse("helpdesk", yaml);
+
+        assertThat(descriptor.access()).isNotNull();
+        assertThat(descriptor.access().read().roles()).containsExactly("authenticated");
+        assertThat(descriptor.access().write().roles()).containsExactly("admin", "developer");
+    }
+
+    @Test
+    void missing_access_returns_default_policy() {
+        String yaml = "collections:\n  items:\n    fields:\n      - name: title\n        type: string\n";
+        AppDescriptor descriptor = AppDescriptorParser.parse("minimal",
+                                                             new java.io.ByteArrayInputStream(yaml.getBytes()));
+
+        assertThat(descriptor.access().read().roles()).isEmpty();
+        assertThat(descriptor.access().write().roles()).containsExactly("admin", "developer");
+    }
+
+    @Test
+    void missing_params_returns_empty_list() {
+        String yaml = "collections:\n  items:\n    fields:\n      - name: title\n        type: string\n";
+        AppDescriptor descriptor = AppDescriptorParser.parse("minimal",
+                                                             new java.io.ByteArrayInputStream(yaml.getBytes()));
+
+        assertThat(descriptor.params()).isEmpty();
+    }
+
     @Test
     void rejects_null_input() {
         assertThatThrownBy(() -> AppDescriptorParser.parse("test", null))

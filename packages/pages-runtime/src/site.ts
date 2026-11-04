@@ -34,10 +34,10 @@ import type {PagesFilterDetail} from "@casehubio/pages-viz/dist/base/filter-type
 import type {SelectionChangeDetail} from "@casehubio/pages-table";
 import {typedRowToRecord} from "./selection-bridge.js";
 import {dispatchSelectionToHostPanels, dispatchSelectionClearAll} from "./selection-forwarding.js";
-import {buildPagePathMap} from "./page-paths.js";
+import {buildPagePathMap, extendPagePathMap} from "./page-paths.js";
 import {buildDataSetScope, resolveDataSetDef} from "./dataset-scope.js";
 import type {ActiveSlots} from "./navigation.js";
-import {buildPageIndex, computeCurrentPage, walkNavigate} from "./navigation.js";
+import {buildPageIndex, computeCurrentPage, extendPageIndex, walkNavigate} from "./navigation.js";
 import {createActivationCallback} from "./activation.js";
 import type {ComponentRegistry} from "./registry.js";
 import type {VizTarget} from "./data-pipeline.js";
@@ -70,6 +70,11 @@ import type {ContainerState} from "@casehubio/pages-component";
 import type {Container} from "./frame-sandbox/types.js";
 import {captureContainerState} from "./container-tree-ops.js";
 import {migrateFrameLayout} from "./layout-migration.js";
+import {PageApiClient} from "./page-api.js";
+import {DynamicPageLoader} from "./dynamic-page-loader.js";
+import {renderErrorBoundary} from "./error-boundary.js";
+import {extractUrlParams} from "./url-params.js";
+import type {ParamDef} from "./url-params.js";
 
 // --- Event detail interfaces for typed CustomEvent access ---
 
@@ -141,6 +146,7 @@ export interface SiteOptions {
   readonly zoneEngine?: ZoneLayoutEngine;
   readonly editMode?: boolean;
   readonly onYamlChange?: (yaml: string) => void;
+  readonly appId?: string;
 }
 
 export async function loadSite(
@@ -179,6 +185,31 @@ export async function loadSite(
   const pagePathMap = buildPagePathMap(root);
   const dataSetScope = buildDataSetScope(root, pagePathMap);
   const pageIndex = buildPageIndex(root, pagePathMap);
+
+  const dynamicPageNames = new Set<string>();
+  let dynamicLoader: DynamicPageLoader | undefined;
+
+  if (options?.appId) {
+    const fetchFn = options.fetch ?? globalThis.fetch.bind(globalThis);
+    const devTokenFn = options.devAuth ? createDevAuthTokenFn() : undefined;
+    const tokenFn = devTokenFn ? () => devTokenFn() ?? undefined : undefined;
+    const client = new PageApiClient(options.appId, fetchFn, options.baseUrl, tokenFn);
+    const globalDefaults = (root.props?.["global"] ?? root.props?.["settings"]) as Record<string, unknown> | undefined;
+    dynamicLoader = new DynamicPageLoader(client, globalDefaults);
+
+    try {
+      const meta = await dynamicLoader.fetchIndex();
+      for (const entry of meta) {
+        if (pageIndex.has(entry.name)) continue;
+        const placeholder: Component = { type: "page", props: { name: entry.name } };
+        extendPagePathMap(placeholder, entry.name, pagePathMap);
+        extendPageIndex(placeholder, pagePathMap, pageIndex);
+        dynamicPageNames.add(entry.name);
+      }
+    } catch {
+      // Index fetch failed — dynamic pages unavailable, static pages still work
+    }
+  }
 
   const registry: ComponentRegistry = new Map();
   const activeSlots: ActiveSlots = new Map();
@@ -252,6 +283,7 @@ export async function loadSite(
   });
 
   let _navigating = false;
+  let _navGeneration = 0;
   let currentPage = "";
 
   function onBeforeUnload(e: BeforeUnloadEvent): void {
@@ -385,6 +417,35 @@ export async function loadSite(
   function navigateInternal(path: string): void {
     _navigating = true;
     const segments = path.split("/").filter(Boolean);
+    const pageName = segments.join("/");
+
+    if (dynamicLoader && dynamicPageNames.has(pageName)) {
+      currentPage = pageName;
+      contextManager.updatePage(currentPage, currentPage);
+      contextManager.clearAllSelections();
+      dispatchSelectionClearAll(registry);
+      const gen = ++_navGeneration;
+      _navigating = false;
+
+      dynamicLoader.fetchPage(pageName)
+        .then(component => {
+          if (gen !== _navGeneration) return;
+          const dynamicContainer = ensureDynamicContainer(target);
+          dynamicContainer.innerHTML = "";
+          renderComponent(dynamicContainer, component, { permissions, onNode });
+          hideStaticContent(target);
+        })
+        .catch(err => {
+          if (gen !== _navGeneration) return;
+          const dynamicContainer = ensureDynamicContainer(target);
+          dynamicContainer.innerHTML = "";
+          renderErrorBoundary(dynamicContainer, pageName, err instanceof Error ? err : new Error(String(err)));
+          hideStaticContent(target);
+        });
+      return;
+    }
+
+    showStaticContent(target);
     currentPage = walkNavigate(root, segments, target, lazyPageResolutions);
     contextManager.updatePage(currentPage, currentPage);
     contextManager.clearAllSelections();
@@ -1485,7 +1546,54 @@ export async function loadSite(
     syncUrl("replaceState");
   }
 
+  if (typeof window !== "undefined") {
+    const paramDefs = root.props?.["properties"] as readonly ParamDef[] | undefined;
+    const urlParams = extractUrlParams(window.location.search, paramDefs);
+    if (Object.keys(urlParams).length > 0) {
+      contextManager.updateParams(urlParams);
+    }
+  }
+
   return site;
+}
+
+function ensureDynamicContainer(target: HTMLElement): HTMLElement {
+  let container = target.querySelector<HTMLElement>("[data-dynamic-page]");
+  if (!container) {
+    container = document.createElement("div");
+    container.setAttribute("data-dynamic-page", "");
+    target.appendChild(container);
+  }
+  return container;
+}
+
+function hideStaticContent(target: HTMLElement): void {
+  for (const child of Array.from(target.children)) {
+    const el = child as HTMLElement;
+    if (!el.hasAttribute("data-dynamic-page")) {
+      el.dataset.pagesDisplay = el.style.display;
+      el.style.display = "none";
+    }
+  }
+}
+
+function showStaticContent(target: HTMLElement): void {
+  const dynamicContainer = target.querySelector<HTMLElement>("[data-dynamic-page]");
+  if (dynamicContainer) {
+    dynamicContainer.innerHTML = "";
+    dynamicContainer.style.display = "none";
+  }
+  for (const child of Array.from(target.children)) {
+    if (!(child as HTMLElement).hasAttribute("data-dynamic-page")) {
+      const saved = (child as HTMLElement).dataset.pagesDisplay;
+      if (saved !== undefined) {
+        (child as HTMLElement).style.display = saved;
+        delete (child as HTMLElement).dataset.pagesDisplay;
+      } else {
+        (child as HTMLElement).style.display = "";
+      }
+    }
+  }
 }
 
 function showErrorBanner(container: HTMLElement, message: string): void {

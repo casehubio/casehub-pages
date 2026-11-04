@@ -51,3 +51,14 @@ labels:
     - P2/High
     - P3/Medium
     - P4/Low
+
+params:
+  - name: ticketId
+    type: string
+    required: false
+
+access:
+  read:
+    roles: [authenticated]
+  write:
+    roles: [admin, developer]

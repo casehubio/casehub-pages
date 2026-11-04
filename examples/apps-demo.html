@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" class="pages-theme-casehub-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaseHub — Apps Within Apps</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Inter, system-ui, sans-serif;
+            background: var(--pages-surface-0, #0f172a);
+            color: var(--pages-text-primary, #e2e8f0);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            background: var(--pages-surface-1, #1e293b);
+            border-bottom: 1px solid var(--pages-border, #334155);
+        }
+        header h1 { font-size: 16px; font-weight: 600; }
+        .app-nav {
+            display: flex;
+            gap: 8px;
+            margin-left: 24px;
+        }
+        .app-nav button {
+            padding: 6px 16px;
+            border: 1px solid var(--pages-border, #475569);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--pages-text-secondary, #94a3b8);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+        .app-nav button:hover {
+            background: var(--pages-surface-2, #334155);
+            color: var(--pages-text-primary, #e2e8f0);
+        }
+        .app-nav button.active {
+            background: var(--pages-primary, #3b82f6);
+            color: white;
+            border-color: var(--pages-primary, #3b82f6);
+        }
+        .app-nav button[data-source="static"]::after {
+            content: "";
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        main {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+        #app-container { height: 100%; }
+        .status { padding: 8px 24px; font-size: 11px; color: #64748b; background: #0f172a; border-top: 1px solid #1e293b; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>CaseHub Platform</h1>
+        <div class="app-nav" id="app-nav">
+            <button class="active" data-app="catalogue">Catalogue</button>
+        </div>
+    </header>
+    <main>
+        <div id="app-container"></div>
+    </main>
+    <div class="status" id="status">Loading apps...</div>
+    <script src="casehub-bundle.js"></script>
+    <script>
+        const SERVER = 'http://localhost:8090';
+        const container = document.getElementById('app-container');
+        const nav = document.getElementById('app-nav');
+        const status = document.getElementById('status');
+
+        let currentSite = null;
+        let discoveredApps = [];
+
+        // Wire catalogue button
+        document.querySelector('[data-app="catalogue"]').onclick = () => showCatalogue(discoveredApps);
+
+        async function loadAppCatalogue() {
+            try {
+                const res = await fetch(`${SERVER}/api/apps/platform/_apps`);
+                discoveredApps = await res.json();
+                status.textContent = `${discoveredApps.length} apps discovered`;
+
+                // Build navigation
+                for (const app of discoveredApps) {
+                    if (app.appId === 'platform') continue;
+                    const btn = document.createElement('button');
+                    btn.textContent = app.name || app.appId;
+                    btn.dataset.app = app.appId;
+                    if (app.source === 'static') btn.dataset.source = 'static';
+                    btn.title = app.description || '';
+                    btn.onclick = () => switchApp(app.appId);
+                    nav.appendChild(btn);
+                }
+
+                // Show catalogue view
+                showCatalogue(discoveredApps);
+            } catch (e) {
+                status.textContent = 'Failed to connect to backend: ' + e.message;
+            }
+        }
+
+        function showCatalogue(apps) {
+            container.innerHTML = '';
+            setActive('catalogue');
+
+            const catalogueYaml = `
+pages:
+- name: App Catalogue
+  rows:
+  - columns:
+    - span: 3
+      components:
+      - type: title
+        properties:
+          text: Available Apps
+          size: h3
+      - type: metric
+        properties:
+          lookup:
+            uuid: apps-catalogue
+            group:
+            - functions:
+              - source: appId
+                function: COUNT
+          columns:
+          - id: appId
+            pattern: '#'
+    - span: 9
+      components:
+      - type: title
+        properties:
+          text: Applications
+          size: h3
+      - type: data-table
+        properties:
+          pageSize: 20
+          sortable: true
+          lookup:
+            uuid: apps-catalogue
+          columns:
+          - id: name
+          - id: appId
+          - id: description
+          - id: route
+          - id: source
+
+datasets:
+- uuid: apps-catalogue
+  url: ${SERVER}/api/apps/platform/_apps
+  columns:
+  - id: appId
+    type: TEXT
+  - id: name
+    type: TEXT
+  - id: description
+    type: TEXT
+  - id: route
+    type: TEXT
+  - id: source
+    type: LABEL
+
+navTree:
+  root_items:
+  - type: GROUP
+    id: CatalogueNav
+    children:
+    - page: App Catalogue
+`;
+            loadYaml(catalogueYaml);
+        }
+
+        async function switchApp(appId) {
+            setActive(appId);
+            status.textContent = 'Loading ' + appId + '...';
+
+            try {
+                // Fetch the page YAML from the gallery samples
+                const samplePath = `samples/Domain Showcases/${appId}/${appId}.page.yaml`;
+                const res = await fetch(samplePath);
+                if (!res.ok) throw new Error(`Sample not found: ${samplePath}`);
+                const yaml = await res.text();
+                container.innerHTML = '';
+                loadYaml(yaml);
+                status.textContent = appId + ' loaded';
+            } catch (e) {
+                container.innerHTML = '<div style="padding:24px;color:#f87171;">Failed to load ' + appId + ': ' + e.message + '</div>';
+                status.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        async function loadYaml(yaml) {
+            try {
+                if (currentSite) {
+                    currentSite.dispose();
+                    currentSite = null;
+                    container.innerHTML = '';
+                }
+                currentSite = await casehubPages.loadSite(container, yaml, {
+                    baseUrl: SERVER,
+                    fetch: (url, opts) => fetch(url, { ...opts, mode: 'cors' })
+                });
+            } catch (e) {
+                container.innerHTML = '<div style="padding:24px;color:#f87171;">Render error: ' + e.message + '</div>';
+            }
+        }
+
+        function setActive(appId) {
+            nav.querySelectorAll('button').forEach(b => {
+                b.classList.toggle('active', b.dataset.app === appId);
+            });
+        }
+
+        // Start
+        casehubPages.applyTheme('casehub-dark');
+        loadAppCatalogue();
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+access:
+  read:
+    roles: [authenticated]
+  write:
+    roles: [admin]

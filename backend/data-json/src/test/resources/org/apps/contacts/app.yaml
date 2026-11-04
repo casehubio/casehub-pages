@@ -1,0 +1,29 @@
+collections:
+  contacts:
+    fields:
+      - name: firstName
+        type: string
+      - name: lastName
+        type: string
+      - name: email
+        type: string
+      - name: phone
+        type: string
+      - name: company
+        type: string
+      - name: role
+        type: string
+      - name: category
+        type: enum
+        values: [CUSTOMER, PARTNER, VENDOR, INTERNAL]
+      - name: status
+        type: enum
+        values: [ACTIVE, INACTIVE, ARCHIVED]
+    data:
+      - data/contacts.json
+
+access:
+  read:
+    roles: [authenticated]
+  write:
+    roles: [admin, developer]

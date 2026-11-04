@@ -21,6 +21,16 @@ class AppRegistryTest {
     }
 
     @Test
+    void discovers_contacts_and_tasks_apps() {
+        assertThat(registry.getRegisteredApps()).contains("contacts", "tasks");
+        assertThat(registry.getDescriptor("contacts")).isPresent();
+        assertThat(registry.getDescriptor("contacts").get().collections()).extracting("name").contains("contacts");
+        assertThat(registry.getDescriptor("tasks")).isPresent();
+        assertThat(registry.getDescriptor("tasks").get().collections()).extracting("name").contains("tasks", "notes");
+    }
+
+
+    @Test
     void returns_descriptor_for_registered_app() {
         Optional<AppDescriptor> descriptor = registry.getDescriptor("helpdesk");
         assertThat(descriptor).isPresent();
@@ -34,6 +44,31 @@ class AppRegistryTest {
         assertThat(schema.get().fieldTypes()).containsKey("subject");
         assertThat(schema.get().fieldTypes().get("subject")).isEqualTo("string");
     }
+
+    @Test
+    void registers_pages_system_collection_for_each_app() {
+        Optional<CollectionSchema> schema = registry.getSchema("helpdesk", "_pages");
+        assertThat(schema).isPresent();
+        assertThat(schema.get().fieldTypes()).containsKeys("name", "yaml", "description", "icon", "order", "author", "labels", "source", "sourceHash");
+        assertThat(schema.get().fieldTypes().get("name")).isEqualTo("string");
+        assertThat(schema.get().fieldTypes().get("yaml")).isEqualTo("string");
+        assertThat(schema.get().fieldTypes().get("order")).isEqualTo("number");
+        assertThat(schema.get().fieldTypes().get("labels")).isEqualTo("array");
+        assertThat(schema.get().defaults()).containsEntry("order", (Object) 0);
+    }
+
+    @Test
+    void registers_apps_system_collection_for_each_app() {
+        Optional<CollectionSchema> schema = registry.getSchema("helpdesk", "_apps");
+        assertThat(schema).isPresent();
+        assertThat(schema.get().fieldTypes()).containsKeys("appId", "name", "description", "icon", "order", "route", "labels", "source");
+        assertThat(schema.get().fieldTypes().get("appId")).isEqualTo("string");
+        assertThat(schema.get().fieldTypes().get("name")).isEqualTo("string");
+        assertThat(schema.get().fieldTypes().get("order")).isEqualTo("number");
+        assertThat(schema.get().fieldTypes().get("labels")).isEqualTo("array");
+        assertThat(schema.get().defaults()).containsEntry("order", (Object) 0);
+    }
+
 
     @Test
     void returns_schema_with_enum_encoding() {
