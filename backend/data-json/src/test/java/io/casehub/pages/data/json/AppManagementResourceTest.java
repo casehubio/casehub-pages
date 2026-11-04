@@ -138,6 +138,70 @@ class AppManagementResourceTest {
                 .then().statusCode(404);
     }
 
+
+    @Test
+    void disabled_app_pages_return_404() {
+        String appId = "gated-pages-" + System.nanoTime();
+        createDynamicApp(appId);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(Map.of("action", "stop"))
+                .post("/api/apps/" + appId + "/lifecycle")
+                .then().statusCode(200);
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .get("/api/apps/" + appId + "/pages")
+                .then().statusCode(404)
+                .body("error", containsString("disabled"));
+    }
+
+    @Test
+    void disabled_app_child_apps_return_404() {
+        String appId = "gated-catalogue-" + System.nanoTime();
+        createDynamicApp(appId);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(Map.of("action", "stop"))
+                .post("/api/apps/" + appId + "/lifecycle")
+                .then().statusCode(200);
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .get("/api/apps/" + appId + "/apps")
+                .then().statusCode(404)
+                .body("error", containsString("disabled"));
+    }
+
+    @Test
+    void reenabled_app_pages_return_200() {
+        String appId = "gated-reenable-" + System.nanoTime();
+        createDynamicApp(appId);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(Map.of("action", "stop"))
+                .post("/api/apps/" + appId + "/lifecycle")
+                .then().statusCode(200);
+
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body(Map.of("action", "start"))
+                .post("/api/apps/" + appId + "/lifecycle")
+                .then().statusCode(200);
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .get("/api/apps/" + appId + "/pages")
+                .then().statusCode(200);
+    }
+
     private void createDynamicApp(String appId) {
         given()
                 .contentType(ContentType.JSON)

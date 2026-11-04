@@ -55,6 +55,8 @@ public class PageResource {
     @GET
     public Response list(@PathParam("appId") String appId,
                          @QueryParam("label") String labelFilter) {
+        Response gate = checkAppEnabled(appId);
+        if (gate != null) return gate;
         AppAccessPolicy access = resolveAccess(appId);
         if (!access.read().isSatisfiedBy(ResourceUtils.extractRoles(jwt))) {
             return Response.status(403).entity(Map.of("error", "Insufficient read permissions")).build();
@@ -81,6 +83,8 @@ public class PageResource {
     @Path("/{name}")
     public Response get(@PathParam("appId") String appId,
                         @PathParam("name") String name) {
+        Response gate = checkAppEnabled(appId);
+        if (gate != null) return gate;
         AppAccessPolicy access = resolveAccess(appId);
         if (!access.read().isSatisfiedBy(ResourceUtils.extractRoles(jwt))) {
             return Response.status(403).entity(Map.of("error", "Insufficient read permissions")).build();
@@ -97,6 +101,8 @@ public class PageResource {
 
     @POST
     public Response create(@PathParam("appId") String appId, JsonNode body) {
+        Response gate = checkAppEnabled(appId);
+        if (gate != null) return gate;
         if (!(body instanceof ObjectNode obj)) {
             return Response.status(400).entity(Map.of("error", "Expected JSON object")).build();
         }
@@ -150,6 +156,8 @@ public class PageResource {
                            @PathParam("name") String name,
                            @HeaderParam("If-Match") String ifMatch,
                            JsonNode changes) {
+        Response gate = checkAppEnabled(appId);
+        if (gate != null) return gate;
         if (!(changes instanceof ObjectNode changesObj)) {
             return Response.status(400).entity(Map.of("error", "Expected JSON object")).build();
         }
@@ -192,6 +200,8 @@ public class PageResource {
     @Path("/{name}")
     public Response delete(@PathParam("appId") String appId,
                            @PathParam("name") String name) {
+        Response gate = checkAppEnabled(appId);
+        if (gate != null) return gate;
         AppAccessPolicy access = resolveAccess(appId);
         if (!access.write().isSatisfiedBy(ResourceUtils.extractRoles(jwt))) {
             return Response.status(403).entity(Map.of("error", "Insufficient write permissions")).build();
@@ -226,5 +236,12 @@ public class PageResource {
     }
 
 
+    private Response checkAppEnabled(String appId) {
+        if (!appRegistry.isAppEnabled(appId)) {
+            return Response.status(404)
+                           .entity(Map.of("error", "App is disabled: " + appId)).build();
+        }
+        return null;
+    }
 }
 
