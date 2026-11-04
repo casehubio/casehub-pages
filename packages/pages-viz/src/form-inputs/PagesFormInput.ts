@@ -1,10 +1,12 @@
 import { type PropertyValues } from "lit";
 import { property } from "lit/decorators.js";
 import { PagesElement } from "../base/PagesElement.js";
-import type { FormInputCommon } from "@casehubio/pages-component";
+import type { FormInputCommon, FieldSchema } from "@casehubio/pages-component";
 import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 import type { ActionRequest, ActionCallbacks, SubmitConfig } from "@casehubio/pages-component";
+import type { FieldViolation } from "@casehubio/pages-component";
+import { validateField } from "@casehubio/pages-component";
 
 export interface PagesFieldChangeDetail {
   readonly field: string;
@@ -26,6 +28,9 @@ export abstract class PagesFormInput<
   @property({ attribute: false }) errorMessage: string | undefined;
   @property({ type: Boolean, attribute: false }) required = false;
   @property({ attribute: false }) describedBy: string | undefined;
+  @property({ attribute: false }) serverViolations?: readonly FieldViolation[];
+  @property({ type: Boolean }) validateOnBlur = true;
+  @property({ attribute: false }) fieldSchema?: FieldSchema;
 
   set editable(value: boolean) {
     this._editable = value;
@@ -144,5 +149,18 @@ export abstract class PagesFormInput<
         detail: { field, value, committed },
       }),
     );
+  }
+
+  protected _handleBlur(): void {
+    if (!this.validateOnBlur || !this.fieldSchema) return;
+    const error = validateField(this.fieldSchema, this.currentValue, this.required);
+    this.errorMessage = error ?? undefined;
+  }
+
+  protected _handleFocus(): void {
+    if (this.serverViolations?.length) {
+      this.serverViolations = undefined;
+      this.errorMessage = undefined;
+    }
   }
 }

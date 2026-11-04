@@ -1,1 +1,1 @@
-export { validateField } from './validate-field.js';
+export { validateField, validateFieldAll } from './validate-field.js';

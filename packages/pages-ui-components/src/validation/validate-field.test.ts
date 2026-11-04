@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateField } from './validate-field.js';
+import { validateField, validateFieldAll } from './validate-field.js';
 
 
 describe('validateField', () => {
@@ -105,5 +105,44 @@ describe('validateField', () => {
 
   it('returns null for valid number within constraints', () => {
     expect(validateField({ type: 'number', minimum: 0, maximum: 100 }, 50, false)).toBeNull();
+  });
+});
+
+describe('validateFieldAll', () => {
+  it('returns all violations for a field with multiple failures', () => {
+    const result = validateFieldAll({ type: 'string', minLength: 5, pattern: '^[A-Z]' }, 'ab', false);
+    expect(result).toHaveLength(2);
+    expect(result[0].constraint).toBe('minLength');
+    expect(result[1].constraint).toBe('pattern');
+  });
+
+  it('returns empty array for valid value', () => {
+    const result = validateFieldAll({ type: 'string', minLength: 2 }, 'Hello', false);
+    expect(result).toHaveLength(0);
+  });
+
+  it('includes params in violations', () => {
+    const result = validateFieldAll({ type: 'string', minLength: 5 }, 'ab', false);
+    expect(result[0].params).toEqual({ min: 5 });
+  });
+
+  it('returns required violation for empty required value', () => {
+    const result = validateFieldAll({ type: 'string' }, '', true);
+    expect(result).toHaveLength(1);
+    expect(result[0].constraint).toBe('required');
+  });
+
+  it('returns all number violations', () => {
+    const result = validateFieldAll({ type: 'number', minimum: 10, multipleOf: 3 }, 7, false);
+    expect(result).toHaveLength(2);
+    expect(result.map(v => v.constraint)).toContain('minimum');
+    expect(result.map(v => v.constraint)).toContain('multipleOf');
+  });
+
+  it('returns array constraint violations', () => {
+    const result = validateFieldAll({ type: 'array', minItems: 3 }, ['a'], false);
+    expect(result).toHaveLength(1);
+    expect(result[0].constraint).toBe('minItems');
+    expect(result[0].params).toEqual({ min: 3 });
   });
 });

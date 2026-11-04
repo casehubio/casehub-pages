@@ -66,4 +66,33 @@ class MutationExceptionMapperTest {
         assertThat(ex.getCause()).isSameAs(cause);
         assertThat(ex.code()).isEqualTo("NOT_FOUND");
     }
+
+    @Test
+    void schemaViolationWithViolationsReturns422WithStructuredBody() {
+        var violations = java.util.List.of(
+                new FieldViolation("name", "minLength", Map.of("min", 5), "must be at least 5 characters"),
+                new FieldViolation("name", "pattern", Map.of("pattern", "^[A-Z]"), "must match pattern")
+                                          );
+        var ex       = new SchemaViolationException("name: minLength; name: pattern", violations);
+        var response = mapper.toResponse(ex);
+        assertThat(response.getStatus()).isEqualTo(422);
+        @SuppressWarnings("unchecked")
+        var entity = (java.util.LinkedHashMap<String, Object>) response.getEntity();
+        assertThat(entity.get("error")).isEqualTo("VALIDATION_FAILED");
+        @SuppressWarnings("unchecked")
+        var violationsList = (java.util.List<Map<String, Object>>) entity.get("violations");
+        assertThat(violationsList).hasSize(2);
+        assertThat(violationsList.get(0).get("field")).isEqualTo("name");
+        assertThat(violationsList.get(0).get("constraint")).isEqualTo("minLength");
+    }
+
+    @Test
+    void schemaViolationWithoutViolationsReturns400() {
+        var ex       = new SchemaViolationException("Field 'name' expected type 'string'");
+        var response = mapper.toResponse(ex);
+        assertThat(response.getStatus()).isEqualTo(400);
+        @SuppressWarnings("unchecked")
+        var entity = (Map<String, String>) response.getEntity();
+        assertThat(entity.get("code")).isEqualTo("SCHEMA_VIOLATION");
+    }
 }

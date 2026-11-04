@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.casehub.pages.data.CollectionSchema;
 import io.casehub.pages.data.DataCacheService;
 import io.casehub.pages.data.DataContext;
-import io.casehub.pages.data.SchemaViolationException;
 import io.casehub.pages.data.SlugUtils;
 import io.casehub.platform.api.identity.TenancyConstants;
 import io.quarkus.security.Authenticated;
@@ -129,11 +128,7 @@ public class PageResource {
             return Response.status(400).entity(Map.of("error", e.getMessage())).build();
         }
 
-        try {
-            validateSchema(appId, obj);
-        } catch (SchemaViolationException e) {
-            return Response.status(400).entity(Map.of("error", e.getMessage())).build();
-        }
+        validateSchema(appId, obj);
 
         String sluggedName = SlugUtils.slugify(name);
         if (isStaticPage(sluggedName)) {
@@ -179,11 +174,7 @@ public class PageResource {
             }
         }
 
-        try {
-            validateSchema(appId, changesObj);
-        } catch (SchemaViolationException e) {
-            return Response.status(400).entity(Map.of("error", e.getMessage())).build();
-        }
+        validateSchema(appId, changesObj);
 
         DataContext         ctx             = new DataContext(STORE_ID);
         JsonCollectionStore store           = appRegistry.getStore();

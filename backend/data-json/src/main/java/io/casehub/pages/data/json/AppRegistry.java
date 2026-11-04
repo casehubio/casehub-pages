@@ -294,6 +294,8 @@ public class AppRegistry {
         Map<String, Object> defaults   = new LinkedHashMap<>();
         Map<String, String> refs       = new LinkedHashMap<>();
 
+        Map<String, CollectionSchema.FieldConstraints> fieldConstraints = new LinkedHashMap<>();
+
         for (FieldDef field : col.fields()) {
             String typeStr = switch (field.type()) {
                 case ENUM -> "enum:" + String.join(",", field.enumValues());
@@ -307,7 +309,24 @@ public class AppRegistry {
             if (field.ref() != null) {
                 refs.put(field.name(), field.ref());
             }
+
+            boolean hasConstraints = field.required() || field.minLength() != null
+                || field.maxLength() != null || field.pattern() != null
+                || field.minimum() != null || field.maximum() != null
+                || field.exclusiveMinimum() != null || field.exclusiveMaximum() != null
+                || field.multipleOf() != null || field.format() != null;
+            if (hasConstraints || field.type() == FieldType.ENUM) {
+                fieldConstraints.put(field.name(), new CollectionSchema.FieldConstraints(
+                    field.type().toJson(), field.required(),
+                    field.minLength(), field.maxLength(), field.pattern(),
+                    field.minimum(), field.maximum(),
+                    field.exclusiveMinimum(), field.exclusiveMaximum(),
+                    field.multipleOf(),
+                    field.enumValues().isEmpty() ? null : field.enumValues(),
+                    field.format()
+                ));
+            }
         }
-        return new CollectionSchema(col.name(), fieldTypes, defaults, refs);
+        return new CollectionSchema(col.name(), fieldTypes, defaults, refs, fieldConstraints);
     }
 }

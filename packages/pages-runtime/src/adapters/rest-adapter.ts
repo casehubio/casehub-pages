@@ -1,4 +1,23 @@
-import type { SaveAdapter, SaveResult } from "../save-adapter.js";
+import type { FieldViolation, SaveAdapter, SaveResult } from "../save-adapter.js";
+
+async function parseValidationErrors(response: Response): Promise<SaveResult | undefined> {
+  if (response.status !== 422) return undefined;
+  try {
+    const body: Record<string, unknown> = await response.json() as Record<string, unknown>;
+    if (body.error === "VALIDATION_FAILED" && Array.isArray(body.violations)) {
+      const fieldErrors: FieldViolation[] = (body.violations as Record<string, unknown>[]).map((v) => ({
+        field: String(v.field ?? ""),
+        constraint: String(v.constraint ?? ""),
+        params: (v.params as Readonly<Record<string, unknown>>) ?? {},
+        message: String(v.message ?? ""),
+      }));
+      return { success: false, error: "VALIDATION_FAILED", fieldErrors };
+    }
+  } catch {
+    // JSON parse failed — fall through
+  }
+  return undefined;
+}
 
 export interface RestAdapterConfig {
   readonly method?: "PUT" | "PATCH" | "POST";
@@ -31,6 +50,8 @@ export function createRestAdapter(
         });
 
         if (!response.ok) {
+          const validationResult = await parseValidationErrors(response);
+          if (validationResult) return validationResult;
           return { success: false, error: `HTTP ${String(response.status)}: ${response.statusText}` };
         }
 
@@ -56,6 +77,8 @@ export function createRestAdapter(
           body: JSON.stringify(record),
         });
         if (!response.ok) {
+          const validationResult = await parseValidationErrors(response);
+          if (validationResult) return validationResult;
           return { success: false, error: `HTTP ${String(response.status)}: ${response.statusText}` };
         }
         const contentType = response.headers.get("content-type");
@@ -77,6 +100,8 @@ export function createRestAdapter(
           headers: config?.headers ?? {},
         });
         if (!response.ok) {
+          const validationResult = await parseValidationErrors(response);
+          if (validationResult) return validationResult;
           return { success: false, error: `HTTP ${String(response.status)}: ${response.statusText}` };
         }
         return { success: true };

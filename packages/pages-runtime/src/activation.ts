@@ -32,24 +32,7 @@ import {lookupPanel} from "./panel-registry.js";
 import type {ConfigurablePanel, DataReceiver} from "@casehubio/pages-component";
 import {createFormFieldProxy, createHostPanelProxy} from "./form-field-proxy.js";
 
-function validateFormField(
-  schema: { minLength?: number; maxLength?: number; minimum?: number; maximum?: number; pattern?: string },
-  value: unknown,
-  required: boolean,
-): string | null {
-  if (required && (value === null || value === undefined || value === "")) return "Required";
-  if (value === null || value === undefined || value === "") return null;
-  if (typeof value === "string") {
-    if (schema.pattern != null && !new RegExp(schema.pattern).test(value)) return "Invalid format";
-    if (schema.minLength != null && value.length < schema.minLength) return `Must be at least ${schema.minLength} characters`;
-    if (schema.maxLength != null && value.length > schema.maxLength) return `Must be at most ${schema.maxLength} characters`;
-  }
-  if (typeof value === "number") {
-    if (schema.minimum != null && value < schema.minimum) return `Must be at least ${schema.minimum}`;
-    if (schema.maximum != null && value > schema.maximum) return `Must be at most ${schema.maximum}`;
-  }
-  return null;
-}
+import { validateField as validateFormField } from "@casehubio/pages-component";
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
 import type {FloatingWorkspaceProps, ContentFactory, ContainerState} from "@casehubio/pages-component";

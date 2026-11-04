@@ -43,6 +43,7 @@
         <jandex-maven-plugin.version>3.3.1</jandex-maven-plugin.version>
         <sqlite-jdbc.version>3.53.1.0</sqlite-jdbc.version>
         <hikaricp.version>7.0.2</hikaricp.version>
+        <json-schema-validator.version>1.5.6</json-schema-validator.version>
     </properties>
 
     <dependencyManagement>
@@ -116,6 +117,11 @@
                 <groupId>io.casehub</groupId>
                 <artifactId>casehub-platform-yaml-core</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.networknt</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>${json-schema-validator.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

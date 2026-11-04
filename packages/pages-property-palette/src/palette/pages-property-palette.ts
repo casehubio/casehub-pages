@@ -83,6 +83,7 @@ export class PagesPropertyPalette extends LitElement {
   @property({ attribute: false }) source: PropertyPaletteSource | undefined;
   @property({ attribute: false }) resolver: EditorResolver | undefined;
   @property() paletteId: string | undefined;
+  @property({ type: Boolean, attribute: 'validate-on-change' }) validateOnChange = true;
 
   @state() private _showAdvanced = false;
   @state() private _errors: Map<string, string> = new Map();
@@ -372,13 +373,15 @@ export class PagesPropertyPalette extends LitElement {
     required: boolean,
   ): void {
     const pathKey = fieldPath.join('.');
-    const error = validateField(schema, value, required);
-    if (error) {
-      this._errors = new Map(this._errors).set(pathKey, error);
-    } else {
-      const next = new Map(this._errors);
-      next.delete(pathKey);
-      this._errors = next;
+    if (this.validateOnChange) {
+      const error = validateField(schema, value, required);
+      if (error) {
+        this._errors = new Map(this._errors).set(pathKey, error);
+      } else {
+        const next = new Map(this._errors);
+        next.delete(pathKey);
+        this._errors = next;
+      }
     }
     this.source?.onChange(fieldPath, value);
     this.requestUpdate();

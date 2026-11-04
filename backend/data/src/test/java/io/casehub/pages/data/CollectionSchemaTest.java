@@ -94,4 +94,81 @@ class CollectionSchemaTest {
 
         assertThat(schema.refs()).containsEntry("assignee", "agents");
     }
+
+    @Test
+    void validateToResult_rejects_minLength_violation() {
+        var constraints = Map.of("name", new CollectionSchema.FieldConstraints(
+                "string", false, 5, null, null, null, null, null, null, null, null, null));
+        CollectionSchema schema = new CollectionSchema("tickets",
+                                                       Map.of("name", "string"), Map.of(), Map.of(), constraints);
+
+        ObjectNode             doc    = MAPPER.createObjectNode().put("name", "ab");
+        SchemaValidationResult result = schema.validateToResult(doc);
+
+        assertThat(result.valid()).isFalse();
+        assertThat(result.violations()).hasSize(1);
+        assertThat(result.violations().get(0).field()).isEqualTo("name");
+        assertThat(result.violations().get(0).constraint()).isEqualTo("minLength");
+    }
+
+    @Test
+    void validateToResult_rejects_required_missing() {
+        var constraints = Map.of("name", new CollectionSchema.FieldConstraints(
+                "string", true, null, null, null, null, null, null, null, null, null, null));
+        CollectionSchema schema = new CollectionSchema("tickets",
+                                                       Map.of("name", "string"), Map.of(), Map.of(), constraints);
+
+        ObjectNode             doc    = MAPPER.createObjectNode();
+        SchemaValidationResult result = schema.validateToResult(doc);
+
+        assertThat(result.valid()).isFalse();
+        assertThat(result.violations()).anySatisfy(v ->
+                                                           assertThat(v.constraint()).isEqualTo("required"));
+    }
+
+    @Test
+    void validateToResult_accepts_valid_document() {
+        var constraints = Map.of("name", new CollectionSchema.FieldConstraints(
+                "string", true, 2, 50, null, null, null, null, null, null, null, null));
+        CollectionSchema schema = new CollectionSchema("tickets",
+                                                       Map.of("name", "string"), Map.of(), Map.of(), constraints);
+
+        ObjectNode             doc    = MAPPER.createObjectNode().put("name", "Valid Name");
+        SchemaValidationResult result = schema.validateToResult(doc);
+
+        assertThat(result.valid()).isTrue();
+        assertThat(result.violations()).isEmpty();
+    }
+
+    @Test
+    void validate_throws_with_violations() {
+        var constraints = Map.of("name", new CollectionSchema.FieldConstraints(
+                "string", true, 5, null, null, null, null, null, null, null, null, null));
+        CollectionSchema schema = new CollectionSchema("tickets",
+                                                       Map.of("name", "string"), Map.of(), Map.of(), constraints);
+
+        ObjectNode doc = MAPPER.createObjectNode().put("name", "ab");
+
+        assertThatThrownBy(() -> schema.validate(doc))
+                .isInstanceOf(SchemaViolationException.class)
+                .satisfies(e -> {
+                    SchemaViolationException sve = (SchemaViolationException) e;
+                    assertThat(sve.violations()).isNotEmpty();
+                    assertThat(sve.violations().get(0).field()).isEqualTo("name");
+                });
+    }
+
+    @Test
+    void validateToResult_reports_multiple_violations() {
+        var constraints = Map.of("name", new CollectionSchema.FieldConstraints(
+                "string", false, 5, null, "^[A-Z]", null, null, null, null, null, null, null));
+        CollectionSchema schema = new CollectionSchema("tickets",
+                                                       Map.of("name", "string"), Map.of(), Map.of(), constraints);
+
+        ObjectNode             doc    = MAPPER.createObjectNode().put("name", "ab");
+        SchemaValidationResult result = schema.validateToResult(doc);
+
+        assertThat(result.valid()).isFalse();
+        assertThat(result.violations().size()).isGreaterThanOrEqualTo(2);
+    }
 }

@@ -21,8 +21,12 @@ export interface SaveAdapter {
   ): Promise<SaveResult>;
 }
 
+import type { FieldViolation } from "@casehubio/pages-component";
+export type { FieldViolation } from "@casehubio/pages-component";
+
 export interface SaveResult {
   readonly success: boolean;
   readonly error?: string;
   readonly updatedRecord?: Readonly<Record<string, unknown>>;
+  readonly fieldErrors?: readonly FieldViolation[];
 }

@@ -567,10 +567,12 @@ export async function loadSite(
       target.dispatchEvent(
         new CustomEvent("pages-save-error", {
           bubbles: true,
-          detail: { pagePath, error: result.error ?? "Save failed" },
+          detail: { pagePath, error: result.error ?? "Save failed", fieldErrors: result.fieldErrors },
         }),
       );
-      showErrorBanner(target, result.error ?? "Save failed");
+      if (!result.fieldErrors?.length) {
+        showErrorBanner(target, result.error ?? "Save failed");
+      }
     }
   }
 
@@ -901,9 +903,11 @@ export async function loadSite(
         } else {
           target.dispatchEvent(new CustomEvent("pages-save-error", {
             bubbles: true,
-            detail: { pagePath: entry.pagePath, error: result.error ?? "Create failed" },
+            detail: { pagePath: entry.pagePath, error: result.error ?? "Create failed", fieldErrors: result.fieldErrors },
           }));
-          showErrorBanner(target, result.error ?? "Create failed");
+          if (!result.fieldErrors?.length) {
+            showErrorBanner(target, result.error ?? "Create failed");
+          }
           resolve?.({ success: false, error: result.error ?? "Create failed" });
         }
       })
@@ -940,9 +944,11 @@ export async function loadSite(
         } else {
           target.dispatchEvent(new CustomEvent("pages-save-error", {
             bubbles: true,
-            detail: { pagePath: entry.pagePath, error: result.error ?? "Delete failed" },
+            detail: { pagePath: entry.pagePath, error: result.error ?? "Delete failed", fieldErrors: result.fieldErrors },
           }));
-          showErrorBanner(target, result.error ?? "Delete failed");
+          if (!result.fieldErrors?.length) {
+            showErrorBanner(target, result.error ?? "Delete failed");
+          }
         }
       })
       .catch((err: unknown) => {

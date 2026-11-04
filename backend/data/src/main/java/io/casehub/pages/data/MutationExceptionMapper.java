@@ -5,13 +5,32 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Provider
 public class MutationExceptionMapper implements ExceptionMapper<MutationException> {
     @Override
     public Response toResponse(MutationException e) {
+        if (e instanceof SchemaViolationException sve && !sve.violations().isEmpty()) {
+            var body = new LinkedHashMap<String, Object>();
+            body.put("error", "VALIDATION_FAILED");
+            body.put("violations", sve.violations().stream()
+                .map(v -> Map.of(
+                    "field", v.field(),
+                    "constraint", v.constraint(),
+                    "params", v.params(),
+                    "message", v.message()
+                ))
+                .toList());
+            return Response.status(422)
+                .entity(body)
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+
         int status = switch (e.code()) {
+            case "SCHEMA_VIOLATION" -> 400;
             case "VALIDATION_ERROR" -> 422;
             case "VERSION_CONFLICT", "SLUG_CONFLICT", "REF_DELETE_BLOCKED" -> 409;
             case "NOT_FOUND" -> 404;

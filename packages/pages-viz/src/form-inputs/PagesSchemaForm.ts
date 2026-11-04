@@ -5,6 +5,7 @@ import type { DataSetLookup } from "@casehubio/pages-data";
 import type { SchemaFormProps, FieldSchema } from "@casehubio/pages-component";
 import { resolveSchemaRefs, isFormValueProvider } from "@casehubio/pages-component";
 import { validateField } from "./schema-types.js";
+import type { FieldViolation } from "@casehubio/pages-component";
 import {
   deriveSchemaFromDataSet,
   mapFieldToComponentType,
@@ -184,6 +185,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
         <pages-property-palette
           .source=${source}
           .resolver=${this._resolver}
+          .validateOnChange=${this.props?.validateOnBlur !== false}
         ></pages-property-palette>
         ${isCreateMode && !isDisplay && !this._fieldsOnly ? html`
           <div class="submit-bar">
@@ -317,6 +319,15 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       this._palette.setFieldErrors(fieldErrors);
     }
     return allValid;
+  }
+
+  setServerErrors(errors: ReadonlyMap<string, readonly FieldViolation[]>): void {
+    if (!this._palette) return;
+    const fieldErrors = new Map<string, string | undefined>();
+    for (const [field, violations] of errors) {
+      fieldErrors.set(field, violations[0]?.message);
+    }
+    this._palette.setFieldErrors(fieldErrors);
   }
 
   submit(): Record<string, unknown> | null {

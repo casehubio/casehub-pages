@@ -59,7 +59,19 @@ public final class AppDescriptorParser {
             Object defaultValue = parseDefault(fieldNode.get("default"), type);
             List<String> enumValues = parseStringArray(fieldNode.get("values"));
             String ref = fieldNode.has("ref") ? fieldNode.get("ref").asText() : null;
-            result.add(new FieldDef(name, type, defaultValue, enumValues, ref));
+            boolean required = fieldNode.has("required") && fieldNode.get("required").asBoolean();
+            Integer minLength = optionalInt(fieldNode, "minLength");
+            Integer maxLength = optionalInt(fieldNode, "maxLength");
+            String pattern = fieldNode.has("pattern") ? fieldNode.get("pattern").asText() : null;
+            Number minimum = optionalNumber(fieldNode, "minimum");
+            Number maximum = optionalNumber(fieldNode, "maximum");
+            Number exclusiveMinimum = optionalNumber(fieldNode, "exclusiveMinimum");
+            Number exclusiveMaximum = optionalNumber(fieldNode, "exclusiveMaximum");
+            Number multipleOf = optionalNumber(fieldNode, "multipleOf");
+            String format = fieldNode.has("format") ? fieldNode.get("format").asText() : null;
+            result.add(new FieldDef(name, type, defaultValue, enumValues, ref,
+                required, minLength, maxLength, pattern, minimum, maximum,
+                exclusiveMinimum, exclusiveMaximum, multipleOf, format));
         }
         return List.copyOf(result);
     }
@@ -81,6 +93,14 @@ public final class AppDescriptorParser {
             result.add(item.asText());
         }
         return List.copyOf(result);
+    }
+
+    private static Integer optionalInt(JsonNode parent, String key) {
+        return parent.has(key) ? parent.get(key).asInt() : null;
+    }
+
+    private static Number optionalNumber(JsonNode parent, String key) {
+        return parent.has(key) ? parent.get(key).numberValue() : null;
     }
 
     private static List<String> parseDataFiles(JsonNode node) {

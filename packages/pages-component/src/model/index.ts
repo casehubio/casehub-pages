@@ -126,7 +126,8 @@ export type { FormScopeProps } from "./form-scope-types.js";
 export type { SubmitButtonProps } from "./submit-button-types.js";
 
 // Field validation and access
-export { validateField } from "./field-validation.js";
+export { validateField, validateFieldAll } from "./field-validation.js";
+export type { FieldViolation } from "./field-validation.js";
 export { readFieldValue, setFieldError, STANDALONE_TYPES } from "./field-access.js";
 
 // Form input types

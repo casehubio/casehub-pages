@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.casehub.pages.data.CollectionSchema;
 import io.casehub.pages.data.DataCacheService;
 import io.casehub.pages.data.DataContext;
-import io.casehub.pages.data.SchemaViolationException;
 import io.casehub.pages.data.SlugUtils;
 import io.casehub.platform.api.identity.TenancyConstants;
 import io.quarkus.security.Authenticated;
@@ -124,11 +123,7 @@ public class AppCatalogueResource {
             return Response.status(400).entity(Map.of("error", "App name is required")).build();
         }
 
-        try {
-            validateSchema(appId, obj);
-        } catch (SchemaViolationException e) {
-            return Response.status(400).entity(Map.of("error", e.getMessage())).build();
-        }
+        validateSchema(appId, obj);
 
         DataContext         ctx   = new DataContext(STORE_ID);
         JsonCollectionStore store = appRegistry.getStore();
@@ -174,11 +169,7 @@ public class AppCatalogueResource {
             return Response.status(409).entity(Map.of("error", "Static apps are immutable: " + childAppId)).build();
         }
 
-        try {
-            validateSchema(appId, changesObj);
-        } catch (SchemaViolationException e) {
-            return Response.status(400).entity(Map.of("error", e.getMessage())).build();
-        }
+        validateSchema(appId, changesObj);
 
         OptionalInt expectedVersion = ResourceUtils.parseIfMatch(ifMatch);
         store.update(ctx, STORE_ID, APPS_COLLECTION, childAppId, changesObj, expectedVersion, MergeStrategy.RFC_7396);
