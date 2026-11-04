@@ -51,19 +51,26 @@ public class AppRegistry {
                                                                       Map.of("order", (Object) 0),
                                                                       Map.of()
     );
-    static final CollectionSchema APPS_SCHEMA  = new CollectionSchema("_apps",
-                                                                      Map.of(
-                                                                              "appId", "string",
-                                                                              "name", "string",
-                                                                              "description", "string",
-                                                                              "icon", "string",
-                                                                              "order", "number",
-                                                                              "route", "string",
-                                                                              "labels", "array",
-                                                                              "source", "string"
-                                                                            ),
-                                                                      Map.of("order", (Object) 0),
-                                                                      Map.of()
+    static final CollectionSchema APPS_SCHEMA = new CollectionSchema("_apps",
+                                                                     Map.ofEntries(
+                                                                             Map.entry("appId", "string"),
+                                                                             Map.entry("name", "string"),
+                                                                             Map.entry("description", "string"),
+                                                                             Map.entry("icon", "string"),
+                                                                             Map.entry("order", "number"),
+                                                                             Map.entry("route", "string"),
+                                                                             Map.entry("labels", "array"),
+                                                                             Map.entry("source", "string"),
+                                                                             Map.entry("enabled", "boolean"),
+                                                                             Map.entry("displayName", "string"),
+                                                                             Map.entry("autoSeed", "boolean"),
+                                                                             Map.entry("maxDocuments", "number")
+                                                                                  ),
+                                                                     Map.of("order", (Object) 0,
+                                                                            "enabled", (Object) true,
+                                                                            "autoSeed", (Object) true,
+                                                                            "maxDocuments", (Object) (-1)),
+                                                                     Map.of()
     );
 
 
@@ -109,6 +116,14 @@ public class AppRegistry {
         }
         return Optional.empty();
     }
+
+    public boolean isAppEnabled(String appId) {
+        DataContext ctx = new DataContext(TenancyConstants.PLATFORM_TENANT_ID);
+        return store.get(ctx, TenancyConstants.PLATFORM_TENANT_ID, "_apps", appId)
+                    .map(doc -> !doc.has("enabled") || doc.get("enabled").asBoolean(true))
+                    .orElse(true);
+    }
+
 
     public static boolean isLabelRef(String ref) {
         return ref != null && ref.startsWith("labels/");

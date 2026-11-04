@@ -94,4 +94,29 @@ class AppRegistryTest {
     void returns_empty_for_unknown_collection() {
         assertThat(registry.getSchema("helpdesk", "nonexistent")).isEmpty();
     }
+
+    @Test
+    void isAppEnabled_returns_true_for_registered_app() {
+        assertThat(registry.isAppEnabled("contacts")).isTrue();
+    }
+
+    @Test
+    void isAppEnabled_returns_true_for_unknown_app() {
+        assertThat(registry.isAppEnabled("nonexistent-app-xyz")).isTrue();
+    }
+
+    @Test
+    void apps_schema_includes_settings_fields() {
+        Optional<CollectionSchema> schema = registry.getSchema("helpdesk", "_apps");
+        assertThat(schema).isPresent();
+        assertThat(schema.get().fieldTypes()).containsKeys("enabled", "displayName", "autoSeed", "maxDocuments");
+        assertThat(schema.get().fieldTypes().get("enabled")).isEqualTo("boolean");
+        assertThat(schema.get().fieldTypes().get("displayName")).isEqualTo("string");
+        assertThat(schema.get().fieldTypes().get("autoSeed")).isEqualTo("boolean");
+        assertThat(schema.get().fieldTypes().get("maxDocuments")).isEqualTo("number");
+        assertThat(schema.get().defaults()).containsEntry("enabled", (Object) true);
+        assertThat(schema.get().defaults()).containsEntry("autoSeed", (Object) true);
+        assertThat(schema.get().defaults()).containsEntry("maxDocuments", (Object) (-1));
+    }
+
 }
