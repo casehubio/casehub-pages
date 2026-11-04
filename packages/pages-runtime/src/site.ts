@@ -35,7 +35,7 @@ import type {SelectionChangeDetail} from "@casehubio/pages-table";
 import {typedRowToRecord} from "./selection-bridge.js";
 import {dispatchSelectionToHostPanels, dispatchSelectionClearAll} from "./selection-forwarding.js";
 import {buildPagePathMap, extendPagePathMap} from "./page-paths.js";
-import {buildDataSetScope, resolveDataSetDef} from "./dataset-scope.js";
+import {buildDataSetScope, extendDataSetScope, resolveDataSetDef} from "./dataset-scope.js";
 import type {ActiveSlots} from "./navigation.js";
 import {buildPageIndex, computeCurrentPage, extendPageIndex, walkNavigate} from "./navigation.js";
 import {createActivationCallback} from "./activation.js";
@@ -430,6 +430,9 @@ export async function loadSite(
       dynamicLoader.fetchPage(pageName)
         .then(component => {
           if (gen !== _navGeneration) return;
+          extendPagePathMap(component, pageName, pagePathMap);
+          const inheritedScope = dataSetScope.get(pageName) ?? new Map();
+          extendDataSetScope(component, inheritedScope, pagePathMap, dataSetScope);
           const dynamicContainer = ensureDynamicContainer(target);
           dynamicContainer.innerHTML = "";
           renderComponent(dynamicContainer, component, { permissions, onNode });
