@@ -167,6 +167,45 @@ describe("template-parser", () => {
       );
     });
 
+    it("upgrades params.* escape to html when mode is none", () => {
+      const ctx: RuntimeContext = {
+        filter: {},
+        datasets: {},
+        page: { name: "test", path: "/test" },
+        params: { name: '<script>alert("xss")</script>' },
+        selection: {},
+      };
+      expect(resolveTemplate("#{params.name}", ctx, "none")).toBe(
+        "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;"
+      );
+    });
+
+    it("does not upgrade params.* escape when mode is already html", () => {
+      const ctx: RuntimeContext = {
+        filter: {},
+        datasets: {},
+        page: { name: "test", path: "/test" },
+        params: { name: '<b>bold</b>' },
+        selection: {},
+      };
+      expect(resolveTemplate("#{params.name}", ctx, "html")).toBe(
+        "&lt;b&gt;bold&lt;/b&gt;"
+      );
+    });
+
+    it("upgrades only params.* vars in mixed templates", () => {
+      const ctx: RuntimeContext = {
+        filter: { html: ["<b>trusted</b>"] },
+        datasets: {},
+        page: { name: "test", path: "/test" },
+        params: { name: '<i>untrusted</i>' },
+        selection: {},
+      };
+      expect(resolveTemplate("#{filter.html} #{params.name}", ctx, "none")).toBe(
+        "<b>trusted</b> &lt;i&gt;untrusted&lt;/i&gt;"
+      );
+    });
+
     it("resolves page properties", () => {
       const ctx: RuntimeContext = {
         filter: {},

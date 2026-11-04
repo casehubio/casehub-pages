@@ -77,8 +77,10 @@ export function resolveTemplate(
   escape: EscapeMode
 ): string {
   return template.replace(/#\{([^}]+)\}/g, (_match, path: string) => {
-    const rawValue = resolvePath(path.trim(), context);
-    return applyEscape(rawValue, escape);
+    const trimmed = path.trim();
+    const rawValue = resolvePath(trimmed, context);
+    const effectiveEscape = (escape === "none" && trimmed.startsWith("params.")) ? "html" : escape;
+    return applyEscape(rawValue, effectiveEscape);
   });
 }
 
