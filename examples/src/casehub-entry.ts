@@ -28,6 +28,7 @@ import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";
 applyTheme('casehub-dark');
 
 export { loadSite, applyTheme, getTheme };
+export { attachGridEditController } from "@casehubio/pages-component";
 export { progressiveInsert };
 export type { LiveSite, SiteOptions };
 

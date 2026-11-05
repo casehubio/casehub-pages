@@ -42,6 +42,7 @@ import type {Container} from "./frame-sandbox/types.js";
 import {createFrameKeyboardHandler} from "./frame-keyboard.js";
 import {configToContainerState} from "./layout-migration.js";
 import {attachDockDrag} from "./dock-drag.js";
+import {attachGridEditController} from "@casehubio/pages-component";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -941,6 +942,12 @@ export function createActivationCallback(
       group.mount(el);
       el.dataset.frameSandbox = "mounted";
       return;
+    }
+
+    // Grid edit controller for any component with positioned items
+    if (component.items?.some(i => i.placement.mode === "positioned")) {
+      const gridProps = component.props as { columns?: number; rowHeight?: number } | undefined;
+      attachGridEditController(el, component.items, gridProps?.columns ?? 12, gridProps?.rowHeight);
     }
 
     // Layout, page, unknown: no activation needed

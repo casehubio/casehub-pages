@@ -316,4 +316,35 @@ describe("TabOrganiser", () => {
       document.body.removeChild(host);
     });
   });
+
+  describe("grid edit coexistence", () => {
+    it("suppresses tab drag when data-grid-editing-active is set on body", () => {
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      const entries = makeEntries("a", "b");
+      const onTabDragStart = vi.fn();
+      const strategy = createTabbedStrategy({
+        onTabDragStart,
+      });
+      strategy.mount(host, entries, testFactory());
+      mockTabBounds(host);
+
+      document.body.setAttribute("data-grid-editing-active", "");
+
+      const btn = host.querySelector("[data-tab-key='a']") as HTMLElement;
+      btn.dispatchEvent(new PointerEvent("pointerdown", {
+        clientX: 0, clientY: 0, bubbles: true, pointerId: 1,
+      }));
+      document.dispatchEvent(new PointerEvent("pointermove", {
+        clientX: 50, clientY: 50, pointerId: 1,
+      }));
+      document.dispatchEvent(new PointerEvent("pointerup", { pointerId: 1 }));
+
+      expect(onTabDragStart).not.toHaveBeenCalled();
+
+      document.body.removeAttribute("data-grid-editing-active");
+      strategy.dispose();
+      document.body.removeChild(host);
+    });
+  });
 });

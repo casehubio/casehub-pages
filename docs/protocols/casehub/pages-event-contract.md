@@ -107,6 +107,7 @@ by the runtime event delegation layer:
 | `pages-compositor-collapse` | Split collapsed (last tab closed) | Compositor |
 | `pages-compositor-view-mode` | View mode toggled | Compositor renderer |
 | `pages-frame-transfer` | Frame moved cross-tab | Compositor transfer |
+| `pages-grid-edit` | Grid DnD move/resize completed | Grid edit controller |
 
 Do not use these names as `pages-event` topics or as custom event names in
 application code — they will collide with the framework's event delegation.

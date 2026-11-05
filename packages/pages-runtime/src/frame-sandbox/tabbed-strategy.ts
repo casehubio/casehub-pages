@@ -77,6 +77,7 @@ export function createTabbedStrategy(
 
     btn.addEventListener("pointerdown", (startEvt) => {
       if (!stripEl) return;
+      if (document.body.hasAttribute("data-grid-editing-active")) return;
       startEvt.preventDefault();
       let didDrag = false;
       let draggedOut = false;
