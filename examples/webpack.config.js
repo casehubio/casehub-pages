@@ -86,12 +86,17 @@ module.exports = (env = {}) => {
           test: /pages-aria[\/]dist[\/]/,
           sideEffects: true,
         },
+        {
+          test: /pages-primitives[\/](?:dist|src)[\/]dock/,
+          sideEffects: true,
+        },
       ],
     },
     entry: {
       "casehub-bundle": path.resolve(__dirname, "src/casehub-entry.ts"),
       "dock-test-bundle": path.resolve(__dirname, "src/dock-test-entry.ts"),
       "diagram-export-tool": path.resolve(__dirname, "src/diagram-export-tool.ts"),
+      "builder-bundle": path.resolve(__dirname, "src/builder-entry.ts"),
     },
     output: {
       path: path.resolve(__dirname, "dist"),

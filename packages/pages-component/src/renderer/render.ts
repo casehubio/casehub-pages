@@ -57,13 +57,19 @@ function renderNode(
     applyLayoutCSS(el, component);
   }
 
-  // 3b. Page-level padding, height propagation, and flex layout
+  // 3b. Page-level padding and height propagation
   if (component.type === "page") {
     el.style.padding = "var(--pages-space-4, 16px)";
     el.style.height = "100%";
     el.style.boxSizing = "border-box";
-    el.style.display = "flex";
-    el.style.flexDirection = "column";
+    if (component.items && component.items.length > 0) {
+      el.style.display = "grid";
+      const columns = isGrid(component) ? (component.props?.columns ?? 12) : 12;
+      el.style.gridTemplateColumns = `repeat(${String(columns)}, 1fr)`;
+    } else {
+      el.style.display = "flex";
+      el.style.flexDirection = "column";
+    }
   }
 
   // 4. Apply Component.style — runs AFTER layout CSS so author overrides win
@@ -96,6 +102,9 @@ function renderNode(
 
   // 6. Render children — items take precedence over slots
   if (component.items && component.items.length > 0) {
+    el.style.display = "grid";
+    const columns = isGrid(component) ? (component.props?.columns ?? 12) : 12;
+    el.style.gridTemplateColumns = `repeat(${String(columns)}, 1fr)`;
     const rowHeight = isGrid(component) ? component.props?.rowHeight : undefined;
     if (rowHeight === undefined) {
       el.style.gridAutoRows = "min-content";
