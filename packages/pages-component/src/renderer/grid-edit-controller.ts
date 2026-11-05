@@ -17,6 +17,8 @@ import {
   hideGhost,
   createEditButton,
   removeEditButton,
+  createInsertionZones,
+  removeInsertionZones,
 } from "./grid-overlay.js";
 
 export interface GridEditController {
@@ -42,6 +44,7 @@ class GridEditControllerImpl implements GridEditController {
   private overlay: HTMLDivElement | null = null;
   private observer: MutationObserver | null = null;
   private priorPosition = "";
+  private _insertionZones: HTMLElement[] = [];
 
   private dragging = false;
   private dragItemId: string | null = null;
@@ -117,6 +120,7 @@ class GridEditControllerImpl implements GridEditController {
     const rect = this.gridEl.getBoundingClientRect();
     this.geometry = computeGridGeometry(rect, this.columns, this.rowHeight, this.gap);
     this.overlay = createGridOverlay(this.gridEl, this.geometry);
+    this._insertionZones = createInsertionZones(this.gridEl, this.geometry, this.items);
 
     this.gridEl.addEventListener("pointerdown", this.onPointerDown);
     this.gridEl.addEventListener("pointermove", this.onPointerMove);
@@ -142,6 +146,7 @@ class GridEditControllerImpl implements GridEditController {
       }
     }
 
+    removeInsertionZones(this._insertionZones);
     removeGridOverlay(this.gridEl);
     this.overlay = null;
 
@@ -156,6 +161,7 @@ class GridEditControllerImpl implements GridEditController {
 
   dispose(): void {
     this.exit();
+    removeInsertionZones(this._insertionZones);
     removeEditButton(this.gridEl);
     this.observer?.disconnect();
     this.observer = null;

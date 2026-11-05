@@ -1,4 +1,5 @@
 import type { GridGeometry } from "./grid-drag.js";
+import type { GridItem } from "../model/types.js";
 import { cellRectToPixel } from "./grid-drag.js";
 
 export function createGridOverlay(
@@ -87,4 +88,91 @@ export function createEditButton(
 export function removeEditButton(gridEl: HTMLElement): void {
   const btn = gridEl.querySelector("[data-grid-edit-button]");
   btn?.remove();
+}
+
+export function createInsertionZones(
+  gridEl: HTMLElement,
+  geometry: GridGeometry,
+  items: readonly GridItem[],
+): HTMLElement[] {
+  const occupied = new Set<string>();
+  for (const item of items) {
+    if (item.placement.mode !== "positioned") continue;
+    const p = item.placement;
+    for (let dx = 0; dx < p.w; dx++) {
+      for (let dy = 0; dy < p.h; dy++) {
+        occupied.add(`${String(p.x + dx)},${String(p.y + dy)}`);
+      }
+    }
+  }
+
+  const maxY = items.reduce((max, item) => {
+    if (item.placement.mode !== "positioned") return max;
+    return Math.max(max, item.placement.y + item.placement.h);
+  }, 0);
+
+  const zones: HTMLElement[] = [];
+
+  for (let y = 0; y < maxY; y++) {
+    for (let x = 0; x < geometry.columns; x++) {
+      if (!occupied.has(`${String(x)},${String(y)}`)) {
+        zones.push(createZoneButton(gridEl, geometry, x, y));
+      }
+    }
+  }
+
+  for (let x = 0; x < geometry.columns; x++) {
+    zones.push(createZoneButton(gridEl, geometry, x, maxY));
+  }
+
+  return zones;
+}
+
+function createZoneButton(
+  gridEl: HTMLElement,
+  geometry: GridGeometry,
+  x: number,
+  y: number,
+): HTMLElement {
+  const btn = gridEl.ownerDocument.createElement("button");
+  btn.textContent = "+";
+  btn.dataset.insertionZone = "true";
+  btn.dataset.x = String(x);
+  btn.dataset.y = String(y);
+  const rect = cellRectToPixel(x, y, 1, 1, geometry);
+  btn.style.position = "absolute";
+  btn.style.left = `${String(rect.left)}px`;
+  btn.style.top = `${String(rect.top)}px`;
+  btn.style.width = `${String(rect.width)}px`;
+  btn.style.height = `${String(rect.height)}px`;
+  btn.style.pointerEvents = "auto";
+  btn.style.opacity = "0.6";
+  btn.style.cursor = "pointer";
+  btn.style.border = "none";
+  btn.style.background = "transparent";
+  btn.style.fontSize = "24px";
+  btn.style.color = "var(--pages-neutral-5)";
+  btn.style.display = "flex";
+  btn.style.alignItems = "center";
+  btn.style.justifyContent = "center";
+
+  btn.addEventListener("click", () => {
+    gridEl.dispatchEvent(new CustomEvent("pages-grid-edit", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        type: "insert",
+        placement: { mode: "positioned", x, y, w: 1, h: 1 },
+        componentType: "placeholder",
+      },
+    }));
+  });
+
+  gridEl.appendChild(btn);
+  return btn;
+}
+
+export function removeInsertionZones(zones: HTMLElement[]): void {
+  for (const z of zones) z.remove();
+  zones.length = 0;
 }
