@@ -27,6 +27,7 @@ import { findPathAtOffset, getNodeRange, classifyPath, getParentPath } from './y
 import { builderHighlightExtension, setHighlightRange } from './yaml-gutter.js';
 import { collectComponentsInScope } from './scope-collector.js';
 import type { FieldSchema } from '@casehubio/pages-component';
+import { GridEditBridge, type GridEditDetail } from './grid-edit-bridge.js';
 
 import '../tree/builder-tree.js';
 import '../palette/builder-palette.js';
@@ -48,7 +49,7 @@ function addBlankEnumOptions(schema: FieldSchema): FieldSchema {
   return { ...schema, properties };
 }
 
-type EditOrigin = 'editor' | 'tree' | 'properties' | 'palette' | 'toolbar';
+type EditOrigin = 'editor' | 'tree' | 'properties' | 'palette' | 'toolbar' | 'grid';
 
 @customElement('pages-builder-shell')
 export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
@@ -190,6 +191,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _clipboardUnsub: (() => void) | undefined;
+  private _gridBridge = new GridEditBridge();
+  private _gridEditHandler = (e: Event) => {
+    const detail = (e as CustomEvent).detail as GridEditDetail;
+    const origin: EditOrigin = detail.type === 'insert' ? 'palette' : 'grid';
+    this._applyEdit(origin, () => this._gridBridge.applyGridEdit(this._document, detail));
+  };
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -200,6 +207,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this.registerShortcut('c', () => this._copySelected(), { description: 'Copy', requiresModifier: true });
     this.registerShortcut('Escape', () => { getClipboard().setInsertMode(false); }, { description: 'Exit insert mode' });
     this._clipboardUnsub = getClipboard().subscribe(() => this._syncTree());
+    this.addEventListener('pages-grid-edit', this._gridEditHandler);
   }
 
   override disconnectedCallback(): void {
@@ -211,6 +219,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._clipboardUnsub?.();
     this._selectionOverlay?.dispose();
     this._selectionOverlayCleanup?.();
+    this.removeEventListener('pages-grid-edit', this._gridEditHandler);
   }
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
