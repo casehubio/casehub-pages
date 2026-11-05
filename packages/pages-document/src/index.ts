@@ -1,4 +1,4 @@
-export { PageDocument, PageNode, RowNode, ColumnNode, DatasetNode, ComponentNode, NavTreeNode } from './page-document.js';
+export { PageDocument, PageNode, RowNode, ColumnNode, DatasetNode, ComponentNode, NavTreeNode, GridItemNode } from './page-document.js';
 export type { ContainerChildren } from './page-document.js';
 export type { Diagnostic, Position, Range, LayoutMode, Unsubscribe } from './types.js';
 export type { ContainerChildDescriptor, SlotDescriptor } from './container-descriptors.js';
