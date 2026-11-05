@@ -193,10 +193,10 @@ describe("layout placement: nested rows inside columns", () => {
     });
     expect(items).toHaveLength(2);
     expect(items[0]!.component.type).toBe("html");
-    expect(items[0]!.placement).toEqual({ x: 0, y: 0, w: 6, h: 1 });
+    expect(items[0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
     // Second item is a grid sub-container
     expect(items[1]!.component.type).toBe("grid");
-    expect(items[1]!.placement).toEqual({ x: 6, y: 0, w: 6, h: 1 });
+    expect(items[1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
     expect(items[1]!.component.items).toHaveLength(2);
   });
 
@@ -256,11 +256,11 @@ describe("layout placement: nested rows inside columns", () => {
     });
     // Parent has 2 items in row 0 + 1 item in row 1
     expect(items).toHaveLength(3);
-    expect(items[0]!.placement).toEqual({ x: 0, y: 0, w: 4, h: 1 });
+    expect(items[0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 4, h: 1 });
     expect(items[1]!.component.type).toBe("grid");
-    expect(items[1]!.placement).toEqual({ x: 4, y: 0, w: 8, h: 1 });
+    expect(items[1]!.placement).toEqual({ mode: "positioned", x: 4, y: 0, w: 8, h: 1 });
     expect(items[1]!.component.items).toHaveLength(3);
-    expect(items[2]!.placement).toEqual({ x: 0, y: 1, w: 12, h: 1 });
+    expect(items[2]!.placement).toEqual({ mode: "positioned", x: 0, y: 1, w: 12, h: 1 });
   });
 
   it("nested rows width capped to parent span", () => {
@@ -377,9 +377,9 @@ describe("layout placement: row-level properties", () => {
     const items = wrapper.items!;
     expect(items).toHaveLength(2);
     expect(items[0]!.component.type).toBe("html");
-    expect(items[0]!.placement).toEqual({ x: 0, y: 0, w: 6, h: 1 });
+    expect(items[0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
     expect(items[1]!.component.type).toBe("grid");
-    expect(items[1]!.placement).toEqual({ x: 6, y: 0, w: 6, h: 1 });
+    expect(items[1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
   });
 
   it("rows with and without properties maintain correct y progression", () => {
@@ -439,10 +439,10 @@ describe("layout placement: Column with rows dashboard", () => {
     // Row 0: bar-chart + grid sub-container (no row-level properties on row 0)
     // Row 1: grid wrapper for ROW 2 (has properties)
     expect(items[0]!.component.type).toBe("bar-chart");
-    expect(items[0]!.placement).toEqual({ x: 0, y: 0, w: 6, h: 1 });
+    expect(items[0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
 
     expect(items[1]!.component.type).toBe("grid");
-    expect(items[1]!.placement).toEqual({ x: 6, y: 0, w: 6, h: 1 });
+    expect(items[1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
     // Sub-container holds pie and meter (each wrapped by their row props)
     const nested = items[1]!.component.items!;
     expect(nested).toHaveLength(2);

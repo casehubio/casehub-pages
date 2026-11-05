@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 111,
+  "totalSamples": 112,
   "categories": [
     {
       "category": "Charts",
@@ -483,6 +483,12 @@
             "frame",
             "sandbox"
           ]
+        },
+        {
+          "name": "Grid Spanning",
+          "path": "Layout/Grid Spanning.page.yaml",
+          "category": "Layout",
+          "file": "Grid Spanning.page.yaml"
         },
         {
           "name": "Layout Patterns",

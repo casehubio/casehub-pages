@@ -85,11 +85,11 @@ describe("renderComponent — layout types", () => {
       props: { columns: 12 },
       items: [
         {
-          placement: { x: 0, y: 0, w: 6, h: 1 },
+          placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 },
           component: { type: "html" },
         },
         {
-          placement: { x: 6, y: 0, w: 6, h: 1 },
+          placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 1 },
           component: { type: "html" },
         },
       ],
@@ -106,6 +106,139 @@ describe("renderComponent — layout types", () => {
     const child1 = children[1] as HTMLElement;
     expect(child1.style.gridColumn).toBe("7 / span 6");
     expect(child1.style.gridRow).toBe("1 / span 1");
+  });
+
+  it("uses GridProps.columns instead of hardcoded 12", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      props: { columns: 6 },
+      items: [
+        { placement: { mode: "positioned", x: 0, y: 0, w: 3, h: 1 }, component: { type: "html" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    expect(grid.style.gridTemplateColumns).toBe("repeat(6, 1fr)");
+  });
+
+  it("adds grid-auto-flow: row when auto items present", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      items: [
+        { placement: { mode: "auto", w: 4, h: 1 }, component: { type: "html" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    expect(grid.style.gridAutoFlow).toBe("row");
+  });
+
+  it("omits grid-auto-flow when all items are positioned", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      items: [
+        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    expect(grid.style.gridAutoFlow).toBe("");
+  });
+
+  it("renders positioned items sorted by (y, x) for WCAG DOM order", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      items: [
+        { placement: { mode: "positioned", x: 6, y: 1, w: 6, h: 1 }, component: { type: "html", id: "bottom-right" } },
+        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "top-left" } },
+        { placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 1 }, component: { type: "html", id: "top-right" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    const children = grid.querySelectorAll(":scope > [data-component-id]");
+    expect(children[0]!.getAttribute("data-component-id")).toBe("top-left");
+    expect(children[1]!.getAttribute("data-component-id")).toBe("top-right");
+    expect(children[2]!.getAttribute("data-component-id")).toBe("bottom-right");
+  });
+
+  it("renders positioned items before auto items in mixed grids", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      items: [
+        { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html", id: "auto-1" } },
+        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "pos-1" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    const children = grid.querySelectorAll(":scope > [data-component-id]");
+    expect(children[0]!.getAttribute("data-component-id")).toBe("pos-1");
+    expect(children[1]!.getAttribute("data-component-id")).toBe("auto-1");
+  });
+
+  it("generates auto IDs for auto-placed items", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      items: [
+        { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html" } },
+        { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    const children = grid.querySelectorAll(":scope > [data-component-id]");
+    expect(children[0]!.getAttribute("data-component-id")).toBe("root::auto::0");
+    expect(children[1]!.getAttribute("data-component-id")).toBe("root::auto::1");
+  });
+
+  it("applies grid-auto-rows from rowHeight", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      props: { columns: 12, rowHeight: 80 },
+      items: [
+        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    expect(grid.style.gridAutoRows).toBe("80px");
+  });
+
+  it("uses min-content when rowHeight absent", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      props: { columns: 12 },
+      items: [
+        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    expect(grid.style.gridAutoRows).toBe("min-content");
+  });
+
+  it("sets overflow hidden on items when rowHeight present", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      props: { columns: 12, rowHeight: 80 },
+      items: [
+        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      ],
+    };
+    renderComponent(target, component);
+    const grid = target.firstElementChild as HTMLElement;
+    const item = grid.firstElementChild as HTMLElement;
+    expect(item.style.overflow).toBe("hidden");
   });
 
   it("columns with col-N slots: correct distribution", () => {
@@ -257,7 +390,7 @@ describe("renderComponent — items vs slots precedence", () => {
       props: { columns: 12 },
       items: [
         {
-          placement: { x: 0, y: 0, w: 12, h: 1 },
+          placement: { mode: "positioned", x: 0, y: 0, w: 12, h: 1 },
           component: { type: "html" },
         },
       ],

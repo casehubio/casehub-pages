@@ -1,0 +1,159 @@
+pages:
+- name: Grid Spanning
+  items:
+    - placement: { mode: positioned, x: 0, y: 0, w: 12, h: 1 }
+      component:
+        type: title
+        properties:
+          text: Grid Spanning
+          size: h2
+
+    - placement: { mode: positioned, x: 0, y: 1, w: 12, h: 1 }
+      component:
+        type: markdown
+        properties:
+          content: >
+            Grid items can span multiple columns and rows using `w` and `h`
+            in their placement. `mode: positioned` gives explicit `{x, y, w, h}`
+            coordinates. `mode: auto` uses CSS auto-flow with span-only sizing.
+
+    - placement: { mode: positioned, x: 0, y: 2, w: 12, h: 1 }
+      component:
+        type: title
+        properties:
+          text: Positioned Items — Explicit Coordinates
+          size: h4
+
+    - placement: { mode: positioned, x: 0, y: 3, w: 4, h: 3 }
+      component:
+        html: >
+          <div style="background: #1a6b5a; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 180px; box-sizing: border-box; display: flex;
+                      flex-direction: column; justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <div style="font-size: 2em; font-weight: bold;">4 × 3</div>
+            <div style="opacity: 0.7; margin-top: 4px;">4 cols, 3 rows</div>
+          </div>
+
+    - placement: { mode: positioned, x: 4, y: 3, w: 8, h: 1 }
+      component:
+        html: >
+          <div style="background: #2563eb; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-size: 1.5em; font-weight: bold;">8 × 1</span>
+            <span style="opacity: 0.7; margin-left: 12px;">8 cols, 1 row</span>
+          </div>
+
+    - placement: { mode: positioned, x: 4, y: 4, w: 4, h: 2 }
+      component:
+        html: >
+          <div style="background: #9333ea; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 120px; box-sizing: border-box; display: flex;
+                      flex-direction: column; justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <div style="font-size: 2em; font-weight: bold;">4 × 2</div>
+            <div style="opacity: 0.7; margin-top: 4px;">4 cols, 2 rows</div>
+          </div>
+
+    - placement: { mode: positioned, x: 8, y: 4, w: 2, h: 1 }
+      component:
+        html: >
+          <div style="background: #dc2626; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-weight: bold;">2 × 1</span>
+          </div>
+
+    - placement: { mode: positioned, x: 10, y: 4, w: 2, h: 1 }
+      component:
+        html: >
+          <div style="background: #ea580c; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-weight: bold;">2 × 1</span>
+          </div>
+
+    - placement: { mode: positioned, x: 8, y: 5, w: 4, h: 1 }
+      component:
+        html: >
+          <div style="background: #0891b2; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-size: 1.2em; font-weight: bold;">4 × 1</span>
+          </div>
+
+    - placement: { mode: positioned, x: 0, y: 6, w: 6, h: 2 }
+      component:
+        html: >
+          <div style="background: #b45309; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 120px; box-sizing: border-box; display: flex;
+                      flex-direction: column; justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <div style="font-size: 2em; font-weight: bold;">6 × 2</div>
+            <div style="opacity: 0.7; margin-top: 4px;">half width, 2 rows</div>
+          </div>
+
+    - placement: { mode: positioned, x: 6, y: 6, w: 6, h: 2 }
+      component:
+        html: >
+          <div style="background: #059669; border-radius: 8px; padding: 16px;
+                      height: 100%; min-height: 120px; box-sizing: border-box; display: flex;
+                      flex-direction: column; justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <div style="font-size: 2em; font-weight: bold;">6 × 2</div>
+            <div style="opacity: 0.7; margin-top: 4px;">half width, 2 rows</div>
+          </div>
+
+    - placement: { mode: positioned, x: 0, y: 8, w: 12, h: 1 }
+      component:
+        type: title
+        properties:
+          text: Auto-Placed Items — Span Only, No Coordinates
+          size: h4
+
+    - placement: { mode: auto, w: 3, h: 1 }
+      component:
+        html: >
+          <div style="background: #4f46e5; border-radius: 8px; padding: 16px;
+                      min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-weight: bold;">auto 3×1</span>
+          </div>
+
+    - placement: { mode: auto, w: 3, h: 1 }
+      component:
+        html: >
+          <div style="background: #7c3aed; border-radius: 8px; padding: 16px;
+                      min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-weight: bold;">auto 3×1</span>
+          </div>
+
+    - placement: { mode: auto, w: 6, h: 1 }
+      component:
+        html: >
+          <div style="background: #be185d; border-radius: 8px; padding: 16px;
+                      min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-weight: bold;">auto 6×1</span>
+            <span style="opacity: 0.7; margin-left: 8px;">fills remaining half</span>
+          </div>
+
+    - placement: { mode: auto, w: 12, h: 1 }
+      component:
+        html: >
+          <div style="background: #475569; border-radius: 8px; padding: 16px;
+                      min-height: 50px; box-sizing: border-box; display: flex;
+                      justify-content: center; align-items: center;
+                      color: white; font-family: sans-serif;">
+            <span style="font-weight: bold;">auto 12×1</span>
+            <span style="opacity: 0.7; margin-left: 8px;">full width, auto-placed</span>
+          </div>

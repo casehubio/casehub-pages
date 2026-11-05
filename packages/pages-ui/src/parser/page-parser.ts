@@ -1,4 +1,4 @@
-import type { Component, GridItem } from "../model/types.js";
+import type { Component, GridItem, GridPlacement } from "../model/types.js";
 import { expand } from "@casehubio/yaml-core/expand";
 import { substituteProperties } from "./property-substitution.js";
 import { desugarComponent } from "./component-desugar.js";
@@ -274,14 +274,47 @@ export function parsePageContent(
   pageIndex: number,
   displayerDefaults?: Record<string, unknown>,
 ): { items?: readonly GridItem[] } | { slots?: Readonly<Record<string, readonly Component[]>> } {
+  const itemsRaw = pageRaw["items"] as unknown[] | undefined;
   const componentsRaw = pageRaw["components"] as unknown[] | undefined;
   const rowsRaw = pageRaw["rows"] as unknown[] | undefined;
+
+  if (itemsRaw) {
+    const maxColumns = 12;
+    const items: GridItem[] = itemsRaw.map((entryRaw, i) => {
+      const entry = entryRaw as Record<string, unknown>;
+      const placementRaw = entry["placement"] as Record<string, unknown> | undefined;
+      const componentRaw = entry["component"] as Record<string, unknown> | undefined;
+      const component = desugarComponent(componentRaw ?? {}, displayerDefaults);
+
+      let placement: GridPlacement;
+      if (placementRaw) {
+        const mode = (placementRaw["mode"] as string) ?? "positioned";
+        const w = Math.min(Number(placementRaw["w"] ?? 1), maxColumns);
+        const h = Number(placementRaw["h"] ?? 1);
+        if (mode === "auto") {
+          placement = { mode: "auto", w, h };
+        } else {
+          const x = Number(placementRaw["x"] ?? 0);
+          const y = Number(placementRaw["y"] ?? 0);
+          placement = { mode: "positioned", x, y, w, h };
+        }
+      } else {
+        placement = { mode: "auto", w: 1, h: 1 };
+      }
+
+      return {
+        placement,
+        component: assignIdIfMissing(component, `grid_${String(pageIndex)}_item_${String(i)}`),
+      };
+    });
+    return { items };
+  }
 
   if (componentsRaw) {
     const items: GridItem[] = componentsRaw.map((compRaw, i) => {
       const component = desugarComponent(compRaw as Record<string, unknown>, displayerDefaults);
       return {
-        placement: { x: 0, y: i, w: 12, h: 1 },
+        placement: { mode: "positioned" as const, x: 0, y: i, w: 12, h: 1 },
         component: assignIdIfMissing(component, `grid_${String(pageIndex)}_0_${String(i)}`),
       };
     });
@@ -322,8 +355,8 @@ export function parsePageContent(
             const component = desugarComponent(colComponents[ci] as Record<string, unknown>, displayerDefaults);
             const placed: GridItem = {
               placement: hasRowProps
-                ? { x, y: ci, w: span, h: 1 }
-                : { x, y: y + ci, w: span, h: 1 },
+                ? { mode: "positioned" as const, x, y: ci, w: span, h: 1 }
+                : { mode: "positioned" as const, x, y: y + ci, w: span, h: 1 },
               component: assignIdIfMissing(component, `grid_${String(pageIndex)}_${String(x)}_${String(y + ci)}`),
             };
 
@@ -356,8 +389,8 @@ export function parsePageContent(
             };
             const placed: GridItem = {
               placement: hasRowProps
-                ? { x, y: 0, w: span, h: 1 }
-                : { x, y, w: span, h: 1 },
+                ? { mode: "positioned" as const, x, y: 0, w: span, h: 1 }
+                : { mode: "positioned" as const, x, y, w: span, h: 1 },
               component: subContainer,
             };
             rowItems.push(placed);
@@ -376,7 +409,7 @@ export function parsePageContent(
           items: rowItems,
         };
         items.push({
-          placement: { x: 0, y, w: 12, h: 1 },
+          placement: { mode: "positioned" as const, x: 0, y, w: 12, h: 1 },
           component: rowComponent,
         });
       } else {

@@ -199,9 +199,9 @@ describe("desugar-new-types", () => {
 
       expect(result.type).toBe("grid");
       expect(result.items).toHaveLength(3);
-      expect(result.items![0]!.placement).toEqual({ x: 0, y: 0, w: 6, h: 1 });
-      expect(result.items![1]!.placement).toEqual({ x: 0, y: 1, w: 6, h: 1 });
-      expect(result.items![2]!.placement).toEqual({ x: 6, y: 0, w: 6, h: 1 });
+      expect(result.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
+      expect(result.items![1]!.placement).toEqual({ mode: "positioned", x: 0, y: 1, w: 6, h: 1 });
+      expect(result.items![2]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
     });
   });
 

@@ -22,6 +22,9 @@ export function applyLayoutCSS(
       element.style.display = "grid";
       if (isGrid(component)) {
         element.style.gridTemplateColumns = `repeat(${String(component.props?.columns ?? 12)}, 1fr)`;
+        if (component.props?.rowHeight !== undefined) {
+          element.style.gridAutoRows = `${String(component.props.rowHeight)}px`;
+        }
       }
       break;
     }

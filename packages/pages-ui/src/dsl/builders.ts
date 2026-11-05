@@ -167,7 +167,7 @@ export function at(
   component: Component
 ): GridItem {
   return freeze({
-    placement: freeze({ x, y, w, h }),
+    placement: freeze({ mode: "positioned" as const, x, y, w, h }),
     component,
   });
 }

@@ -27,7 +27,7 @@ describe("Component", () => {
   it("represents a grid with items", () => {
     const chart: Component = { type: "bar-chart", props: {} };
     const item: GridItem = {
-      placement: { x: 0, y: 0, w: 6, h: 2 },
+      placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 },
       component: chart,
     };
     const grid: Component = {

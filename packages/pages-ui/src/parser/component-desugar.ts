@@ -1,4 +1,4 @@
-import type { Component } from "../model/types.js";
+import type { Component, GridPlacement } from "../model/types.js";
 import { z } from "zod";
 import { componentSchemaRegistry } from "@casehubio/pages-schema";
 import { desugarDisplayer } from "./displayer-desugar.js";
@@ -403,7 +403,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       : columnsArray.map(() => Math.floor(12 / columnsArray.length));
     const visibleWhen = raw.visibleWhen as string | undefined;
 
-    const items: { placement: { x: number; y: number; w: number; h: number }; component: Component }[] = [];
+    const items: { placement: GridPlacement; component: Component }[] = [];
     let x = 0;
     for (let ci = 0; ci < columnsArray.length; ci++) {
       const col = columnsArray[ci]!;
@@ -411,7 +411,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       const colComponents = (col.components ?? []) as Array<Record<string, unknown>>;
       for (let ri = 0; ri < colComponents.length; ri++) {
         const component = desugarComponent(colComponents[ri]!, displayerDefaults);
-        items.push({ placement: { x, y: ri, w: span, h: 1 }, component });
+        items.push({ placement: { mode: "positioned" as const, x, y: ri, w: span, h: 1 }, component });
       }
       x += span;
     }

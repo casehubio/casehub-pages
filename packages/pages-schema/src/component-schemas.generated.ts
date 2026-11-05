@@ -36,6 +36,7 @@ const fieldSchemaZod: z.ZodType = z.lazy(() =>
 
 export const gridPropsSchema = z.object({
   columns: z.number(),
+  rowHeight: z.number().optional(),
 });
 
 export const columnsPropsSchema = z.object({
@@ -1792,7 +1793,7 @@ export const mapPropsSchema = z.object({
   mapName: z.string().optional(),
   roam: z.union([z.boolean(), z.boolean(), z.string(), z.string()]).optional(),
   center: z.object({
-    "__@unscopables@101": z.object({}),
+    "__@unscopables@102": z.object({}),
   }).optional(),
   zoom: z.number().optional(),
   scaleLimit: z.object({
@@ -2242,7 +2243,7 @@ export const graphCanvasPropsSchema = z.object({
     zoomOnPinch: z.boolean().optional(),
     snapToGrid: z.boolean().optional(),
     snapGrid: z.object({
-      "__@unscopables@101": z.object({}),
+      "__@unscopables@102": z.object({}),
     }).optional(),
     colorMode: z.enum(["light", "dark", "system"]).optional(),
     defaultMarkerColor: z.string().optional(),

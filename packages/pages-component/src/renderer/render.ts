@@ -5,6 +5,7 @@ import { checkAccess } from "./access.js";
 import { applyGridPlacement } from "./grid.js";
 import { getSlotNames, getSlotChildren } from "./slots.js";
 import { isLayoutType, applyLayoutCSS } from "./layout.js";
+import { isGrid } from "../model/type-guards.js";
 import { wireInteractivity } from "./interactive.js";
 
 // Subset of INTERACTIVE_TYPES (navigation.ts, runtime package). All lazy types
@@ -95,16 +96,44 @@ function renderNode(
 
   // 6. Render children — items take precedence over slots
   if (component.items && component.items.length > 0) {
-    el.style.display = "grid";
-    el.style.gridTemplateColumns = "repeat(12, 1fr)";
-    el.style.gridAutoRows = "min-content";
+    const rowHeight = isGrid(component) ? component.props?.rowHeight : undefined;
+    if (rowHeight === undefined) {
+      el.style.gridAutoRows = "min-content";
+    }
     el.style.alignContent = "start";
     el.style.gap = "var(--pages-space-3, 12px)";
-    for (const item of component.items) {
-      renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);
+
+    const hasAutoItems = component.items.some(item => item.placement.mode === "auto");
+    if (hasAutoItems) {
+      el.style.gridAutoFlow = "row";
+    }
+
+    const positioned = component.items
+      .map((item, i) => ({ item, originalIndex: i }))
+      .filter(e => e.item.placement.mode === "positioned");
+    const auto = component.items
+      .map((item, i) => ({ item, originalIndex: i }))
+      .filter(e => e.item.placement.mode === "auto");
+
+    positioned.sort((a, b) => {
+      const ap = a.item.placement as { mode: "positioned"; x: number; y: number; w: number; h: number };
+      const bp = b.item.placement as { mode: "positioned"; x: number; y: number; w: number; h: number };
+      return ap.y !== bp.y ? ap.y - bp.y : ap.x - bp.x;
+    });
+
+    const ordered = [...positioned, ...auto];
+    for (const { item, originalIndex } of ordered) {
+      if (item.placement.mode === "positioned") {
+        renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);
+      } else {
+        renderNode(el, item.component, id, "auto", originalIndex, permissions, doc, onNode);
+      }
       const child = el.lastElementChild;
       if (child instanceof HTMLElement) {
         applyGridPlacement(child, item.placement);
+        if (rowHeight !== undefined) {
+          child.style.overflow = "hidden";
+        }
       }
     }
   } else if (component.slots) {

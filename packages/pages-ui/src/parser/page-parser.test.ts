@@ -71,8 +71,8 @@ describe("parsePage", () => {
       const page = root.slots!["content"]![0]!;
       expect(page.items).toBeDefined();
       expect(page.items!.length).toBe(2);
-      expect(page.items![0]!.placement).toEqual({ x: 0, y: 0, w: 12, h: 1 });
-      expect(page.items![1]!.placement).toEqual({ x: 0, y: 1, w: 12, h: 1 });
+      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 12, h: 1 });
+      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 0, y: 1, w: 12, h: 1 });
     });
 
     it("desugars html shorthand to html component", () => {
@@ -116,8 +116,8 @@ describe("parsePage", () => {
       });
       const page = root.slots!["content"]![0]!;
       expect(page.items!.length).toBe(2);
-      expect(page.items![0]!.placement).toEqual({ x: 0, y: 0, w: 6, h: 1 });
-      expect(page.items![1]!.placement).toEqual({ x: 6, y: 0, w: 6, h: 1 });
+      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
+      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
     });
 
     it("defaults span to 12 when omitted", () => {
@@ -200,8 +200,8 @@ describe("parsePage", () => {
       });
       const page = root.slots!["content"]![0]!;
       expect(page.items!.length).toBe(2);
-      expect(page.items![0]!.placement).toEqual({ x: 0, y: 0, w: 6, h: 1 });
-      expect(page.items![1]!.placement).toEqual({ x: 0, y: 1, w: 6, h: 1 });
+      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
+      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 0, y: 1, w: 6, h: 1 });
     });
 
     it("applies column-level properties as style", () => {
@@ -714,6 +714,129 @@ describe("parsePage", () => {
       });
       // The root should not contain yaml-core keys
       expect(root.props!["variables"]).toBeUndefined();
+    });
+  });
+
+  describe("items format", () => {
+    it("parses positioned items with explicit placement", () => {
+      const root = parsePage({
+        pages: [{
+          items: [
+            { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 }, component: { type: "metric" } },
+            { placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+          ],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items).toHaveLength(2);
+      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 2 });
+      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
+    });
+
+    it("parses auto items with span only", () => {
+      const root = parsePage({
+        pages: [{
+          items: [
+            { placement: { mode: "auto", w: 4, h: 1 }, component: { type: "metric" } },
+          ],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items).toHaveLength(1);
+      expect(page.items![0]!.placement).toEqual({ mode: "auto", w: 4, h: 1 });
+    });
+
+    it("parses mixed positioned and auto items", () => {
+      const root = parsePage({
+        pages: [{
+          items: [
+            { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 }, component: { type: "metric" } },
+            { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html" } },
+          ],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items).toHaveLength(2);
+      expect(page.items![0]!.placement.mode).toBe("positioned");
+      expect(page.items![1]!.placement.mode).toBe("auto");
+    });
+
+    it("treats placement without mode as positioned (backward compat)", () => {
+      const root = parsePage({
+        pages: [{
+          items: [
+            { placement: { x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+          ],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items![0]!.placement.mode).toBe("positioned");
+    });
+
+    it("items format takes priority over components format", () => {
+      const root = parsePage({
+        pages: [{
+          items: [
+            { placement: { mode: "auto", w: 12, h: 1 }, component: { type: "metric" } },
+          ],
+          components: [{ html: "ignored" }],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items).toHaveLength(1);
+      expect(page.items![0]!.placement.mode).toBe("auto");
+    });
+
+    it("clamps w to 12 columns by default", () => {
+      const root = parsePage({
+        pages: [{
+          items: [
+            { placement: { mode: "auto", w: 15, h: 1 }, component: { type: "html" } },
+          ],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items![0]!.placement.w).toBe(12);
+    });
+  });
+
+  describe("existing formats produce mode: positioned", () => {
+    it("components format adds mode: positioned", () => {
+      const root = parsePage({
+        pages: [{ components: [{ html: "Hello" }] }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items![0]!.placement.mode).toBe("positioned");
+    });
+
+    it("rows format adds mode: positioned", () => {
+      const root = parsePage({
+        pages: [{
+          rows: [{
+            columns: [{ span: 6, components: [{ html: "A" }] }],
+          }],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      expect(page.items![0]!.placement.mode).toBe("positioned");
+    });
+
+    it("type: columns desugar produces mode: positioned", () => {
+      const root = parsePage({
+        pages: [{
+          components: [
+            { type: "columns", columns: [
+              { components: [{ html: "A" }] },
+              { components: [{ html: "B" }] },
+            ]},
+          ],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      const gridItem = page.items![0]!;
+      const nestedGrid = gridItem.component;
+      expect(nestedGrid.type).toBe("grid");
+      expect(nestedGrid.items![0]!.placement.mode).toBe("positioned");
     });
   });
 });

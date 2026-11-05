@@ -3,6 +3,7 @@ import type { Component, DockZone, DockSide, DockWorkbenchConfig, FrameConfig } 
 
 export interface GridProps {
   readonly columns: number;
+  readonly rowHeight?: number;
 }
 
 export interface ColumnsProps {
