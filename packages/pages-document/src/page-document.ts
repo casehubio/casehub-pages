@@ -711,6 +711,13 @@ export class ComponentNode {
             );
           }
         }
+      } else if (slot.kind === 'grid-items') {
+        const seq = doc.getIn([...this.path, slot.yamlKey]);
+        if (isSeq(seq)) {
+          slots[slot.yamlKey] = (seq as YAMLSeq).items.map((_: unknown, i: number) =>
+            new GridItemNode(this._doc, [...this.path, slot.yamlKey, i])
+          ) as any;
+        }
       }
     }
     return { slots, descriptor: desc };
