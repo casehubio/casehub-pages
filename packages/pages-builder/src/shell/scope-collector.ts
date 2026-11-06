@@ -10,7 +10,9 @@ export function collectComponentsInScope(
 
   const collectFromPage = (page: PageNode) => {
     const mode = page.getLayoutMode();
-    if (mode === 'rows') {
+    if (mode === 'items') {
+      for (const item of page.getItems()) results.push(item.getComponent());
+    } else if (mode === 'rows') {
       for (const row of page.getRows()) for (const col of row.getColumns()) results.push(...col.getComponents());
     } else if (mode === 'columns') {
       for (const col of page.getColumns()) results.push(...col.getComponents());
@@ -53,7 +55,10 @@ export function collectComponentsInScope(
   } else if (nodeType === 'component') {
     const page = doc.getPages()[path[1] as number];
     if (!page) return results;
-    if (path[2] === 'components' && path.length >= 4) {
+    if (path[2] === 'items' && path.length >= 4) {
+      const item = page.getItems()[path[3] as number];
+      if (item) results.push(item.getComponent());
+    } else if (path[2] === 'components' && path.length >= 4) {
       const c = page.getComponents()[path[3] as number];
       if (c) results.push(c);
     } else if (path[2] === 'rows' && path.length >= 8) {
@@ -87,7 +92,9 @@ export function collectComponentsInScope(
         }
       };
       const mode = page.getLayoutMode();
-      if (mode === 'rows') {
+      if (mode === 'items') {
+        for (const item of page.getItems()) check(item.getComponent());
+      } else if (mode === 'rows') {
         for (const row of page.getRows()) for (const col of row.getColumns()) col.getComponents().forEach(check);
       } else if (mode === 'columns') {
         for (const col of page.getColumns()) col.getComponents().forEach(check);

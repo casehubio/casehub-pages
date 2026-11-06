@@ -3,7 +3,7 @@ import type { Diagnostic, LayoutMode, Unsubscribe } from './types.js';
 import { getContainerDescriptor, type ContainerChildDescriptor } from './container-descriptors.js';
 import { zodToFieldSchema } from './zod-to-fieldschema.js';
 import { componentSchemaRegistry } from '@casehubio/pages-schema';
-import type { FieldSchema } from '@casehubio/pages-component';
+import type { FieldSchema, GridPlacement } from '@casehubio/pages-component';
 import { z } from 'zod';
 
 const MAX_UNDO_STACK = 50;
@@ -302,6 +302,7 @@ export class PageNode {
 
   getLayoutMode(): LayoutMode {
     const doc = this._doc._getDoc();
+    if (isSeq(doc.getIn([...this.path, 'items']))) return 'items';
     if (isSeq(doc.getIn([...this.path, 'rows']))) return 'rows';
     if (isSeq(doc.getIn([...this.path, 'columns']))) return 'columns';
     return 'flat';
@@ -438,10 +439,52 @@ export class PageNode {
     }
   }
 
+  getItems(): GridItemNode[] {
+    if (this.getLayoutMode() !== 'items') return [];
+    const seq = this._doc._getDoc().getIn([...this.path, 'items']);
+    if (!isSeq(seq)) return [];
+    return (seq as YAMLSeq).items.map((_: unknown, i: number) =>
+      new GridItemNode(this._doc, [...this.path, 'items', i])
+    );
+  }
+
+  addItem(
+    placement: GridPlacement,
+    type: string,
+    props?: Record<string, unknown>,
+  ): GridItemNode {
+    if (this.getLayoutMode() !== 'items') {
+      throw new Error('addItem() requires items: layout mode — convert first');
+    }
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const placementObj: Record<string, number> = { w: placement.w, h: placement.h };
+    if (placement.mode === 'positioned') {
+      placementObj['x'] = placement.x;
+      placementObj['y'] = placement.y;
+    }
+    const entry: Record<string, unknown> = {
+      placement: placementObj,
+      component: { type, ...(props ? { properties: props } : {}) },
+    };
+    const node = doc.createNode(entry);
+    const seq = doc.getIn([...this.path, 'items']);
+    (seq as YAMLSeq).add(node);
+    this._doc._notifyInternal();
+    const items = this.getItems();
+    return items[items.length - 1]!;
+  }
+
+  removeItem(index: number): void {
+    this._doc._pushUndoInternal();
+    this._doc._getDoc().deleteIn([...this.path, 'items', index]);
+    this._doc._notifyInternal();
+  }
+
   removeChild(index: number): void {
     this._doc._pushUndoInternal();
     const mode = this.getLayoutMode();
-    const key = mode === 'rows' ? 'rows' : mode === 'columns' ? 'columns' : 'components';
+    const key = mode === 'rows' ? 'rows' : mode === 'columns' ? 'columns' : mode === 'items' ? 'items' : 'components';
     this._doc._getDoc().deleteIn([...this.path, key, index]);
     this._doc._notifyInternal();
   }
@@ -667,6 +710,13 @@ export class ComponentNode {
               new ComponentNode(this._doc, [...this.path, slot.yamlKey, slot.childKey, i])
             );
           }
+        }
+      } else if (slot.kind === 'grid-items') {
+        const seq = doc.getIn([...this.path, slot.yamlKey]);
+        if (isSeq(seq)) {
+          slots[slot.yamlKey] = (seq as YAMLSeq).items.map((_: unknown, i: number) =>
+            new GridItemNode(this._doc, [...this.path, slot.yamlKey, i])
+          ) as any;
         }
       }
     }
@@ -1015,6 +1065,83 @@ export class NavTreeNode {
     this._doc._pushUndoInternal();
     const key = this.path.length <= 1 ? 'root_items' : 'children';
     this._doc._getDoc().deleteIn([...this.path, key, index]);
+    this._doc._notifyInternal();
+  }
+}
+
+export class GridItemNode {
+  constructor(
+    private readonly _doc: PageDocument,
+    readonly path: readonly (string | number)[],
+  ) {}
+
+  getPlacement(): GridPlacement {
+    const raw = this._doc._getDoc().getIn([...this.path, 'placement']);
+    if (!raw || typeof raw !== 'object') {
+      return { mode: 'auto', w: 1, h: 1 };
+    }
+    const obj = toRecord(raw);
+    if ('x' in obj && 'y' in obj) {
+      return {
+        mode: 'positioned',
+        x: obj.x as number,
+        y: obj.y as number,
+        w: (obj.w as number) ?? 1,
+        h: (obj.h as number) ?? 1,
+      };
+    }
+    return { mode: 'auto', w: (obj.w as number) ?? 1, h: (obj.h as number) ?? 1 };
+  }
+
+  setPlacement(p: GridPlacement): void {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const base = [...this.path, 'placement'];
+    doc.setIn([...base, 'w'], p.w);
+    doc.setIn([...base, 'h'], p.h);
+    if (p.mode === 'positioned') {
+      doc.setIn([...base, 'x'], p.x);
+      doc.setIn([...base, 'y'], p.y);
+    }
+    this._doc._notifyInternal();
+  }
+
+  getComponent(): ComponentNode {
+    return new ComponentNode(this._doc, [...this.path, 'component']);
+  }
+
+  get type(): string { return this.getComponent().type; }
+
+  getProperties(): Record<string, unknown> {
+    return this.getComponent().getProperties();
+  }
+
+  setProperty(key: string, value: unknown): void {
+    this.getComponent().setProperty(key, value);
+  }
+
+  moveToIndex(newIndex: number): void {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const itemsPath = this.path.slice(0, -1);
+    const seq = doc.getIn(itemsPath);
+    const idx = this.path[this.path.length - 1] as number;
+    if (!isSeq(seq)) return;
+    const node = (seq as YAMLSeq).items[idx];
+    (seq as YAMLSeq).items.splice(idx, 1);
+    (seq as YAMLSeq).items.splice(newIndex, 0, node);
+    this._doc._notifyInternal();
+  }
+
+  duplicate(): void {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const itemsPath = this.path.slice(0, -1);
+    const seq = doc.getIn(itemsPath);
+    const idx = this.path[this.path.length - 1] as number;
+    if (!isSeq(seq)) return;
+    const clone = doc.createNode((seq as YAMLSeq).items[idx].toJSON());
+    (seq as YAMLSeq).items.splice(idx + 1, 0, clone);
     this._doc._notifyInternal();
   }
 }

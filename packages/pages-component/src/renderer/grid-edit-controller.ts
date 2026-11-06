@@ -17,6 +17,8 @@ import {
   hideGhost,
   createEditButton,
   removeEditButton,
+  createInsertionZones,
+  removeInsertionZones,
 } from "./grid-overlay.js";
 
 export interface GridEditController {
@@ -42,9 +44,11 @@ class GridEditControllerImpl implements GridEditController {
   private overlay: HTMLDivElement | null = null;
   private observer: MutationObserver | null = null;
   private priorPosition = "";
+  private _insertionZones: HTMLElement[] = [];
 
   private dragging = false;
   private dragItemId: string | null = null;
+  private hoveredId: string | null = null;
   private dragHandle: ResizeHandle | "move" = "move";
   private dragStartX = 0;
   private dragStartY = 0;
@@ -109,14 +113,24 @@ class GridEditControllerImpl implements GridEditController {
 
     for (const child of this.gridEl.children) {
       const el = child as HTMLElement;
-      if (el.dataset.componentId && el.firstElementChild) {
-        (el.firstElementChild as HTMLElement).style.pointerEvents = "none";
+      if (el.dataset.componentId) {
+        if (el.firstElementChild) {
+          (el.firstElementChild as HTMLElement).style.pointerEvents = "none";
+        }
+        el.style.outline = "1px dashed var(--pages-neutral-6, #71717a)";
+        el.style.outlineOffset = "-1px";
+        el.style.borderRadius = "var(--pages-radius-sm, 4px)";
+        el.style.cursor = "grab";
       }
     }
 
     const rect = this.gridEl.getBoundingClientRect();
     this.geometry = computeGridGeometry(rect, this.columns, this.rowHeight, this.gap);
-    this.overlay = createGridOverlay(this.gridEl, this.geometry);
+    const hasFixedRows = getComputedStyle(this.gridEl).gridAutoRows !== "min-content";
+    if (hasFixedRows) {
+      this.overlay = createGridOverlay(this.gridEl, this.geometry);
+    }
+    this._insertionZones = createInsertionZones(this.gridEl, this.geometry, this.items);
 
     this.gridEl.addEventListener("pointerdown", this.onPointerDown);
     this.gridEl.addEventListener("pointermove", this.onPointerMove);
@@ -137,11 +151,18 @@ class GridEditControllerImpl implements GridEditController {
 
     for (const child of this.gridEl.children) {
       const el = child as HTMLElement;
-      if (el.dataset.componentId && el.firstElementChild) {
-        (el.firstElementChild as HTMLElement).style.pointerEvents = "";
+      if (el.dataset.componentId) {
+        if (el.firstElementChild) {
+          (el.firstElementChild as HTMLElement).style.pointerEvents = "";
+        }
+        el.style.outline = "";
+        el.style.outlineOffset = "";
+        el.style.cursor = "";
       }
     }
+    this.hoveredId = null;
 
+    removeInsertionZones(this._insertionZones);
     removeGridOverlay(this.gridEl);
     this.overlay = null;
 
@@ -156,6 +177,7 @@ class GridEditControllerImpl implements GridEditController {
 
   dispose(): void {
     this.exit();
+    removeInsertionZones(this._insertionZones);
     removeEditButton(this.gridEl);
     this.observer?.disconnect();
     this.observer = null;
@@ -207,8 +229,39 @@ class GridEditControllerImpl implements GridEditController {
     e.preventDefault();
   }
 
+  private updateHover(clientX: number, clientY: number): void {
+    const target = this.findItemAtPoint(clientX, clientY);
+    const newId = target?.id ?? null;
+    if (newId === this.hoveredId) return;
+    if (this.hoveredId) {
+      const prev = this.gridEl.querySelector(`[data-component-id="${this.hoveredId}"]`) as HTMLElement | null;
+      if (prev) {
+        prev.style.outline = "1px dashed var(--pages-neutral-6, #71717a)";
+      }
+    }
+    if (newId) {
+      const el = this.gridEl.querySelector(`[data-component-id="${newId}"]`) as HTMLElement | null;
+      if (el) {
+        el.style.outline = "2px solid var(--pages-accent-7, #3b82f6)";
+      }
+    }
+    this.hoveredId = newId;
+  }
+
+  private setAllOutlines(style: string): void {
+    for (const child of this.gridEl.children) {
+      const el = child as HTMLElement;
+      if (el.dataset.componentId) {
+        el.style.outline = style;
+      }
+    }
+  }
+
   private handlePointerMove(e: PointerEvent): void {
-    if (!this.dragItemId || !this.geometry) return;
+    if (!this.dragItemId || !this.geometry) {
+      if (this._active && this.geometry) this.updateHover(e.clientX, e.clientY);
+      return;
+    }
 
     const dx = e.clientX - this.dragStartX;
     const dy = e.clientY - this.dragStartY;
@@ -217,8 +270,12 @@ class GridEditControllerImpl implements GridEditController {
       if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
       this.dragging = true;
       this.storeOriginalPlacements();
+      this.setAllOutlines("1px solid var(--pages-neutral-6, #71717a)");
       const el = this.gridEl.querySelector(`[data-component-id="${this.dragItemId}"]`) as HTMLElement | null;
-      if (el) el.style.opacity = "0.4";
+      if (el) {
+        el.style.opacity = "0.4";
+        el.style.outline = "2px solid var(--pages-accent-7, #3b82f6)";
+      }
     }
 
     const cell = snapToCell(e.clientX, e.clientY, this.geometry);
@@ -265,6 +322,7 @@ class GridEditControllerImpl implements GridEditController {
       }
     }
 
+    this.setAllOutlines("1px dashed var(--pages-neutral-6, #71717a)");
     if (this.overlay) hideGhost(this.overlay);
 
     const resolvedItems: GridItem[] = this.items.map(gi => {
@@ -299,6 +357,11 @@ class GridEditControllerImpl implements GridEditController {
   private cancelDrag(): void {
     this.restoreOriginalPlacements();
     if (this.overlay) hideGhost(this.overlay);
+    this.setAllOutlines("1px dashed var(--pages-neutral-6, #71717a)");
+    for (const child of this.gridEl.children) {
+      const el = child as HTMLElement;
+      if (el.dataset.componentId) el.style.opacity = "";
+    }
     this.dragging = false;
     this.dragItemId = null;
   }

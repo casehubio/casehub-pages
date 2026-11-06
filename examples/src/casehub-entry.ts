@@ -21,6 +21,8 @@ import { dashboardSchema } from "@casehubio/pages-schema";
 import "@casehubio/pages-property-palette";
 import "@casehubio/pages-diagram-palette";
 // pages-builder loaded on demand — static import crashes UMD bundle (decorator compat)
+// Lazy-load the builder bundle so gallery samples can mount <pages-builder-shell>
+import("@casehubio/pages-builder").catch(() => {});
 import { createBasicPipelineModel, PIPELINE_SCHEMAS } from "./pipeline-stencils";
 import type { LiveSite, SiteOptions } from "@casehubio/pages-runtime";
 import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";

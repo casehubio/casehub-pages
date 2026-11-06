@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 112,
+  "totalSamples": 114,
   "categories": [
     {
       "category": "Charts",
@@ -483,6 +483,20 @@
             "frame",
             "sandbox"
           ]
+        },
+        {
+          "name": "Grid Builder",
+          "path": "Layout/Grid Builder.page.yaml",
+          "category": "Layout",
+          "file": "Grid Builder.page.yaml",
+          "tsPath": "Layout/Grid Builder.ts"
+        },
+        {
+          "name": "Grid Builder",
+          "path": "Layout/Grid Builder.yaml",
+          "category": "Layout",
+          "file": "Grid Builder.yaml",
+          "tsPath": "Layout/Grid Builder.ts"
         },
         {
           "name": "Grid Spanning",

@@ -7,7 +7,8 @@ export interface ContainerChildDescriptor {
 export type SlotDescriptor =
   | { kind: 'named-record'; yamlKey: string; childKey: 'components' }
   | { kind: 'array'; yamlKey: string }
-  | { kind: 'nested-array'; yamlKey: string; childKey: string };
+  | { kind: 'nested-array'; yamlKey: string; childKey: string }
+  | { kind: 'grid-items'; yamlKey: string };
 
 export const CONTAINER_DESCRIPTORS: ContainerChildDescriptor[] = [
   { type: 'tabs', defaultContentSlot: 'tabs', slots: [{ kind: 'named-record', yamlKey: 'tabs', childKey: 'components' }] },
@@ -23,6 +24,7 @@ export const CONTAINER_DESCRIPTORS: ContainerChildDescriptor[] = [
   { type: 'stack', defaultContentSlot: 'sections', slots: [{ kind: 'named-record', yamlKey: 'sections', childKey: 'components' }] },
   { type: 'menu', defaultContentSlot: 'sections', slots: [{ kind: 'named-record', yamlKey: 'sections', childKey: 'components' }] },
   { type: 'tree', defaultContentSlot: 'sections', slots: [{ kind: 'named-record', yamlKey: 'sections', childKey: 'components' }] },
+  { type: 'grid', defaultContentSlot: 'items', slots: [{ kind: 'grid-items', yamlKey: 'items' }] },
 ];
 
 const descriptorMap = new Map(CONTAINER_DESCRIPTORS.map(d => [d.type, d]));

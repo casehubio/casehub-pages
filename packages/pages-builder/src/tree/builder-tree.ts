@@ -1,7 +1,8 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { RovingTabindexMixin, KeyboardShortcutMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
-import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode } from '@casehubio/pages-document';
+import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, type GridItemNode } from '@casehubio/pages-document';
+import type { GridPlacement } from '@casehubio/pages-component';
 import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
 import { lookupRecord } from '../data/lookup-record.js';
 import { computeMenuItems } from './tree-context-menu.js';
@@ -16,6 +17,12 @@ export interface TreeNodeInfo {
   readonly nodeType: TreeNodeType;
   readonly path: readonly (string | number)[];
   readonly children: readonly TreeNodeInfo[];
+  readonly annotation?: string;
+}
+
+export function formatPlacement(p: GridPlacement): string {
+  if (p.mode === 'positioned') return `[${p.x},${p.y} ${p.w}×${p.h}]`;
+  return `[auto ${p.w}×${p.h}]`;
 }
 
 // --- Tree model builder (pure logic, independently testable) ---
@@ -80,10 +87,44 @@ function buildRowNode(row: RowNode): TreeNodeInfo {
   };
 }
 
+function buildGridItemNode(item: GridItemNode): TreeNodeInfo {
+  const comp = item.getComponent();
+  const entry = catalogByType.get(comp.type);
+  const children: TreeNodeInfo[] = [];
+
+  if (comp.isContainer()) {
+    const containerChildren = comp.getChildren();
+    for (const [slotName, slotChildren] of Object.entries(containerChildren.slots)) {
+      const slotDesc = containerChildren.descriptor?.slots.find(s => s.yamlKey === slotName);
+      const childNodes = slotDesc?.kind === 'grid-items'
+        ? (slotChildren as GridItemNode[]).map(buildGridItemNode)
+        : (slotChildren as ComponentNode[]).map(buildComponentNode);
+      children.push({
+        label: slotName,
+        icon: 'folder_open',
+        nodeType: 'section',
+        path: [...comp.path, slotName],
+        children: childNodes,
+      });
+    }
+  }
+
+  return {
+    label: componentLabel(comp),
+    icon: entry?.icon ?? 'widgets',
+    nodeType: 'component',
+    path: [...item.path],
+    children,
+    annotation: formatPlacement(item.getPlacement()),
+  };
+}
+
 function buildPageNode(page: PageNode): TreeNodeInfo {
   const mode = page.getLayoutMode();
   let children: TreeNodeInfo[];
-  if (mode === 'rows') {
+  if (mode === 'items') {
+    children = page.getItems().map(buildGridItemNode);
+  } else if (mode === 'rows') {
     children = page.getRows().map(buildRowNode);
   } else if (mode === 'columns') {
     children = page.getColumns().map(buildColumnNode);
@@ -512,6 +553,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
           ${hasChildren ? html`<span class="toggle">${expanded ? '▼' : '▸'}</span>`
             : html`<span class="toggle-spacer"></span>`}
           <span class="label">${node.label}</span>
+          ${node.annotation ? html`<span class="annotation">${node.annotation}</span>` : nothing}
           ${this._isContainerNode(node) ? html`
             <button class="add-btn" title="Add child" aria-label="Add to ${node.label}" @click="${(e: Event) => this._handleAddClick(node, e)}">+</button>
           ` : nothing}
@@ -657,6 +699,14 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       overflow: hidden;
       text-overflow: ellipsis;
       flex: 1;
+    }
+
+    .annotation {
+      font-size: 10px;
+      color: var(--pages-text-secondary, #5f6368);
+      opacity: 0.7;
+      margin-left: 4px;
+      white-space: nowrap;
     }
 
     .add-btn {

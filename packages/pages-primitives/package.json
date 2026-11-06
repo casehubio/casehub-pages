@@ -24,9 +24,13 @@
     "./dist/index.js",
     "./dist/modal/index.js",
     "./dist/modal/pages-modal.js",
+    "./dist/dock/index.js",
+    "./dist/dock/pages-dock-workbench.js",
     "./src/index.ts",
     "./src/modal/index.ts",
-    "./src/modal/pages-modal.ts"
+    "./src/modal/pages-modal.ts",
+    "./src/dock/index.ts",
+    "./src/dock/pages-dock-workbench.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

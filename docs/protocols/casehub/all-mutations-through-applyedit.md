@@ -11,4 +11,4 @@ violation_hint: "Calling doc.addPage(), node.setProperty(), or any PageDocument 
 created: 2026-09-16
 ---
 
-Every document mutation in builder-shell must be wrapped in `this._applyEdit(origin, () => { mutation })`. Direct calls to PageDocument or node-level APIs bypass the coordinator — views don't sync, undo doesn't record, and the editor may receive a full-content replacement that destroys cursor position. The origin parameter (`'editor' | 'tree' | 'properties' | 'palette' | 'toolbar'`) identifies the source so `_syncViews` can skip writing back to the originator.
+Every document mutation in builder-shell must be wrapped in `this._applyEdit(origin, () => { mutation })`. Direct calls to PageDocument or node-level APIs bypass the coordinator — views don't sync, undo doesn't record, and the editor may receive a full-content replacement that destroys cursor position. The origin parameter (`'editor' | 'tree' | 'properties' | 'palette' | 'toolbar' | 'grid'`) identifies the source so `_syncViews` can skip writing back to the originator.
