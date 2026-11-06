@@ -170,7 +170,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
     this._syncTree();
     this._resolvePropertySource();
-    this._refreshPreview();
+    if (origin !== 'grid') {
+      this._refreshPreview();
+    }
     this._emitChange();
     this.requestUpdate();
   }
@@ -418,7 +420,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._selectionOverlay.update(bounds, nodeType, path, { isContainer });
     this._overlayScrollBase = container.scrollTop;
 
-    if (isContainer || nodeType === 'page' || nodeType === 'column' || nodeType === 'row') {
+    const isGridPage = nodeType === 'page' && this._findPageAtPath(path)?.getLayoutMode() === 'items';
+    if (!isGridPage && (isContainer || nodeType === 'page' || nodeType === 'column' || nodeType === 'row')) {
       const childBounds = elements.length > 1
         ? elements.map(el => {
             const r = el.getBoundingClientRect();
