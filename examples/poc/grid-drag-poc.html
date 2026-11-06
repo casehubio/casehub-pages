@@ -355,6 +355,30 @@ function compact(allItems, movedId) {
   return result;
 }
 
+// Insert-rows displacement — used for resize
+// Instead of cascading pushes, shift everything at or below the overlap down uniformly
+function displaceByInsertingRows(allItems, movedId) {
+  const result = allItems.map(i => ({ ...i }));
+  const moved = result.find(i => i.id === movedId);
+  if (!moved) return result;
+
+  const displaced = result.filter(i => i.id !== movedId && overlaps(moved, i));
+  if (displaced.length === 0) return result;
+
+  const firstOverlapY = Math.min(...displaced.map(i => i.y));
+  const shiftAmount = (moved.y + moved.h) - firstOverlapY;
+  if (shiftAmount <= 0) return result;
+
+  for (const item of result) {
+    if (item.id === movedId) continue;
+    if (item.y >= firstOverlapY) {
+      item.y += shiftAmount;
+    }
+  }
+
+  return result;
+}
+
 // Compact ALL items upward (no moved exception) — used after delete
 function compactAll(allItems) {
   const result = allItems.map(i => ({ ...i }));
@@ -479,11 +503,18 @@ function hitTest(panel, e) {
   const nearLeft = x - rect.left < RESIZE_INSET;
   const nearTop = y - rect.top < RESIZE_INSET;
 
+  // Corners first
   if (nearBottom && nearRight) return 'resize-br';
-  if (nearRight) return 'resize-right';
+  if (nearTop && nearRight) return 'resize-tr';
+  if (nearTop && nearLeft) return 'resize-tl';
+  if (nearBottom && nearLeft) return 'resize-bl';
+  // Edges — resize takes priority over drag handle
+  if (nearTop) return 'resize-top';
   if (nearBottom) return 'resize-bottom';
+  if (nearRight) return 'resize-right';
   if (nearLeft) return 'resize-left';
-  if (nearTop && y - rect.top < HANDLE_HEIGHT) return 'move';
+  // Title bar = move
+  if (y - rect.top < HANDLE_HEIGHT) return 'move';
   return null; // click in body — select, don't drag
 }
 
@@ -549,8 +580,9 @@ grid.addEventListener('pointermove', (e) => {
       const mode = hitTest(panel, e);
       if (mode === 'move') panel.style.cursor = 'grab';
       else if (mode === 'resize-right' || mode === 'resize-left') panel.style.cursor = 'ew-resize';
-      else if (mode === 'resize-bottom') panel.style.cursor = 'ns-resize';
-      else if (mode === 'resize-br') panel.style.cursor = 'nwse-resize';
+      else if (mode === 'resize-bottom' || mode === 'resize-top') panel.style.cursor = 'ns-resize';
+      else if (mode === 'resize-br' || mode === 'resize-tl') panel.style.cursor = 'nwse-resize';
+      else if (mode === 'resize-tr' || mode === 'resize-bl') panel.style.cursor = 'nesw-resize';
       else panel.style.cursor = 'default';
     }
   }
@@ -645,22 +677,28 @@ function updateDragResize(cell) {
   const orig = originalItem;
   let { x, y, w, h } = orig;
 
-  if (dragMode === 'resize-right' || dragMode === 'resize-br') {
+  if (dragMode.includes('right')) {
     w = Math.max(1, Math.min(COLS - x, cell.x - x + 1));
   }
-  if (dragMode === 'resize-bottom' || dragMode === 'resize-br') {
+  if (dragMode.includes('bottom') || dragMode === 'resize-bl') {
     h = Math.max(1, cell.y - y + 1);
   }
-  if (dragMode === 'resize-left') {
+  if (dragMode.includes('left') && dragMode !== 'resize-bl') {
     const newX = Math.min(cell.x, x + w - 1);
     w = x + w - newX;
     x = newX;
+  }
+  if (dragMode.includes('top')) {
+    const newY = Math.min(cell.y, y + h - 1);
+    h = y + h - newY;
+    y = newY;
   }
 
   const proposed = items.map(i =>
     i.id === dragId ? { ...i, x, y, w, h } : { ...i }
   );
-  const resolved = compact(proposed, dragId);
+  // Resize uses insert-rows (predictable shift) instead of compact (gravity)
+  const resolved = displaceByInsertingRows(proposed, dragId);
 
   const before = capturePositions();
   const resized = resolved.find(i => i.id === dragId);
@@ -692,20 +730,37 @@ function finishDrag() {
   } else {
     let { x, y, w, h } = originalItem;
     const cell = lastSnapCell;
-    if (dragMode === 'resize-right' || dragMode === 'resize-br') {
+    if (dragMode.includes('right')) {
       w = Math.max(1, Math.min(COLS - x, cell.x - x + 1));
     }
-    if (dragMode === 'resize-bottom' || dragMode === 'resize-br') {
+    if (dragMode.includes('bottom') || dragMode === 'resize-bl') {
       h = Math.max(1, cell.y - y + 1);
     }
-    if (dragMode === 'resize-left') {
+    if (dragMode.includes('left') && dragMode !== 'resize-bl') {
       const newX = Math.min(cell.x, x + w - 1);
       w = x + w - newX;
       x = newX;
     }
+    if (dragMode.includes('top')) {
+      const newY = Math.min(cell.y, y + h - 1);
+      h = y + h - newY;
+      y = newY;
+    }
     finalItems = items.map(i =>
       i.id === dragId ? { ...i, x, y, w, h } : { ...i }
     );
+    // Resize uses insert-rows displacement
+    items = displaceByInsertingRows(finalItems, dragId);
+    if (placeholder) { placeholder.remove(); placeholder = null; }
+    render();
+    statusEl.textContent = `Resized ${originalItem.label}`;
+    dragging = false;
+    dragId = null;
+    dragMode = null;
+    dragOrigin = null;
+    lastSnapCell = null;
+    originalItem = null;
+    return;
   }
 
   items = compact(finalItems, dragId);
