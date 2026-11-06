@@ -314,11 +314,16 @@ function overlaps(a, b) {
       && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-function compact(allItems, movedId) {
+// Resolve overlaps then compact upward — used for both move and resize
+// 1. Push: items overlapping the moved item go just below it
+// 2. Cascade: repeat until no overlaps remain (only between actually conflicting pairs)
+// 3. Compact: pull every non-moved item upward to the lowest non-blocked row
+function resolveAndCompact(allItems, movedId) {
   const result = allItems.map(i => ({ ...i }));
   const moved = result.find(i => i.id === movedId);
   if (!moved) return result;
 
+  // Push direct overlaps below the moved item
   for (const item of result) {
     if (item.id === movedId) continue;
     if (overlaps(moved, item)) {
@@ -326,53 +331,38 @@ function compact(allItems, movedId) {
     }
   }
 
-  result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
-  for (let i = 0; i < result.length; i++) {
-    for (let j = i + 1; j < result.length; j++) {
-      if (overlaps(result[i], result[j])) {
-        result[j].y = result[i].y + result[i].h;
+  // Cascade: keep resolving until stable (max 50 iterations for safety)
+  for (let pass = 0; pass < 50; pass++) {
+    let changed = false;
+    result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        if (result[i].id === result[j].id) continue;
+        if (overlaps(result[i], result[j])) {
+          const pushY = result[i].y + result[i].h;
+          if (result[j].y < pushY) {
+            result[j].y = pushY;
+            changed = true;
+          }
+        }
       }
     }
+    if (!changed) break;
   }
 
+  // Compact: pull every non-moved item upward
   result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
   for (const item of result) {
     if (item.id === movedId) continue;
-    let bestY = 0;
-    while (bestY < item.y) {
-      const candidate = { ...item, y: bestY };
+    for (let tryY = 0; tryY < item.y; tryY++) {
+      const candidate = { ...item, y: tryY };
       const blocked = result.some(other =>
         other !== item && overlaps(candidate, other)
       );
       if (!blocked) {
-        item.y = bestY;
+        item.y = tryY;
         break;
       }
-      bestY++;
-    }
-  }
-
-  return result;
-}
-
-// Insert-rows displacement — used for resize
-// Instead of cascading pushes, shift everything at or below the overlap down uniformly
-function displaceByInsertingRows(allItems, movedId) {
-  const result = allItems.map(i => ({ ...i }));
-  const moved = result.find(i => i.id === movedId);
-  if (!moved) return result;
-
-  const displaced = result.filter(i => i.id !== movedId && overlaps(moved, i));
-  if (displaced.length === 0) return result;
-
-  const firstOverlapY = Math.min(...displaced.map(i => i.y));
-  const shiftAmount = (moved.y + moved.h) - firstOverlapY;
-  if (shiftAmount <= 0) return result;
-
-  for (const item of result) {
-    if (item.id === movedId) continue;
-    if (item.y >= firstOverlapY) {
-      item.y += shiftAmount;
     }
   }
 
@@ -656,7 +646,7 @@ function updateDragMove(cell) {
   const proposed = items.map(i =>
     i.id === dragId ? { ...i, x: newX, y: newY } : { ...i }
   );
-  const resolved = compact(proposed, dragId);
+  const resolved = resolveAndCompact(proposed, dragId);
 
   const before = capturePositions();
   const movedItem = resolved.find(i => i.id === dragId);
@@ -697,8 +687,7 @@ function updateDragResize(cell) {
   const proposed = items.map(i =>
     i.id === dragId ? { ...i, x, y, w, h } : { ...i }
   );
-  // Resize uses insert-rows (predictable shift) instead of compact (gravity)
-  const resolved = displaceByInsertingRows(proposed, dragId);
+  const resolved = resolveAndCompact(proposed, dragId);
 
   const before = capturePositions();
   const resized = resolved.find(i => i.id === dragId);
@@ -749,8 +738,7 @@ function finishDrag() {
     finalItems = items.map(i =>
       i.id === dragId ? { ...i, x, y, w, h } : { ...i }
     );
-    // Resize uses insert-rows displacement
-    items = displaceByInsertingRows(finalItems, dragId);
+    items = resolveAndCompact(finalItems, dragId);
     if (placeholder) { placeholder.remove(); placeholder = null; }
     render();
     statusEl.textContent = `Resized ${originalItem.label}`;
@@ -763,7 +751,7 @@ function finishDrag() {
     return;
   }
 
-  items = compact(finalItems, dragId);
+  items = resolveAndCompact(finalItems, dragId);
 
   if (placeholder) { placeholder.remove(); placeholder = null; }
   render();
