@@ -126,7 +126,10 @@ class GridEditControllerImpl implements GridEditController {
 
     const rect = this.gridEl.getBoundingClientRect();
     this.geometry = computeGridGeometry(rect, this.columns, this.rowHeight, this.gap);
-    this.overlay = createGridOverlay(this.gridEl, this.geometry);
+    const hasFixedRows = getComputedStyle(this.gridEl).gridAutoRows !== "min-content";
+    if (hasFixedRows) {
+      this.overlay = createGridOverlay(this.gridEl, this.geometry);
+    }
     this._insertionZones = createInsertionZones(this.gridEl, this.geometry, this.items);
 
     this.gridEl.addEventListener("pointerdown", this.onPointerDown);
