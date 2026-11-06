@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid Drag POC — #618</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f0f;
+    color: #fafafa;
+    padding: 24px;
+  }
+  h1 { font-size: 18px; margin-bottom: 8px; font-weight: 500; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 20px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 80px;
+    gap: 8px;
+    padding: 8px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    position: relative;
+  }
+
+  .panel {
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .panel .handle {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: rgba(255,255,255,0.9);
+    cursor: grab;
+    flex-shrink: 0;
+  }
+  .panel .handle::before {
+    content: '⠿';
+    margin-right: 6px;
+    opacity: 0;
+    transition: opacity 150ms;
+  }
+  .panel:hover .handle::before,
+  .grid[data-editing] .panel .handle::before {
+    opacity: 0.6;
+  }
+
+  .panel .body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    opacity: 0.8;
+  }
+
+  .grid[data-editing] .panel {
+    outline: 1px dashed rgba(255,255,255,0.2);
+    outline-offset: -1px;
+  }
+  .grid[data-editing] .panel:hover {
+    outline: 2px solid #3b82f6;
+  }
+  .panel.dragging {
+    opacity: 0.4 !important;
+    outline: 2px solid #3b82f6 !important;
+  }
+  .panel.dragging .handle { cursor: grabbing; }
+
+  .placeholder {
+    border: 2px dashed #3b82f6;
+    background: rgba(59, 130, 246, 0.12);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+
+  .controls {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .controls button {
+    padding: 6px 16px;
+    font-size: 13px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #222;
+    color: #eee;
+    cursor: pointer;
+  }
+  .controls button:hover { background: #333; }
+  .controls button.active { background: #2563eb; border-color: #2563eb; }
+
+  .status {
+    font-size: 12px;
+    color: #666;
+    margin-top: 12px;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Grid Drag POC — Placeholder + Compaction + FLIP</h1>
+<p class="subtitle">Proving: structural placeholder, vertical compaction, FLIP animation, drag handle (24px)</p>
+
+<div class="controls">
+  <button id="edit-btn">Edit Mode</button>
+  <button id="reset-btn">Reset</button>
+  <span id="status" class="status"></span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+// --- Model ---
+const COLS = 12;
+const GAP = 8;
+const HANDLE_HEIGHT = 24;
+const FLIP_DURATION = 200;
+
+const INITIAL_ITEMS = [
+  { id: 'A', x: 0, y: 0, w: 4, h: 3, color: '#1a6b5a', label: '4×3' },
+  { id: 'B', x: 4, y: 0, w: 8, h: 1, color: '#2563eb', label: '8×1' },
+  { id: 'C', x: 4, y: 1, w: 4, h: 2, color: '#9333ea', label: '4×2' },
+  { id: 'D', x: 8, y: 1, w: 2, h: 1, color: '#dc2626', label: '2×1' },
+  { id: 'E', x: 10, y: 1, w: 2, h: 1, color: '#ea580c', label: '2×1' },
+  { id: 'F', x: 8, y: 2, w: 4, h: 1, color: '#0891b2', label: '4×1' },
+  { id: 'G', x: 0, y: 3, w: 6, h: 2, color: '#b45309', label: '6×2' },
+  { id: 'H', x: 6, y: 3, w: 6, h: 2, color: '#059669', label: '6×2' },
+];
+
+let items = JSON.parse(JSON.stringify(INITIAL_ITEMS));
+let editing = false;
+let dragging = false;
+let dragId = null;
+let dragOrigin = null;    // { cellX, cellY } where pointer first hit
+let pointerStart = null;  // { px, py } for threshold
+let placeholder = null;
+let lastSnapCell = null;
+
+const grid = document.getElementById('grid');
+const editBtn = document.getElementById('edit-btn');
+const resetBtn = document.getElementById('reset-btn');
+const statusEl = document.getElementById('status');
+
+// --- Rendering ---
+function render() {
+  grid.innerHTML = '';
+  for (const item of items) {
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.dataset.id = item.id;
+    panel.style.background = item.color;
+    panel.style.gridColumn = `${item.x + 1} / span ${item.w}`;
+    panel.style.gridRow = `${item.y + 1} / span ${item.h}`;
+
+    const handle = document.createElement('div');
+    handle.className = 'handle';
+    handle.textContent = item.label;
+
+    const body = document.createElement('div');
+    body.className = 'body';
+    body.textContent = `${item.w}×${item.h}`;
+
+    panel.appendChild(handle);
+    panel.appendChild(body);
+    grid.appendChild(panel);
+  }
+}
+
+function applyPlacement(el, item) {
+  el.style.gridColumn = `${item.x + 1} / span ${item.w}`;
+  el.style.gridRow = `${item.y + 1} / span ${item.h}`;
+}
+
+// --- Grid Geometry ---
+function getGeometry() {
+  const rect = grid.getBoundingClientRect();
+  const padding = 8;
+  const innerWidth = rect.width - padding * 2;
+  const cellWidth = (innerWidth - GAP * (COLS - 1)) / COLS;
+  return { left: rect.left + padding, top: rect.top + padding, cellWidth };
+}
+
+function snapToCell(px, py) {
+  const g = getGeometry();
+  const step = g.cellWidth + GAP;
+  return {
+    x: Math.max(0, Math.min(COLS - 1, Math.floor((px - g.left) / step))),
+    y: Math.max(0, Math.floor((py - g.top) / (80 + GAP))),
+  };
+}
+
+// --- Overlap / Compaction ---
+function overlaps(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x
+      && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function compact(allItems, movedId) {
+  const result = allItems.map(i => ({ ...i }));
+  const moved = result.find(i => i.id === movedId);
+  if (!moved) return result;
+
+  // Push: items overlapping the moved item go below it
+  for (const item of result) {
+    if (item.id === movedId) continue;
+    if (overlaps(moved, item)) {
+      item.y = moved.y + moved.h;
+    }
+  }
+
+  // Cascade pushes
+  result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+  for (let i = 0; i < result.length; i++) {
+    for (let j = i + 1; j < result.length; j++) {
+      if (overlaps(result[i], result[j])) {
+        result[j].y = result[i].y + result[i].h;
+      }
+    }
+  }
+
+  // Compact upward (skip the moved item — it stays where dropped)
+  result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+  for (const item of result) {
+    if (item.id === movedId) continue;
+    let bestY = 0;
+    while (bestY < item.y) {
+      const candidate = { ...item, y: bestY };
+      const blocked = result.some(other =>
+        other !== item && overlaps(candidate, other)
+      );
+      if (!blocked) {
+        item.y = bestY;
+        break;
+      }
+      bestY++;
+    }
+  }
+
+  return result;
+}
+
+// --- FLIP Animation ---
+function capturePositions() {
+  const positions = new Map();
+  for (const el of grid.querySelectorAll('.panel')) {
+    positions.set(el.dataset.id, el.getBoundingClientRect());
+  }
+  return positions;
+}
+
+function flipAnimate(before) {
+  for (const el of grid.querySelectorAll('.panel')) {
+    const id = el.dataset.id;
+    if (id === dragId) continue;  // don't animate the dragged item
+    const oldRect = before.get(id);
+    if (!oldRect) continue;
+    const newRect = el.getBoundingClientRect();
+    const dx = oldRect.left - newRect.left;
+    const dy = oldRect.top - newRect.top;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+
+    // Invert: place at old position
+    el.style.transition = 'none';
+    el.style.transform = `translate(${dx}px, ${dy}px)`;
+
+    // Play: animate to new position
+    requestAnimationFrame(() => {
+      el.style.transition = `transform ${FLIP_DURATION}ms ease`;
+      el.style.transform = '';
+    });
+  }
+}
+
+// --- Edit Mode ---
+editBtn.addEventListener('click', () => {
+  editing = !editing;
+  editBtn.classList.toggle('active', editing);
+  editBtn.textContent = editing ? 'Exit Edit' : 'Edit Mode';
+  grid.toggleAttribute('data-editing', editing);
+  if (!editing && dragging) cancelDrag();
+  statusEl.textContent = editing ? 'Click and drag a panel by its title bar' : '';
+});
+
+resetBtn.addEventListener('click', () => {
+  items = JSON.parse(JSON.stringify(INITIAL_ITEMS));
+  render();
+  statusEl.textContent = 'Reset to initial layout';
+});
+
+// --- Drag ---
+grid.addEventListener('pointerdown', (e) => {
+  if (!editing) return;
+  const panel = e.target.closest('.panel');
+  if (!panel) return;
+
+  // Drag handle check — only the top 24px
+  const panelRect = panel.getBoundingClientRect();
+  if (e.clientY - panelRect.top > HANDLE_HEIGHT) {
+    statusEl.textContent = 'Drag from the title bar (top 24px)';
+    return;
+  }
+
+  const id = panel.dataset.id;
+  dragId = id;
+  pointerStart = { px: e.clientX, py: e.clientY };
+  dragOrigin = snapToCell(e.clientX, e.clientY);
+
+  grid.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+
+grid.addEventListener('pointermove', (e) => {
+  if (!dragId) return;
+
+  // Threshold check
+  if (!dragging) {
+    const dx = e.clientX - pointerStart.px;
+    const dy = e.clientY - pointerStart.py;
+    if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+    startDrag();
+  }
+
+  const cell = snapToCell(e.clientX, e.clientY);
+  if (lastSnapCell && cell.x === lastSnapCell.x && cell.y === lastSnapCell.y) return;
+  lastSnapCell = cell;
+
+  updateDrag(cell);
+});
+
+grid.addEventListener('pointerup', (e) => {
+  if (!dragId) return;
+  if (!dragging) { dragId = null; return; }
+  finishDrag();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && dragging) cancelDrag();
+});
+
+function startDrag() {
+  dragging = true;
+  const item = items.find(i => i.id === dragId);
+
+  // Fade the dragged panel
+  const panel = grid.querySelector(`[data-id="${dragId}"]`);
+  if (panel) panel.classList.add('dragging');
+
+  // Create placeholder
+  placeholder = document.createElement('div');
+  placeholder.className = 'placeholder';
+  applyPlacement(placeholder, item);
+  grid.appendChild(placeholder);
+
+  statusEl.textContent = `Dragging ${item.label}`;
+}
+
+function updateDrag(cell) {
+  const item = items.find(i => i.id === dragId);
+  if (!item) return;
+
+  // Compute new placement from drag offset
+  const offsetX = cell.x - dragOrigin.x;
+  const offsetY = cell.y - dragOrigin.y;
+  const newX = Math.max(0, Math.min(COLS - item.w, item.x + offsetX));
+  const newY = Math.max(0, item.y + offsetY);
+
+  // Build proposed layout
+  const proposed = items.map(i =>
+    i.id === dragId ? { ...i, x: newX, y: newY } : { ...i }
+  );
+  const resolved = compact(proposed, dragId);
+
+  // FLIP: capture before
+  const before = capturePositions();
+
+  // Update placeholder
+  const movedItem = resolved.find(i => i.id === dragId);
+  if (movedItem) {
+    applyPlacement(placeholder, movedItem);
+  }
+
+  // Update all non-dragged panels
+  for (const ri of resolved) {
+    if (ri.id === dragId) continue;
+    const el = grid.querySelector(`[data-id="${ri.id}"]`);
+    if (el) applyPlacement(el, ri);
+  }
+
+  // FLIP: animate
+  flipAnimate(before);
+
+  statusEl.textContent = `Dragging ${item.label} → (${newX}, ${newY})`;
+}
+
+function finishDrag() {
+  const item = items.find(i => i.id === dragId);
+  if (!item || !lastSnapCell) { cancelDrag(); return; }
+
+  const offsetX = lastSnapCell.x - dragOrigin.x;
+  const offsetY = lastSnapCell.y - dragOrigin.y;
+  const newX = Math.max(0, Math.min(COLS - item.w, item.x + offsetX));
+  const newY = Math.max(0, item.y + offsetY);
+
+  const proposed = items.map(i =>
+    i.id === dragId ? { ...i, x: newX, y: newY } : { ...i }
+  );
+  items = compact(proposed, dragId);
+
+  // Remove placeholder and re-render
+  if (placeholder) { placeholder.remove(); placeholder = null; }
+  render();
+
+  statusEl.textContent = `Dropped ${item.label} at (${newX}, ${newY})`;
+  dragging = false;
+  dragId = null;
+  dragOrigin = null;
+  lastSnapCell = null;
+}
+
+function cancelDrag() {
+  if (placeholder) { placeholder.remove(); placeholder = null; }
+
+  // Restore all panels to their original positions
+  for (const item of items) {
+    const el = grid.querySelector(`[data-id="${item.id}"]`);
+    if (el) {
+      el.classList.remove('dragging');
+      el.style.transform = '';
+      el.style.transition = '';
+      applyPlacement(el, item);
+    }
+  }
+
+  statusEl.textContent = 'Drag cancelled';
+  dragging = false;
+  dragId = null;
+  dragOrigin = null;
+  lastSnapCell = null;
+}
+
+// --- Init ---
+render();
+</script>
+</body>
+</html>
