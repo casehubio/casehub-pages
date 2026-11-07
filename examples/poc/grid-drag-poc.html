@@ -167,6 +167,10 @@
   <button id="edit-btn">Edit Mode</button>
   <button id="reset-btn">Reset</button>
   <button id="delete-btn" class="delete-btn" style="display:none">Delete</button>
+  <select id="compactor-select" style="padding:4px 8px;font-size:13px;border:1px solid #444;border-radius:4px;background:#222;color:#eee;">
+    <option value="vertical" selected>Vertical (gravity)</option>
+    <option value="float">Float (no gravity)</option>
+  </select>
   <span id="status" class="status"></span>
 </div>
 
@@ -187,6 +191,45 @@ const ROW_H = 80;
 const HANDLE_HEIGHT = 24;
 const FLIP_DURATION = 200;
 const RESIZE_INSET = 8;
+
+// --- Pluggable Compactors ---
+const compactors = {
+  vertical: {
+    resolve(items, movedId) {
+      const moved = items.find(i => i.id === movedId);
+      const placed = [moved];
+      const rest = items
+        .filter(i => i.id !== movedId)
+        .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+      for (const item of rest) {
+        for (let tryY = 0; ; tryY++) {
+          const candidate = { ...item, y: tryY };
+          const blocked = placed.some(p => overlaps(candidate, p));
+          if (!blocked) { item.y = tryY; placed.push(item); break; }
+        }
+      }
+    },
+  },
+  float: {
+    resolve(items, movedId) {
+      const moved = items.find(i => i.id === movedId);
+      for (const item of items) {
+        if (item.id === movedId) continue;
+        while (overlaps(moved, item)) { item.y += 1; }
+      }
+      const sorted = items.filter(i => i.id !== movedId).sort((a, b) => a.y - b.y);
+      for (let i = 0; i < sorted.length; i++) {
+        for (let j = i + 1; j < sorted.length; j++) {
+          if (overlaps(sorted[i], sorted[j])) {
+            sorted[j].y = sorted[i].y + sorted[i].h;
+          }
+        }
+      }
+    },
+  },
+};
+
+function getCompactor() { return compactors[compactorSelect.value] || compactors.vertical; }
 
 const INITIAL_ITEMS = [
   { id: 'A', x: 0, y: 0, w: 4, h: 3, color: '#1a6b5a', label: '4×3' },
@@ -218,6 +261,7 @@ const grid = document.getElementById('grid');
 const editBtn = document.getElementById('edit-btn');
 const resetBtn = document.getElementById('reset-btn');
 const deleteBtn = document.getElementById('delete-btn');
+const compactorSelect = document.getElementById('compactor-select');
 const statusEl = document.getElementById('status');
 const helpEl = document.getElementById('help');
 
@@ -314,31 +358,9 @@ function overlaps(a, b) {
       && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-// Single-rule layout resolver.
-// Fix moved item at its new placement, then re-place every other item
-// at the lowest valid row. One rule, no special cases.
 function resolveAndCompact(allItems, movedId) {
   const result = allItems.map(i => ({ ...i }));
-  const moved = result.find(i => i.id === movedId);
-  if (!moved) return result;
-
-  const placed = [moved];
-  const rest = result
-    .filter(i => i.id !== movedId)
-    .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
-
-  for (const item of rest) {
-    for (let tryY = 0; ; tryY++) {
-      const candidate = { ...item, y: tryY };
-      const blocked = placed.some(p => overlaps(candidate, p));
-      if (!blocked) {
-        item.y = tryY;
-        placed.push(item);
-        break;
-      }
-    }
-  }
-
+  getCompactor().resolve(result, movedId);
   return result;
 }
 

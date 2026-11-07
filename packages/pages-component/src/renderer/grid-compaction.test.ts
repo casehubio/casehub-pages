@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { resolveAndCompact } from "./grid-compaction.js";
+import { resolveAndCompact, verticalCompactor, floatCompactor } from "./grid-compaction.js";
+import type { GridCompactor } from "./grid-compaction.js";
 import type { IdentifiedPlacement } from "./grid-collision.js";
 
 function p(x: number, y: number, w: number, h: number) {
@@ -189,7 +190,6 @@ describe("resolveAndCompact", () => {
         item("a", 0, 0, 6, 2),
         item("b", 0, 2, 6, 1),
       ];
-      // Move a down to y:1 — overlaps b. b displaced then compacts to y:0 (freed by a moving down)
       const result = resolveAndCompact(items, "a", p(0, 1, 6, 2));
       expect(find(result, "a").y).toBe(1);
       expect(find(result, "b").y).toBe(0);
@@ -200,11 +200,62 @@ describe("resolveAndCompact", () => {
         item("a", 0, 0, 6, 2),
         item("b", 0, 3, 6, 1),
       ];
-      // Move a to y:2 — b was at y:3, a now covers y:2-3, pushes b to y:4
-      // But compact pulls b up: b at y:0 doesn't overlap a at y:2. b goes to y:0.
       const result = resolveAndCompact(items, "a", p(0, 2, 6, 2));
       expect(find(result, "a").y).toBe(2);
       expect(find(result, "b").y).toBe(0);
     });
+  });
+});
+
+describe("floatCompactor", () => {
+  it("does not compact gaps — items stay where they are", () => {
+    const items = [item("a", 0, 0, 4, 1), item("b", 0, 5, 4, 1)];
+    const result = resolveAndCompact(items, "a", p(0, 0, 4, 1), floatCompactor);
+    expect(find(result, "b").y).toBe(5);
+  });
+
+  it("pushes overlapping item down minimally", () => {
+    const items = [item("a", 0, 0, 6, 1), item("b", 0, 0, 6, 1)];
+    const result = resolveAndCompact(items, "a", p(0, 0, 6, 2));
+    expect(find(result, "b").y).toBe(2);
+  });
+
+  it("does not move non-overlapping items", () => {
+    const items = [
+      item("a", 0, 0, 4, 1),
+      item("b", 4, 0, 4, 1),
+      item("c", 0, 3, 4, 1),
+    ];
+    const result = resolveAndCompact(items, "a", p(0, 0, 8, 2), floatCompactor);
+    expect(find(result, "b").y).toBe(2);
+    expect(find(result, "c").y).toBe(3);
+  });
+
+  it("shrink does NOT compact — items stay in displaced position", () => {
+    const items = [item("a", 0, 0, 6, 1), item("b", 6, 0, 6, 1)];
+    const expanded = resolveAndCompact(items, "a", p(0, 0, 12, 1), floatCompactor);
+    expect(find(expanded, "b").y).toBe(1);
+
+    const shrunk = resolveAndCompact(expanded, "a", p(0, 0, 6, 1), floatCompactor);
+    expect(find(shrunk, "b").y).toBe(1);
+  });
+});
+
+describe("pluggable compactor", () => {
+  it("accepts a custom compactor", () => {
+    const noopCompactor: GridCompactor = {
+      resolve(_items, _movedId) {},
+    };
+    const items = [item("a", 0, 0, 6, 1), item("b", 0, 0, 6, 1)];
+    const result = resolveAndCompact(items, "a", p(0, 0, 6, 2), noopCompactor);
+    expect(find(result, "b").y).toBe(0);
+  });
+
+  it("vertical and float produce different results for same input", () => {
+    const items = [item("a", 0, 0, 4, 1), item("b", 0, 5, 4, 1)];
+    const vertical = resolveAndCompact(items, "a", p(0, 0, 4, 1), verticalCompactor);
+    const float = resolveAndCompact(items, "a", p(0, 0, 4, 1), floatCompactor);
+    expect(find(vertical, "b").y).toBe(1);
+    expect(find(float, "b").y).toBe(5);
   });
 });
