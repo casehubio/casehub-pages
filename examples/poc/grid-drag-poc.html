@@ -180,17 +180,61 @@
     line-height: 1.6;
   }
 
+  /* Row breaks */
+  .row-break {
+    grid-column: 1 / -1;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: #252525;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #aaa;
+    cursor: default;
+    user-select: none;
+    gap: 6px;
+  }
+  .row-break .break-toggle {
+    cursor: pointer;
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 150ms;
+    width: 14px;
+    text-align: center;
+  }
+  .row-break .break-toggle:hover { opacity: 1; }
+  .row-break .break-toggle.collapsed { transform: rotate(-90deg); }
+  .row-break .break-title { flex: 1; }
+  .row-break .break-drag {
+    display: none;
+    cursor: grab;
+    opacity: 0.4;
+    font-size: 12px;
+  }
+  .row-break .break-drag:hover { opacity: 0.9; }
+  .grid[data-editing] .row-break .break-drag { display: inline; }
+  .grid[data-editing] .row-break {
+    outline: 1px dashed rgba(255,255,255,0.15);
+    outline-offset: -1px;
+  }
+  .grid[data-editing] .row-break:hover {
+    outline: 1px solid #3b82f6;
+  }
+
 </style>
 </head>
 <body>
 
 <h1>Grid Drag POC — Move, Resize, Delete</h1>
-<p class="subtitle">Proving: structural placeholder, compaction, FLIP animation, resize spanning, two-stage delete, dual drag handles</p>
+<p class="subtitle">Proving: structural placeholder, compaction, FLIP animation, resize spanning, two-stage delete, dual drag handles, row breaks</p>
 
 <div class="controls">
   <button id="edit-btn">Edit Mode</button>
   <button id="reset-btn">Reset</button>
   <button id="delete-btn" class="delete-btn" style="display:none">Delete</button>
+  <button id="add-break-btn" style="display:none">+ Break</button>
   <select id="compactor-select" style="padding:4px 8px;font-size:13px;border:1px solid #444;border-radius:4px;background:#222;color:#eee;">
     <option value="vertical" selected>Vertical (gravity)</option>
     <option value="float">Float (no gravity)</option>
@@ -223,8 +267,7 @@
   <b>⇄ drag:</b> swap positions &nbsp;
   <b>⌥+⇄ drag:</b> replace (destructive) &nbsp;
   <b>Resize:</b> drag edges or corners &nbsp;
-  <b>Select:</b> click a panel &nbsp;
-  <b>Delete:</b> select then Delete — two-stage &nbsp;
+  <b>Row breaks:</b> gravity boundaries — click ▼ to collapse, drag ⠿ to reorder &nbsp;
   <b>Esc:</b> cancel drag or deselect
 </div>
 
@@ -237,16 +280,31 @@ const FLIP_DURATION = 200;
 const RESIZE_INSET = 8;
 
 // --- Pluggable Compactors ---
+function getSectionFloor(item, allItems) {
+  // Find the nearest break above this item — that's the compaction floor
+  let floor = 0;
+  for (const other of allItems) {
+    if (other.type === 'break' && other.y + other.h <= item.y && other.y + other.h > floor) {
+      floor = other.y + other.h;
+    }
+  }
+  return floor;
+}
+
 const compactors = {
   vertical: {
     resolve(items, movedId) {
       const moved = items.find(i => i.id === movedId);
       const placed = [moved];
+      // Breaks are placed first and treated as immovable
+      const breaks = items.filter(i => i.type === 'break' && i.id !== movedId);
+      for (const brk of breaks) placed.push(brk);
       const rest = items
-        .filter(i => i.id !== movedId)
+        .filter(i => i.id !== movedId && i.type !== 'break')
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
       for (const item of rest) {
-        for (let tryY = 0; ; tryY++) {
+        const floor = getSectionFloor(item, items);
+        for (let tryY = floor; ; tryY++) {
           const candidate = { ...item, y: tryY };
           const blocked = placed.some(p => overlaps(candidate, p));
           if (!blocked) { item.y = tryY; placed.push(item); break; }
@@ -277,6 +335,7 @@ function getCompactor() { return compactors[compactorSelect.value] || compactors
 
 // sizing: { widthMode: 'proportional'|'fixed', heightMode: 'rows'|'fixed'|'content',
 //           fixedWidth?: px, fixedHeight?: px }
+let breakCounter = 1;
 const INITIAL_ITEMS = [
   { id: 'A', x: 0, y: 0, w: 4, h: 3, color: '#1a6b5a', label: 'A', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
   { id: 'B', x: 4, y: 0, w: 8, h: 1, color: '#2563eb', label: 'B', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
@@ -284,8 +343,9 @@ const INITIAL_ITEMS = [
   { id: 'D', x: 8, y: 1, w: 2, h: 1, color: '#dc2626', label: 'D', sizing: { widthMode: 'fixed', heightMode: 'rows', fixedWidth: 160 } },
   { id: 'E', x: 10, y: 1, w: 2, h: 1, color: '#ea580c', label: 'E', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
   { id: 'F', x: 8, y: 2, w: 4, h: 1, color: '#0891b2', label: 'F', sizing: { widthMode: 'proportional', heightMode: 'fixed', fixedHeight: 120 } },
-  { id: 'G', x: 0, y: 3, w: 6, h: 2, color: '#b45309', label: 'G', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
-  { id: 'H', x: 6, y: 3, w: 6, h: 2, color: '#059669', label: 'H', sizing: { widthMode: 'proportional', heightMode: 'content' } },
+  { id: 'brk-1', x: 0, y: 3, w: 12, h: 1, type: 'break', label: 'Section 2', collapsed: false },
+  { id: 'G', x: 0, y: 4, w: 6, h: 2, color: '#b45309', label: 'G', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
+  { id: 'H', x: 6, y: 4, w: 6, h: 2, color: '#059669', label: 'H', sizing: { widthMode: 'proportional', heightMode: 'content' } },
 ];
 
 let items = JSON.parse(JSON.stringify(INITIAL_ITEMS));
@@ -315,6 +375,7 @@ const propWidthMode = document.getElementById('prop-width-mode');
 const propFixedWidth = document.getElementById('prop-fixed-width');
 const propHeightMode = document.getElementById('prop-height-mode');
 const propFixedHeight = document.getElementById('prop-fixed-height');
+const addBreakBtn = document.getElementById('add-break-btn');
 const statusEl = document.getElementById('status');
 const helpEl = document.getElementById('help');
 
@@ -336,55 +397,99 @@ function render() {
     grid.appendChild(el);
   }
 
-  // Render panels
-  for (const item of items) {
-    const panel = document.createElement('div');
-    panel.className = 'panel';
-    if (selectedId === item.id) panel.classList.add('selected');
-    panel.dataset.id = item.id;
-    panel.style.background = item.color;
-    panel.style.gridColumn = `${item.x + 1} / span ${item.w}`;
-    panel.style.gridRow = `${item.y + 1} / span ${item.h}`;
-    applySizing(panel, item);
-
-    const handle = document.createElement('div');
-    handle.className = 'handle';
-    const moveIcon = document.createElement('span');
-    moveIcon.className = 'drag-icon move-icon';
-    moveIcon.textContent = '⠿';
-    moveIcon.dataset.dragIntent = 'displace';
-    moveIcon.title = 'Drag to displace';
-    const swapIcon = document.createElement('span');
-    swapIcon.className = 'drag-icon swap-icon';
-    swapIcon.textContent = '⇄';
-    swapIcon.dataset.dragIntent = 'swap';
-    swapIcon.title = 'Drag to swap (⌥ = replace)';
-    handle.appendChild(moveIcon);
-    handle.appendChild(swapIcon);
-    const labelSpan = document.createElement('span');
-    labelSpan.className = 'label';
-    labelSpan.textContent = item.label;
-    handle.appendChild(labelSpan);
-
-    const body = document.createElement('div');
-    body.className = 'body';
-    const s = item.sizing || {};
-    const wLabel = s.widthMode === 'fixed' ? `${s.fixedWidth}px` : `${item.w}col`;
-    const hLabel = s.heightMode === 'fixed' ? `${s.fixedHeight}px` : s.heightMode === 'content' ? 'auto' : `${item.h}row`;
-    body.textContent = `${wLabel} × ${hLabel}`;
-
-    panel.appendChild(handle);
-    panel.appendChild(body);
-
-    // Resize handles (visible in edit mode via CSS)
-    for (const dir of ['right', 'bottom', 'left', 'top-edge', 'br']) {
-      const rh = document.createElement('div');
-      rh.className = `resize-handle ${dir}`;
-      rh.dataset.resize = dir;
-      panel.appendChild(rh);
+  // Find collapsed sections (panels hidden by collapsed breaks)
+  const breaks = items.filter(i => i.type === 'break').sort((a, b) => a.y - b.y);
+  const collapsedSections = new Set();
+  for (const brk of breaks) {
+    if (brk.collapsed) {
+      const nextBreak = breaks.find(b => b.y > brk.y);
+      const sectionEnd = nextBreak ? nextBreak.y : Infinity;
+      for (const item of items) {
+        if (item.type === 'break') continue;
+        if (item.y > brk.y && item.y < sectionEnd) collapsedSections.add(item.id);
+      }
     }
+  }
 
-    grid.appendChild(panel);
+  // Render all items (panels + breaks)
+  for (const item of items) {
+    if (item.type === 'break') {
+      // Render row break
+      const el = document.createElement('div');
+      el.className = 'row-break';
+      el.dataset.id = item.id;
+      el.style.gridRow = `${item.y + 1} / span 1`;
+
+      const toggle = document.createElement('span');
+      toggle.className = 'break-toggle' + (item.collapsed ? ' collapsed' : '');
+      toggle.textContent = '▼';
+      toggle.addEventListener('click', () => toggleBreak(item.id));
+
+      const title = document.createElement('span');
+      title.className = 'break-title';
+      title.textContent = item.label;
+
+      const drag = document.createElement('span');
+      drag.className = 'break-drag drag-icon move-icon';
+      drag.textContent = '⠿';
+      drag.dataset.dragIntent = 'displace';
+
+      el.appendChild(drag);
+      el.appendChild(toggle);
+      el.appendChild(title);
+      grid.appendChild(el);
+    } else {
+      // Skip panels in collapsed sections
+      if (collapsedSections.has(item.id)) continue;
+
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+      if (selectedId === item.id) panel.classList.add('selected');
+      panel.dataset.id = item.id;
+      panel.style.background = item.color;
+      panel.style.gridColumn = `${item.x + 1} / span ${item.w}`;
+      panel.style.gridRow = `${item.y + 1} / span ${item.h}`;
+      applySizing(panel, item);
+
+      const handle = document.createElement('div');
+      handle.className = 'handle';
+      const moveIcon = document.createElement('span');
+      moveIcon.className = 'drag-icon move-icon';
+      moveIcon.textContent = '⠿';
+      moveIcon.dataset.dragIntent = 'displace';
+      moveIcon.title = 'Drag to displace';
+      const swapIcon = document.createElement('span');
+      swapIcon.className = 'drag-icon swap-icon';
+      swapIcon.textContent = '⇄';
+      swapIcon.dataset.dragIntent = 'swap';
+      swapIcon.title = 'Drag to swap (⌥ = replace)';
+      handle.appendChild(moveIcon);
+      handle.appendChild(swapIcon);
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'label';
+      labelSpan.textContent = item.label;
+      handle.appendChild(labelSpan);
+
+      const body = document.createElement('div');
+      body.className = 'body';
+      const s = item.sizing || {};
+      const wLabel = s.widthMode === 'fixed' ? `${s.fixedWidth}px` : `${item.w}col`;
+      const hLabel = s.heightMode === 'fixed' ? `${s.fixedHeight}px` : s.heightMode === 'content' ? 'auto' : `${item.h}row`;
+      body.textContent = `${wLabel} × ${hLabel}`;
+
+      panel.appendChild(handle);
+      panel.appendChild(body);
+
+      // Resize handles (visible in edit mode via CSS)
+      for (const dir of ['right', 'bottom', 'left', 'top-edge', 'br']) {
+        const rh = document.createElement('div');
+        rh.className = `resize-handle ${dir}`;
+        rh.dataset.resize = dir;
+        panel.appendChild(rh);
+      }
+
+      grid.appendChild(panel);
+    }
   }
 
   updateLabels();
@@ -468,7 +573,9 @@ function compactAll(allItems) {
   const result = allItems.map(i => ({ ...i }));
   result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
   for (const item of result) {
-    let bestY = 0;
+    if (item.type === 'break') continue; // breaks don't compact
+    const floor = getSectionFloor(item, result);
+    let bestY = floor;
     while (bestY < item.y) {
       const candidate = { ...item, y: bestY };
       const blocked = result.some(other =>
@@ -487,7 +594,7 @@ function compactAll(allItems) {
 // --- FLIP Animation ---
 function capturePositions() {
   const positions = new Map();
-  for (const el of grid.querySelectorAll('.panel, .drop-placeholder')) {
+  for (const el of grid.querySelectorAll('.panel, .drop-placeholder, .row-break')) {
     const id = el.dataset.id || el.dataset.dropId;
     if (id) positions.set(id, el.getBoundingClientRect());
   }
@@ -495,7 +602,7 @@ function capturePositions() {
 }
 
 function flipAnimate(before, skipId) {
-  for (const el of grid.querySelectorAll('.panel, .drop-placeholder')) {
+  for (const el of grid.querySelectorAll('.panel, .drop-placeholder, .row-break')) {
     const id = el.dataset.id || el.dataset.dropId;
     if (id === skipId) continue;
     const oldRect = before.get(id);
@@ -658,6 +765,7 @@ editBtn.addEventListener('click', () => {
   editBtn.textContent = editing ? 'Exit Edit' : 'Edit Mode';
   grid.toggleAttribute('data-editing', editing);
   helpEl.style.display = editing ? '' : 'none';
+  addBreakBtn.style.display = editing ? '' : 'none';
   if (!editing) {
     if (dragging) cancelDrag();
     deselect();
@@ -668,6 +776,7 @@ editBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', () => {
   items = JSON.parse(JSON.stringify(INITIAL_ITEMS));
   dropPlaceholders = [];
+  breakCounter = 1;
   deselect();
   render();
   statusEl.textContent = 'Reset to initial layout';
@@ -682,6 +791,23 @@ grid.addEventListener('pointerdown', (e) => {
   // Clicking on a drop placeholder
   const dpEl = e.target.closest('.drop-placeholder');
   if (dpEl) return; // handled by click event on the placeholder
+
+  // Row break drag
+  const breakEl = e.target.closest('.row-break');
+  if (breakEl) {
+    const dragIcon = e.target.closest('.break-drag');
+    if (!dragIcon) return; // click on toggle or title — not a drag
+    const id = breakEl.dataset.id;
+    dragId = id;
+    dragMode = 'move';
+    dragIntent = 'displace';
+    originalItem = { ...items.find(i => i.id === id) };
+    pointerStart = { px: e.clientX, py: e.clientY };
+    dragOrigin = snapToCell(e.clientX, e.clientY);
+    grid.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    return;
+  }
 
   const panel = e.target.closest('.panel');
   if (!panel) { deselect(); return; }
@@ -770,12 +896,19 @@ document.addEventListener('keydown', (e) => {
 // --- Drag: Move ---
 function startDrag() {
   dragging = true;
-  const panel = grid.querySelector(`[data-id="${dragId}"]`);
-  if (panel) panel.classList.add('dragging');
+  const el = grid.querySelector(`[data-id="${dragId}"]`);
+  if (el) el.classList.add('dragging');
 
   placeholder = document.createElement('div');
-  placeholder.className = 'placeholder';
-  applyPlacement(placeholder, originalItem);
+  if (originalItem.type === 'break') {
+    placeholder.className = 'row-break';
+    placeholder.style.opacity = '0.4';
+    placeholder.style.gridRow = `${originalItem.y + 1} / span 1`;
+    placeholder.style.pointerEvents = 'none';
+  } else {
+    placeholder.className = 'placeholder';
+    applyPlacement(placeholder, originalItem);
+  }
   grid.appendChild(placeholder);
 
   statusEl.textContent = dragMode === 'swap'
@@ -792,14 +925,35 @@ function findOverlapping(proposed, movedId) {
 
 function updateDragMove(cell) {
   const item = originalItem;
-  const offsetX = cell.x - dragOrigin.x;
   const offsetY = cell.y - dragOrigin.y;
-  const newX = Math.max(0, Math.min(COLS - item.w, item.x + offsetX));
   const newY = Math.max(0, item.y + offsetY);
+  // Breaks only move vertically
+  const newX = item.type === 'break' ? 0 : Math.max(0, Math.min(COLS - item.w, item.x + (cell.x - dragOrigin.x)));
 
   const proposed = items.map(i =>
     i.id === dragId ? { ...i, x: newX, y: newY } : { ...i }
   );
+
+  if (item.type === 'break') {
+    // Break drag: show placeholder at target row, resolve and compact
+    if (placeholder) placeholder.style.gridRow = `${newY + 1} / span 1`;
+    const proposed = items.map(i =>
+      i.id === dragId ? { ...i, y: newY } : { ...i }
+    );
+    const resolved = resolveAndCompact(proposed, dragId);
+    const before = capturePositions();
+    for (const ri of resolved) {
+      if (ri.id === dragId) continue;
+      const el = grid.querySelector(`[data-id="${ri.id}"]`);
+      if (el) {
+        if (ri.type === 'break') { el.style.gridRow = `${ri.y + 1} / span 1`; }
+        else { applyPlacement(el, ri); }
+      }
+    }
+    flipAnimate(before, dragId);
+    statusEl.textContent = `Moving break "${item.label}" → row ${newY}`;
+    return;
+  }
 
   if (dragIntent === 'swap') {
     // Swap mode: show placeholder without displacing, highlight swap target
@@ -990,7 +1144,8 @@ function cancelDrag() {
       el.classList.remove('dragging', 'swap-target', 'replace-target');
       el.style.transform = '';
       el.style.transition = '';
-      applyPlacement(el, item);
+      if (item.type === 'break') { el.style.gridRow = `${item.y + 1} / span 1`; }
+      else { applyPlacement(el, item); }
     }
   }
 
@@ -1003,6 +1158,27 @@ function cancelDrag() {
   lastSnapCell = null;
   originalItem = null;
 }
+
+// --- Row Breaks ---
+function toggleBreak(id) {
+  const brk = items.find(i => i.id === id);
+  if (!brk) return;
+  const before = capturePositions();
+  brk.collapsed = !brk.collapsed;
+  render();
+  flipAnimate(before, null);
+  statusEl.textContent = brk.collapsed ? `Collapsed "${brk.label}"` : `Expanded "${brk.label}"`;
+}
+
+addBreakBtn.addEventListener('click', () => {
+  breakCounter++;
+  const maxY = items.reduce((max, i) => Math.max(max, i.y + i.h), 0);
+  const before = capturePositions();
+  items.push({ id: `brk-${breakCounter}`, x: 0, y: maxY, w: 12, h: 1, type: 'break', label: `Section ${breakCounter}`, collapsed: false });
+  render();
+  flipAnimate(before, null);
+  statusEl.textContent = `Added row break at row ${maxY}`;
+});
 
 // --- Init ---
 render();
