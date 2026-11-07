@@ -293,30 +293,29 @@ No rendering components for `ControlStep` or `FusedPipelineStep` (which are also
 
 ---
 
-## Part 7 — In-Progress Platform Issues
+## Part 7 — Recently Landed Platform Issues
 
 ### #735 — Combined-Key Shorthand for Invoke Bindings
 
-**Status:** No branch, no commits, not started in either repo.
+**Status:** LANDED on platform (commit cddefa95, 2026-11-07).
 
-**What it adds:** `rest-request GET /api/users:` shorthand where discriminator fields (method + URL) are extracted from the key suffix and merged into step params.
+**What it adds:** When a key with a space fails direct registry lookup, Walker tries prefix-match: `rest-request GET /api/users:` → prefix `rest-request` resolved against registry, suffix `GET /api/users` becomes `_subject` in params. `RestRequestCompiler` parses `_subject` into `method` + `url`.
 
-**TS impact:** When Java implements this, TS needs the same combined-key extension — plus per-binding discriminator field mapping. The parsing mechanism is nearly identical in both repos.
+**TS impact (Phase 1):** TS Walker needs the same prefix-match fallback in its action resolution path. When the full key doesn't match a registered action, try splitting at the first space and looking up the prefix.
 
 ### #742 — `capture:` and `name:` as First-Class Step-Level Keys
 
-**Status:** No branch, no commits, not started in either repo.
+**Status:** LANDED on platform (commit cddefa95, 2026-11-07).
 
-**Current state:**
-- `capture` is in Java `DECORATOR_KEYS` — not in TS
-- `capture` runtime wiring exists in Java `PlaybookRunnerCore` for `PluginStep` only
-- `name:` does not exist in either — both use `step:` for naming
-- `seenNames` validates step name uniqueness in both
+**What it adds:**
+- `name` added to `STRUCTURAL_KEYS` — alias for `step:` but allowed inside structural blocks (where `step:` is rejected with an error directing to combined-key syntax)
+- `name:` and `step:` are mutually exclusive — both present throws
+- `capture` was already in `DECORATOR_KEYS` — no Walker change needed
 
-**TS impact:**
-1. Add `capture` to `DECORATOR_KEYS` and `RESERVED_KEYS` (C2 above)
-2. Wire capture in step evaluation — store `Result` output as named scope
-3. If `name:` is added in Java, add it to TS as an alias for `step:`
+**TS impact (Phase 1):**
+1. Add `name` to structural key handling in walker.ts — alias for `step:`, allowed inside structural blocks
+2. Add mutual exclusion check: `name:` + `step:` on same step throws
+3. Add `capture` to `DECORATOR_KEYS` and `RESERVED_KEYS` (C2 above)
 
 ---
 
@@ -362,6 +361,8 @@ Per the governing principle: every keyword, step type, and structural key that J
 | H8 | Result.failure.detail field | XS | Structural alignment |
 | L1 | OnCompleteExpander `name` → `step:` fix | XS | Produces invalid step naming |
 | M7 | DecoratorChain loop position alignment | XS | Decorator composition order mismatch |
+| #742 | Add `name` to structural keys (alias for `step:`, allowed inside structural blocks) | S | Walker rejects valid step naming |
+| #735 | Combined-key invoke shorthand (prefix-match fallback for action keys with spaces) | S | Walker rejects `rest-request GET /url:` syntax |
 
 ### Phase 2 — Runtime Parity (behaviour behind the schema)
 
