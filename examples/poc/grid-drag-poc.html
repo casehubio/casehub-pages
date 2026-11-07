@@ -289,7 +289,6 @@ const RESIZE_INSET = 8;
 
 // --- Pluggable Compactors ---
 function getSectionFloor(item, allItems) {
-  // Find the nearest break above this item — that's the compaction floor
   let floor = 0;
   for (const other of allItems) {
     if (other.type === 'break' && other.y + other.h <= item.y && other.y + other.h > floor) {
@@ -297,6 +296,23 @@ function getSectionFloor(item, allItems) {
     }
   }
   return floor;
+}
+
+function getSectionCeiling(item, allItems) {
+  let ceiling = Infinity;
+  for (const other of allItems) {
+    if (other.type === 'break' && other.y > item.y && other.y < ceiling) {
+      ceiling = other.y;
+    }
+  }
+  return ceiling;
+}
+
+function pushBreakAndBelow(breakItem, allItems, amount) {
+  const breakY = breakItem.y;
+  for (const item of allItems) {
+    if (item.y >= breakY) item.y += amount;
+  }
 }
 
 const compactors = {
@@ -337,7 +353,17 @@ const compactors = {
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
       for (const item of rest) {
         const floor = getSectionFloor(item, items);
+        let ceiling = getSectionCeiling(item, items);
         for (let tryY = floor; ; tryY++) {
+          if (tryY + item.h > ceiling) {
+            // No room in section — push the break (and everything below) down
+            const ceilingBreak = items.find(b => b.type === 'break' && b.y === ceiling);
+            if (ceilingBreak) {
+              pushBreakAndBelow(ceilingBreak, items, 1);
+              // Update placed array positions too (they reference same objects)
+              ceiling++;
+            }
+          }
           const candidate = { ...item, y: tryY };
           const blocked = placed.some(p => overlaps(candidate, p));
           if (!blocked) { item.y = tryY; placed.push(item); break; }
