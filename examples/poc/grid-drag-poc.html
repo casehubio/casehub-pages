@@ -1215,22 +1215,11 @@ function updateDragMove(cell) {
   );
 
   if (item.type === 'break') {
-    // Break drag: show placeholder at target row, resolve and compact
+    // Break drag: only move placeholder — don't compact until drop.
+    // Compacting during drag causes a feedback loop: compaction changes
+    // DOM row heights → snapToCell reads new heights → different snap
+    // → different compaction → oscillation.
     if (placeholder) placeholder.style.gridRow = `${newY + 1} / span 1`;
-    const proposed = items.map(i =>
-      i.id === dragId ? { ...i, y: newY } : { ...i }
-    );
-    const resolved = resolveAndCompact(proposed, dragId);
-    const before = capturePositions();
-    for (const ri of resolved) {
-      if (ri.id === dragId) continue;
-      const el = grid.querySelector(`[data-id="${ri.id}"]`);
-      if (el) {
-        if (ri.type === 'break') { el.style.gridRow = `${ri.y + 1} / span 1`; }
-        else { applyPlacement(el, ri); }
-      }
-    }
-    flipAnimate(before, dragId);
     statusEl.textContent = `Moving break "${item.label}" → row ${newY}`;
     return;
   }
