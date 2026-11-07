@@ -687,10 +687,41 @@ function getGeometry() {
 function snapToCell(px, py) {
   const g = getGeometry();
   const step = g.cellWidth + GAP;
-  return {
-    x: Math.max(0, Math.min(COLS - 1, Math.floor((px - g.left) / step))),
-    y: Math.max(0, Math.floor((py - g.top) / (ROW_H + GAP))),
-  };
+  const x = Math.max(0, Math.min(COLS - 1, Math.floor((px - g.left) / step)));
+
+  // Build actual row positions from rendered grid items
+  const gridRect = grid.getBoundingClientRect();
+  const rowTops = new Map();
+  for (const el of grid.querySelectorAll('.panel, .row-break, .placeholder')) {
+    const id = el.dataset.id || el.dataset.dropId;
+    if (!id) continue;
+    const r = el.getBoundingClientRect();
+    const rowStr = el.style.gridRow.match(/(\d+)/);
+    if (rowStr) {
+      const row = parseInt(rowStr[1]) - 1; // CSS grid rows are 1-indexed
+      if (!rowTops.has(row) || r.top < rowTops.get(row).top) {
+        rowTops.set(row, { top: r.top, bottom: r.bottom });
+      }
+    }
+  }
+
+  // Find which row the pointer is in
+  let y = 0;
+  if (rowTops.size > 0) {
+    const sortedRows = [...rowTops.entries()].sort((a, b) => a[1].top - b[1].top);
+    for (const [row, bounds] of sortedRows) {
+      const midpoint = (bounds.top + bounds.bottom) / 2;
+      if (py < midpoint) break;
+      y = row;
+    }
+    // If below all rows, use last row + 1
+    const lastRow = sortedRows[sortedRows.length - 1];
+    if (py > lastRow[1].bottom) y = lastRow[0] + 1;
+  } else {
+    y = Math.max(0, Math.floor((py - g.top) / (ROW_H + GAP)));
+  }
+
+  return { x, y: Math.max(0, y) };
 }
 
 // --- Overlap / Compaction ---
