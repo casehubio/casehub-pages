@@ -330,9 +330,25 @@ const compactors = {
         placed.push(brk);
       }
 
-      // 2. Place the moved item — if it overlaps a break, nudge it
-      //    Try proposed position first, then scan outward
-      if (moved.type !== 'break') {
+      // 2. Place the moved item — if it overlaps a placed item, nudge it
+      //    For breaks: nudge past any panels it overlaps
+      //    For panels: nudge past any breaks it overlaps
+      if (moved.type === 'break') {
+        // Break must not overlap any panel — nudge downward past them
+        for (const p of placed) {
+          if (p.type === 'break') continue;
+          if (overlaps(moved, p)) {
+            moved.y = p.y + p.h;
+          }
+        }
+        // Also check non-placed panels (they haven't been compacted yet)
+        for (const item of items) {
+          if (item.id === movedId || item.type === 'break') continue;
+          if (overlaps(moved, item)) {
+            moved.y = item.y + item.h;
+          }
+        }
+      } else if (moved.type !== 'break') {
         let bestY = moved.y;
         for (let offset = 0; ; offset++) {
           // Try above first (user intent when dragging up), then below
