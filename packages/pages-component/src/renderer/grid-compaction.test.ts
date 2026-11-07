@@ -138,6 +138,51 @@ describe("resolveAndCompact", () => {
     });
   });
 
+  describe("expand-shrink round-trip — full layout with spanning items", () => {
+    const layout = () => [
+      item("A", 0, 0, 4, 3),
+      item("B", 4, 0, 8, 1),
+      item("C", 4, 1, 4, 2),
+      item("D", 8, 1, 2, 1),
+      item("E", 10, 1, 2, 1),
+      item("F", 8, 2, 4, 1),
+      item("G", 0, 3, 6, 2),
+      item("H", 6, 3, 6, 2),
+    ];
+
+    it("expand G then shrink back to original — layout fully restores", () => {
+      const original = layout();
+      const originalPositions = Object.fromEntries(
+        original.map(i => [i.id, { ...i.placement }]),
+      );
+
+      // Expand G from w:6 to w:10
+      const expanded = resolveAndCompact(original, "G", p(0, 3, 10, 2));
+      // H should have moved (it overlaps G's new extent)
+      expect(find(expanded, "H").y).toBeGreaterThan(3);
+
+      // Shrink G back to original w:6
+      const restored = resolveAndCompact(expanded, "G", p(0, 3, 6, 2));
+      // Every item should be back at its original position
+      for (const id of ["A", "B", "C", "D", "E", "F", "G", "H"]) {
+        expect(find(restored, id)).toEqual(originalPositions[id]);
+      }
+    });
+
+    it("expand C right then shrink back — layout fully restores", () => {
+      const original = layout();
+      const originalPositions = Object.fromEntries(
+        original.map(i => [i.id, { ...i.placement }]),
+      );
+
+      const expanded = resolveAndCompact(original, "C", p(4, 1, 8, 2));
+      const restored = resolveAndCompact(expanded, "C", p(4, 1, 4, 2));
+      for (const id of ["A", "B", "C", "D", "E", "F", "G", "H"]) {
+        expect(find(restored, id)).toEqual(originalPositions[id]);
+      }
+    });
+  });
+
   describe("move — displace and compact", () => {
     it("move displaces overlapping item, compact fills freed space", () => {
       const items = [

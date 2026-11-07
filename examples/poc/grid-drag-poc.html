@@ -314,71 +314,26 @@ function overlaps(a, b) {
       && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-// Insert-rows then compact.
-// 1. Find items displaced by the moved item
-// 2. Pack displaced items to find how many rows they need
-// 3. Insert that many rows at moved.y + moved.h (shift everything below down)
-// 4. Place displaced items in the inserted space
-// 5. Compact ALL non-moved items upward — items that don't conflict pull back up
+// Single-rule layout resolver.
+// Fix moved item at its new placement, then re-place every other item
+// at the lowest valid row. One rule, no special cases.
 function resolveAndCompact(allItems, movedId) {
   const result = allItems.map(i => ({ ...i }));
   const moved = result.find(i => i.id === movedId);
   if (!moved) return result;
 
-  // 1. Find displaced items
-  const displacedIds = new Set();
-  for (const item of result) {
-    if (item.id === movedId) continue;
-    if (overlaps(moved, item)) {
-      displacedIds.add(item.id);
-    }
-  }
-  if (displacedIds.size > 0) {
-  const displaced = result
-    .filter(i => displacedIds.has(i.id))
+  const placed = [moved];
+  const rest = result
+    .filter(i => i.id !== movedId)
     .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
 
-  // 2. Pack displaced items to find how many rows they need
-  // Place them starting at y=0, each at the lowest y where it doesn't overlap others
-  const packed = displaced.map(i => ({ ...i, y: 0 }));
-  for (let idx = 0; idx < packed.length; idx++) {
-    for (let tryY = 0; tryY < 100; tryY++) {
-      packed[idx].y = tryY;
-      const blocked = packed.some((other, otherIdx) =>
-        otherIdx < idx && overlaps(packed[idx], other)
-      );
-      if (!blocked) break;
-    }
-  }
-  const insertRows = packed.reduce((max, p) => Math.max(max, p.y + p.h), 0);
-  const insertY = moved.y + moved.h;
-
-  // 3. Insert rows — shift everything at y >= insertY down (except moved and displaced)
-  for (const item of result) {
-    if (item.id === movedId) continue;
-    if (displacedIds.has(item.id)) continue;
-    if (item.y >= insertY) {
-      item.y += insertRows;
-    }
-  }
-
-  // 4. Place displaced items in the inserted space
-  for (let idx = 0; idx < displaced.length; idx++) {
-    displaced[idx].y = insertY + packed[idx].y;
-  }
-  } // end if (displacedIds.size > 0)
-
-  // 5. Compact ALL non-moved items upward (runs even with no displacements — handles shrink)
-  result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
-  for (const item of result) {
-    if (item.id === movedId) continue;
-    for (let tryY = 0; tryY < item.y; tryY++) {
+  for (const item of rest) {
+    for (let tryY = 0; ; tryY++) {
       const candidate = { ...item, y: tryY };
-      const blocked = result.some(other =>
-        other !== item && overlaps(candidate, other)
-      );
+      const blocked = placed.some(p => overlaps(candidate, p));
       if (!blocked) {
         item.y = tryY;
+        placed.push(item);
         break;
       }
     }
