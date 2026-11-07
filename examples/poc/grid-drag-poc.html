@@ -38,24 +38,35 @@
     height: 24px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
+    padding: 0 6px;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.3px;
     color: rgba(255,255,255,0.9);
-    cursor: grab;
+    cursor: default;
     flex-shrink: 0;
+    gap: 2px;
   }
-  .panel .handle::before {
-    content: '⠿';
-    margin-right: 6px;
-    opacity: 0;
-    transition: opacity 150ms;
+  .panel .handle .drag-icon {
+    display: none;
+    padding: 0 3px;
+    cursor: grab;
+    opacity: 0.4;
+    font-size: 12px;
+    border-radius: 3px;
+    line-height: 20px;
   }
-  .panel:hover .handle::before,
-  .grid[data-editing] .panel .handle::before {
-    opacity: 0.6;
+  .panel .handle .drag-icon:hover {
+    opacity: 0.9;
+    background: rgba(255,255,255,0.12);
   }
+  .panel .handle .drag-icon.swap-icon:hover {
+    background: rgba(59, 130, 246, 0.3);
+  }
+  .grid[data-editing] .panel .handle .drag-icon {
+    display: inline-block;
+  }
+  .panel .handle .label { margin-left: 2px; }
 
   .panel .body {
     flex: 1;
@@ -81,7 +92,15 @@
     opacity: 0.4 !important;
     outline: 2px solid #3b82f6 !important;
   }
-  .panel.dragging .handle { cursor: grabbing; }
+  .panel.dragging .handle .drag-icon { cursor: grabbing; }
+  .panel.swap-target {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: -1px;
+  }
+  .panel.replace-target {
+    outline: 2px solid #dc2626 !important;
+    outline-offset: -1px;
+  }
 
   /* Resize handles */
   .grid[data-editing] .panel .resize-handle {
@@ -103,6 +122,10 @@
     background: rgba(59, 130, 246, 0.12);
     border-radius: 6px;
     pointer-events: none;
+  }
+  .placeholder.replace-mode {
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, 0.12);
   }
 
   /* Drop placeholder — left behind after first delete */
@@ -157,80 +180,12 @@
     line-height: 1.6;
   }
 
-  /* Collision popup */
-  .collision-popup {
-    position: fixed;
-    z-index: 100;
-    background: #1a1a1a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 160px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-  }
-  .collision-popup .popup-title {
-    font-size: 11px;
-    color: #888;
-    padding: 2px 8px 4px;
-    border-bottom: 1px solid #333;
-    margin-bottom: 2px;
-  }
-  .collision-popup button {
-    padding: 6px 12px;
-    font-size: 13px;
-    border: 1px solid #333;
-    border-radius: 4px;
-    background: #222;
-    color: #eee;
-    cursor: pointer;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .collision-popup button:hover:not(:disabled) {
-    background: #2563eb;
-    border-color: #2563eb;
-  }
-  .collision-popup button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-  .collision-popup button .shortcut {
-    margin-left: auto;
-    font-size: 10px;
-    color: #666;
-    font-family: monospace;
-  }
-
-  /* Collision mode toggle */
-  .mode-toggle {
-    display: inline-flex;
-    border: 1px solid #444;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  .mode-toggle button {
-    padding: 5px 12px;
-    font-size: 12px;
-    border: none;
-    background: #222;
-    color: #aaa;
-    cursor: pointer;
-    border-right: 1px solid #444;
-  }
-  .mode-toggle button:last-child { border-right: none; }
-  .mode-toggle button:hover { background: #333; }
-  .mode-toggle button.active { background: #2563eb; color: #fff; }
 </style>
 </head>
 <body>
 
 <h1>Grid Drag POC — Move, Resize, Delete</h1>
-<p class="subtitle">Proving: structural placeholder, compaction, FLIP animation, resize spanning, two-stage delete, collision popup</p>
+<p class="subtitle">Proving: structural placeholder, compaction, FLIP animation, resize spanning, two-stage delete, dual drag handles</p>
 
 <div class="controls">
   <button id="edit-btn">Edit Mode</button>
@@ -240,12 +195,6 @@
     <option value="vertical" selected>Vertical (gravity)</option>
     <option value="float">Float (no gravity)</option>
   </select>
-  <span style="width:1px;height:20px;background:#333;margin:0 4px;"></span>
-  <span style="font-size:12px;color:#888;">Collision:</span>
-  <div class="mode-toggle" id="collision-toggle">
-    <button data-mode="displace" class="active">Displace</button>
-    <button data-mode="prompt">Prompt</button>
-  </div>
   <span id="status" class="status"></span>
 </div>
 
@@ -270,11 +219,12 @@
 <div class="grid" id="grid"></div>
 
 <div class="help" id="help" style="display:none">
-  <b>Move:</b> drag title bar (top 24px) &nbsp;
-  <b>Resize:</b> drag edges or bottom-right corner &nbsp;
+  <b>⠿ drag:</b> displace (push down) &nbsp;
+  <b>⇄ drag:</b> swap positions &nbsp;
+  <b>⌥+⇄ drag:</b> replace (destructive) &nbsp;
+  <b>Resize:</b> drag edges or corners &nbsp;
   <b>Select:</b> click a panel &nbsp;
-  <b>Delete:</b> select then press Delete/Backspace (or button) — first removes panel leaving a placeholder, second removes placeholder &nbsp;
-  <b>Collision:</b> Displace (auto-push) or Prompt (popup with displace/split/replace/swap) &nbsp;
+  <b>Delete:</b> select then Delete — two-stage &nbsp;
   <b>Esc:</b> cancel drag or deselect
 </div>
 
@@ -344,17 +294,15 @@ let editing = false;
 let selectedId = null;
 
 // Drag state
-let collisionMode = 'displace'; // 'displace' | 'prompt'
 let dragging = false;
 let dragId = null;
-let dragMode = null; // 'move' | 'resize-right' | 'resize-bottom' | 'resize-left' | 'resize-top' | 'resize-br'
+let dragMode = null; // 'move' | 'swap' | 'resize-right' | 'resize-bottom' | etc.
+let dragIntent = 'displace'; // 'displace' | 'swap'
 let dragOrigin = null;
 let pointerStart = null;
 let placeholder = null;
 let lastSnapCell = null;
 let originalItem = null; // snapshot of item at drag start
-let collisionPopup = null; // active popup element
-let pendingDrop = null; // { movedId, proposed, overlapping, originalItems }
 
 const grid = document.getElementById('grid');
 const editBtn = document.getElementById('edit-btn');
@@ -369,18 +317,6 @@ const propHeightMode = document.getElementById('prop-height-mode');
 const propFixedHeight = document.getElementById('prop-fixed-height');
 const statusEl = document.getElementById('status');
 const helpEl = document.getElementById('help');
-const collisionToggle = document.getElementById('collision-toggle');
-
-// --- Collision mode toggle ---
-collisionToggle.addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-mode]');
-  if (!btn) return;
-  collisionMode = btn.dataset.mode;
-  for (const b of collisionToggle.querySelectorAll('button')) {
-    b.classList.toggle('active', b.dataset.mode === collisionMode);
-  }
-  statusEl.textContent = `Collision mode: ${collisionMode}`;
-});
 
 // --- Rendering ---
 function render() {
@@ -413,7 +349,22 @@ function render() {
 
     const handle = document.createElement('div');
     handle.className = 'handle';
-    handle.textContent = item.label;
+    const moveIcon = document.createElement('span');
+    moveIcon.className = 'drag-icon move-icon';
+    moveIcon.textContent = '⠿';
+    moveIcon.dataset.dragIntent = 'displace';
+    moveIcon.title = 'Drag to displace';
+    const swapIcon = document.createElement('span');
+    swapIcon.className = 'drag-icon swap-icon';
+    swapIcon.textContent = '⇄';
+    swapIcon.dataset.dragIntent = 'swap';
+    swapIcon.title = 'Drag to swap (⌥ = replace)';
+    handle.appendChild(moveIcon);
+    handle.appendChild(swapIcon);
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'label';
+    labelSpan.textContent = item.label;
+    handle.appendChild(labelSpan);
 
     const body = document.createElement('div');
     body.className = 'body';
@@ -445,8 +396,8 @@ function updateLabels() {
     if (!el) continue;
     const body = el.querySelector('.body');
     if (body) body.textContent = `${item.w}×${item.h}`;
-    const handle = el.querySelector('.handle');
-    if (handle) handle.textContent = item.label;
+    const label = el.querySelector('.handle .label');
+    if (label) label.textContent = item.label;
   }
 }
 
@@ -670,7 +621,7 @@ function deleteSelected() {
   statusEl.textContent = `Removed ${item.label} — placeholder left at (${item.x},${item.y}). Delete placeholder to collapse.`;
 }
 
-// --- Hit test for resize vs move ---
+// --- Hit test for resize vs move/swap ---
 function hitTest(panel, e) {
   const rect = panel.getBoundingClientRect();
   const x = e.clientX;
@@ -691,9 +642,13 @@ function hitTest(panel, e) {
   if (nearBottom) return 'resize-bottom';
   if (nearRight) return 'resize-right';
   if (nearLeft) return 'resize-left';
-  // Title bar = move
-  if (y - rect.top < HANDLE_HEIGHT) return 'move';
-  return null; // click in body — select, don't drag
+  // Check if a drag icon was clicked
+  const dragIcon = e.target.closest('.drag-icon');
+  if (dragIcon) {
+    dragIntent = dragIcon.dataset.dragIntent === 'swap' ? 'swap' : 'displace';
+    return dragIntent === 'swap' ? 'swap' : 'move';
+  }
+  return null; // click in body or label — select, don't drag
 }
 
 // --- Edit Mode ---
@@ -755,12 +710,15 @@ grid.addEventListener('pointermove', (e) => {
   if (editing && !dragId) {
     const panel = e.target.closest('.panel');
     if (panel) {
-      const mode = hitTest(panel, e);
-      if (mode === 'move') panel.style.cursor = 'grab';
-      else if (mode === 'resize-right' || mode === 'resize-left') panel.style.cursor = 'ew-resize';
-      else if (mode === 'resize-bottom' || mode === 'resize-top') panel.style.cursor = 'ns-resize';
-      else if (mode === 'resize-br' || mode === 'resize-tl') panel.style.cursor = 'nwse-resize';
-      else if (mode === 'resize-tr' || mode === 'resize-bl') panel.style.cursor = 'nesw-resize';
+      if (e.target.closest('.drag-icon')) return; // icons have their own cursor
+      const rect = panel.getBoundingClientRect();
+      const x = e.clientX, y = e.clientY;
+      const nearR = rect.right - x < RESIZE_INSET, nearB = rect.bottom - y < RESIZE_INSET;
+      const nearL = x - rect.left < RESIZE_INSET, nearT = y - rect.top < RESIZE_INSET;
+      if ((nearB && nearR) || (nearT && nearL)) panel.style.cursor = 'nwse-resize';
+      else if ((nearT && nearR) || (nearB && nearL)) panel.style.cursor = 'nesw-resize';
+      else if (nearR || nearL) panel.style.cursor = 'ew-resize';
+      else if (nearB || nearT) panel.style.cursor = 'ns-resize';
       else panel.style.cursor = 'default';
     }
   }
@@ -778,7 +736,7 @@ grid.addEventListener('pointermove', (e) => {
   if (lastSnapCell && cell.x === lastSnapCell.x && cell.y === lastSnapCell.y) return;
   lastSnapCell = cell;
 
-  if (dragMode === 'move') {
+  if (dragMode === 'move' || dragMode === 'swap') {
     updateDragMove(cell);
   } else {
     updateDragResize(cell);
@@ -792,9 +750,10 @@ grid.addEventListener('pointerup', (e) => {
     selectPanel(dragId);
     dragId = null;
     dragMode = null;
+    dragIntent = 'displace';
     return;
   }
-  finishDrag();
+  finishDrag(e);
 });
 
 document.addEventListener('keydown', (e) => {
@@ -819,7 +778,9 @@ function startDrag() {
   applyPlacement(placeholder, originalItem);
   grid.appendChild(placeholder);
 
-  statusEl.textContent = dragMode === 'move'
+  statusEl.textContent = dragMode === 'swap'
+    ? `Swap-dragging ${originalItem.label}`
+    : dragMode === 'move'
     ? `Moving ${originalItem.label}`
     : `Resizing ${originalItem.label} (${dragMode})`;
 }
@@ -840,20 +801,22 @@ function updateDragMove(cell) {
     i.id === dragId ? { ...i, x: newX, y: newY } : { ...i }
   );
 
-  if (collisionMode === 'prompt') {
-    // In prompt mode, show placeholder at target position but don't displace other items
+  if (dragIntent === 'swap') {
+    // Swap mode: show placeholder without displacing, highlight swap target
     if (placeholder) applyPlacement(placeholder, { x: newX, y: newY, w: item.w, h: item.h });
-    // Highlight overlapping panels
     const colliding = findOverlapping(proposed, dragId);
+    const target = colliding[0];
     for (const el of grid.querySelectorAll('.panel')) {
-      const isColliding = colliding.some(c => c.id === el.dataset.id);
-      el.style.outline = isColliding ? '2px solid #f59e0b' : '';
+      el.classList.remove('swap-target', 'replace-target');
+      if (target && el.dataset.id === target.id) {
+        el.classList.add('swap-target');
+      }
     }
-    statusEl.textContent = colliding.length > 0
-      ? `Moving ${item.label} → (${newX}, ${newY}) — collision with ${colliding.map(c => c.label).join(', ')}`
+    statusEl.textContent = target
+      ? `Swap ${item.label} ⇄ ${target.label} (hold ⌥ to replace)`
       : `Moving ${item.label} → (${newX}, ${newY})`;
   } else {
-    // In displace mode, resolve and compact as before
+    // Displace mode: resolve and compact as before
     const resolved = resolveAndCompact(proposed, dragId);
     const before = capturePositions();
     const movedItem = resolved.find(i => i.id === dragId);
@@ -909,177 +872,17 @@ function updateDragResize(cell) {
   statusEl.textContent = `Resizing ${orig.label} → ${w}×${h}`;
 }
 
-// --- Collision Popup ---
-function dismissPopup() {
-  if (collisionPopup) {
-    collisionPopup.remove();
-    collisionPopup = null;
-  }
-  pendingDrop = null;
-  document.removeEventListener('keydown', popupKeyHandler);
-}
-
-function cancelCollision() {
-  if (pendingDrop) {
-    items = pendingDrop.originalItems;
-  }
-  dismissPopup();
-  render();
-  statusEl.textContent = 'Drop cancelled';
-}
-
-function popupKeyHandler(e) {
-  if (e.key === 'Escape') {
-    e.preventDefault();
-    e.stopPropagation();
-    cancelCollision();
-  }
-}
-
-function showCollisionPopup(movedId, proposed, overlapping, originalItems) {
-  dismissPopup();
-
-  const target = overlapping[0]; // primary collision target
-  const moved = proposed.find(i => i.id === movedId);
-  const canSplitH = target.h > 1;
-  const canSplitV = target.w > 1;
-
-  pendingDrop = { movedId, proposed, overlapping, originalItems };
-
-  const popup = document.createElement('div');
-  popup.className = 'collision-popup';
-
-  const title = document.createElement('div');
-  title.className = 'popup-title';
-  title.textContent = `${moved.label} → ${target.label}`;
-  popup.appendChild(title);
-
-  const actions = [
-    { label: 'Displace', icon: '↓', key: 'd', enabled: true, action: 'displace' },
-    { label: 'Split H', icon: '─', key: 'h', enabled: canSplitH, action: 'splitH', title: canSplitH ? 'Stack vertically' : `Can't split — height is 1` },
-    { label: 'Split V', icon: '│', key: 'v', enabled: canSplitV, action: 'splitV', title: canSplitV ? 'Side by side' : `Can't split — width is 1` },
-    { label: 'Replace', icon: '⤓', key: 'r', enabled: true, action: 'replace' },
-    { label: 'Swap', icon: '⇄', key: 's', enabled: true, action: 'swap' },
-  ];
-
-  for (const act of actions) {
-    const btn = document.createElement('button');
-    btn.disabled = !act.enabled;
-    if (act.title) btn.title = act.title;
-    btn.innerHTML = `<span>${act.icon}</span> ${act.label} <span class="shortcut">${act.key}</span>`;
-    btn.addEventListener('click', () => executeCollisionAction(act.action));
-    popup.appendChild(btn);
-  }
-
-  // Position near the drop target
-  const g = getGeometry();
-  const step = g.cellWidth + GAP;
-  const popupX = g.left + (target.x + target.w) * step;
-  const popupY = getGeometry().top + target.y * (ROW_H + GAP) + ROW_H / 2;
-  popup.style.left = `${Math.min(popupX, window.innerWidth - 200)}px`;
-  popup.style.top = `${Math.min(popupY, window.innerHeight - 250)}px`;
-
-  document.body.appendChild(popup);
-  collisionPopup = popup;
-
-  // Keyboard shortcuts
-  document.addEventListener('keydown', popupKeyHandler);
-  document.addEventListener('keydown', function popupShortcuts(e) {
-    if (!collisionPopup) { document.removeEventListener('keydown', popupShortcuts); return; }
-    const act = actions.find(a => a.key === e.key && a.enabled);
-    if (act) {
-      e.preventDefault();
-      executeCollisionAction(act.action);
-      document.removeEventListener('keydown', popupShortcuts);
-    }
-  });
-
-  // Click outside to dismiss
-  setTimeout(() => {
-    document.addEventListener('click', function outsideClick(e) {
-      if (!collisionPopup) { document.removeEventListener('click', outsideClick); return; }
-      if (!collisionPopup.contains(e.target)) {
-        document.removeEventListener('click', outsideClick);
-        cancelCollision();
-      }
-    });
-  }, 0);
-}
-
-function executeCollisionAction(action) {
-  if (!pendingDrop) return;
-  const { movedId, proposed, overlapping, originalItems } = pendingDrop;
-  const moved = proposed.find(i => i.id === movedId);
-  const target = overlapping[0];
-
-  const before = capturePositions();
-  dismissPopup();
-
-  switch (action) {
-    case 'displace': {
-      items = resolveAndCompact(proposed, movedId);
-      break;
-    }
-    case 'splitH': {
-      // Stack vertically: target keeps top half, moved gets bottom half
-      const topH = Math.floor(target.h / 2);
-      const botH = target.h - topH;
-      items = items.map(i => {
-        if (i.id === target.id) return { ...i, h: topH };
-        if (i.id === movedId) return { ...i, x: target.x, y: target.y + topH, w: target.w, h: botH };
-        return { ...i };
-      });
-      items = resolveAndCompact(items, movedId);
-      break;
-    }
-    case 'splitV': {
-      // Side by side: target keeps left half, moved gets right half
-      const leftW = Math.floor(target.w / 2);
-      const rightW = target.w - leftW;
-      items = items.map(i => {
-        if (i.id === target.id) return { ...i, w: leftW };
-        if (i.id === movedId) return { ...i, x: target.x + leftW, y: target.y, w: rightW, h: target.h };
-        return { ...i };
-      });
-      items = resolveAndCompact(items, movedId);
-      break;
-    }
-    case 'replace': {
-      // Moved takes target's position; target is removed
-      items = items
-        .filter(i => i.id !== target.id)
-        .map(i => i.id === movedId ? { ...i, x: target.x, y: target.y, w: target.w, h: target.h } : { ...i });
-      items = resolveAndCompact(items, movedId);
-      break;
-    }
-    case 'swap': {
-      // Exchange positions
-      const movedOrig = originalItems.find(i => i.id === movedId);
-      items = items.map(i => {
-        if (i.id === movedId) return { ...i, x: target.x, y: target.y, w: target.w, h: target.h };
-        if (i.id === target.id) return { ...i, x: movedOrig.x, y: movedOrig.y, w: movedOrig.w, h: movedOrig.h };
-        return { ...i };
-      });
-      break;
-    }
-  }
-
-  render();
-  flipAnimate(before, null);
-  statusEl.textContent = `${action}: ${moved.label} → ${target.label}`;
-}
-
 // --- Finish / Cancel ---
-function finishDrag() {
+function finishDrag(e) {
   if (!lastSnapCell) { cancelDrag(); return; }
 
-  // Clear collision highlights
+  // Clear swap/replace highlights
   for (const el of grid.querySelectorAll('.panel')) {
-    el.style.outline = '';
+    el.classList.remove('swap-target', 'replace-target');
   }
 
   let finalItems;
-  if (dragMode === 'move') {
+  if (dragMode === 'move' || dragMode === 'swap') {
     const offsetX = lastSnapCell.x - dragOrigin.x;
     const offsetY = lastSnapCell.y - dragOrigin.y;
     const newX = Math.max(0, Math.min(COLS - originalItem.w, originalItem.x + offsetX));
@@ -1116,26 +919,45 @@ function finishDrag() {
     dragging = false;
     dragId = null;
     dragMode = null;
+    dragIntent = 'displace';
     dragOrigin = null;
     lastSnapCell = null;
     originalItem = null;
     return;
   }
 
-  // Check for collisions in prompt mode
-  if (collisionMode === 'prompt') {
+  // Swap intent: check for collision target
+  if (dragIntent === 'swap') {
     const colliding = findOverlapping(finalItems, dragId);
     if (colliding.length > 0) {
-      // Keep placeholder visible, show popup
+      const target = colliding[0];
+      const before = capturePositions();
+      const isReplace = e && e.altKey;
+
+      if (isReplace) {
+        // Option held — replace: remove target, dragged takes target's position
+        items = items
+          .filter(i => i.id !== target.id)
+          .map(i => i.id === dragId ? { ...i, x: target.x, y: target.y, w: target.w, h: target.h } : { ...i });
+        items = resolveAndCompact(items, dragId);
+        statusEl.textContent = `Replaced ${target.label} with ${originalItem.label}`;
+      } else {
+        // Swap: exchange positions
+        items = items.map(i => {
+          if (i.id === dragId) return { ...i, x: target.x, y: target.y, w: target.w, h: target.h };
+          if (i.id === target.id) return { ...i, x: originalItem.x, y: originalItem.y, w: originalItem.w, h: originalItem.h };
+          return { ...i };
+        });
+        statusEl.textContent = `Swapped ${originalItem.label} ⇄ ${target.label}`;
+      }
+
       if (placeholder) { placeholder.remove(); placeholder = null; }
-      const savedOriginalItems = items.map(i => ({ ...i }));
-      // Temporarily apply the proposed position for the moved item only (for visual)
-      items = finalItems;
       render();
-      showCollisionPopup(dragId, finalItems, colliding, savedOriginalItems);
+      flipAnimate(before, null);
       dragging = false;
       dragId = null;
       dragMode = null;
+      dragIntent = 'displace';
       dragOrigin = null;
       lastSnapCell = null;
       originalItem = null;
@@ -1143,17 +965,17 @@ function finishDrag() {
     }
   }
 
+  // No collision or displace intent — resolve and compact
   items = resolveAndCompact(finalItems, dragId);
 
   if (placeholder) { placeholder.remove(); placeholder = null; }
   render();
 
-  statusEl.textContent = dragMode === 'move'
-    ? `Dropped ${originalItem.label}`
-    : `Resized ${originalItem.label}`;
+  statusEl.textContent = `Dropped ${originalItem.label}`;
   dragging = false;
   dragId = null;
   dragMode = null;
+  dragIntent = 'displace';
   dragOrigin = null;
   lastSnapCell = null;
   originalItem = null;
@@ -1161,15 +983,13 @@ function finishDrag() {
 
 function cancelDrag() {
   if (placeholder) { placeholder.remove(); placeholder = null; }
-  dismissPopup();
 
   for (const item of items) {
     const el = grid.querySelector(`[data-id="${item.id}"]`);
     if (el) {
-      el.classList.remove('dragging');
+      el.classList.remove('dragging', 'swap-target', 'replace-target');
       el.style.transform = '';
       el.style.transition = '';
-      el.style.outline = '';
       applyPlacement(el, item);
     }
   }
@@ -1178,6 +998,7 @@ function cancelDrag() {
   dragging = false;
   dragId = null;
   dragMode = null;
+  dragIntent = 'displace';
   dragOrigin = null;
   lastSnapCell = null;
   originalItem = null;
