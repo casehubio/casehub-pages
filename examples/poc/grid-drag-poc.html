@@ -340,60 +340,36 @@ const compactors = {
       const breaks = items.filter(i => i.type === 'break');
       const panels = items.filter(i => i.type !== 'break');
 
-      // Pre-phase: assign each panel to a section using STABLE break positions.
-      // When a break is being moved, use the OTHER breaks (which haven't moved)
-      // plus the moved break's ORIGINAL position for section assignment.
-      // Since we don't have the original position, we use the rule:
-      // a panel's section = count of breaks whose position is strictly below
-      // the panel's Y. For a moved break, we exclude it from the count
-      // and handle the moved panel separately.
-      const stableBreaks = breaks
-        .filter(b => b.id !== movedId)
-        .map(b => ({ id: b.id, y: b.y }))
-        .sort((a, b) => a.y - b.y);
-      const panelSections = new Map();
-      for (const p of panels) {
-        if (p.id === movedId) continue;
-        let sectionIdx = 0;
-        for (const sb of stableBreaks) {
-          if (sb.y + 1 <= p.y) sectionIdx++;
-        }
-        panelSections.set(p.id, sectionIdx);
-      }
-
       // --- Phase 1: resolve moved item position ---
       if (moved.type === 'break') {
-        // Snap break past any panel it overlaps
-        let changed = true;
-        while (changed) {
-          changed = false;
-          for (const p of panels) {
-            if (overlaps(moved, p)) {
-              moved.y = p.y + p.h;
-              changed = true;
-            }
-          }
-        }
-        // Displace other breaks that overlap the moved break
+        // Break stays at proposed position — panels displace around it
+        // Displace other breaks that overlap
         for (const b of breaks) {
           if (b.id === movedId) continue;
           if (overlaps(moved, b)) b.y = moved.y + moved.h;
         }
-        // Break drag: panels don't rearrange, only the divider moves
-        return;
-      }
-
-      // Panel: snap away from any break it overlaps
-      for (const b of breaks) {
-        if (overlaps(moved, b)) {
-          moved.y = moved.y < b.y ? b.y - moved.h : b.y + b.h;
-          if (moved.y < 0) moved.y = b.y + b.h;
+      } else {
+        // Panel: snap away from any break it overlaps
+        for (const b of breaks) {
+          if (overlaps(moved, b)) {
+            moved.y = moved.y < b.y ? b.y - moved.h : b.y + b.h;
+            if (moved.y < 0) moved.y = b.y + b.h;
+          }
         }
       }
 
-      // --- Phase 2: compact panels within their sections ---
-      const placed = [moved, ...breaks];
+      // --- Phase 2: compact all other panels within sections ---
+      // Use FINAL break positions for section assignment
+      const placed = [moved, ...breaks.filter(b => b.id !== movedId)];
       const sortedBreaks = [...breaks].sort((a, b) => a.y - b.y);
+
+      function getSectionIdx(panelY) {
+        let idx = 0;
+        for (const b of sortedBreaks) {
+          if (b.y + b.h <= panelY) idx++;
+        }
+        return idx;
+      }
 
       function getSectionBounds(idx) {
         const floor = idx === 0 ? 0 : sortedBreaks[idx - 1].y + sortedBreaks[idx - 1].h;
@@ -406,7 +382,16 @@ const compactors = {
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
 
       for (const item of rest) {
-        const sectionIdx = panelSections.get(item.id) || 0;
+        // Assign section based on where the panel is relative to final break positions
+        // If panel overlaps a break, it goes to the section below that break
+        let sectionIdx = getSectionIdx(item.y);
+        for (const b of sortedBreaks) {
+          if (overlaps(item, b)) {
+            sectionIdx = getSectionIdx(b.y + b.h);
+            break;
+          }
+        }
+
         let { floor, ceiling } = getSectionBounds(sectionIdx);
 
         let pushes = 0;
