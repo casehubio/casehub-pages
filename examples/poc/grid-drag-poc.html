@@ -1174,7 +1174,10 @@ document.addEventListener('keydown', (e) => {
 function startDrag() {
   dragging = true;
   const el = grid.querySelector(`[data-id="${dragId}"]`);
-  if (el) el.classList.add('dragging');
+  if (el) {
+    el.classList.add('dragging');
+    if (originalItem.type === 'break') el.style.display = 'none';
+  }
 
   placeholder = document.createElement('div');
   if (originalItem.type === 'break') {
@@ -1421,6 +1424,7 @@ function cancelDrag() {
       el.classList.remove('dragging', 'swap-target', 'replace-target');
       el.style.transform = '';
       el.style.transition = '';
+      el.style.display = '';
       if (item.type === 'break') { el.style.gridRow = `${item.y + 1} / span 1`; }
       else { applyPlacement(el, item); }
     }
