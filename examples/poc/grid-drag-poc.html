@@ -103,8 +103,10 @@
     outline-offset: -1px;
   }
 
-  /* Resize handles */
+  /* Resize handles — hidden outside edit mode */
+  .panel .resize-handle { display: none; }
   .grid[data-editing] .panel .resize-handle {
+    display: block;
     position: absolute;
     z-index: 5;
   }
