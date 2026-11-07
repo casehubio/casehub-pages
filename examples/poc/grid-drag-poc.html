@@ -349,11 +349,11 @@ const compactors = {
           if (overlaps(moved, b)) b.y = moved.y + moved.h;
         }
       } else {
-        // Panel: snap away from any break it overlaps
+        // Panel: snap away from any break it overlaps — try above first
         for (const b of breaks) {
           if (overlaps(moved, b)) {
-            moved.y = moved.y < b.y ? b.y - moved.h : b.y + b.h;
-            if (moved.y < 0) moved.y = b.y + b.h;
+            const above = b.y - moved.h;
+            moved.y = above >= 0 ? above : b.y + b.h;
           }
         }
       }
