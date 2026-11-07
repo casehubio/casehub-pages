@@ -333,8 +333,7 @@ function resolveAndCompact(allItems, movedId) {
       displacedIds.add(item.id);
     }
   }
-  if (displacedIds.size === 0) return result;
-
+  if (displacedIds.size > 0) {
   const displaced = result
     .filter(i => displacedIds.has(i.id))
     .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
@@ -367,8 +366,9 @@ function resolveAndCompact(allItems, movedId) {
   for (let idx = 0; idx < displaced.length; idx++) {
     displaced[idx].y = insertY + packed[idx].y;
   }
+  } // end if (displacedIds.size > 0)
 
-  // 5. Compact ALL non-moved items upward
+  // 5. Compact ALL non-moved items upward (runs even with no displacements — handles shrink)
   result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
   for (const item of result) {
     if (item.id === movedId) continue;
