@@ -287,31 +287,49 @@ const HANDLE_HEIGHT = 24;
 const FLIP_DURATION = 200;
 const RESIZE_INSET = 8;
 
-// --- Pluggable Compactors ---
-function getSectionFloor(item, allItems) {
+// --- Compaction with break boundaries ---
+//
+// Algorithm (vertical compactor with breaks):
+//
+// Phase 1 — Resolve the moved item's position
+//   If moved is a break:
+//     Snap to the nearest panel boundary (can't land inside a panel's row span).
+//     Displace other breaks it overlaps.
+//   If moved is a panel:
+//     Place at proposed position. If it overlaps a break, snap to nearest
+//     valid Y (try above first, then below).
+//
+// Phase 2 — Compact all other panels within their sections
+//   Each panel belongs to a section: [floor, ceiling) where:
+//     floor = nearest break above (break.y + break.h), or 0
+//     ceiling = nearest break below (break.y), or Infinity
+//   For each panel (sorted by Y), find the lowest Y in [floor, ceiling)
+//   where it doesn't overlap any already-placed item.
+//   If no fit exists in [floor, ceiling), push ceiling break + everything
+//   below it down by 1 to grow the section. Retry.
+//
+// Invariant: no panel ever crosses a break boundary.
+
+function sectionFloor(y, breaks) {
   let floor = 0;
-  for (const other of allItems) {
-    if (other.type === 'break' && other.y + other.h <= item.y && other.y + other.h > floor) {
-      floor = other.y + other.h;
-    }
+  for (const b of breaks) {
+    if (b.y + b.h <= y && b.y + b.h > floor) floor = b.y + b.h;
   }
   return floor;
 }
 
-function getSectionCeiling(item, allItems) {
+function sectionCeiling(y, breaks) {
   let ceiling = Infinity;
-  for (const other of allItems) {
-    if (other.type === 'break' && other.y > item.y && other.y < ceiling) {
-      ceiling = other.y;
-    }
+  for (const b of breaks) {
+    if (b.y > y && b.y < ceiling) ceiling = b.y;
   }
   return ceiling;
 }
 
-function pushBreakAndBelow(breakItem, allItems, amount) {
-  const breakY = breakItem.y;
-  for (const item of allItems) {
-    if (item.y >= breakY) item.y += amount;
+function pushDownFrom(y, items, excludeId) {
+  for (const item of items) {
+    if (item.id === excludeId) continue;
+    if (item.y >= y) item.y += 1;
   }
 }
 
@@ -319,74 +337,98 @@ const compactors = {
   vertical: {
     resolve(items, movedId) {
       const moved = items.find(i => i.id === movedId);
-      const placed = [];
+      const breaks = items.filter(i => i.type === 'break');
+      const panels = items.filter(i => i.type !== 'break');
 
-      // 1. Place breaks first — they're immovable boundaries
-      for (const brk of items) {
-        if (brk.type !== 'break' || brk.id === movedId) continue;
-        if (moved.type === 'break' && overlaps(moved, brk)) {
-          brk.y = moved.y + moved.h;
+      // Pre-phase: assign each panel to a section using STABLE break positions.
+      // When a break is being moved, use the OTHER breaks (which haven't moved)
+      // plus the moved break's ORIGINAL position for section assignment.
+      // Since we don't have the original position, we use the rule:
+      // a panel's section = count of breaks whose position is strictly below
+      // the panel's Y. For a moved break, we exclude it from the count
+      // and handle the moved panel separately.
+      const stableBreaks = breaks
+        .filter(b => b.id !== movedId)
+        .map(b => ({ id: b.id, y: b.y }))
+        .sort((a, b) => a.y - b.y);
+      const panelSections = new Map();
+      for (const p of panels) {
+        if (p.id === movedId) continue;
+        let sectionIdx = 0;
+        for (const sb of stableBreaks) {
+          if (sb.y + 1 <= p.y) sectionIdx++;
         }
-        placed.push(brk);
+        panelSections.set(p.id, sectionIdx);
       }
 
-      // 2. Place the moved item — if it overlaps a placed item, nudge it
-      //    For breaks: nudge past any panels it overlaps
-      //    For panels: nudge past any breaks it overlaps
+      // --- Phase 1: resolve moved item position ---
       if (moved.type === 'break') {
-        // Break must not overlap any panel — nudge downward past them
-        for (const p of placed) {
-          if (p.type === 'break') continue;
-          if (overlaps(moved, p)) {
-            moved.y = p.y + p.h;
+        // Snap break past any panel it overlaps
+        let changed = true;
+        while (changed) {
+          changed = false;
+          for (const p of panels) {
+            if (overlaps(moved, p)) {
+              moved.y = p.y + p.h;
+              changed = true;
+            }
           }
         }
-        // Also check non-placed panels (they haven't been compacted yet)
-        for (const item of items) {
-          if (item.id === movedId || item.type === 'break') continue;
-          if (overlaps(moved, item)) {
-            moved.y = item.y + item.h;
-          }
+        // Displace other breaks that overlap the moved break
+        for (const b of breaks) {
+          if (b.id === movedId) continue;
+          if (overlaps(moved, b)) b.y = moved.y + moved.h;
         }
-      } else if (moved.type !== 'break') {
-        let bestY = moved.y;
-        for (let offset = 0; ; offset++) {
-          // Try above first (user intent when dragging up), then below
-          for (const tryY of offset === 0 ? [bestY] : [bestY - offset, bestY + offset]) {
-            if (tryY < 0) continue;
-            const candidate = { ...moved, y: tryY };
-            const blocked = placed.some(p => overlaps(candidate, p));
-            if (!blocked) { moved.y = tryY; break; }
-          }
-          if (!placed.some(p => overlaps(moved, p))) break;
+        // Break drag: panels don't rearrange, only the divider moves
+        return;
+      }
+
+      // Panel: snap away from any break it overlaps
+      for (const b of breaks) {
+        if (overlaps(moved, b)) {
+          moved.y = moved.y < b.y ? b.y - moved.h : b.y + b.h;
+          if (moved.y < 0) moved.y = b.y + b.h;
         }
       }
-      placed.push(moved);
 
-      // 3. Compact non-break, non-moved items within their sections
-      const rest = items
-        .filter(i => i.id !== movedId && i.type !== 'break')
+      // --- Phase 2: compact panels within their sections ---
+      const placed = [moved, ...breaks];
+      const sortedBreaks = [...breaks].sort((a, b) => a.y - b.y);
+
+      function getSectionBounds(idx) {
+        const floor = idx === 0 ? 0 : sortedBreaks[idx - 1].y + sortedBreaks[idx - 1].h;
+        const ceiling = idx < sortedBreaks.length ? sortedBreaks[idx].y : Infinity;
+        return { floor, ceiling };
+      }
+
+      const rest = panels
+        .filter(p => p.id !== movedId)
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+
       for (const item of rest) {
-        const floor = getSectionFloor(item, items);
-        let ceiling = getSectionCeiling(item, items);
-        let pushCount = 0;
-        for (let tryY = floor; ; tryY++) {
-          if (tryY + item.h > ceiling) {
-            const ceilingBreak = items.find(b => b.type === 'break' && b.y === ceiling);
-            if (ceilingBreak && ceilingBreak.id !== movedId && pushCount < 20) {
-              pushBreakAndBelow(ceilingBreak, items, 1);
+        const sectionIdx = panelSections.get(item.id) || 0;
+        let { floor, ceiling } = getSectionBounds(sectionIdx);
+
+        let pushes = 0;
+        let tryY = floor;
+        while (true) {
+          if (tryY + item.h > ceiling && pushes < 20) {
+            const ceilingBreak = sortedBreaks[sectionIdx];
+            if (ceilingBreak) {
+              pushDownFrom(ceilingBreak.y, items, item.id);
               ceiling++;
-              pushCount++;
-            } else {
-              break;
+              pushes++;
+              continue;
             }
           }
           const candidate = { ...item, y: tryY };
-          const blocked = placed.some(p => overlaps(candidate, p));
-          if (!blocked) { item.y = tryY; placed.push(item); break; }
+          if (!placed.some(p => overlaps(candidate, p))) {
+            item.y = tryY;
+            placed.push(item);
+            break;
+          }
+          tryY++;
         }
-        if (!placed.includes(item)) { placed.push(item); }
       }
     },
   },
@@ -649,22 +691,20 @@ function resolveAndCompact(allItems, movedId) {
 // Compact ALL items upward (no moved exception) — used after delete
 function compactAll(allItems) {
   const result = allItems.map(i => ({ ...i }));
-  result.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
-  for (const item of result) {
-    if (item.type === 'break') continue; // breaks don't compact
-    const floor = getSectionFloor(item, result);
-    let bestY = floor;
-    while (bestY < item.y) {
-      const candidate = { ...item, y: bestY };
-      const blocked = result.some(other =>
-        other !== item && overlaps(candidate, other)
-      );
-      if (!blocked) {
-        item.y = bestY;
+  const breaks = result.filter(i => i.type === 'break');
+  const panels = result.filter(i => i.type !== 'break');
+  panels.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+  const placed = [...breaks];
+  for (const item of panels) {
+    const floor = sectionFloor(item.y, breaks);
+    for (let tryY = floor; tryY <= item.y; tryY++) {
+      const candidate = { ...item, y: tryY };
+      if (!placed.some(p => overlaps(candidate, p))) {
+        item.y = tryY;
         break;
       }
-      bestY++;
     }
+    placed.push(item);
   }
   return result;
 }
