@@ -496,6 +496,7 @@ let pointerStart = null;
 let placeholder = null;
 let lastSnapCell = null;
 let originalItem = null; // snapshot of item at drag start
+let frozenRowPositions = null; // row positions captured at drag start
 
 const grid = document.getElementById('grid');
 const editBtn = document.getElementById('edit-btn');
@@ -684,13 +685,7 @@ function getGeometry() {
   return { left: rect.left + padding, top: rect.top + padding, cellWidth };
 }
 
-function snapToCell(px, py) {
-  const g = getGeometry();
-  const step = g.cellWidth + GAP;
-  const x = Math.max(0, Math.min(COLS - 1, Math.floor((px - g.left) / step)));
-
-  // Build actual row positions from rendered grid items
-  const gridRect = grid.getBoundingClientRect();
+function captureRowPositions() {
   const rowTops = new Map();
   for (const el of grid.querySelectorAll('.panel, .row-break, .placeholder')) {
     const id = el.dataset.id || el.dataset.dropId;
@@ -698,23 +693,30 @@ function snapToCell(px, py) {
     const r = el.getBoundingClientRect();
     const rowStr = el.style.gridRow.match(/(\d+)/);
     if (rowStr) {
-      const row = parseInt(rowStr[1]) - 1; // CSS grid rows are 1-indexed
+      const row = parseInt(rowStr[1]) - 1;
       if (!rowTops.has(row) || r.top < rowTops.get(row).top) {
         rowTops.set(row, { top: r.top, bottom: r.bottom });
       }
     }
   }
+  return rowTops.size > 0 ? [...rowTops.entries()].sort((a, b) => a[1].top - b[1].top) : null;
+}
 
-  // Find which row the pointer is in
+function snapToCell(px, py) {
+  const g = getGeometry();
+  const step = g.cellWidth + GAP;
+  const x = Math.max(0, Math.min(COLS - 1, Math.floor((px - g.left) / step)));
+
+  // Use frozen positions during drag to prevent feedback loops
+  const sortedRows = frozenRowPositions || captureRowPositions();
+
   let y = 0;
-  if (rowTops.size > 0) {
-    const sortedRows = [...rowTops.entries()].sort((a, b) => a[1].top - b[1].top);
+  if (sortedRows) {
     for (const [row, bounds] of sortedRows) {
       const midpoint = (bounds.top + bounds.bottom) / 2;
       if (py < midpoint) break;
       y = row;
     }
-    // If below all rows, use last row + 1
     const lastRow = sortedRows[sortedRows.length - 1];
     if (py > lastRow[1].bottom) y = lastRow[0] + 1;
   } else {
@@ -1173,6 +1175,7 @@ document.addEventListener('keydown', (e) => {
 // --- Drag: Move ---
 function startDrag() {
   dragging = true;
+  frozenRowPositions = captureRowPositions();
   const el = grid.querySelector(`[data-id="${dragId}"]`);
   if (el) {
     el.classList.add('dragging');
@@ -1215,11 +1218,23 @@ function updateDragMove(cell) {
   );
 
   if (item.type === 'break') {
-    // Break drag: only move placeholder — don't compact until drop.
-    // Compacting during drag causes a feedback loop: compaction changes
-    // DOM row heights → snapToCell reads new heights → different snap
-    // → different compaction → oscillation.
+    // Break drag: live compaction preview. snapToCell uses frozen row
+    // positions (captured at drag start) to prevent feedback loops.
     if (placeholder) placeholder.style.gridRow = `${newY + 1} / span 1`;
+    const proposed = items.map(i =>
+      i.id === dragId ? { ...i, y: newY } : { ...i }
+    );
+    const resolved = resolveAndCompact(proposed, dragId);
+    const before = capturePositions();
+    for (const ri of resolved) {
+      if (ri.id === dragId) continue;
+      const el = grid.querySelector(`[data-id="${ri.id}"]`);
+      if (el) {
+        if (ri.type === 'break') { el.style.gridRow = `${ri.y + 1} / span 1`; }
+        else { applyPlacement(el, ri); }
+      }
+    }
+    flipAnimate(before, dragId);
     statusEl.textContent = `Moving break "${item.label}" → row ${newY}`;
     return;
   }
@@ -1346,6 +1361,7 @@ function finishDrag(e) {
     dragOrigin = null;
     lastSnapCell = null;
     originalItem = null;
+    frozenRowPositions = null;
     return;
   }
 
@@ -1384,6 +1400,7 @@ function finishDrag(e) {
       dragOrigin = null;
       lastSnapCell = null;
       originalItem = null;
+      frozenRowPositions = null;
       return;
     }
   }
@@ -1402,6 +1419,7 @@ function finishDrag(e) {
   dragOrigin = null;
   lastSnapCell = null;
   originalItem = null;
+  frozenRowPositions = null;
 }
 
 function cancelDrag() {
@@ -1427,6 +1445,7 @@ function cancelDrag() {
   dragOrigin = null;
   lastSnapCell = null;
   originalItem = null;
+  frozenRowPositions = null;
 }
 
 // --- Row Breaks ---
