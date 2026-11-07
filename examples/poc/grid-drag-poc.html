@@ -18,7 +18,7 @@
   .grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: minmax(80px, auto);
+    grid-auto-rows: auto;
     gap: 8px;
     padding: 8px;
     background: #1a1a1a;
@@ -32,6 +32,7 @@
     overflow: hidden;
     user-select: none;
     position: relative;
+    min-height: 80px;
   }
 
   .panel .handle {
@@ -180,25 +181,37 @@
     line-height: 1.6;
   }
 
-  /* Row breaks */
+  /* Row breaks — thin divider, expands on hover for drag target */
   .row-break {
     grid-column: 1 / -1;
-    height: 28px;
+    height: 4px;
+    min-height: 4px;
+    max-height: 4px;
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: #252525;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
+    background: #333;
+    border-radius: 2px;
+    font-size: 0;
     color: #aaa;
     cursor: default;
     user-select: none;
-    gap: 6px;
+    gap: 4px;
+    overflow: hidden;
+    transition: height 150ms, max-height 150ms, font-size 150ms, padding 150ms;
+  }
+  .row-break:hover, .row-break.expanded {
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 10px;
+    background: #252525;
   }
   .row-break .break-toggle {
     cursor: pointer;
-    font-size: 10px;
+    font-size: inherit;
     opacity: 0.6;
     transition: transform 150ms;
     width: 14px;
@@ -206,21 +219,21 @@
   }
   .row-break .break-toggle:hover { opacity: 1; }
   .row-break .break-toggle.collapsed { transform: rotate(-90deg); }
-  .row-break .break-title { flex: 1; }
+  .row-break .break-title { flex: 1; white-space: nowrap; }
   .row-break .break-drag {
     display: none;
     cursor: grab;
     opacity: 0.4;
-    font-size: 12px;
+    font-size: inherit;
   }
   .row-break .break-drag:hover { opacity: 0.9; }
   .grid[data-editing] .row-break .break-drag { display: inline; }
   .grid[data-editing] .row-break {
-    outline: 1px dashed rgba(255,255,255,0.15);
+    outline: 1px dashed rgba(255,255,255,0.1);
     outline-offset: -1px;
   }
   .grid[data-editing] .row-break:hover {
-    outline: 1px solid #3b82f6;
+    outline: 1px solid rgba(59, 130, 246, 0.4);
   }
 
 </style>
@@ -296,9 +309,15 @@ const compactors = {
     resolve(items, movedId) {
       const moved = items.find(i => i.id === movedId);
       const placed = [moved];
-      // Breaks are placed first and treated as immovable
-      const breaks = items.filter(i => i.type === 'break' && i.id !== movedId);
-      for (const brk of breaks) placed.push(brk);
+      // First, displace any breaks that overlap the moved item
+      for (const brk of items) {
+        if (brk.type !== 'break' || brk.id === movedId) continue;
+        if (overlaps(moved, brk)) {
+          brk.y = moved.y + moved.h;
+        }
+        placed.push(brk);
+      }
+      // Then compact non-break, non-moved items within their sections
       const rest = items
         .filter(i => i.id !== movedId && i.type !== 'break')
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
