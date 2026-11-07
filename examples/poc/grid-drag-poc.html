@@ -1244,23 +1244,28 @@ function updateDragMove(cell, rawClientY) {
     const lineY = Math.max(0, rawClientY - gridRect.top);
     if (placeholder) placeholder.style.top = `${lineY}px`;
 
-    // Find nearest valid snap row from frozen positions
-    const SNAP_THRESHOLD = 25;
+    // Find nearest row boundary to snap to
+    const SNAP_THRESHOLD = 40;
     let bestRow = -1;
     let bestDist = Infinity;
     if (frozenRowPositions) {
+      // Each row's top edge is a snap target (= boundary above that row)
+      const seen = new Set();
       for (const [row, bounds] of frozenRowPositions) {
-        // Snap to top edge of each row (= boundary between rows)
-        const dist = Math.abs(rawClientY - bounds.top);
-        if (dist < bestDist) { bestDist = dist; bestRow = row; }
-        // Also check bottom edge of last item in row
-        const distBot = Math.abs(rawClientY - bounds.bottom);
-        if (distBot < bestDist) { bestDist = distBot; bestRow = row + 1; }
+        if (!seen.has(row)) {
+          seen.add(row);
+          const dist = Math.abs(rawClientY - bounds.top);
+          if (dist < bestDist) { bestDist = dist; bestRow = row; }
+        }
       }
+      // Also snap to below the last row
+      const lastRow = frozenRowPositions[frozenRowPositions.length - 1];
+      const distBelow = Math.abs(rawClientY - lastRow[1].bottom);
+      if (distBelow < bestDist) { bestDist = distBelow; bestRow = lastRow[0] + 1; }
     }
 
     if (bestDist < SNAP_THRESHOLD && bestRow >= 0) {
-      // SNAP — show live compaction at this row
+      // SNAP — show the actual divider at snap point, hide cursor line
       if (!breakDragState.isSnapped || breakDragState.snappedRow !== bestRow) {
         breakDragState.isSnapped = true;
         breakDragState.snappedRow = bestRow;
@@ -1272,16 +1277,15 @@ function updateDragMove(cell, rawClientY) {
         items = resolved;
         render();
         flipAnimate(before, dragId);
-        // Re-add the cursor line and hide original break
+        // Show the rendered break at snap position, hide cursor line
         grid.appendChild(placeholder);
-        placeholder.style.top = `${lineY}px`;
-        const origEl = grid.querySelector(`[data-id="${dragId}"]`);
-        if (origEl) origEl.style.display = 'none';
+        const snapEl = grid.querySelector(`[data-id="${dragId}"]`);
+        if (snapEl) snapEl.style.display = '';
       }
-      placeholder.classList.add('snapped');
+      placeholder.style.display = 'none';
       statusEl.textContent = `Snap → row ${bestRow}`;
     } else {
-      // UNSNAP — revert to original positions
+      // UNSNAP — hide divider, show cursor line tracking mouse
       if (breakDragState.isSnapped) {
         breakDragState.isSnapped = false;
         breakDragState.snappedRow = null;
@@ -1290,11 +1294,11 @@ function updateDragMove(cell, rawClientY) {
         render();
         flipAnimate(before, dragId);
         grid.appendChild(placeholder);
-        placeholder.style.top = `${lineY}px`;
         const origEl = grid.querySelector(`[data-id="${dragId}"]`);
         if (origEl) origEl.style.display = 'none';
       }
-      placeholder.classList.remove('snapped');
+      placeholder.style.display = '';
+      placeholder.style.top = `${lineY}px`;
       statusEl.textContent = `Moving break "${item.label}"`;
     }
     return;
