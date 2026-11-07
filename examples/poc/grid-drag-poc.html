@@ -123,6 +123,7 @@
     background: rgba(59, 130, 246, 0.12);
     border-radius: 6px;
     pointer-events: none;
+    min-height: 80px;
   }
   .placeholder.replace-mode {
     border-color: #dc2626;
@@ -302,34 +303,40 @@ const compactors = {
   vertical: {
     resolve(items, movedId) {
       const moved = items.find(i => i.id === movedId);
-      const placed = [moved];
+      const placed = [];
 
-      // Snapshot break positions BEFORE displacement for section membership
-      const breakFloors = new Map();
-      for (const item of items) {
-        if (item.type !== 'break' && item.id !== movedId) {
-          breakFloors.set(item.id, getSectionFloor(item, items));
-        }
-      }
-
-      // Displace any breaks that overlap the moved item
+      // 1. Place breaks first — they're immovable boundaries
       for (const brk of items) {
         if (brk.type !== 'break' || brk.id === movedId) continue;
-        if (overlaps(moved, brk)) {
+        if (moved.type === 'break' && overlaps(moved, brk)) {
           brk.y = moved.y + moved.h;
         }
         placed.push(brk);
       }
 
-      // Compact non-break, non-moved items — use pre-displacement section floors
-      // but clamp to the displaced break position (whichever is higher)
+      // 2. Place the moved item — if it overlaps a break, nudge it
+      //    Try proposed position first, then scan outward
+      if (moved.type !== 'break') {
+        let bestY = moved.y;
+        for (let offset = 0; ; offset++) {
+          // Try above first (user intent when dragging up), then below
+          for (const tryY of offset === 0 ? [bestY] : [bestY - offset, bestY + offset]) {
+            if (tryY < 0) continue;
+            const candidate = { ...moved, y: tryY };
+            const blocked = placed.some(p => overlaps(candidate, p));
+            if (!blocked) { moved.y = tryY; break; }
+          }
+          if (!placed.some(p => overlaps(moved, p))) break;
+        }
+      }
+      placed.push(moved);
+
+      // 3. Compact non-break, non-moved items within their sections
       const rest = items
         .filter(i => i.id !== movedId && i.type !== 'break')
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
       for (const item of rest) {
-        const originalFloor = breakFloors.get(item.id) || 0;
-        const currentFloor = getSectionFloor(item, items);
-        const floor = Math.max(originalFloor, currentFloor);
+        const floor = getSectionFloor(item, items);
         for (let tryY = floor; ; tryY++) {
           const candidate = { ...item, y: tryY };
           const blocked = placed.some(p => overlaps(candidate, p));
