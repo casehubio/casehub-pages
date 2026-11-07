@@ -181,40 +181,28 @@
     line-height: 1.6;
   }
 
-  /* Row breaks — thin divider, expands on hover for drag target */
+  /* Row breaks — always-visible thin section header */
   .row-break {
     grid-column: 1 / -1;
-    height: 4px;
-    min-height: 4px;
-    max-height: 4px;
+    height: 22px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    background: #333;
-    border-radius: 2px;
-    font-size: 0;
-    color: #aaa;
+    padding: 0 8px;
+    background: #1f1f1f;
+    border-top: 1px solid #333;
+    font-size: 11px;
+    font-weight: 500;
+    color: #777;
     cursor: default;
     user-select: none;
     gap: 4px;
-    overflow: hidden;
-    transition: height 150ms, max-height 150ms, font-size 150ms, padding 150ms;
-  }
-  .row-break:hover, .row-break.expanded {
-    height: 24px;
-    min-height: 24px;
-    max-height: 24px;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 0 10px;
-    background: #252525;
   }
   .row-break .break-toggle {
     cursor: pointer;
-    font-size: inherit;
-    opacity: 0.6;
+    font-size: 9px;
+    opacity: 0.5;
     transition: transform 150ms;
-    width: 14px;
+    width: 12px;
     text-align: center;
   }
   .row-break .break-toggle:hover { opacity: 1; }
@@ -223,17 +211,18 @@
   .row-break .break-drag {
     display: none;
     cursor: grab;
-    opacity: 0.4;
-    font-size: inherit;
+    opacity: 0.3;
+    font-size: 11px;
   }
-  .row-break .break-drag:hover { opacity: 0.9; }
+  .row-break .break-drag:hover { opacity: 0.8; }
   .grid[data-editing] .row-break .break-drag { display: inline; }
   .grid[data-editing] .row-break {
-    outline: 1px dashed rgba(255,255,255,0.1);
-    outline-offset: -1px;
+    cursor: default;
+    border-top-color: #444;
   }
   .grid[data-editing] .row-break:hover {
-    outline: 1px solid rgba(59, 130, 246, 0.4);
+    border-top-color: #3b82f6;
+    color: #aaa;
   }
 
 </style>
