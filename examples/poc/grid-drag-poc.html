@@ -231,12 +231,32 @@
     border-top: 1px solid rgba(59, 130, 246, 0.3);
   }
 
+  /* Sticky panel indicator */
+  .panel.sticky-panel {
+    outline: 2px solid #f59e0b !important;
+    outline-offset: -2px;
+  }
+  .panel.sticky-panel .handle .drag-icon { display: none !important; }
+
+  /* Expand panel indicator */
+  .panel.expand-panel {
+    outline: 2px dashed #10b981 !important;
+    outline-offset: -2px;
+  }
+
+  /* Active toggle buttons in props panel */
+  .prop-toggle-active {
+    background: #2563eb !important;
+    color: #fff !important;
+    border-color: #2563eb !important;
+  }
+
 </style>
 </head>
 <body>
 
 <h1>Grid Drag POC — Move, Resize, Delete</h1>
-<p class="subtitle">Proving: structural placeholder, compaction, FLIP animation, resize spanning, two-stage delete, dual drag handles, row breaks</p>
+<p class="subtitle">Proving: structural placeholder, compaction, FLIP animation, resize spanning, two-stage delete, dual drag handles, row breaks, expand/sticky</p>
 
 <div class="controls">
   <button id="edit-btn">Edit Mode</button>
@@ -266,6 +286,9 @@
     <option value="content">Content</option>
   </select>
   <input id="prop-fixed-height" type="number" placeholder="px" style="display:none;width:60px;padding:2px 6px;font-size:12px;background:#222;color:#eee;border:1px solid #444;border-radius:3px;margin-left:4px;">
+  <span style="margin:0 8px;">|</span>
+  <label id="prop-expand-label" style="cursor:pointer;padding:2px 8px;border:1px solid #444;border-radius:3px;font-size:11px;background:#222;color:#aaa;">⤢ Expand</label>
+  <label id="prop-sticky-label" style="cursor:pointer;padding:2px 8px;border:1px solid #444;border-radius:3px;font-size:11px;background:#222;color:#aaa;margin-left:4px;">📌 Sticky</label>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -276,6 +299,8 @@
   <b>⌥+⇄ drag:</b> replace (destructive) &nbsp;
   <b>Resize:</b> drag edges or corners &nbsp;
   <b>Row breaks:</b> gravity boundaries — click ▼ to collapse, drag ⠿ to reorder &nbsp;
+  <b>Expand:</b> panel fills available space (revertible) &nbsp;
+  <b>Sticky:</b> panel is immovable &nbsp;
   <b>Esc:</b> cancel drag or deselect
 </div>
 
@@ -359,8 +384,9 @@ const compactors = {
       }
 
       // --- Phase 2: compact all other panels within sections ---
-      // Use FINAL break positions for section assignment
-      const placed = [moved, ...breaks.filter(b => b.id !== movedId)];
+      // Sticky panels are immovable — placed first alongside breaks
+      const stickyPanels = panels.filter(p => p.sticky && p.id !== movedId);
+      const placed = [moved, ...breaks.filter(b => b.id !== movedId), ...stickyPanels];
       const sortedBreaks = [...breaks].sort((a, b) => a.y - b.y);
 
       function getSectionIdx(panelY) {
@@ -378,7 +404,7 @@ const compactors = {
       }
 
       const rest = panels
-        .filter(p => p.id !== movedId)
+        .filter(p => p.id !== movedId && !p.sticky)
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
 
       for (const item of rest) {
@@ -480,6 +506,8 @@ const propWidthMode = document.getElementById('prop-width-mode');
 const propFixedWidth = document.getElementById('prop-fixed-width');
 const propHeightMode = document.getElementById('prop-height-mode');
 const propFixedHeight = document.getElementById('prop-fixed-height');
+const propExpandLabel = document.getElementById('prop-expand-label');
+const propStickyLabel = document.getElementById('prop-sticky-label');
 const addBreakBtn = document.getElementById('add-break-btn');
 const statusEl = document.getElementById('status');
 const helpEl = document.getElementById('help');
@@ -550,6 +578,8 @@ function render() {
       const panel = document.createElement('div');
       panel.className = 'panel';
       if (selectedId === item.id) panel.classList.add('selected');
+      if (item.sticky) panel.classList.add('sticky-panel');
+      if (item.expand) panel.classList.add('expand-panel');
       panel.dataset.id = item.id;
       panel.style.background = item.color;
       panel.style.gridColumn = `${item.x + 1} / span ${item.w}`;
@@ -670,6 +700,42 @@ function overlaps(a, b) {
 function resolveAndCompact(allItems, movedId) {
   const result = allItems.map(i => ({ ...i }));
   getCompactor().resolve(result, movedId);
+  // Expand-to-fill runs after compaction
+  const expandItems = result.filter(i => i.expand && i.type !== 'break');
+  for (const item of expandItems) {
+    let maxW = COLS - item.x;
+    for (const other of result) {
+      if (other.id === item.id || other.type === 'break') continue;
+      if (other.y < item.y + item.h && other.y + other.h > item.y) {
+        if (other.x >= item.x + item.w && other.x < item.x + maxW) {
+          maxW = other.x - item.x;
+        }
+      }
+    }
+    let minX = 0;
+    for (const other of result) {
+      if (other.id === item.id || other.type === 'break') continue;
+      if (other.y < item.y + item.h && other.y + other.h > item.y) {
+        if (other.x + other.w <= item.x && other.x + other.w > minX) {
+          minX = other.x + other.w;
+        }
+      }
+    }
+    item.w = maxW + (item.x - minX);
+    item.x = minX;
+    const breaks = result.filter(r => r.type === 'break');
+    let maxH = sectionCeiling(item.y, breaks) - item.y;
+    if (!isFinite(maxH)) maxH = item.h; // no break below — keep original height
+    for (const other of result) {
+      if (other.id === item.id) continue;
+      if (other.x < item.x + item.w && other.x + other.w > item.x) {
+        if (other.y >= item.y + item.h && other.y - item.y < maxH) {
+          maxH = other.y - item.y;
+        }
+      }
+    }
+    if (maxH > 0) item.h = maxH;
+  }
   return result;
 }
 
@@ -692,6 +758,51 @@ function compactAll(allItems) {
     placed.push(item);
   }
   return result;
+}
+
+// --- Expand to fill ---
+function applyExpand() {
+  const expandItems = items.filter(i => i.expand && i.type !== 'break');
+  if (expandItems.length === 0) return;
+
+  for (const item of expandItems) {
+    // Horizontal: expand right until hitting another panel or grid edge
+    let maxW = COLS - item.x;
+    for (const other of items) {
+      if (other.id === item.id || other.type === 'break') continue;
+      if (other.y < item.y + item.h && other.y + other.h > item.y) {
+        if (other.x >= item.x + item.w && other.x < item.x + maxW) {
+          maxW = other.x - item.x;
+        }
+      }
+    }
+    // Also expand left
+    let minX = 0;
+    for (const other of items) {
+      if (other.id === item.id || other.type === 'break') continue;
+      if (other.y < item.y + item.h && other.y + other.h > item.y) {
+        if (other.x + other.w <= item.x && other.x + other.w > minX) {
+          minX = other.x + other.w;
+        }
+      }
+    }
+    item.w = maxW + (item.x - minX);
+    item.x = minX;
+
+    // Vertical: expand down to section ceiling or nearest panel below
+    const brks = items.filter(i => i.type === 'break');
+    let maxH = sectionCeiling(item.y, brks) - item.y;
+    if (!isFinite(maxH)) maxH = item.h;
+    for (const other of items) {
+      if (other.id === item.id) continue;
+      if (other.x < item.x + item.w && other.x + other.w > item.x) {
+        if (other.y >= item.y + item.h && other.y - item.y < maxH) {
+          maxH = other.y - item.y;
+        }
+      }
+    }
+    if (maxH > 0) item.h = maxH;
+  }
 }
 
 // --- FLIP Animation ---
@@ -764,6 +875,8 @@ function showPropsPanel(item) {
   propHeightMode.value = s.heightMode || 'rows';
   propFixedHeight.style.display = s.heightMode === 'fixed' ? '' : 'none';
   propFixedHeight.value = s.fixedHeight || 200;
+  propExpandLabel.classList.toggle('prop-toggle-active', !!item.expand);
+  propStickyLabel.classList.toggle('prop-toggle-active', !!item.sticky);
 }
 
 function hidePropsPanel() {
@@ -793,6 +906,34 @@ propWidthMode.addEventListener('change', applyPropChange);
 propHeightMode.addEventListener('change', applyPropChange);
 propFixedWidth.addEventListener('change', applyPropChange);
 propFixedHeight.addEventListener('change', applyPropChange);
+
+propExpandLabel.addEventListener('click', () => {
+  if (!selectedId) return;
+  const item = items.find(i => i.id === selectedId);
+  if (!item) return;
+  item.expand = !item.expand;
+  if (item.expand) {
+    item._origW = item.w;
+    item._origH = item.h;
+  } else if (item._origW) {
+    item.w = item._origW;
+    item.h = item._origH;
+    delete item._origW;
+    delete item._origH;
+  }
+  applyExpand();
+  render();
+  selectPanel(selectedId);
+});
+
+propStickyLabel.addEventListener('click', () => {
+  if (!selectedId) return;
+  const item = items.find(i => i.id === selectedId);
+  if (!item) return;
+  item.sticky = !item.sticky;
+  render();
+  selectPanel(selectedId);
+});
 
 // --- Delete (two-stage) ---
 function deleteSelected() {
