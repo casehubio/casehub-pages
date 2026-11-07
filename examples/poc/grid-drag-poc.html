@@ -174,6 +174,24 @@
   <span id="status" class="status"></span>
 </div>
 
+<div id="props-panel" style="display:none;margin-bottom:12px;padding:10px 14px;background:#1a1a1a;border:1px solid #333;border-radius:6px;font-size:13px;">
+  <span id="props-title" style="font-weight:600;margin-right:12px;"></span>
+  <label style="margin-right:8px;">Width:</label>
+  <select id="prop-width-mode" style="padding:2px 6px;font-size:12px;background:#222;color:#eee;border:1px solid #444;border-radius:3px;">
+    <option value="proportional">Proportional (columns)</option>
+    <option value="fixed">Fixed (px)</option>
+  </select>
+  <input id="prop-fixed-width" type="number" placeholder="px" style="display:none;width:60px;padding:2px 6px;font-size:12px;background:#222;color:#eee;border:1px solid #444;border-radius:3px;margin-left:4px;">
+  <span style="margin:0 8px;">|</span>
+  <label style="margin-right:8px;">Height:</label>
+  <select id="prop-height-mode" style="padding:2px 6px;font-size:12px;background:#222;color:#eee;border:1px solid #444;border-radius:3px;">
+    <option value="rows">Rows</option>
+    <option value="fixed">Fixed (px)</option>
+    <option value="content">Content</option>
+  </select>
+  <input id="prop-fixed-height" type="number" placeholder="px" style="display:none;width:60px;padding:2px 6px;font-size:12px;background:#222;color:#eee;border:1px solid #444;border-radius:3px;margin-left:4px;">
+</div>
+
 <div class="grid" id="grid"></div>
 
 <div class="help" id="help" style="display:none">
@@ -231,15 +249,17 @@ const compactors = {
 
 function getCompactor() { return compactors[compactorSelect.value] || compactors.vertical; }
 
+// sizing: { widthMode: 'proportional'|'fixed', heightMode: 'rows'|'fixed'|'content',
+//           fixedWidth?: px, fixedHeight?: px }
 const INITIAL_ITEMS = [
-  { id: 'A', x: 0, y: 0, w: 4, h: 3, color: '#1a6b5a', label: '4×3' },
-  { id: 'B', x: 4, y: 0, w: 8, h: 1, color: '#2563eb', label: '8×1' },
-  { id: 'C', x: 4, y: 1, w: 4, h: 2, color: '#9333ea', label: '4×2' },
-  { id: 'D', x: 8, y: 1, w: 2, h: 1, color: '#dc2626', label: '2×1' },
-  { id: 'E', x: 10, y: 1, w: 2, h: 1, color: '#ea580c', label: '2×1' },
-  { id: 'F', x: 8, y: 2, w: 4, h: 1, color: '#0891b2', label: '4×1' },
-  { id: 'G', x: 0, y: 3, w: 6, h: 2, color: '#b45309', label: '6×2' },
-  { id: 'H', x: 6, y: 3, w: 6, h: 2, color: '#059669', label: '6×2' },
+  { id: 'A', x: 0, y: 0, w: 4, h: 3, color: '#1a6b5a', label: 'A', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
+  { id: 'B', x: 4, y: 0, w: 8, h: 1, color: '#2563eb', label: 'B', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
+  { id: 'C', x: 4, y: 1, w: 4, h: 2, color: '#9333ea', label: 'C', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
+  { id: 'D', x: 8, y: 1, w: 2, h: 1, color: '#dc2626', label: 'D', sizing: { widthMode: 'fixed', heightMode: 'rows', fixedWidth: 160 } },
+  { id: 'E', x: 10, y: 1, w: 2, h: 1, color: '#ea580c', label: 'E', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
+  { id: 'F', x: 8, y: 2, w: 4, h: 1, color: '#0891b2', label: 'F', sizing: { widthMode: 'proportional', heightMode: 'fixed', fixedHeight: 120 } },
+  { id: 'G', x: 0, y: 3, w: 6, h: 2, color: '#b45309', label: 'G', sizing: { widthMode: 'proportional', heightMode: 'rows' } },
+  { id: 'H', x: 6, y: 3, w: 6, h: 2, color: '#059669', label: 'H', sizing: { widthMode: 'proportional', heightMode: 'content' } },
 ];
 
 let items = JSON.parse(JSON.stringify(INITIAL_ITEMS));
@@ -262,6 +282,12 @@ const editBtn = document.getElementById('edit-btn');
 const resetBtn = document.getElementById('reset-btn');
 const deleteBtn = document.getElementById('delete-btn');
 const compactorSelect = document.getElementById('compactor-select');
+const propsPanel = document.getElementById('props-panel');
+const propsTitle = document.getElementById('props-title');
+const propWidthMode = document.getElementById('prop-width-mode');
+const propFixedWidth = document.getElementById('prop-fixed-width');
+const propHeightMode = document.getElementById('prop-height-mode');
+const propFixedHeight = document.getElementById('prop-fixed-height');
 const statusEl = document.getElementById('status');
 const helpEl = document.getElementById('help');
 
@@ -292,6 +318,7 @@ function render() {
     panel.style.background = item.color;
     panel.style.gridColumn = `${item.x + 1} / span ${item.w}`;
     panel.style.gridRow = `${item.y + 1} / span ${item.h}`;
+    applySizing(panel, item);
 
     const handle = document.createElement('div');
     handle.className = 'handle';
@@ -299,7 +326,10 @@ function render() {
 
     const body = document.createElement('div');
     body.className = 'body';
-    body.textContent = `${item.w}×${item.h}`;
+    const s = item.sizing || {};
+    const wLabel = s.widthMode === 'fixed' ? `${s.fixedWidth}px` : `${item.w}col`;
+    const hLabel = s.heightMode === 'fixed' ? `${s.fixedHeight}px` : s.heightMode === 'content' ? 'auto' : `${item.h}row`;
+    body.textContent = `${wLabel} × ${hLabel}`;
 
     panel.appendChild(handle);
     panel.appendChild(body);
@@ -332,6 +362,33 @@ function updateLabels() {
 function applyPlacement(el, item) {
   el.style.gridColumn = `${item.x + 1} / span ${item.w}`;
   el.style.gridRow = `${item.y + 1} / span ${item.h}`;
+  applySizing(el, item);
+}
+
+function applySizing(el, item) {
+  const s = item.sizing || {};
+  // Width
+  if (s.widthMode === 'fixed' && s.fixedWidth) {
+    el.style.minWidth = `${s.fixedWidth}px`;
+    el.style.width = `${s.fixedWidth}px`;
+  } else {
+    el.style.minWidth = '';
+    el.style.width = '';
+  }
+  // Height
+  if (s.heightMode === 'fixed' && s.fixedHeight) {
+    el.style.minHeight = `${s.fixedHeight}px`;
+    el.style.height = `${s.fixedHeight}px`;
+  } else if (s.heightMode === 'content') {
+    el.style.minHeight = '';
+    el.style.height = 'auto';
+  } else {
+    el.style.minHeight = '';
+    el.style.height = '';
+  }
+  // Visual indicator of sizing mode
+  const badge = s.widthMode === 'fixed' ? '📌' : s.heightMode === 'content' ? '📏' : s.heightMode === 'fixed' ? '📐' : '';
+  el.dataset.sizingBadge = badge;
 }
 
 // --- Grid Geometry ---
@@ -423,22 +480,67 @@ function selectPanel(id) {
     el.classList.toggle('selected', el.dataset.id === id);
   }
   const item = items.find(i => i.id === id);
-  if (item) statusEl.textContent = `Selected ${item.label} (${item.w}×${item.h}) — Delete to remove`;
+  if (item) {
+    statusEl.textContent = `Selected ${item.label} — Delete to remove`;
+    showPropsPanel(item);
+  }
 }
 
 function selectDropPlaceholder(id) {
   selectedId = id;
   deleteBtn.style.display = editing ? '' : 'none';
+  hidePropsPanel();
   statusEl.textContent = `Selected empty placeholder — Delete again to collapse`;
 }
 
 function deselect() {
   selectedId = null;
   deleteBtn.style.display = 'none';
+  hidePropsPanel();
   for (const el of grid.querySelectorAll('.panel')) {
     el.classList.remove('selected');
   }
 }
+
+function showPropsPanel(item) {
+  const s = item.sizing || { widthMode: 'proportional', heightMode: 'rows' };
+  propsPanel.style.display = '';
+  propsTitle.textContent = `Panel ${item.label}`;
+  propWidthMode.value = s.widthMode || 'proportional';
+  propFixedWidth.style.display = s.widthMode === 'fixed' ? '' : 'none';
+  propFixedWidth.value = s.fixedWidth || 200;
+  propHeightMode.value = s.heightMode || 'rows';
+  propFixedHeight.style.display = s.heightMode === 'fixed' ? '' : 'none';
+  propFixedHeight.value = s.fixedHeight || 200;
+}
+
+function hidePropsPanel() {
+  propsPanel.style.display = 'none';
+}
+
+function applyPropChange() {
+  if (!selectedId) return;
+  const item = items.find(i => i.id === selectedId);
+  if (!item) return;
+  item.sizing = item.sizing || {};
+  item.sizing.widthMode = propWidthMode.value;
+  item.sizing.heightMode = propHeightMode.value;
+  if (item.sizing.widthMode === 'fixed') {
+    item.sizing.fixedWidth = parseInt(propFixedWidth.value) || 200;
+  }
+  if (item.sizing.heightMode === 'fixed') {
+    item.sizing.fixedHeight = parseInt(propFixedHeight.value) || 200;
+  }
+  propFixedWidth.style.display = item.sizing.widthMode === 'fixed' ? '' : 'none';
+  propFixedHeight.style.display = item.sizing.heightMode === 'fixed' ? '' : 'none';
+  render();
+  selectPanel(selectedId);
+}
+
+propWidthMode.addEventListener('change', applyPropChange);
+propHeightMode.addEventListener('change', applyPropChange);
+propFixedWidth.addEventListener('change', applyPropChange);
+propFixedHeight.addEventListener('change', applyPropChange);
 
 // --- Delete (two-stage) ---
 function deleteSelected() {
