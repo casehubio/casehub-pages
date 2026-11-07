@@ -303,7 +303,16 @@ const compactors = {
     resolve(items, movedId) {
       const moved = items.find(i => i.id === movedId);
       const placed = [moved];
-      // First, displace any breaks that overlap the moved item
+
+      // Snapshot break positions BEFORE displacement for section membership
+      const breakFloors = new Map();
+      for (const item of items) {
+        if (item.type !== 'break' && item.id !== movedId) {
+          breakFloors.set(item.id, getSectionFloor(item, items));
+        }
+      }
+
+      // Displace any breaks that overlap the moved item
       for (const brk of items) {
         if (brk.type !== 'break' || brk.id === movedId) continue;
         if (overlaps(moved, brk)) {
@@ -311,12 +320,16 @@ const compactors = {
         }
         placed.push(brk);
       }
-      // Then compact non-break, non-moved items within their sections
+
+      // Compact non-break, non-moved items — use pre-displacement section floors
+      // but clamp to the displaced break position (whichever is higher)
       const rest = items
         .filter(i => i.id !== movedId && i.type !== 'break')
         .sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
       for (const item of rest) {
-        const floor = getSectionFloor(item, items);
+        const originalFloor = breakFloors.get(item.id) || 0;
+        const currentFloor = getSectionFloor(item, items);
+        const floor = Math.max(originalFloor, currentFloor);
         for (let tryY = floor; ; tryY++) {
           const candidate = { ...item, y: tryY };
           const blocked = placed.some(p => overlaps(candidate, p));
