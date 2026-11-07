@@ -282,6 +282,8 @@
   <button id="edit-btn">Edit Mode</button>
   <button id="reset-btn">Reset</button>
   <button id="delete-btn" class="delete-btn" style="display:none">Delete</button>
+  <button id="undo-btn" style="display:none" disabled>↩ Undo</button>
+  <button id="redo-btn" style="display:none" disabled>↪ Redo</button>
   <button id="add-break-btn" style="display:none">+ Break</button>
   <select id="compactor-select" style="padding:4px 8px;font-size:13px;border:1px solid #444;border-radius:4px;background:#222;color:#eee;">
     <option value="vertical" selected>Vertical (gravity)</option>
@@ -501,6 +503,46 @@ const INITIAL_ITEMS = [
 
 let items = JSON.parse(JSON.stringify(INITIAL_ITEMS));
 let dropPlaceholders = []; // { id, x, y, w, h } — left behind after first delete
+
+// Undo/redo
+const undoStack = [];
+const redoStack = [];
+const MAX_UNDO = 50;
+function pushUndo() {
+  undoStack.push({ items: JSON.parse(JSON.stringify(items)), dp: JSON.parse(JSON.stringify(dropPlaceholders)) });
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  redoStack.length = 0;
+  updateUndoButtons();
+}
+function undo() {
+  if (undoStack.length === 0) return;
+  redoStack.push({ items: JSON.parse(JSON.stringify(items)), dp: JSON.parse(JSON.stringify(dropPlaceholders)) });
+  const state = undoStack.pop();
+  items = state.items;
+  dropPlaceholders = state.dp;
+  deselect();
+  render();
+  updateUndoButtons();
+  statusEl.textContent = 'Undo';
+}
+function redo() {
+  if (redoStack.length === 0) return;
+  undoStack.push({ items: JSON.parse(JSON.stringify(items)), dp: JSON.parse(JSON.stringify(dropPlaceholders)) });
+  const state = redoStack.pop();
+  items = state.items;
+  dropPlaceholders = state.dp;
+  deselect();
+  render();
+  updateUndoButtons();
+  statusEl.textContent = 'Redo';
+}
+function updateUndoButtons() {
+  const undoBtn = document.getElementById('undo-btn');
+  const redoBtn = document.getElementById('redo-btn');
+  if (undoBtn) undoBtn.disabled = undoStack.length === 0;
+  if (redoBtn) redoBtn.disabled = redoStack.length === 0;
+}
+
 let editing = false;
 let selectedId = null;
 
@@ -941,6 +983,7 @@ function applyPropChange() {
   if (!selectedId) return;
   const item = items.find(i => i.id === selectedId);
   if (!item) return;
+  pushUndo();
   item.sizing = item.sizing || {};
   item.sizing.widthMode = propWidthMode.value;
   item.sizing.heightMode = propHeightMode.value;
@@ -965,6 +1008,7 @@ propExpandLabel.addEventListener('click', () => {
   if (!selectedId) return;
   const item = items.find(i => i.id === selectedId);
   if (!item) return;
+  pushUndo();
   item.expand = !item.expand;
   if (item.expand) {
     item._origW = item.w;
@@ -984,6 +1028,7 @@ propStickyLabel.addEventListener('click', () => {
   if (!selectedId) return;
   const item = items.find(i => i.id === selectedId);
   if (!item) return;
+  pushUndo();
   item.sticky = !item.sticky;
   render();
   selectPanel(selectedId);
@@ -992,6 +1037,7 @@ propStickyLabel.addEventListener('click', () => {
 // --- Delete (two-stage) ---
 function deleteSelected() {
   if (!selectedId) return;
+  pushUndo();
 
   // Check if it's a drop placeholder (second delete)
   const dpIdx = dropPlaceholders.findIndex(dp => dp.id === selectedId);
@@ -1064,6 +1110,8 @@ editBtn.addEventListener('click', () => {
   grid.toggleAttribute('data-editing', editing);
   helpEl.style.display = editing ? '' : 'none';
   addBreakBtn.style.display = editing ? '' : 'none';
+  document.getElementById('undo-btn').style.display = editing ? '' : 'none';
+  document.getElementById('redo-btn').style.display = editing ? '' : 'none';
   if (!editing) {
     if (dragging) cancelDrag();
     deselect();
@@ -1195,7 +1243,18 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     deleteSelected();
   }
+  if (e.key === 'z' && (e.metaKey || e.ctrlKey) && !e.shiftKey && editing) {
+    e.preventDefault();
+    undo();
+  }
+  if (e.key === 'z' && (e.metaKey || e.ctrlKey) && e.shiftKey && editing) {
+    e.preventDefault();
+    redo();
+  }
 });
+
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('redo-btn').addEventListener('click', redo);
 
 // --- Drag: Move ---
 function startDrag() {
@@ -1389,7 +1448,7 @@ function finishDrag(e) {
   if (breakDragState) {
     if (placeholder) { placeholder.remove(); placeholder = null; }
     if (breakDragState.isSnapped) {
-      // Items already set to resolved state during snap preview — just render
+      pushUndo();
       render();
       statusEl.textContent = `Moved break to row ${breakDragState.snappedRow}`;
     } else {
@@ -1448,6 +1507,7 @@ function finishDrag(e) {
     finalItems = items.map(i =>
       i.id === dragId ? { ...i, x, y, w, h } : { ...i }
     );
+    pushUndo();
     items = resolveAndCompact(finalItems, dragId);
     if (placeholder) { placeholder.remove(); placeholder = null; }
     render();
@@ -1471,8 +1531,8 @@ function finishDrag(e) {
       const before = capturePositions();
       const isReplace = e && e.altKey;
 
+      pushUndo();
       if (isReplace) {
-        // Option held — replace: remove target, dragged takes target's position
         items = items
           .filter(i => i.id !== target.id)
           .map(i => i.id === dragId ? { ...i, x: target.x, y: target.y, w: target.w, h: target.h } : { ...i });
@@ -1504,6 +1564,7 @@ function finishDrag(e) {
   }
 
   // No collision or displace intent — resolve and compact
+  pushUndo();
   items = resolveAndCompact(finalItems, dragId);
 
   if (placeholder) { placeholder.remove(); placeholder = null; }
@@ -1567,6 +1628,7 @@ function cancelDrag() {
 function toggleBreak(id) {
   const brk = items.find(i => i.id === id);
   if (!brk) return;
+  pushUndo();
   const before = capturePositions();
   brk.collapsed = !brk.collapsed;
   render();
@@ -1575,6 +1637,7 @@ function toggleBreak(id) {
 }
 
 addBreakBtn.addEventListener('click', () => {
+  pushUndo();
   breakCounter++;
   const maxY = items.reduce((max, i) => Math.max(max, i.y + i.h), 0);
   const before = capturePositions();
