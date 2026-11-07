@@ -18,7 +18,7 @@
   .grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: 80px;
+    grid-auto-rows: minmax(80px, auto);
     gap: 8px;
     padding: 8px;
     background: #1a1a1a;
@@ -375,13 +375,13 @@ function applySizing(el, item) {
     el.style.minWidth = '';
     el.style.width = '';
   }
-  // Height
+  // Height — use min-height so the grid row can grow to accommodate
   if (s.heightMode === 'fixed' && s.fixedHeight) {
     el.style.minHeight = `${s.fixedHeight}px`;
-    el.style.height = `${s.fixedHeight}px`;
+    el.style.height = '';
   } else if (s.heightMode === 'content') {
     el.style.minHeight = '';
-    el.style.height = 'auto';
+    el.style.height = '';
   } else {
     el.style.minHeight = '';
     el.style.height = '';
