@@ -167,8 +167,10 @@
   <button id="edit-btn">Edit Mode</button>
   <button id="reset-btn">Reset</button>
   <button id="delete-btn" class="delete-btn" style="display:none">Delete</button>
-  <button id="mode-vertical" class="active" style="font-size:12px">Vertical</button>
-  <button id="mode-float" style="font-size:12px">Float</button>
+  <select id="compactor-select" style="padding:4px 8px;font-size:13px;border:1px solid #444;border-radius:4px;background:#222;color:#eee;">
+    <option value="vertical" selected>Vertical (gravity)</option>
+    <option value="float">Float (no gravity)</option>
+  </select>
   <span id="status" class="status"></span>
 </div>
 
@@ -227,14 +229,7 @@ const compactors = {
   },
 };
 
-function getCompactor() { return compactors[activeCompactorKey] || compactors.vertical; }
-
-function setCompactorMode(key) {
-  activeCompactorKey = key;
-  modeVerticalBtn.classList.toggle('active', key === 'vertical');
-  modeFloatBtn.classList.toggle('active', key === 'float');
-  statusEl.textContent = `Mode: ${key === 'vertical' ? 'Vertical (gravity)' : 'Float (no gravity)'}`;
-}
+function getCompactor() { return compactors[compactorSelect.value] || compactors.vertical; }
 
 const INITIAL_ITEMS = [
   { id: 'A', x: 0, y: 0, w: 4, h: 3, color: '#1a6b5a', label: '4×3' },
@@ -266,9 +261,7 @@ const grid = document.getElementById('grid');
 const editBtn = document.getElementById('edit-btn');
 const resetBtn = document.getElementById('reset-btn');
 const deleteBtn = document.getElementById('delete-btn');
-const modeVerticalBtn = document.getElementById('mode-vertical');
-const modeFloatBtn = document.getElementById('mode-float');
-let activeCompactorKey = 'vertical';
+const compactorSelect = document.getElementById('compactor-select');
 const statusEl = document.getElementById('status');
 const helpEl = document.getElementById('help');
 
@@ -533,8 +526,6 @@ resetBtn.addEventListener('click', () => {
 });
 
 deleteBtn.addEventListener('click', deleteSelected);
-modeVerticalBtn.addEventListener('click', () => setCompactorMode('vertical'));
-modeFloatBtn.addEventListener('click', () => setCompactorMode('float'));
 
 // --- Pointer Events ---
 grid.addEventListener('pointerdown', (e) => {
