@@ -354,20 +354,23 @@ const compactors = {
       for (const item of rest) {
         const floor = getSectionFloor(item, items);
         let ceiling = getSectionCeiling(item, items);
+        let pushCount = 0;
         for (let tryY = floor; ; tryY++) {
           if (tryY + item.h > ceiling) {
-            // No room in section — push the break (and everything below) down
             const ceilingBreak = items.find(b => b.type === 'break' && b.y === ceiling);
-            if (ceilingBreak) {
+            if (ceilingBreak && ceilingBreak.id !== movedId && pushCount < 20) {
               pushBreakAndBelow(ceilingBreak, items, 1);
-              // Update placed array positions too (they reference same objects)
               ceiling++;
+              pushCount++;
+            } else {
+              break;
             }
           }
           const candidate = { ...item, y: tryY };
           const blocked = placed.some(p => overlaps(candidate, p));
           if (!blocked) { item.y = tryY; placed.push(item); break; }
         }
+        if (!placed.includes(item)) { placed.push(item); }
       }
     },
   },
