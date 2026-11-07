@@ -181,25 +181,34 @@
     line-height: 1.6;
   }
 
-  /* Row breaks — always-visible thin section header */
+  /* Row breaks — pencil thin, expands on hover */
   .row-break {
     grid-column: 1 / -1;
-    height: 22px;
+    height: 4px;
+    min-height: 4px;
     display: flex;
     align-items: center;
-    padding: 0 8px;
-    background: #1f1f1f;
-    border-top: 1px solid #333;
-    font-size: 11px;
-    font-weight: 500;
-    color: #777;
+    padding: 0;
+    background: #333;
+    border-radius: 2px;
+    font-size: 0;
+    color: #888;
     cursor: default;
     user-select: none;
     gap: 4px;
+    overflow: hidden;
+    transition: height 120ms ease, padding 120ms ease, font-size 100ms ease 20ms;
+  }
+  .row-break:hover {
+    height: 22px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #252525;
   }
   .row-break .break-toggle {
     cursor: pointer;
-    font-size: 9px;
+    font-size: inherit;
     opacity: 0.5;
     transition: transform 150ms;
     width: 12px;
@@ -212,17 +221,13 @@
     display: none;
     cursor: grab;
     opacity: 0.3;
-    font-size: 11px;
+    font-size: inherit;
   }
   .row-break .break-drag:hover { opacity: 0.8; }
   .grid[data-editing] .row-break .break-drag { display: inline; }
-  .grid[data-editing] .row-break {
-    cursor: default;
-    border-top-color: #444;
-  }
   .grid[data-editing] .row-break:hover {
-    border-top-color: #3b82f6;
-    color: #aaa;
+    background: #282828;
+    border-top: 1px solid rgba(59, 130, 246, 0.3);
   }
 
 </style>
