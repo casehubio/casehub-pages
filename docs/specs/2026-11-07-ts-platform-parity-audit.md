@@ -23,6 +23,23 @@ The Java YAML runtime has undergone extensive development through epic platform#
 
 ---
 
+## Governing Principle — Schema Parity Is Non-Negotiable
+
+The playbook YAML is a shared language across runtimes. Both Walkers must accept the **same schema** — every keyword, every step type, every decorator, every top-level key. The portability system (`universal`, `java`, `ts`, `both`) already handles whether a step *executes* on a given runtime; the Walker must never reject valid YAML that the other runtime accepts.
+
+This means:
+- **Keywords:** Both `DECORATOR_KEYS` and `RESERVED_KEYS` must be identical across runtimes. A decorator that is Java-only (e.g. `at:`) must still be recognized by the TS Walker — it can be a no-op at runtime, but it must not throw a parse error.
+- **Step types:** All step types must parse on both sides. `ControlStep` (pause/resume) must parse in TS even if the runtime returns a not-implemented result. Agent session bindings must parse even if they can't execute in the browser.
+- **Plugin parameters:** `absorbSiblings` must work at the parse level so that `assertThat:` with matcher siblings parses correctly regardless of runtime.
+- **Annotations:** The `#@` syntax must parse and produce an `AnnotationMap` even if the runtime doesn't act on it. The `annotations` field must exist on all step types.
+- **Top-level keys:** `pools:`, `orchestration:`, `vars:`, `params:` must all parse without error.
+
+The existing portability model (`aria` is Java-only, `mcp` is TS-only) demonstrates the pattern: the Walker accepts both; the runtime's portability check determines whether execution proceeds. Schema acceptance and runtime execution are separate concerns.
+
+**Consequence for prioritisation:** All keyword, step type, and structural parsing gaps move to Phase 1 regardless of runtime implementation status. A playbook that parses on Java must parse on TypeScript.
+
+---
+
 ## Part 1 — Keyword-Level Parity
 
 ### DECORATOR_KEYS
@@ -324,52 +341,58 @@ These areas need no work:
 
 ## Part 9 — Prioritised Implementation Plan
 
-### Phase 1 — Critical Fixes (blocking correctness)
+### Phase 1 — Schema Parity (all parsing/acceptance gaps)
 
-| # | Gap | Effort | Blocks |
-|---|-----|--------|--------|
-| C1 | Fix scalar subject key: `value` → `_subject` | XS | Cross-platform plugin compat |
-| C2 | Add `capture` to DECORATOR_KEYS + RESERVED_KEYS | XS | #742, test parity |
-| C3 | Add `absorbSiblings` to Definition + Walker | S | assertThat, emit-event |
-| C4 | Add `annotations` field to all ResolvedStep types | S | Annotation system |
-| H6 | Add `at`, `on-complete`, `resource`, `priority` to keyword sets | XS | Decorator chain handlers already exist |
-| M1 | Add `barrier`, `quorum` to COMBINED_KEY_PREFIXES | XS | Combined-key parity |
+Per the governing principle: every keyword, step type, and structural key that Java accepts must also be accepted by the TS Walker. Runtime behaviour can differ; parse-level rejection cannot.
 
-### Phase 2 — High Priority (test/playbook parity)
+| # | Gap | Effort | Why Phase 1 |
+|---|-----|--------|-------------|
+| C1 | Fix scalar subject key: `value` → `_subject` | XS | Cross-platform plugin compat — silent data mismatch |
+| C2 | Add `capture` to DECORATOR_KEYS + RESERVED_KEYS | XS | Walker rejects valid YAML |
+| C3 | Add `absorbSiblings` to Definition + Walker | S | Walker rejects assertThat matcher siblings |
+| C4 | Add `annotations` field to all ResolvedStep types | S | Structural alignment for annotation data |
+| H6 | Add `at`, `on-complete`, `resource`, `priority` to keyword sets | XS | Walker rejects valid decorators |
+| M1 | Add `barrier`, `quorum` to COMBINED_KEY_PREFIXES | XS | Walker rejects valid combined-key syntax |
+| M4 | ControlStep (pause/resume) — parse-level acceptance | S | Walker rejects valid step types |
+| M2 | `concurrent:` as parallel alias | XS | Walker rejects valid keyword |
+| M3 | `pools:` and `orchestration:` top-level key parsing | S | Document parser rejects valid keys |
+| H5a | Agent session binding types (parse only, no handler needed) | S | Walker rejects valid invoke bindings |
+| M9 | AgentBinding fields (modelQuery, pool, modelChain, responseFormat) | S | Binding parser rejects valid fields |
+| M8 | `vars:`/`params:` key acceptance (align with Java naming) | S | Document parser rejects valid keys |
+| H8 | Result.failure.detail field | XS | Structural alignment |
+| L1 | OnCompleteExpander `name` → `step:` fix | XS | Produces invalid step naming |
+| M7 | DecoratorChain loop position alignment | XS | Decorator composition order mismatch |
 
-| # | Gap | Effort | Blocks |
-|---|-----|--------|--------|
-| H4 | Test infrastructure (assert, assertThat, run-playbook, verify-simulation) | L | .test.yaml parity |
-| H3 | Typed error catch scope | M | Error-aware playbooks |
-| H8 | Result.failure.detail field | XS | Error detail propagation |
-| M4 | ControlStep (pause/resume) | S | Consumer lifecycle |
-| M2 | `concurrent:` as parallel alias | XS | Playbook compatibility |
-| M3 | `pools:` and `orchestration:` parsing | S | Agent pool playbooks |
-| M8 | `vars:`/`params:` alignment | M | Typed variables |
-| M6 | SimulateBlockParser for test blocks | M | Test simulation |
-| L1 | OnCompleteExpander `name` → `step:` fix | XS | on-complete correctness |
+### Phase 2 — Runtime Parity (behaviour behind the schema)
+
+Once the schema is unified, these add runtime behaviour where it matters:
+
+| # | Gap | Effort | What it enables |
+|---|-----|--------|-----------------|
+| H3 | Typed error catch scope (`${error.type/message/step/detail}`) | M | Error-aware playbooks |
+| H4 | Test infrastructure (assert, assertThat, run-playbook, verify-simulation) | L | .test.yaml execution |
+| M6 | SimulateBlockParser for test blocks | M | Test simulation config |
+| H1 | Annotation system (parser, extractor, map, injection) | L | @Inject, migrated decorators |
+| M4a | ControlStep runtime (pause/resume evaluation) | S | Consumer lifecycle control |
 
 ### Phase 3 — Expression System (foundational)
 
-| # | Gap | Effort | Blocks |
-|---|-----|--------|--------|
+| # | Gap | Effort | What it enables |
+|---|-----|--------|-----------------|
 | H2 | Type-aware expression resolution | XL | EXPRESSION param type |
 | H7 | VariableResolver dual-registration | M | Expression context |
-| H1 | Annotation system | L | @Inject, migrated decorators |
 
-### Phase 4 — Alignment with In-Progress Features
+### Phase 4 — Streaming and Advanced Agent
 
-| # | Gap | Effort | Blocks |
-|---|-----|--------|--------|
-| H5 | Agent session bindings | M | Multi-turn agent playbooks |
+| # | Gap | Effort | What it enables |
+|---|-----|--------|-----------------|
+| H5b | Agent session handlers (runtime execution) | M | Multi-turn agent playbooks |
 | M5 | FusedPipelineStep | M | Streaming optimization |
-| M9 | AgentBinding fields (modelQuery, pool, modelChain, responseFormat) | S | Advanced agent config |
-| M7 | DecoratorChain loop position | XS | Edge-case ordering |
 
 ### Phase 5 — Visual Polish
 
-| # | Gap | Effort | Blocks |
-|---|-----|--------|--------|
+| # | Gap | Effort | What it enables |
+|---|-----|--------|-----------------|
 | L2 | Decorator badge rendering (22 missing) | M | Visual completeness |
 | L3 | Action icon coverage | S | Visual polish |
 | L4 | Step-viewer for new step types | S | Visual completeness |
