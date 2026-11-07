@@ -233,6 +233,24 @@
     border-top: 1px solid rgba(59, 130, 246, 0.3);
   }
 
+  /* Break drag — free-tracking indicator */
+  .break-cursor-line {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 3px;
+    background: #3b82f6;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 50;
+    transition: opacity 100ms;
+  }
+  .break-cursor-line.snapped {
+    background: #10b981;
+    height: 4px;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+
   /* Sticky panel indicator */
   .panel.sticky-panel {
     outline: 2px solid #f59e0b !important;
@@ -497,6 +515,7 @@ let placeholder = null;
 let lastSnapCell = null;
 let originalItem = null; // snapshot of item at drag start
 let frozenRowPositions = null; // row positions captured at drag start
+let breakDragState = null; // { snappedRow, originalItems, isSnapped }
 
 const grid = document.getElementById('grid');
 const editBtn = document.getElementById('edit-btn');
@@ -1137,6 +1156,12 @@ grid.addEventListener('pointermove', (e) => {
     startDrag();
   }
 
+  // Break drags track pixels, not cells — bypass snap dedup
+  if (originalItem && originalItem.type === 'break') {
+    updateDragMove(null, e.clientY);
+    return;
+  }
+
   const cell = snapToCell(e.clientX, e.clientY);
   if (lastSnapCell && cell.x === lastSnapCell.x && cell.y === lastSnapCell.y) return;
   lastSnapCell = cell;
@@ -1184,10 +1209,14 @@ function startDrag() {
 
   placeholder = document.createElement('div');
   if (originalItem.type === 'break') {
-    placeholder.className = 'row-break';
-    placeholder.style.opacity = '0.4';
-    placeholder.style.gridRow = `${originalItem.y + 1} / span 1`;
-    placeholder.style.pointerEvents = 'none';
+    // Break drag: use a free-tracking cursor line instead of a grid-positioned placeholder
+    placeholder.className = 'break-cursor-line';
+    grid.style.position = 'relative';
+    breakDragState = {
+      snappedRow: null,
+      originalItems: items.map(i => ({ ...i })),
+      isSnapped: false,
+    };
   } else {
     placeholder.className = 'placeholder';
     applyPlacement(placeholder, originalItem);
@@ -1206,38 +1235,78 @@ function findOverlapping(proposed, movedId) {
   return proposed.filter(i => i.id !== movedId && overlaps(moved, i));
 }
 
-function updateDragMove(cell) {
+function updateDragMove(cell, rawClientY) {
   const item = originalItem;
+
+  if (item.type === 'break' && breakDragState) {
+    // Break drag: cursor line tracks mouse pixel position
+    const gridRect = grid.getBoundingClientRect();
+    const lineY = Math.max(0, rawClientY - gridRect.top);
+    if (placeholder) placeholder.style.top = `${lineY}px`;
+
+    // Find nearest valid snap row from frozen positions
+    const SNAP_THRESHOLD = 25;
+    let bestRow = -1;
+    let bestDist = Infinity;
+    if (frozenRowPositions) {
+      for (const [row, bounds] of frozenRowPositions) {
+        // Snap to top edge of each row (= boundary between rows)
+        const dist = Math.abs(rawClientY - bounds.top);
+        if (dist < bestDist) { bestDist = dist; bestRow = row; }
+        // Also check bottom edge of last item in row
+        const distBot = Math.abs(rawClientY - bounds.bottom);
+        if (distBot < bestDist) { bestDist = distBot; bestRow = row + 1; }
+      }
+    }
+
+    if (bestDist < SNAP_THRESHOLD && bestRow >= 0) {
+      // SNAP — show live compaction at this row
+      if (!breakDragState.isSnapped || breakDragState.snappedRow !== bestRow) {
+        breakDragState.isSnapped = true;
+        breakDragState.snappedRow = bestRow;
+        const proposed = breakDragState.originalItems.map(i =>
+          i.id === dragId ? { ...i, y: bestRow } : { ...i }
+        );
+        const resolved = resolveAndCompact(proposed, dragId);
+        const before = capturePositions();
+        items = resolved;
+        render();
+        flipAnimate(before, dragId);
+        // Re-add the cursor line and hide original break
+        grid.appendChild(placeholder);
+        placeholder.style.top = `${lineY}px`;
+        const origEl = grid.querySelector(`[data-id="${dragId}"]`);
+        if (origEl) origEl.style.display = 'none';
+      }
+      placeholder.classList.add('snapped');
+      statusEl.textContent = `Snap → row ${bestRow}`;
+    } else {
+      // UNSNAP — revert to original positions
+      if (breakDragState.isSnapped) {
+        breakDragState.isSnapped = false;
+        breakDragState.snappedRow = null;
+        const before = capturePositions();
+        items = breakDragState.originalItems.map(i => ({ ...i }));
+        render();
+        flipAnimate(before, dragId);
+        grid.appendChild(placeholder);
+        placeholder.style.top = `${lineY}px`;
+        const origEl = grid.querySelector(`[data-id="${dragId}"]`);
+        if (origEl) origEl.style.display = 'none';
+      }
+      placeholder.classList.remove('snapped');
+      statusEl.textContent = `Moving break "${item.label}"`;
+    }
+    return;
+  }
+
+  // Non-break drag: cell-based positioning
   const offsetY = cell.y - dragOrigin.y;
   const newY = Math.max(0, item.y + offsetY);
-  // Breaks only move vertically
-  const newX = item.type === 'break' ? 0 : Math.max(0, Math.min(COLS - item.w, item.x + (cell.x - dragOrigin.x)));
-
+  const newX = Math.max(0, Math.min(COLS - item.w, item.x + (cell.x - dragOrigin.x)));
   const proposed = items.map(i =>
     i.id === dragId ? { ...i, x: newX, y: newY } : { ...i }
   );
-
-  if (item.type === 'break') {
-    // Break drag: live compaction preview. snapToCell uses frozen row
-    // positions (captured at drag start) to prevent feedback loops.
-    if (placeholder) placeholder.style.gridRow = `${newY + 1} / span 1`;
-    const proposed = items.map(i =>
-      i.id === dragId ? { ...i, y: newY } : { ...i }
-    );
-    const resolved = resolveAndCompact(proposed, dragId);
-    const before = capturePositions();
-    for (const ri of resolved) {
-      if (ri.id === dragId) continue;
-      const el = grid.querySelector(`[data-id="${ri.id}"]`);
-      if (el) {
-        if (ri.type === 'break') { el.style.gridRow = `${ri.y + 1} / span 1`; }
-        else { applyPlacement(el, ri); }
-      }
-    }
-    flipAnimate(before, dragId);
-    statusEl.textContent = `Moving break "${item.label}" → row ${newY}`;
-    return;
-  }
 
   if (dragIntent === 'swap') {
     // Swap mode: show placeholder without displacing, highlight swap target
@@ -1312,6 +1381,31 @@ function updateDragResize(cell) {
 
 // --- Finish / Cancel ---
 function finishDrag(e) {
+  // Break drag: commit if snapped, revert if not
+  if (breakDragState) {
+    if (placeholder) { placeholder.remove(); placeholder = null; }
+    if (breakDragState.isSnapped) {
+      // Items already set to resolved state during snap preview — just render
+      render();
+      statusEl.textContent = `Moved break to row ${breakDragState.snappedRow}`;
+    } else {
+      // Revert to original
+      items = breakDragState.originalItems;
+      render();
+      statusEl.textContent = 'Break drag cancelled';
+    }
+    breakDragState = null;
+    dragging = false;
+    dragId = null;
+    dragMode = null;
+    dragIntent = 'displace';
+    dragOrigin = null;
+    lastSnapCell = null;
+    originalItem = null;
+    frozenRowPositions = null;
+    return;
+  }
+
   if (!lastSnapCell) { cancelDrag(); return; }
 
   // Clear swap/replace highlights
@@ -1424,6 +1518,23 @@ function finishDrag(e) {
 
 function cancelDrag() {
   if (placeholder) { placeholder.remove(); placeholder = null; }
+
+  // Break drag: revert to original items
+  if (breakDragState) {
+    items = breakDragState.originalItems;
+    breakDragState = null;
+    render();
+    statusEl.textContent = 'Cancelled';
+    dragging = false;
+    dragId = null;
+    dragMode = null;
+    dragIntent = 'displace';
+    dragOrigin = null;
+    lastSnapCell = null;
+    originalItem = null;
+    frozenRowPositions = null;
+    return;
+  }
 
   for (const item of items) {
     const el = grid.querySelector(`[data-id="${item.id}"]`);
