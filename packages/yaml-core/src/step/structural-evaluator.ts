@@ -15,6 +15,8 @@ import type { InvokeHandler } from './invoke/invoke-handler.js';
 import type { EventEmitter } from './emit-event-emitter.js';
 import { DefinitionParser } from './definition-parser.js';
 import type { ObjectVariableSource } from '../types.js';
+import { InjectionResolver } from '../annotation/injection-resolver.js';
+import type { Annotation } from '../annotation/annotation-map.js';
 
 export class StructuralEvaluator {
   private readonly invokeHandlers: InvokeHandler[];
@@ -23,7 +25,15 @@ export class StructuralEvaluator {
     this.invokeHandlers = invokeHandlers;
   }
   async evaluate(step: ResolvedStep, context: Context): Promise<Result> {
-    const result = await this.dispatch(step, context);
+    let processedStep = step;
+    if (step.annotations?.length > 0 && 'params' in step) {
+      const anns = step.annotations as Annotation[];
+      if (anns.some(a => a.name === 'Inject')) {
+        const augmented = InjectionResolver.resolve(anns, (step as { params: Record<string, unknown> }).params, context.services);
+        processedStep = { ...step, params: augmented } as ResolvedStep;
+      }
+    }
+    const result = await this.dispatch(processedStep, context);
     if (step.name && result.kind === 'success') {
       context.scope.resultStore().recordSuccess(step.name, result.output);
     } else if (step.name && result.kind === 'failure') {

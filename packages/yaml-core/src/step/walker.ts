@@ -1,5 +1,11 @@
 import type { MatchPattern } from '../match.js';
 import type { CloudEventSpec } from './types.js';
+import { AnnotationParser } from '../annotation/annotation-parser.js';
+import { StepPositionScanner } from '../annotation/step-position-scanner.js';
+import { AnnotationExtractor } from '../annotation/annotation-extractor.js';
+import { AnnotationMap } from '../annotation/annotation-map.js';
+import type { Annotation } from '../annotation/annotation-map.js';
+import { DecoratorAnnotationResolver } from '../annotation/decorator-annotation-resolver.js';
 
 export interface CatalogEntry {
   qualifiedName: string;
@@ -263,24 +269,33 @@ const MAX_DEPTH = 32;
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Walker {
-  static resolve(steps: Record<string, unknown>[], catalog: Catalog): ResolvedStep[] {
+  static resolve(steps: Record<string, unknown>[], catalog: Catalog, rawYaml?: string): ResolvedStep[] {
     const seenNames = new Set<string>();
-    const resolved = Walker.resolveAtDepth(steps, catalog, 0, 'root', seenNames);
+    let annotationMap = AnnotationMap.empty();
+    if (rawYaml) {
+      const parsedAnnotations = AnnotationParser.parse(rawYaml);
+      const stepPositions = StepPositionScanner.scan(rawYaml);
+      annotationMap = AnnotationExtractor.extract(parsedAnnotations, stepPositions);
+    }
+    const resolved = Walker.resolveAtDepth(steps, catalog, 0, 'root', seenNames, annotationMap);
     Walker.validateRefs(resolved, seenNames);
     return resolved;
   }
 
   private static resolveAtDepth(
     steps: Record<string, unknown>[], catalog: Catalog, depth: number,
-    path: string, seenNames: Set<string>,
+    path: string, seenNames: Set<string>, annotationMap: AnnotationMap, baseAddress?: string,
   ): ResolvedStep[] {
     if (depth > MAX_DEPTH) throw new Error(`${path}: step nesting exceeds maximum depth of ${MAX_DEPTH}`);
-    return steps.map((step, i) => Walker.resolveOne(step, catalog, depth, `${path} → Step ${i}`, seenNames));
+    return steps.map((step, i) => {
+      const address = baseAddress !== undefined ? `${baseAddress}.${i}` : String(i);
+      return Walker.resolveOne(step, catalog, depth, `${path} → Step ${i}`, seenNames, annotationMap, address);
+    });
   }
 
   private static resolveOne(
     step: Record<string, unknown>, catalog: Catalog, depth: number,
-    stepPath: string, seenNames: Set<string>,
+    stepPath: string, seenNames: Set<string>, annotationMap: AnnotationMap = AnnotationMap.empty(), stepAddress: string = '0',
   ): ResolvedStep {
     let stepName: string | null = null;
     let structuralType: string | null = null;
@@ -410,8 +425,13 @@ export class Walker {
       throw new Error(`${stepPath}: step has both structural type '${structuralType}' and invoke`);
     }
 
+    const stepAnns: Annotation[] = annotationMap.forStep(stepAddress);
+    const mergedDecorators = stepAnns.length > 0
+      ? DecoratorAnnotationResolver.mergeDecorators(stepAnns, decorators)
+      : decorators;
+
     if (structuralType === 'pause' || structuralType === 'resume') {
-      return { kind: 'control', name: stepName, control: structuralType, target: structuralValue as string, decorators, annotations: [] };
+      return { kind: 'control', name: stepName, control: structuralType, target: structuralValue as string, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'emit-event') {
@@ -432,23 +452,23 @@ export class Walker {
         }
         return spec as unknown as CloudEventSpec;
       });
-      return { kind: 'emit-event', name: stepName, events, emitTo: emitTo as 'scope' | 'pages-event' | 'both', decorators, annotations: [] };
+      return { kind: 'emit-event', name: stepName, events, emitTo: emitTo as 'scope' | 'pages-event' | 'both', decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'block') {
-      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → block`, seenNames);
-      return { kind: 'block', name: stepName, steps: substeps, decorators, annotations: [] };
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → block`, seenNames, annotationMap, stepAddress);
+      return { kind: 'block', name: stepName, steps: substeps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'parallel') {
       let steps: ResolvedStep[];
       let branches: NamedBranch[] | undefined;
       if (Array.isArray(structuralValue)) {
-        steps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames);
+        steps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames, annotationMap, stepAddress);
       } else if (typeof structuralValue === 'object' && structuralValue !== null) {
         const namedBranches = Object.entries(structuralValue as Record<string, unknown>).map(([bName, bSteps]) => ({
           name: bName,
-          steps: Walker.resolveAtDepth(bSteps as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel:${bName}`, seenNames),
+          steps: Walker.resolveAtDepth(bSteps as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel:${bName}`, seenNames, annotationMap, stepAddress),
         }));
         branches = namedBranches;
         steps = namedBranches.flatMap(b => b.steps);
@@ -473,9 +493,9 @@ export class Walker {
     if (structuralType === 'if') {
       const thenRaw = (companions['then'] as Record<string, unknown>[] | undefined) ?? [];
       const elseRaw = (companions['else'] as Record<string, unknown>[] | undefined) ?? [];
-      const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, `${stepPath} → then`, seenNames);
-      const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, `${stepPath} → else`, seenNames);
-      return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators, annotations: [] };
+      const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, `${stepPath} → then`, seenNames, annotationMap, stepAddress);
+      const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, `${stepPath} → else`, seenNames, annotationMap, stepAddress);
+      return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'match') {
@@ -496,12 +516,12 @@ export class Walker {
         if (isDefault) {
           pattern = { type: 'default' };
           caseSteps = Walker.resolveAtDepth(
-            (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, casePath, seenNames);
+            (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, casePath, seenNames, annotationMap, stepAddress);
         } else {
           pattern = Walker.parsePattern(c['pattern'] ?? c['when']);
           const rest = Walker.stripKeys(c, ['pattern', 'when', 'guard']);
           caseSteps = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, casePath, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, casePath, seenNames, annotationMap, stepAddress)]
             : [];
         }
         const guard = (c['guard'] as string) ?? null;
@@ -510,16 +530,16 @@ export class Walker {
         }
         return { pattern, guard, steps: caseSteps };
       });
-      return { kind: 'match', name: stepName, scrutinee: structuralValue as string, cases, decorators, annotations: [] };
+      return { kind: 'match', name: stepName, scrutinee: structuralValue as string, cases, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'try') {
-      const trySteps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → try`, seenNames);
+      const trySteps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → try`, seenNames, annotationMap, stepAddress);
       const catchRaw = (companions['catch'] as Record<string, unknown>[] | undefined) ?? [];
       const finallyRaw = (companions['finally'] as Record<string, unknown>[] | undefined) ?? [];
-      const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, `${stepPath} → catch`, seenNames);
-      const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, `${stepPath} → finally`, seenNames);
-      return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators, annotations: [] };
+      const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, `${stepPath} → catch`, seenNames, annotationMap, stepAddress);
+      const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, `${stepPath} → finally`, seenNames, annotationMap, stepAddress);
+      return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'select') {
@@ -531,25 +551,25 @@ export class Walker {
           const channelName = typeof sub === 'string' ? sub : (sub['channel'] as string);
           const rest = Walker.stripKeys(b, ['subscribe']);
           const branchStep = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames, annotationMap, stepAddress)]
             : [];
           return { type: 'subscribe' as const, name: channelName, steps: branchStep };
         }
         if (b['wait']) {
           const rest = Walker.stripKeys(b, ['wait']);
           const branchStep = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames, annotationMap, stepAddress)]
             : [];
           return { type: 'wait' as const, name: b['wait'] as string, steps: branchStep };
         }
         throw new Error(`${branchPath}: select branch must have subscribe or wait`);
       });
-      return { kind: 'select', name: stepName, branches, decorators, annotations: [] };
+      return { kind: 'select', name: stepName, branches, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'race') {
-      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → race`, seenNames);
-      return { kind: 'race', name: stepName, steps: substeps, decorators, annotations: [] };
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → race`, seenNames, annotationMap, stepAddress);
+      return { kind: 'race', name: stepName, steps: substeps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'barrier') {
@@ -557,7 +577,7 @@ export class Walker {
       const awaitSteps = barrierVal['await'] as string[];
       const timeoutRaw = barrierVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'barrier', name: stepName, awaitSteps, ...(timeout !== undefined ? { timeout } : {}), decorators, annotations: [] };
+      return { kind: 'barrier', name: stepName, awaitSteps, ...(timeout !== undefined ? { timeout } : {}), decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'quorum') {
@@ -566,13 +586,13 @@ export class Walker {
       const ofSteps = quorumVal['of'] as string[];
       const timeoutRaw = quorumVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators, annotations: [] };
+      return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType && PROMOTABLE_DECORATORS.has(structuralType)) {
       let substeps: ResolvedStep[];
       if (Array.isArray(structuralValue)) {
-        substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames);
+        substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames, annotationMap, stepAddress);
         decorators[structuralType] = true;
       } else {
         const entries = Object.entries(structuralValue as Record<string, unknown>);
@@ -583,10 +603,10 @@ export class Walker {
         if (!Array.isArray(stepsRaw)) {
           throw new Error(`${stepPath}: structural '${structuralType}' parameter '${param}' must map to a steps array`);
         }
-        substeps = Walker.resolveAtDepth(stepsRaw as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames);
+        substeps = Walker.resolveAtDepth(stepsRaw as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames, annotationMap, stepAddress);
         decorators[structuralType] = param;
       }
-      return { kind: 'block', name: stepName, steps: substeps, decorators, annotations: [] };
+      return { kind: 'block', name: stepName, steps: substeps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (!structuralType && !actionKey && !invokeSpec && decorators['delay'] !== undefined) {
@@ -596,11 +616,11 @@ export class Walker {
     }
 
     if (!structuralType && !actionKey && !invokeSpec && decorators['simulation'] !== undefined) {
-      return { kind: 'delay', name: stepName, duration: 0, decorators, annotations: [] };
+      return { kind: 'delay', name: stepName, duration: 0, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (invokeSpec) {
-      return { kind: 'invoke', name: stepName, invokeSpec, decorators, annotations: [] };
+      return { kind: 'invoke', name: stepName, invokeSpec, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (actionKey) {
@@ -613,7 +633,7 @@ export class Walker {
         params = { [primaryKey]: actionValue };
       }
       for (const [k, v] of unknownKeys) params[k] = v;
-      return { kind: 'plugin', name: stepName, entry, params, decorators, annotations: [] };
+      return { kind: 'plugin', name: stepName, entry, params, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     throw new Error(`${stepPath}: no step type identified. Keys: ${Object.keys(step).join(', ')}`);
