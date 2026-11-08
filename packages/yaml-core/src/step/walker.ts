@@ -297,14 +297,16 @@ export class Walker {
       if (REMOVED_KEYS.has(key)) {
         throw new Error(`${stepPath}: '${key}' is no longer valid — use inline sibling keys, or 'block' for multiple actions`);
       }
-      if (key === 'step' || key === 'name') {
+      if (key === 'step') {
+        throw new Error(`${stepPath}: use 'name:' instead of 'step:' for step naming, or combined-key form`);
+      } else if (key === 'name') {
         stepName = value as string;
         if (stepName !== null && seenNames.has(stepName)) {
           throw new Error(`${stepPath}: duplicate step name '${stepName}'`);
         }
         if (stepName !== null) seenNames.add(stepName);
       } else if (key === 'invoke') {
-        invokeSpec = value as Record<string, unknown>;
+        throw new Error(`${stepPath}: verbose 'invoke:' form is no longer valid — use compact invoke syntax (e.g., 'rest-request GET /url:')`);
       } else if (key === 'block' || key === 'parallel' || key === 'concurrent' || key === 'try' || key === 'select' || key === 'race') {
         structuralType = key === 'concurrent' ? 'parallel' : key;
         structuralValue = value;

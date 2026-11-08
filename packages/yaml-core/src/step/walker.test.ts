@@ -26,8 +26,8 @@ describe('Walker', () => {
     it('allows unique names', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA'), doB: makeEntry('doB') });
       const steps = [
-        { step: 'first', doA: {} },
-        { step: 'second', doB: {} },
+        { name: 'first', doA: {} },
+        { name: 'second', doB: {} },
       ];
       expect(() => Walker.resolve(steps, catalog)).not.toThrow();
     });
@@ -35,8 +35,8 @@ describe('Walker', () => {
     it('throws on duplicate step names', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       const steps = [
-        { step: 'same-name', doA: {} },
-        { step: 'same-name', doA: {} },
+        { name: 'same-name', doA: {} },
+        { name: 'same-name', doA: {} },
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/duplicate.*same-name/i);
     });
@@ -53,10 +53,10 @@ describe('Walker', () => {
     it('detects duplicates in nested blocks', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       const steps = [
-        { step: 'outer', doA: {} },
+        { name: 'outer', doA: {} },
         {
           block: [
-            { step: 'outer', doA: {} },
+            { name: 'outer', doA: {} },
           ],
         },
       ];
@@ -68,8 +68,8 @@ describe('Walker', () => {
     it('accepts barrier referencing known step names', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       const steps = [
-        { step: 'step-a', doA: {} },
-        { step: 'step-b', doA: {} },
+        { name: 'step-a', doA: {} },
+        { name: 'step-b', doA: {} },
         { barrier: { await: ['step-a', 'step-b'] } },
       ];
       expect(() => Walker.resolve(steps, catalog)).not.toThrow();
@@ -78,7 +78,7 @@ describe('Walker', () => {
     it('throws when barrier references unknown step name', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       const steps = [
-        { step: 'step-a', doA: {} },
+        { name: 'step-a', doA: {} },
         { barrier: { await: ['step-a', 'nonexistent'] } },
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/nonexistent/);
@@ -87,7 +87,7 @@ describe('Walker', () => {
     it('throws when quorum references unknown step name', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
       const steps = [
-        { step: 'step-a', doA: {} },
+        { name: 'step-a', doA: {} },
         { quorum: { required: 1, of: ['step-a', 'ghost'] } },
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/ghost/);
@@ -102,7 +102,7 @@ describe('Walker', () => {
           match: 'value',
           cases: [
             { pattern: 'x', doA: {} },
-            { default: [{ step: 'fallback', doA: {} }] },
+            { default: [{ name: 'fallback', doA: {} }] },
           ],
         },
       ];
@@ -215,7 +215,7 @@ describe('Walker', () => {
     });
 
     it('resolves delay with step name', () => {
-      const steps = [{ step: 'pause', delay: '2s' }];
+      const steps = [{ name: 'pause', delay: '2s' }];
       const resolved = Walker.resolve(steps, makeCatalog());
       expect(resolved[0]!.kind).toBe('delay');
       expect(resolved[0]!.name).toBe('pause');
@@ -427,7 +427,7 @@ describe('Walker', () => {
     it('preserves step name on structural decorator', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { step: 'my-loop', forEach: { 'item in items': [{ fill: {} }] } },
+        { name: 'my-loop', forEach: { 'item in items': [{ fill: {} }] } },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.name).toBe('my-loop');
@@ -620,7 +620,7 @@ describe('Walker', () => {
     it('combined-key step name does not override explicit step key', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { step: 'explicit', 'block setup': [{ fill: {} }] },
+        { name: 'explicit', 'block setup': [{ fill: {} }] },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.name).toBe('explicit');
@@ -632,7 +632,7 @@ describe('Walker', () => {
 
     it('parses single event', () => {
       const steps = Walker.resolve([{
-        step: 'alert',
+        name: 'alert',
         'emit-event': { type: 'pathology.alert', data: { severity: 'HIGH' } },
       }], catalog);
       expect(steps).toHaveLength(1);
@@ -731,7 +731,7 @@ describe('Walker', () => {
 
     it('works with decorators', () => {
       const steps = Walker.resolve([{
-        step: 'retry-emit',
+        name: 'retry-emit',
         'emit-event': { type: 'a.b', data: {} },
         retry: 3,
         timeout: '5s',
@@ -751,7 +751,7 @@ describe('Walker', () => {
         resolveInferred: (name: string) =>
           name === 'load-content' ? inferredEntry : undefined,
       };
-      const steps = [{ step: 'load-panel', 'load-content': { role: 'region', name: 'Diff' } }];
+      const steps = [{ name: 'load-panel', 'load-content': { role: 'region', name: 'Diff' } }];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved).toHaveLength(1);
       expect(resolved[0].kind).toBe('plugin');
@@ -828,8 +828,8 @@ describe('Walker', () => {
 
     it('M1: barrier as combined key prefix', () => {
       const steps = Walker.resolve([
-        { step: 'a', doA: {} },
-        { step: 'b', doA: {} },
+        { name: 'a', doA: {} },
+        { name: 'b', doA: {} },
         { 'barrier myBarrier': { await: ['a', 'b'] } },
       ], catalog);
       expect(steps[2]!.name).toBe('myBarrier');
@@ -838,8 +838,8 @@ describe('Walker', () => {
 
     it('M1: quorum as combined key prefix', () => {
       const steps = Walker.resolve([
-        { step: 'a', doA: {} },
-        { step: 'b', doA: {} },
+        { name: 'a', doA: {} },
+        { name: 'b', doA: {} },
         { 'quorum 2-of-3': { required: 2, of: ['a', 'b'] } },
       ], catalog);
       expect(steps[2]!.name).toBe('2-of-3');
@@ -954,6 +954,16 @@ describe('Walker', () => {
         expect(steps[0].params['_subject']).toBe('hello');
       }
     });
+
+    it('P5: step key rejected — use name instead', () => {
+      expect(() => Walker.resolve([{ step: 'myStep', doA: {} }], catalog))
+        .toThrow(/use 'name:' instead of 'step:'/i);
+    });
+
+    it('P2: verbose invoke form rejected', () => {
+      expect(() => Walker.resolve([{ invoke: { binding: 'rest', url: '/api' } }], catalog))
+        .toThrow(/verbose 'invoke:' form.*use compact/i);
+    });
   });
 
   describe('simulation decorator', () => {
@@ -961,7 +971,7 @@ describe('Walker', () => {
 
     it('block with simulation decorator resolves to BlockStep with simulation in decorators', () => {
       const steps = Walker.resolve([{
-        step: 'sim-phase',
+        name: 'sim-phase',
         simulation: {
           strategies: { 'agent-provider.invoke': 'sequential' },
           corpus: [{ file: 'fixtures/data.yaml' }],
@@ -999,7 +1009,7 @@ describe('Walker', () => {
 
     it('standalone simulation step resolves to zero-delay step', () => {
       const steps = Walker.resolve([{
-        step: 'switch-to-simulated',
+        name: 'switch-to-simulated',
         simulation: {
           strategies: { 'agent-provider.invoke': 'key-lookup' },
           corpus: ['fixtures/llm-responses.yaml'],
