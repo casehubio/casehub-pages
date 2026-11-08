@@ -232,20 +232,20 @@ describe('Walker', () => {
   });
 
   describe('non-object action value wrapping', () => {
-    it('wraps string action value as { value: string }', () => {
+    it('wraps string action value as { _subject: string }', () => {
       const catalog = makeCatalog({ navigate: makeEntry('navigate') });
       const steps = [{ navigate: '/dashboard' }];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('plugin');
-      expect((resolved[0] as any).params).toEqual({ value: '/dashboard' });
+      expect((resolved[0] as any).params).toEqual({ _subject: '/dashboard' });
     });
 
-    it('wraps number action value as { value: number }', () => {
-      const catalog = makeCatalog({ pause: makeEntry('pause') });
-      const steps = [{ pause: 500 }];
+    it('wraps number action value as { _subject: number }', () => {
+      const catalog = makeCatalog({ waitMs: makeEntry('waitMs') });
+      const steps = [{ waitMs: 500 }];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('plugin');
-      expect((resolved[0] as any).params).toEqual({ value: 500 });
+      expect((resolved[0] as any).params).toEqual({ _subject: 500 });
     });
 
     it('passes object action values unchanged', () => {
@@ -785,6 +785,136 @@ describe('Walker', () => {
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0].kind).toBe('plugin');
       expect((resolved[0] as any).entry.qualifiedName).toBe('click-registered');
+    });
+  });
+
+  describe('schema parity — keyword acceptance', () => {
+    const catalog = makeCatalog({ doA: makeEntry('doA') });
+
+    it('C1: scalar plugin value wrapped as _subject not value', () => {
+      const steps = Walker.resolve([{ doA: 'hello' }], catalog);
+      expect(steps[0]!.kind).toBe('plugin');
+      if (steps[0]!.kind === 'plugin') {
+        expect(steps[0].params).toEqual({ _subject: 'hello' });
+        expect(steps[0].params).not.toHaveProperty('value');
+      }
+    });
+
+    it('C2: capture accepted as decorator key', () => {
+      expect(() => Walker.resolve([{ capture: 'result', doA: {} }], catalog)).not.toThrow();
+      const steps = Walker.resolve([{ capture: 'result', doA: {} }], catalog);
+      expect(steps[0]!.decorators['capture']).toBe('result');
+    });
+
+    it('H6: at accepted as decorator key', () => {
+      const steps = Walker.resolve([{ at: '2026-01-01T00:00:00Z', doA: {} }], catalog);
+      expect(steps[0]!.decorators['at']).toBe('2026-01-01T00:00:00Z');
+    });
+
+    it('H6: on-complete accepted as decorator key', () => {
+      const steps = Walker.resolve([{ 'on-complete': 'cleanup', doA: {} }], catalog);
+      expect(steps[0]!.decorators['on-complete']).toBe('cleanup');
+    });
+
+    it('H6: resource accepted as decorator key', () => {
+      const steps = Walker.resolve([{ resource: 'db-pool', doA: {} }], catalog);
+      expect(steps[0]!.decorators['resource']).toBe('db-pool');
+    });
+
+    it('H6: priority accepted as decorator key', () => {
+      const steps = Walker.resolve([{ priority: 'high', doA: {} }], catalog);
+      expect(steps[0]!.decorators['priority']).toBe('high');
+    });
+
+    it('M1: barrier as combined key prefix', () => {
+      const steps = Walker.resolve([
+        { step: 'a', doA: {} },
+        { step: 'b', doA: {} },
+        { 'barrier myBarrier': { await: ['a', 'b'] } },
+      ], catalog);
+      expect(steps[2]!.name).toBe('myBarrier');
+      expect(steps[2]!.kind).toBe('barrier');
+    });
+
+    it('M1: quorum as combined key prefix', () => {
+      const steps = Walker.resolve([
+        { step: 'a', doA: {} },
+        { step: 'b', doA: {} },
+        { 'quorum 2-of-3': { required: 2, of: ['a', 'b'] } },
+      ], catalog);
+      expect(steps[2]!.name).toBe('2-of-3');
+      expect(steps[2]!.kind).toBe('quorum');
+    });
+
+    it('M2: concurrent accepted as alias for parallel', () => {
+      const steps = Walker.resolve([{
+        concurrent: [{ doA: {} }, { doA: {} }],
+      }], catalog);
+      expect(steps[0]!.kind).toBe('parallel');
+      if (steps[0]!.kind === 'parallel') {
+        expect(steps[0].steps).toHaveLength(2);
+      }
+    });
+
+    it('M2: concurrent with named branches', () => {
+      const steps = Walker.resolve([{
+        concurrent: { branchA: [{ doA: {} }], branchB: [{ doA: {} }] },
+      }], catalog);
+      expect(steps[0]!.kind).toBe('parallel');
+      if (steps[0]!.kind === 'parallel') {
+        expect(steps[0].branches).toHaveLength(2);
+      }
+    });
+
+    it('H8: Result failure type allows detail field', () => {
+      const result: import('./walker.js').Result = {
+        kind: 'failure',
+        message: 'broken',
+        detail: { code: 'E001', context: { key: 'val' } },
+      };
+      expect(result.kind).toBe('failure');
+      if (result.kind === 'failure') {
+        expect(result.detail).toEqual({ code: 'E001', context: { key: 'val' } });
+      }
+    });
+
+    it('M8: vars accepted as reserved key on steps', () => {
+      expect(() => Walker.resolve([{ vars: { x: 1 }, doA: {} }], catalog)).not.toThrow();
+    });
+
+    it('M8: params accepted as reserved key on steps', () => {
+      expect(() => Walker.resolve([{ params: { y: 2 }, doA: {} }], catalog)).not.toThrow();
+    });
+
+    it('C4: all step types carry annotations field', () => {
+      const steps = Walker.resolve([{ doA: {} }], catalog);
+      expect(steps[0]).toHaveProperty('annotations');
+    });
+
+    it('M4: pause accepted as structural step type', () => {
+      const steps = Walker.resolve([{ pause: 'workflow-gate' }], catalog);
+      expect(steps[0]!.kind).toBe('control');
+    });
+
+    it('M4: resume accepted as structural step type', () => {
+      const steps = Walker.resolve([{ resume: 'workflow-gate' }], catalog);
+      expect(steps[0]!.kind).toBe('control');
+    });
+
+    it('C3: absorbSiblings causes unknown keys to be absorbed into params', () => {
+      const absorbEntry = makeEntry('assertThat');
+      absorbEntry.definition.absorbSiblings = true;
+      const cat = makeCatalog({ assertThat: absorbEntry });
+      const steps = Walker.resolve([{ assertThat: '${expr}', contains: 'expected' }], cat);
+      expect(steps[0]!.kind).toBe('plugin');
+      if (steps[0]!.kind === 'plugin') {
+        expect(steps[0].params['contains']).toBe('expected');
+      }
+    });
+
+    it('name accepted as alias for step on structural blocks', () => {
+      const steps = Walker.resolve([{ name: 'my-block', block: [{ doA: {} }] }], catalog);
+      expect(steps[0]!.name).toBe('my-block');
     });
   });
 

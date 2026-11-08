@@ -85,6 +85,7 @@ export interface Definition {
   outputs: Record<string, Parameter>;
   invoke?: InvokeBinding;
   portability?: Portability;
+  absorbSiblings?: boolean;
 }
 
 export interface DefinitionFile {
