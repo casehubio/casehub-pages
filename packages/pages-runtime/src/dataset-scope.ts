@@ -78,7 +78,7 @@ function walkScope(
 
   if (component.items) {
     for (const item of component.items) {
-      walkScope(item.component, current, paths, scope);
+      if (item.component) walkScope(item.component, current, paths, scope);
     }
   }
 

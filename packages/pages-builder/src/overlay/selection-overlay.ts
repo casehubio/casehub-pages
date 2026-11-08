@@ -10,13 +10,18 @@ const ALL_BUTTONS: ButtonDef[] = [
   ['sel-delete-btn', '✕', 'selection-delete'],
 ];
 
+const EDIT_LAYOUT_BTN: ButtonDef = ['sel-edit-layout-btn', '⊞', 'selection-edit-layout'];
+
 function getButtonsForNodeType(
   nodeType: TreeNodeType,
   isContainer: boolean,
 ): ButtonDef[] {
   if (nodeType === 'page') {
-    return ALL_BUTTONS.filter(([, , evt]) =>
-      evt === 'selection-add' || evt === 'selection-delete');
+    return [EDIT_LAYOUT_BTN, ...ALL_BUTTONS.filter(([, , evt]) =>
+      evt === 'selection-add' || evt === 'selection-delete')];
+  }
+  if (nodeType === 'grid-item') {
+    return [EDIT_LAYOUT_BTN, ...ALL_BUTTONS];
   }
   if (nodeType === 'component' && !isContainer) {
     return ALL_BUTTONS.filter(([, , evt]) => evt !== 'selection-add');
@@ -35,6 +40,8 @@ export class SelectionOverlay {
   private _overlayRoot: HTMLElement;
   private _overlay: HTMLElement | null = null;
   private _insertionPoints: HTMLElement[] = [];
+  private _buttonsContainer: HTMLElement | null = null;
+  private _toolbarLocked = false;
 
   constructor(overlayRoot: HTMLElement) {
     this._overlayRoot = overlayRoot;
@@ -110,17 +117,35 @@ export class SelectionOverlay {
 
     toolbar.appendChild(buttonsContainer);
     toolbar.appendChild(trigger);
+    this._buttonsContainer = buttonsContainer;
 
     toolbar.addEventListener('mouseenter', () => {
       buttonsContainer.style.maxWidth = '200px';
       buttonsContainer.style.opacity = '1';
     });
     toolbar.addEventListener('mouseleave', () => {
+      if (this._toolbarLocked) return;
       buttonsContainer.style.maxWidth = '0';
       buttonsContainer.style.opacity = '0';
     });
 
     this._overlay.appendChild(toolbar);
+    if (this._toolbarLocked) {
+      buttonsContainer.style.maxWidth = '200px';
+      buttonsContainer.style.opacity = '1';
+    }
+  }
+
+  lockToolbar(): void {
+    this._toolbarLocked = true;
+    if (this._buttonsContainer) {
+      this._buttonsContainer.style.maxWidth = '200px';
+      this._buttonsContainer.style.opacity = '1';
+    }
+  }
+
+  unlockToolbar(): void {
+    this._toolbarLocked = false;
   }
 
   hide(): void {

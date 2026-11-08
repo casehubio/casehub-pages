@@ -98,135 +98,6 @@ describe("parsePage", () => {
     });
   });
 
-  describe("rows/columns → grid placement", () => {
-    it("desugars rows/columns/span to grid items", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              {
-                columns: [
-                  { span: 6, components: [{ html: "left" }] },
-                  { span: 6, components: [{ html: "right" }] },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBe(2);
-      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
-      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
-    });
-
-    it("defaults span to 12 when omitted", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              {
-                columns: [{ components: [{ html: "full" }] }],
-              },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.placement.w).toBe(12);
-    });
-
-    it("handles multiple rows", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              { columns: [{ span: 12, components: [{ html: "row1" }] }] },
-              { columns: [{ span: 12, components: [{ html: "row2" }] }] },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBe(2);
-      expect(page.items![0]!.placement.y).toBe(0);
-      expect(page.items![1]!.placement.y).toBe(1);
-    });
-
-    it("accepts layoutColumns as alias for columns", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              {
-                layoutColumns: [{ span: 6, components: [{ html: "left" }] }],
-              },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBe(1);
-      expect(page.items![0]!.placement.w).toBe(6);
-    });
-
-    it("accepts layoutComponents as alias for components in columns", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              {
-                columns: [{ span: 12, layoutComponents: [{ html: "legacy" }] }],
-              },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.component.type).toBe("html");
-    });
-
-    it("stacks multiple components within a column vertically", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              {
-                columns: [{ span: 6, components: [{ html: "A" }, { html: "B" }] }],
-              },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBe(2);
-      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
-      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 0, y: 1, w: 6, h: 1 });
-    });
-
-    it("applies column-level properties as style", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              {
-                columns: [
-                  {
-                    span: 12,
-                    properties: { "background-color": "#eee" },
-                    components: [{ html: "styled" }],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.component.style!["background-color"]).toBe("#eee");
-    });
-  });
-
   describe("property substitution", () => {
     it("substitutes ${name} in component content", () => {
       const root = parsePage({
@@ -409,63 +280,6 @@ describe("parsePage", () => {
       expect(contentItem!.component.slots!["SubPage2"]).toBeDefined();
     });
 
-    it("preserves grid item placement when slot-targets are interspersed", () => {
-      // Regression test: slot-targets between regular components must not
-      // cause placement misalignment after nav resolution
-      const root = parsePage({
-        pages: [
-          {
-            name: "Main",
-            rows: [
-              {
-                columns: [
-                  { span: 4, components: [{ html: "sidebar" }] },
-                  {
-                    span: 8,
-                    components: [
-                      { type: "TABS", properties: { navGroupId: "G1" } },
-                    ],
-                  },
-                ],
-              },
-              {
-                columns: [
-                  { span: 4, components: [{ div: "d1" }] },
-                  { span: 8, components: [{ html: "footer" }] },
-                ],
-              },
-            ],
-          },
-          { name: "P1", components: [{ html: "content1" }] },
-        ],
-        navTree: {
-          root_items: [{ type: "GROUP", id: "G1", children: [{ page: "P1" }] }],
-        },
-      });
-      const mainPage = root.slots!["content"]![0]!;
-      // sidebar (x:0) should keep its placement
-      const sidebarItem = mainPage.items!.find((item) =>
-        item.component.type === "html" && item.component.props?.["content"] === "sidebar"
-      );
-      expect(sidebarItem).toBeDefined();
-      expect(sidebarItem!.placement.x).toBe(0);
-      expect(sidebarItem!.placement.w).toBe(4);
-
-      // footer (x:4, y:1) should keep its placement — not shifted by slot-target removal
-      const footerItem = mainPage.items!.find((item) =>
-        item.component.type === "html" && item.component.props?.["content"] === "footer"
-      );
-      expect(footerItem).toBeDefined();
-      expect(footerItem!.placement.x).toBe(4);
-      expect(footerItem!.placement.w).toBe(8);
-
-      // tabs should be present with slots
-      const tabsItem = mainPage.items!.find((item) => item.component.type === "tabs");
-      expect(tabsItem).toBeDefined();
-      expect(tabsItem!.placement.x).toBe(4);
-      expect(tabsItem!.placement.w).toBe(8);
-    });
-
     it("removes slot-target components from grid items during resolution", () => {
       const root = parsePage({
         pages: [
@@ -488,6 +302,50 @@ describe("parsePage", () => {
     });
   });
 
+  describe("nested grid components", () => {
+    it("parses nested grid component with recursive items", () => {
+      const root = parsePage({
+        pages: [{
+          items: [{
+            placement: { x: 0, y: 0, w: 6, h: 4 },
+            component: {
+              type: "grid",
+              items: [{
+                placement: { x: 0, y: 0, w: 6, h: 1 },
+                component: { type: "html", properties: { content: "nested" } },
+              }],
+            },
+          }],
+        }],
+      });
+      const page = root.slots!["content"]![0]!;
+      const outer = page.items![0]!;
+      expect(outer.component!.type).toBe("grid");
+      expect(outer.component!.items).toHaveLength(1);
+      expect(outer.component!.items![0]!.component!.type).toBe("html");
+    });
+
+    it("preserves placement on nested items", () => {
+      const root = parsePage({
+        pages: [{
+          items: [{
+            placement: { x: 0, y: 0, w: 12, h: 4 },
+            component: {
+              type: "grid",
+              items: [
+                { placement: { x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+                { placement: { x: 6, y: 0, w: 6, h: 1 }, component: { type: "chart" } },
+              ],
+            },
+          }],
+        }],
+      });
+      const nested = root.slots!["content"]![0]!.items![0]!.component!.items!;
+      expect(nested[0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
+      expect(nested[1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
+    });
+  });
+
   describe("empty and edge cases", () => {
     it("handles page with no components or rows (empty items)", () => {
       const root = parsePage({
@@ -495,23 +353,6 @@ describe("parsePage", () => {
       });
       const page = root.slots!["content"]![0]!;
       expect(page.items).toEqual([]);
-    });
-
-    it("handles row with no columns (skips row)", () => {
-      const root = parsePage({
-        pages: [
-          {
-            rows: [
-              {}, // no columns
-              { columns: [{ span: 12, components: [{ html: "after empty" }] }] },
-            ],
-          },
-        ],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBe(1);
-      // The empty row increments y, so this component is at y=1
-      expect(page.items![0]!.placement.y).toBe(1);
     });
 
     it("handles multiple pages", () => {
@@ -567,37 +408,6 @@ describe("parsePage", () => {
       expect(chart.props?.["resizable"]).toBe(true);
       const chartProps = getProps(chart, "bar-chart");
       expect(chartProps.lookup.dataSetId).toBe("ds");
-    });
-  });
-
-  describe("row-level properties", () => {
-    it("wraps row items in a grid container when row has properties", () => {
-      const root = parsePage({
-        pages: [{
-          rows: [{
-            properties: { "margin-top": "20px", border: "solid 1px" },
-            columns: [{ span: 6, components: [{ html: "left" }] }, { span: 6, components: [{ html: "right" }] }],
-          }],
-        }],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items).toHaveLength(1);
-      const wrapper = page.items![0]!.component;
-      expect(wrapper.type).toBe("grid");
-      expect(wrapper.style).toEqual({ "margin-top": "20px", border: "solid 1px" });
-      expect(wrapper.items).toHaveLength(2);
-    });
-
-    it("does not wrap when row has no properties", () => {
-      const root = parsePage({
-        pages: [{
-          rows: [{
-            columns: [{ span: 12, components: [{ html: "full" }] }],
-          }],
-        }],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.component.type).toBe("html");
     });
   });
 
@@ -804,18 +614,6 @@ describe("parsePage", () => {
     it("components format adds mode: positioned", () => {
       const root = parsePage({
         pages: [{ components: [{ html: "Hello" }] }],
-      });
-      const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.placement.mode).toBe("positioned");
-    });
-
-    it("rows format adds mode: positioned", () => {
-      const root = parsePage({
-        pages: [{
-          rows: [{
-            columns: [{ span: 6, components: [{ html: "A" }] }],
-          }],
-        }],
       });
       const page = root.slots!["content"]![0]!;
       expect(page.items![0]!.placement.mode).toBe("positioned");

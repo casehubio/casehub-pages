@@ -1,143 +1,190 @@
 pages:
   - name: Action Buttons
-    components:
-      - type: title
-        properties:
-          text: Action Buttons
-          size: h2
-
-      - type: markdown
-        properties:
-          content: >
-            **Action buttons** dispatch HTTP requests on click. They show loading state
-            during the request and error state on failure. Without a backend handler,
-            buttons demonstrate the error flow — useful for understanding the full lifecycle.
-
-      - type: columns
-        properties:
-          span: "4,4,4"
-        columns:
-          - components:
-              - type: title
-                properties:
-                  text: Primary
-                  size: h3
-              - action-button:
-                  label: Submit Report
-                  url: /api/reports
-                  method: POST
-                  style: primary
-              - type: markdown
-                properties:
-                  content: >
-                    Default style. Dispatches a POST request to the endpoint.
-
-          - components:
-              - type: title
-                properties:
-                  text: Danger
-                  size: h3
-              - action-button:
-                  label: Delete Record
-                  url: /api/records/42
-                  method: DELETE
-                  style: danger
-                  confirm: Are you sure you want to delete this record?
-              - type: markdown
-                properties:
-                  content: >
-                    Danger style with **confirmation dialog**. The `confirm` property
-                    shows a prompt before dispatching the request.
-
-          - components:
-              - type: title
-                properties:
-                  text: Secondary
-                  size: h3
-              - action-button:
-                  label: Refresh Cache
-                  url: /api/cache/refresh
-                  method: POST
-                  style: secondary
-              - type: markdown
-                properties:
-                  content: >
-                    Secondary style for less prominent actions.
-
-      - type: title
-        properties:
-          text: With Callbacks
-          size: h3
-
-      - type: markdown
-        properties:
-          content: >
-            Buttons support `onSuccess` and `onError` callbacks. On success,
-            the button can refresh datasets or show a message. On error,
-            a custom error message is displayed.
-
-      - type: columns
-        properties:
-          span: "6,6"
-        columns:
-          - components:
-              - action-button:
-                  label: Export Data
-                  url: /api/export
-                  method: POST
-                  style: primary
-                  onSuccess:
-                    message: Export complete
-              - type: markdown
-                properties:
-                  content: "Success callback with a **message** toast."
-
-          - components:
-              - action-button:
-                  label: Sync Upstream
-                  url: /api/sync
-                  method: POST
-                  style: secondary
-                  onError:
-                    message: Sync failed — check connectivity
-              - type: markdown
-                properties:
-                  content: "Custom **error message** replaces the default."
-
-      - type: title
-        properties:
-          text: Standalone Button Variants
-          size: h2
-
-      - type: markdown
-        properties:
-          content: >
-            **Standalone buttons** from `@casehubio/pages-ui-components` — use directly
-            in any HTML page or Lit template without the action-button DSL.
-
-      - type: html
-        properties:
-          content: |
-            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 16px 0;">
-              <pages-button label="Primary" variant="primary"></pages-button>
-              <pages-button label="Secondary" variant="secondary"></pages-button>
-              <pages-button label="Ghost" variant="ghost"></pages-button>
-              <pages-button label="Danger" variant="danger"></pages-button>
-              <pages-button label="Loading" variant="primary" loading></pages-button>
-              <pages-button label="Disabled" variant="primary" disabled></pages-button>
-            </div>
-
-      - type: markdown
-        properties:
-          content: >
-            **Sizes:** xs, sm, md (default), lg
-
-      - type: html
-        properties:
-          content: |
-            <div style="display: flex; gap: 12px; align-items: center; padding: 16px 0;">
-              <pages-button label="Extra Small" variant="ghost" size="xs"></pages-button>
-              <pages-button label="Small" variant="ghost" size="sm"></pages-button>
-              <pages-button label="Medium" variant="ghost"></pages-button>
-              <pages-button label="Large" variant="ghost" size="lg"></pages-button>
-            </div>
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Action Buttons
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              **Action buttons** dispatch HTTP requests on click. They show loading state during the request and error state on failure. Without a backend handler, buttons demonstrate the error flow — useful for understanding the full lifecycle.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: columns
+          properties:
+            span: 4,4,4
+          columns:
+            - components:
+                - type: title
+                  properties:
+                    text: Primary
+                    size: h3
+                - action-button:
+                    label: Submit Report
+                    url: /api/reports
+                    method: POST
+                    style: primary
+                - type: markdown
+                  properties:
+                    content: |
+                      Default style. Dispatches a POST request to the endpoint.
+            - components:
+                - type: title
+                  properties:
+                    text: Danger
+                    size: h3
+                - action-button:
+                    label: Delete Record
+                    url: /api/records/42
+                    method: DELETE
+                    style: danger
+                    confirm: Are you sure you want to delete this record?
+                - type: markdown
+                  properties:
+                    content: |
+                      Danger style with **confirmation dialog**. The `confirm` property shows a prompt before dispatching the request.
+            - components:
+                - type: title
+                  properties:
+                    text: Secondary
+                    size: h3
+                - action-button:
+                    label: Refresh Cache
+                    url: /api/cache/refresh
+                    method: POST
+                    style: secondary
+                - type: markdown
+                  properties:
+                    content: |
+                      Secondary style for less prominent actions.
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: With Callbacks
+            size: h3
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Buttons support `onSuccess` and `onError` callbacks. On success, the button can refresh datasets or show a message. On error, a custom error message is displayed.
+      - placement:
+          x: 0
+          y: 5
+          w: 12
+          h: 1
+        component:
+          type: columns
+          properties:
+            span: 6,6
+          columns:
+            - components:
+                - action-button:
+                    label: Export Data
+                    url: /api/export
+                    method: POST
+                    style: primary
+                    onSuccess:
+                      message: Export complete
+                - type: markdown
+                  properties:
+                    content: Success callback with a **message** toast.
+            - components:
+                - action-button:
+                    label: Sync Upstream
+                    url: /api/sync
+                    method: POST
+                    style: secondary
+                    onError:
+                      message: Sync failed — check connectivity
+                - type: markdown
+                  properties:
+                    content: Custom **error message** replaces the default.
+      - placement:
+          x: 0
+          y: 6
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Standalone Button Variants
+            size: h2
+      - placement:
+          x: 0
+          y: 7
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              **Standalone buttons** from `@casehubio/pages-ui-components` — use directly in any HTML page or Lit template without the action-button DSL.
+      - placement:
+          x: 0
+          y: 8
+          w: 12
+          h: 1
+        component:
+          type: html
+          properties:
+            content: |
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 16px 0;">
+                <pages-button label="Primary" variant="primary"></pages-button>
+                <pages-button label="Secondary" variant="secondary"></pages-button>
+                <pages-button label="Ghost" variant="ghost"></pages-button>
+                <pages-button label="Danger" variant="danger"></pages-button>
+                <pages-button label="Loading" variant="primary" loading></pages-button>
+                <pages-button label="Disabled" variant="primary" disabled></pages-button>
+              </div>
+      - placement:
+          x: 0
+          y: 9
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              **Sizes:** xs, sm, md (default), lg
+      - placement:
+          x: 0
+          y: 10
+          w: 12
+          h: 1
+        component:
+          type: html
+          properties:
+            content: |
+              <div style="display: flex; gap: 12px; align-items: center; padding: 16px 0;">
+                <pages-button label="Extra Small" variant="ghost" size="xs"></pages-button>
+                <pages-button label="Small" variant="ghost" size="sm"></pages-button>
+                <pages-button label="Medium" variant="ghost"></pages-button>
+                <pages-button label="Large" variant="ghost" size="lg"></pages-button>
+              </div>

@@ -1,6 +1,6 @@
 datasets:
   - uuid: data
-    content: >-
+    content: |-
       [
           ["A", 3],
           ["B", 2],
@@ -10,49 +10,77 @@ datasets:
           ["F", -2],
           ["G", -3]
       ]
-
 pages:
-  - rows:
-      - columns:
-          - span: 4
-            components:
-              - type: title
-                properties:
-                  text: All rows (rowCount 10)
-                  size: h3
-              - type: line-chart
-                properties:
-                  lookup:
-                    uuid: data
-                    rowCount: 10
-          - span: 4
-            components:
-              - type: title
-                properties:
-                  text: Values > 0
-                  size: h3
-              - type: bar-chart
-                properties:
-                  lookup:
-                    uuid: data
-                    filter:
-                      - column: Column 1
-                        function: GREATER_THAN
-                        args:
-                          - 0
-          - span: 4
-            components:
-              - type: title
-                properties:
-                  text: Values < 0
-                  size: h3
-              - type: bar-chart
-                properties:
-                  subtype: bar
-                  lookup:
-                    uuid: data
-                    filter:
-                      - column: Column 1
-                        function: LOWER_THAN
-                        args:
-                          - 0
+  - items:
+      - placement:
+          x: 0
+          y: 0
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: All rows (rowCount 10)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 4
+          h: 1
+        component:
+          type: line-chart
+          properties:
+            lookup:
+              uuid: data
+              rowCount: 10
+      - placement:
+          x: 4
+          y: 0
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Values > 0
+            size: h3
+      - placement:
+          x: 4
+          y: 1
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            lookup:
+              uuid: data
+              filter:
+                - column: Column 1
+                  function: GREATER_THAN
+                  args:
+                    - 0
+      - placement:
+          x: 8
+          y: 0
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Values < 0
+            size: h3
+      - placement:
+          x: 8
+          y: 1
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            subtype: bar
+            lookup:
+              uuid: data
+              filter:
+                - column: Column 1
+                  function: LOWER_THAN
+                  args:
+                    - 0

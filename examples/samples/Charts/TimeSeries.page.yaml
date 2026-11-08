@@ -1,6 +1,6 @@
 datasets:
   - uuid: timeseries
-    content: >-
+    content: |-
       [
         ["2024-01-01T00:00:00Z", 120, 80],
         ["2024-02-01T00:00:00Z", 135, 95],
@@ -34,17 +34,28 @@ datasets:
         type: NUMBER
       - id: costs
         type: NUMBER
-
 pages:
-  - components:
-      - type: title
-        properties:
-          text: Monthly Revenue vs Costs (2024-2025)
-          size: h3
-      - type: timeseries
-        properties:
-          chart:
-            resizable: true
-            zoom: true
-          lookup:
-            uuid: timeseries
+  - items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Monthly Revenue vs Costs (2024-2025)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: timeseries
+          properties:
+            chart:
+              resizable: true
+              zoom: true
+            lookup:
+              uuid: timeseries

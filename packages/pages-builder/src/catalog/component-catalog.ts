@@ -38,8 +38,8 @@ const NEEDS_DATASET_TYPES = new Set([
 ]);
 
 const PAGE_LEVEL_ONLY = new Set(['page', 'lazy-page']);
-const LAYOUT_TYPES = new Set(['rows', 'columns', 'grid']);
-const LAYOUT_BLOCKED_PARENTS = new Set(['column', 'row']);
+const LAYOUT_TYPES = new Set(['columns', 'grid']);
+const LAYOUT_BLOCKED_PARENTS = new Set(['page', 'column', 'row']);
 
 function defaultRelevance(ctx: PaletteContext): ContextRelevance {
   return ctx.acceptsComponents ? 'normal' : 'hidden';
@@ -105,7 +105,6 @@ export const COMPONENT_CATALOG: readonly ComponentCatalogEntry[] = [
   // Layout
   entry('grid', 'Grid', 'Layout', 'grid_view', 'CSS grid container'),
   entry('columns', 'Columns', 'Layout', 'view_column', 'Multi-column layout'),
-  entry('rows', 'Rows', 'Layout', 'table_rows', 'Stacked row layout'),
   entry('stack', 'Stack', 'Layout', 'layers', 'Vertical stack of sections', {}, undefined, { sampleChildren: 2 }),
   entry('tabs', 'Tabs', 'Layout', 'tab', 'Tabbed container', {}, undefined, { sampleChildren: 2 }),
   entry('pills', 'Pills', 'Layout', 'toggle_on', 'Pill-style tabbed container', {}, undefined, { sampleChildren: 2 }),

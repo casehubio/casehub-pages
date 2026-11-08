@@ -120,14 +120,14 @@ export function parsePage(raw: unknown): Component {
     if (page.items) {
       // Collect embedded page names
       for (const item of page.items) {
-        if (item.component.type === "page-ref" || item.component.type === "panel") {
+        if (item.component?.type === "page-ref" || item.component?.type === "panel") {
           const refName = item.component.props?.["name"] as string | undefined;
           if (refName) embeddedPageNames.add(refName);
         }
       }
 
       // Resolve all components together so targetDivId can find its slot-target
-      const allComponents = page.items.map(item => item.component);
+      const allComponents = page.items.filter(item => item.component).map(item => item.component!);
       const resolved = resolveNavigation(allComponents, childPages, navTree);
 
       // Map resolved components back to grid items using the original placement.
@@ -143,7 +143,7 @@ export function parsePage(raw: unknown): Component {
         const origItem = page.items[i];
         if (!origItem) continue;
         const orig = origItem.component;
-        if (orig.type === "slot-target" && !resolved.includes(orig)) {
+        if (orig && orig.type === "slot-target" && !resolved.includes(orig)) {
           removedIndices.add(i);
         }
       }
@@ -162,7 +162,7 @@ export function parsePage(raw: unknown): Component {
           origIdx++;
         } else {
           resolvedItems.push({
-            placement: { x: 0, y: resolvedItems.length, w: 12, h: 1 },
+            placement: { mode: "positioned" as const, x: 0, y: resolvedItems.length, w: 12, h: 1 },
             component: comp,
           });
         }
@@ -276,27 +276,24 @@ export function parsePageContent(
 ): { items?: readonly GridItem[] } | { slots?: Readonly<Record<string, readonly Component[]>> } {
   const itemsRaw = pageRaw["items"] as unknown[] | undefined;
   const componentsRaw = pageRaw["components"] as unknown[] | undefined;
-  const rowsRaw = pageRaw["rows"] as unknown[] | undefined;
-
   if (itemsRaw) {
     const maxColumns = 12;
     const items: GridItem[] = itemsRaw.map((entryRaw, i) => {
       const entry = entryRaw as Record<string, unknown>;
       const placementRaw = entry["placement"] as Record<string, unknown> | undefined;
       const componentRaw = entry["component"] as Record<string, unknown> | undefined;
-      const component = desugarComponent(componentRaw ?? {}, displayerDefaults);
+      const component = componentRaw
+        ? desugarComponent(componentRaw, displayerDefaults)
+        : undefined;
 
       let placement: GridPlacement;
       if (placementRaw) {
-        const mode = (placementRaw["mode"] as string) ?? "positioned";
         const w = Math.min(Number(placementRaw["w"] ?? 1), maxColumns);
         const h = Number(placementRaw["h"] ?? 1);
-        if (mode === "auto") {
-          placement = { mode: "auto", w, h };
+        if ("x" in placementRaw && "y" in placementRaw) {
+          placement = { mode: "positioned", x: Number(placementRaw["x"]), y: Number(placementRaw["y"]), w, h };
         } else {
-          const x = Number(placementRaw["x"] ?? 0);
-          const y = Number(placementRaw["y"] ?? 0);
-          placement = { mode: "positioned", x, y, w, h };
+          placement = { mode: "auto", w, h };
         }
       } else {
         placement = { mode: "auto", w: 1, h: 1 };
@@ -304,7 +301,9 @@ export function parsePageContent(
 
       return {
         placement,
-        component: assignIdIfMissing(component, `grid_${String(pageIndex)}_item_${String(i)}`),
+        ...(component
+          ? { component: assignIdIfMissing(component, `grid_${String(pageIndex)}_item_${String(i)}`) }
+          : {}),
       };
     });
     return { items };
@@ -318,108 +317,6 @@ export function parsePageContent(
         component: assignIdIfMissing(component, `grid_${String(pageIndex)}_0_${String(i)}`),
       };
     });
-    return { items };
-  }
-
-  if (rowsRaw) {
-    const items: GridItem[] = [];
-    let y = 0;
-    for (const rowRaw of rowsRaw) {
-      const row = rowRaw as Record<string, unknown>;
-      const columnsRaw = (row["columns"] ?? row["layoutColumns"]) as unknown[] | undefined;
-      if (!columnsRaw) {
-        y++;
-        continue;
-      }
-
-      const rowProps = row["properties"] as Record<string, string> | undefined;
-      const hasRowProps = rowProps && typeof rowProps === "object" && Object.keys(rowProps).length > 0;
-
-      // Collect this row's items
-      const rowItems: GridItem[] = [];
-      let x = 0;
-      let maxComponentsInColumn = 1;
-      for (const colRaw of columnsRaw) {
-        const col = colRaw as Record<string, unknown>;
-        const span = Number(col["span"] ?? 12);
-        const colComponents = (col["components"] ?? col["layoutComponents"]) as
-          | unknown[]
-          | undefined;
-        const colRows = col["rows"] as unknown[] | undefined;
-
-        if (colComponents) {
-          if (colComponents.length > maxComponentsInColumn) {
-            maxComponentsInColumn = colComponents.length;
-          }
-          for (let ci = 0; ci < colComponents.length; ci++) {
-            const component = desugarComponent(colComponents[ci] as Record<string, unknown>, displayerDefaults);
-            const placed: GridItem = {
-              placement: hasRowProps
-                ? { mode: "positioned" as const, x, y: ci, w: span, h: 1 }
-                : { mode: "positioned" as const, x, y: y + ci, w: span, h: 1 },
-              component: assignIdIfMissing(component, `grid_${String(pageIndex)}_${String(x)}_${String(y + ci)}`),
-            };
-
-            const colProps = col["properties"] as Record<string, string> | undefined;
-            if (colProps && typeof colProps === "object" && Object.keys(colProps).length > 0) {
-              rowItems.push({
-                ...placed,
-                component: {
-                  ...placed.component,
-                  style: { ...placed.component.style, ...colProps },
-                },
-              });
-            } else {
-              rowItems.push(placed);
-            }
-          }
-        } else if (colRows) {
-          const subPageIndex = pageIndex * 100 + x * 10 + y;
-          const subPage = { rows: colRows } as Record<string, unknown>;
-          const subResult = parsePageContent(subPage, subPageIndex, displayerDefaults);
-          if ("items" in subResult && subResult.items.length > 0) {
-            const colProps = col["properties"] as Record<string, string> | undefined;
-            const subContainer: Component = {
-              type: "grid",
-              id: `nested_${String(pageIndex)}_${String(x)}_${String(y)}`,
-              items: subResult.items,
-              ...(colProps && typeof colProps === "object" && Object.keys(colProps).length > 0
-                ? { style: colProps }
-                : {}),
-            };
-            const placed: GridItem = {
-              placement: hasRowProps
-                ? { mode: "positioned" as const, x, y: 0, w: span, h: 1 }
-                : { mode: "positioned" as const, x, y, w: span, h: 1 },
-              component: subContainer,
-            };
-            rowItems.push(placed);
-          }
-        }
-
-        x += span;
-      }
-
-      if (hasRowProps && rowItems.length > 0) {
-        // Wrap row items in a grid container with the row's CSS properties
-        const rowComponent: Component = {
-          type: "grid",
-          id: `row_${String(pageIndex)}_${String(y)}`,
-          style: rowProps,
-          items: rowItems,
-        };
-        items.push({
-          placement: { mode: "positioned" as const, x: 0, y, w: 12, h: 1 },
-          component: rowComponent,
-        });
-      } else {
-        for (const item of rowItems) {
-          items.push(item);
-        }
-      }
-
-      y += hasRowProps ? 1 : maxComponentsInColumn;
-    }
     return { items };
   }
 
@@ -446,6 +343,7 @@ function patchSlotReferences(
 
   if (component.items) {
     const patched = component.items.map((item) => {
+      if (!item.component) return item;
       const patchedChild = patchSlotReferences(item.component, resolved);
       if (patchedChild !== item.component) {
         return { ...item, component: patchedChild };
@@ -487,7 +385,7 @@ function containsNavGroupRef(page: Component, navTreeGroupIds: Set<string>): boo
     if (groupId && navTreeGroupIds.has(groupId)) return true;
     if (comp.items) {
       for (const item of comp.items) {
-        if (check(item.component)) return true;
+        if (item.component && check(item.component)) return true;
       }
     }
     if (comp.slots) {

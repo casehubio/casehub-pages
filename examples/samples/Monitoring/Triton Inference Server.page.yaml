@@ -1,355 +1,459 @@
 properties:
   metricsUrl: /data/triton/metrics
 datasets:
-- uuid: metrics
-  url: ${metricsUrl}
-  columns:
-  - id: metric
-    type: LABEL
-  - id: labels
-    type: LABEL
-  - id: value
-    type: NUMBER
+  - uuid: metrics
+    url: ${metricsUrl}
+    columns:
+      - id: metric
+        type: LABEL
+      - id: labels
+        type: LABEL
+      - id: value
+        type: NUMBER
 pages:
-- properties:
-    margin-left: 5px
-  rows:
-  - columns:
-    - components:
-      - html: Triton Inference Server <hr />
-        properties:
-          font-size: x-large
-          margin: 13px
-  - columns:
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Running Models
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: metrics
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_count
-            group:
-            - functions:
-              - source: labels
-                function: COUNT
-          columns:
-          - id: labels
-            pattern: '#'
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Inference Count
-          size: h3
-      - type: metric
-        properties:
-          visible: 'true'
-          lookup:
-            uuid: metrics
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_count
-            group:
-            - functions:
-              - source: value
-                function: SUM
-          columns:
-          - id: value
-            pattern: '#'
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Inference Requests Success
-          size: h3
-      - type: metric
-        properties:
-          visible: 'true'
-          lookup:
-            uuid: metrics
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_request_success
-            group:
-            - functions:
-              - source: value
-                function: SUM
-          columns:
-          - id: value
-            pattern: '#'
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Inference Requests Failure
-          size: h3
-      - type: metric
-        properties:
-          visible: 'true'
-          lookup:
-            uuid: metrics
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_request_failure
-            group:
-            - functions:
-              - source: value
-                function: SUM
-          columns:
-          - id: value
-            pattern: '#'
-  - columns:
-    - properties:
-        width: 220px
-        margin-top: 20px
-      components:
-      - html: <strong>Filter by Model</strong>
-      - type: selector
-        properties:
-          filter:
-            notification: 'true'
-          lookup:
-            uuid: metrics
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_count
-            group:
-            - columnGroup:
-                source: labels
-              functions:
-              - source: labels
-                column: model
-          columns:
-          - id: model
-            expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
   - properties:
-      margin-top: 20px
-    columns:
-    - span: '4'
-      components:
-      - type: title
-        properties:
-          text: Inference Count
-          size: h3
-      - type: bar-chart
-        properties:
-          filter:
-            listening: 'true'
-          lookup:
-            uuid: metrics
-            sort:
-            - column: value
-              sortOrder: DESCENDING
+      margin-left: 5px
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          html: Triton Inference Server <hr />
+          properties:
+            font-size: x-large
+            margin: 13px
+      - placement:
+          x: 0
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Running Models
+            size: h3
+      - placement:
+          x: 0
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              uuid: metrics
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_count
+              group:
+                - functions:
+                    - source: labels
+                      function: COUNT
+            columns:
+              - id: labels
+                pattern: "#"
+      - placement:
+          x: 3
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Inference Count
+            size: h3
+      - placement:
+          x: 3
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            visible: "true"
+            lookup:
+              uuid: metrics
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_count
+              group:
+                - functions:
+                    - source: value
+                      function: SUM
+            columns:
+              - id: value
+                pattern: "#"
+      - placement:
+          x: 6
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Inference Requests Success
+            size: h3
+      - placement:
+          x: 6
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            visible: "true"
+            lookup:
+              uuid: metrics
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_request_success
+              group:
+                - functions:
+                    - source: value
+                      function: SUM
+            columns:
+              - id: value
+                pattern: "#"
+      - placement:
+          x: 9
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Inference Requests Failure
+            size: h3
+      - placement:
+          x: 9
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            visible: "true"
+            lookup:
+              uuid: metrics
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_request_failure
+              group:
+                - functions:
+                    - source: value
+                      function: SUM
+            columns:
+              - id: value
+                pattern: "#"
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          html: <strong>Filter by Model</strong>
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          type: selector
+          properties:
             filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_count
-            - column: value
-              function: GREATER_THAN
-              args:
-              - 0
-            group:
-            - columnGroup:
-                source: labels
-              functions:
-              - source: labels
-              - source: value
-                function: SUM
-          columns:
-          - id: labels
-            expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
-          - id: value
-            pattern: '#'
-    - span: '4'
-      components:
-      - type: title
-        properties:
-          text: Sucessful Inferences
-          size: h3
-      - type: bar-chart
-        properties:
-          filter:
-            listening: 'true'
-          lookup:
-            uuid: metrics
-            sort:
-            - column: value
-              sortOrder: DESCENDING
+              notification: "true"
+            lookup:
+              uuid: metrics
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_count
+              group:
+                - columnGroup:
+                    source: labels
+                  functions:
+                    - source: labels
+                      column: model
+            columns:
+              - id: model
+                expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
+      - placement:
+          x: 0
+          y: 5
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Inference Count
+            size: h3
+      - placement:
+          x: 0
+          y: 6
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
             filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_request_success
-            - column: value
-              function: GREATER_THAN
-              args:
-              - 0
-            group:
-            - columnGroup:
-                source: labels
-              functions:
-              - source: labels
-              - source: value
-                function: SUM
-          columns:
-          - id: labels
-            expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
-          - id: value
-            pattern: '#'
-    - span: '4'
-      components:
-      - type: title
-        properties:
-          text: Failed Inferences
-          size: h3
-      - type: bar-chart
-        properties:
-          filter:
-            listening: 'true'
-          lookup:
-            uuid: metrics
-            sort:
-            - column: value
-              sortOrder: DESCENDING
+              listening: "true"
+            lookup:
+              uuid: metrics
+              sort:
+                - column: value
+                  sortOrder: DESCENDING
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_count
+                - column: value
+                  function: GREATER_THAN
+                  args:
+                    - 0
+              group:
+                - columnGroup:
+                    source: labels
+                  functions:
+                    - source: labels
+                    - source: value
+                      function: SUM
+            columns:
+              - id: labels
+                expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
+              - id: value
+                pattern: "#"
+      - placement:
+          x: 4
+          y: 5
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Sucessful Inferences
+            size: h3
+      - placement:
+          x: 4
+          y: 6
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
             filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_request_failure
-            - column: value
-              function: GREATER_THAN
-              args:
-              - 0
-            group:
-            - columnGroup:
-                source: labels
-              functions:
-              - source: labels
-              - source: value
-                function: SUM
-          columns:
-          - id: labels
-            expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
-          - id: value
-            pattern: '#'
-  - properties:
-      margin-top: 20px
-    columns:
-    - span: '4'
-      components:
-      - type: title
-        properties:
-          text: Inference Request Duration
-          size: h3
-      - type: bar-chart
-        properties:
-          filter:
-            listening: 'true'
-          lookup:
-            uuid: metrics
-            sort:
-            - column: value
-              sortOrder: DESCENDING
+              listening: "true"
+            lookup:
+              uuid: metrics
+              sort:
+                - column: value
+                  sortOrder: DESCENDING
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_request_success
+                - column: value
+                  function: GREATER_THAN
+                  args:
+                    - 0
+              group:
+                - columnGroup:
+                    source: labels
+                  functions:
+                    - source: labels
+                    - source: value
+                      function: SUM
+            columns:
+              - id: labels
+                expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
+              - id: value
+                pattern: "#"
+      - placement:
+          x: 8
+          y: 5
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Failed Inferences
+            size: h3
+      - placement:
+          x: 8
+          y: 6
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
             filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_request_duration_us
-            group:
-            - columnGroup:
-                source: labels
-              functions:
-              - source: labels
-              - source: value
-                column: Duration
-          columns:
-          - id: labels
-            expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
-          axis:
-            x:
-              labels_angle: 15
-    - span: '4'
-      components:
-      - type: title
-        properties:
-          text: Inference Total Duration
-          size: h3
-      - type: bar-chart
-        properties:
-          filter:
-            listening: 'true'
-          lookup:
-            uuid: metrics
-            sort:
-            - column: value
-              sortOrder: DESCENDING
+              listening: "true"
+            lookup:
+              uuid: metrics
+              sort:
+                - column: value
+                  sortOrder: DESCENDING
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_request_failure
+                - column: value
+                  function: GREATER_THAN
+                  args:
+                    - 0
+              group:
+                - columnGroup:
+                    source: labels
+                  functions:
+                    - source: labels
+                    - source: value
+                      function: SUM
+            columns:
+              - id: labels
+                expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
+              - id: value
+                pattern: "#"
+      - placement:
+          x: 0
+          y: 7
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Inference Request Duration
+            size: h3
+      - placement:
+          x: 0
+          y: 8
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
             filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_compute_infer_duration_us
-            - column: value
-              function: GREATER_THAN
-              args:
-              - 0
-            group:
-            - columnGroup:
-                source: labels
-              functions:
-              - source: labels
-              - source: value
-                column: Duration
-          columns:
-          - id: labels
-            expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
-    - span: '4'
-      components:
-      - type: title
-        properties:
-          text: Queue Wait
-          size: h3
-      - type: bar-chart
-        properties:
-          filter:
-            listening: 'true'
-          lookup:
-            uuid: metrics
-            sort:
-            - column: value
-              sortOrder: DESCENDING
+              listening: "true"
+            lookup:
+              uuid: metrics
+              sort:
+                - column: value
+                  sortOrder: DESCENDING
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_request_duration_us
+              group:
+                - columnGroup:
+                    source: labels
+                  functions:
+                    - source: labels
+                    - source: value
+                      column: Duration
+            columns:
+              - id: labels
+                expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
+            axis:
+              x:
+                labels_angle: 15
+      - placement:
+          x: 4
+          y: 7
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Inference Total Duration
+            size: h3
+      - placement:
+          x: 4
+          y: 8
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
             filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - nv_inference_queue_duration_us
-            - column: value
-              function: GREATER_THAN
-              args:
-              - 0
-            group:
-            - columnGroup:
-                source: labels
-              functions:
-              - source: labels
-              - source: value
-                column: Duration
-          columns:
-          - id: labels
-            expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
+              listening: "true"
+            lookup:
+              uuid: metrics
+              sort:
+                - column: value
+                  sortOrder: DESCENDING
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_compute_infer_duration_us
+                - column: value
+                  function: GREATER_THAN
+                  args:
+                    - 0
+              group:
+                - columnGroup:
+                    source: labels
+                  functions:
+                    - source: labels
+                    - source: value
+                      column: Duration
+            columns:
+              - id: labels
+                expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
+      - placement:
+          x: 8
+          y: 7
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Queue Wait
+            size: h3
+      - placement:
+          x: 8
+          y: 8
+          w: 4
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            filter:
+              listening: "true"
+            lookup:
+              uuid: metrics
+              sort:
+                - column: value
+                  sortOrder: DESCENDING
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - nv_inference_queue_duration_us
+                - column: value
+                  function: GREATER_THAN
+                  args:
+                    - 0
+              group:
+                - columnGroup:
+                    source: labels
+                  functions:
+                    - source: labels
+                    - source: value
+                      column: Duration
+            columns:
+              - id: labels
+                expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")

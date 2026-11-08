@@ -1,6 +1,6 @@
 datasets:
   - uuid: departments
-    content: >-
+    content: |-
       [
         ["Engineering", 450],
         ["Sales", 280],
@@ -18,9 +18,8 @@ datasets:
         type: LABEL
       - id: headcount
         type: NUMBER
-
   - uuid: org-tree
-    content: >-
+    content: |-
       [
         ["Company", 0, ""],
         ["Engineering", 450, "Company"],
@@ -41,34 +40,52 @@ datasets:
         type: NUMBER
       - id: parent
         type: LABEL
-
 pages:
-  - rows:
-    - columns:
-      - span: 6
-        components:
-          - type: title
-            properties:
-              text: Flat Treemap
-              size: h3
-          - type: treemap-chart
-            properties:
-              title: Department Headcount
-              chart:
-                height: 400
-              lookup:
-                uuid: departments
-      - span: 6
-        components:
-          - type: title
-            properties:
-              text: Hierarchical Treemap
-              size: h3
-          - type: treemap-chart
-            properties:
-              title: Org Structure
-              parentColumn: parent
-              chart:
-                height: 400
-              lookup:
-                uuid: org-tree
+  - items:
+      - placement:
+          x: 0
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Flat Treemap
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: treemap-chart
+          properties:
+            title: Department Headcount
+            chart:
+              height: 400
+            lookup:
+              uuid: departments
+      - placement:
+          x: 6
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Hierarchical Treemap
+            size: h3
+      - placement:
+          x: 6
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: treemap-chart
+          properties:
+            title: Org Structure
+            parentColumn: parent
+            chart:
+              height: 400
+            lookup:
+              uuid: org-tree

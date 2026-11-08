@@ -1,6 +1,6 @@
 datasets:
   - uuid: products
-    content: >-
+    content: |-
       [
         ["Laptop Pro", "Electronics", 1299, 45, true],
         ["Wireless Mouse", "Electronics", 29, 230, true],
@@ -23,42 +23,68 @@ datasets:
         type: NUMBER
       - id: active
         type: LABEL
-
 pages:
   - name: Inline Dataset
-    components:
-      - type: title
-        properties:
-          text: Inline Dataset
-          size: h2
-
-      - type: markdown
-        properties:
-          content: |
-            Data defined directly in YAML using the `content` property —
-            a JSON array of rows. Each row is an array matching the `columns`
-            definition. No external URL needed.
-
-      - type: data-table
-        properties:
-          lookup:
-            uuid: products
-          sortable: true
-          filter:
-            notification: true
-
-      - type: title
-        properties:
-          text: Stock by Category
-          size: h3
-      - type: bar-chart
-        properties:
-          lookup:
-            uuid: products
-            group:
-              - columnGroup:
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Inline Dataset
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Data defined directly in YAML using the `content` property —
+              a JSON array of rows. Each row is an array matching the `columns`
+              definition. No external URL needed.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: data-table
+          properties:
+            lookup:
+              uuid: products
+            sortable: true
+            filter:
+              notification: true
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Stock by Category
+            size: h3
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
                     source: category
-                functions:
-                  - source: category
-                  - source: stock
-                    function: SUM
+                  functions:
+                    - source: category
+                    - source: stock
+                      function: SUM

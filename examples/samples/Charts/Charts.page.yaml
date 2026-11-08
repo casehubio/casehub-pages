@@ -1,286 +1,417 @@
 pages:
-- name: index
-  components:
-  - type: tabs
-    properties:
-      width: 100%
-      navGroupId: ChartsNav
-      targetDivId: charts_div
-  - div: charts_div
-- name: Bar Chart
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype COLUMN (default)
-          size: h3
-      - type: bar-chart
-        properties:
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype BAR
-          size: h3
-      - type: bar-chart
-        properties:
-          subtype: bar
-          chart:
-            margin:
-              left: 80
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-  - columns:
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype COLUMN_STACKED
-          size: h3
-      - type: bar-chart
-        properties:
-          subtype: column-stacked
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype BAR_STACKED
-          size: h3
-      - type: bar-chart
-        properties:
-          subtype: bar-stacked
-          chart:
-            margin:
-              left: 80
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-- name: Line Chart
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype LINE (default)
-          size: h3
-      - type: line-chart
-        properties:
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype SMOOTH
-          size: h3
-      - type: line-chart
-        properties:
-          subtype: smooth
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-- name: Area Chart
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype AREA (default)
-          size: h3
-      - type: area-chart
-        properties:
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype AREA_STACKED
-          size: h3
-      - type: area-chart
-        properties:
-          subtype: area-stacked
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-              - source: Quantity2
-- name: Pie Chart
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype PIE (default)
-          size: h3
-      - type: pie-chart
-        properties:
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: subtype DONUT
-          size: h3
-      - type: pie-chart
-        properties:
-          subtype: donut
-          lookup:
-            uuid: products
-            group:
-            - columnGroup:
-                source: Product
-              functions:
-              - source: Product
-              - source: Quantity
-- name: Bubble Chart
-  components:
-  - type: title
-    properties:
-      text: Bubble Chart
-      size: h3
-  - type: bubble-chart
-    properties:
-      lookup:
-        uuid: products
-        group:
-        - columnGroup:
-            source: Product
-          functions:
-          - source: Product
-          - source: Quantity
-          - source: Quantity2
-          - source: Product
-- name: Timeseries
-  components:
-  - type: title
-    properties:
-      text: Timeseries
-      size: h3
-  - type: timeseries
-    properties:
-      chart:
-        zoom: true
-      lookup:
-        uuid: timeseries
-      width: 100%
+  - name: index
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            width: 100%
+            navGroupId: ChartsNav
+            targetDivId: charts_div
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          div: charts_div
+  - name: Bar Chart
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype COLUMN (default)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+      - placement:
+          x: 6
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype BAR
+            size: h3
+      - placement:
+          x: 6
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            subtype: bar
+            chart:
+              margin:
+                left: 80
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+      - placement:
+          x: 0
+          y: 2
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype COLUMN_STACKED
+            size: h3
+      - placement:
+          x: 0
+          y: 3
+          w: 6
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            subtype: column-stacked
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+      - placement:
+          x: 6
+          y: 2
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype BAR_STACKED
+            size: h3
+      - placement:
+          x: 6
+          y: 3
+          w: 6
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            subtype: bar-stacked
+            chart:
+              margin:
+                left: 80
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+  - name: Line Chart
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype LINE (default)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: line-chart
+          properties:
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+      - placement:
+          x: 6
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype SMOOTH
+            size: h3
+      - placement:
+          x: 6
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: line-chart
+          properties:
+            subtype: smooth
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+  - name: Area Chart
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype AREA (default)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: area-chart
+          properties:
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+      - placement:
+          x: 6
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype AREA_STACKED
+            size: h3
+      - placement:
+          x: 6
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: area-chart
+          properties:
+            subtype: area-stacked
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+  - name: Pie Chart
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype PIE (default)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: pie-chart
+          properties:
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+      - placement:
+          x: 6
+          y: 0
+          w: 6
+          h: 1
+        component:
+          type: title
+          properties:
+            text: subtype DONUT
+            size: h3
+      - placement:
+          x: 6
+          y: 1
+          w: 6
+          h: 1
+        component:
+          type: pie-chart
+          properties:
+            subtype: donut
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+  - name: Bubble Chart
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Bubble Chart
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: bubble-chart
+          properties:
+            lookup:
+              uuid: products
+              group:
+                - columnGroup:
+                    source: Product
+                  functions:
+                    - source: Product
+                    - source: Quantity
+                    - source: Quantity2
+                    - source: Product
+  - name: Timeseries
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Timeseries
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: timeseries
+          properties:
+            chart:
+              zoom: true
+            lookup:
+              uuid: timeseries
+            width: 100%
 navTree:
   root_items:
-  - type: GROUP
-    id: ChartsNav
-    children:
-    - page: Bar Chart
-    - page: Line Chart
-    - page: Area Chart
-    - page: Pie Chart
-    - page: Bubble Chart
-    - page: Timeseries
+    - type: GROUP
+      id: ChartsNav
+      children:
+        - page: Bar Chart
+        - page: Line Chart
+        - page: Area Chart
+        - page: Pie Chart
+        - page: Bubble Chart
+        - page: Timeseries
 datasets:
-- uuid: products
-  content: >-
-    [
-      ["Computers", "Scanner", 5, 3],
-      ["Computers", "Printer", 7, 4],
-      ["Computers", "Laptop", 3, 2],
-      ["Electronics", "Camera", 10, 7],
-      ["Electronics", "Headphones", 5, 9]
-    ]
-  columns:
-  - id: Section
-    type: LABEL
-  - id: Product
-    type: LABEL
-  - id: Quantity
-    type: NUMBER
-  - id: Quantity2
-    type: NUMBER
-- uuid: timeseries
-  content: >-
-    [
-      ["2024-01-01", 120, 80],
-      ["2024-02-01", 135, 95],
-      ["2024-03-01", 150, 110],
-      ["2024-04-01", 140, 105],
-      ["2024-05-01", 165, 120],
-      ["2024-06-01", 180, 130],
-      ["2024-07-01", 175, 125],
-      ["2024-08-01", 190, 140],
-      ["2024-09-01", 200, 155],
-      ["2024-10-01", 210, 160],
-      ["2024-11-01", 195, 150],
-      ["2024-12-01", 220, 170]
-    ]
-  columns:
-  - id: Date
-    type: DATE
-  - id: Series A
-    type: NUMBER
-  - id: Series B
-    type: NUMBER
+  - uuid: products
+    content: |-
+      [
+        ["Computers", "Scanner", 5, 3],
+        ["Computers", "Printer", 7, 4],
+        ["Computers", "Laptop", 3, 2],
+        ["Electronics", "Camera", 10, 7],
+        ["Electronics", "Headphones", 5, 9]
+      ]
+    columns:
+      - id: Section
+        type: LABEL
+      - id: Product
+        type: LABEL
+      - id: Quantity
+        type: NUMBER
+      - id: Quantity2
+        type: NUMBER
+  - uuid: timeseries
+    content: |-
+      [
+        ["2024-01-01", 120, 80],
+        ["2024-02-01", 135, 95],
+        ["2024-03-01", 150, 110],
+        ["2024-04-01", 140, 105],
+        ["2024-05-01", 165, 120],
+        ["2024-06-01", 180, 130],
+        ["2024-07-01", 175, 125],
+        ["2024-08-01", 190, 140],
+        ["2024-09-01", 200, 155],
+        ["2024-10-01", 210, 160],
+        ["2024-11-01", 195, 150],
+        ["2024-12-01", 220, 170]
+      ]
+    columns:
+      - id: Date
+        type: DATE
+      - id: Series A
+        type: NUMBER
+      - id: Series B
+        type: NUMBER

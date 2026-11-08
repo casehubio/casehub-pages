@@ -1,6 +1,6 @@
 datasets:
   - uuid: team-data
-    content: >
+    content: |
       [
         ["Engineering", "Alice Chen", "Staff Engineer", "92", "Active"],
         ["Engineering", "Bob Kim", "Senior Engineer", "87", "Active"],
@@ -26,119 +26,115 @@ datasets:
         type: NUMBER
       - id: status
         type: LABEL
-
 pages:
   - name: Grouped View
-    components:
-      - type: tabs
-        properties:
-          targetPage: true
-        tabs:
-          Sectioned:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    Groups displayed as **section headings** with table content below each.
-                    The default preset — best for scanning grouped data.
-              - type: grouped-view
-                properties:
-                  lookup:
-                    uuid: team-data
-                  groupBy:
-                    column: department
-                  preset: sectioned
-                  defaultExpanded: true
-                  showGroupSummary: true
-                  aggregations:
-                    - column: score
-                      fn: AVG
-
-          Spreadsheet:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    Groups displayed as **inline table rows** — compact spreadsheet view.
-                    Groups are collapsible rows within the table itself.
-              - type: grouped-view
-                properties:
-                  lookup:
-                    uuid: team-data
-                  groupBy:
-                    column: department
-                  preset: spreadsheet
-                  defaultExpanded: true
-
-          List:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    Groups displayed as **section headings** with list content.
-                    Best for text-heavy data where a table layout would be too dense.
-              - type: grouped-view
-                properties:
-                  lookup:
-                    uuid: team-data
-                  groupBy:
-                    column: department
-                  preset: list
-                  order: asc
-
-          With Aggregation:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    Group summaries with **aggregation** — showing count, average score,
-                    and min/max per department.
-              - type: grouped-view
-                properties:
-                  lookup:
-                    uuid: team-data
-                  groupBy:
-                    column: department
-                  preset: sectioned
-                  defaultExpanded: false
-                  showGroupSummary: true
-                  aggregations:
-                    - column: score
-                      fn: AVG
-                    - column: score
-                      fn: MIN
-                    - column: score
-                      fn: MAX
-                    - column: name
-                      fn: COUNT
-
-          Sortable with Column Config:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    Groups with **column configuration** — sortable columns and
-                    row styling. Click column headers to sort across all groups.
-              - type: grouped-view
-                properties:
-                  lookup:
-                    uuid: team-data
-                  groupBy:
-                    column: department
-                  preset: sectioned
-                  sortable: true
-                  columnConfig:
-                    - id: name
-                      width: "2fr"
-                      sortable: true
-                    - id: role
-                      width: "2fr"
-                    - id: score
-                      width: "1fr"
-                      sortable: true
-                      align: end
-                    - id: status
-                      width: "1fr"
-                  rowStyle:
-                    - condition: "row.cell('score').value >= 90"
-                      className: highlight-row
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            targetPage: true
+          tabs:
+            Sectioned:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Groups displayed as **section headings** with table content below each. The default preset — best for scanning grouped data.
+                - type: grouped-view
+                  properties:
+                    lookup:
+                      uuid: team-data
+                    groupBy:
+                      column: department
+                    preset: sectioned
+                    defaultExpanded: true
+                    showGroupSummary: true
+                    aggregations:
+                      - column: score
+                        fn: AVG
+            Spreadsheet:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Groups displayed as **inline table rows** — compact spreadsheet view. Groups are collapsible rows within the table itself.
+                - type: grouped-view
+                  properties:
+                    lookup:
+                      uuid: team-data
+                    groupBy:
+                      column: department
+                    preset: spreadsheet
+                    defaultExpanded: true
+            List:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Groups displayed as **section headings** with list content. Best for text-heavy data where a table layout would be too dense.
+                - type: grouped-view
+                  properties:
+                    lookup:
+                      uuid: team-data
+                    groupBy:
+                      column: department
+                    preset: list
+                    order: asc
+            With Aggregation:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Group summaries with **aggregation** — showing count, average score, and min/max per department.
+                - type: grouped-view
+                  properties:
+                    lookup:
+                      uuid: team-data
+                    groupBy:
+                      column: department
+                    preset: sectioned
+                    defaultExpanded: false
+                    showGroupSummary: true
+                    aggregations:
+                      - column: score
+                        fn: AVG
+                      - column: score
+                        fn: MIN
+                      - column: score
+                        fn: MAX
+                      - column: name
+                        fn: COUNT
+            Sortable with Column Config:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Groups with **column configuration** — sortable columns and row styling. Click column headers to sort across all groups.
+                - type: grouped-view
+                  properties:
+                    lookup:
+                      uuid: team-data
+                    groupBy:
+                      column: department
+                    preset: sectioned
+                    sortable: true
+                    columnConfig:
+                      - id: name
+                        width: 2fr
+                        sortable: true
+                      - id: role
+                        width: 2fr
+                      - id: score
+                        width: 1fr
+                        sortable: true
+                        align: end
+                      - id: status
+                        width: 1fr
+                    rowStyle:
+                      - condition: row.cell('score').value >= 90
+                        className: highlight-row

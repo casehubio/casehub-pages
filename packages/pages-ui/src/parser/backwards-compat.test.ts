@@ -76,63 +76,6 @@ describe("backwards compatibility — existing samples", () => {
     });
   });
 
-  describe("Column with rows — nested layout (legacy displayer syntax)", () => {
-    const root = parsePage({
-      pages: [{ rows: [{ columns: [
-        { span: "6", components: [{ displayer: { type: "BARCHART", chart: { height: 300 } } }] },
-        { span: "6", rows: [
-          { columns: [{ components: [{ displayer: { type: "PIECHART", chart: { height: 150 } } }] }] },
-          { columns: [{ components: [{ displayer: { type: "METERCHART", chart: { height: 150 } } }] }] },
-        ] },
-      ] }] }],
-    });
-
-    it("parses nested rows inside columns", () => {
-      const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBeGreaterThan(1);
-    });
-
-    it("contains bar chart and pie chart from nested layout", () => {
-      const page = root.slots!["content"]![0]!;
-      const allTypes: string[] = [];
-      function collectTypes(items: readonly { component: { type: string; items?: readonly { component: { type: string } }[] } }[]): void {
-        for (const item of items) {
-          allTypes.push(item.component.type);
-          if (item.component.items) collectTypes(item.component.items);
-        }
-      }
-      collectTypes(page.items!);
-      expect(allTypes).toContain("bar-chart");
-      expect(allTypes).toContain("pie-chart");
-    });
-  });
-
-  describe("legacy layoutTemplates format (inline fixture)", () => {
-    const root = parsePage({
-      layoutTemplates: [{ name: "Test", rows: [
-        { layoutColumns: [{ layoutComponents: [
-          { type: "HTML", properties: { HTML_CODE: "Hello" } },
-          { displayer: { type: "BARCHART", lookup: { uuid: "test" } } },
-        ] }] },
-      ] }],
-    });
-
-    it("accepts layoutTemplates key", () => {
-      expect(root.type).toBe("page");
-    });
-
-    it("handles legacy layoutColumns and layoutComponents", () => {
-      const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBeGreaterThan(0);
-    });
-
-    it("handles type: HTML with HTML_CODE property", () => {
-      const page = root.slots!["content"]![0]!;
-      const htmlItems = page.items!.filter((item) => item.component.type === "html");
-      expect(htmlItems.length).toBeGreaterThan(0);
-    });
-  });
-
   describe("legacy lowercase displayer types (inline fixture)", () => {
     const root = parsePage({
       global: { displayer: { chart: { resizable: true } }, mode: "dark" },
@@ -165,36 +108,6 @@ describe("backwards compatibility — existing samples", () => {
     it("handles empty displayer (null value)", () => {
       const page = root.slots!["content"]![0]!;
       expect(page.items!.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe("legacy property substitution and lowercase timeseries (inline fixture)", () => {
-    const root = parsePage({
-      properties: { prometheusUrl: "http://localhost:9090" },
-      pages: [{ rows: [{ columns: [{ components: [
-        { displayer: { type: "timeseries", lookup: { uuid: "metrics" } } },
-      ] }] }] }],
-      datasets: [{ uuid: "metrics", url: "${prometheusUrl}/api/v1/query" }],
-    });
-
-    it("substitutes properties in URLs", () => {
-      expect(root.type).toBe("page");
-    });
-
-    it("parses lowercase type: timeseries", () => {
-      const page = root.slots!["content"]![0]!;
-      function findComponentByType(c: Component, type: string): Component | undefined {
-        if (c.type === type) return c;
-        if (c.items) {
-          for (const item of c.items) {
-            const found = findComponentByType(item.component, type);
-            if (found) return found;
-          }
-        }
-        return undefined;
-      }
-      const timeseries = findComponentByType(page, "timeseries");
-      expect(timeseries).toBeDefined();
     });
   });
 

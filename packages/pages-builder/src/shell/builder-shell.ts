@@ -134,11 +134,13 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _pendingEditorSync: number | undefined;
   private _editorDirty = false;
-  private _inlinePickerOpen = false;
+  @state() private _inlinePickerOpen = false;
   private _inlinePickerPath: readonly (string | number)[] | undefined;
   private _inlinePickerNodeType: TreeNodeType | undefined;
-  private _inlinePickerAnchor: HTMLElement | undefined;
-  private _positionPickerOpen = false;
+  @state() private _inlinePickerAnchor: HTMLElement | undefined;
+  @state() private _inlinePickerAnchorRect: DOMRect | undefined;
+  @state() private _positionPickerOpen = false;
+  @state() private _positionPickerShowReplace = false;
   private _positionPickerAnchor: HTMLElement | undefined;
   private _insertPosition: 'before' | 'after' | undefined;
   private _insertAtIndex: number | undefined;
@@ -260,9 +262,14 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       void this.updateComplete.then(() => {
         this._diffPatchEditor();
         this._connectEditorCursorSync();
+        if (this._viewMode !== 'source' && this._selectedPath && this._selectedNodeType) {
+          requestAnimationFrame(() => this._highlightPreviewNode(this._selectedPath!, this._selectedNodeType!));
+        } else if (this._viewMode === 'source' && this._selectionOverlay) {
+          this._selectionOverlay.hide();
+        }
       });
     }
-    if (changed.has('_selectedPath') || changed.has('_document')) {
+    if (changed.has('_selectedPath') || changed.has('_document') || changed.has('_inlinePickerOpen') || changed.has('_positionPickerOpen')) {
       this._syncTree();
       if (this._compsContainer) this._refreshPaletteContext();
     }
@@ -412,11 +419,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const bounds = new DOMRect(minX, minY, maxX - minX, maxY - minY);
 
     let isContainer = false;
-    if (nodeType === 'component') {
+    if (nodeType === 'component' || nodeType === 'grid-item') {
       const comp = this._findComponentAtPath(path);
       isContainer = comp?.isContainer() ?? false;
     }
 
+    overlayRoot.style.transform = '';
     this._selectionOverlay.update(bounds, nodeType, path, { isContainer });
     this._overlayScrollBase = container.scrollTop;
 
@@ -456,14 +464,14 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._selectionOverlayCleanup?.();
 
     const onAdd = (e: Event) => {
-      const detail = (e as Parameters<typeof this._handleTreeAdd>[0]).detail;
-      const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
-      this._handleTreeAdd(new CustomEvent('tree-add', { detail: { path: detail.path, nodeType: detail.nodeType, ...(target ? { target } : {}) } }));
+      const detail = (e as CustomEvent).detail as { path: readonly (string | number)[]; nodeType: TreeNodeType; target?: HTMLElement };
+      this._selectionOverlay?.lockToolbar();
+      this._handleTreeAdd(new CustomEvent('tree-add', { detail: { path: detail.path, nodeType: detail.nodeType, ...(detail.target ? { target: detail.target } : {}) } }));
     };
     const onInsert = (e: Event) => {
-      const detail = (e as Parameters<typeof this._handleTreeInsert>[0]).detail;
-      const target = overlayRoot.querySelector('.builder-scope-overlay') as HTMLElement | undefined ?? undefined;
-      this._handleTreeInsert(new CustomEvent('tree-insert', { detail: { path: detail.path, nodeType: detail.nodeType, ...(target ? { target } : {}) } }));
+      const detail = (e as CustomEvent).detail as { path: readonly (string | number)[]; nodeType: TreeNodeType; target?: HTMLElement };
+      this._selectionOverlay?.lockToolbar();
+      this._handleTreeInsert(new CustomEvent('tree-insert', { detail: { path: detail.path, nodeType: detail.nodeType, ...(detail.target ? { target: detail.target } : {}) } }));
     };
     const onCut = (e: Event) => {
       const { path, nodeType } = (e as Parameters<typeof this._handleTreeCut>[0]).detail;
@@ -484,12 +492,22 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       this._handleInsertAt(e as Parameters<typeof this._handleInsertAt>[0]);
     };
 
+    const onEditLayout = () => {
+      const previewContainer = this.shadowRoot?.querySelector('.preview-container');
+      const allBtns = previewContainer?.querySelectorAll('button');
+      const layoutBtn = allBtns ? Array.from(allBtns).find(b => b.textContent?.trim() === 'Edit layout') : null;
+      if (layoutBtn) {
+        layoutBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      }
+    };
+
     overlayRoot.addEventListener('selection-add', onAdd);
     overlayRoot.addEventListener('selection-insert', onInsert);
     overlayRoot.addEventListener('selection-insert-at', onInsertAt);
     overlayRoot.addEventListener('selection-cut', onCut);
     overlayRoot.addEventListener('selection-copy', onCopy);
     overlayRoot.addEventListener('selection-delete', onDelete);
+    overlayRoot.addEventListener('selection-edit-layout', onEditLayout);
 
     this._selectionOverlayCleanup = () => {
       overlayRoot.removeEventListener('selection-add', onAdd);
@@ -498,6 +516,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       overlayRoot.removeEventListener('selection-cut', onCut);
       overlayRoot.removeEventListener('selection-copy', onCopy);
       overlayRoot.removeEventListener('selection-delete', onDelete);
+      overlayRoot.removeEventListener('selection-edit-layout', onEditLayout);
     };
   }
 
@@ -586,7 +605,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         this._previewClickTimer = null;
         this._syncSource = 'visual';
         this._selectedPath = path;
-        this._selectedNodeType = 'component';
+        this._selectedNodeType = classifyPath(path) ?? 'component';
         this._updatePropertySource();
       }, 200);
     };
@@ -651,10 +670,20 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _searchComponentsForType(
-    parent: { getComponents?: () => ComponentNode[]; getRows?: () => { getColumns: () => { getComponents: () => ComponentNode[] }[] }[] },
+    parent: { getComponents?: () => ComponentNode[]; getRows?: () => { getColumns: () => { getComponents: () => ComponentNode[] }[] }[]; getItems?: () => import('@casehubio/pages-document').GridItemNode[]; getLayoutMode?: () => string },
     type: string, basePath: readonly (string | number)[], startCount: number, targetIndex: number
   ): { path: readonly (string | number)[] | undefined; count: number } {
     let count = startCount;
+    if (parent.getLayoutMode?.() === 'items' && parent.getItems) {
+      for (const item of parent.getItems()) {
+        const comp = item.getComponent();
+        if (comp && comp.type === type) {
+          if (count === targetIndex) return { path: item.path, count };
+          count++;
+        }
+      }
+      return { path: undefined, count };
+    }
     if (parent.getComponents) {
       const comps = parent.getComponents();
       for (let i = 0; i < comps.length; i++) {
@@ -732,6 +761,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._inlinePickerPath = e.detail.path;
     this._inlinePickerNodeType = e.detail.nodeType;
     this._inlinePickerAnchor = e.detail.target;
+    this._inlinePickerAnchorRect = e.detail.target?.getBoundingClientRect();
     this._syncTree();
   }
 
@@ -801,28 +831,68 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._inlinePickerPath = e.detail.path;
     this._inlinePickerNodeType = e.detail.nodeType;
     this._positionPickerOpen = true;
+    this._positionPickerShowReplace = e.detail.nodeType === 'component' && e.detail.path.includes('items');
     this._positionPickerAnchor = e.detail.target;
     this._inlinePickerAnchor = e.detail.target;
+    this._inlinePickerAnchorRect = e.detail.target?.getBoundingClientRect();
     this._syncTree();
   }
 
-  private _handlePositionSelect(e: CustomEvent<{ position: 'before' | 'after' }>): void {
+  private _handlePositionSelect(e: CustomEvent<{ position: 'before' | 'after' | 'replace' }>): void {
     this._insertPosition = e.detail.position;
     this._positionPickerOpen = false;
+    const nt = this._inlinePickerNodeType ?? 'component';
+    const path = this._inlinePickerPath ?? [];
 
-    const clipboard = getClipboard();
-    if (clipboard.fragment && clipboard.insertMode) {
-      this._pasteAtPosition(
-        this._inlinePickerPath ?? [],
-        this._inlinePickerNodeType ?? 'component',
-        e.detail.position,
-      );
-      this._insertPosition = undefined;
+    if (e.detail.position === 'replace' && path.includes('items')) {
+      const gridItemPath = path.slice(0, path.indexOf('items') + 2) as (string | number)[];
+      this._inlinePickerPath = gridItemPath;
+      this._inlinePickerNodeType = 'grid-item';
+      this._inlinePickerAnchor = this._positionPickerAnchor;
+      this._refreshPaletteContext();
+      this._inlinePickerOpen = true;
       this._syncTree();
       return;
     }
 
-    this._refreshPaletteContextForSibling(this._inlinePickerPath ?? [], this._inlinePickerNodeType ?? 'component');
+    const clipboard = getClipboard();
+    if (clipboard.fragment && clipboard.insertMode) {
+      this._pasteAtPosition(path, nt, e.detail.position);
+      this._insertPosition = undefined;
+      this._selectionOverlay?.unlockToolbar();
+      this._syncTree();
+      this._updatePropertySource();
+      return;
+    }
+
+    if (nt === 'grid-item') {
+      this._applyEdit('tree', () => {
+        if (path[2] !== 'items' || typeof path[3] !== 'number') return;
+        const page = this._findPageAtPath(['pages', path[1] as number]);
+        if (!page || page.getLayoutMode() !== 'items') return;
+        const items = page.getItems();
+        const target = items[path[3]];
+        if (!target) return;
+        const tp = target.getPlacement();
+        if (tp.mode !== 'positioned') return;
+        const insertY = e.detail.position === 'after' ? tp.y + tp.h : tp.y;
+        for (const item of items) {
+          const p = item.getPlacement();
+          if (p.mode === 'positioned' && p.y >= insertY) {
+            item.setPlacement({ mode: 'positioned', x: p.x, y: p.y + 1, w: p.w, h: p.h });
+          }
+        }
+        page.insertEmptyItemAt(path[3], { mode: 'positioned', x: 0, y: insertY, w: 12, h: 1 });
+      });
+      this._insertPosition = undefined;
+      this._selectionOverlay?.unlockToolbar();
+      this._syncTree();
+      this._updatePropertySource();
+      return;
+    }
+
+    this._refreshPaletteContextForSibling(path, nt);
+    this._inlinePickerAnchorRect = this._inlinePickerAnchor?.getBoundingClientRect();
     this._inlinePickerOpen = true;
     this._syncTree();
   }
@@ -842,18 +912,27 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (!type) return;
 
     this._applyEdit('tree', () => {
-      if (siblingNodeType === 'component') {
+      if (siblingNodeType === 'grid-item') {
+        if (siblingPath[2] !== 'items' || typeof siblingPath[3] !== 'number') return;
+        const page = this._findPageAtPath(['pages', siblingPath[1] as number]);
+        if (!page || page.getLayoutMode() !== 'items') return;
+        const items = page.getItems();
+        const target = items[siblingPath[3]];
+        if (!target) return;
+        const tp = target.getPlacement();
+        if (tp.mode !== 'positioned') return;
+        if (position === 'after') {
+          page.addItem({ mode: 'positioned', x: tp.x, y: tp.y + tp.h, w: tp.w, h: 1 }, type);
+        } else {
+          page.addItem({ mode: 'positioned', x: tp.x, y: tp.y, w: tp.w, h: 1 }, type);
+          target.setPlacement({ mode: 'positioned', x: tp.x, y: tp.y + 1, w: tp.w, h: tp.h });
+        }
+      } else if (siblingNodeType === 'component') {
         const col = this._findColumnAtPath(siblingPath.slice(0, -2) as (string | number)[]);
         if (!col) return;
         const compIndex = siblingPath[siblingPath.length - 1] as number;
         const insertIndex = position === 'before' ? compIndex : compIndex + 1;
         col.insertComponentAt(insertIndex, type, props);
-      } else if (siblingNodeType === 'row') {
-        const page = this._findPageAtPath(['pages', siblingPath[1] as number]);
-        if (!page) return;
-        const rowIndex = siblingPath[3] as number;
-        const insertIndex = position === 'before' ? rowIndex : rowIndex + 1;
-        page.insertRowAt(insertIndex);
       }
     });
 
@@ -893,9 +972,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
             }
             newPath = row.insertColumnAt(index, newSpan).path;
           }
-        } else if (parentNodeType === 'page') {
-          const page = this._findPageAtPath(parentPath);
-          if (page) newPath = page.insertRowAt(index).path;
         }
       });
       if (newPath) {
@@ -925,6 +1001,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._inlinePickerPath = parentPath;
     this._inlinePickerNodeType = parentNodeType;
     this._inlinePickerAnchor = target;
+    this._inlinePickerAnchorRect = target?.getBoundingClientRect();
     this._insertAtIndex = index;
     this._syncTree();
   }
@@ -935,7 +1012,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     tree.expandPath(parentPath);
   }
 
-  private static _LAYOUT_TYPES = new Set(['rows', 'columns', 'grid']);
+
 
   private _handleInlinePickerSelect(e: CustomEvent<ComponentCatalogEntry>): void {
     const entry = e.detail;
@@ -957,8 +1034,13 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         if (nt === 'page') {
           const page = this._findPageAtPath(path);
           if (!page) return;
-          if (PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
-            newPath = page.insertRowAt(insertIndex).path;
+          if (page.getLayoutMode() === 'items') {
+            const items = page.getItems();
+            const refItem = items[insertIndex] ?? items[items.length - 1];
+            const rp = refItem?.getPlacement();
+            const y = rp?.mode === 'positioned' ? rp.y : insertIndex;
+            const item = page.addItem({ mode: 'positioned', x: 0, y, w: 12, h: 1 }, entry.type);
+            newPath = item.path;
           } else {
             newPath = page.insertChildAt(insertIndex, entry.type, props).path;
           }
@@ -988,26 +1070,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       return;
     }
 
-    if (insertPos && nt === 'row' && PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
-      let newPath: readonly (string | number)[] | undefined;
-      this._applyEdit('tree', () => {
-        const page = this._findPageAtPath(['pages', path[1] as number]);
-        if (!page) return;
-        const rowIndex = path[3] as number;
-        const insertIndex = insertPos === 'before' ? rowIndex : rowIndex + 1;
-        const row = page.insertRowAt(insertIndex);
-        newPath = row.path;
-      });
-      if (newPath) {
-        this._selectedPath = newPath;
-        this._selectedNodeType = 'row';
-        this._expandAfterAdd(['pages', path[1] as number], 'page');
-        this._expandAfterAdd(newPath, 'row');
-        this._updatePropertySource();
-      }
-      return;
-    }
-
     if (insertPos && nt === 'component') {
       let newPath: readonly (string | number)[] | undefined;
       this._applyEdit('tree', () => {
@@ -1030,12 +1092,19 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._applyEdit('tree', () => {
       if (nt === 'page') {
         const page = this._findPageAtPath(path);
-        if (page && PagesBuilderShell._LAYOUT_TYPES.has(entry.type)) {
-          const row = page.addRow();
-          newChildPath = row.path;
-        } else if (page) {
-          const comp = page.addComponent(entry.type, props);
-          newChildPath = comp.path;
+        if (page) {
+          if (page.getLayoutMode() === 'items') {
+            const items = page.getItems();
+            const maxY = items.reduce((m, it) => {
+              const p = it.getPlacement();
+              return p.mode === 'positioned' ? Math.max(m, p.y + p.h) : m;
+            }, 0);
+            const item = page.addItem({ mode: 'positioned', x: 0, y: maxY, w: 12, h: 1 }, entry.type);
+            newChildPath = item.path;
+          } else {
+            const comp = page.addComponent(entry.type, props);
+            newChildPath = comp.path;
+          }
         }
       } else if (nt === 'column') {
         const comp = this._findColumnAtPath(path)?.addComponent(entry.type, props);
@@ -1048,6 +1117,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
             const comp = cols[0]!.addComponent(entry.type, props);
             newChildPath = comp.path;
           }
+        }
+      } else if (nt === 'grid-item') {
+        const item = this._findGridItemAtPath(path);
+        if (item) {
+          const comp = item.setComponent(entry.type, props);
+          newChildPath = comp.path;
         }
       } else if (nt === 'component') {
         const page = this._findPageAtPath(['pages', path[1] as number]);
@@ -1070,17 +1145,66 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _handleTreeAction(e: CustomEvent<{ action: string; path: readonly (string | number)[]; nodeType: TreeNodeType }>): void {
     const { action, path, nodeType } = e.detail;
+    if (action === 'set-component') {
+      this._handleTreeAdd(new CustomEvent('tree-add', {
+        detail: { path, nodeType },
+      }));
+      return;
+    }
     this._applyEdit('tree', () => {
       switch (action) {
         case 'delete': this._deleteAtPath(path, nodeType); break;
         case 'duplicate': if (nodeType === 'component') this._findComponentAtPath(path)?.duplicate(); break;
-        case 'add-row': this._findPageAtPath(path)?.addRow(); break;
-        case 'add-column': this._findRowAtPath(path)?.addColumn(); break;
         case 'move-up': this._moveAtPath(path, -1); break;
         case 'move-down': this._moveAtPath(path, 1); break;
-        case 'wrap-row': {
+        case 'add-item': {
+          const page = this._findPageAtPath(path);
+          if (page && page.getLayoutMode() === 'items') {
+            const items = page.getItems();
+            const maxY = items.reduce((m, it) => {
+              const p = it.getPlacement();
+              return p.mode === 'positioned' ? Math.max(m, p.y + p.h) : m;
+            }, 0);
+            page.addEmptyItem({ mode: 'positioned', x: 0, y: maxY, w: 12, h: 1 });
+          }
+          break;
+        }
+        case 'split-horizontal':
+        case 'split-vertical': {
+          if (path[2] === 'items' && typeof path[3] === 'number') {
+            this._gridBridge.applyGridEdit(this._document, {
+              type: 'split',
+              targetIndex: path[3],
+              direction: action === 'split-horizontal' ? 'horizontal' : 'vertical',
+            });
+          }
+          break;
+        }
+        case 'wrap-tabs': {
+          const comp = this._findComponentAtPath(path);
+          if (!comp) break;
           const page = this._findPageAtPath(['pages', path[1] as number]);
-          if (page && path[2] === 'components') page.wrapInRow([path[3] as number]);
+          if (!page) break;
+          const compJson = this._document._getDoc().getIn([...path])?.toJSON?.();
+          if (!compJson) break;
+          if (path[2] === 'items' && typeof path[3] === 'number') {
+            const item = page.getItems()[path[3]];
+            if (!item) break;
+            const placement = item.getPlacement();
+            page.removeItem(path[3]);
+            const tabsItem = page.addItem(placement, 'tabs');
+            const tabsComp = tabsItem.getComponent();
+            if (tabsComp) tabsComp.addChild('Tab 1', compJson['type'] as string, compJson['properties'] as Record<string, unknown> | undefined);
+          } else {
+            const parentPath = path.slice(0, -2);
+            const idx = path[path.length - 1] as number;
+            const col = this._findColumnAtPath(parentPath as (string | number)[]);
+            if (col) {
+              col.removeComponent(idx);
+              const tabsComp = col.addComponent('tabs');
+              tabsComp.addChild('Tab 1', compJson['type'] as string, compJson['properties'] as Record<string, unknown> | undefined);
+            }
+          }
           break;
         }
       }
@@ -1091,6 +1215,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const idx = path[path.length - 1] as number;
     if (nodeType === 'page') { this._document.removePage(idx); return; }
     if (nodeType === 'dataset') { this._document.removeDataset(idx); return; }
+    if (nodeType === 'grid-item') { this._findPageAtPath(['pages', path[1] as number])?.removeItem(path[3] as number); return; }
     if (nodeType === 'row') { this._findPageAtPath(['pages', path[1] as number])?.removeChild(path[3] as number); return; }
     if (nodeType === 'column') { this._findRowAtPath(path.slice(0, 4))?.removeColumn(idx); return; }
     if (nodeType === 'component') {
@@ -1192,6 +1317,38 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           });
         },
       };
+      return;
+    }
+
+    if (nt === 'grid-item') {
+      const item = this._findGridItemAtPath(path);
+      if (!item) { this._propertySource = undefined; return; }
+      const comp = item.getComponent();
+      if (comp) {
+        const resolve = () => this._findComponentAtPath(path);
+        this._propertySource = {
+          schema: addBlankEnumOptions(comp.getSchema()),
+          get data() { return resolve()?.getProperties() ?? {}; },
+          onChange: (field, value) => {
+            this._applyEdit('properties', () => {
+              const n = resolve();
+              if (!n) return;
+              const v = value === '' ? undefined : value;
+              if (v === undefined) n.removeProperty(String(field[0]));
+              else n.setProperty(String(field[0]), v);
+            });
+          },
+        };
+      } else {
+        const p = item.getPlacement();
+        this._propertySource = {
+          schema: { type: 'object', properties: {
+            placement: { type: 'string', title: 'Placement', readOnly: true },
+          }},
+          get data() { return { placement: p.mode === 'positioned' ? `${p.x},${p.y} ${p.w}×${p.h}` : `auto ${p.w}×${p.h}` }; },
+          onChange: () => {},
+        };
+      }
       return;
     }
 
@@ -1327,6 +1484,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         .selectedPath="${this._selectedPath}"
         .clipboardFragmentType="${getClipboard().fragmentType ?? undefined}"
         .insertMode="${getClipboard().insertMode}"
+        .pickerActive="${this._inlinePickerOpen || this._positionPickerOpen}"
         @node-select="${(e: Event) => this._handleNodeSelect(e as Parameters<typeof this._handleNodeSelect>[0])}"
         @tree-add="${(e: Event) => this._handleTreeAdd(e as Parameters<typeof this._handleTreeAdd>[0])}"
         @tree-insert="${(e: Event) => this._handleTreeInsert(e as Parameters<typeof this._handleTreeInsert>[0])}"
@@ -1335,19 +1493,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         @tree-copy="${(e: Event) => this._handleTreeCopy(e as Parameters<typeof this._handleTreeCopy>[0])}"
         @tree-action="${(e: Event) => this._handleTreeAction(e as Parameters<typeof this._handleTreeAction>[0])}"
       ></pages-builder-tree>
-      <pages-builder-inline-picker
-        .context="${this._paletteContext}"
-        .open="${this._inlinePickerOpen}"
-        .anchor="${this._inlinePickerAnchor}"
-        @component-select="${(e: Event) => this._handleInlinePickerSelect(e as Parameters<typeof this._handleInlinePickerSelect>[0])}"
-        @picker-close="${() => { this._inlinePickerOpen = false; this._insertAtIndex = undefined; this._syncTree(); }}"
-      ></pages-builder-inline-picker>
-      <pages-position-picker
-        .open="${this._positionPickerOpen}"
-        .anchor="${this._positionPickerAnchor}"
-        @position-select="${(e: Event) => this._handlePositionSelect(e as Parameters<typeof this._handlePositionSelect>[0])}"
-        @picker-close="${() => { this._positionPickerOpen = false; this._syncTree(); }}"
-      ></pages-position-picker>
     `, this._treeContainer);
   }
 
@@ -1417,6 +1562,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _refreshPaletteContextForSibling(_path: readonly (string | number)[], nodeType: TreeNodeType): void {
     const datasets = this._document.getDatasets();
     const parentNt = nodeType === 'component' ? 'column'
+      : nodeType === 'grid-item' ? 'page'
       : nodeType === 'column' ? 'row'
       : nodeType === 'row' ? undefined
       : undefined;
@@ -1504,7 +1650,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _scrollYamlToPath(path: readonly (string | number)[] | undefined): void {
     if (!path || path.length === 0) return;
-    requestAnimationFrame(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const range = this._getYamlRange(path);
       if (!range) return;
       const editorEl = this.shadowRoot?.querySelector<PagesCodeEditor>('pages-code-editor');
@@ -1518,7 +1664,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         ],
       });
       setTimeout(() => { this._suppressCursorSync = false; }, 50);
-    });
+    }));
   }
 
   private _highlightYamlRange(path: readonly (string | number)[] | undefined): void {
@@ -1535,6 +1681,13 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _findPageAtPath(path: readonly (string | number)[]): PageNode | undefined {
     if (path.length < 2 || path[0] !== 'pages') return undefined;
     return this._document.getPages()[path[1] as number];
+  }
+
+  private _findGridItemAtPath(path: readonly (string | number)[]): import('@casehubio/pages-document').GridItemNode | undefined {
+    if (path.length < 4 || path[0] !== 'pages' || path[2] !== 'items') return undefined;
+    const page = this._document.getPages()[path[1] as number];
+    if (!page || page.getLayoutMode() !== 'items') return undefined;
+    return page.getItems()[path[3] as number];
   }
 
   private _findRowAtPath(path: readonly (string | number)[]): RowNode | undefined {
@@ -1674,6 +1827,21 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           .renderCentre="${this._renderEditorContent}"
         >
         </pages-dock-workbench>
+        <pages-builder-inline-picker
+          .context="${this._paletteContext}"
+          .open="${this._inlinePickerOpen}"
+          .anchor="${this._inlinePickerAnchor}"
+          .anchorRect="${this._inlinePickerAnchorRect}"
+          @component-select="${(e: Event) => this._handleInlinePickerSelect(e as Parameters<typeof this._handleInlinePickerSelect>[0])}"
+          @picker-close="${() => { this._inlinePickerOpen = false; this._insertAtIndex = undefined; this._selectionOverlay?.unlockToolbar(); this._syncTree(); }}"
+        ></pages-builder-inline-picker>
+        <pages-position-picker
+          .open="${this._positionPickerOpen}"
+          .showReplace="${this._positionPickerShowReplace}"
+          .anchor="${this._positionPickerAnchor}"
+          @position-select="${(e: Event) => this._handlePositionSelect(e as Parameters<typeof this._handlePositionSelect>[0])}"
+          @picker-close="${() => { this._positionPickerOpen = false; this._selectionOverlay?.unlockToolbar(); this._syncTree(); }}"
+        ></pages-position-picker>
       </div>
     `;
   }

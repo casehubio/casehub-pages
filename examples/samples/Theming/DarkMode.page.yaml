@@ -1,20 +1,26 @@
 global:
   mode: dark
 datasets:
-- uuid: test
-  content: '[["Hello", 20, 12], ["World", 10, 25]]'
+  - uuid: test
+    content: '[["Hello", 20, 12], ["World", 10, 25]]'
 pages:
-- components:
-  - type: bar-chart
-    properties:
-      chart:
-        resizable: true
-      lookup:
-        uuid: test
-        group:
-        - columnGroup:
-            source: Column 0
-          functions:
-          - source: Column 0
-          - source: Column 1
-          - source: Column 2
+  - items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            chart:
+              resizable: true
+            lookup:
+              uuid: test
+              group:
+                - columnGroup:
+                    source: Column 0
+                  functions:
+                    - source: Column 0
+                    - source: Column 1
+                    - source: Column 2

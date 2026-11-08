@@ -1,6 +1,6 @@
 var mount = document.getElementById('grid-builder-mount');
 if (mount) {
-  fetch('samples/Layout/Grid Builder.yaml')
+  fetch('samples/Layout/includes/grid-builder-data.yaml')
     .then(function (r) { return r.text(); })
     .then(function (yaml) {
       var check = setInterval(function () {

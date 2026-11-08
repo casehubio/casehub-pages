@@ -1,6 +1,6 @@
 datasets:
   - uuid: tasks
-    content: >
+    content: |
       [
         ["TASK-001", "Deploy v2.4", "Critical", "9", "Error", "2026-07-01"],
         ["TASK-002", "Update dependencies", "Normal", "4", "Complete", "2026-06-28"],
@@ -31,50 +31,68 @@ datasets:
         type: LABEL
       - id: due
         type: DATE
-
 pages:
   - name: Row Styles
-    components:
-      - type: title
-        properties:
-          text: Conditional Row Styling
-          size: h2
-
-      - type: markdown
-        properties:
-          content: >
-            **rowStyle** rules apply CSS styles conditionally per row.
-            Each rule has a `condition` expression evaluated against row data.
-            When true, either a `className` or inline `style` is applied.
-
-      - type: data-table
-        properties:
-          lookup:
-            uuid: tasks
-          sortable: true
-          pageSize: 15
-          filter:
-            notification: true
-          rowStyle:
-            - condition: "#{row.status} == 'Error'"
-              style:
-                backgroundColor: "oklch(0.65 0.12 25 / 0.15)"
-                color: "oklch(0.55 0.15 25)"
-            - condition: "#{row.priority} > 7"
-              style:
-                fontWeight: bold
-            - condition: "#{row.status} == 'Pending'"
-              style:
-                backgroundColor: "oklch(0.75 0.10 80 / 0.12)"
-            - condition: "#{row.status} == 'Complete'"
-              style:
-                color: "oklch(0.55 0.15 145)"
-
-      - type: markdown
-        properties:
-          content: |
-            **Rules applied** (first match wins):
-            - `#{row.status} == 'Error'` → red background
-            - `#{row.priority} > 7` → bold text
-            - `#{row.status} == 'Pending'` → yellow background
-            - `#{row.status} == 'Complete'` → green text
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Conditional Row Styling
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              **rowStyle** rules apply CSS styles conditionally per row. Each rule has a `condition` expression evaluated against row data. When true, either a `className` or inline `style` is applied.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: data-table
+          properties:
+            lookup:
+              uuid: tasks
+            sortable: true
+            pageSize: 15
+            filter:
+              notification: true
+            rowStyle:
+              - condition: "#{row.status} == 'Error'"
+                style:
+                  backgroundColor: oklch(0.65 0.12 25 / 0.15)
+                  color: oklch(0.55 0.15 25)
+              - condition: "#{row.priority} > 7"
+                style:
+                  fontWeight: bold
+              - condition: "#{row.status} == 'Pending'"
+                style:
+                  backgroundColor: oklch(0.75 0.10 80 / 0.12)
+              - condition: "#{row.status} == 'Complete'"
+                style:
+                  color: oklch(0.55 0.15 145)
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              **Rules applied** (first match wins):
+              - `#{row.status} == 'Error'` → red background
+              - `#{row.priority} > 7` → bold text
+              - `#{row.status} == 'Pending'` → yellow background
+              - `#{row.status} == 'Complete'` → green text

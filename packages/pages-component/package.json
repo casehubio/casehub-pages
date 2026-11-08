@@ -23,7 +23,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-data": "workspace:*",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "rimraf": "^6.1.0",
