@@ -1639,12 +1639,23 @@ function toggleBreak(id) {
 addBreakBtn.addEventListener('click', () => {
   pushUndo();
   breakCounter++;
-  const maxY = items.reduce((max, i) => Math.max(max, i.y + i.h), 0);
+  // Insert after the selected panel, or at the bottom if nothing selected
+  let insertY;
+  const sel = selectedId ? items.find(i => i.id === selectedId) : null;
+  if (sel && sel.type !== 'break') {
+    insertY = sel.y + sel.h;
+    // Push everything at or below insertY down by 1 to make room
+    for (const item of items) {
+      if (item.y >= insertY) item.y += 1;
+    }
+  } else {
+    insertY = items.reduce((max, i) => Math.max(max, i.y + i.h), 0);
+  }
   const before = capturePositions();
-  items.push({ id: `brk-${breakCounter}`, x: 0, y: maxY, w: 12, h: 1, type: 'break', label: `Section ${breakCounter}`, collapsed: false });
+  items.push({ id: `brk-${breakCounter}`, x: 0, y: insertY, w: 12, h: 1, type: 'break', label: `Section ${breakCounter}`, collapsed: false });
   render();
   flipAnimate(before, null);
-  statusEl.textContent = `Added row break at row ${maxY}`;
+  statusEl.textContent = sel ? `Added break after ${sel.label} at row ${insertY}` : `Added break at row ${insertY}`;
 });
 
 // --- Init ---
