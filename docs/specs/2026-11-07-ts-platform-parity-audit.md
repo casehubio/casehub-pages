@@ -429,21 +429,13 @@ Verbose `invoke: { binding: X, ... }` forms are now **rejected** by Java (#754).
 
 **Phase 1:** Expand the prefix-match fallback from #735 to cover all binding types. Add compact form validation (reject verbose forms for consistency).
 
-### P3: Advisory Step Type (#672)
+### ~~P3: Advisory Step Type (#672)~~ — NOT A WALKER GAP
 
-**Java:** `advisory:` is a YAML step type — the Walker recognises it as a structural key. Advisory steps provide non-blocking guidance during execution.
+Advisory is a PlaybookCompiler concern (`AdvisoryCompiler` compiles advisory steps into `SetTask`), not a Walker keyword. The Walker does not recognise `advisory:` as a structural key on either runtime. No TS parity work needed.
 
-**TS:** `advisory` not in `RESERVED_KEYS`. Would throw on parse.
+### ~~P4: Admission/Salience Step Types (#681)~~ — NOT STEP TYPES
 
-**Phase 1:** Add `advisory` to `RESERVED_KEYS` and handle in Walker dispatch.
-
-### P4: Admission/Salience Step Types (#681)
-
-**Java:** `admission:` and `salience:` are agent interaction step types for pool admission control and priority routing.
-
-**TS:** Neither in `RESERVED_KEYS`.
-
-**Phase 1:** Add both to `RESERVED_KEYS` and handle in Walker dispatch.
+`admission` and `salience` are fields on `PoolDeclaration` (agent pool configuration), not step-level YAML keywords. They are parsed from the `pools:` top-level key, which is already covered by M3. No additional TS parity work needed.
 
 ### P5: Enforce Combined-Key Form — Reject Verbose block:/step: (#698)
 
@@ -463,15 +455,15 @@ Verbose `invoke: { binding: X, ... }` forms are now **rejected** by Java (#754).
 
 ### Updated Phase 1 Scope
 
-Adding P1-P5 to #620 brings the total from 17 items to 22:
+Adding P1, P2, P5 to #620 brings the total from 17 items to 20:
 
 | # | New Gap | Effort |
 |---|---------|--------|
 | P1 | primaryInput() — scalar-to-definition mapping | M |
 | P2 | Compact invoke binding syntax (all binding types + enforcement) | M |
-| P3 | Advisory step type in RESERVED_KEYS | XS |
-| P4 | Admission/salience step types in RESERVED_KEYS | XS |
 | P5 | Enforce combined-key form — reject verbose block:/step: | S |
+
+P3 (advisory) and P4 (admission/salience) removed — not Walker keywords.
 
 ---
 
