@@ -48,3 +48,9 @@ export { parsePlaybookFrontMatter, isBuiltInSchema, isDomainSchema, PLAYBOOK_SCH
 export type { PlaybookFrontMatter, PlaybookDocument } from './playbook.js';
 export { createPlaybookSchemaRegistry, domainSchema, PLAYBOOK_CAPABILITIES } from './playbook-schema.js';
 export type { PlaybookSchemaDescriptor, PlaybookSchemaRegistry } from './playbook-schema.js';
+
+export { AnnotationParser, AnnotationMap, StepPositionScanner, AnnotationExtractor, DecoratorAnnotationResolver, InjectionResolver } from './annotation/index.js';
+export type { ParsedAnnotation, Annotation, StepLineInfo } from './annotation/index.js';
+
+export { SimulateBlockParser, YamlTestParser, YamlTestDiscovery, YamlTestExecutor, TestCatalog, describeYamlTests } from './test/index.js';
+export type { TestFile, TestCase, TestResult, TestSuiteResult } from './test/index.js';

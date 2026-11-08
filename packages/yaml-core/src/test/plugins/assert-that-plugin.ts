@@ -66,4 +66,4 @@ export function createAssertThatPlugin(): CatalogEntry {
   return { qualifiedName: 'assertThat', definition: assertThatDefinition, action: assertThatAction };
 }
 
-export { MATCHER_KEYS };
+

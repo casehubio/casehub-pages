@@ -609,10 +609,10 @@ export class Walker {
       return { kind: 'block', name: stepName, steps: substeps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
-    if (!structuralType && !actionKey && !invokeSpec && decorators['delay'] !== undefined) {
-      const duration = parseDurationMs(decorators['delay'] as string);
-      const { delay: _, ...rest } = decorators;
-      return { kind: 'delay', name: stepName, duration, decorators: rest, annotations: [] };
+    if (!structuralType && !actionKey && !invokeSpec && mergedDecorators['delay'] !== undefined) {
+      const duration = parseDurationMs(mergedDecorators['delay'] as string);
+      const { delay: _, ...rest } = mergedDecorators;
+      return { kind: 'delay', name: stepName, duration, decorators: rest, annotations: stepAnns };
     }
 
     if (!structuralType && !actionKey && !invokeSpec && decorators['simulation'] !== undefined) {

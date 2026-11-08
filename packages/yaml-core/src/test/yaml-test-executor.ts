@@ -25,7 +25,7 @@ export interface TestSuiteResult {
   totalDuration: number;
 }
 
-class CompositeCatalog implements Catalog {
+class CatalogChain implements Catalog {
   constructor(private readonly catalogs: Catalog[]) {}
 
   resolve(actionName: string): CatalogEntry | undefined {
@@ -57,7 +57,7 @@ export class YamlTestExecutor {
   async run(testFile: TestFile): Promise<TestSuiteResult> {
     const startTime = Date.now();
     const results: TestResult[] = [];
-    const compositeCatalog = new CompositeCatalog([new TestCatalog(), this.catalog]);
+    const compositeCatalog = new CatalogChain([new TestCatalog(), this.catalog]);
 
     for (const testCase of testFile.tests) {
       const result = await this.runTestCase(testCase, testFile, compositeCatalog);

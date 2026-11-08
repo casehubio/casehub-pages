@@ -23,10 +23,13 @@ export type {
   ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, DelayStep, RaceStep, SelectBranch, ResolvedMatchCase,
-  EmitEventStep,
+  EmitEventStep, ControlStep,
   Action, Result, ServiceRegistry, Catalog, CatalogEntry,
 } from './walker.js';
-export { Walker, MapServiceRegistry, stepSuccess, stepFailure } from './walker.js';
+export { Walker, MapServiceRegistry, stepSuccess, stepFailure, stepFailureWithCategory } from './walker.js';
+
+export type { ErrorCategory } from './error-category.js';
+export { ERROR_CATEGORIES } from './error-category.js';
 
 export type { CatalogSource } from './catalog.js';
 export { CompositeCatalog, ImportScopedCatalog } from './catalog.js';
