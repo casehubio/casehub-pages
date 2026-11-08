@@ -400,6 +400,81 @@ Once the schema is unified, these add runtime behaviour where it matters:
 
 ---
 
+## Part 10 — Post-Audit Platform Additions (2026-11-08 update)
+
+Features that landed on platform after the original audit. These need adding to Phase 1 (#620) or later phases.
+
+### P1: primaryInput() — Scalar-to-Definition Mapping (#754)
+
+**Java:** When a plugin action receives a scalar value, `primaryInput()` resolves it to the first required input parameter of the action's `Definition`. `rest-request GET /api:` maps the suffix to the `url` input, not to a generic `_subject` key.
+
+**TS:** Wraps scalar values as `{ value: actionValue }` (line 543-545). No definition lookup. This is a step beyond C1 (key naming) — it changes how scalar values are interpreted.
+
+**Phase 1:** Walker must look up the action definition and map the scalar to the first required input.
+
+### P2: Compact Invoke Binding Syntax (#750-#754, #756-#758)
+
+**Java:** Combined-key shorthand for all invoke bindings:
+- `rest-request GET /api/users:` → method + url from suffix
+- `graphql domain:operation:` → domain and operation from key
+- `agent-query session: prompt` → session from suffix, prompt as value
+- `agent-invoke classifier: "question"` → ephemeral open/query/close (#756)
+- `process-exec command:` → command from suffix
+- `mcp-call tool:` → tool name from suffix
+- `simulated dataset-name:` → dataset from suffix (#758)
+
+Verbose `invoke: { binding: X, ... }` forms are now **rejected** by Java (#754).
+
+**TS:** Accepts `invoke:` as raw Record with no validation. No prefix-match, no compact enforcement.
+
+**Phase 1:** Expand the prefix-match fallback from #735 to cover all binding types. Add compact form validation (reject verbose forms for consistency).
+
+### P3: Advisory Step Type (#672)
+
+**Java:** `advisory:` is a YAML step type — the Walker recognises it as a structural key. Advisory steps provide non-blocking guidance during execution.
+
+**TS:** `advisory` not in `RESERVED_KEYS`. Would throw on parse.
+
+**Phase 1:** Add `advisory` to `RESERVED_KEYS` and handle in Walker dispatch.
+
+### P4: Admission/Salience Step Types (#681)
+
+**Java:** `admission:` and `salience:` are agent interaction step types for pool admission control and priority routing.
+
+**TS:** Neither in `RESERVED_KEYS`.
+
+**Phase 1:** Add both to `RESERVED_KEYS` and handle in Walker dispatch.
+
+### P5: Enforce Combined-Key Form — Reject Verbose block:/step: (#698)
+
+**Java:** Standalone `block:` and `step: name` are now rejected. The Walker requires combined-key form: `"block myBlock": [...]` and `"step myStep"` (as the map key).
+
+**TS:** Accepts standalone `step:` (walker.ts:271-276) and standalone `block:` (walker.ts:279).
+
+**Phase 1:** Align enforcement. Reject standalone `step:` and `block:` when combined-key form should be used.
+
+### P6: Phase-Aware Agent Simulation (#755, #744)
+
+**Java:** `CorpusBackend` → `SimulationRuntime` bridge, `StateMachineSelector.advance()` for lifecycle-aware corpus selection, per-test simulation config in .test.yaml files.
+
+**TS:** SimulationRuntime and SimulationOverlay exist but no phase-aware corpus selection or state machine selector integration.
+
+**Phase 2:** Runtime behaviour, not schema. Add after schema parity is complete.
+
+### Updated Phase 1 Scope
+
+Adding P1-P5 to #620 brings the total from 17 items to 22:
+
+| # | New Gap | Effort |
+|---|---------|--------|
+| P1 | primaryInput() — scalar-to-definition mapping | M |
+| P2 | Compact invoke binding syntax (all binding types + enforcement) | M |
+| P3 | Advisory step type in RESERVED_KEYS | XS |
+| P4 | Admission/salience step types in RESERVED_KEYS | XS |
+| P5 | Enforce combined-key form — reject verbose block:/step: | S |
+
+---
+
 ## Appendix A — Java Catalog Stub Actions (63 actions)
 
 The full action vocabulary registered in `ValidatePlaybookPlugin.CATALOG_STUB_ACTIONS`:
