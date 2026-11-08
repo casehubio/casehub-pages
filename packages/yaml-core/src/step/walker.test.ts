@@ -916,6 +916,44 @@ describe('Walker', () => {
       const steps = Walker.resolve([{ name: 'my-block', block: [{ doA: {} }] }], catalog);
       expect(steps[0]!.name).toBe('my-block');
     });
+
+    it('#735: combined-key invoke shorthand resolves prefix as action', () => {
+      const cat = makeCatalog({ 'rest-request': makeEntry('rest-request') });
+      const steps = Walker.resolve([{ 'rest-request GET /api/users': {} }], cat);
+      expect(steps[0]!.kind).toBe('plugin');
+      if (steps[0]!.kind === 'plugin') {
+        expect(steps[0].params['_subject']).toBe('GET /api/users');
+      }
+    });
+
+    it('#735: combined-key invoke shorthand with object value merges', () => {
+      const cat = makeCatalog({ 'rest-request': makeEntry('rest-request') });
+      const steps = Walker.resolve([{ 'rest-request GET /api/users': { headers: { auth: 'token' } } }], cat);
+      expect(steps[0]!.kind).toBe('plugin');
+      if (steps[0]!.kind === 'plugin') {
+        expect(steps[0].params['_subject']).toBe('GET /api/users');
+        expect(steps[0].params['headers']).toEqual({ auth: 'token' });
+      }
+    });
+
+    it('P1: scalar value maps to first required input when definition has inputs', () => {
+      const entry = makeEntry('rest-request');
+      entry.definition.inputs = { url: { type: 'string' as any, required: true }, method: { type: 'string' as any, required: false } };
+      const cat = makeCatalog({ 'rest-request': entry });
+      const steps = Walker.resolve([{ 'rest-request': '/api/users' }], cat);
+      expect(steps[0]!.kind).toBe('plugin');
+      if (steps[0]!.kind === 'plugin') {
+        expect(steps[0].params['url']).toBe('/api/users');
+      }
+    });
+
+    it('P1: scalar value falls back to _subject when no required inputs', () => {
+      const steps = Walker.resolve([{ doA: 'hello' }], catalog);
+      expect(steps[0]!.kind).toBe('plugin');
+      if (steps[0]!.kind === 'plugin') {
+        expect(steps[0].params['_subject']).toBe('hello');
+      }
+    });
   });
 
   describe('simulation decorator', () => {

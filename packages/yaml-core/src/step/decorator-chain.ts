@@ -649,14 +649,14 @@ export class DecoratorChain {
     if (decorators['timeout'] != null) {
       execution = new TimeoutDecorator(execution, decorators['timeout']);
     }
+    if (decorators['loop'] != null) {
+      execution = new LoopDecorator(execution, decorators['loop']);
+    }
     if (decorators['from'] != null) {
       execution = new FromDecorator(execution, decorators['from']);
     }
     if (decorators['on-error'] != null) {
       execution = new OnErrorDecorator(execution, String(decorators['on-error']));
-    }
-    if (decorators['loop'] != null) {
-      execution = new LoopDecorator(execution, decorators['loop']);
     }
     if (decorators['cancel'] != null) {
       execution = new CancelDecorator(execution, String(decorators['cancel']));

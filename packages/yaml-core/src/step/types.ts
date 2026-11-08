@@ -16,6 +16,10 @@ export type InvokeBinding =
   | GraphqlBinding
   | ScriptBinding
   | AgentBinding
+  | AgentSessionOpenBinding
+  | AgentSessionQueryBinding
+  | AgentSessionClearBinding
+  | AgentSessionCloseBinding
   | ProcessBinding
   | AriaBinding
   | GraphqlDomainBinding
@@ -54,8 +58,35 @@ export interface AgentBinding {
   kind: 'agent';
   descriptor: string;
   model?: string;
+  modelQuery?: string;
+  modelChain?: string[];
+  pool?: string;
+  responseFormat?: string;
   timeout?: string;
   structuredOutput: boolean;
+}
+
+export interface AgentSessionOpenBinding {
+  kind: 'agent-session-open';
+  descriptor: string;
+  model?: string;
+  timeout?: string;
+}
+
+export interface AgentSessionQueryBinding {
+  kind: 'agent-session-query';
+  sessionRef: string;
+  timeout?: string;
+}
+
+export interface AgentSessionClearBinding {
+  kind: 'agent-session-clear';
+  sessionRef: string;
+}
+
+export interface AgentSessionCloseBinding {
+  kind: 'agent-session-close';
+  sessionRef: string;
 }
 
 export interface ProcessBinding {

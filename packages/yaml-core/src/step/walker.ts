@@ -361,7 +361,24 @@ export class Walker {
           actionValue = value;
           actionEntry = resolved;
         } else {
-          unknownKeys.push([key, value]);
+          const spaceIdx = key.indexOf(' ');
+          if (spaceIdx > 0) {
+            const prefix = key.substring(0, spaceIdx);
+            const suffix = key.substring(spaceIdx + 1);
+            const prefixResolved = catalog.resolve(prefix) ?? catalog.resolveInferred?.(prefix);
+            if (prefixResolved) {
+              actionKey = prefix;
+              const params = (typeof value === 'object' && value !== null && !Array.isArray(value))
+                ? { _subject: suffix, ...(value as Record<string, unknown>) }
+                : { _subject: suffix };
+              actionValue = params;
+              actionEntry = prefixResolved;
+            } else {
+              unknownKeys.push([key, value]);
+            }
+          } else {
+            unknownKeys.push([key, value]);
+          }
         }
       }
     }
@@ -586,9 +603,13 @@ export class Walker {
 
     if (actionKey) {
       const entry = actionEntry ?? catalog.resolve(actionKey)!;
-      const params = (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue))
-        ? { ...(actionValue as Record<string, unknown>) }
-        : { _subject: actionValue };
+      let params: Record<string, unknown>;
+      if (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue)) {
+        params = { ...(actionValue as Record<string, unknown>) };
+      } else {
+        const primaryKey = primaryInput(entry.definition);
+        params = { [primaryKey]: actionValue };
+      }
       for (const [k, v] of unknownKeys) params[k] = v;
       return { kind: 'plugin', name: stepName, entry, params, decorators, annotations: [] };
     }
@@ -653,6 +674,13 @@ export class Walker {
     }
     return { type: 'value', value: raw };
   }
+}
+
+function primaryInput(definition: import('./types').Definition): string {
+  for (const [name, param] of Object.entries(definition.inputs)) {
+    if (param.required) return name;
+  }
+  return '_subject';
 }
 
 function parseDurationMs(duration: string): number {
