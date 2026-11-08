@@ -158,6 +158,37 @@ var CC_EXAMPLES = [
       { 'task-poll': { name: 'monitor' } },
     ],
   },
+  {
+    name: 'Named Consumer',
+    tags: ['from', 'consumer', 'named', 'lifecycle'],
+    description: 'Named consumer with lifecycle control — a background consumer reads from a channel via a named handle. A supervisor stops the consumer after a delay, demonstrating lifecycle management of long-running readers.',
+    yaml: [
+      '- concurrent:',
+      '    source:',
+      '      - log: { message: "Emitting events" }',
+      '        publish: { channel: raw-events, data: { type: "click", ts: 1000 } }',
+      '        delay: 100ms',
+      '        loop: 10',
+      '',
+      '    enricher:',
+      '      - name: enrich',
+      '        log: { message: "Enriching ${from.type}" }',
+      '        from: { channel: raw-events, name: enricher }',
+      '        loop: continuous',
+      '        cancel: shutdown',
+      '',
+      '    supervisor:',
+      '      - delay: 500ms',
+      '      - stop: enricher',
+      '      - log: { message: "Enricher stopped after 500ms" }',
+    ].join('\n'),
+    steps: [
+      { parallel: [
+        { 'chan-produce': { name: 'raw-events', capacity: 5, items: 10, interval: 100 } },
+        { 'named-consume': { channel: 'raw-events', label: 'enricher', stopAfterMs: 500 } },
+      ] },
+    ],
+  },
 ];
 
 var ccTraceEl = document.getElementById('cc-trace');
@@ -568,6 +599,37 @@ async function ccRunExample(idx) {
         ccTrace('pipeline: processed ' + processed + '/' + params.expect + ' items', '✓');
         outputs.push('pipeline complete: ' + processed + ' items');
         return runner.stepSuccess({ processed: processed });
+      }
+    },
+    {
+      name: 'named-consume',
+      inputs: { channel: { type: 'STRING', required: true }, label: { type: 'STRING', required: true }, stopAfterMs: { type: 'NUMBER', required: true } },
+      execute: async function(params) {
+        ccStepCount++;
+        if (ccCountEl) ccCountEl.textContent = String(ccStepCount);
+        var ch = runner.scope.channel(params.channel, 5);
+        var received = 0;
+        var stopped = false;
+        var stopTimer = setTimeout(function() {
+          stopped = true;
+          ccTrace(params.label + ': stopped by supervisor after ' + params.stopAfterMs + 'ms', '✓');
+          outputs.push(params.label + ' stopped — ' + received + ' items processed');
+        }, params.stopAfterMs);
+        while (!stopped) {
+          try {
+            var item = await ch.receive(200);
+            if (item === undefined) break;
+            received++;
+            ccTrace(params.label + ' ← ' + item, '✓');
+            outputs.push(params.label + ': ' + item);
+            await ccDelay(50);
+          } catch (e) {
+            break;
+          }
+        }
+        clearTimeout(stopTimer);
+        ccTrace(params.label + ': total processed = ' + received, '✓');
+        return runner.stepSuccess({ received: received, label: params.label });
       }
     },
   ]);

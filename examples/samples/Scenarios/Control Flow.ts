@@ -147,9 +147,9 @@ var SW_EXAMPLES = [
     ],
   },
   {
-    name: 'Select (first-to-complete)',
-    tags: ['select', 'race', 'first-to-complete'],
-    description: 'Select races multiple branches — the first to complete wins. Wait branches block on named signals; the first signal to fire determines which branch executes.',
+    name: 'Select (signal multiplexing)',
+    tags: ['select', 'signal', 'multiplexing'],
+    description: 'Channel and signal multiplexing — wait on multiple named signals, the first signal to fire determines which branch executes. For first-to-complete over arbitrary concurrent blocks, use race: instead.',
     yaml: [
       '- select:',
       '  - wait: fast-signal',
@@ -166,6 +166,27 @@ var SW_EXAMPLES = [
     preRun: function(runner) {
       runner.scope.signal('fast-signal').signal();
     },
+  },
+  {
+    name: 'Race (first-to-complete)',
+    tags: ['race', 'first-to-complete', 'cancellation'],
+    description: 'First-to-complete over arbitrary blocks — branches execute concurrently, the first to finish wins, the loser is cancelled. Unlike select (signal-based), race works with any step sequence.',
+    yaml: [
+      '- race:',
+      '  - block:',
+      '    - delay: 200ms',
+      '    - log: { message: "Slow branch finished" }',
+      '  - log: { message: "Fast branch finished" }',
+    ].join('\n'),
+    steps: [
+      { race: [
+        { block: [
+          { delay: '200ms' },
+          { log: { message: 'Slow branch finished' } },
+        ] },
+        { log: { message: 'Fast branch finished' } },
+      ] },
+    ],
   },
 ];
 

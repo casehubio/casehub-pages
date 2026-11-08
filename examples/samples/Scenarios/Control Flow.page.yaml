@@ -49,7 +49,8 @@ pages:
                   <option value="4">Try / Catch / Finally</option>
                   <option value="5">Barrier</option>
                   <option value="6">Quorum</option>
-                  <option value="7">Select (first-to-complete)</option>
+                  <option value="7">Select (signal multiplexing)</option>
+                  <option value="8">Race (first-to-complete)</option>
                 </select>
                 <button id="sw-run-btn" style="padding: 8px 24px; background: #16a34a; border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; white-space: nowrap;">▶ Run</button>
               </div>
