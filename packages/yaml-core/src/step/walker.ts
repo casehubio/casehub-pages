@@ -13,7 +13,7 @@ export interface Action {
 
 export type Result =
   | { kind: 'success'; output: Record<string, unknown>; executionMetadata: Record<string, unknown> }
-  | { kind: 'failure'; message: string; failureCategory?: string };
+  | { kind: 'failure'; message: string; failureCategory?: string; detail?: Record<string, unknown> };
 
 export function stepSuccess(output: Record<string, unknown>, metadata?: Record<string, unknown>): Result {
   return { kind: 'success', output, executionMetadata: metadata ?? {} };
@@ -77,7 +77,8 @@ export type ResolvedStep =
   | QuorumStep
   | DelayStep
   | RaceStep
-  | EmitEventStep;
+  | EmitEventStep
+  | ControlStep;
 
 export interface PluginStep {
   kind: 'plugin';
@@ -85,6 +86,7 @@ export interface PluginStep {
   entry: CatalogEntry;
   params: Record<string, unknown>;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface InvokeStep {
@@ -92,6 +94,7 @@ export interface InvokeStep {
   name: string | null;
   invokeSpec: Record<string, unknown>;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface BlockStep {
@@ -99,6 +102,7 @@ export interface BlockStep {
   name: string | null;
   steps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface IfElseStep {
@@ -108,6 +112,7 @@ export interface IfElseStep {
   thenSteps: ResolvedStep[];
   elseSteps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface MatchStep {
@@ -116,6 +121,7 @@ export interface MatchStep {
   scrutinee: string;
   cases: ResolvedMatchCase[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface NamedBranch {
@@ -132,6 +138,7 @@ export interface ParallelStep {
   cancelRemaining?: boolean;
   collectionTimeout?: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface TryCatchFinallyStep {
@@ -141,6 +148,7 @@ export interface TryCatchFinallyStep {
   catchSteps: ResolvedStep[];
   finallySteps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface SelectStep {
@@ -148,6 +156,7 @@ export interface SelectStep {
   name: string | null;
   branches: SelectBranch[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface BarrierStep {
@@ -156,6 +165,7 @@ export interface BarrierStep {
   awaitSteps: string[];
   timeout?: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface QuorumStep {
@@ -165,6 +175,7 @@ export interface QuorumStep {
   ofSteps: string[];
   timeout?: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface DelayStep {
@@ -172,6 +183,7 @@ export interface DelayStep {
   name: string | null;
   duration: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface RaceStep {
@@ -179,6 +191,7 @@ export interface RaceStep {
   name: string | null;
   steps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface EmitEventStep {
@@ -187,20 +200,33 @@ export interface EmitEventStep {
   events: CloudEventSpec[];
   emitTo: 'scope' | 'pages-event' | 'both';
   decorators: Record<string, unknown>;
+  annotations: unknown[];
+}
+
+export interface ControlStep {
+  kind: 'control';
+  name: string | null;
+  control: 'pause' | 'resume';
+  target: string;
+  decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 const RESERVED_KEYS = new Set([
-  'step', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
+  'step', 'name', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
   'try', 'catch', 'finally', 'select',
   'on-success', 'on-failure', 'forEach', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'parallel', 'semaphore', 'barrier', 'quorum', 'race',
+  'parallel', 'concurrent', 'semaphore', 'barrier', 'quorum', 'race',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'advance-after', 'cancel-remaining', 'collection-timeout',
   'emit-event', 'emit-to',
   'simulation',
+  'pause', 'resume',
+  'at', 'on-complete', 'resource', 'priority', 'capture',
+  'vars', 'params',
 ]);
 
 const DECORATOR_KEYS = new Set([
@@ -211,6 +237,7 @@ const DECORATOR_KEYS = new Set([
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'simulation',
+  'at', 'on-complete', 'resource', 'priority', 'capture',
 ]);
 
 const PROMOTABLE_DECORATORS = new Set(['forEach', 'retry', 'timeout', 'when', 'mutex', 'loop']);
@@ -221,7 +248,8 @@ const REMOVED_KEYS = new Set(['steps', 'do']);
 
 const COMBINED_KEY_PREFIXES = new Set([
   ...PROMOTABLE_DECORATORS,
-  'block', 'parallel', 'try', 'select', 'race', 'if', 'match',
+  'block', 'parallel', 'concurrent', 'try', 'select', 'race', 'if', 'match',
+  'barrier', 'quorum',
 ]);
 
 function matchCombinedKey(key: string): string | null {
@@ -263,20 +291,26 @@ export class Walker {
     let invokeSpec: Record<string, unknown> | null = null;
     const decorators: Record<string, unknown> = {};
     const companions: Record<string, unknown> = {};
+    const unknownKeys: [string, unknown][] = [];
 
     for (const [key, value] of Object.entries(step)) {
       if (REMOVED_KEYS.has(key)) {
         throw new Error(`${stepPath}: '${key}' is no longer valid — use inline sibling keys, or 'block' for multiple actions`);
       }
       if (key === 'step') {
+        throw new Error(`${stepPath}: use 'name:' instead of 'step:' for step naming, or combined-key form`);
+      } else if (key === 'name') {
         stepName = value as string;
         if (stepName !== null && seenNames.has(stepName)) {
           throw new Error(`${stepPath}: duplicate step name '${stepName}'`);
         }
         if (stepName !== null) seenNames.add(stepName);
       } else if (key === 'invoke') {
-        invokeSpec = value as Record<string, unknown>;
-      } else if (key === 'block' || key === 'parallel' || key === 'try' || key === 'select' || key === 'race') {
+        throw new Error(`${stepPath}: verbose 'invoke:' form is no longer valid — use compact invoke syntax (e.g., 'rest-request GET /url:')`);
+      } else if (key === 'block' || key === 'parallel' || key === 'concurrent' || key === 'try' || key === 'select' || key === 'race') {
+        structuralType = key === 'concurrent' ? 'parallel' : key;
+        structuralValue = value;
+      } else if (key === 'pause' || key === 'resume') {
         structuralType = key;
         structuralValue = value;
       } else if (key === 'if' && step['then'] !== undefined) {
@@ -306,19 +340,20 @@ export class Walker {
         structuralValue = value;
       } else if (DECORATOR_KEYS.has(key) && !(key === 'if' && step['then'] !== undefined)) {
         decorators[key] = value;
-      } else if (matchCombinedKey(key) && Array.isArray(value)) {
+      } else if (matchCombinedKey(key) && (Array.isArray(value) || (typeof value === 'object' && value !== null))) {
         if (structuralType) {
           throw new Error(`${stepPath}: step has both structural type '${structuralType}' and structural decorator '${key}'`);
         }
         const spaceIdx = key.indexOf(' ');
         const prefix = key.substring(0, spaceIdx);
         const param = key.substring(spaceIdx + 1);
+        const normalizedPrefix = prefix === 'concurrent' ? 'parallel' : prefix;
         if (PROMOTABLE_DECORATORS.has(prefix)) {
           structuralType = prefix;
           structuralValue = { [param]: value };
         } else {
           stepName = stepName ?? param;
-          structuralType = prefix;
+          structuralType = normalizedPrefix;
           structuralValue = value;
         }
       } else if (!RESERVED_KEYS.has(key)) {
@@ -328,8 +363,33 @@ export class Walker {
           actionValue = value;
           actionEntry = resolved;
         } else {
-          throw new Error(`${stepPath}: unknown step key '${key}' — not a reserved keyword and not found in catalog`);
+          const spaceIdx = key.indexOf(' ');
+          if (spaceIdx > 0) {
+            const prefix = key.substring(0, spaceIdx);
+            const suffix = key.substring(spaceIdx + 1);
+            const prefixResolved = catalog.resolve(prefix) ?? catalog.resolveInferred?.(prefix);
+            if (prefixResolved) {
+              actionKey = prefix;
+              const params = (typeof value === 'object' && value !== null && !Array.isArray(value))
+                ? { _subject: suffix, ...(value as Record<string, unknown>) }
+                : { _subject: suffix };
+              actionValue = params;
+              actionEntry = prefixResolved;
+            } else {
+              unknownKeys.push([key, value]);
+            }
+          } else {
+            unknownKeys.push([key, value]);
+          }
         }
+      }
+    }
+
+    if (unknownKeys.length > 0) {
+      const canAbsorb = actionEntry?.definition.absorbSiblings === true;
+      if (!canAbsorb) {
+        const [firstKey] = unknownKeys[0]!;
+        throw new Error(`${stepPath}: unknown step key '${firstKey}' — not a reserved keyword and not found in catalog`);
       }
     }
 
@@ -350,6 +410,10 @@ export class Walker {
       throw new Error(`${stepPath}: step has both structural type '${structuralType}' and invoke`);
     }
 
+    if (structuralType === 'pause' || structuralType === 'resume') {
+      return { kind: 'control', name: stepName, control: structuralType, target: structuralValue as string, decorators, annotations: [] };
+    }
+
     if (structuralType === 'emit-event') {
       const emitTo = (step['emit-to'] as string | undefined) ?? 'both';
       if (emitTo !== 'scope' && emitTo !== 'pages-event' && emitTo !== 'both') {
@@ -368,12 +432,12 @@ export class Walker {
         }
         return spec as unknown as CloudEventSpec;
       });
-      return { kind: 'emit-event', name: stepName, events, emitTo: emitTo as 'scope' | 'pages-event' | 'both', decorators };
+      return { kind: 'emit-event', name: stepName, events, emitTo: emitTo as 'scope' | 'pages-event' | 'both', decorators, annotations: [] };
     }
 
     if (structuralType === 'block') {
       const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → block`, seenNames);
-      return { kind: 'block', name: stepName, steps: substeps, decorators };
+      return { kind: 'block', name: stepName, steps: substeps, decorators, annotations: [] };
     }
 
     if (structuralType === 'parallel') {
@@ -402,6 +466,7 @@ export class Walker {
         ...(cancelRemaining !== undefined ? { cancelRemaining } : {}),
         ...(collectionTimeout !== undefined ? { collectionTimeout } : {}),
         decorators,
+        annotations: [],
       };
     }
 
@@ -410,7 +475,7 @@ export class Walker {
       const elseRaw = (companions['else'] as Record<string, unknown>[] | undefined) ?? [];
       const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, `${stepPath} → then`, seenNames);
       const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, `${stepPath} → else`, seenNames);
-      return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators };
+      return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators, annotations: [] };
     }
 
     if (structuralType === 'match') {
@@ -445,7 +510,7 @@ export class Walker {
         }
         return { pattern, guard, steps: caseSteps };
       });
-      return { kind: 'match', name: stepName, scrutinee: structuralValue as string, cases, decorators };
+      return { kind: 'match', name: stepName, scrutinee: structuralValue as string, cases, decorators, annotations: [] };
     }
 
     if (structuralType === 'try') {
@@ -454,7 +519,7 @@ export class Walker {
       const finallyRaw = (companions['finally'] as Record<string, unknown>[] | undefined) ?? [];
       const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, `${stepPath} → catch`, seenNames);
       const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, `${stepPath} → finally`, seenNames);
-      return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators };
+      return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators, annotations: [] };
     }
 
     if (structuralType === 'select') {
@@ -479,12 +544,12 @@ export class Walker {
         }
         throw new Error(`${branchPath}: select branch must have subscribe or wait`);
       });
-      return { kind: 'select', name: stepName, branches, decorators };
+      return { kind: 'select', name: stepName, branches, decorators, annotations: [] };
     }
 
     if (structuralType === 'race') {
       const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → race`, seenNames);
-      return { kind: 'race', name: stepName, steps: substeps, decorators };
+      return { kind: 'race', name: stepName, steps: substeps, decorators, annotations: [] };
     }
 
     if (structuralType === 'barrier') {
@@ -492,7 +557,7 @@ export class Walker {
       const awaitSteps = barrierVal['await'] as string[];
       const timeoutRaw = barrierVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'barrier', name: stepName, awaitSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
+      return { kind: 'barrier', name: stepName, awaitSteps, ...(timeout !== undefined ? { timeout } : {}), decorators, annotations: [] };
     }
 
     if (structuralType === 'quorum') {
@@ -501,7 +566,7 @@ export class Walker {
       const ofSteps = quorumVal['of'] as string[];
       const timeoutRaw = quorumVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
+      return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators, annotations: [] };
     }
 
     if (structuralType && PROMOTABLE_DECORATORS.has(structuralType)) {
@@ -521,29 +586,34 @@ export class Walker {
         substeps = Walker.resolveAtDepth(stepsRaw as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames);
         decorators[structuralType] = param;
       }
-      return { kind: 'block', name: stepName, steps: substeps, decorators };
+      return { kind: 'block', name: stepName, steps: substeps, decorators, annotations: [] };
     }
 
     if (!structuralType && !actionKey && !invokeSpec && decorators['delay'] !== undefined) {
       const duration = parseDurationMs(decorators['delay'] as string);
       const { delay: _, ...rest } = decorators;
-      return { kind: 'delay', name: stepName, duration, decorators: rest };
+      return { kind: 'delay', name: stepName, duration, decorators: rest, annotations: [] };
     }
 
     if (!structuralType && !actionKey && !invokeSpec && decorators['simulation'] !== undefined) {
-      return { kind: 'delay', name: stepName, duration: 0, decorators };
+      return { kind: 'delay', name: stepName, duration: 0, decorators, annotations: [] };
     }
 
     if (invokeSpec) {
-      return { kind: 'invoke', name: stepName, invokeSpec, decorators };
+      return { kind: 'invoke', name: stepName, invokeSpec, decorators, annotations: [] };
     }
 
     if (actionKey) {
       const entry = actionEntry ?? catalog.resolve(actionKey)!;
-      const params = (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue))
-        ? actionValue as Record<string, unknown>
-        : { value: actionValue };
-      return { kind: 'plugin', name: stepName, entry, params, decorators };
+      let params: Record<string, unknown>;
+      if (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue)) {
+        params = { ...(actionValue as Record<string, unknown>) };
+      } else {
+        const primaryKey = primaryInput(entry.definition);
+        params = { [primaryKey]: actionValue };
+      }
+      for (const [k, v] of unknownKeys) params[k] = v;
+      return { kind: 'plugin', name: stepName, entry, params, decorators, annotations: [] };
     }
 
     throw new Error(`${stepPath}: no step type identified. Keys: ${Object.keys(step).join(', ')}`);
@@ -606,6 +676,13 @@ export class Walker {
     }
     return { type: 'value', value: raw };
   }
+}
+
+function primaryInput(definition: import('./types').Definition): string {
+  for (const [name, param] of Object.entries(definition.inputs)) {
+    if (param.required) return name;
+  }
+  return '_subject';
 }
 
 function parseDurationMs(duration: string): number {

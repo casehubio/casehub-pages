@@ -14,7 +14,7 @@ import { CsvParser } from './csv-parser.js';
 import type { CsvDataSource } from './csv-parser.js';
 import { ImportExpander } from './import-expander.js';
 
-const YAML_CORE_KEYS = new Set(['variables', 'modules', 'imports', 'iterations', 'data']);
+const YAML_CORE_KEYS = new Set(['variables', 'vars', 'params', 'modules', 'imports', 'iterations', 'data', 'pools', 'orchestration']);
 
 interface ExpandOptions {
   strict?: boolean;
