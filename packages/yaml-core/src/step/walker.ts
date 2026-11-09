@@ -1,5 +1,7 @@
 import type { MatchPattern } from '../match.js';
 import type { CloudEventSpec } from './types.js';
+import type { FusedStageDescriptor } from './streaming-types.js';
+import { FusionPass } from './fusion-pass.js';
 import { AnnotationParser } from '../annotation/annotation-parser.js';
 import { StepPositionScanner } from '../annotation/step-position-scanner.js';
 import { AnnotationExtractor } from '../annotation/annotation-extractor.js';
@@ -84,7 +86,8 @@ export type ResolvedStep =
   | DelayStep
   | RaceStep
   | EmitEventStep
-  | ControlStep;
+  | ControlStep
+  | FusedPipelineStep;
 
 export interface PluginStep {
   kind: 'plugin';
@@ -218,6 +221,14 @@ export interface ControlStep {
   annotations: unknown[];
 }
 
+export interface FusedPipelineStep {
+  kind: 'fused-pipeline';
+  name: string | null;
+  stages: FusedStageDescriptor[];
+  decorators: Record<string, unknown>;
+  annotations: unknown[];
+}
+
 const RESERVED_KEYS = new Set([
   'step', 'name', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
   'try', 'catch', 'finally', 'select',
@@ -279,7 +290,7 @@ export class Walker {
     }
     const resolved = Walker.resolveAtDepth(steps, catalog, 0, 'root', seenNames, annotationMap);
     Walker.validateRefs(resolved, seenNames);
-    return resolved;
+    return FusionPass.fuse(resolved);
   }
 
   private static resolveAtDepth(

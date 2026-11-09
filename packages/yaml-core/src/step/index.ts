@@ -26,10 +26,13 @@ export type {
   ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, DelayStep, RaceStep, SelectBranch, ResolvedMatchCase,
-  EmitEventStep, ControlStep,
+  EmitEventStep, ControlStep, FusedPipelineStep,
   Action, Result, ServiceRegistry, Catalog, CatalogEntry,
 } from './walker.js';
 export { Walker, MapServiceRegistry, stepSuccess, stepFailure, stepFailureWithCategory } from './walker.js';
+
+export type { StreamingTypeInfo, StreamingStepFactory, FusedStageDescriptor } from './streaming-types.js';
+export { FusionPass } from './fusion-pass.js';
 
 export type { ErrorCategory } from './error-category.js';
 export { ERROR_CATEGORIES } from './error-category.js';

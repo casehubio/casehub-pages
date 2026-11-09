@@ -1,5 +1,6 @@
 import type { ParameterType } from '../types.js';
 import type { Portability } from './portability.js';
+import type { StreamingTypeInfo } from './streaming-types.js';
 
 export interface Parameter {
   type: ParameterType;
@@ -126,6 +127,7 @@ export interface Definition {
   invoke?: InvokeBinding;
   portability?: Portability;
   absorbSiblings?: boolean;
+  streamingType?: StreamingTypeInfo;
 }
 
 export interface DefinitionFile {
