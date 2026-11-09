@@ -69,6 +69,10 @@ export { GraphqlInvokeHandler } from './invoke/graphql-handler.js';
 export { ScriptInvokeHandler } from './invoke/script-handler.js';
 export { AgentInvokeHandler } from './invoke/agent-handler.js';
 export { ProcessInvokeHandler } from './invoke/process-handler.js';
+export { AgentSessionOpenHandler } from './invoke/agent-session-open-handler.js';
+export { AgentSessionQueryHandler } from './invoke/agent-session-query-handler.js';
+export { AgentSessionClearHandler } from './invoke/agent-session-clear-handler.js';
+export { AgentSessionCloseHandler } from './invoke/agent-session-close-handler.js';
 
 export { YamlDefinitionSource } from './sources/yaml-source.js';
 export { McpToolSource } from './sources/mcp-source.js';
