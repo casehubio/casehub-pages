@@ -3,8 +3,9 @@ import type {
   Action, Result, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
   BarrierStep, QuorumStep, CatalogEntry, InvokeStep,
-  DelayStep, RaceStep, ControlStep,
+  DelayStep, RaceStep, ControlStep, FusedPipelineStep,
 } from './walker.js';
+import type { StreamingStepFactory } from './streaming-types.js';
 import { stepSuccess, stepFailure, stepFailureWithCategory, MapServiceRegistry } from './walker.js';
 import { StructuralEvaluator } from './structural-evaluator.js';
 import type { Context } from './decorator-chain.js';
@@ -709,6 +710,88 @@ describe('StructuralEvaluator', () => {
 
       expect(result.kind).toBe('success');
       expect(scope.consumer('unknown-consumer').isPaused()).toBe(true);
+    });
+  });
+
+  describe('fused pipeline step', () => {
+    const textToJsonFactory: StreamingStepFactory = async function* (_params, input) {
+      const parts: string[] = [];
+      for await (const chunk of input) parts.push(chunk as string);
+      yield { text: parts.join(''), processed: true };
+    };
+
+    const jsonToTextFactory: StreamingStepFactory = async function* (_params, input) {
+      for await (const item of input) yield `result: ${JSON.stringify(item)}`;
+    };
+
+    const seedFactory: StreamingStepFactory = async function* (params) {
+      yield params['seed'] ?? 'hello';
+    };
+
+    function fusedStep(stages: Array<{ name: string; factory: StreamingStepFactory }>): FusedPipelineStep {
+      return {
+        kind: 'fused-pipeline',
+        name: stages[stages.length - 1].name,
+        stages: stages.map(s => ({
+          stepName: s.name,
+          actionName: s.name,
+          params: {},
+          decorators: {},
+          inputKey: 'input',
+          factory: s.factory,
+        })),
+        decorators: {},
+        annotations: [],
+      };
+    }
+
+    it('evaluates two-stage pipeline', async () => {
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([
+        { name: 'seed', factory: seedFactory },
+        { name: 'toText', factory: jsonToTextFactory },
+      ]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+    });
+
+    it('three-stage pipeline chains correctly', async () => {
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([
+        { name: 'seed', factory: seedFactory },
+        { name: 'toJson', factory: textToJsonFactory },
+        { name: 'toText', factory: jsonToTextFactory },
+      ]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+    });
+
+    it('returns failure when a stage throws', async () => {
+      const failingFactory: StreamingStepFactory = async function* () {
+        throw new Error('stage exploded');
+      };
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([
+        { name: 'fail', factory: failingFactory },
+        { name: 'never', factory: jsonToTextFactory },
+      ]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('failure');
+      if (result.kind === 'failure') expect(result.message).toContain('stage exploded');
+    });
+
+    it('single-object output is unwrapped', async () => {
+      const objectFactory: StreamingStepFactory = async function* () {
+        yield { key: 'value', count: 42 };
+      };
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([{ name: 'obj', factory: objectFactory }]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      if (result.kind === 'success') {
+        expect(result.output.key).toBe('value');
+        expect(result.output.count).toBe(42);
+      }
     });
   });
 });
