@@ -39,6 +39,7 @@ export { PagesDelayStep } from './delay-step.js';
 export { EmitEventStepComponent } from './emit-event-step.js';
 
 export { ControlStepComponent } from './control-step.js';
+export { FusedPipelineStepComponent } from './fused-pipeline-step.js';
 
 export { PagesStepViewer } from './pages-step-viewer.js';
 export { renderDiffContent } from './diff-dispatch.js';

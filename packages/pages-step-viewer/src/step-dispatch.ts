@@ -15,6 +15,7 @@ import './select-view.js';
 import './delay-step.js';
 import './emit-event-step.js';
 import './control-step.js';
+import './fused-pipeline-step.js';
 
 const SM_ACTIONS = new Set(['sm-create']);
 
@@ -50,6 +51,8 @@ export function renderStepContent(step: ResolvedStep): TemplateResult {
       return html`<emit-event-step .step=${step}></emit-event-step>`;
     case 'control':
       return html`<control-step .step=${step}></control-step>`;
+    case 'fused-pipeline':
+      return html`<fused-pipeline-step .step=${step}></fused-pipeline-step>`;
     default:
       return html`<error-step kind="${(step as ResolvedStep).kind}" message="unsupported step type"></error-step>`;
   }
