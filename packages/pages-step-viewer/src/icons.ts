@@ -14,6 +14,12 @@ const ICON_MAP: Record<string, ActionIcon> = {
   await:    { symbol: '◈', colorClass: 'await' },
   graphql:  { symbol: '◉', colorClass: 'graphql' },
   delay:    { symbol: '⏱', colorClass: 'delay' },
+  'rest-request':       { symbol: '⇄', colorClass: 'rest' },
+  'process':            { symbol: '⊞', colorClass: 'process' },
+  'agent-invoke':       { symbol: '◈', colorClass: 'agent' },
+  'mcp':                { symbol: '⊛', colorClass: 'mcp' },
+  'emit-event':         { symbol: '◇', colorClass: 'event' },
+  'verify-simulation':  { symbol: '✓', colorClass: 'assert' },
 };
 
 export function getActionIcon(actionName: string): ActionIcon {

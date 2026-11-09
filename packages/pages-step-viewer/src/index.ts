@@ -17,7 +17,8 @@ export type { ErrorCategory } from './yaml-error-banner.js';
 export { renderStepContent } from './step-dispatch.js';
 
 export { DecoratorBadge } from './decorator-badge.js';
-export type { DecoratorKind } from './decorator-badge.js';
+export { renderDecorators } from './decorator-config.js';
+export type { DecoratorConfig } from './decorator-config.js';
 
 export { getActionIcon } from './icons.js';
 export type { ActionIcon } from './icons.js';
@@ -36,6 +37,9 @@ export { renderDiffMarker, renderFieldChanges, diffTokenStyles, diffMarkerStyles
 export { PagesDelayStep } from './delay-step.js';
 
 export { EmitEventStepComponent } from './emit-event-step.js';
+
+export { ControlStepComponent } from './control-step.js';
+export { FusedPipelineStepComponent } from './fused-pipeline-step.js';
 
 export { PagesStepViewer } from './pages-step-viewer.js';
 export { renderDiffContent } from './diff-dispatch.js';
