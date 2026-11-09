@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import type { PluginStep } from '@casehubio/yaml-core/step';
 import { getActionIcon } from './icons.js';
 import { parseExpressions } from './expression.js';
-import './decorator-badge.js';
+import { renderDecorators } from './decorator-config.js';
 import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
@@ -124,7 +124,7 @@ export class StepCard extends LitElement {
       <div class="step-icon ${icon.colorClass}">${icon.symbol}</div>
       <span class="step-action">${actionName}</span>
       ${this.renderParams()}
-      ${this.renderDecorators()}
+      ${renderDecorators(this.step.decorators)}
       ${renderDiffMarker(this.diffState)}
       ${renderFieldChanges(this.fieldChanges)}
     `;
@@ -161,49 +161,5 @@ export class StepCard extends LitElement {
         : html`<span class="expr ${s.type}">${s.value}</span>`
     )}`;
   }
-
-  private renderDecorators(): TemplateResult | typeof nothing {
-    const decs = this.step.decorators;
-    if (!decs || Object.keys(decs).length === 0) return nothing;
-
-    const badges: TemplateResult[] = [];
-
-    if (decs.retry != null) {
-      badges.push(html`<decorator-badge kind="retry" label="retry: ${decs.retry}"></decorator-badge>`);
-    }
-    if (decs.timeout != null) {
-      badges.push(html`<decorator-badge kind="timeout" label="${decs.timeout}ms"></decorator-badge>`);
-    }
-    if (decs.loop != null) {
-      badges.push(html`<decorator-badge kind="loop" label="${decs.loop}"></decorator-badge>`);
-    }
-    if (decs.when != null || decs.if != null) {
-      badges.push(html`<decorator-badge kind="when" label="${decs.when ?? decs.if}"></decorator-badge>`);
-    }
-    if (decs.mutex != null) {
-      badges.push(html`<decorator-badge kind="mutex" label="${decs.mutex}"></decorator-badge>`);
-    }
-    if (decs.forEach != null) {
-      const fe = decs.forEach;
-      const label = typeof fe === 'string'
-        ? fe
-        : `${(fe as Record<string, unknown>).item ?? ''} in ${(fe as Record<string, unknown>).collection ?? ''}`;
-      badges.push(html`<decorator-badge kind="foreach" label="${label}"></decorator-badge>`);
-    }
-    if (decs.publish != null) {
-      badges.push(html`<decorator-badge kind="publish" label="→ ${decs.publish}"></decorator-badge>`);
-    }
-    if (decs.from != null) {
-      badges.push(html`<decorator-badge kind="from" label="← ${decs.from}"></decorator-badge>`);
-    }
-    if (decs.cancel != null) {
-      badges.push(html`<decorator-badge kind="cancel" label="cancel: ${decs.cancel}"></decorator-badge>`);
-    }
-
-    return badges.length > 0
-      ? html`<div class="decorators">${badges}</div>`
-      : nothing;
-  }
-
 
 }

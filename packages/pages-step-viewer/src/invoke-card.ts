@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { InvokeStep } from '@casehubio/yaml-core/step';
-import './decorator-badge.js';
+import { renderDecorators } from './decorator-config.js';
 import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
@@ -163,7 +163,7 @@ export class InvokeCard extends LitElement {
           `)}
         </div>
       ` : nothing}
-      ${this.renderDecorators()}
+      ${renderDecorators(this.step.decorators)}
       ${renderDiffMarker(this.diffState)}
       ${renderFieldChanges(this.fieldChanges)}
     `;
@@ -195,12 +195,4 @@ export class InvokeCard extends LitElement {
     return String(v);
   }
 
-  private renderDecorators(): TemplateResult | typeof nothing {
-    const decs = this.step.decorators;
-    if (!decs || Object.keys(decs).length === 0) return nothing;
-    const badges: TemplateResult[] = [];
-    if (decs.retry != null) badges.push(html`<decorator-badge kind="retry" label="retry: ${decs.retry}"></decorator-badge>`);
-    if (decs.timeout != null) badges.push(html`<decorator-badge kind="timeout" label="${decs.timeout}ms"></decorator-badge>`);
-    return badges.length > 0 ? html`<div class="decorators">${badges}</div>` : nothing;
-  }
 }
