@@ -5,6 +5,11 @@ import type {
   Definition, InvokeBinding, RestBinding, McpBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
 } from '../types.js';
+import type { SessionPipeline, AgentSession, AgentEvent, AgentSessionInit, ClearingPolicy } from './session-pipeline.js';
+import { AgentSessionOpenHandler } from './agent-session-open-handler.js';
+import { AgentSessionQueryHandler } from './agent-session-query-handler.js';
+import { AgentSessionClearHandler } from './agent-session-clear-handler.js';
+import { AgentSessionCloseHandler } from './agent-session-close-handler.js';
 
 export const MOCK_REST_RESPONSES: Record<string, Record<string, unknown>> = {
   'GET /api/users': { status: 200, body: [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] },
@@ -170,7 +175,24 @@ export function createMockProcessHandler(
   return new MockProcessInvokeHandler(responses);
 }
 
+class MockSessionPipeline implements SessionPipeline {
+  private sessions = new Map<string, AgentSession>();
+  async openSession(name: string, _init: AgentSessionInit, _policy: ClearingPolicy): Promise<void> {
+    const session: AgentSession = {
+      async *query(_prompt: string): AsyncIterable<AgentEvent> {
+        yield { kind: 'text-delta', text: 'mock response' };
+        yield { kind: 'invocation-complete', inputTokens: 5, outputTokens: 3, durationMs: 50 };
+      },
+      async clear() {},
+    };
+    this.sessions.set(name, session);
+  }
+  sessionFor(name: string): AgentSession | undefined { return this.sessions.get(name); }
+  async releaseSession(name: string): Promise<void> { this.sessions.delete(name); }
+}
+
 export function createMockInvokeHandlers(): InvokeHandler[] {
+  const pipeline = new MockSessionPipeline();
   return [
     createMockRestHandler(),
     createMockMcpHandler(),
@@ -178,5 +200,9 @@ export function createMockInvokeHandlers(): InvokeHandler[] {
     createMockScriptHandler(),
     createMockAgentHandler(),
     createMockProcessHandler(),
+    new AgentSessionOpenHandler(pipeline),
+    new AgentSessionQueryHandler(pipeline),
+    new AgentSessionClearHandler(pipeline),
+    new AgentSessionCloseHandler(pipeline),
   ];
 }

@@ -2,7 +2,7 @@ import type {
   ResolvedStep, Result, PluginStep, BlockStep, ParallelStep,
   IfElseStep, MatchStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, InvokeStep, DelayStep, RaceStep,
-  EmitEventStep, ControlStep,
+  EmitEventStep, ControlStep, FusedPipelineStep,
 } from './walker.js';
 import { stepSuccess, stepFailure } from './walker.js';
 import { mergeAbortSignals } from './abort-utils.js';
@@ -64,6 +64,7 @@ export class StructuralEvaluator {
       case 'race': return this.evaluateRace(step, context);
       case 'emit-event': return this.evaluateEmitEvent(step, context);
       case 'control': return this.evaluateControl(step, context);
+      case 'fused-pipeline': return this.evaluateFusedPipeline(step, context);
     }
   }
 
@@ -350,5 +351,32 @@ export class StructuralEvaluator {
       handle.resume();
     }
     return stepSuccess({ control: step.control, target: step.target });
+  }
+
+  private async evaluateFusedPipeline(step: FusedPipelineStep, context: Context): Promise<Result> {
+    const emptyIterable: AsyncIterable<unknown> = { async *[Symbol.asyncIterator]() {} };
+    let currentIterable: AsyncIterable<unknown> = emptyIterable;
+
+    try {
+      for (const stage of step.stages) {
+        const resolvedParams = context.resolver.resolveMap(stage.params, stage.stepName ?? 'anonymous');
+        currentIterable = stage.factory(resolvedParams, currentIterable, context.services);
+      }
+
+      const outputs: unknown[] = [];
+      for await (const value of currentIterable) {
+        outputs.push(value);
+      }
+
+      const output = outputs.length === 1 && typeof outputs[0] === 'object' && outputs[0] !== null
+        ? outputs[0] as Record<string, unknown>
+        : { values: outputs };
+
+      return stepSuccess(output);
+    } catch (err) {
+      return stepFailure(
+        `Fused pipeline '${step.name ?? 'anonymous'}' failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 }
