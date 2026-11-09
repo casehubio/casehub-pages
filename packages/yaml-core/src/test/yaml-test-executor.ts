@@ -4,7 +4,7 @@ import { StructuralEvaluator } from '../step/structural-evaluator.js';
 import type { Context } from '../step/decorator-chain.js';
 import { VariableResolver } from '../variable-resolver.js';
 import type { VariableSource } from '../types.js';
-import { SimulationRuntime } from '../step/simulation-runtime.js';
+import { SimulationRuntime } from '../simulation/runtime.js';
 import { SimulateBlockParser } from './simulate-block-parser.js';
 import type { TestFile, TestCase } from './yaml-test-parser.js';
 import { TestCatalog } from './plugins/test-catalog.js';
@@ -86,13 +86,13 @@ export class YamlTestExecutor {
 
     try {
       if (testFile.simulate) {
-        const config = SimulateBlockParser.parse(testFile.simulate);
-        runtime.pushOverlay(config);
+        const { config, corpus } = SimulateBlockParser.parseToSimulation(testFile.simulate);
+        runtime.pushOverlay(config, corpus);
       }
 
       if (testCase.simulate) {
-        const config = SimulateBlockParser.parse(testCase.simulate);
-        runtime.pushOverlay(config);
+        const { config, corpus } = SimulateBlockParser.parseToSimulation(testCase.simulate);
+        runtime.pushOverlay(config, corpus);
       }
 
       const resolver = this.buildResolver(testFile.vars, testFile.params);

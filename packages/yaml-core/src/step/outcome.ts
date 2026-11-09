@@ -1,4 +1,4 @@
-import type { JournalEntry } from './simulation-runtime.js';
+import type { JournalEntry } from '../simulation/types.js';
 
 export interface StepOutcomeEntry {
   readonly name: string;

@@ -23,6 +23,38 @@ import type { ProfileSource } from './profile.js';
 
 const IDENTITY_EXTRACTOR: KeyExtractor<unknown> = (input) => String(input);
 
+interface LegacyConfig {
+  strategies: Record<string, string>;
+  corpus: Array<{ file: string } | { inline: Record<string, Array<{ input: unknown; output: unknown; realism?: DataRealism }>> }>;
+  capture: string[];
+  fallthroughRealism?: Record<string, DataRealism>;
+}
+
+function isLegacyConfig(config: unknown): config is LegacyConfig {
+  return typeof config === 'object' && config !== null
+    && 'strategies' in config && typeof (config as Record<string, unknown>)['strategies'] === 'object'
+    && !('strategyFor' in config);
+}
+
+function convertLegacy(legacy: LegacyConfig): { config: SimulationConfig; corpus: SimulationCorpus<unknown, unknown> } {
+  const corpus = new InMemorySimulationCorpus<unknown, unknown>();
+  for (const entry of legacy.corpus) {
+    if ('inline' in entry) {
+      for (const [qn, data] of Object.entries(entry.inline)) {
+        for (const datum of data) corpus.record(qn, '', datum.input, datum.output);
+      }
+    }
+  }
+  return {
+    config: new MapSimulationConfig({
+      strategies: legacy.strategies,
+      capture: legacy.capture,
+      fallthroughRealism: legacy.fallthroughRealism,
+    }),
+    corpus,
+  };
+}
+
 function resolveAlias(name: string): string {
   switch (name) {
     case 'seq': return 'sequential';
@@ -63,12 +95,24 @@ export class SimulationRuntime {
     this._profileSource = profileSource;
   }
 
-  pushOverlay(config: SimulationConfig, corpus?: SimulationCorpus<unknown, unknown>): SimulationOverlay {
-    const overlay = new SimulationOverlay(config, corpus ?? new InMemorySimulationCorpus());
+  pushOverlay(config: SimulationConfig | LegacyConfig, corpus?: SimulationCorpus<unknown, unknown>): SimulationOverlay {
+    let effectiveConfig: SimulationConfig;
+    let effectiveCorpus: SimulationCorpus<unknown, unknown>;
+
+    if (isLegacyConfig(config)) {
+      const converted = convertLegacy(config);
+      effectiveConfig = converted.config;
+      effectiveCorpus = converted.corpus;
+    } else {
+      effectiveConfig = config;
+      effectiveCorpus = corpus ?? new InMemorySimulationCorpus();
+    }
+
+    const overlay = new SimulationOverlay(effectiveConfig, effectiveCorpus);
     this.overlayStack.push(overlay);
     this.strategyCache.clear();
-    for (const qn of config.corpusSelectionKeys()) {
-      const sel = config.corpusSelection(qn);
+    for (const qn of effectiveConfig.corpusSelectionKeys()) {
+      const sel = effectiveConfig.corpusSelection(qn);
       if (sel) this.buildSelector(qn, sel);
     }
     return overlay;

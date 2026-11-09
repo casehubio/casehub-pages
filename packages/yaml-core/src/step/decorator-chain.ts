@@ -12,8 +12,9 @@ import { parsePriority, Priority } from '../orchestration/priority.js';
 import { FromDecorator } from './from-decorator.js';
 import { CancelDecorator } from './cancel-decorator.js';
 import { BackgroundDecorator } from './background-decorator.js';
-import { SimulationRuntime } from './simulation-runtime.js';
-import type { SimulationConfig, CorpusEntry } from './simulation-runtime.js';
+import { SimulationRuntime } from '../simulation/runtime.js';
+import { MapSimulationConfig } from '../simulation/config.js';
+import { InMemorySimulationCorpus } from '../simulation/in-memory-corpus.js';
 
 export interface Context {
   readonly params: Record<string, unknown>;
@@ -565,15 +566,22 @@ class SimulationDecorator implements DecoratedExecution {
     }
 
     const block = this.raw as Record<string, unknown>;
-    const corpus: CorpusEntry[] = (Array.isArray(block['corpus']) ? block['corpus'] : []).map(
-      (entry: unknown) => typeof entry === 'string' ? { file: entry } : entry as CorpusEntry,
-    );
-    const config: SimulationConfig = {
-      strategies: (block['strategies'] as Record<string, string>) ?? {},
-      corpus,
-      capture: (block['capture'] as string[]) ?? [],
-    };
-    runtime.pushOverlay(config);
+    const strategies = (block['strategies'] as Record<string, string>) ?? {};
+    const capture = (block['capture'] as string[]) ?? [];
+    const config = new MapSimulationConfig({ strategies, capture });
+    const corpus = new InMemorySimulationCorpus<unknown, unknown>();
+
+    const rawCorpus = Array.isArray(block['corpus']) ? block['corpus'] as Record<string, unknown>[] : [];
+    for (const entry of rawCorpus) {
+      if (typeof entry === 'object' && entry !== null && 'inline' in entry) {
+        const inline = entry['inline'] as Record<string, Array<{ input: unknown; output: unknown }>>;
+        for (const [qn, data] of Object.entries(inline)) {
+          for (const datum of data) corpus.record(qn, '', datum.input, datum.output);
+        }
+      }
+    }
+
+    runtime.pushOverlay(config, corpus);
     return this.next.execute(context);
   }
 }

@@ -1,8 +1,24 @@
-import type { SimulationConfig as LegacySimulationConfig, CorpusDatum, CorpusEntry } from '../step/simulation-runtime.js';
 import { MapSimulationConfig } from '../simulation/config.js';
 import type { MapSimulationConfigInit } from '../simulation/config.js';
 import { InMemorySimulationCorpus } from '../simulation/in-memory-corpus.js';
 import type { ExhaustionPolicy, CorpusSelectorConfig, InvocationRecord } from '../simulation/types.js';
+
+export interface CorpusDatum {
+  input: unknown;
+  output: unknown;
+  realism?: import('../simulation/types.js').DataRealism;
+}
+
+export type CorpusEntry =
+  | { file: string }
+  | { inline: Record<string, CorpusDatum[]> };
+
+export interface LegacySimulationConfig {
+  strategies: Record<string, string>;
+  corpus: CorpusEntry[];
+  capture: string[];
+  fallthroughRealism?: Record<string, import('../simulation/types.js').DataRealism>;
+}
 
 interface AliasSpec {
   qualifiedName: string;
@@ -189,4 +205,26 @@ export class SimulateBlockParser {
 
     return { config: new MapSimulationConfig(init), corpus };
   }
+}
+
+export function legacyConfigToSimulation(legacy: LegacySimulationConfig): SimulationParseResult {
+  const corpus = new InMemorySimulationCorpus<unknown, unknown>();
+
+  for (const entry of legacy.corpus) {
+    if ('inline' in entry) {
+      for (const [qualifiedName, data] of Object.entries(entry.inline)) {
+        for (const datum of data) {
+          corpus.record(qualifiedName, '', datum.input, datum.output);
+        }
+      }
+    }
+  }
+
+  const init: MapSimulationConfigInit = {
+    strategies: legacy.strategies,
+    capture: legacy.capture,
+    fallthroughRealism: legacy.fallthroughRealism,
+  };
+
+  return { config: new MapSimulationConfig(init), corpus };
 }

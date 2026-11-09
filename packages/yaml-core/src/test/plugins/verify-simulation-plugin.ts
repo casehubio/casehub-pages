@@ -1,7 +1,7 @@
 import type { Action, Result, CatalogEntry, ServiceRegistry } from '../../step/walker.js';
 import { stepSuccess, stepFailureWithCategory } from '../../step/walker.js';
 import type { Definition } from '../../step/types.js';
-import type { SimulationRuntime } from '../../step/simulation-runtime.js';
+import type { SimulationRuntime } from '../../simulation/runtime.js';
 
 const verifySimulationDefinition: Definition = {
   name: 'verify-simulation',

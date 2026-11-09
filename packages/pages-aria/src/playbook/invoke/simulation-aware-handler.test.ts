@@ -37,7 +37,7 @@ describe('SimulationAwareInvokeHandler', () => {
 
     const entries = runtime.allEntriesFor('cases.startCase');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.dataRealism).toBe('STRUCTURALLY_VALID');
+    expect(entries[0]!.dataRealism).toBe('DOMAIN_PLAUSIBLE');
   });
 
   it('records fallthrough when no strategy matches', async () => {
