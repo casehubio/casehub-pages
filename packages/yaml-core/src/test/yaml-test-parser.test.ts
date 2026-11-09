@@ -64,4 +64,25 @@ describe('YamlTestParser', () => {
     const result = YamlTestParser.parse(raw, yaml);
     expect(result.rawYaml).toBe(yaml);
   });
+
+  it('parses per-test simulate block', () => {
+    const raw = {
+      name: 'suite',
+      simulate: { agent: { strategy: 'sequential', corpus: [] } },
+      tests: [
+        { name: 'test1', steps: [] },
+        { name: 'test2', simulate: { agent: { strategy: 'key-lookup', corpus: [] } }, steps: [] },
+      ],
+    };
+    const result = YamlTestParser.parse(raw);
+    expect(result.tests[0]!.simulate).toBeUndefined();
+    expect(result.tests[1]!.simulate).toBeDefined();
+    expect(result.tests[1]!.simulate!['agent']).toEqual({ strategy: 'key-lookup', corpus: [] });
+  });
+
+  it('single-test shorthand does not expose per-test simulate', () => {
+    const raw = { name: 'single', steps: [{ log: 'x' }] };
+    const result = YamlTestParser.parse(raw);
+    expect(result.tests[0]!.simulate).toBeUndefined();
+  });
 });

@@ -1,6 +1,7 @@
 export interface TestCase {
   name: string;
   steps: Record<string, unknown>[];
+  simulate?: Record<string, unknown>;
 }
 
 export interface TestFile {
@@ -36,6 +37,7 @@ export class YamlTestParser {
     const tests = rawTests.map(t => ({
       name: (t['name'] as string) ?? 'unnamed',
       steps: (t['steps'] as Record<string, unknown>[]) ?? [],
+      ...(t['simulate'] ? { simulate: t['simulate'] as Record<string, unknown> } : {}),
     }));
 
     return {

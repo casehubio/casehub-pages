@@ -90,6 +90,11 @@ export class YamlTestExecutor {
         runtime.pushOverlay(config);
       }
 
+      if (testCase.simulate) {
+        const config = SimulateBlockParser.parse(testCase.simulate);
+        runtime.pushOverlay(config);
+      }
+
       const resolver = this.buildResolver(testFile.vars, testFile.params);
       const context: Context = {
         params: {},
