@@ -1,4 +1,4 @@
-export type ParameterType = 'STRING' | 'INTEGER' | 'NUMBER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT';
+export type ParameterType = 'STRING' | 'INTEGER' | 'NUMBER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT' | 'EXPRESSION';
 
 export type ParsedValue =
   | { type: 'string'; value: string }
@@ -39,6 +39,7 @@ export function canAcceptType(target: ParameterType, source: ParameterType): boo
   if (target === source) return true;
   if (target === 'STRING' && source !== 'ARRAY' && source !== 'OBJECT') return true;
   if (target === 'NUMBER' && source === 'INTEGER') return true;
+  if (target === 'EXPRESSION') return source === 'STRING';
   return false;
 }
 
@@ -50,7 +51,7 @@ export function parseParameterType(name: string): ParameterType {
   const upper = name.toUpperCase();
   if (upper === 'DECIMAL') return 'NUMBER';
   if (upper === 'LIST') return 'ARRAY';
-  const valid: ParameterType[] = ['STRING', 'INTEGER', 'NUMBER', 'BOOLEAN', 'ARRAY', 'OBJECT'];
+  const valid: ParameterType[] = ['STRING', 'INTEGER', 'NUMBER', 'BOOLEAN', 'ARRAY', 'OBJECT', 'EXPRESSION'];
   if (valid.includes(upper as ParameterType)) return upper as ParameterType;
   throw new Error(`Unknown ParameterType: '${name}'`);
 }
@@ -63,6 +64,7 @@ export function validateParamValue(type: ParameterType, value: unknown): boolean
     case 'BOOLEAN': return typeof value === 'boolean';
     case 'ARRAY': return Array.isArray(value);
     case 'OBJECT': return value !== null && typeof value === 'object' && !Array.isArray(value);
+    case 'EXPRESSION': return typeof value === 'string';
   }
 }
 

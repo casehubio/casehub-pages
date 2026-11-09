@@ -8,17 +8,20 @@ export class VariableResolver {
   private readonly objectSources: Record<string, ObjectVariableSource>;
   private readonly deferredPrefixes: Set<string>;
   private readonly deferredPrefixHandler: DeferredPrefixHandler | null;
+  private readonly scopeContainers: Record<string, Record<string, unknown>>;
 
   constructor(
     prefixSources: Record<string, VariableSource>,
     deferredPrefixes: Set<string>,
     deferredPrefixHandler: DeferredPrefixHandler | null = null,
     objectSources: Record<string, ObjectVariableSource> = {},
+    scopeContainers: Record<string, Record<string, unknown>> = {},
   ) {
     this.prefixSources = { ...prefixSources };
     this.objectSources = { ...objectSources };
     this.deferredPrefixes = new Set(deferredPrefixes);
     this.deferredPrefixHandler = deferredPrefixHandler;
+    this.scopeContainers = { ...scopeContainers };
   }
 
   static forParams(
@@ -48,23 +51,42 @@ export class VariableResolver {
 
   withScope(prefix: string, source: VariableSource): VariableResolver {
     const newSources = { ...this.prefixSources, [prefix]: source };
-    return new VariableResolver(newSources, this.deferredPrefixes, this.deferredPrefixHandler, this.objectSources);
+    return new VariableResolver(newSources, this.deferredPrefixes, this.deferredPrefixHandler, this.objectSources, this.scopeContainers);
   }
 
-  withObjectScope(prefix: string, source: ObjectVariableSource): VariableResolver {
-    const newObjSources = { ...this.objectSources, [prefix]: source };
-    return new VariableResolver(this.prefixSources, this.deferredPrefixes, this.deferredPrefixHandler, newObjSources);
+  withObjectScope(prefix: string, source: ObjectVariableSource | Record<string, unknown>): VariableResolver {
+    if (typeof (source as ObjectVariableSource).resolve === 'function') {
+      const newObjSources = { ...this.objectSources, [prefix]: source as ObjectVariableSource };
+      return new VariableResolver(this.prefixSources, this.deferredPrefixes, this.deferredPrefixHandler, newObjSources, this.scopeContainers);
+    }
+    const record = source as Record<string, unknown>;
+    const objSource: ObjectVariableSource = {
+      resolve: (name: string) => record[name],
+      allowContainerReturn: () => true,
+    };
+    const newObjSources = { ...this.objectSources, [prefix]: objSource };
+    const newContainers = { ...this.scopeContainers, [prefix]: record };
+    return new VariableResolver(this.prefixSources, this.deferredPrefixes, this.deferredPrefixHandler, newObjSources, newContainers);
   }
 
   withChainedScope(prefix: string, source: VariableSource): VariableResolver {
     const existing = this.prefixSources[prefix];
     const chained = existing ? chainSources(source, existing) : source;
     const newSources = { ...this.prefixSources, [prefix]: chained };
-    return new VariableResolver(newSources, this.deferredPrefixes, this.deferredPrefixHandler, this.objectSources);
+    return new VariableResolver(newSources, this.deferredPrefixes, this.deferredPrefixHandler, this.objectSources, this.scopeContainers);
   }
 
   withDeferredPrefixHandler(handler: DeferredPrefixHandler): VariableResolver {
-    return new VariableResolver(this.prefixSources, this.deferredPrefixes, handler, this.objectSources);
+    return new VariableResolver(this.prefixSources, this.deferredPrefixes, handler, this.objectSources, this.scopeContainers);
+  }
+
+  withExpressionContext(prefix: string, container: Record<string, unknown>): VariableResolver {
+    const newContainers = { ...this.scopeContainers, [prefix]: container };
+    return new VariableResolver(this.prefixSources, this.deferredPrefixes, this.deferredPrefixHandler, this.objectSources, newContainers);
+  }
+
+  buildExpressionContext(): Record<string, unknown> {
+    return { ...this.scopeContainers };
   }
 
   resolve(value: unknown): unknown {

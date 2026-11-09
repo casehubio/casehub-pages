@@ -17,6 +17,8 @@ import { DefinitionParser } from './definition-parser.js';
 import type { ObjectVariableSource } from '../types.js';
 import { InjectionResolver } from '../annotation/injection-resolver.js';
 import type { Annotation } from '../annotation/annotation-map.js';
+import { hasExpressionParams, resolvePluginParams } from './expression-resolver.js';
+import type { ExpressionEngineRegistry } from '../expression/expression-engine-registry.js';
 
 export class StructuralEvaluator {
   private readonly invokeHandlers: InvokeHandler[];
@@ -66,7 +68,17 @@ export class StructuralEvaluator {
   }
 
   private async evaluatePlugin(step: PluginStep, context: Context): Promise<Result> {
-    const resolvedParams = context.resolver.resolveMap(step.params, step.name ?? 'anonymous');
+    let resolvedParams: Record<string, unknown>;
+    const declaredInputs = step.entry.definition?.inputs;
+    if (declaredInputs && hasExpressionParams(declaredInputs)) {
+      const registry = context.services.lookup({ name: 'ExpressionEngineRegistry' }) as ExpressionEngineRegistry | undefined;
+      if (!registry) {
+        return stepFailure(`Plugin '${step.name ?? 'anonymous'}': ExpressionEngineRegistry not registered in ServiceRegistry`);
+      }
+      resolvedParams = resolvePluginParams(step.params, declaredInputs, context.resolver, registry);
+    } else {
+      resolvedParams = context.resolver.resolveMap(step.params, step.name ?? 'anonymous');
+    }
     const chain = DecoratorChain.build(step.decorators, step.entry.action);
     return chain.execute({ ...context, params: resolvedParams, stepName: step.name ?? 'anonymous' });
   }

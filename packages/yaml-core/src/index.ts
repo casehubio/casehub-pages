@@ -54,3 +54,18 @@ export type { ParsedAnnotation, Annotation, StepLineInfo } from './annotation/in
 
 export { SimulateBlockParser, YamlTestParser, YamlTestDiscovery, YamlTestExecutor, TestCatalog, describeYamlTests } from './test/index.js';
 export type { TestFile, TestCase, TestResult, TestSuiteResult } from './test/index.js';
+
+export {
+  DescriptiveExpression,
+  DefaultExpressionEngineRegistry,
+  JqExpressionEngine,
+  JsExpressionEngine,
+  createExpressionEngineRegistry,
+} from './expression/index.js';
+export type {
+  ExpressionEngine,
+  ExpressionEngineRegistry,
+  CompiledExpression,
+  ExpressionDescription,
+  ExpressionContext,
+} from './expression/index.js';
