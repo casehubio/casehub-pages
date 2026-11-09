@@ -65,6 +65,11 @@ export class StepCard extends LitElement {
     .step-icon.graphql { background: rgba(245, 194, 231, 0.15); color: #f5c2e7; }
     .step-icon.delay   { background: rgba(249, 226, 175, 0.15); color: #f9e2af; }
     .step-icon.default { background: rgba(205, 214, 244, 0.1);  color: #cdd6f4; }
+    .step-icon.rest    { background: rgba(250, 179, 135, 0.15); color: #fab387; }
+    .step-icon.process { background: rgba(127, 132, 156, 0.15); color: #7f849c; }
+    .step-icon.agent   { background: rgba(148, 226, 213, 0.15); color: #94e2d5; }
+    .step-icon.mcp     { background: rgba(203, 166, 247, 0.15); color: #cba6f7; }
+    .step-icon.event   { background: rgba(249, 226, 175, 0.15); color: #f9e2af; }
 
     .step-action {
       font-weight: 500;

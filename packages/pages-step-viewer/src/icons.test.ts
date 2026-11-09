@@ -35,4 +35,28 @@ describe('getActionIcon', () => {
   it('returns await icon', () => {
     expect(getActionIcon('await')).toEqual({ symbol: '◈', colorClass: 'await' });
   });
+
+  it('returns rest-request icon', () => {
+    expect(getActionIcon('rest-request')).toEqual({ symbol: '⇄', colorClass: 'rest' });
+  });
+
+  it('returns process icon', () => {
+    expect(getActionIcon('process')).toEqual({ symbol: '⊞', colorClass: 'process' });
+  });
+
+  it('returns agent-invoke icon', () => {
+    expect(getActionIcon('agent-invoke')).toEqual({ symbol: '◈', colorClass: 'agent' });
+  });
+
+  it('returns mcp icon', () => {
+    expect(getActionIcon('mcp')).toEqual({ symbol: '⊛', colorClass: 'mcp' });
+  });
+
+  it('returns emit-event icon', () => {
+    expect(getActionIcon('emit-event')).toEqual({ symbol: '◇', colorClass: 'event' });
+  });
+
+  it('returns verify-simulation icon', () => {
+    expect(getActionIcon('verify-simulation')).toEqual({ symbol: '✓', colorClass: 'assert' });
+  });
 });
