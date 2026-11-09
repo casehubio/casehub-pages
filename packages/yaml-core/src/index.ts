@@ -60,6 +60,7 @@ export {
   DefaultExpressionEngineRegistry,
   JqExpressionEngine,
   JsExpressionEngine,
+  createExpressionEngineRegistry,
 } from './expression/index.js';
 export type {
   ExpressionEngine,

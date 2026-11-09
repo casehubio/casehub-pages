@@ -6,3 +6,4 @@ export type { ExpressionEngineRegistry } from './expression-engine-registry.js';
 export { DefaultExpressionEngineRegistry } from './expression-engine-registry.js';
 export { JqExpressionEngine } from './jq-expression-engine.js';
 export { JsExpressionEngine } from './js-expression-engine.js';
+export { createExpressionEngineRegistry } from './create-registry.js';
