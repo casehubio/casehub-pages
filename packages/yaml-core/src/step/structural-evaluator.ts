@@ -71,7 +71,10 @@ export class StructuralEvaluator {
     let resolvedParams: Record<string, unknown>;
     const declaredInputs = step.entry.definition?.inputs;
     if (declaredInputs && hasExpressionParams(declaredInputs)) {
-      const registry = context.services.lookup({ name: 'ExpressionEngineRegistry' }) as ExpressionEngineRegistry;
+      const registry = context.services.lookup({ name: 'ExpressionEngineRegistry' }) as ExpressionEngineRegistry | undefined;
+      if (!registry) {
+        return stepFailure(`Plugin '${step.name ?? 'anonymous'}': ExpressionEngineRegistry not registered in ServiceRegistry`);
+      }
       resolvedParams = resolvePluginParams(step.params, declaredInputs, context.resolver, registry);
     } else {
       resolvedParams = context.resolver.resolveMap(step.params, step.name ?? 'anonymous');
