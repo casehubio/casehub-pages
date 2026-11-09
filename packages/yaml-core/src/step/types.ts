@@ -69,13 +69,22 @@ export interface AgentBinding {
 export interface AgentSessionOpenBinding {
   kind: 'agent-session-open';
   descriptor: string;
+  system?: string;
   model?: string;
+  modelQuery?: string;
+  modelChain?: string[];
+  pool?: string;
   timeout?: string;
+  checkoutTimeout?: string;
 }
 
 export interface AgentSessionQueryBinding {
   kind: 'agent-session-query';
   sessionRef: string;
+  user: string;
+  responseFormat?: string;
+  output?: string;
+  priority?: boolean;
   timeout?: string;
 }
 

@@ -2,9 +2,12 @@ export type {
   Parameter, Definition, DefinitionFile,
   InvokeBinding, McpBinding, RestBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
+  AgentSessionOpenBinding, AgentSessionQueryBinding,
+  AgentSessionClearBinding, AgentSessionCloseBinding,
   AriaBinding, GraphqlDomainBinding, SimulatedBinding, VerifySimulationBinding, ElementMethodBinding,
   CloudEventSpec,
 } from './types.js';
+export type { SessionPipeline, AgentSession, AgentEvent, AgentSessionInit, ClearingPolicy } from './invoke/session-pipeline.js';
 export { CE_NAMED_FIELDS } from './types.js';
 
 export type { EventEmitter } from './emit-event-emitter.js';

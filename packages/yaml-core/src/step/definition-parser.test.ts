@@ -137,4 +137,73 @@ describe('DefinitionParser', () => {
       expect(file.actions['gql']!.portability).toBe('universal');
     });
   });
+
+  describe('parseInvoke — session bindings', () => {
+    it('parses agent-session-open binding', () => {
+      const binding = DefinitionParser.parseInvoke({
+        'agent-session-open': {
+          session: 'chat-1', system: 'You are a helper.', model: 'gpt-4',
+          'model-query': 'fast', pool: 'default', timeout: '30s',
+          'checkout-timeout': '5s',
+        },
+      });
+      expect(binding).toEqual({
+        kind: 'agent-session-open',
+        descriptor: 'chat-1',
+        system: 'You are a helper.',
+        model: 'gpt-4',
+        modelQuery: 'fast',
+        pool: 'default',
+        timeout: '30s',
+        checkoutTimeout: '5s',
+      });
+    });
+
+    it('parses agent-session-open with camelCase keys', () => {
+      const binding = DefinitionParser.parseInvoke({
+        'agent-session-open': { session: 's1', modelQuery: 'cheap', modelChain: ['a', 'b'], checkoutTimeout: '10s' },
+      });
+      expect(binding.kind).toBe('agent-session-open');
+      if (binding.kind === 'agent-session-open') {
+        expect(binding.modelQuery).toBe('cheap');
+        expect(binding.modelChain).toEqual(['a', 'b']);
+        expect(binding.checkoutTimeout).toBe('10s');
+      }
+    });
+
+    it('parses agent-query binding', () => {
+      const binding = DefinitionParser.parseInvoke({
+        'agent-query': { session: 'chat-1', user: 'Hello', 'response-format': 'json', output: 'answer', priority: true },
+      });
+      expect(binding).toEqual({
+        kind: 'agent-session-query',
+        sessionRef: 'chat-1',
+        user: 'Hello',
+        responseFormat: 'json',
+        output: 'answer',
+        priority: true,
+        timeout: undefined,
+      });
+    });
+
+    it('parses agent-session-clear with map', () => {
+      const binding = DefinitionParser.parseInvoke({ 'agent-session-clear': { session: 'chat-1' } });
+      expect(binding).toEqual({ kind: 'agent-session-clear', sessionRef: 'chat-1' });
+    });
+
+    it('parses agent-session-clear with string shorthand', () => {
+      const binding = DefinitionParser.parseInvoke({ 'agent-session-clear': 'chat-1' });
+      expect(binding).toEqual({ kind: 'agent-session-clear', sessionRef: 'chat-1' });
+    });
+
+    it('parses agent-session-close with map', () => {
+      const binding = DefinitionParser.parseInvoke({ 'agent-session-close': { session: 'chat-1' } });
+      expect(binding).toEqual({ kind: 'agent-session-close', sessionRef: 'chat-1' });
+    });
+
+    it('parses agent-session-close with string shorthand', () => {
+      const binding = DefinitionParser.parseInvoke({ 'agent-session-close': 'chat-1' });
+      expect(binding).toEqual({ kind: 'agent-session-close', sessionRef: 'chat-1' });
+    });
+  });
 });
