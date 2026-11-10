@@ -1,6 +1,6 @@
 datasets:
   - uuid: employees
-    content: >-
+    content: |-
       [
         ["EMP-001", "Alice Johnson", "Engineering", "Senior Developer", 2018, 92000, "Python, Go, Kubernetes", "Platform team lead, owns deployment pipeline"],
         ["EMP-002", "Bob Smith", "Marketing", "Marketing Manager", 2019, 78000, "SEO, Analytics, Figma", "Manages brand campaigns and content calendar"],
@@ -28,86 +28,99 @@ datasets:
         type: TEXT
       - id: notes
         type: TEXT
-
 pages:
   - name: Row Detail
-    components:
-      - type: title
-        properties:
-          text: Row Detail Expansion
-          size: h2
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Row Detail Expansion
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Click the **▶** chevron to expand a row and see additional detail
+              columns below it. In **multi** mode, several rows can be open at
+              once and the header chevron toggles all.
 
-      - type: markdown
-        properties:
-          content: |
-            Click the **▶** chevron to expand a row and see additional detail
-            columns below it. In **multi** mode, several rows can be open at
-            once and the header chevron toggles all.
-
-            The main table shows ID, Name, Department, and Role. The detail
-            panel reveals Skills and Notes — columns that would clutter the
-            main grid but are useful on demand.
-
-      - type: tabs
-        properties:
-          targetPage: true
-        tabs:
-          Multi Mode:
-            components:
-              - type: data-table
-                properties:
-                  lookup:
-                    uuid: employees
-                  sortable: true
-                  columns:
-                    - id: id
-                      name: ID
-                    - id: name
-                      name: Name
-                    - id: department
-                      name: Dept
-                    - id: role
-                      name: Role
-                  rowDetail:
-                    mode: multi
+              The main table shows ID, Name, Department, and Role. The detail
+              panel reveals Skills and Notes — columns that would clutter the
+              main grid but are useful on demand.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            targetPage: true
+          tabs:
+            Multi Mode:
+              components:
+                - type: data-table
+                  properties:
+                    lookup:
+                      uuid: employees
+                    sortable: true
                     columns:
-                      - id: joined
-                        label: Joined
-                      - id: salary
-                        label: Salary
-                      - id: skills
-                        label: Skills
-                      - id: notes
-                        label: Notes
-
-          Single Mode:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **Single mode** (default) — expanding one row automatically
-                    collapses the previously open row.
-              - type: data-table
-                properties:
-                  lookup:
-                    uuid: employees
-                  sortable: true
-                  columns:
-                    - id: id
-                      name: ID
-                    - id: name
-                      name: Name
-                    - id: department
-                      name: Dept
-                    - id: role
-                      name: Role
-                  rowDetail:
+                      - id: id
+                        name: ID
+                      - id: name
+                        name: Name
+                      - id: department
+                        name: Dept
+                      - id: role
+                        name: Role
+                    rowDetail:
+                      mode: multi
+                      columns:
+                        - id: joined
+                          label: Joined
+                        - id: salary
+                          label: Salary
+                        - id: skills
+                          label: Skills
+                        - id: notes
+                          label: Notes
+            Single Mode:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Single mode** (default) — expanding one row automatically collapses the previously open row.
+                - type: data-table
+                  properties:
+                    lookup:
+                      uuid: employees
+                    sortable: true
                     columns:
-                      - id: joined
-                        label: Joined
-                      - id: salary
-                        label: Salary
-                      - id: skills
-                        label: Skills
-                      - id: notes
-                        label: Notes
+                      - id: id
+                        name: ID
+                      - id: name
+                        name: Name
+                      - id: department
+                        name: Dept
+                      - id: role
+                        name: Role
+                    rowDetail:
+                      columns:
+                        - id: joined
+                          label: Joined
+                        - id: salary
+                          label: Salary
+                        - id: skills
+                          label: Skills
+                        - id: notes
+                          label: Notes

@@ -3,7 +3,7 @@ import { COMPONENT_CATALOG, getFilteredCatalog, getCatalogCategories } from './c
 import type { PaletteContext } from './palette-context.js';
 
 const ALL_COMPONENT_TYPES = [
-  'grid', 'columns', 'rows', 'stack', 'tabs', 'pills', 'sidebar', 'tree',
+  'grid', 'columns', 'stack', 'tabs', 'pills', 'sidebar', 'tree',
   'menu', 'accordion', 'carousel', 'split', 'dock-bar', 'host-panel',
   'floating-workspace', 'panel', 'html', 'markdown', 'title', 'lazy-page',
   'page', 'bar-chart', 'line-chart', 'area-chart', 'pie-chart',
@@ -159,7 +159,7 @@ describe('getFilteredCatalog', () => {
     };
     const filtered = getFilteredCatalog(ctx);
     expect(filtered.length).toBeGreaterThan(0);
-    expect(filtered.every(r => ['rows', 'columns', 'grid'].includes(r.entry.type))).toBe(true);
+    expect(filtered.every(r => ['columns', 'grid'].includes(r.entry.type))).toBe(true);
   });
 
   it('data components have prereqHint set', () => {

@@ -36,10 +36,36 @@ describe('buildTreeModel for items layout', () => {
     const pageNode = pagesSection.children[0]!;
     expect(pageNode.nodeType).toBe('page');
     expect(pageNode.children).toHaveLength(2);
-    expect(pageNode.children[0]!.label).toContain('Revenue');
-    expect(pageNode.children[0]!.annotation).toBe('[0,0 6×2]');
-    expect(pageNode.children[0]!.nodeType).toBe('component');
-    expect(pageNode.children[1]!.label).toContain('table');
-    expect(pageNode.children[1]!.annotation).toBe('[6,0 6×1]');
+    const item0 = pageNode.children[0]!;
+    expect(item0.label).toContain('Revenue');
+    expect(item0.annotation).toBe('[0,0 6×2]');
+    expect(item0.nodeType).toBe('grid-item');
+    expect(item0.children).toHaveLength(1);
+    expect(item0.children[0]!.nodeType).toBe('component');
+    expect(item0.children[0]!.label).toContain('Revenue');
+    const item1 = pageNode.children[1]!;
+    expect(item1.label).toContain('table');
+    expect(item1.annotation).toBe('[6,0 6×1]');
+    expect(item1.children).toHaveLength(1);
+    expect(item1.children[0]!.nodeType).toBe('component');
+  });
+
+  it('sorts grid items by placement y then x', () => {
+    const yaml = `pages:
+  - title: Test
+    items:
+      - placement: { x: 6, y: 2, w: 6, h: 1 }
+        component: { type: html }
+      - placement: { x: 0, y: 0, w: 6, h: 1 }
+        component: { type: title }
+      - placement: { x: 0, y: 2, w: 6, h: 1 }
+        component: { type: metric }
+`;
+    const doc = PageDocument.parse(yaml);
+    const model = buildTreeModel(doc);
+    const page = model.find(n => n.label === 'Pages')!.children[0]!;
+    expect(page.children[0]!.annotation).toBe('[0,0 6×1]');
+    expect(page.children[1]!.annotation).toBe('[0,2 6×1]');
+    expect(page.children[2]!.annotation).toBe('[6,2 6×1]');
   });
 });

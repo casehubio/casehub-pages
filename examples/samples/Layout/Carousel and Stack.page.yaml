@@ -1,6 +1,6 @@
 datasets:
   - uuid: demo-data
-    content: >
+    content: |
       [
         ["Engineering", "Platform", "45", "Active"],
         ["Engineering", "Frontend", "35", "Active"],
@@ -19,82 +19,83 @@ datasets:
         type: NUMBER
       - id: status
         type: LABEL
-
 pages:
   - name: Carousel and Stack
-    components:
-      - type: tabs
-        properties:
-          targetPage: true
-        tabs:
-          Carousel:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **Carousel** — a sliding container with prev/next navigation.
-                    Each named slot becomes a slide. Only the active slide renders.
-              - type: carousel
-                sections:
-                  Bar Chart:
-                    components:
-                      - type: title
-                        properties:
-                          text: Team Headcount
-                          size: h3
-                      - type: bar-chart
-                        properties:
-                          lookup:
-                            uuid: demo-data
-                  Pie Chart:
-                    components:
-                      - type: title
-                        properties:
-                          text: Division Breakdown
-                          size: h3
-                      - type: pie-chart
-                        properties:
-                          lookup:
-                            uuid: demo-data
-                            group:
-                              - columnGroup:
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            targetPage: true
+          tabs:
+            Carousel:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Carousel** — a sliding container with prev/next navigation. Each named slot becomes a slide. Only the active slide renders.
+                - type: carousel
+                  sections:
+                    Bar Chart:
+                      components:
+                        - type: title
+                          properties:
+                            text: Team Headcount
+                            size: h3
+                        - type: bar-chart
+                          properties:
+                            lookup:
+                              uuid: demo-data
+                    Pie Chart:
+                      components:
+                        - type: title
+                          properties:
+                            text: Division Breakdown
+                            size: h3
+                        - type: pie-chart
+                          properties:
+                            lookup:
+                              uuid: demo-data
+                              group:
+                                - columnGroup:
                                     source: division
-                                functions:
-                                  - source: division
-                                  - source: headcount
-                                    function: SUM
-                  Data Table:
-                    components:
-                      - type: data-table
-                        properties:
-                          lookup:
-                            uuid: demo-data
-                          sortable: true
-
-          Stack:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **Stack** — a container where only one child is visible at a time.
-                    Unlike carousel, stack has no built-in navigation — it relies on
-                    external controls or programmatic switching.
-              - type: stack
-                sections:
-                  Overview:
-                    components:
-                      - type: metric
-                        properties:
-                          lookup:
-                            uuid: demo-data
-                            group:
-                              - functions:
-                                  - source: headcount
-                                    function: SUM
-                  Details:
-                    components:
-                      - type: data-table
-                        properties:
-                          lookup:
-                            uuid: demo-data
-                          sortable: true
+                                  functions:
+                                    - source: division
+                                    - source: headcount
+                                      function: SUM
+                    Data Table:
+                      components:
+                        - type: data-table
+                          properties:
+                            lookup:
+                              uuid: demo-data
+                            sortable: true
+            Stack:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Stack** — a container where only one child is visible at a time. Unlike carousel, stack has no built-in navigation — it relies on external controls or programmatic switching.
+                - type: stack
+                  sections:
+                    Overview:
+                      components:
+                        - type: metric
+                          properties:
+                            lookup:
+                              uuid: demo-data
+                              group:
+                                - functions:
+                                    - source: headcount
+                                      function: SUM
+                    Details:
+                      components:
+                        - type: data-table
+                          properties:
+                            lookup:
+                              uuid: demo-data
+                            sortable: true

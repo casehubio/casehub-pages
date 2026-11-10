@@ -326,39 +326,6 @@ export class PageNode {
     return (seq as YAMLSeq).items.map((_, i) => new ComponentNode(this._doc, [...this.path, 'components', i]));
   }
 
-  addRow(): RowNode {
-    this._doc._pushUndoInternal();
-    const doc = this._doc._getDoc();
-    const rowsPath = [...this.path, 'rows'];
-    const seq = doc.getIn(rowsPath);
-    const newRow = doc.createNode({ columns: [{ span: 12, components: [] }] });
-    if (!isSeq(seq)) {
-      doc.setIn(rowsPath, []);
-      (doc.getIn(rowsPath) as YAMLSeq).add(newRow);
-    } else {
-      (seq as YAMLSeq).add(newRow);
-    }
-    this._doc._notifyInternal();
-    const rows = this.getRows();
-    return rows[rows.length - 1]!;
-  }
-
-  insertRowAt(index: number): RowNode {
-    this._doc._pushUndoInternal();
-    const doc = this._doc._getDoc();
-    const rowsPath = [...this.path, 'rows'];
-    const seq = doc.getIn(rowsPath);
-    const newRow = doc.createNode({ columns: [{ span: 12, components: [] }] });
-    if (!isSeq(seq)) {
-      doc.setIn(rowsPath, []);
-      (doc.getIn(rowsPath) as YAMLSeq).add(newRow);
-    } else {
-      (seq as YAMLSeq).items.splice(index, 0, newRow);
-    }
-    this._doc._notifyInternal();
-    return new RowNode(this._doc, [...this.path, 'rows', index]);
-  }
-
   addComponent(type: string, props?: Record<string, unknown>): ComponentNode {
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
@@ -384,7 +351,7 @@ export class PageNode {
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
     const mode = this.getLayoutMode();
-    const key = mode === 'rows' ? 'rows' : mode === 'columns' ? 'columns' : 'components';
+    const key = mode === 'items' ? 'items' : 'components';
     const seqPath = [...this.path, key];
     const entry: Record<string, unknown> = { type };
     if (props && Object.keys(props).length > 0) entry['properties'] = props;
@@ -398,45 +365,6 @@ export class PageNode {
     }
     this._doc._notifyInternal();
     return new ComponentNode(this._doc, [...seqPath, index]);
-  }
-
-  wrapInRow(componentIndices: number[]): RowNode {
-    const mode = this.getLayoutMode();
-    if (mode === 'columns') throw new Error('Cannot wrap in row when page uses column layout');
-    this._doc.beginTransaction();
-    try {
-      const doc = this._doc._getDoc();
-      const sorted = [...componentIndices].sort((a, b) => a - b);
-      const compsPath = [...this.path, 'components'];
-      const compsSeq = doc.getIn(compsPath);
-      if (!isSeq(compsSeq)) throw new Error('No components to wrap');
-      const items = (compsSeq as YAMLSeq).items;
-      const collected = sorted.map(i => JSON.parse(JSON.stringify(items[i])) as unknown);
-      for (let i = sorted.length - 1; i >= 0; i--) {
-        items.splice(sorted[i]!, 1);
-      }
-      const rowData = { columns: [{ span: 12, components: collected }] };
-      if (mode === 'flat') {
-        const remaining = items.splice(0, items.length);
-        doc.deleteIn(compsPath);
-        const rowsPath = [...this.path, 'rows'];
-        const allRows: Record<string, unknown>[] = [rowData];
-        if (remaining.length > 0) {
-          allRows.push({ columns: [{ span: 12, components: remaining.map(r => JSON.parse(JSON.stringify(r)) as unknown) }] });
-        }
-        doc.setIn(rowsPath, doc.createNode(allRows));
-      } else {
-        const rowsPath = [...this.path, 'rows'];
-        const rowsSeq = doc.getIn(rowsPath) as YAMLSeq;
-        const rowNode = doc.createNode(rowData);
-        rowsSeq.items.splice(sorted[0]!, 0, rowNode);
-      }
-      this._doc.commitTransaction();
-      return this.getRows()[mode === 'flat' ? 0 : sorted[0]!]!;
-    } catch (e) {
-      this._doc.abortTransaction();
-      throw e;
-    }
   }
 
   getItems(): GridItemNode[] {
@@ -475,6 +403,49 @@ export class PageNode {
     return items[items.length - 1]!;
   }
 
+  addEmptyItem(placement: GridPlacement): GridItemNode {
+    if (this.getLayoutMode() !== 'items') {
+      throw new Error('addEmptyItem() requires items: layout mode');
+    }
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const placementObj: Record<string, number> = { w: placement.w, h: placement.h };
+    if (placement.mode === 'positioned') {
+      placementObj['x'] = placement.x;
+      placementObj['y'] = placement.y;
+    }
+    const entry: Record<string, unknown> = { placement: placementObj };
+    const node = doc.createNode(entry);
+    const seq = doc.getIn([...this.path, 'items']);
+    (seq as YAMLSeq).add(node);
+    this._doc._notifyInternal();
+    const items = this.getItems();
+    return items[items.length - 1]!;
+  }
+
+  insertEmptyItemAt(index: number, placement: GridPlacement): GridItemNode {
+    if (this.getLayoutMode() !== 'items') {
+      throw new Error('insertEmptyItemAt() requires items: layout mode');
+    }
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const placementObj: Record<string, number> = placement.mode === 'positioned'
+      ? { x: placement.x, y: placement.y, w: placement.w, h: placement.h }
+      : { w: placement.w, h: placement.h };
+    const placeholder = '<div style="border:2px dashed rgba(66,133,244,0.3);min-height:48px;display:flex;align-items:center;justify-content:center;color:rgba(66,133,244,0.5);font-size:24px;border-radius:8px">+</div>';
+    const entry: Record<string, unknown> = {
+      placement: placementObj,
+      component: { type: 'html', properties: { content: placeholder } },
+    };
+    const node = doc.createNode(entry);
+    const placementNode = (node as YAMLMap).get('placement', true);
+    if (isMap(placementNode)) (placementNode as YAMLMap).flow = true;
+    const seq = doc.getIn([...this.path, 'items']);
+    (seq as YAMLSeq).items.splice(index, 0, node);
+    this._doc._notifyInternal();
+    return this.getItems()[index]!;
+  }
+
   removeItem(index: number): void {
     this._doc._pushUndoInternal();
     this._doc._getDoc().deleteIn([...this.path, 'items', index]);
@@ -484,7 +455,7 @@ export class PageNode {
   removeChild(index: number): void {
     this._doc._pushUndoInternal();
     const mode = this.getLayoutMode();
-    const key = mode === 'rows' ? 'rows' : mode === 'columns' ? 'columns' : mode === 'items' ? 'items' : 'components';
+    const key = mode === 'items' ? 'items' : 'components';
     this._doc._getDoc().deleteIn([...this.path, key, index]);
     this._doc._notifyInternal();
   }
@@ -1106,18 +1077,33 @@ export class GridItemNode {
     this._doc._notifyInternal();
   }
 
-  getComponent(): ComponentNode {
+  getComponent(): ComponentNode | undefined {
+    const doc = this._doc._getDoc();
+    const compPath = [...this.path, 'component'];
+    const comp = doc.getIn(compPath);
+    if (!comp) return undefined;
+    return new ComponentNode(this._doc, compPath);
+  }
+
+  get type(): string | undefined { return this.getComponent()?.type; }
+
+  getProperties(): Record<string, unknown> {
+    return this.getComponent()?.getProperties() ?? {};
+  }
+
+  setComponent(type: string, props?: Record<string, unknown>): ComponentNode {
+    this._doc._pushUndoInternal();
+    const doc = this._doc._getDoc();
+    const compObj: Record<string, unknown> = { type };
+    if (props && Object.keys(props).length > 0) compObj['properties'] = props;
+    const node = doc.createNode(compObj);
+    doc.setIn([...this.path, 'component'], node);
+    this._doc._notifyInternal();
     return new ComponentNode(this._doc, [...this.path, 'component']);
   }
 
-  get type(): string { return this.getComponent().type; }
-
-  getProperties(): Record<string, unknown> {
-    return this.getComponent().getProperties();
-  }
-
   setProperty(key: string, value: unknown): void {
-    this.getComponent().setProperty(key, value);
+    this.getComponent()?.setProperty(key, value);
   }
 
   moveToIndex(newIndex: number): void {

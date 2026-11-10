@@ -1,6 +1,6 @@
 datasets:
   - uuid: transaction
-    content: >-
+    content: |-
       [
         [1, "TXN-2026-04521", 125000, "USD", "true", "2026-07-06", "2026-07-06T14:30:00Z", "Multiple rapid transfers to high-risk jurisdictions.", "Acme Holdings Ltd", "Shell Corp 42 LLC"]
       ]
@@ -25,7 +25,6 @@ datasets:
         type: TEXT
       - id: receiver
         type: TEXT
-
 pages:
   - name: Schema Form
     dataScope:
@@ -35,199 +34,253 @@ pages:
       trigger: auto
       delay: 1000
       adapter: local
-    components:
-      - type: title
-        properties:
-          text: "Form Inputs"
-          size: h2
-
-      - type: markdown
-        properties:
-          content: |
-            Same AML transaction payload, three approaches. **Schema** passes
-            one JSON Schema — full automation. **HTML** uses `type: html` for
-            full layout control. **YAML** uses DSL form inputs — flat fields
-            only.
-
-      - type: tabs
-        properties:
-          targetPage: true
-        tabs:
-          Schema:
-            components:
-              - type: markdown
-                properties:
-                  content: |
-                    **Schema-driven form** — one component, one JSON Schema.
-                    Auto-derives field types, labels, and validation from the
-                    schema. Edit a field — changes auto-save after 1 second.
-
-              - schema-form:
-                  schema:
-                    properties:
-                      transactionId: { type: string, minLength: 1 }
-                      amount: { type: number, minimum: 0 }
-                      currency: { type: string, enum: [USD, EUR, GBP] }
-                      flagged: { type: boolean }
-                      reportDate: { type: string, format: date }
-                      detectedAt: { type: string, format: datetime-local }
-                      notes: { type: string, format: textarea }
-                      sender: { type: string }
-                      receiver: { type: string }
-                    required: [transactionId, amount]
-                  excludeFields: [id]
-
-          Nested:
-            components:
-              - type: markdown
-                properties:
-                  content: |
-                    **Nested schema form** — objects, arrays, arrays of objects,
-                    and discriminated unions. All from one JSON Schema.
-
-              - schema-form:
-                  schema:
-                    properties:
-                      transactionId: { type: string, minLength: 1 }
-                      amount: { type: number, minimum: 0 }
-                      currency: { type: string, enum: [USD, EUR, GBP] }
-                      flagged: { type: boolean }
-                      parties:
-                        type: object
-                        title: Parties
-                        properties:
-                          sender: { type: string }
-                          receiver: { type: string }
-                        required: [sender, receiver]
-                      tags:
-                        type: array
-                        title: Tags
-                        items: { type: string }
-                        minItems: 1
-                        maxItems: 10
-                      linkedTransactions:
-                        type: array
-                        title: Linked Transactions
-                        items:
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Form Inputs
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Same AML transaction payload, three approaches. **Schema** passes
+              one JSON Schema — full automation. **HTML** uses `type: html` for
+              full layout control. **YAML** uses DSL form inputs — flat fields
+              only.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            targetPage: true
+          tabs:
+            Schema:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Schema-driven form** — one component, one JSON Schema.
+                      Auto-derives field types, labels, and validation from the
+                      schema. Edit a field — changes auto-save after 1 second.
+                - schema-form:
+                    schema:
+                      properties:
+                        transactionId:
+                          type: string
+                          minLength: 1
+                        amount:
+                          type: number
+                          minimum: 0
+                        currency:
+                          type: string
+                          enum:
+                            - USD
+                            - EUR
+                            - GBP
+                        flagged:
+                          type: boolean
+                        reportDate:
+                          type: string
+                          format: date
+                        detectedAt:
+                          type: string
+                          format: datetime-local
+                        notes:
+                          type: string
+                          format: textarea
+                        sender:
+                          type: string
+                        receiver:
+                          type: string
+                      required:
+                        - transactionId
+                        - amount
+                    excludeFields:
+                      - id
+            Nested:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Nested schema form** — objects, arrays, arrays of objects,
+                      and discriminated unions. All from one JSON Schema.
+                - schema-form:
+                    schema:
+                      properties:
+                        transactionId:
+                          type: string
+                          minLength: 1
+                        amount:
+                          type: number
+                          minimum: 0
+                        currency:
+                          type: string
+                          enum:
+                            - USD
+                            - EUR
+                            - GBP
+                        flagged:
+                          type: boolean
+                        parties:
                           type: object
+                          title: Parties
                           properties:
-                            id: { type: string }
-                            amount: { type: number, minimum: 0 }
-                          required: [id]
-                      contactMethod:
-                        title: Contact Method
-                        oneOf:
-                          - properties:
-                              channel: { const: email }
-                              address: { type: string, title: Email Address }
-                            required: [channel, address]
-                          - properties:
-                              channel: { const: phone }
-                              number: { type: string, title: Phone Number }
-                            required: [channel, number]
-                    required: [transactionId, amount]
-                  excludeFields: [id]
-                  forceCreate: true
-
-          HTML:
-            components:
-              - type: markdown
-                properties:
-                  content: |
-                    Raw HTML via `type: html` — full layout control including
-                    nesting and arrays. More verbose, but no DSL limitations.
-
-              - type: html
-                properties:
-                  content: >
-                    <div style="font-family:var(--pages-font-family,system-ui,sans-serif);font-size:14px;">
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">TransactionId</label><input type="text" value="TXN-2026-04521" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Amount</label><input type="number" value="125000" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Currency</label><select style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;"><option selected>USD</option><option>EUR</option><option>GBP</option></select></div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" checked style="width:18px;height:18px;" /> Flagged</label></div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">ReportDate</label><input type="date" value="2026-07-06" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">DetectedAt</label><input type="datetime-local" value="2026-07-06T14:30" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Notes</label><textarea rows="4" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;font-family:inherit;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;resize:vertical;">Multiple rapid transfers to high-risk jurisdictions.</textarea></div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
-                        <span style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Parties</span>
-                        <div style="padding-left:16px;border-left:2px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
-                          <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Sender</label><input type="text" value="Acme Holdings Ltd" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                          <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Receiver</label><input type="text" value="Shell Corp 42 LLC" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                        </div>
-                      </div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
-                        <span style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Tags</span>
-                        <div style="padding-left:16px;border-left:2px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
-                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="high-risk" style="flex:1;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));" /></div>
-                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="cross-border" style="flex:1;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));" /></div>
-                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="layering" style="flex:1;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));" /></div>
-                        </div>
-                      </div>
-                      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
-                        <span style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">LinkedTransactions</span>
-                        <div style="padding-left:16px;border-left:2px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
-                          <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
-                            <span style="font-size:12px;font-weight:500;color:var(--pages-text-muted, oklch(0.60 0 0));">1.</span>
-                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Id</label><input type="text" value="TXN-2026-04519" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Amount</label><input type="number" value="50000" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                            sender:
+                              type: string
+                            receiver:
+                              type: string
+                          required:
+                            - sender
+                            - receiver
+                        tags:
+                          type: array
+                          title: Tags
+                          items:
+                            type: string
+                          minItems: 1
+                          maxItems: 10
+                        linkedTransactions:
+                          type: array
+                          title: Linked Transactions
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              amount:
+                                type: number
+                                minimum: 0
+                            required:
+                              - id
+                        contactMethod:
+                          title: Contact Method
+                          oneOf:
+                            - properties:
+                                channel:
+                                  const: email
+                                address:
+                                  type: string
+                                  title: Email Address
+                              required:
+                                - channel
+                                - address
+                            - properties:
+                                channel:
+                                  const: phone
+                                number:
+                                  type: string
+                                  title: Phone Number
+                              required:
+                                - channel
+                                - number
+                      required:
+                        - transactionId
+                        - amount
+                    excludeFields:
+                      - id
+                    forceCreate: true
+            HTML:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Raw HTML via `type: html` — full layout control including
+                      nesting and arrays. More verbose, but no DSL limitations.
+                - type: html
+                  properties:
+                    content: |
+                      <div style="font-family:var(--pages-font-family,system-ui,sans-serif);font-size:14px;">
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">TransactionId</label><input type="text" value="TXN-2026-04521" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Amount</label><input type="number" value="125000" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Currency</label><select style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;"><option selected>USD</option><option>EUR</option><option>GBP</option></select></div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" checked style="width:18px;height:18px;" /> Flagged</label></div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">ReportDate</label><input type="date" value="2026-07-06" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">DetectedAt</label><input type="datetime-local" value="2026-07-06T14:30" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Notes</label><textarea rows="4" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;font-family:inherit;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;resize:vertical;">Multiple rapid transfers to high-risk jurisdictions.</textarea></div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
+                          <span style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Parties</span>
+                          <div style="padding-left:16px;border-left:2px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Sender</label><input type="text" value="Acme Holdings Ltd" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Receiver</label><input type="text" value="Shell Corp 42 LLC" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
                           </div>
-                          <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
-                            <span style="font-size:12px;font-weight:500;color:var(--pages-text-muted, oklch(0.60 0 0));">2.</span>
-                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Id</label><input type="text" value="TXN-2026-04520" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
-                            <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Amount</label><input type="number" value="75000" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
+                          <span style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Tags</span>
+                          <div style="padding-left:16px;border-left:2px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
+                            <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="high-risk" style="flex:1;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));" /></div>
+                            <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="cross-border" style="flex:1;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));" /></div>
+                            <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><input type="text" value="layering" style="flex:1;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));" /></div>
+                          </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
+                          <span style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">LinkedTransactions</span>
+                          <div style="padding-left:16px;border-left:2px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
+                            <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
+                              <span style="font-size:12px;font-weight:500;color:var(--pages-text-muted, oklch(0.60 0 0));">1.</span>
+                              <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Id</label><input type="text" value="TXN-2026-04519" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                              <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Amount</label><input type="number" value="50000" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                            </div>
+                            <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));">
+                              <span style="font-size:12px;font-weight:500;color:var(--pages-text-muted, oklch(0.60 0 0));">2.</span>
+                              <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Id</label><input type="text" value="TXN-2026-04520" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                              <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"><label style="font-size:14px;font-weight:500;color:var(--pages-text-primary, oklch(0.25 0 0));">Amount</label><input type="number" value="75000" style="width:100%;padding:8px 12px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:4px;font-size:14px;background:var(--pages-surface-primary, oklch(0.99 0 0));color:var(--pages-text-primary, oklch(0.25 0 0));box-sizing:border-box;" /></div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-
-          YAML:
-            components:
-              - type: markdown
-                properties:
-                  content: |
-                    Pure YAML DSL — each field wired individually. No nesting,
-                    no array editing, no display mode, no datetime-local.
-
-              - input:
-                  field: transactionId
-                  label: Transaction ID
-                  required: true
-
-              - number-input:
-                  field: amount
-                  label: Amount
-                  min: 0
-
-              - select:
-                  field: currency
-                  label: Currency
-                  options:
-                    values:
-                      - USD
-                      - EUR
-                      - GBP
-
-              - checkbox:
-                  field: flagged
-                  label: Flagged
-
-              - date-picker:
-                  field: reportDate
-                  label: Report Date
-
-              - date-picker:
-                  field: detectedAt
-                  label: Detected At
-
-              - textarea:
-                  field: notes
-                  label: Notes
-                  rows: 4
-
-              - input:
-                  field: sender
-                  label: Sender
-
-              - input:
-                  field: receiver
-                  label: Receiver
+            YAML:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Pure YAML DSL — each field wired individually. No nesting,
+                      no array editing, no display mode, no datetime-local.
+                - input:
+                    field: transactionId
+                    label: Transaction ID
+                    required: true
+                - number-input:
+                    field: amount
+                    label: Amount
+                    min: 0
+                - select:
+                    field: currency
+                    label: Currency
+                    options:
+                      values:
+                        - USD
+                        - EUR
+                        - GBP
+                - checkbox:
+                    field: flagged
+                    label: Flagged
+                - date-picker:
+                    field: reportDate
+                    label: Report Date
+                - date-picker:
+                    field: detectedAt
+                    label: Detected At
+                - textarea:
+                    field: notes
+                    label: Notes
+                    rows: 4
+                - input:
+                    field: sender
+                    label: Sender
+                - input:
+                    field: receiver
+                    label: Receiver

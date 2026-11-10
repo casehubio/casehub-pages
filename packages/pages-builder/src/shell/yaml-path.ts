@@ -88,7 +88,7 @@ export function getNodeRange(doc: PageDocument, path: readonly (string | number)
 
   const yaml = fresh.toString();
   let to = range[1];
-  while (to > range[0] && (yaml[to - 1] === '\n' || yaml[to - 1] === '\r')) to--;
+  while (to > range[0] && (yaml[to - 1] === '\n' || yaml[to - 1] === '\r' || yaml[to - 1] === ' ' || yaml[to - 1] === '\t')) to--;
   return { from: range[0], to };
 }
 
@@ -112,6 +112,14 @@ export function classifyPath(path: readonly (string | number)[]): TreeNodeType |
     const seg = path[i];
     if (seg === 'components' && i + 1 < path.length && typeof path[i + 1] === 'number') return 'component';
     if (seg === 'properties') return 'component';
+  }
+  for (let i = path.length - 1; i >= 0; i--) {
+    const seg = path[i];
+    if (seg === 'items' && i + 1 < path.length && typeof path[i + 1] === 'number') {
+      const afterItem = i + 2 < path.length ? path[i + 2] : undefined;
+      if (afterItem === 'component' || afterItem === 'properties') return 'component';
+      return 'grid-item';
+    }
   }
   for (let i = path.length - 1; i >= 0; i--) {
     const seg = path[i];

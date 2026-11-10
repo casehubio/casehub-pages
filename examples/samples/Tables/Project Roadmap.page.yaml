@@ -1,6 +1,6 @@
 datasets:
   - uuid: ui-pipeline
-    content: >
+    content: |
       [
         ["blocks", "#44", "blocks#44", "epic: agentic planning architecture", "done", "33 issues closed since v2"],
         ["blocks", "#28", "blocks#28", "epic: shared pattern consolidation", "done", "Core blocks extracted"],
@@ -34,9 +34,8 @@ datasets:
         type: LABEL
       - id: notes
         type: TEXT
-
   - uuid: trust-cbr
-    content: >
+    content: |
       [
         ["devtown", "#130", "devtown#130", "PR similarity model — feature vectors + distance", "done", "Closed 2026-07-10"],
         ["devtown", "#131", "devtown#131", "CBR retrieval service — find K similar cases", "done", "Closed 2026-07-10"],
@@ -75,9 +74,8 @@ datasets:
         type: LABEL
       - id: notes
         type: TEXT
-
   - uuid: merge-queue
-    content: >
+    content: |
       [
         ["devtown", "#101", "devtown#101", "GitHub webhook receiver for admission", "done", ""],
         ["devtown", "#103", "devtown#103", "Adaptive batch sizing feedback loop", "done", ""],
@@ -107,9 +105,8 @@ datasets:
         type: LABEL
       - id: notes
         type: TEXT
-
   - uuid: summary
-    content: >
+    content: |
       [
         ["devtown issues closed (all time)", "107", "114", "+7"],
         ["Cross-repo closures since v3", "—", "2", "parent#361, blocks-ui#38"],
@@ -126,481 +123,479 @@ datasets:
         type: TEXT
       - id: delta
         type: TEXT
-
 pages:
   - name: Project Roadmap
-    components:
-      - type: title
-        properties:
-          text: Cross-Repo Roadmap — Gantt Chart with Critical Path (v4)
-          size: h2
-
-      - type: markdown
-        properties:
-          content: |
-            Generated 2026-07-16 · All repos scanned · ✅ Done · ✅ Done since v3 · 🔵 Open · 🟠 Blocked
-
-      - html: >
-          <div style="background: var(--pages-surface-secondary, oklch(0.50 0.01 220 / 0.1)); padding: 10px 15px; border-radius: 6px; margin: 10px 0; font-size: 13px;">
-          <strong>Since v3 (2026-07-14):</strong> 7 devtown issues closed (#104, #124, #127, #134, #135, #136, #150),
-          plus blocks-ui#38, parent#361. Trust &amp; CBR layer is now <strong>fully complete</strong> (only UI-blocked #98 remains).
-          Merge Queue layer has only UI-blocked items and the cross-repo epic remaining.
-          blocks-ui#41 (devtown governance workbench migration) remains the critical UI gate.
-          </div>
-
-      - type: tabs
-        tabs:
-          Rounded Borders:
-            components:
-              - type: legend
-                properties:
-                  entries:
-                    - label: devtown
-                      color: "oklch(0.55 0.15 245)"
-                    - label: engine
-                      color: "oklch(0.50 0.12 150)"
-                    - label: blocks
-                      color: "oklch(0.60 0.12 130)"
-                    - label: blocks-ui
-                      color: "oklch(0.65 0.15 55)"
-                    - label: pages
-                      color: "oklch(0.55 0.15 350)"
-                    - label: parent
-                      color: "oklch(0.55 0.03 230)"
-                    - label: work
-                      color: "oklch(0.55 0.12 275)"
-                    - label: qhorus
-                      color: "oklch(0.55 0.10 175)"
-                    - label: claudony
-                      color: "oklch(0.50 0.15 310)"
-                    - label: platform
-                      color: "oklch(0.45 0.03 230)"
-                    - label: ledger
-                      color: "oklch(0.50 0.15 25)"
-                  layout: linear
-
-              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
-              - html: >
-                  <div style="background:oklch(0.70 0.10 55 / 0.15); border:2px solid oklch(0.65 0.15 55); border-radius:6px; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
-                  🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
-
-              - type: data-table
-                style:
-                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
-                  border-radius: "8px"
-                  padding: "15px"
-                  margin-bottom: "20px"
-                  overflow: hidden
-                properties:
-                  lookup:
-                    uuid: ui-pipeline
-                  pageSize: 25
-                  columns:
-                    - id: repo
-                      name: Repo
-                      width: "100px"
-                      pill:
-                        blocks: "oklch(0.60 0.12 130)"
-                        blocks-ui: "oklch(0.65 0.15 55)"
-                        pages: "oklch(0.55 0.15 350)"
-                        devtown: "oklch(0.55 0.15 245)"
-                        parent: "oklch(0.55 0.03 230)"
-                        work: "oklch(0.55 0.12 275)"
-                        platform: "oklch(0.45 0.03 230)"
-                    - id: issue
-                      name: Issue
-                      width: "130px"
-                    - id: title
-                      name: Title
-                      width: "3fr"
-                    - id: status
-                      name: Status
-                      width: "140px"
-                      expression: >-
-                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","critical":"🔵 OPEN","new":"🆕 NEW"}, value)
-                    - id: notes
-                      name: Notes
-                      width: "2fr"
-                  rowAccent:
-                    column: status
-                    columns: all
-                    colorMap:
-                      newly-done: "oklch(0.55 0.12 145)"
-                      critical: "oklch(0.55 0.15 25)"
-                      blocked: "oklch(0.55 0.12 55)"
-                  rowStyle:
-                    - condition: "#{row.status} == 'done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'newly-done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'blocked'"
-                      style:
-                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
-                        color: "oklch(0.55 0.12 55)"
-                    - condition: "#{row.status} == 'critical'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 25 / 0.12)"
-                    - condition: "#{row.status} == 'new'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
-
-              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Trust &amp; CBR</h3>'
-              - type: data-table
-                style:
-                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
-                  border-radius: "8px"
-                  padding: "15px"
-                  margin-bottom: "20px"
-                  overflow: hidden
-                properties:
-                  lookup:
-                    uuid: trust-cbr
-                  pageSize: 25
-                  columns:
-                    - id: repo
-                      name: Repo
-                      width: "100px"
-                      pill:
-                        devtown: "oklch(0.55 0.15 245)"
-                        parent: "oklch(0.55 0.03 230)"
-                        work: "oklch(0.55 0.12 275)"
-                        platform: "oklch(0.45 0.03 230)"
-                    - id: issue
-                      name: Issue
-                      width: "130px"
-                    - id: title
-                      name: Title
-                      width: "3fr"
-                    - id: status
-                      name: Status
-                      width: "140px"
-                      expression: >-
-                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","new":"🆕 NEW"}, value)
-                    - id: notes
-                      name: Notes
-                      width: "2fr"
-                  rowAccent:
-                    column: status
-                    columns: all
-                    colorMap:
-                      newly-done: "oklch(0.55 0.12 145)"
-                      blocked: "oklch(0.55 0.12 55)"
-                  rowStyle:
-                    - condition: "#{row.status} == 'done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'newly-done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'blocked'"
-                      style:
-                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
-                        color: "oklch(0.55 0.12 55)"
-                    - condition: "#{row.status} == 'new'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
-
-              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Merge Queue</h3>'
-              - type: data-table
-                style:
-                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
-                  border-radius: "8px"
-                  padding: "15px"
-                  margin-bottom: "20px"
-                  overflow: hidden
-                properties:
-                  lookup:
-                    uuid: merge-queue
-                  pageSize: 25
-                  columns:
-                    - id: repo
-                      name: Repo
-                      width: "100px"
-                      pill:
-                        devtown: "oklch(0.55 0.15 245)"
-                        parent: "oklch(0.55 0.03 230)"
-                        work: "oklch(0.55 0.12 275)"
-                        platform: "oklch(0.45 0.03 230)"
-                    - id: issue
-                      name: Issue
-                      width: "130px"
-                    - id: title
-                      name: Title
-                      width: "3fr"
-                    - id: status
-                      name: Status
-                      width: "140px"
-                      expression: >-
-                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","new":"🆕 NEW"}, value)
-                    - id: notes
-                      name: Notes
-                      width: "2fr"
-                  rowAccent:
-                    column: status
-                    columns: all
-                    colorMap:
-                      newly-done: "oklch(0.55 0.12 145)"
-                      blocked: "oklch(0.55 0.12 55)"
-                  rowStyle:
-                    - condition: "#{row.status} == 'done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'newly-done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'blocked'"
-                      style:
-                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
-                        color: "oklch(0.55 0.12 55)"
-                    - condition: "#{row.status} == 'new'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
-
-              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Summary — v3 → v4 Delta</h3>'
-              - type: data-table
-                style:
-                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
-                  border-radius: "8px"
-                  padding: "15px"
-                  overflow: hidden
-                properties:
-                  lookup:
-                    uuid: summary
-                  columns:
-                    - id: metric
-                      name: Metric
-                      width: "2fr"
-                    - id: v3
-                      name: v3
-                      width: "1fr"
-                    - id: v4
-                      name: v4
-                      width: "1fr"
-                    - id: delta
-                      name: Delta
-                      width: "2fr"
-
-          Square Borders:
-            components:
-              - type: markdown
-                properties:
-                  content: "Same roadmap with **square-cut borders** (no border-radius) and no padding."
-              - type: legend
-                properties:
-                  entries:
-                    - label: devtown
-                      color: "oklch(0.55 0.15 245)"
-                    - label: blocks
-                      color: "oklch(0.60 0.12 130)"
-                    - label: blocks-ui
-                      color: "oklch(0.65 0.15 55)"
-                    - label: pages
-                      color: "oklch(0.55 0.15 350)"
-                  layout: linear
-              - html: '<h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>'
-              - html: >
-                  <div style="background:oklch(0.70 0.10 55 / 0.15); border:2px solid oklch(0.65 0.15 55); padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
-                  🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
-              - type: data-table
-                style:
-                  border: "1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
-                properties:
-                  lookup:
-                    uuid: ui-pipeline
-                  pageSize: 25
-                  columns:
-                    - id: repo
-                      name: Repo
-                      width: "100px"
-                      pill:
-                        blocks: "oklch(0.60 0.12 130)"
-                        blocks-ui: "oklch(0.65 0.15 55)"
-                        pages: "oklch(0.55 0.15 350)"
-                        devtown: "oklch(0.55 0.15 245)"
-                        parent: "oklch(0.55 0.03 230)"
-                        work: "oklch(0.55 0.12 275)"
-                        platform: "oklch(0.45 0.03 230)"
-                    - id: issue
-                      name: Issue
-                      width: "130px"
-                    - id: title
-                      name: Title
-                      width: "3fr"
-                    - id: status
-                      name: Status
-                      width: "140px"
-                      expression: >-
-                        $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","critical":"🔵 OPEN","new":"🆕 NEW"}, value)
-                    - id: notes
-                      name: Notes
-                      width: "2fr"
-                  rowAccent:
-                    column: status
-                    columns: all
-                    colorMap:
-                      newly-done: "oklch(0.55 0.12 145)"
-                      critical: "oklch(0.55 0.15 25)"
-                      blocked: "oklch(0.55 0.12 55)"
-                  rowStyle:
-                    - condition: "#{row.status} == 'done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.10)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'newly-done'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 145 / 0.15)"
-                        color: "oklch(0.55 0.12 145)"
-                    - condition: "#{row.status} == 'blocked'"
-                      style:
-                        backgroundColor: "oklch(0.70 0.08 55 / 0.12)"
-                        color: "oklch(0.55 0.12 55)"
-                    - condition: "#{row.status} == 'critical'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.10 25 / 0.12)"
-                    - condition: "#{row.status} == 'new'"
-                      style:
-                        backgroundColor: "oklch(0.65 0.08 245 / 0.10)"
-
-          Legend Layouts:
-            components:
-              - type: markdown
-                properties:
-                  content: "**Linear** (default) — wraps naturally, one dimension resizes with the browser:"
-              - type: legend
-                properties:
-                  entries:
-                    - label: devtown
-                      color: "oklch(0.55 0.15 245)"
-                    - label: engine
-                      color: "oklch(0.50 0.12 150)"
-                    - label: blocks
-                      color: "oklch(0.60 0.12 130)"
-                    - label: blocks-ui
-                      color: "oklch(0.65 0.15 55)"
-                    - label: pages
-                      color: "oklch(0.55 0.15 350)"
-                    - label: parent
-                      color: "oklch(0.55 0.03 230)"
-                    - label: work
-                      color: "oklch(0.55 0.12 275)"
-                    - label: qhorus
-                      color: "oklch(0.55 0.10 175)"
-                    - label: claudony
-                      color: "oklch(0.50 0.15 310)"
-                    - label: platform
-                      color: "oklch(0.45 0.03 230)"
-                    - label: ledger
-                      color: "oklch(0.50 0.15 25)"
-                  layout: linear
-
-              - type: markdown
-                properties:
-                  content: "**Horizontal** — fixed height to 1 row, scrolls horizontally:"
-              - type: legend
-                properties:
-                  entries:
-                    - label: devtown
-                      color: "oklch(0.55 0.15 245)"
-                    - label: engine
-                      color: "oklch(0.50 0.12 150)"
-                    - label: blocks
-                      color: "oklch(0.60 0.12 130)"
-                    - label: blocks-ui
-                      color: "oklch(0.65 0.15 55)"
-                    - label: pages
-                      color: "oklch(0.55 0.15 350)"
-                    - label: parent
-                      color: "oklch(0.55 0.03 230)"
-                    - label: work
-                      color: "oklch(0.55 0.12 275)"
-                    - label: qhorus
-                      color: "oklch(0.55 0.10 175)"
-                    - label: claudony
-                      color: "oklch(0.50 0.15 310)"
-                    - label: platform
-                      color: "oklch(0.45 0.03 230)"
-                    - label: ledger
-                      color: "oklch(0.50 0.15 25)"
-                  layout: horizontal
-
-              - type: markdown
-                properties:
-                  content: "**Vertical** — fixed width to 1 column, grows downward:"
-              - type: legend
-                properties:
-                  entries:
-                    - label: devtown
-                      color: "oklch(0.55 0.15 245)"
-                    - label: engine
-                      color: "oklch(0.50 0.12 150)"
-                    - label: blocks
-                      color: "oklch(0.60 0.12 130)"
-                    - label: blocks-ui
-                      color: "oklch(0.65 0.15 55)"
-                    - label: pages
-                      color: "oklch(0.55 0.15 350)"
-                    - label: parent
-                      color: "oklch(0.55 0.03 230)"
-                  layout: vertical
-
-              - type: markdown
-                properties:
-                  content: "**Grid** — constrained width forces multi-row wrapping:"
-              - type: legend
-                style:
-                  max-width: "350px"
-                  border: "1px dashed var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))"
-                  padding: "8px"
-                  border-radius: "4px"
-                properties:
-                  entries:
-                    - label: devtown
-                      color: "oklch(0.55 0.15 245)"
-                    - label: engine
-                      color: "oklch(0.50 0.12 150)"
-                    - label: blocks
-                      color: "oklch(0.60 0.12 130)"
-                    - label: blocks-ui
-                      color: "oklch(0.65 0.15 55)"
-                    - label: pages
-                      color: "oklch(0.55 0.15 350)"
-                    - label: parent
-                      color: "oklch(0.55 0.03 230)"
-                    - label: work
-                      color: "oklch(0.55 0.12 275)"
-                    - label: qhorus
-                      color: "oklch(0.55 0.10 175)"
-                    - label: claudony
-                      color: "oklch(0.50 0.15 310)"
-                    - label: platform
-                      color: "oklch(0.45 0.03 230)"
-                    - label: ledger
-                      color: "oklch(0.50 0.15 25)"
-                  layout: grid
-
-              - type: markdown
-                properties:
-                  content: "**Circle swatches:**"
-              - type: legend
-                properties:
-                  entries:
-                    - label: devtown
-                      color: "oklch(0.55 0.15 245)"
-                    - label: engine
-                      color: "oklch(0.50 0.12 150)"
-                    - label: blocks
-                      color: "oklch(0.60 0.12 130)"
-                    - label: blocks-ui
-                      color: "oklch(0.65 0.15 55)"
-                    - label: pages
-                      color: "oklch(0.55 0.15 350)"
-                  layout: linear
-                  swatchShape: circle
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Cross-Repo Roadmap — Gantt Chart with Critical Path (v4)
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Generated 2026-07-16 · All repos scanned · ✅ Done · ✅ Done since v3 · 🔵 Open · 🟠 Blocked
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          html: |
+            <div style="background: var(--pages-surface-secondary, oklch(0.50 0.01 220 / 0.1)); padding: 10px 15px; border-radius: 6px; margin: 10px 0; font-size: 13px;"> <strong>Since v3 (2026-07-14):</strong> 7 devtown issues closed (#104, #124, #127, #134, #135, #136, #150), plus blocks-ui#38, parent#361. Trust &amp; CBR layer is now <strong>fully complete</strong> (only UI-blocked #98 remains). Merge Queue layer has only UI-blocked items and the cross-repo epic remaining. blocks-ui#41 (devtown governance workbench migration) remains the critical UI gate. </div>
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          tabs:
+            Rounded Borders:
+              components:
+                - type: legend
+                  properties:
+                    entries:
+                      - label: devtown
+                        color: oklch(0.55 0.15 245)
+                      - label: engine
+                        color: oklch(0.50 0.12 150)
+                      - label: blocks
+                        color: oklch(0.60 0.12 130)
+                      - label: blocks-ui
+                        color: oklch(0.65 0.15 55)
+                      - label: pages
+                        color: oklch(0.55 0.15 350)
+                      - label: parent
+                        color: oklch(0.55 0.03 230)
+                      - label: work
+                        color: oklch(0.55 0.12 275)
+                      - label: qhorus
+                        color: oklch(0.55 0.10 175)
+                      - label: claudony
+                        color: oklch(0.50 0.15 310)
+                      - label: platform
+                        color: oklch(0.45 0.03 230)
+                      - label: ledger
+                        color: oklch(0.50 0.15 25)
+                    layout: linear
+                - html: <h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>
+                - html: |
+                    <div style="background:oklch(0.70 0.10 55 / 0.15); border:2px solid oklch(0.65 0.15 55); border-radius:6px; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;"> 🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
+                - type: data-table
+                  style:
+                    border: 1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))
+                    border-radius: 8px
+                    padding: 15px
+                    margin-bottom: 20px
+                    overflow: hidden
+                  properties:
+                    lookup:
+                      uuid: ui-pipeline
+                    pageSize: 25
+                    columns:
+                      - id: repo
+                        name: Repo
+                        width: 100px
+                        pill:
+                          blocks: oklch(0.60 0.12 130)
+                          blocks-ui: oklch(0.65 0.15 55)
+                          pages: oklch(0.55 0.15 350)
+                          devtown: oklch(0.55 0.15 245)
+                          parent: oklch(0.55 0.03 230)
+                          work: oklch(0.55 0.12 275)
+                          platform: oklch(0.45 0.03 230)
+                      - id: issue
+                        name: Issue
+                        width: 130px
+                      - id: title
+                        name: Title
+                        width: 3fr
+                      - id: status
+                        name: Status
+                        width: 140px
+                        expression: $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","critical":"🔵 OPEN","new":"🆕 NEW"}, value)
+                      - id: notes
+                        name: Notes
+                        width: 2fr
+                    rowAccent:
+                      column: status
+                      columns: all
+                      colorMap:
+                        newly-done: oklch(0.55 0.12 145)
+                        critical: oklch(0.55 0.15 25)
+                        blocked: oklch(0.55 0.12 55)
+                    rowStyle:
+                      - condition: "#{row.status} == 'done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.10)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'newly-done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.15)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'blocked'"
+                        style:
+                          backgroundColor: oklch(0.70 0.08 55 / 0.12)
+                          color: oklch(0.55 0.12 55)
+                      - condition: "#{row.status} == 'critical'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 25 / 0.12)
+                      - condition: "#{row.status} == 'new'"
+                        style:
+                          backgroundColor: oklch(0.65 0.08 245 / 0.10)
+                - html: <h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Trust &amp; CBR</h3>
+                - type: data-table
+                  style:
+                    border: 1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))
+                    border-radius: 8px
+                    padding: 15px
+                    margin-bottom: 20px
+                    overflow: hidden
+                  properties:
+                    lookup:
+                      uuid: trust-cbr
+                    pageSize: 25
+                    columns:
+                      - id: repo
+                        name: Repo
+                        width: 100px
+                        pill:
+                          devtown: oklch(0.55 0.15 245)
+                          parent: oklch(0.55 0.03 230)
+                          work: oklch(0.55 0.12 275)
+                          platform: oklch(0.45 0.03 230)
+                      - id: issue
+                        name: Issue
+                        width: 130px
+                      - id: title
+                        name: Title
+                        width: 3fr
+                      - id: status
+                        name: Status
+                        width: 140px
+                        expression: $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","new":"🆕 NEW"}, value)
+                      - id: notes
+                        name: Notes
+                        width: 2fr
+                    rowAccent:
+                      column: status
+                      columns: all
+                      colorMap:
+                        newly-done: oklch(0.55 0.12 145)
+                        blocked: oklch(0.55 0.12 55)
+                    rowStyle:
+                      - condition: "#{row.status} == 'done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.10)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'newly-done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.15)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'blocked'"
+                        style:
+                          backgroundColor: oklch(0.70 0.08 55 / 0.12)
+                          color: oklch(0.55 0.12 55)
+                      - condition: "#{row.status} == 'new'"
+                        style:
+                          backgroundColor: oklch(0.65 0.08 245 / 0.10)
+                - html: <h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Merge Queue</h3>
+                - type: data-table
+                  style:
+                    border: 1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))
+                    border-radius: 8px
+                    padding: 15px
+                    margin-bottom: 20px
+                    overflow: hidden
+                  properties:
+                    lookup:
+                      uuid: merge-queue
+                    pageSize: 25
+                    columns:
+                      - id: repo
+                        name: Repo
+                        width: 100px
+                        pill:
+                          devtown: oklch(0.55 0.15 245)
+                          parent: oklch(0.55 0.03 230)
+                          work: oklch(0.55 0.12 275)
+                          platform: oklch(0.45 0.03 230)
+                      - id: issue
+                        name: Issue
+                        width: 130px
+                      - id: title
+                        name: Title
+                        width: 3fr
+                      - id: status
+                        name: Status
+                        width: 140px
+                        expression: $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","new":"🆕 NEW"}, value)
+                      - id: notes
+                        name: Notes
+                        width: 2fr
+                    rowAccent:
+                      column: status
+                      columns: all
+                      colorMap:
+                        newly-done: oklch(0.55 0.12 145)
+                        blocked: oklch(0.55 0.12 55)
+                    rowStyle:
+                      - condition: "#{row.status} == 'done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.10)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'newly-done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.15)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'blocked'"
+                        style:
+                          backgroundColor: oklch(0.70 0.08 55 / 0.12)
+                          color: oklch(0.55 0.12 55)
+                      - condition: "#{row.status} == 'new'"
+                        style:
+                          backgroundColor: oklch(0.65 0.08 245 / 0.10)
+                - html: <h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Summary — v3 → v4 Delta</h3>
+                - type: data-table
+                  style:
+                    border: 1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))
+                    border-radius: 8px
+                    padding: 15px
+                    overflow: hidden
+                  properties:
+                    lookup:
+                      uuid: summary
+                    columns:
+                      - id: metric
+                        name: Metric
+                        width: 2fr
+                      - id: v3
+                        name: v3
+                        width: 1fr
+                      - id: v4
+                        name: v4
+                        width: 1fr
+                      - id: delta
+                        name: Delta
+                        width: 2fr
+            Square Borders:
+              components:
+                - type: markdown
+                  properties:
+                    content: Same roadmap with **square-cut borders** (no border-radius) and no padding.
+                - type: legend
+                  properties:
+                    entries:
+                      - label: devtown
+                        color: oklch(0.55 0.15 245)
+                      - label: blocks
+                        color: oklch(0.60 0.12 130)
+                      - label: blocks-ui
+                        color: oklch(0.65 0.15 55)
+                      - label: pages
+                        color: oklch(0.55 0.15 350)
+                    layout: linear
+                - html: <h3 style="border-bottom:2px solid currentColor; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">UI Pipeline (cross-cutting)</h3>
+                - html: |
+                    <div style="background:oklch(0.70 0.10 55 / 0.15); border:2px solid oklch(0.65 0.15 55); padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;"> 🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
+                - type: data-table
+                  style:
+                    border: 1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))
+                  properties:
+                    lookup:
+                      uuid: ui-pipeline
+                    pageSize: 25
+                    columns:
+                      - id: repo
+                        name: Repo
+                        width: 100px
+                        pill:
+                          blocks: oklch(0.60 0.12 130)
+                          blocks-ui: oklch(0.65 0.15 55)
+                          pages: oklch(0.55 0.15 350)
+                          devtown: oklch(0.55 0.15 245)
+                          parent: oklch(0.55 0.03 230)
+                          work: oklch(0.55 0.12 275)
+                          platform: oklch(0.45 0.03 230)
+                      - id: issue
+                        name: Issue
+                        width: 130px
+                      - id: title
+                        name: Title
+                        width: 3fr
+                      - id: status
+                        name: Status
+                        width: 140px
+                        expression: $lookup({"done":"✅ DONE","newly-done":"✅ Done since v3","open":"🔵 OPEN","blocked":"🟠 BLOCKED","critical":"🔵 OPEN","new":"🆕 NEW"}, value)
+                      - id: notes
+                        name: Notes
+                        width: 2fr
+                    rowAccent:
+                      column: status
+                      columns: all
+                      colorMap:
+                        newly-done: oklch(0.55 0.12 145)
+                        critical: oklch(0.55 0.15 25)
+                        blocked: oklch(0.55 0.12 55)
+                    rowStyle:
+                      - condition: "#{row.status} == 'done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.10)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'newly-done'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 145 / 0.15)
+                          color: oklch(0.55 0.12 145)
+                      - condition: "#{row.status} == 'blocked'"
+                        style:
+                          backgroundColor: oklch(0.70 0.08 55 / 0.12)
+                          color: oklch(0.55 0.12 55)
+                      - condition: "#{row.status} == 'critical'"
+                        style:
+                          backgroundColor: oklch(0.65 0.10 25 / 0.12)
+                      - condition: "#{row.status} == 'new'"
+                        style:
+                          backgroundColor: oklch(0.65 0.08 245 / 0.10)
+            Legend Layouts:
+              components:
+                - type: markdown
+                  properties:
+                    content: "**Linear** (default) — wraps naturally, one dimension resizes with the browser:"
+                - type: legend
+                  properties:
+                    entries:
+                      - label: devtown
+                        color: oklch(0.55 0.15 245)
+                      - label: engine
+                        color: oklch(0.50 0.12 150)
+                      - label: blocks
+                        color: oklch(0.60 0.12 130)
+                      - label: blocks-ui
+                        color: oklch(0.65 0.15 55)
+                      - label: pages
+                        color: oklch(0.55 0.15 350)
+                      - label: parent
+                        color: oklch(0.55 0.03 230)
+                      - label: work
+                        color: oklch(0.55 0.12 275)
+                      - label: qhorus
+                        color: oklch(0.55 0.10 175)
+                      - label: claudony
+                        color: oklch(0.50 0.15 310)
+                      - label: platform
+                        color: oklch(0.45 0.03 230)
+                      - label: ledger
+                        color: oklch(0.50 0.15 25)
+                    layout: linear
+                - type: markdown
+                  properties:
+                    content: "**Horizontal** — fixed height to 1 row, scrolls horizontally:"
+                - type: legend
+                  properties:
+                    entries:
+                      - label: devtown
+                        color: oklch(0.55 0.15 245)
+                      - label: engine
+                        color: oklch(0.50 0.12 150)
+                      - label: blocks
+                        color: oklch(0.60 0.12 130)
+                      - label: blocks-ui
+                        color: oklch(0.65 0.15 55)
+                      - label: pages
+                        color: oklch(0.55 0.15 350)
+                      - label: parent
+                        color: oklch(0.55 0.03 230)
+                      - label: work
+                        color: oklch(0.55 0.12 275)
+                      - label: qhorus
+                        color: oklch(0.55 0.10 175)
+                      - label: claudony
+                        color: oklch(0.50 0.15 310)
+                      - label: platform
+                        color: oklch(0.45 0.03 230)
+                      - label: ledger
+                        color: oklch(0.50 0.15 25)
+                    layout: horizontal
+                - type: markdown
+                  properties:
+                    content: "**Vertical** — fixed width to 1 column, grows downward:"
+                - type: legend
+                  properties:
+                    entries:
+                      - label: devtown
+                        color: oklch(0.55 0.15 245)
+                      - label: engine
+                        color: oklch(0.50 0.12 150)
+                      - label: blocks
+                        color: oklch(0.60 0.12 130)
+                      - label: blocks-ui
+                        color: oklch(0.65 0.15 55)
+                      - label: pages
+                        color: oklch(0.55 0.15 350)
+                      - label: parent
+                        color: oklch(0.55 0.03 230)
+                    layout: vertical
+                - type: markdown
+                  properties:
+                    content: "**Grid** — constrained width forces multi-row wrapping:"
+                - type: legend
+                  style:
+                    max-width: 350px
+                    border: 1px dashed var(--pages-border-subtle, oklch(0.50 0 0 / 0.2))
+                    padding: 8px
+                    border-radius: 4px
+                  properties:
+                    entries:
+                      - label: devtown
+                        color: oklch(0.55 0.15 245)
+                      - label: engine
+                        color: oklch(0.50 0.12 150)
+                      - label: blocks
+                        color: oklch(0.60 0.12 130)
+                      - label: blocks-ui
+                        color: oklch(0.65 0.15 55)
+                      - label: pages
+                        color: oklch(0.55 0.15 350)
+                      - label: parent
+                        color: oklch(0.55 0.03 230)
+                      - label: work
+                        color: oklch(0.55 0.12 275)
+                      - label: qhorus
+                        color: oklch(0.55 0.10 175)
+                      - label: claudony
+                        color: oklch(0.50 0.15 310)
+                      - label: platform
+                        color: oklch(0.45 0.03 230)
+                      - label: ledger
+                        color: oklch(0.50 0.15 25)
+                    layout: grid
+                - type: markdown
+                  properties:
+                    content: "**Circle swatches:**"
+                - type: legend
+                  properties:
+                    entries:
+                      - label: devtown
+                        color: oklch(0.55 0.15 245)
+                      - label: engine
+                        color: oklch(0.50 0.12 150)
+                      - label: blocks
+                        color: oklch(0.60 0.12 130)
+                      - label: blocks-ui
+                        color: oklch(0.65 0.15 55)
+                      - label: pages
+                        color: oklch(0.55 0.15 350)
+                    layout: linear
+                    swatchShape: circle

@@ -352,6 +352,16 @@ describe('classifyPath', () => {
     expect(classifyPath(['pages', 0, 'columns', 0, 'components', 0])).toBe('component');
   });
 
+  it('classifies grid-item path', () => {
+    expect(classifyPath(['pages', 0, 'items', 0])).toBe('grid-item');
+    expect(classifyPath(['pages', 0, 'items', 2])).toBe('grid-item');
+  });
+
+  it('classifies component inside grid-item path', () => {
+    expect(classifyPath(['pages', 0, 'items', 0, 'component'])).toBe('component');
+    expect(classifyPath(['pages', 0, 'items', 0, 'properties'])).toBe('component');
+  });
+
   it('classifies dataset path', () => {
     expect(classifyPath(['datasets', 0])).toBe('dataset');
   });

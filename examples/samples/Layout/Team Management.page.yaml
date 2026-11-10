@@ -1,148 +1,208 @@
 datasets:
-- uuid: team_members
-  content: >-
-    [
-        ["Platform", "Alice Johnson", "Tech Lead", "alice@example.com", "Engineering"],
-        ["Platform", "Bob Smith", "Senior Developer", "bob@example.com", "Engineering"],
-        ["Platform", "Charlie Brown", "Developer", "charlie@example.com", "Engineering"],
-        ["Platform", "Diana Ross", "QA Engineer", "diana@example.com", "Quality"],
-        ["Data", "Eve Wilson", "Team Lead", "eve@example.com", "Engineering"],
-        ["Data", "Frank Miller", "Data Engineer", "frank@example.com", "Engineering"],
-        ["Data", "Grace Lee", "Analytics Engineer", "grace@example.com", "Engineering"],
-        ["Data", "Henry Davis", "ML Engineer", "henry@example.com", "Research"],
-        ["Frontend", "Iris Chen", "Team Lead", "iris@example.com", "Engineering"],
-        ["Frontend", "Jack Taylor", "Senior Frontend Dev", "jack@example.com", "Engineering"],
-        ["Frontend", "Karen White", "Frontend Developer", "karen@example.com", "Engineering"],
-        ["Frontend", "Leo Martinez", "UX Engineer", "leo@example.com", "Design"]
-    ]
-  columns:
-  - id: Team
-    type: LABEL
-  - id: Member
-    type: LABEL
-  - id: Role
-    type: LABEL
-  - id: Email
-    type: LABEL
-  - id: Department
-    type: LABEL
+  - uuid: team_members
+    content: |-
+      [
+          ["Platform", "Alice Johnson", "Tech Lead", "alice@example.com", "Engineering"],
+          ["Platform", "Bob Smith", "Senior Developer", "bob@example.com", "Engineering"],
+          ["Platform", "Charlie Brown", "Developer", "charlie@example.com", "Engineering"],
+          ["Platform", "Diana Ross", "QA Engineer", "diana@example.com", "Quality"],
+          ["Data", "Eve Wilson", "Team Lead", "eve@example.com", "Engineering"],
+          ["Data", "Frank Miller", "Data Engineer", "frank@example.com", "Engineering"],
+          ["Data", "Grace Lee", "Analytics Engineer", "grace@example.com", "Engineering"],
+          ["Data", "Henry Davis", "ML Engineer", "henry@example.com", "Research"],
+          ["Frontend", "Iris Chen", "Team Lead", "iris@example.com", "Engineering"],
+          ["Frontend", "Jack Taylor", "Senior Frontend Dev", "jack@example.com", "Engineering"],
+          ["Frontend", "Karen White", "Frontend Developer", "karen@example.com", "Engineering"],
+          ["Frontend", "Leo Martinez", "UX Engineer", "leo@example.com", "Design"]
+      ]
+    columns:
+      - id: Team
+        type: LABEL
+      - id: Member
+        type: LABEL
+      - id: Role
+        type: LABEL
+      - id: Email
+        type: LABEL
+      - id: Department
+        type: LABEL
 pages:
-- name: Overview
-  rows:
-  - columns:
-    - components:
-      - html: >-
-          <div style="padding: 12px 20px; background: linear-gradient(135deg, oklch(0.35 0.15 260), oklch(0.40 0.15 260)); color: var(--pages-text-secondary, oklch(0.80 0 0)); margin-bottom:
-          16px; border-radius: 8px">
-            <strong style="font-size: 1.3em">Team Management</strong>
-            <span style="margin-left: 12px; opacity: 0.7">Organization overview and team details</span>
-          </div>
-  - columns:
-    - components:
-      - type: title
-        properties:
-          text: Teams Overview
-          size: h3
-      - type: data-table
-        properties:
-          pageSize: 10
-          sortable: true
-          lookup:
-            uuid: team_members
-            group:
-            - columnGroup:
-                source: Team
-              functions:
-              - source: Team
-              - source: Member
-                function: JOIN
-                column: Members
-                separator: ', '
-              - source: Member
-                function: COUNT
-                column: Member Count
-- name: Team Detail
-  rows:
-  - columns:
-    - components:
-      - html: >-
-          <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
-            ↳ Team detail — select a team from Overview to filter
-          </div>
-  - columns:
-    - components:
-      - type: title
-        properties:
-          text: All Team Members
-          size: h3
-      - type: data-table
-        properties:
-          pageSize: 15
-          sortable: true
-          filter:
-            listening: true
-          lookup:
-            uuid: team_members
-- name: Admin Settings
-  rows:
-  - columns:
-    - components:
-      - html: >-
-          <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
-            ↳ Admin settings
-          </div>
-  - columns:
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Total Teams
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: team_members
-            group:
-            - functions:
-              - source: Team
-                function: COUNT
-                column: Count
-          columns:
-          - id: Count
-            pattern: '#,##0'
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Total Members
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: team_members
-            group:
-            - functions:
-              - source: Member
-                function: COUNT
-                column: Count
-          columns:
-          - id: Count
-            pattern: '#,##0'
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Departments
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: team_members
-            group:
-            - functions:
-              - source: Department
-                function: COUNT
-                column: Count
-          columns:
-          - id: Count
-            pattern: '#,##0'
+  - name: Overview
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          html: |-
+            <div style="padding: 12px 20px; background: linear-gradient(135deg, oklch(0.35 0.15 260), oklch(0.40 0.15 260)); color: var(--pages-text-secondary, oklch(0.80 0 0)); margin-bottom: 16px; border-radius: 8px">
+              <strong style="font-size: 1.3em">Team Management</strong>
+              <span style="margin-left: 12px; opacity: 0.7">Organization overview and team details</span>
+            </div>
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Teams Overview
+            size: h3
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: data-table
+          properties:
+            pageSize: 10
+            sortable: true
+            lookup:
+              uuid: team_members
+              group:
+                - columnGroup:
+                    source: Team
+                  functions:
+                    - source: Team
+                    - source: Member
+                      function: JOIN
+                      column: Members
+                      separator: ", "
+                    - source: Member
+                      function: COUNT
+                      column: Member Count
+  - name: Team Detail
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          html: |-
+            <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
+              ↳ Team detail — select a team from Overview to filter
+            </div>
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: All Team Members
+            size: h3
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: data-table
+          properties:
+            pageSize: 15
+            sortable: true
+            filter:
+              listening: true
+            lookup:
+              uuid: team_members
+  - name: Admin Settings
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          html: |-
+            <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
+              ↳ Admin settings
+            </div>
+      - placement:
+          x: 0
+          y: 1
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Total Teams
+            size: h3
+      - placement:
+          x: 0
+          y: 2
+          w: 4
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              uuid: team_members
+              group:
+                - functions:
+                    - source: Team
+                      function: COUNT
+                      column: Count
+            columns:
+              - id: Count
+                pattern: "#,##0"
+      - placement:
+          x: 4
+          y: 1
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Total Members
+            size: h3
+      - placement:
+          x: 4
+          y: 2
+          w: 4
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              uuid: team_members
+              group:
+                - functions:
+                    - source: Member
+                      function: COUNT
+                      column: Count
+            columns:
+              - id: Count
+                pattern: "#,##0"
+      - placement:
+          x: 8
+          y: 1
+          w: 4
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Departments
+            size: h3
+      - placement:
+          x: 8
+          y: 2
+          w: 4
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              uuid: team_members
+              group:
+                - functions:
+                    - source: Department
+                      function: COUNT
+                      column: Count
+            columns:
+              - id: Count
+                pattern: "#,##0"

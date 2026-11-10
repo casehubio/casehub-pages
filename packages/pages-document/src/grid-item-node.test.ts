@@ -38,8 +38,8 @@ describe('GridItemNode', () => {
       const doc = parse(GRID_PAGE_YAML);
       const items = doc.getPages()[0]!.getItems();
       const comp = items[0]!.getComponent();
-      expect(comp.type).toBe('chart');
-      expect(comp.getProperties()).toEqual({ title: 'Revenue' });
+      expect(comp!.type).toBe('chart');
+      expect(comp!.getProperties()).toEqual({ title: 'Revenue' });
     });
   });
 

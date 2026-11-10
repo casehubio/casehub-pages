@@ -1,6 +1,6 @@
 datasets:
   - uuid: org
-    content: >
+    content: |
       [
         ["1", "", "Acme Corp", "Company", "500", "London"],
         ["2", "1", "Engineering", "Division", "180", "London"],
@@ -36,69 +36,79 @@ datasets:
         type: NUMBER
       - id: location
         type: LABEL
-
 pages:
   - name: Tree Table
-    components:
-      - type: title
-        properties:
-          text: Expandable Tree Table
-          size: h2
-
-      - type: markdown
-        properties:
-          content: >
-            **expandable** creates hierarchical rows using `idColumn` and
-            `parentColumn`. Rows whose `parentId` matches another row's `id`
-            nest underneath it. `defaultExpanded` controls how many levels
-            are open initially — set to a number for depth, or `true` for all.
-
-      - type: tabs
-        properties:
-          targetPage: true
-        tabs:
-          Expand 2 Levels:
-            components:
-              - type: data-table
-                properties:
-                  lookup:
-                    uuid: org
-                  sortable: true
-                  filter:
-                    notification: true
-                  expandable:
-                    idColumn: id
-                    parentColumn: parentId
-                    defaultExpanded: 2
-
-          Fully Expanded:
-            components:
-              - type: data-table
-                properties:
-                  lookup:
-                    uuid: org
-                  sortable: true
-                  filter:
-                    notification: true
-                  expandable:
-                    idColumn: id
-                    parentColumn: parentId
-                    defaultExpanded: true
-
-          Collapsed:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    Start collapsed — click rows to expand manually.
-              - type: data-table
-                properties:
-                  lookup:
-                    uuid: org
-                  sortable: true
-                  filter:
-                    notification: true
-                  expandable:
-                    idColumn: id
-                    parentColumn: parentId
-                    defaultExpanded: false
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Expandable Tree Table
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              **expandable** creates hierarchical rows using `idColumn` and `parentColumn`. Rows whose `parentId` matches another row's `id` nest underneath it. `defaultExpanded` controls how many levels are open initially — set to a number for depth, or `true` for all.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            targetPage: true
+          tabs:
+            Expand 2 Levels:
+              components:
+                - type: data-table
+                  properties:
+                    lookup:
+                      uuid: org
+                    sortable: true
+                    filter:
+                      notification: true
+                    expandable:
+                      idColumn: id
+                      parentColumn: parentId
+                      defaultExpanded: 2
+            Fully Expanded:
+              components:
+                - type: data-table
+                  properties:
+                    lookup:
+                      uuid: org
+                    sortable: true
+                    filter:
+                      notification: true
+                    expandable:
+                      idColumn: id
+                      parentColumn: parentId
+                      defaultExpanded: true
+            Collapsed:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      Start collapsed — click rows to expand manually.
+                - type: data-table
+                  properties:
+                    lookup:
+                      uuid: org
+                    sortable: true
+                    filter:
+                      notification: true
+                    expandable:
+                      idColumn: id
+                      parentColumn: parentId
+                      defaultExpanded: false

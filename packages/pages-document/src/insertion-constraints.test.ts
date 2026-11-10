@@ -2,19 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { allowedTypesAt, allowedTypesForSiblingOf, isAllowedChild } from './insertion-constraints.js';
 
 describe('allowedTypesAt', () => {
-  it('page allows rows, columns, and all component types', () => {
+  it('page allows all component types, no structural types', () => {
     const c = allowedTypesAt('page');
-    expect(c.structuralTypes).toContain('row');
-    expect(c.structuralTypes).toContain('column');
+    expect(c.structuralTypes).toEqual([]);
     expect(c.componentTypes.length).toBeGreaterThan(50);
     expect(c.componentTypes).toContain('bar-chart');
     expect(c.componentTypes).toContain('input');
-  });
-
-  it('row allows only columns', () => {
-    const c = allowedTypesAt('row');
-    expect(c.structuralTypes).toEqual(['column']);
-    expect(c.componentTypes).toEqual([]);
+    expect(c.componentTypes).not.toContain('rows');
   });
 
   it('column allows all component types, no structural', () => {
@@ -55,15 +49,9 @@ describe('allowedTypesForSiblingOf', () => {
     expect(c.componentTypes.length).toBeGreaterThan(50);
   });
 
-  it('sibling of column = row constraint (columns only)', () => {
-    const c = allowedTypesForSiblingOf('column');
-    expect(c.structuralTypes).toEqual(['column']);
-    expect(c.componentTypes).toEqual([]);
-  });
-
-  it('sibling of row = page constraint (rows, columns, components)', () => {
-    const c = allowedTypesForSiblingOf('row');
-    expect(c.structuralTypes).toContain('row');
+  it('sibling of grid-item = page constraint (all components)', () => {
+    const c = allowedTypesForSiblingOf('grid-item');
+    expect(c.structuralTypes).toEqual([]);
     expect(c.componentTypes.length).toBeGreaterThan(50);
   });
 });
@@ -73,24 +61,12 @@ describe('isAllowedChild', () => {
     expect(isAllowedChild('column', 'bar-chart')).toBe(true);
   });
 
-  it('row is not allowed in column', () => {
-    expect(isAllowedChild('column', 'row')).toBe(false);
-  });
-
-  it('column is allowed in row', () => {
-    expect(isAllowedChild('row', 'column')).toBe(true);
-  });
-
-  it('bar-chart is not allowed in row', () => {
-    expect(isAllowedChild('row', 'bar-chart')).toBe(false);
+  it('bar-chart is allowed in page', () => {
+    expect(isAllowedChild('page', 'bar-chart')).toBe(true);
   });
 
   it('nothing is allowed in leaf component', () => {
     expect(isAllowedChild('bar-chart', 'input')).toBe(false);
-  });
-
-  it('row is allowed in page', () => {
-    expect(isAllowedChild('page', 'row')).toBe(true);
   });
 
   it('component is allowed in container (tabs)', () => {

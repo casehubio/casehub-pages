@@ -1,114 +1,50 @@
-import { describe, it, expect } from "vitest";
-import { createGridOverlay, removeGridOverlay, showGhost, hideGhost, createEditButton, removeEditButton } from "./grid-overlay.js";
-import type { GridGeometry } from "./grid-drag.js";
+import { describe, it, expect, beforeEach } from "vitest";
+import { JSDOM } from "jsdom";
+import {
+  showPlaceholder,
+  hidePlaceholder,
+  renderEmptyContainer,
+} from "./grid-overlay.js";
 
-const GEO: GridGeometry = {
-  columns: 12,
-  cellWidth: 89,
-  cellHeight: 60,
-  gap: 12,
-  gridLeft: 0,
-  gridTop: 0,
-};
+let gridEl: HTMLElement;
 
-describe("createGridOverlay", () => {
-  it("creates overlay div with pointer-events none", () => {
-    const grid = document.createElement("div");
-    const overlay = createGridOverlay(grid, GEO);
-    expect(overlay.style.pointerEvents).toBe("none");
-    expect(overlay.style.position).toBe("absolute");
-    expect(overlay.dataset.gridOverlay).toBeDefined();
-    expect(grid.contains(overlay)).toBe(true);
+beforeEach(() => {
+  const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+  gridEl = dom.window.document.createElement("div");
+  gridEl.style.display = "grid";
+  gridEl.style.gridTemplateColumns = "repeat(12, 1fr)";
+  dom.window.document.body.appendChild(gridEl);
+});
+
+describe("showPlaceholder", () => {
+  it("creates a structural grid item with correct placement", () => {
+    const ph = showPlaceholder(gridEl, { x: 2, y: 1, w: 4, h: 2 });
+    expect(ph.style.gridColumn).toBe("3 / span 4");
+    expect(ph.style.gridRow).toBe("2 / span 2");
+    expect(ph.dataset.gridPlaceholder).toBeDefined();
   });
 
-  it("sets background with repeating-linear-gradient", () => {
-    const grid = document.createElement("div");
-    const overlay = createGridOverlay(grid, GEO);
-    expect(overlay.style.backgroundImage).toContain("repeating-linear-gradient");
+  it("removes previous placeholder before creating new one", () => {
+    showPlaceholder(gridEl, { x: 0, y: 0, w: 6, h: 1 });
+    showPlaceholder(gridEl, { x: 6, y: 0, w: 6, h: 1 });
+    const placeholders = gridEl.querySelectorAll("[data-grid-placeholder]");
+    expect(placeholders.length).toBe(1);
   });
 });
 
-describe("removeGridOverlay", () => {
-  it("removes the overlay from the grid", () => {
-    const grid = document.createElement("div");
-    createGridOverlay(grid, GEO);
-    expect(grid.querySelector("[data-grid-overlay]")).not.toBeNull();
-    removeGridOverlay(grid);
-    expect(grid.querySelector("[data-grid-overlay]")).toBeNull();
-  });
-
-  it("does nothing when no overlay exists", () => {
-    const grid = document.createElement("div");
-    removeGridOverlay(grid);
-    expect(grid.children).toHaveLength(0);
+describe("hidePlaceholder", () => {
+  it("removes the placeholder element", () => {
+    showPlaceholder(gridEl, { x: 0, y: 0, w: 6, h: 1 });
+    hidePlaceholder(gridEl);
+    expect(gridEl.querySelector("[data-grid-placeholder]")).toBeNull();
   });
 });
 
-describe("showGhost / hideGhost", () => {
-  it("adds ghost div inside overlay", () => {
-    const grid = document.createElement("div");
-    const overlay = createGridOverlay(grid, GEO);
-    const ghost = showGhost(overlay, 2, 1, 4, 2, GEO);
-    expect(ghost.dataset.gridGhost).toBeDefined();
-    expect(overlay.contains(ghost)).toBe(true);
-  });
-
-  it("positions ghost based on cell coordinates", () => {
-    const grid = document.createElement("div");
-    const overlay = createGridOverlay(grid, GEO);
-    const ghost = showGhost(overlay, 0, 0, 1, 1, GEO);
-    expect(ghost.style.left).toBe("0px");
-    expect(ghost.style.top).toBe("0px");
-  });
-
-  it("replaces existing ghost on re-show", () => {
-    const grid = document.createElement("div");
-    const overlay = createGridOverlay(grid, GEO);
-    showGhost(overlay, 0, 0, 1, 1, GEO);
-    showGhost(overlay, 2, 2, 1, 1, GEO);
-    const ghosts = overlay.querySelectorAll("[data-grid-ghost]");
-    expect(ghosts).toHaveLength(1);
-  });
-
-  it("removes ghost on hideGhost", () => {
-    const grid = document.createElement("div");
-    const overlay = createGridOverlay(grid, GEO);
-    showGhost(overlay, 0, 0, 1, 1, GEO);
-    hideGhost(overlay);
-    expect(overlay.querySelector("[data-grid-ghost]")).toBeNull();
-  });
-});
-
-describe("createEditButton", () => {
-  it("creates button appended to grid element", () => {
-    const grid = document.createElement("div");
-    let clicked = false;
-    createEditButton(grid, () => { clicked = true; });
-    const btn = grid.querySelector("[data-grid-edit-button]") as HTMLButtonElement;
-    expect(btn).not.toBeNull();
-    btn.click();
-    expect(clicked).toBe(true);
-  });
-
-  it("positions button absolutely", () => {
-    const grid = document.createElement("div");
-    createEditButton(grid, () => {});
-    const btn = grid.querySelector("[data-grid-edit-button]") as HTMLElement;
-    expect(btn.style.position).toBe("absolute");
-  });
-});
-
-describe("removeEditButton", () => {
-  it("removes the edit button", () => {
-    const grid = document.createElement("div");
-    createEditButton(grid, () => {});
-    removeEditButton(grid);
-    expect(grid.querySelector("[data-grid-edit-button]")).toBeNull();
-  });
-
-  it("does nothing when no button exists", () => {
-    const grid = document.createElement("div");
-    removeEditButton(grid);
-    expect(grid.children).toHaveLength(0);
+describe("renderEmptyContainer", () => {
+  it("adds empty-container styling to element", () => {
+    const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+    const el = dom.window.document.createElement("div");
+    renderEmptyContainer(el);
+    expect(el.dataset.emptyContainer).toBeDefined();
   });
 });

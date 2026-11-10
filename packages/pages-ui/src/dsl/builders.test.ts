@@ -53,6 +53,7 @@ import {
   eventTimeline,
   dataTable,
   masterDetail,
+  emptyContainer,
   type PageOptions,
 } from "./builders.js";
 
@@ -1091,6 +1092,20 @@ describe("dockWorkbench builder", () => {
       });
       expect(result.type).toBe("data-table");
       expect((result.props as any).selectionKey).toBe("id");
+    });
+  });
+
+  describe("emptyContainer()", () => {
+    it("creates a GridItem with no component", () => {
+      const item = emptyContainer(0, 0, 6, 2);
+      expect(item.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 2 });
+      expect(item.component).toBeUndefined();
+    });
+
+    it("creates a frozen object", () => {
+      const item = emptyContainer(3, 1, 4, 3);
+      expect(Object.isFrozen(item)).toBe(true);
+      expect(Object.isFrozen(item.placement)).toBe(true);
     });
   });
 });

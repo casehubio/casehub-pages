@@ -1,99 +1,141 @@
 datasets:
-- uuid: apps
-  url: /api/apps/platform/_apps
-  mutable:
-    keyColumn: appId
-    createUrl: /api/apps/platform/_apps
-    updateUrl: /api/apps/platform/_apps/{appId}
-    deleteUrl: /api/apps/platform/_apps/{appId}
-  columns:
-  - id: appId
-    type: TEXT
-  - id: name
-    type: TEXT
-  - id: description
-    type: TEXT
-  - id: icon
-    type: TEXT
-  - id: order
-    type: TEXT
-  - id: route
-    type: TEXT
-  - id: source
-    type: LABEL
-
+  - uuid: apps
+    url: /api/apps/platform/_apps
+    mutable:
+      keyColumn: appId
+      createUrl: /api/apps/platform/_apps
+      updateUrl: /api/apps/platform/_apps/{appId}
+      deleteUrl: /api/apps/platform/_apps/{appId}
+    columns:
+      - id: appId
+        type: TEXT
+      - id: name
+        type: TEXT
+      - id: description
+        type: TEXT
+      - id: icon
+        type: TEXT
+      - id: order
+        type: TEXT
+      - id: route
+        type: TEXT
+      - id: source
+        type: LABEL
 pages:
-- name: index
-  components:
-  - type: tabs
-    properties:
-      navGroupId: PlatformNav
-      width: 100%
-
-- name: App Catalogue
-  rows:
-  - columns:
-    - span: 3
-      components:
-      - type: title
-        properties:
-          text: Available Apps
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: apps
-            group:
-            - functions:
-              - source: appId
-                function: COUNT
-          columns:
-          - id: appId
-            pattern: '#'
-    - span: 9
-      components:
-      - type: title
-        properties:
-          text: Applications
-          size: h3
-      - type: data-table
-        properties:
-          pageSize: 20
-          sortable: true
-          filter:
-            notification: true
-          lookup:
-            uuid: apps
-          columns:
-          - id: name
-          - id: appId
-          - id: description
-          - id: route
-          - id: source
-
-- name: Add App
-  components:
-  - type: title
-    properties:
-      text: Register Application
-      size: h2
-  - schema-form:
-      schema:
-        properties:
-          appId: { type: string, minLength: 1 }
-          name: { type: string, minLength: 1 }
-          description: { type: string }
-          icon: { type: string }
-          route: { type: string }
-        required: [appId, name]
-      forceCreate: true
-      submitUrl: /api/apps/platform/_apps
-      submitMethod: POST
-
+  - name: index
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            navGroupId: PlatformNav
+            width: 100%
+  - name: App Catalogue
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Available Apps
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              uuid: apps
+              group:
+                - functions:
+                    - source: appId
+                      function: COUNT
+            columns:
+              - id: appId
+                pattern: "#"
+      - placement:
+          x: 3
+          y: 0
+          w: 9
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Applications
+            size: h3
+      - placement:
+          x: 3
+          y: 1
+          w: 9
+          h: 1
+        component:
+          type: data-table
+          properties:
+            pageSize: 20
+            sortable: true
+            filter:
+              notification: true
+            lookup:
+              uuid: apps
+            columns:
+              - id: name
+              - id: appId
+              - id: description
+              - id: route
+              - id: source
+  - name: Add App
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Register Application
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          schema-form:
+            schema:
+              properties:
+                appId:
+                  type: string
+                  minLength: 1
+                name:
+                  type: string
+                  minLength: 1
+                description:
+                  type: string
+                icon:
+                  type: string
+                route:
+                  type: string
+              required:
+                - appId
+                - name
+            forceCreate: true
+            submitUrl: /api/apps/platform/_apps
+            submitMethod: POST
 navTree:
   root_items:
-  - type: GROUP
-    id: PlatformNav
-    children:
-    - page: App Catalogue
-    - page: Add App
+    - type: GROUP
+      id: PlatformNav
+      children:
+        - page: App Catalogue
+        - page: Add App

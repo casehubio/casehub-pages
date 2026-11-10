@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Builder Tree — Context Menu Test (#625)</title>
+  <style>
+    :root {
+      --pages-neutral-1: #f8f9fa;
+      --pages-neutral-2: #f1f3f5;
+      --pages-neutral-3: #e9ecef;
+      --pages-neutral-4: #dee2e6;
+      --pages-neutral-5: #ced4da;
+      --pages-neutral-6: #adb5bd;
+      --pages-neutral-7: #868e96;
+      --pages-neutral-8: #495057;
+      --pages-neutral-9: #343a40;
+      --pages-neutral-10: #212529;
+      --pages-neutral-11: #343a40;
+      --pages-neutral-12: #1a1a2e;
+      --pages-text-primary: var(--pages-neutral-12);
+      --pages-text-secondary: var(--pages-neutral-8);
+      --pages-section-color: var(--pages-neutral-8);
+      --pages-border-color: var(--pages-neutral-4);
+      --pages-surface-bg: #fff;
+      --pages-hover-bg: rgba(0, 0, 0, 0.06);
+      --pages-selected-bg: rgba(66, 133, 244, 0.14);
+      --pages-selected-color: #1a56db;
+      --pages-focus-ring: #4285f4;
+      --pages-primary: #1a56db;
+      --pages-font-family: system-ui, -apple-system, sans-serif;
+      --pages-font-size-sm: 13px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--pages-font-family); height: 100vh; color: var(--pages-text-primary); }
+    pages-builder-shell { display: block; height: 100%; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import '@casehubio/pages-code-editor';
+    import '@casehubio/pages-property-palette';
+    import '@casehubio/pages-viz';
+    import { loadSite } from '@casehubio/pages-runtime';
+    import './src/shell/builder-shell.js';
+
+    const YAML = `pages:
+  - name: Grid Test
+    items:
+      - placement: { x: 0, y: 0, w: 6, h: 2 }
+        component:
+          type: title
+          properties:
+            text: Revenue Overview
+      - placement: { x: 6, y: 0, w: 6, h: 2 }
+        component:
+          type: html
+          properties:
+            content: "<p>Customer metrics panel</p>"
+      - placement: { x: 0, y: 2, w: 12, h: 3 }
+        component:
+          type: bar-chart
+          properties:
+            subtype: column
+            title: Weekly Sales
+            lookup:
+              uuid: sales
+      - placement: { x: 0, y: 5, w: 4, h: 2 }
+      - placement: { x: 4, y: 5, w: 8, h: 2 }
+        component:
+          type: metric
+          properties:
+            label: Total Customers
+            value: "1,247"
+
+datasets:
+  - uuid: sales
+    content: >-
+      [[1,"Jan",4200],[2,"Feb",5100],[3,"Mar",4800],[4,"Apr",6300]]
+    columns:
+      - id: id
+        type: NUMBER
+      - id: month
+        type: TEXT
+      - id: revenue
+        type: NUMBER
+`;
+
+    const el = document.createElement('pages-builder-shell');
+    let currentSite = null;
+    el.renderPreview = (container, yaml) => {
+      if (currentSite) { currentSite.dispose(); currentSite = null; }
+      container.innerHTML = '';
+      loadSite(container, yaml).then(site => { currentSite = site; }).catch(() => {});
+    };
+    document.body.appendChild(el);
+    requestAnimationFrame(() => {
+      el.yaml = YAML;
+    });
+  </script>
+</body>
+</html>

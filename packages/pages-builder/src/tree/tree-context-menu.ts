@@ -9,38 +9,24 @@ export function computeMenuItems(nodeType: TreeNodeType, isContainer: boolean): 
         { label: 'Move up', action: 'move-up' },
         { label: 'Move down', action: 'move-down' },
         { separator: true, label: '' },
-        { label: 'Wrap in…', children: [
-          { label: 'Row', action: 'wrap-row' },
-          { label: 'Column', action: 'wrap-column' },
-          { separator: true, label: '' },
-          { label: 'Tabs', action: 'wrap-tabs' },
-        ]},
-        { label: 'Replace with…', action: 'replace-with' },
+        { label: 'Wrap in Tabs', action: 'wrap-tabs' },
         { separator: true, label: '' },
         { label: 'Duplicate', action: 'duplicate', shortcut: '⌃D' },
         { label: 'Delete', action: 'delete', shortcut: '⌫' },
       ];
-    case 'row':
+    case 'grid-item':
       return [
         { label: 'Move up', action: 'move-up' },
         { label: 'Move down', action: 'move-down' },
         { separator: true, label: '' },
-        { label: 'Add column', action: 'add-column' },
-        { separator: true, label: '' },
-        { label: 'Delete', action: 'delete', shortcut: '⌫' },
-      ];
-    case 'column':
-      return [
-        { label: 'Move left', action: 'move-up' },
-        { label: 'Move right', action: 'move-down' },
-        { separator: true, label: '' },
-        { label: 'Add component', action: 'add-child' },
+        { label: 'Split horizontally', action: 'split-horizontal' },
+        { label: 'Split vertically', action: 'split-vertical' },
         { separator: true, label: '' },
         { label: 'Delete', action: 'delete', shortcut: '⌫' },
       ];
     case 'page':
       return [
-        { label: 'Add row', action: 'add-row' },
+        { label: 'Add item', action: 'add-item' },
         { label: 'Add component', action: 'add-child' },
         { separator: true, label: '' },
         { label: 'Delete', action: 'delete', shortcut: '⌫' },

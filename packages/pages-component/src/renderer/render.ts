@@ -132,13 +132,18 @@ function renderNode(
 
     const ordered = [...positioned, ...auto];
     for (const { item, originalIndex } of ordered) {
-      if (item.placement.mode === "positioned") {
+      if (!item.component) {
+        const empty = document.createElement("div");
+        empty.className = "pages-empty-container";
+        el.appendChild(empty);
+      } else if (item.placement.mode === "positioned") {
         renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);
       } else {
         renderNode(el, item.component, id, "auto", originalIndex, permissions, doc, onNode);
       }
       const child = el.lastElementChild;
       if (child instanceof HTMLElement) {
+        child.dataset.itemId = String(originalIndex);
         applyGridPlacement(child, item.placement);
         if (rowHeight !== undefined) {
           child.style.overflow = "hidden";

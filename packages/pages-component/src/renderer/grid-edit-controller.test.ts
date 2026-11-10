@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { attachGridEditController } from "./grid-edit-controller.js";
+import type { GridEditController } from "./grid-edit-controller.js";
 import type { GridItem } from "../model/types.js";
 
 function makeItems(): GridItem[] {
@@ -9,15 +10,30 @@ function makeItems(): GridItem[] {
   ];
 }
 
+function makeItemsWithEmpty(): GridItem[] {
+  return [
+    { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 }, component: { type: "html", id: "a" } },
+    { placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 2 } },
+    { placement: { mode: "positioned", x: 0, y: 2, w: 12, h: 1 }, component: { type: "html", id: "c" } },
+  ];
+}
+
 function setupGrid(items: GridItem[]): HTMLElement {
   const grid = document.createElement("div");
   grid.style.display = "grid";
   grid.style.gridTemplateColumns = "repeat(12, 1fr)";
   document.body.appendChild(grid);
-  for (const item of items) {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]!;
     const el = document.createElement("div");
-    el.dataset.componentId = item.component.id ?? "";
-    el.dataset.componentType = item.component.type;
+    el.dataset.itemId = String(i);
+    if (item.component?.id) {
+      el.dataset.componentId = item.component.id;
+    }
+    if (item.placement.mode === "positioned") {
+      el.style.gridColumn = `${item.placement.x + 1} / span ${item.placement.w}`;
+      el.style.gridRow = `${item.placement.y + 1} / span ${item.placement.h}`;
+    }
     const content = document.createElement("div");
     content.textContent = "content";
     el.appendChild(content);
@@ -58,6 +74,14 @@ describe("GridEditController", () => {
     ctrl.dispose();
   });
 
+  it("has mode property defaulting to layout", () => {
+    const items = makeItems();
+    const grid = setupGrid(items);
+    const ctrl = attachGridEditController(grid, items, 12, 60);
+    expect(ctrl.mode).toBe("layout");
+    ctrl.dispose();
+  });
+
   it("enter sets data-grid-editing and data-grid-editing-active on body", () => {
     const items = makeItems();
     const grid = setupGrid(items);
@@ -87,12 +111,21 @@ describe("GridEditController", () => {
     ctrl.dispose();
   });
 
+  it("enter creates mode toggle", () => {
+    const items = makeItems();
+    const grid = setupGrid(items);
+    const ctrl = attachGridEditController(grid, items, 12, 60);
+    ctrl.enter();
+    expect(grid.querySelector("[data-mode-toggle]")).not.toBeNull();
+    ctrl.dispose();
+  });
+
   it("enter sets pointer-events none on item content", () => {
     const items = makeItems();
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
     ctrl.enter();
-    const itemEl = grid.querySelector("[data-component-id='a']") as HTMLElement;
+    const itemEl = grid.querySelector("[data-item-id='0']") as HTMLElement;
     const content = itemEl.firstElementChild as HTMLElement;
     expect(content.style.pointerEvents).toBe("none");
     ctrl.dispose();
@@ -121,13 +154,14 @@ describe("GridEditController", () => {
     ctrl.dispose();
   });
 
-  it("exit removes grid overlay", () => {
+  it("exit removes grid overlay and mode toggle", () => {
     const items = makeItems();
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
     ctrl.enter();
     ctrl.exit();
     expect(grid.querySelector("[data-grid-overlay]")).toBeNull();
+    expect(grid.querySelector("[data-mode-toggle]")).toBeNull();
     ctrl.dispose();
   });
 
@@ -137,7 +171,7 @@ describe("GridEditController", () => {
     const ctrl = attachGridEditController(grid, items, 12, 60);
     ctrl.enter();
     ctrl.exit();
-    const itemEl = grid.querySelector("[data-component-id='a']") as HTMLElement;
+    const itemEl = grid.querySelector("[data-item-id='0']") as HTMLElement;
     const content = itemEl.firstElementChild as HTMLElement;
     expect(content.style.pointerEvents).toBe("");
     ctrl.dispose();
@@ -148,7 +182,7 @@ describe("GridEditController", () => {
     const gridA = setupGrid(itemsA);
     const ctrlA = attachGridEditController(gridA, itemsA, 12, 60);
     const itemsB: GridItem[] = [
-      { placement: { mode: "positioned", x: 0, y: 0, w: 12, h: 1 }, component: { type: "html", id: "c" } },
+      { placement: { mode: "positioned", x: 0, y: 0, w: 12, h: 1 }, component: { type: "html", id: "d" } },
     ];
     const gridB = setupGrid(itemsB);
     const ctrlB = attachGridEditController(gridB, itemsB, 12, 60);
@@ -166,7 +200,7 @@ describe("GridEditController", () => {
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
     ctrl.enter();
-    grid.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     expect(ctrl.active).toBe(false);
     ctrl.dispose();
   });
@@ -180,6 +214,7 @@ describe("GridEditController", () => {
     expect(grid.hasAttribute("data-grid-editing")).toBe(false);
     expect(grid.querySelector("[data-grid-overlay]")).toBeNull();
     expect(grid.querySelector("[data-grid-edit-button]")).toBeNull();
+    expect(grid.querySelector("[data-mode-toggle]")).toBeNull();
     expect(ctrl.active).toBe(false);
   });
 
@@ -189,7 +224,6 @@ describe("GridEditController", () => {
     const ctrl = attachGridEditController(grid, items, 12, 60);
     ctrl.enter();
     grid.remove();
-    // MutationObserver fires asynchronously — trigger microtask flush
     return new Promise<void>(resolve => {
       setTimeout(() => {
         expect(ctrl.active).toBe(false);
@@ -198,19 +232,28 @@ describe("GridEditController", () => {
     });
   });
 
-  it("dispatches pages-grid-edit event with correct shape", () => {
-    const items = makeItems();
+  it("handles items with empty containers (no component)", () => {
+    const items = makeItemsWithEmpty();
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
     ctrl.enter();
-    const handler = vi.fn();
-    grid.addEventListener("pages-grid-edit", handler);
-    // The event is dispatched by the controller on pointerup after a valid drag.
-    // We can't fully simulate pointer capture in jsdom, but we verify the event
-    // contract exists by checking the controller exposes the right API surface.
+    expect(ctrl.active).toBe(true);
+    const emptyEl = grid.querySelector("[data-item-id='1']") as HTMLElement;
+    expect(emptyEl).not.toBeNull();
+    ctrl.dispose();
+  });
+
+  it("exposes correct API surface", () => {
+    const items = makeItems();
+    const grid = setupGrid(items);
+    const ctrl = attachGridEditController(grid, items, 12, 60);
     expect(typeof ctrl.enter).toBe("function");
     expect(typeof ctrl.exit).toBe("function");
     expect(typeof ctrl.dispose).toBe("function");
+    expect(ctrl.gridEl).toBe(grid);
+    expect(ctrl.items).toBe(items);
+    expect(ctrl.columns).toBe(12);
+    expect(ctrl.mode).toBe("layout");
     ctrl.dispose();
   });
 });

@@ -1,199 +1,322 @@
 datasets:
-- uuid: devs
-  content: >-
-    [
-      [1, "Alice Chen", "Java", 8],
-      [2, "Bob Kim", "TypeScript", 3],
-      [3, "Carlos Ruiz", "Python", 12],
-      [4, "Diana Park", "Go", 5],
-      [5, "Eve Johnson", "Java", 2],
-      [6, "Frank Lee", "Rust", 7],
-      [7, "Grace Wu", "TypeScript", 10],
-      [8, "Henry Zhang", "Python", 4],
-      [9, "Iris Chen", "Java", 6],
-      [10, "Jack Taylor", "Go", 1]
-    ]
-  columns:
-  - id: id
-    type: NUMBER
-  - id: name
-    type: TEXT
-  - id: language
-    type: LABEL
-  - id: workingYears
-    type: NUMBER
-
+  - uuid: devs
+    content: |-
+      [
+        [1, "Alice Chen", "Java", 8],
+        [2, "Bob Kim", "TypeScript", 3],
+        [3, "Carlos Ruiz", "Python", 12],
+        [4, "Diana Park", "Go", 5],
+        [5, "Eve Johnson", "Java", 2],
+        [6, "Frank Lee", "Rust", 7],
+        [7, "Grace Wu", "TypeScript", 10],
+        [8, "Henry Zhang", "Python", 4],
+        [9, "Iris Chen", "Java", 6],
+        [10, "Jack Taylor", "Go", 1]
+      ]
+    columns:
+      - id: id
+        type: NUMBER
+      - id: name
+        type: TEXT
+      - id: language
+        type: LABEL
+      - id: workingYears
+        type: NUMBER
 pages:
-- name: Developer List
-  components:
-    - type: title
-      properties:
-        text: Developer Registration
-        size: h2
-
-    - type: markdown
-      properties:
-        content: |
-          Click a row to edit. Changes save automatically after 2 seconds.
-          The bar chart updates with the table.
-
-    - type: selector
-      properties:
-        subtype: labels
-        filter:
-          notification: true
-        lookup:
-          uuid: devs
-          group:
-          - columnGroup:
-                source: language
-            functions:
-            - source: language
-
-    - type: data-table
-      properties:
-        lookup:
-          uuid: devs
-        sortable: true
-        filter:
-          notification: true
-          listening: true
-
-    - type: bar-chart
-      properties:
-        subtype: column
-        chart:
-          height: 250
-        filter:
-          listening: true
-        lookup:
-          uuid: devs
-          sort:
-          - column: Total
-            sortOrder: DESCENDING
-          group:
-          - columnGroup:
-              source: language
-              groupStrategy: DYNAMIC
-            functions:
-            - source: language
-            - source: workingYears
-              function: SUM
-              column: Total
-
-- name: Edit Developer
-  dataScope:
-    dataset: devs
-    idColumn: id
-  save:
-    trigger: auto
-    delay: 2000
-    adapter: local
-  components:
-    - type: title
-      properties:
-        text: Edit Developer
-        size: h3
-
-    - input:
-        field: name
-        label: Name
-        required: true
-
-    - select:
-        field: language
-        label: Language
-        options:
-          values:
-          - Java
-          - TypeScript
-          - Python
-          - Go
-          - Rust
-          - Kotlin
-          - C++
-
-    - number-input:
-        field: workingYears
-        label: Working Years
-        min: 0
-        max: 50
-
-- name: Edit Developer (Schema)
-  dataScope:
-    dataset: devs
-    idColumn: id
-  save:
-    trigger: auto
-    delay: 2000
-    adapter: local
-  components:
-    - type: title
-      properties:
-        text: Edit Developer (Schema Form)
-        size: h3
-
-    - type: markdown
-      properties:
-        content: |
-          Same data as the DSL form, but driven by a single
-          `schema-form:` component with explicit schema constraints.
-
-    - schema-form:
-        schema:
+  - name: Developer List
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
           properties:
-            name: { type: string, minLength: 1 }
-            language: { type: string, enum: [Java, TypeScript, Python, Go, Rust, Kotlin, C++] }
-            workingYears: { type: integer, minimum: 0, maximum: 50 }
-          required: [name]
-        excludeFields: [id]
-        labels:
-          workingYears: Years of Experience
-
-- name: New Developer (Nested)
-  components:
-    - type: title
-      properties:
-        text: New Developer (Nested Schema)
-        size: h3
-
-    - type: markdown
-      properties:
-        content: |
-          Rich developer profile with nested address, skills array, and
-          preferred contact method (oneOf). Demonstrates all nested form
-          capabilities in a create-mode form.
-
-    - schema-form:
-        schema:
+            text: Developer Registration
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
           properties:
-            name: { type: string, minLength: 1 }
-            language: { type: string, enum: [Java, TypeScript, Python, Go, Rust, Kotlin, C++] }
-            workingYears: { type: integer, minimum: 0, maximum: 50, title: Years of Experience }
-            address:
-              type: object
-              title: Office Address
+            content: |
+              Click a row to edit. Changes save automatically after 2 seconds.
+              The bar chart updates with the table.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: selector
+          properties:
+            subtype: labels
+            filter:
+              notification: true
+            lookup:
+              uuid: devs
+              group:
+                - columnGroup:
+                    source: language
+                  functions:
+                    - source: language
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: data-table
+          properties:
+            lookup:
+              uuid: devs
+            sortable: true
+            filter:
+              notification: true
+              listening: true
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            subtype: column
+            chart:
+              height: 250
+            filter:
+              listening: true
+            lookup:
+              uuid: devs
+              sort:
+                - column: Total
+                  sortOrder: DESCENDING
+              group:
+                - columnGroup:
+                    source: language
+                    groupStrategy: DYNAMIC
+                  functions:
+                    - source: language
+                    - source: workingYears
+                      function: SUM
+                      column: Total
+  - name: Edit Developer
+    dataScope:
+      dataset: devs
+      idColumn: id
+    save:
+      trigger: auto
+      delay: 2000
+      adapter: local
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Edit Developer
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          input:
+            field: name
+            label: Name
+            required: true
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          select:
+            field: language
+            label: Language
+            options:
+              values:
+                - Java
+                - TypeScript
+                - Python
+                - Go
+                - Rust
+                - Kotlin
+                - C++
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          number-input:
+            field: workingYears
+            label: Working Years
+            min: 0
+            max: 50
+  - name: Edit Developer (Schema)
+    dataScope:
+      dataset: devs
+      idColumn: id
+    save:
+      trigger: auto
+      delay: 2000
+      adapter: local
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Edit Developer (Schema Form)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Same data as the DSL form, but driven by a single
+              `schema-form:` component with explicit schema constraints.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          schema-form:
+            schema:
               properties:
-                street: { type: string }
-                city: { type: string }
-                state: { type: string, maxLength: 2 }
-                zip: { type: string }
-              required: [street, city]
-            skills:
-              type: array
-              title: Skills
-              items: { type: string }
-              minItems: 1
-              maxItems: 8
-            certifications:
-              type: array
-              title: Certifications
-              items:
-                type: object
-                properties:
-                  name: { type: string, title: Certification Name }
-                  year: { type: integer, minimum: 2000, maximum: 2030 }
-                required: [name]
-          required: [name, language]
-        excludeFields: [id]
-        forceCreate: true
+                name:
+                  type: string
+                  minLength: 1
+                language:
+                  type: string
+                  enum:
+                    - Java
+                    - TypeScript
+                    - Python
+                    - Go
+                    - Rust
+                    - Kotlin
+                    - C++
+                workingYears:
+                  type: integer
+                  minimum: 0
+                  maximum: 50
+              required:
+                - name
+            excludeFields:
+              - id
+            labels:
+              workingYears: Years of Experience
+  - name: New Developer (Nested)
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: New Developer (Nested Schema)
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Rich developer profile with nested address, skills array, and
+              preferred contact method (oneOf). Demonstrates all nested form
+              capabilities in a create-mode form.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          schema-form:
+            schema:
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                language:
+                  type: string
+                  enum:
+                    - Java
+                    - TypeScript
+                    - Python
+                    - Go
+                    - Rust
+                    - Kotlin
+                    - C++
+                workingYears:
+                  type: integer
+                  minimum: 0
+                  maximum: 50
+                  title: Years of Experience
+                address:
+                  type: object
+                  title: Office Address
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    state:
+                      type: string
+                      maxLength: 2
+                    zip:
+                      type: string
+                  required:
+                    - street
+                    - city
+                skills:
+                  type: array
+                  title: Skills
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 8
+                certifications:
+                  type: array
+                  title: Certifications
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        title: Certification Name
+                      year:
+                        type: integer
+                        minimum: 2000
+                        maximum: 2030
+                    required:
+                      - name
+              required:
+                - name
+                - language
+            excludeFields:
+              - id
+            forceCreate: true

@@ -13,6 +13,20 @@ const GRID_YAML = `pages:
           type: table
 `;
 
+const GRID_3ITEMS_YAML = `pages:
+  - title: Test
+    items:
+      - placement: { x: 0, y: 0, w: 6, h: 4 }
+        component:
+          type: chart
+      - placement: { x: 6, y: 0, w: 6, h: 2 }
+        component:
+          type: table
+      - placement: { x: 6, y: 2, w: 6, h: 2 }
+        component:
+          type: summary
+`;
+
 describe('GridEditBridge', () => {
   describe('move', () => {
     it('updates placements for moved items only', () => {
@@ -85,6 +99,123 @@ describe('GridEditBridge', () => {
       expect(items[2]!.getPlacement()).toEqual(
         { mode: 'positioned', x: 0, y: 2, w: 12, h: 1 }
       );
+    });
+  });
+
+  describe('split', () => {
+    it('horizontal split divides height in half and appends empty item', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'split',
+        targetIndex: 0,
+        direction: 'horizontal',
+      });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(3);
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 1 });
+      const newItem = items[2]!;
+      expect(newItem.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 1, w: 6, h: 1 });
+      expect(newItem.type).toBeUndefined();
+    });
+
+    it('vertical split divides width in half', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'split',
+        targetIndex: 0,
+        direction: 'vertical',
+      });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(3);
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 3, h: 2 });
+      expect(items[2]!.getPlacement()).toEqual({ mode: 'positioned', x: 3, y: 0, w: 3, h: 2 });
+    });
+
+    it('preserves original item component after split', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'split', targetIndex: 0, direction: 'horizontal' });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items[0]!.type).toBe('chart');
+    });
+  });
+
+  describe('merge', () => {
+    it('merges two items into bounding rect, removes extras', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'merge', indices: [0, 1] });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(1);
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 12, h: 2 });
+      expect(items[0]!.type).toBe('chart');
+    });
+
+    it('merges non-adjacent items into bounding rect', () => {
+      const doc = PageDocument.parse(GRID_3ITEMS_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'merge', indices: [0, 2] });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(2);
+      const merged = items.find(i => i.type === 'chart');
+      expect(merged!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 12, h: 4 });
+    });
+  });
+
+  describe('swap', () => {
+    it('exchanges placements between two items', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'swap', indexA: 0, indexB: 1 });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 6, y: 0, w: 6, h: 1 });
+      expect(items[0]!.type).toBe('chart');
+      expect(items[1]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
+      expect(items[1]!.type).toBe('table');
+    });
+  });
+
+  describe('remove', () => {
+    it('removes item at index', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'remove', index: 0 });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(1);
+      expect(items[0]!.type).toBe('table');
+    });
+  });
+
+  describe('add-empty', () => {
+    it('appends empty container with no component', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'add-empty',
+        placement: { mode: 'positioned', x: 0, y: 2, w: 6, h: 2 },
+      });
+
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(3);
+      expect(items[2]!.type).toBeUndefined();
+      expect(items[2]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 2, w: 6, h: 2 });
     });
   });
 

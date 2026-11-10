@@ -1,6 +1,6 @@
 datasets:
   - uuid: employees
-    content: >-
+    content: |-
       [
         ["Alice Johnson", "Engineering", "Senior Developer", 2018, 92000],
         ["Bob Smith", "Marketing", "Marketing Manager", 2019, 78000],
@@ -34,47 +34,70 @@ datasets:
         type: NUMBER
       - id: Salary
         type: NUMBER
-
 pages:
   - name: Data Table
-    components:
-      - type: title
-        properties:
-          text: Table with Pagination & Filtering
-          size: h2
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Table with Pagination & Filtering
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Tables include a **filter box** (top-left), **pagination** (bottom),
+              and **sortable columns** (click headers). The pagination footer includes:
 
-      - type: markdown
-        properties:
-          content: |
-            Tables include a **filter box** (top-left), **pagination** (bottom),
-            and **sortable columns** (click headers). The pagination footer includes:
+              - **Page size selector** — choose rows per page from the dropdown
+              - **Jump to page** — type a page number and press Enter
+              - **First / Prev / Next / Last** navigation buttons
 
-            - **Page size selector** — choose rows per page from the dropdown
-            - **Jump to page** — type a page number and press Enter
-            - **First / Prev / Next / Last** navigation buttons
-
-            Click any **LABEL** cell to cross-filter — try clicking a Department value.
-
-      - type: selector
-        properties:
-          subtype: labels
-          filter:
-            notification: true
-          lookup:
-            uuid: employees
-            group:
-              - columnGroup:
+              Click any **LABEL** cell to cross-filter — try clicking a Department value.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: selector
+          properties:
+            subtype: labels
+            filter:
+              notification: true
+            lookup:
+              uuid: employees
+              group:
+                - columnGroup:
                     source: Department
-                functions:
-                  - source: Department
-
-      - type: data-table
-        properties:
-          lookup:
-            uuid: employees
-          pageSize: 5
-          pageSizeOptions: [5, 10, 20]
-          sortable: true
-          filter:
-            notification: true
-            listening: true
+                  functions:
+                    - source: Department
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: data-table
+          properties:
+            lookup:
+              uuid: employees
+            pageSize: 5
+            pageSizeOptions:
+              - 5
+              - 10
+              - 20
+            sortable: true
+            filter:
+              notification: true
+              listening: true

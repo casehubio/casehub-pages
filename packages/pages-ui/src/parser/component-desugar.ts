@@ -393,6 +393,39 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     };
   }
 
+  // Grid layout component — type: grid with items: [...]
+  if ("type" in raw && raw.type === "grid" && "items" in raw) {
+    const itemsRaw = raw.items as Array<Record<string, unknown>>;
+    const visibleWhen = raw.visibleWhen as string | undefined;
+    const style = extractStyle(raw.properties ?? raw.style);
+    const rawId = raw.id as string | undefined;
+
+    const items: { placement: GridPlacement; component?: Component }[] = itemsRaw.map((entryRaw) => {
+      const placementRaw = entryRaw.placement as Record<string, unknown> | undefined;
+      const componentRaw = entryRaw.component as Record<string, unknown> | undefined;
+
+      let placement: GridPlacement;
+      if (placementRaw && "x" in placementRaw && "y" in placementRaw) {
+        placement = { mode: "positioned" as const, x: Number(placementRaw.x), y: Number(placementRaw.y), w: Number(placementRaw.w ?? 1), h: Number(placementRaw.h ?? 1) };
+      } else if (placementRaw) {
+        placement = { mode: "auto" as const, w: Number(placementRaw.w ?? 1), h: Number(placementRaw.h ?? 1) };
+      } else {
+        placement = { mode: "auto" as const, w: 1, h: 1 };
+      }
+
+      const component = componentRaw ? desugarComponent(componentRaw, displayerDefaults) : undefined;
+      return { placement, ...(component ? { component } : {}) };
+    });
+
+    return {
+      type: "grid",
+      items,
+      ...(rawId ? { id: rawId } : {}),
+      ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
+    };
+  }
+
   // Columns layout component — type: columns with columns: [{components: [...]}]
   if ("type" in raw && raw.type === "columns" && "columns" in raw) {
     const columnsArray = raw.columns as Array<Record<string, unknown>>;

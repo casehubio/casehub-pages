@@ -39,7 +39,7 @@ function walkPages(
 
   if (component.items) {
     for (const item of component.items) {
-      walkPages(item.component, paths, index);
+      if (item.component) walkPages(item.component, paths, index);
     }
   }
 
@@ -137,15 +137,15 @@ function findInteractiveWithSlot(
     const children = resolved
       ? [
           ...(resolved.slots ? Object.values(resolved.slots).flat() : []),
-          ...(resolved.items ? resolved.items.map((i) => i.component) : []),
+          ...(resolved.items ? resolved.items.map((i) => i.component).filter(Boolean) : []),
         ]
       : [
           ...(node.slots ? Object.values(node.slots).flat() : []),
-          ...(node.items ? node.items.map((i) => i.component) : []),
+          ...(node.items ? node.items.map((i) => i.component).filter(Boolean) : []),
         ];
 
     if (children.length > 0) {
-      const found = findInteractiveWithSlot(children, slotName, lazyResolutions);
+      const found = findInteractiveWithSlot(children as Component[], slotName, lazyResolutions);
       if (found) return found;
     }
   }
