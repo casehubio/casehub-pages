@@ -83,13 +83,13 @@ describe("renderComponent — layout types", () => {
     const component: Component = {
       type: "grid",
       props: { columns: 12 },
-      items: [
+      grid: [
         {
-          placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 },
+          at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 },
           component: { type: "html" },
         },
         {
-          placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 1 },
+          at: { mode: "positioned", x: 6, y: 0, w: 6, h: 1 },
           component: { type: "html" },
         },
       ],
@@ -113,8 +113,8 @@ describe("renderComponent — layout types", () => {
     const component: Component = {
       type: "grid",
       props: { columns: 6 },
-      items: [
-        { placement: { mode: "positioned", x: 0, y: 0, w: 3, h: 1 }, component: { type: "html" } },
+      grid: [
+        { at: { mode: "positioned", x: 0, y: 0, w: 3, h: 1 }, component: { type: "html" } },
       ],
     };
     renderComponent(target, component);
@@ -126,8 +126,8 @@ describe("renderComponent — layout types", () => {
     const target = document.createElement("div");
     const component: Component = {
       type: "grid",
-      items: [
-        { placement: { mode: "auto", w: 4, h: 1 }, component: { type: "html" } },
+      grid: [
+        { at: { mode: "auto", w: 4, h: 1 }, component: { type: "html" } },
       ],
     };
     renderComponent(target, component);
@@ -139,8 +139,8 @@ describe("renderComponent — layout types", () => {
     const target = document.createElement("div");
     const component: Component = {
       type: "grid",
-      items: [
-        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      grid: [
+        { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
       ],
     };
     renderComponent(target, component);
@@ -152,10 +152,10 @@ describe("renderComponent — layout types", () => {
     const target = document.createElement("div");
     const component: Component = {
       type: "grid",
-      items: [
-        { placement: { mode: "positioned", x: 6, y: 1, w: 6, h: 1 }, component: { type: "html", id: "bottom-right" } },
-        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "top-left" } },
-        { placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 1 }, component: { type: "html", id: "top-right" } },
+      grid: [
+        { at: { mode: "positioned", x: 6, y: 1, w: 6, h: 1 }, component: { type: "html", id: "bottom-right" } },
+        { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "top-left" } },
+        { at: { mode: "positioned", x: 6, y: 0, w: 6, h: 1 }, component: { type: "html", id: "top-right" } },
       ],
     };
     renderComponent(target, component);
@@ -170,9 +170,9 @@ describe("renderComponent — layout types", () => {
     const target = document.createElement("div");
     const component: Component = {
       type: "grid",
-      items: [
-        { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html", id: "auto-1" } },
-        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "pos-1" } },
+      grid: [
+        { at: { mode: "auto", w: 6, h: 1 }, component: { type: "html", id: "auto-1" } },
+        { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "pos-1" } },
       ],
     };
     renderComponent(target, component);
@@ -186,9 +186,9 @@ describe("renderComponent — layout types", () => {
     const target = document.createElement("div");
     const component: Component = {
       type: "grid",
-      items: [
-        { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html" } },
-        { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html" } },
+      grid: [
+        { at: { mode: "auto", w: 6, h: 1 }, component: { type: "html" } },
+        { at: { mode: "auto", w: 6, h: 1 }, component: { type: "html" } },
       ],
     };
     renderComponent(target, component);
@@ -203,8 +203,8 @@ describe("renderComponent — layout types", () => {
     const component: Component = {
       type: "grid",
       props: { columns: 12, rowHeight: 80 },
-      items: [
-        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      grid: [
+        { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
       ],
     };
     renderComponent(target, component);
@@ -217,8 +217,8 @@ describe("renderComponent — layout types", () => {
     const component: Component = {
       type: "grid",
       props: { columns: 12 },
-      items: [
-        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      grid: [
+        { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
       ],
     };
     renderComponent(target, component);
@@ -231,8 +231,8 @@ describe("renderComponent — layout types", () => {
     const component: Component = {
       type: "grid",
       props: { columns: 12, rowHeight: 80 },
-      items: [
-        { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
+      grid: [
+        { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html" } },
       ],
     };
     renderComponent(target, component);
@@ -388,9 +388,9 @@ describe("renderComponent — items vs slots precedence", () => {
     const component: Component = {
       type: "grid",
       props: { columns: 12 },
-      items: [
+      grid: [
         {
-          placement: { mode: "positioned", x: 0, y: 0, w: 12, h: 1 },
+          at: { mode: "positioned", x: 0, y: 0, w: 12, h: 1 },
           component: { type: "html" },
         },
       ],

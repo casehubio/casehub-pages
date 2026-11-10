@@ -26,56 +26,41 @@ datasets:
       - id: Duration
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: traces
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              notification: true
-            lookup:
-              uuid: traces
-              group:
-                - columnGroup:
-                    source: Operation
-                  functions:
-                    - source: Operation
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: bubble-chart
-          properties:
-            chart:
-              resizable: true
-              height: 700
-              zoom: true
-            filter:
-              listening: true
-            lookup:
-              uuid: traces
-              group:
-                - functions:
-                    - source: Start Time
-                    - source: Duration
-                    - source: Duration
-                    - source: Operation
-            axis:
-              x:
-                labels_show: false
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: traces
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: selector
+        properties:
+          filter:
+            notification: true
+          lookup:
+            uuid: traces
+            group:
+              - columnGroup:
+                  source: Operation
+                functions:
+                  - source: Operation
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: bubble-chart
+        properties:
+          chart:
+            resizable: true
+            height: 700
+            zoom: true
+          filter:
+            listening: true
+          lookup:
+            uuid: traces
+            group:
+              - functions:
+                  - source: Start Time
+                  - source: Duration
+                  - source: Duration
+                  - source: Operation
+          axis:
+            x:
+              labels_show: false

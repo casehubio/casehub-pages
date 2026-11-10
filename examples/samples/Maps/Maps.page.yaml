@@ -1,52 +1,30 @@
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 6
-          h: 1
-        component:
-          html: <h4><strong>subtype MAP_REGIONS (default)</strong></h4><br />
-      - placement:
-          x: 0
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: map
-          properties:
-            lookup:
-              uuid: countries
-              group:
-                - columnGroup:
-                    source: Country
-                  functions:
-                    - source: Country
-                    - source: Value
-      - placement:
-          x: 6
-          y: 0
-          w: 6
-          h: 1
-        component:
-          html: <h4><strong>subtype MAP_MARKERS</strong></h4><br />
-      - placement:
-          x: 6
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: map
-          properties:
-            subtype: markers
-            lookup:
-              uuid: countries
-              group:
-                - columnGroup:
-                    source: Country
-                  functions:
-                    - source: Country
-                    - source: Value
+  - grid:
+      - at: { x: 0, y: 0, w: 6, h: 1 }
+      - at: { x: 0, y: 1, w: 6, h: 1 }
+        type: map
+        properties:
+          lookup:
+            uuid: countries
+            group:
+              - columnGroup:
+                  source: Country
+                functions:
+                  - source: Country
+                  - source: Value
+      - at: { x: 6, y: 0, w: 6, h: 1 }
+      - at: { x: 6, y: 1, w: 6, h: 1 }
+        type: map
+        properties:
+          subtype: markers
+          lookup:
+            uuid: countries
+            group:
+              - columnGroup:
+                  source: Country
+                functions:
+                  - source: Country
+                  - source: Value
 datasets:
   - uuid: countries
     content: |-

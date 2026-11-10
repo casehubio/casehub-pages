@@ -102,7 +102,7 @@ class GridEditControllerImpl implements GridEditController {
       this.observer.observe(gridEl.parentElement, { childList: true });
     }
 
-    const hasPositioned = items.some(i => i.placement.mode === "positioned");
+    const hasPositioned = items.some(i => i.at.mode === "positioned");
     if (hasPositioned) {
       this.enterPassive();
     }
@@ -250,8 +250,8 @@ class GridEditControllerImpl implements GridEditController {
     this.livePlacements.clear();
     for (let i = 0; i < this.items.length; i++) {
       const item = this.items[i]!;
-      if (item.placement.mode === "positioned") {
-        this.livePlacements.set(String(i), { x: item.placement.x, y: item.placement.y, w: item.placement.w, h: item.placement.h });
+      if (item.at.mode === "positioned") {
+        this.livePlacements.set(String(i), { x: item.at.x, y: item.at.y, w: item.at.w, h: item.at.h });
       }
     }
   }
@@ -613,7 +613,7 @@ class GridEditControllerImpl implements GridEditController {
     const BTN = "width:20px;height:20px;border:1px solid rgba(255,255,255,0.3);border-radius:3px;background:rgba(0,0,0,0.5);color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;";
     const bar = doc.createElement("div");
     bar.dataset.dragHandle = "";
-    bar.style.cssText = "position:absolute;top:2px;left:2px;display:flex;gap:2px;z-index:10;pointer-events:auto;";
+    bar.style.cssText = "position:absolute;top:2px;left:2px;display:none;gap:2px;z-index:10;pointer-events:auto;";
     const displaceBtn = doc.createElement("button");
     displaceBtn.title = "Drag to displace";
     displaceBtn.textContent = "⇵";
@@ -627,6 +627,7 @@ class GridEditControllerImpl implements GridEditController {
     bar.appendChild(displaceBtn);
     bar.appendChild(swapBtn);
     el.appendChild(bar);
+    if (this.hoveredId === id) bar.style.display = "flex";
   }
 
   private _swapTargetId: string | null = null;
@@ -772,6 +773,7 @@ class GridEditControllerImpl implements GridEditController {
         if (prev) this.clearItemHover(prev);
       }
       this.hoveredId = newId;
+      this._toggleDragHandles(newId);
     }
 
     if (!target) return;
@@ -824,6 +826,13 @@ class GridEditControllerImpl implements GridEditController {
     this.highlightOverlayEdge(false);
   }
 
+  private _toggleDragHandles(hoveredId: string | null): void {
+    const bar = this._selectedEl?.querySelector("[data-drag-handle]") as HTMLElement | null;
+    if (!bar) return;
+    const selectedId = this._selectedEl?.dataset.itemId;
+    bar.style.display = (hoveredId != null && hoveredId === selectedId) ? "flex" : "none";
+  }
+
   private applySelectionOutlines(): void {
     clearSelectionOutlines(this.gridEl);
     for (const id of this.selection.items) {
@@ -855,7 +864,7 @@ class GridEditControllerImpl implements GridEditController {
       const origIndex = Number(rect.id);
       const origItem = this.items[origIndex];
       return {
-        placement: { mode: "positioned" as const, x: rect.x, y: rect.y, w: rect.w, h: rect.h },
+        at: { mode: "positioned" as const, x: rect.x, y: rect.y, w: rect.w, h: rect.h },
         ...(origItem?.component ? { component: origItem.component } : {}),
       };
     });

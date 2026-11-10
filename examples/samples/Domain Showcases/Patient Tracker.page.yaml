@@ -207,435 +207,274 @@ datasets:
         type: NUMBER
 pages:
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: ClinicalNav
-            width: 100%
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: ClinicalNav
+          width: 100%
   - name: Ward Overview
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Patients
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: patients
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 3
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Critical Count
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: patients
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Critical
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 6
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Age
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: patients
-              group:
-                - functions:
-                    - source: age
-                      function: AVERAGE
-            columns:
-              - id: age
-                pattern: "#.#"
-      - placement:
-          x: 9
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Flagged
-            size: h3
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: patients
-              filter:
-                - column: flagged
-                  function: EQUALS_TO
-                  args:
-                    - "true"
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: dropdown
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Total Patients
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: patients
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 3, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Critical Count
+          size: h3
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: patients
             filter:
-              selfApply: true
-              notification: true
-            lookup:
-              uuid: patients
-              group:
-                - columnGroup:
-                    source: ward
-                  functions:
-                    - source: ward
-      - placement:
-          x: 0
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Patients by Diagnosis
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Critical
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 6, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Avg Age
+          size: h3
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: patients
+            group:
+              - functions:
+                  - source: age
+                    function: AVERAGE
+          columns:
+            - id: age
+              pattern: "#.#"
+      - at: { x: 9, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Flagged
+          size: h3
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: patients
             filter:
-              listening: true
-            lookup:
-              uuid: patients
-              group:
-                - columnGroup:
-                    source: diagnosis
-                  functions:
-                    - source: diagnosis
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 4
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Patients by Ward
-            size: h3
-      - placement:
-          x: 4
-          y: 4
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: patients
-              group:
-                - columnGroup:
-                    source: ward
-                  functions:
-                    - source: ward
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 8
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Patients by Status
-            size: h3
-      - placement:
-          x: 8
-          y: 4
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
-            filter:
-              listening: true
-            lookup:
-              uuid: patients
-              group:
-                - columnGroup:
-                    source: status
-                  functions:
-                    - source: status
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 0
-          y: 5
-          w: 8
-          h: 1
-        component:
-          markdown: |-
-            ## #{filter.ward ? filter.ward + " Ward" : "All Wards"} Overview
-            **Current Status:** #{datasets.patients.rowCount} patients
-            **ICU Protocols:** - Vitals monitoring every 2 hours - Critical patients require attending physician approval for transfers - Family visitation restricted to 15 minutes per hour
-            **General Ward:** - Standard vitals monitoring every 4 hours - Discharge planning begins at admission - Medication reconciliation required within 24 hours
-            **Pediatrics:** - Parent/guardian must remain with patient under 12 - Specialized dosing protocols for all medications - Play therapy available 9 AM - 5 PM
-            **Maternity:** - Rooming-in encouraged for all mothers - Lactation consultant available on request - Newborn screening completed before discharge
-      - placement:
-          x: 8
-          y: 5
-          w: 4
-          h: 1
-        component:
-          alert:
-            severity: warning
-            content: Review flagged patients requiring immediate attention
-            dismissible: false
-      - placement:
-          x: 8
-          y: 6
-          w: 4
-          h: 1
-        component:
-          type: badge
-          properties:
-            lookup:
-              uuid: patients
-              group:
-                - columnGroup:
-                    source: status
-                  functions:
-                    - source: status
-      - placement:
-          x: 0
-          y: 7
-          w: 9
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Admission Timelines
-            size: h3
-      - placement:
-          x: 0
-          y: 8
-          w: 9
-          h: 1
-        component:
-          type: timeline
-          properties:
-            startColumn: admitDate
-            endColumn: dischargeDate
-            labelColumn: patient
-            categoryColumn: ward
-            chart:
-              zoom: true
-              height: 300
-            lookup:
-              uuid: admissions
-      - placement:
-          x: 9
-          y: 7
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Next ICU Rounds
-            size: h3
-      - placement:
-          x: 9
-          y: 8
-          w: 3
-          h: 1
-        component:
-          type: countdown
-          properties:
-            lookup:
-              uuid: nextReview
+              - column: flagged
+                function: EQUALS_TO
+                args:
+                  - "true"
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: dropdown
+          filter:
+            selfApply: true
+            notification: true
+          lookup:
+            uuid: patients
+            group:
+              - columnGroup:
+                  source: ward
+                functions:
+                  - source: ward
+      - at: { x: 0, y: 3, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Patients by Diagnosis
+          size: h3
+      - at: { x: 0, y: 4, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: patients
+            group:
+              - columnGroup:
+                  source: diagnosis
+                functions:
+                  - source: diagnosis
+                  - source: id
+                    function: COUNT
+      - at: { x: 4, y: 3, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Patients by Ward
+          size: h3
+      - at: { x: 4, y: 4, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: patients
+            group:
+              - columnGroup:
+                  source: ward
+                functions:
+                  - source: ward
+                  - source: id
+                    function: COUNT
+      - at: { x: 8, y: 3, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Patients by Status
+          size: h3
+      - at: { x: 8, y: 4, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          filter:
+            listening: true
+          lookup:
+            uuid: patients
+            group:
+              - columnGroup:
+                  source: status
+                functions:
+                  - source: status
+                  - source: id
+                    function: COUNT
+      - at: { x: 0, y: 5, w: 8, h: 1 }
+      - at: { x: 8, y: 5, w: 4, h: 1 }
+      - at: { x: 8, y: 6, w: 4, h: 1 }
+        type: badge
+        properties:
+          lookup:
+            uuid: patients
+            group:
+              - columnGroup:
+                  source: status
+                functions:
+                  - source: status
+      - at: { x: 0, y: 7, w: 9, h: 1 }
+        type: title
+        properties:
+          text: Admission Timelines
+          size: h3
+      - at: { x: 0, y: 8, w: 9, h: 1 }
+        type: timeline
+        properties:
+          startColumn: admitDate
+          endColumn: dischargeDate
+          labelColumn: patient
+          categoryColumn: ward
+          chart:
+            zoom: true
+            height: 300
+          lookup:
+            uuid: admissions
+      - at: { x: 9, y: 7, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Next ICU Rounds
+          size: h3
+      - at: { x: 9, y: 8, w: 3, h: 1 }
+        type: countdown
+        properties:
+          lookup:
+            uuid: nextReview
   - name: Vitals Monitor
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Heart Rate by Patient
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: area-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: vitals
-              group:
-                - columnGroup:
-                    source: patientId
-                  functions:
-                    - source: patientId
-                    - source: heartRate
-                      function: AVERAGE
-      - placement:
-          x: 0
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Blood Pressure
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: line-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: vitals
-              group:
-                - columnGroup:
-                    source: timestamp
-                  functions:
-                    - source: timestamp
-                    - source: systolic
-                      function: AVERAGE
-                    - source: diastolic
-                      function: AVERAGE
-      - placement:
-          x: 6
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Oxygen Saturation
-            size: h3
-      - placement:
-          x: 6
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: line-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: vitals
-              group:
-                - columnGroup:
-                    source: timestamp
-                  functions:
-                    - source: timestamp
-                    - source: o2Saturation
-                      function: AVERAGE
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 10
-            sortable: true
-            lookup:
-              uuid: vitals
-            columns:
-              - id: temperature
-                expression: 'value > 38.5 ? "⚠️ " + value : value'
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Heart Rate by Patient
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: area-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: vitals
+            group:
+              - columnGroup:
+                  source: patientId
+                functions:
+                  - source: patientId
+                  - source: heartRate
+                    function: AVERAGE
+      - at: { x: 0, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Blood Pressure
+          size: h3
+      - at: { x: 0, y: 3, w: 6, h: 1 }
+        type: line-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: vitals
+            group:
+              - columnGroup:
+                  source: timestamp
+                functions:
+                  - source: timestamp
+                  - source: systolic
+                    function: AVERAGE
+                  - source: diastolic
+                    function: AVERAGE
+      - at: { x: 6, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Oxygen Saturation
+          size: h3
+      - at: { x: 6, y: 3, w: 6, h: 1 }
+        type: line-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: vitals
+            group:
+              - columnGroup:
+                  source: timestamp
+                functions:
+                  - source: timestamp
+                  - source: o2Saturation
+                    function: AVERAGE
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 10
+          sortable: true
+          lookup:
+            uuid: vitals
+          columns:
+            - id: temperature
+              expression: 'value > 38.5 ? "⚠️ " + value : value'
   - name: Patient Detail
     dataScope:
       dataset: patients
@@ -644,181 +483,44 @@ pages:
       trigger: auto
       delay: 2000
       adapter: local
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: <div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Patient Records</div><div class='pf-v5-c-card__body'>
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            sortable: true
-            filter:
-              listening: true
-              notification: true
-            lookup:
-              uuid: patients
-          visibleWhen: "#{filter.ward}"
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          html: </div></div>
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          action-button:
-            label: Admit New Patient
-            url: /api/patients
-            method: POST
-            style: primary
-            confirm: Add a new patient to the system?
-            body:
-              name: New Patient
-              status: Stable
-            onSuccess:
-              message: Patient admitted successfully
-            onError:
-              message: Failed to admit patient
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          html: <div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Edit Patient</div><div class='pf-v5-c-card__body'>
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          input:
-            field: name
-            label: Patient Name
-            readonly: true
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          number-input:
-            field: age
-            label: Age
-            readonly: true
-      - placement:
-          x: 0
-          y: 7
-          w: 12
-          h: 1
-        component:
-          select:
-            field: ward
-            label: Ward
-            options:
-              values:
-                - ICU
-                - General
-                - Pediatrics
-                - Maternity
-                - Outpatient
-      - placement:
-          x: 0
-          y: 8
-          w: 12
-          h: 1
-        component:
-          select:
-            field: status
-            label: Status
-            options:
-              values:
-                - Stable
-                - Monitoring
-                - Critical
-      - placement:
-          x: 0
-          y: 9
-          w: 12
-          h: 1
-        component:
-          input:
-            field: doctor
-            label: Doctor
-      - placement:
-          x: 0
-          y: 10
-          w: 12
-          h: 1
-        component:
-          textarea:
-            field: notes
-            label: Notes
-            rows: 4
-      - placement:
-          x: 0
-          y: 11
-          w: 12
-          h: 1
-        component:
-          date-picker:
-            field: admitDate
-            label: Admit Date
-            readonly: true
-      - placement:
-          x: 0
-          y: 12
-          w: 12
-          h: 1
-        component:
-          checkbox:
-            field: flagged
-            label: Flagged for Review
-      - placement:
-          x: 0
-          y: 13
-          w: 12
-          h: 1
-        component:
-          html: </div></div>
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          sortable: true
+          filter:
+            listening: true
+            notification: true
+          lookup:
+            uuid: patients
+        visibleWhen: "#{filter.ward}"
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+      - at: { x: 0, y: 7, w: 12, h: 1 }
+      - at: { x: 0, y: 8, w: 12, h: 1 }
+      - at: { x: 0, y: 9, w: 12, h: 1 }
+      - at: { x: 0, y: 10, w: 12, h: 1 }
+      - at: { x: 0, y: 11, w: 12, h: 1 }
+      - at: { x: 0, y: 12, w: 12, h: 1 }
+      - at: { x: 0, y: 13, w: 12, h: 1 }
   - name: Assignments
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Doctor-Patient Assignments
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: graph
-          properties:
-            chart:
-              height: 500
-            lookup:
-              uuid: assignments
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Doctor-Patient Assignments
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: graph
+        properties:
+          chart:
+            height: 500
+          lookup:
+            uuid: assignments
 navTree:
   root_items:
     - type: GROUP

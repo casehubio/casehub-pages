@@ -17,31 +17,21 @@ datasets:
         13, 22, 13, 50, 2, 4, 6, 10, 12, 5, 8, 10
       ]
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: histogram
-            extraConfiguration: |-
-              {
-                  "series": {
-                      "barCategoryGap": "1%"
-                  }
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: histogram
+          extraConfiguration: |-
+            {
+                "series": {
+                    "barCategoryGap": "1%"
+                }
 
-              }
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: histogram
+            }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: histogram

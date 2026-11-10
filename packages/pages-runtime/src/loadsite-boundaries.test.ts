@@ -32,8 +32,8 @@ describe("loadSite input boundaries", () => {
         content: [{
           type: "page",
           props: { name: "Page 1" },
-          items: [{
-            placement: { x: 0, y: 0, w: 12, h: 1 },
+          grid: [{
+            at: { mode: "positioned" as const, x: 0, y: 0, w: 12, h: 1 },
             component: { type: "html", props: { content: "<p>test</p>" } },
           }],
         }],

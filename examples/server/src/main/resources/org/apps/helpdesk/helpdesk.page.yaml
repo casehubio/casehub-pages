@@ -40,366 +40,266 @@ datasets:
         type: LABEL
 pages:
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: HelpdeskNav
-            width: 100%
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: HelpdeskNav
+          width: 100%
   - name: Dashboard
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Open Tickets
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tickets
-              filter:
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CLOSED
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - RESOLVED
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 3
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Urgent
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tickets
-              filter:
-                - column: priority
-                  function: EQUALS_TO
-                  args:
-                    - URGENT
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CLOSED
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 6
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Unassigned
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tickets
-              filter:
-                - column: assigneeId
-                  function: IS_NULL
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CLOSED
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 9
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Resolved Today
-            size: h3
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tickets
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - RESOLVED
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: By Category
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Open Tickets
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tickets
             filter:
-              listening: true
-            lookup:
-              uuid: tickets
-              filter:
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CLOSED
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - RESOLVED
-              group:
-                - columnGroup:
-                    source: category
-                  functions:
-                    - source: category
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 4
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: By Priority
-            size: h3
-      - placement:
-          x: 4
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CLOSED
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - RESOLVED
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 3, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Urgent
+          size: h3
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tickets
             filter:
-              listening: true
-            lookup:
-              uuid: tickets
-              filter:
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CLOSED
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - RESOLVED
-              group:
-                - columnGroup:
-                    source: priority
-                  functions:
-                    - source: priority
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 8
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: By Status
-            size: h3
-      - placement:
-          x: 8
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
+              - column: priority
+                function: EQUALS_TO
+                args:
+                  - URGENT
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CLOSED
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 6, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Unassigned
+          size: h3
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tickets
             filter:
-              listening: true
-            lookup:
-              uuid: tickets
-              group:
-                - columnGroup:
-                    source: status
-                  functions:
-                    - source: status
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Recent Tickets
-            size: h3
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 10
-            sortable: true
+              - column: assigneeId
+                function: IS_NULL
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CLOSED
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 9, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Resolved Today
+          size: h3
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tickets
             filter:
-              notification: true
-              listening: true
-            lookup:
-              uuid: tickets
-              filter:
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CLOSED
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - RESOLVED
-            columns:
-              - id: subject
-              - id: category
-              - id: priority
-              - id: status
-              - id: assigneeId
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - RESOLVED
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: By Category
+          size: h3
+      - at: { x: 0, y: 3, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: tickets
+            filter:
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CLOSED
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - RESOLVED
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
+                  - source: id
+                    function: COUNT
+      - at: { x: 4, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: By Priority
+          size: h3
+      - at: { x: 4, y: 3, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: tickets
+            filter:
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CLOSED
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - RESOLVED
+            group:
+              - columnGroup:
+                  source: priority
+                functions:
+                  - source: priority
+                  - source: id
+                    function: COUNT
+      - at: { x: 8, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: By Status
+          size: h3
+      - at: { x: 8, y: 3, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          filter:
+            listening: true
+          lookup:
+            uuid: tickets
+            group:
+              - columnGroup:
+                  source: status
+                functions:
+                  - source: status
+                  - source: id
+                    function: COUNT
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Recent Tickets
+          size: h3
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 10
+          sortable: true
+          filter:
+            notification: true
+            listening: true
+          lookup:
+            uuid: tickets
+            filter:
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CLOSED
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - RESOLVED
+          columns:
+            - id: subject
+            - id: category
+            - id: priority
+            - id: status
+            - id: assigneeId
   - name: Ticket Queue
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: dropdown
-            filter:
-              selfApply: true
-              notification: true
-            lookup:
-              uuid: tickets
-              group:
-                - columnGroup:
-                    source: status
-                  functions:
-                    - source: status
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
-            filter:
-              selfApply: true
-              notification: true
-            lookup:
-              uuid: tickets
-              group:
-                - columnGroup:
-                    source: category
-                  functions:
-                    - source: category
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 15
-            sortable: true
-            filter:
-              listening: true
-              notification: true
-            lookup:
-              uuid: tickets
-            columns:
-              - id: id
-              - id: subject
-              - id: category
-              - id: priority
-              - id: status
-              - id: customerRef
-              - id: assigneeId
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: dropdown
+          filter:
+            selfApply: true
+            notification: true
+          lookup:
+            uuid: tickets
+            group:
+              - columnGroup:
+                  source: status
+                functions:
+                  - source: status
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            selfApply: true
+            notification: true
+          lookup:
+            uuid: tickets
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 15
+          sortable: true
+          filter:
+            listening: true
+            notification: true
+          lookup:
+            uuid: tickets
+          columns:
+            - id: id
+            - id: subject
+            - id: category
+            - id: priority
+            - id: status
+            - id: customerRef
+            - id: assigneeId
   - name: Ticket Detail
     dataScope:
       dataset: tickets
@@ -408,220 +308,65 @@ pages:
       trigger: auto
       delay: 2000
       adapter: rest
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Ticket Detail
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          input:
-            field: subject
-            label: Subject
-            required: true
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          textarea:
-            field: description
-            label: Description
-            rows: 4
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          select:
-            field: category
-            label: Category
-            options:
-              values:
-                - HARDWARE
-                - SOFTWARE
-                - ACCESS
-                - OTHER
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          select:
-            field: priority
-            label: Priority
-            options:
-              values:
-                - LOW
-                - MEDIUM
-                - HIGH
-                - URGENT
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          select:
-            field: status
-            label: Status
-            options:
-              values:
-                - OPEN
-                - TRIAGED
-                - ASSIGNED
-                - RESOLVED
-                - CLOSED
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          input:
-            field: customerRef
-            label: Customer Reference
-      - placement:
-          x: 0
-          y: 7
-          w: 12
-          h: 1
-        component:
-          input:
-            field: assigneeId
-            label: Assigned To
-      - placement:
-          x: 0
-          y: 8
-          w: 12
-          h: 1
-        component:
-          textarea:
-            field: resolution
-            label: Resolution
-            rows: 3
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Ticket Detail
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+      - at: { x: 0, y: 7, w: 12, h: 1 }
+      - at: { x: 0, y: 8, w: 12, h: 1 }
   - name: New Ticket
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Create Ticket
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          schema-form:
-            schema:
-              properties:
-                subject:
-                  type: string
-                  minLength: 1
-                description:
-                  type: string
-                  format: textarea
-                category:
-                  type: string
-                  enum:
-                    - HARDWARE
-                    - SOFTWARE
-                    - ACCESS
-                    - OTHER
-                priority:
-                  type: string
-                  enum:
-                    - LOW
-                    - MEDIUM
-                    - HIGH
-                    - URGENT
-                customerRef:
-                  type: string
-              required:
-                - subject
-                - category
-                - priority
-            forceCreate: true
-            labels:
-              customerRef: Customer Reference
-            submitUrl: /api/apps/helpdesk/tickets
-            submitMethod: POST
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Create Ticket
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
   - name: Agents
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 8
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Support Agents
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 8
-          h: 1
-        component:
-          type: data-table
-          properties:
-            sortable: true
+    grid:
+      - at: { x: 0, y: 0, w: 8, h: 1 }
+        type: title
+        properties:
+          text: Support Agents
+          size: h3
+      - at: { x: 0, y: 1, w: 8, h: 1 }
+        type: data-table
+        properties:
+          sortable: true
+          filter:
+            notification: true
+          lookup:
+            uuid: agents
+      - at: { x: 8, y: 0, w: 4, h: 1 }
+        type: title
+        properties:
+          text: By Speciality
+          size: h3
+      - at: { x: 8, y: 1, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          lookup:
+            uuid: agents
             filter:
-              notification: true
-            lookup:
-              uuid: agents
-      - placement:
-          x: 8
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: By Speciality
-            size: h3
-      - placement:
-          x: 8
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            lookup:
-              uuid: agents
-              filter:
-                - column: active
-                  function: EQUALS_TO
-                  args:
-                    - "true"
-              group:
-                - columnGroup:
-                    source: speciality
-                  functions:
-                    - source: speciality
-                    - source: id
-                      function: COUNT
+              - column: active
+                function: EQUALS_TO
+                args:
+                  - "true"
+            group:
+              - columnGroup:
+                  source: speciality
+                functions:
+                  - source: speciality
+                  - source: id
+                    function: COUNT
 navTree:
   root_items:
     - type: GROUP

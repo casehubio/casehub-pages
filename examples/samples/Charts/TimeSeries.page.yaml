@@ -35,27 +35,17 @@ datasets:
       - id: costs
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Monthly Revenue vs Costs (2024-2025)
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: timeseries
-          properties:
-            chart:
-              resizable: true
-              zoom: true
-            lookup:
-              uuid: timeseries
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Monthly Revenue vs Costs (2024-2025)
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: timeseries
+        properties:
+          chart:
+            resizable: true
+            zoom: true
+          lookup:
+            uuid: timeseries

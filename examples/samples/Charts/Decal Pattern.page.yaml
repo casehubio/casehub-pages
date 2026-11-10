@@ -18,46 +18,41 @@ datasets:
       - id: Quantity2
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: Product
-                  functions:
-                    - source: Product
-                    - source: Quantity
-                      function: SUM
-                    - source: Quantity2
-                      function: SUM
-            extraConfiguration: |-
-              {
-                "color": [
-                  "gray",
-                  "gray"
-                ],
-                "series": [
-                  {
-                    "itemStyle": {
-                      "decal": {
-                        "symbol": "rectangle"
-                      }
-                    }
-                  },
-                  {
-                    "itemStyle": {
-                      "decal": {
-                        "symbol": "pin"
-                      }
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: Product
+                functions:
+                  - source: Product
+                  - source: Quantity
+                    function: SUM
+                  - source: Quantity2
+                    function: SUM
+          extraConfiguration: |-
+            {
+              "color": [
+                "gray",
+                "gray"
+              ],
+              "series": [
+                {
+                  "itemStyle": {
+                    "decal": {
+                      "symbol": "rectangle"
                     }
                   }
-                ]
-              }
+                },
+                {
+                  "itemStyle": {
+                    "decal": {
+                      "symbol": "pin"
+                    }
+                  }
+                }
+              ]
+            }

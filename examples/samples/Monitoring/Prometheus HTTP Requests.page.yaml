@@ -54,326 +54,219 @@ datasets:
       - id: value
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          properties:
-            background-color: oklch(0.20 0.03 260)
-            color: white
-            padding: 16px 24px
-            border-radius: 8px
-            margin-bottom: 16px
-          html: '<strong style="font-size: 20px; font-family: sans-serif;">Prometheus HTTP Requests</strong> <br/><span style="opacity: 0.7; font-size: 13px;">Real-time HTTP endpoint monitoring</span>'
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          html: Filter by Handler
-          properties:
-            font-weight: bolder
-            font-size: 13px
-            margin-bottom: 4px
-      - placement:
-          x: 0
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: selector
-          properties:
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        properties:
+          background-color: oklch(0.20 0.03 260)
+          color: white
+          padding: 16px 24px
+          border-radius: 8px
+          margin-bottom: 16px
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        properties:
+          font-weight: bolder
+          font-size: 13px
+          margin-bottom: 4px
+      - at: { x: 0, y: 2, w: 3, h: 1 }
+        type: selector
+        properties:
+          filter:
+            notification: "true"
+          lookup:
+            uuid: http_requests
+            group:
+              - columnGroup:
+                  source: handler
+                functions:
+                  - source: handler
+      - at: { x: 0, y: 3, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Total Requests
+          size: h3
+      - at: { x: 0, y: 4, w: 3, h: 1 }
+        type: metric
+        properties:
+          chart:
+            height: "90"
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests
+            group:
+              - functions:
+                  - source: value
+                    function: SUM
+          columns:
+            - id: value
+              pattern: "#,000"
+      - at: { x: 3, y: 3, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Success (2xx)
+          size: h3
+      - at: { x: 3, y: 4, w: 3, h: 1 }
+        type: metric
+        properties:
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests
             filter:
-              notification: "true"
-            lookup:
-              uuid: http_requests
-              group:
-                - columnGroup:
-                    source: handler
-                  functions:
-                    - source: handler
-      - placement:
-          x: 0
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Requests
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            chart:
-              height: "90"
+              - column: code
+                function: EQUALS_TO
+                args:
+                  - 200
+            group:
+              - functions:
+                  - source: value
+                    function: SUM
+          columns:
+            - id: value
+              pattern: "#,000"
+      - at: { x: 6, y: 3, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Errors (4xx/5xx)
+          size: h3
+      - at: { x: 6, y: 4, w: 3, h: 1 }
+        type: metric
+        properties:
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests
             filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
-              group:
-                - functions:
-                    - source: value
-                      function: SUM
-            columns:
-              - id: value
-                pattern: "#,000"
-      - placement:
-          x: 3
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Success (2xx)
-            size: h3
-      - placement:
-          x: 3
-          y: 4
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
+              - column: code
+                function: GREATER_THAN
+                args:
+                  - 399
+            group:
+              - functions:
+                  - source: value
+                    function: SUM
+          columns:
+            - id: value
+              pattern: "#,000"
+      - at: { x: 9, y: 3, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Endpoints
+          size: h3
+      - at: { x: 9, y: 4, w: 3, h: 1 }
+        type: metric
+        properties:
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests
+            group:
+              - columnGroup:
+                  source: handler
+                functions:
+                  - source: handler
+                    function: COUNT
+      - at: { x: 0, y: 5, w: 8, h: 1 }
+        type: title
+        properties:
+          text: Request Volume Over Time
+          size: h3
+      - at: { x: 0, y: 6, w: 8, h: 1 }
+        type: timeseries
+        properties:
+          chart:
+            height: 350
+          filter:
+            listening: "true"
+          lookup:
+            uuid: recent_http_requests
             filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
-              filter:
-                - column: code
-                  function: EQUALS_TO
-                  args:
-                    - 200
-              group:
-                - functions:
-                    - source: value
-                      function: SUM
-            columns:
-              - id: value
-                pattern: "#,000"
-      - placement:
-          x: 6
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Errors (4xx/5xx)
-            size: h3
-      - placement:
-          x: 6
-          y: 4
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
-              filter:
-                - column: code
-                  function: GREATER_THAN
-                  args:
-                    - 399
-              group:
-                - functions:
-                    - source: value
-                      function: SUM
-            columns:
-              - id: value
-                pattern: "#,000"
-      - placement:
-          x: 9
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Endpoints
-            size: h3
-      - placement:
-          x: 9
-          y: 4
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
-              group:
-                - columnGroup:
-                    source: handler
-                  functions:
-                    - source: handler
-                      function: COUNT
-      - placement:
-          x: 0
-          y: 5
-          w: 8
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Request Volume Over Time
-            size: h3
-      - placement:
-          x: 0
-          y: 6
-          w: 8
-          h: 1
-        component:
-          type: timeseries
-          properties:
-            chart:
-              height: 350
-            filter:
-              listening: "true"
-            lookup:
-              uuid: recent_http_requests
-              filter:
-                - column: value
-                  function: GREATER_THAN
-                  args:
-                    - 0
-              group:
-                - functions:
-                    - source: handler
-                    - source: timestamp
-                    - source: value
-      - placement:
-          x: 8
-          y: 5
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Requests by Endpoint
-            size: h3
-      - placement:
-          x: 8
-          y: 6
-          w: 4
-          h: 1
-        component:
-          type: DONUT
-          properties:
-            chart:
-              height: 350
-            filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
-              group:
-                - columnGroup:
-                    source: handler
-                  functions:
-                    - source: handler
-                    - source: value
-                      function: SUM
-      - placement:
-          x: 0
-          y: 7
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Requests by Handler
-            size: h3
-      - placement:
-          x: 0
-          y: 8
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            chart:
-              height: 300
-            filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
-              group:
-                - columnGroup:
-                    source: handler
-                  functions:
-                    - source: handler
-                    - source: value
-                      function: SUM
-      - placement:
-          x: 6
-          y: 7
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Requests by Status Code
-            size: h3
-      - placement:
-          x: 6
-          y: 8
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: bar
-            chart:
-              height: 300
-              margin:
-                left: 80
-            filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
-              group:
-                - columnGroup:
-                    source: code
-                  functions:
-                    - source: code
-                    - source: value
-                      function: SUM
-      - placement:
-          x: 0
-          y: 9
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Request Details
-            size: h3
-      - placement:
-          x: 0
-          y: 10
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            sortable: true
-            show_column_picker: true
-            filter:
-              listening: "true"
-            lookup:
-              uuid: http_requests
+              - column: value
+                function: GREATER_THAN
+                args:
+                  - 0
+            group:
+              - functions:
+                  - source: handler
+                  - source: timestamp
+                  - source: value
+      - at: { x: 8, y: 5, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Requests by Endpoint
+          size: h3
+      - at: { x: 8, y: 6, w: 4, h: 1 }
+        type: DONUT
+        properties:
+          chart:
+            height: 350
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests
+            group:
+              - columnGroup:
+                  source: handler
+                functions:
+                  - source: handler
+                  - source: value
+                    function: SUM
+      - at: { x: 0, y: 7, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Requests by Handler
+          size: h3
+      - at: { x: 0, y: 8, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          chart:
+            height: 300
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests
+            group:
+              - columnGroup:
+                  source: handler
+                functions:
+                  - source: handler
+                  - source: value
+                    function: SUM
+      - at: { x: 6, y: 7, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Requests by Status Code
+          size: h3
+      - at: { x: 6, y: 8, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            height: 300
+            margin:
+              left: 80
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests
+            group:
+              - columnGroup:
+                  source: code
+                functions:
+                  - source: code
+                  - source: value
+                    function: SUM
+      - at: { x: 0, y: 9, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Request Details
+          size: h3
+      - at: { x: 0, y: 10, w: 12, h: 1 }
+        type: data-table
+        properties:
+          sortable: true
+          show_column_picker: true
+          filter:
+            listening: "true"
+          lookup:
+            uuid: http_requests

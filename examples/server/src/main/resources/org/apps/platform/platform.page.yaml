@@ -23,115 +23,59 @@ datasets:
         type: LABEL
 pages:
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: PlatformNav
-            width: 100%
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: PlatformNav
+          width: 100%
   - name: App Catalogue
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Available Apps
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: apps
-              group:
-                - functions:
-                    - source: appId
-                      function: COUNT
-            columns:
-              - id: appId
-                pattern: "#"
-      - placement:
-          x: 3
-          y: 0
-          w: 9
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Applications
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 9
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 20
-            sortable: true
-            filter:
-              notification: true
-            lookup:
-              uuid: apps
-            columns:
-              - id: name
-              - id: appId
-              - id: description
-              - id: route
-              - id: source
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Available Apps
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: apps
+            group:
+              - functions:
+                  - source: appId
+                    function: COUNT
+          columns:
+            - id: appId
+              pattern: "#"
+      - at: { x: 3, y: 0, w: 9, h: 1 }
+        type: title
+        properties:
+          text: Applications
+          size: h3
+      - at: { x: 3, y: 1, w: 9, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 20
+          sortable: true
+          filter:
+            notification: true
+          lookup:
+            uuid: apps
+          columns:
+            - id: name
+            - id: appId
+            - id: description
+            - id: route
+            - id: source
   - name: Add App
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Register Application
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          schema-form:
-            schema:
-              properties:
-                appId:
-                  type: string
-                  minLength: 1
-                name:
-                  type: string
-                  minLength: 1
-                description:
-                  type: string
-                icon:
-                  type: string
-                route:
-                  type: string
-              required:
-                - appId
-                - name
-            forceCreate: true
-            submitUrl: /api/apps/platform/_apps
-            submitMethod: POST
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Register Application
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
 navTree:
   root_items:
     - type: GROUP

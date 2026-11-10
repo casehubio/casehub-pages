@@ -27,16 +27,16 @@ describe("Component", () => {
   it("represents a grid with items", () => {
     const chart: Component = { type: "bar-chart", props: {} };
     const item: GridItem = {
-      placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 },
+      at: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 },
       component: chart,
     };
     const grid: Component = {
       type: "grid",
       props: { columns: 12 },
-      items: [item],
+      grid: [item],
     };
-    expect(grid.items![0]!.placement.w).toBe(6);
-    expect(grid.items![0]!.component).toBe(chart);
+    expect(grid.grid![0]!.at.w).toBe(6);
+    expect(grid.grid![0]!.component).toBe(chart);
   });
 
   it("supports optional id, style, and access", () => {
@@ -93,9 +93,9 @@ describe("Component<T, P>", () => {
 describe("GridItem", () => {
   it("allows GridItem without component (empty container)", () => {
     const item: GridItem = {
-      placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 },
+      at: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 },
     };
-    expect(item.placement.w).toBe(6);
+    expect(item.at.w).toBe(6);
     expect(item.component).toBeUndefined();
   });
 });

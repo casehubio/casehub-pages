@@ -36,8 +36,8 @@ describe('GridEditBridge', () => {
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 3, y: 1, w: 6, h: 2 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 3, y: 1, w: 6, h: 2 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
         ],
       });
 
@@ -54,8 +54,8 @@ describe('GridEditBridge', () => {
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 0, y: 0, w: 6, h: 2 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 0, y: 0, w: 6, h: 2 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
         ],
       });
 
@@ -71,8 +71,8 @@ describe('GridEditBridge', () => {
       bridge.applyGridEdit(doc, {
         type: 'resize',
         items: [
-          { placement: { mode: 'positioned', x: 1, y: 1, w: 5, h: 1 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 1, y: 1, w: 5, h: 1 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
         ],
       });
 
@@ -231,26 +231,28 @@ describe('GridEditBridge', () => {
           title: Users
 `;
 
-    it('silently converts components: to items: with full-width stacked placement', () => {
+    it('silently converts components: to grid: with full-width stacked placement', () => {
       const doc = PageDocument.parse(COMPONENTS_YAML);
       const bridge = new GridEditBridge();
 
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 0, y: 0, w: 12, h: 1 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 0, y: 0, w: 12, h: 1 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'table' } },
         ],
       });
 
       const page = PageDocument.parse(doc.toString()).getPages()[0]!;
-      expect(page.getLayoutMode()).toBe('items');
+      expect(page.getLayoutMode()).toBe('grid');
       const items = page.getItems();
       expect(items).toHaveLength(2);
       expect(items[0]!.type).toBe('chart');
       expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 12, h: 1 });
       expect(items[1]!.type).toBe('table');
       expect(doc.toString()).not.toContain('components:');
+      expect(doc.toString()).toContain('grid:');
+      expect(doc.toString()).toContain('at:');
     });
 
     const ROWS_YAML = `pages:
@@ -275,23 +277,24 @@ describe('GridEditBridge', () => {
                   title: Total
 `;
 
-    it('converts rows: to items: with inferred placements', () => {
+    it('converts rows: to grid: with inferred placements', () => {
       const doc = PageDocument.parse(ROWS_YAML);
       const bridge = new GridEditBridge();
 
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 0, y: 0, w: 6, h: 1 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
-          { placement: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'summary' } },
+          { at: { mode: 'positioned', x: 0, y: 0, w: 6, h: 1 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'summary' } },
         ],
       });
 
       const page = PageDocument.parse(doc.toString()).getPages()[0]!;
-      expect(page.getLayoutMode()).toBe('items');
+      expect(page.getLayoutMode()).toBe('grid');
       expect(page.getItems()).toHaveLength(3);
       expect(doc.toString()).not.toContain('rows:');
+      expect(doc.toString()).toContain('grid:');
     });
   });
 });

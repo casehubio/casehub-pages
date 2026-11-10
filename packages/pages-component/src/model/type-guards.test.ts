@@ -27,7 +27,7 @@ import { dataSetId } from "@casehubio/pages-data";
 
 describe("type guards - layout components", () => {
   it("isGrid narrows grid components", () => {
-    const c: Component = { type: "grid", props: { columns: 12 }, items: [] };
+    const c: Component = { type: "grid", props: { columns: 12 }, grid: [] };
     expect(isGrid(c)).toBe(true);
     if (isGrid(c)) {
       expect(c.props?.columns).toBe(12);

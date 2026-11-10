@@ -104,274 +104,180 @@ pages:
   - name: index
     properties:
       margin: 10px
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          title: Kepler Metrics
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: Metrics
-            targetDivId: Metrics_Div
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          div: Metrics_Div
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: Metrics
+          targetDivId: Metrics_Div
+      - at: { x: 0, y: 2, w: 12, h: 1 }
   - name: Monitoring
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Joules by Container over time
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: timeseries
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: monitoring
-              group:
-                - functions:
-                    - source: Container
-                    - source: Timestamp
-                    - source: Total
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Joules by Container over time
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: timeseries
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: monitoring
+            group:
+              - functions:
+                  - source: Container
+                  - source: Timestamp
+                  - source: Total
   - name: Joules by Node
     properties:
       margin: 20px
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          markdown: "### **Filter**"
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              notification: true
-            lookup:
-              uuid: joules_by_node
-              group:
-                - columnGroup:
-                    source: Node
-                  functions:
-                    - source: Node
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Joules by Node
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: metric
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: joules_by_node
-              group:
-                - functions:
-                    - source: Value
-                      function: SUM
-            columns:
-              - id: Total
-                pattern: "###,###.000"
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Joules by Node
-            size: h3
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            chart:
-              height: 400
-            filter:
-              listening: true
-            lookup:
-              uuid: joules_by_node
-              group:
-                - columnGroup:
-                    source: Node
-                  functions:
-                    - source: Node
-                    - source: Package
-                      function: SUM
-                    - source: Core
-                      function: SUM
-                    - source: DRAM
-                      function: SUM
-                    - source: Uncore
-                      function: SUM
-                    - source: Other Host
-                      function: SUM
-                    - source: GPU
-                      function: SUM
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: selector
+        properties:
+          filter:
+            notification: true
+          lookup:
+            uuid: joules_by_node
+            group:
+              - columnGroup:
+                  source: Node
+                functions:
+                  - source: Node
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Total Joules by Node
+          size: h3
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: metric
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: joules_by_node
+            group:
+              - functions:
+                  - source: Value
+                    function: SUM
+          columns:
+            - id: Total
+              pattern: "###,###.000"
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Joules by Node
+          size: h3
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          chart:
+            height: 400
+          filter:
+            listening: true
+          lookup:
+            uuid: joules_by_node
+            group:
+              - columnGroup:
+                  source: Node
+                functions:
+                  - source: Node
+                  - source: Package
+                    function: SUM
+                  - source: Core
+                    function: SUM
+                  - source: DRAM
+                    function: SUM
+                  - source: Uncore
+                    function: SUM
+                  - source: Other Host
+                    function: SUM
+                  - source: GPU
+                    function: SUM
   - name: Joules by Container
     properties:
       margin: 20px
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          markdown: "### **Filter**"
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              notification: true
-            lookup:
-              uuid: joules_by_container
-              group:
-                - columnGroup:
-                    source: Container
-                  functions:
-                    - source: Container
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              notification: true
-              listening: true
-            lookup:
-              uuid: joules_by_container
-              group:
-                - columnGroup:
-                    source: Pod
-                  functions:
-                    - source: Pod
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Joules by Container
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: metric
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: joules_by_container
-              group:
-                - functions:
-                    - source: Total
-                      function: SUM
-            columns:
-              - id: Total
-                pattern: "###,###.000"
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Joules by Container
-            size: h3
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            chart:
-              height: 400
-            filter:
-              listening: true
-            lookup:
-              uuid: joules_by_container
-              group:
-                - columnGroup:
-                    source: Container
-                  functions:
-                    - source: Container
-                    - source: Package
-                      function: SUM
-                    - source: Core
-                      function: SUM
-                    - source: DRAM
-                      function: SUM
-                    - source: Uncore
-                      function: SUM
-                    - source: Other Host
-                      function: SUM
-                    - source: GPU
-                      function: SUM
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: selector
+        properties:
+          filter:
+            notification: true
+          lookup:
+            uuid: joules_by_container
+            group:
+              - columnGroup:
+                  source: Container
+                functions:
+                  - source: Container
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: selector
+        properties:
+          filter:
+            notification: true
+            listening: true
+          lookup:
+            uuid: joules_by_container
+            group:
+              - columnGroup:
+                  source: Pod
+                functions:
+                  - source: Pod
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Total Joules by Container
+          size: h3
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: metric
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: joules_by_container
+            group:
+              - functions:
+                  - source: Total
+                    function: SUM
+          columns:
+            - id: Total
+              pattern: "###,###.000"
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Joules by Container
+          size: h3
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          chart:
+            height: 400
+          filter:
+            listening: true
+          lookup:
+            uuid: joules_by_container
+            group:
+              - columnGroup:
+                  source: Container
+                functions:
+                  - source: Container
+                  - source: Package
+                    function: SUM
+                  - source: Core
+                    function: SUM
+                  - source: DRAM
+                    function: SUM
+                  - source: Uncore
+                    function: SUM
+                  - source: Other Host
+                    function: SUM
+                  - source: GPU
+                    function: SUM
 navTree:
   root_items:
     - type: GROUP

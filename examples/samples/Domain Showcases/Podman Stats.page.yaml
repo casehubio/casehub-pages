@@ -33,278 +33,180 @@ datasets:
         type: label
 pages:
   - name: Images
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 6
-          h: 1
-        component:
-          markdown: "**Images by Size**"
-      - placement:
-          x: 0
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: bar
-            chart:
-              height: "350"
-              margin:
-                left: "120"
-            lookup:
-              uuid: images
-              rowCount: 7
-              group:
-                - columnGroup:
-                    source: name
-                  functions:
-                    - source: name
-                    - source: Size (MB)
-                      column: Total Size (MB)
-              sort:
-                - column: Total Size (MB)
-                  sortOrder: DESCENDING
-            extraConfiguration: |
-              "series": {
-                "label": {
-                    "position": "top"
-                }
+    grid:
+      - at: { x: 0, y: 0, w: 6, h: 1 }
+      - at: { x: 0, y: 1, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            height: "350"
+            margin:
+              left: "120"
+          lookup:
+            uuid: images
+            rowCount: 7
+            group:
+              - columnGroup:
+                  source: name
+                functions:
+                  - source: name
+                  - source: Size (MB)
+                    column: Total Size (MB)
+            sort:
+              - column: Total Size (MB)
+                sortOrder: DESCENDING
+          extraConfiguration: |
+            "series": {
+              "label": {
+                  "position": "top"
               }
-      - placement:
-          x: 6
-          y: 0
-          w: 6
-          h: 1
-        component:
-          markdown: "**Containers by Image**"
-      - placement:
-          x: 6
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: bar
-            chart:
-              width: "500"
-              height: "350"
-              margin:
-                left: "120"
-            lookup:
-              uuid: images
-              rowCount: 7
-              group:
-                - columnGroup:
-                    source: name
-                  functions:
-                    - source: name
-                    - source: containers
-                      column: containers total
-              sort:
-                - column: containers total
-                  sortOrder: DESCENDING
-              filter:
-                - column: containers
-                  function: GREATER_THAN
-                  args:
-                    - 0
-            columns:
-              - id: containers total
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          markdown: "**Images List**"
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: images
+            }
+      - at: { x: 6, y: 0, w: 6, h: 1 }
+      - at: { x: 6, y: 1, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            width: "500"
+            height: "350"
+            margin:
+              left: "120"
+          lookup:
+            uuid: images
+            rowCount: 7
+            group:
+              - columnGroup:
+                  source: name
+                functions:
+                  - source: name
+                  - source: containers
+                    column: containers total
+            sort:
+              - column: containers total
+                sortOrder: DESCENDING
+            filter:
+              - column: containers
+                function: GREATER_THAN
+                args:
+                  - 0
+          columns:
+            - id: containers total
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: images
   - name: Containers
-    items:
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          markdown: "**Filters**"
-          properties:
-            font-size: small
-      - placement:
-          x: 0
-          y: 2
-          w: 2
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              notification: "true"
-            lookup:
-              uuid: containers
-              group:
-                - columnGroup:
-                    source: image
-                  functions:
-                    - source: image
-                      column: image
-      - placement:
-          x: 2
-          y: 2
-          w: 2
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              notification: true
-            lookup:
-              uuid: containers
-              group:
-                - columnGroup:
-                    source: state
-                  functions:
-                    - source: state
-                      column: state
-      - placement:
-          x: 0
-          y: 3
-          w: 5
-          h: 1
-        component:
-          html: <strong>Containers by State</strong>
-          properties:
-            font-size: medium
-      - placement:
-          x: 0
-          y: 4
-          w: 5
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: bar
-            chart:
-              width: "500"
-              height: "350"
-              margin:
-                left: "70"
-            filter:
-              listening: true
-            lookup:
-              uuid: containers
-              rowCount: 7
-              group:
-                - columnGroup:
-                    source: state
-                  functions:
-                    - source: state
-                    - source: state
-                      function: COUNT
-                      column: total
-            columns:
-              - id: total
-                pattern: "#"
-      - placement:
-          x: 5
-          y: 3
-          w: 6
-          h: 1
-        component:
-          markdown: "**Containers by Image**"
-          properties:
-            font-size: medium
-      - placement:
-          x: 5
-          y: 4
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: bar
-            chart:
-              width: "500"
-              height: "350"
-              margin:
-                left: "120"
-            filter:
-              listening: true
-            lookup:
-              uuid: containers
-              rowCount: 7
-              group:
-                - columnGroup:
-                    source: image
-                  functions:
-                    - source: image
-                    - source: image
-                      function: Count
-                      column: Total
-              sort:
-                - column: Total
-                  sortOrder: DESCENDING
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          title: Containers List
-          properties:
-            size: xl
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: containers
+    grid:
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        properties:
+          font-size: small
+      - at: { x: 0, y: 2, w: 2, h: 1 }
+        type: selector
+        properties:
+          filter:
+            notification: "true"
+          lookup:
+            uuid: containers
+            group:
+              - columnGroup:
+                  source: image
+                functions:
+                  - source: image
+                    column: image
+      - at: { x: 2, y: 2, w: 2, h: 1 }
+        type: selector
+        properties:
+          filter:
+            notification: true
+          lookup:
+            uuid: containers
+            group:
+              - columnGroup:
+                  source: state
+                functions:
+                  - source: state
+                    column: state
+      - at: { x: 0, y: 3, w: 5, h: 1 }
+        properties:
+          font-size: medium
+      - at: { x: 0, y: 4, w: 5, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            width: "500"
+            height: "350"
+            margin:
+              left: "70"
+          filter:
+            listening: true
+          lookup:
+            uuid: containers
+            rowCount: 7
+            group:
+              - columnGroup:
+                  source: state
+                functions:
+                  - source: state
+                  - source: state
+                    function: COUNT
+                    column: total
+          columns:
+            - id: total
+              pattern: "#"
+      - at: { x: 5, y: 3, w: 6, h: 1 }
+        properties:
+          font-size: medium
+      - at: { x: 5, y: 4, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            width: "500"
+            height: "350"
+            margin:
+              left: "120"
+          filter:
+            listening: true
+          lookup:
+            uuid: containers
+            rowCount: 7
+            group:
+              - columnGroup:
+                  source: image
+                functions:
+                  - source: image
+                  - source: image
+                    function: Count
+                    column: Total
+            sort:
+              - column: Total
+                sortOrder: DESCENDING
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        properties:
+          size: xl
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: containers
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: '<h1><strong>Podman Dashboard</strong></h1> <p> This is a dashboard to provide basic information about Podman</p> <p> It uses <a href="https://docs.podman.io/en/latest/_static/api.html">Podman REST API</a>,   so make sure podman service is running on localhost on port 8000 with CORS enabled</p> <p> The following command starts the podman service: </p> <p><em>podman system service tcp:localhost:8000 --cors https://jesuino.github.io  -t 0 </em></strong></p>'
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            targetDivId: podman_tabs_div
-            navGroupId: podman_nav_group
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: div
-          properties:
-            width: 100%
-            divId: podman_tabs_div
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: tabs
+        properties:
+          targetDivId: podman_tabs_div
+          navGroupId: podman_nav_group
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: div
+        properties:
+          width: 100%
+          divId: podman_tabs_div
 navTree:
   root_items:
     - id: podman_nav_group

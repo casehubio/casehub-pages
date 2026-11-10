@@ -25,26 +25,15 @@ datasets:
       - id: Updated
         type: LABEL
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: '<p style="font-size: x-large"><strong>Quarkus Repositories</strong></p> <small>Recently updated repositories matching "quarkus" on GitHub</small> <hr />'
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            chart:
-              height: 600
-              resizable: true
-            filter:
-              notification: true
-            lookup:
-              uuid: quarkus_repos
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          chart:
+            height: 600
+            resizable: true
+          filter:
+            notification: true
+          lookup:
+            uuid: quarkus_repos

@@ -302,6 +302,8 @@ export class PageNode {
 
   getLayoutMode(): LayoutMode {
     const doc = this._doc._getDoc();
+    if (isSeq(doc.getIn([...this.path, 'grid']))) return 'grid';
+    if (isSeq(doc.getIn([...this.path, 'flat']))) return 'flat';
     if (isSeq(doc.getIn([...this.path, 'items']))) return 'items';
     if (isSeq(doc.getIn([...this.path, 'rows']))) return 'rows';
     if (isSeq(doc.getIn([...this.path, 'columns']))) return 'columns';
@@ -351,7 +353,7 @@ export class PageNode {
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
     const mode = this.getLayoutMode();
-    const key = mode === 'items' ? 'items' : 'components';
+    const key = mode === 'grid' ? 'grid' : mode === 'items' ? 'items' : 'components';
     const seqPath = [...this.path, key];
     const entry: Record<string, unknown> = { type };
     if (props && Object.keys(props).length > 0) entry['properties'] = props;
@@ -368,11 +370,13 @@ export class PageNode {
   }
 
   getItems(): GridItemNode[] {
-    if (this.getLayoutMode() !== 'items') return [];
-    const seq = this._doc._getDoc().getIn([...this.path, 'items']);
+    const mode = this.getLayoutMode();
+    if (mode !== 'grid' && mode !== 'items') return [];
+    const key = mode === 'grid' ? 'grid' : 'items';
+    const seq = this._doc._getDoc().getIn([...this.path, key]);
     if (!isSeq(seq)) return [];
     return (seq as YAMLSeq).items.map((_: unknown, i: number) =>
-      new GridItemNode(this._doc, [...this.path, 'items', i])
+      new GridItemNode(this._doc, [...this.path, key, i])
     );
   }
 
@@ -381,22 +385,24 @@ export class PageNode {
     type: string,
     props?: Record<string, unknown>,
   ): GridItemNode {
-    if (this.getLayoutMode() !== 'items') {
-      throw new Error('addItem() requires items: layout mode — convert first');
+    const mode = this.getLayoutMode();
+    if (mode !== 'grid' && mode !== 'items') {
+      throw new Error('addItem() requires grid: or items: layout mode — convert first');
     }
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
-    const placementObj: Record<string, number> = { w: placement.w, h: placement.h };
+    const atObj: Record<string, number> = { w: placement.w, h: placement.h };
     if (placement.mode === 'positioned') {
-      placementObj['x'] = placement.x;
-      placementObj['y'] = placement.y;
+      atObj['x'] = placement.x;
+      atObj['y'] = placement.y;
     }
-    const entry: Record<string, unknown> = {
-      placement: placementObj,
-      component: { type, ...(props ? { properties: props } : {}) },
-    };
+    const key = mode === 'grid' ? 'grid' : 'items';
+    const atKey = mode === 'grid' ? 'at' : 'placement';
+    const entry: Record<string, unknown> = mode === 'grid'
+      ? { [atKey]: atObj, type, ...(props ? { properties: props } : {}) }
+      : { [atKey]: atObj, component: { type, ...(props ? { properties: props } : {}) } };
     const node = doc.createNode(entry);
-    const seq = doc.getIn([...this.path, 'items']);
+    const seq = doc.getIn([...this.path, key]);
     (seq as YAMLSeq).add(node);
     this._doc._notifyInternal();
     const items = this.getItems();
@@ -404,19 +410,22 @@ export class PageNode {
   }
 
   addEmptyItem(placement: GridPlacement): GridItemNode {
-    if (this.getLayoutMode() !== 'items') {
-      throw new Error('addEmptyItem() requires items: layout mode');
+    const mode = this.getLayoutMode();
+    if (mode !== 'grid' && mode !== 'items') {
+      throw new Error('addEmptyItem() requires grid: or items: layout mode');
     }
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
-    const placementObj: Record<string, number> = { w: placement.w, h: placement.h };
+    const atObj: Record<string, number> = { w: placement.w, h: placement.h };
     if (placement.mode === 'positioned') {
-      placementObj['x'] = placement.x;
-      placementObj['y'] = placement.y;
+      atObj['x'] = placement.x;
+      atObj['y'] = placement.y;
     }
-    const entry: Record<string, unknown> = { placement: placementObj };
+    const key = mode === 'grid' ? 'grid' : 'items';
+    const atKey = mode === 'grid' ? 'at' : 'placement';
+    const entry: Record<string, unknown> = { [atKey]: atObj };
     const node = doc.createNode(entry);
-    const seq = doc.getIn([...this.path, 'items']);
+    const seq = doc.getIn([...this.path, key]);
     (seq as YAMLSeq).add(node);
     this._doc._notifyInternal();
     const items = this.getItems();
@@ -424,23 +433,25 @@ export class PageNode {
   }
 
   insertEmptyItemAt(index: number, placement: GridPlacement): GridItemNode {
-    if (this.getLayoutMode() !== 'items') {
-      throw new Error('insertEmptyItemAt() requires items: layout mode');
+    const mode = this.getLayoutMode();
+    if (mode !== 'grid' && mode !== 'items') {
+      throw new Error('insertEmptyItemAt() requires grid: or items: layout mode');
     }
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
-    const placementObj: Record<string, number> = placement.mode === 'positioned'
+    const atObj: Record<string, number> = placement.mode === 'positioned'
       ? { x: placement.x, y: placement.y, w: placement.w, h: placement.h }
       : { w: placement.w, h: placement.h };
+    const key = mode === 'grid' ? 'grid' : 'items';
+    const atKey = mode === 'grid' ? 'at' : 'placement';
     const placeholder = '<div style="border:2px dashed rgba(66,133,244,0.3);min-height:48px;display:flex;align-items:center;justify-content:center;color:rgba(66,133,244,0.5);font-size:24px;border-radius:8px">+</div>';
-    const entry: Record<string, unknown> = {
-      placement: placementObj,
-      component: { type: 'html', properties: { content: placeholder } },
-    };
+    const entry: Record<string, unknown> = mode === 'grid'
+      ? { [atKey]: atObj, type: 'html', properties: { content: placeholder } }
+      : { [atKey]: atObj, component: { type: 'html', properties: { content: placeholder } } };
     const node = doc.createNode(entry);
-    const placementNode = (node as YAMLMap).get('placement', true);
-    if (isMap(placementNode)) (placementNode as YAMLMap).flow = true;
-    const seq = doc.getIn([...this.path, 'items']);
+    const atNode = (node as YAMLMap).get(atKey, true);
+    if (isMap(atNode)) (atNode as YAMLMap).flow = true;
+    const seq = doc.getIn([...this.path, key]);
     (seq as YAMLSeq).items.splice(index, 0, node);
     this._doc._notifyInternal();
     return this.getItems()[index]!;
@@ -448,14 +459,16 @@ export class PageNode {
 
   removeItem(index: number): void {
     this._doc._pushUndoInternal();
-    this._doc._getDoc().deleteIn([...this.path, 'items', index]);
+    const mode = this.getLayoutMode();
+    const key = mode === 'grid' ? 'grid' : 'items';
+    this._doc._getDoc().deleteIn([...this.path, key, index]);
     this._doc._notifyInternal();
   }
 
   removeChild(index: number): void {
     this._doc._pushUndoInternal();
     const mode = this.getLayoutMode();
-    const key = mode === 'items' ? 'items' : 'components';
+    const key = mode === 'grid' ? 'grid' : mode === 'items' ? 'items' : 'components';
     this._doc._getDoc().deleteIn([...this.path, key, index]);
     this._doc._notifyInternal();
   }
@@ -1047,7 +1060,8 @@ export class GridItemNode {
   ) {}
 
   getPlacement(): GridPlacement {
-    const raw = this._doc._getDoc().getIn([...this.path, 'placement']);
+    const doc = this._doc._getDoc();
+    const raw = doc.getIn([...this.path, 'at']) ?? doc.getIn([...this.path, 'placement']);
     if (!raw || typeof raw !== 'object') {
       return { mode: 'auto', w: 1, h: 1 };
     }
@@ -1067,7 +1081,9 @@ export class GridItemNode {
   setPlacement(p: GridPlacement): void {
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
-    const base = [...this.path, 'placement'];
+    const hasAt = doc.getIn([...this.path, 'at']) != null;
+    const atKey = hasAt ? 'at' : (doc.getIn([...this.path, 'placement']) != null ? 'placement' : 'at');
+    const base = [...this.path, atKey];
     doc.setIn([...base, 'w'], p.w);
     doc.setIn([...base, 'h'], p.h);
     if (p.mode === 'positioned') {
@@ -1079,6 +1095,10 @@ export class GridItemNode {
 
   getComponent(): ComponentNode | undefined {
     const doc = this._doc._getDoc();
+    const inlineType = doc.getIn([...this.path, 'type']);
+    if (inlineType) {
+      return new ComponentNode(this._doc, this.path);
+    }
     const compPath = [...this.path, 'component'];
     const comp = doc.getIn(compPath);
     if (!comp) return undefined;
@@ -1094,6 +1114,15 @@ export class GridItemNode {
   setComponent(type: string, props?: Record<string, unknown>): ComponentNode {
     this._doc._pushUndoInternal();
     const doc = this._doc._getDoc();
+    const isInline = doc.getIn([...this.path, 'at']) != null || doc.getIn([...this.path, 'type']) != null;
+    if (isInline) {
+      doc.setIn([...this.path, 'type'], type);
+      if (props && Object.keys(props).length > 0) {
+        doc.setIn([...this.path, 'properties'], doc.createNode(props));
+      }
+      this._doc._notifyInternal();
+      return new ComponentNode(this._doc, this.path);
+    }
     const compObj: Record<string, unknown> = { type };
     if (props && Object.keys(props).length > 0) compObj['properties'] = props;
     const node = doc.createNode(compObj);

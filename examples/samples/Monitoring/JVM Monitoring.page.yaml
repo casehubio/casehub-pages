@@ -12,146 +12,103 @@ datasets:
       - id: Value
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: System CPU Usage
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: metric
-          properties:
-            chart:
-              height: 200
-              margin:
-                left: 10
-                bottom: "60"
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - system_cpu_usage
-              sort:
-                - column: Total
-                  order: DESCENDING
-              group:
-                - functions:
-                    - source: Value
-                      function: MAX
-                      column: Total
-              uuid: pop
-            columns:
-              - id: Total
-                expression: value * 100
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          title: Threads
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jvm_threads_states_threads
-              sort:
-                - column: Total
-                  order: DESCENDING
-              group:
-                - columnGroup:
-                    source: Labels
-                  functions:
-                    - source: Labels
-                    - source: Value
-                      function: MAX
-                      column: Total
-              uuid: pop
-            columns:
-              - id: Labels
-                expression: value.replaceAll('state="', '').replaceAll('",', '')
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          title: JVM Memory Used Bytes
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jvm_memory_used_bytes
-              sort:
-                - column: Total
-                  order: DESCENDING
-              axis:
-                x:
-                  labels_angle: 10
-              group:
-                - columnGroup:
-                    source: Labels
-                  functions:
-                    - source: Labels
-                    - source: Value
-                      function: MAX
-                      column: Total
-              uuid: pop
-            columns:
-              - id: Total
-                pattern: "#"
-              - id: Labels
-                expression: |
-                  value.replaceAll('id="', ' ')
-                    .replaceAll('area="heap",', "")
-                    .replaceAll('area="nonheap",', "")                            
-                    .replaceAll('",', "")
-                    .trim()
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          title: All Metrics
-      - placement:
-          x: 0
-          y: 7
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: pop
-            chart:
-              height: 400
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: System CPU Usage
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: metric
+        properties:
+          chart:
+            height: 200
+            margin:
+              left: 10
+              bottom: "60"
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - system_cpu_usage
+            sort:
+              - column: Total
+                order: DESCENDING
+            group:
+              - functions:
+                  - source: Value
+                    function: MAX
+                    column: Total
+            uuid: pop
+          columns:
+            - id: Total
+              expression: value * 100
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jvm_threads_states_threads
+            sort:
+              - column: Total
+                order: DESCENDING
+            group:
+              - columnGroup:
+                  source: Labels
+                functions:
+                  - source: Labels
+                  - source: Value
+                    function: MAX
+                    column: Total
+            uuid: pop
+          columns:
+            - id: Labels
+              expression: value.replaceAll('state="', '').replaceAll('",', '')
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jvm_memory_used_bytes
+            sort:
+              - column: Total
+                order: DESCENDING
+            axis:
+              x:
+                labels_angle: 10
+            group:
+              - columnGroup:
+                  source: Labels
+                functions:
+                  - source: Labels
+                  - source: Value
+                    function: MAX
+                    column: Total
+            uuid: pop
+          columns:
+            - id: Total
+              pattern: "#"
+            - id: Labels
+              expression: |
+                value.replaceAll('id="', ' ')
+                  .replaceAll('area="heap",', "")
+                  .replaceAll('area="nonheap",', "")                            
+                  .replaceAll('",', "")
+                  .trim()
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+      - at: { x: 0, y: 7, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: pop
+          chart:
+            height: 400

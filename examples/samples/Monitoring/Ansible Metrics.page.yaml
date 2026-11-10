@@ -39,496 +39,308 @@ datasets:
 pages:
   - properties:
       margin-left: 5px
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <p>
-              <a href="${towerUrl}" style="font-size: xx-large">Ansible Tower</a>
-              <small>Metrics Summary</small>
-            </p> <hr />
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          html: <p style="${subTitlesStyle}">Access</p>
-      - placement:
-          x: 0
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Active Sessions
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_sessions_total
-                - column: labels
-                  function: EQUALS_TO
-                  args:
-                    - type="all"
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 3
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Users
-            size: h3
-      - placement:
-          x: 3
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_users_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 6
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Teams
-            size: h3
-      - placement:
-          x: 6
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_teams_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 9
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Organizations
-            size: h3
-      - placement:
-          x: 9
-          y: 3
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_organizations_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          html: <p style="${subTitlesStyle}">Resources</p>
-      - placement:
-          x: 0
-          y: 5
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Inventories
-            size: h3
-      - placement:
-          x: 0
-          y: 6
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_inventories_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 3
-          y: 5
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Projects
-            size: h3
-      - placement:
-          x: 3
-          y: 6
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_projects_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 6
-          y: 5
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Job Templates
-            size: h3
-      - placement:
-          x: 6
-          y: 6
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_job_templates_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 9
-          y: 5
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Inventory Scripts
-            size: h3
-      - placement:
-          x: 9
-          y: 6
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_inventory_scripts_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 0
-          y: 7
-          w: 12
-          h: 1
-        component:
-          html: <p style="${subTitlesStyle}">Misc</p>
-      - placement:
-          x: 0
-          y: 8
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Running Jobs
-            size: h3
-      - placement:
-          x: 0
-          y: 9
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_running_jobs_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 3
-          y: 8
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Pending Jobs
-            size: h3
-      - placement:
-          x: 3
-          y: 9
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_pending_jobs_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 6
-          y: 8
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: All Hosts
-            size: h3
-      - placement:
-          x: 6
-          y: 9
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_hosts_total
-                - column: labels
-                  function: EQUALS_TO
-                  args:
-                    - type="all"
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 9
-          y: 8
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Active Hosts
-            size: h3
-      - placement:
-          x: 9
-          y: 9
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_hosts_total
-                - column: labels
-                  function: EQUALS_TO
-                  args:
-                    - type="active"
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 0
-          y: 10
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Schedules
-            size: h3
-      - placement:
-          x: 0
-          y: 11
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_schedules_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 3
-          y: 10
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Virtual Envs
-            size: h3
-      - placement:
-          x: 3
-          y: 11
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_custom_virtualenvs_total
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 6
-          y: 10
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Instance Capacity
-            size: h3
-      - placement:
-          x: 6
-          y: 11
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_instance_capacity
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-      - placement:
-          x: 9
-          y: 10
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Remaining Capacity
-            size: h3
-      - placement:
-          x: 9
-          y: 11
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - awx_instance_remaining_capacity
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: { x: 0, y: 2, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Active Sessions
+          size: h3
+      - at: { x: 0, y: 3, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_sessions_total
+              - column: labels
+                function: EQUALS_TO
+                args:
+                  - type="all"
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 3, y: 2, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Users
+          size: h3
+      - at: { x: 3, y: 3, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_users_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 6, y: 2, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Teams
+          size: h3
+      - at: { x: 6, y: 3, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_teams_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 9, y: 2, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Organizations
+          size: h3
+      - at: { x: 9, y: 3, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_organizations_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+      - at: { x: 0, y: 5, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Inventories
+          size: h3
+      - at: { x: 0, y: 6, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_inventories_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 3, y: 5, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Projects
+          size: h3
+      - at: { x: 3, y: 6, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_projects_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 6, y: 5, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Job Templates
+          size: h3
+      - at: { x: 6, y: 6, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_job_templates_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 9, y: 5, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Inventory Scripts
+          size: h3
+      - at: { x: 9, y: 6, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_inventory_scripts_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 0, y: 7, w: 12, h: 1 }
+      - at: { x: 0, y: 8, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Running Jobs
+          size: h3
+      - at: { x: 0, y: 9, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_running_jobs_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 3, y: 8, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Pending Jobs
+          size: h3
+      - at: { x: 3, y: 9, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_pending_jobs_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 6, y: 8, w: 3, h: 1 }
+        type: title
+        properties:
+          text: All Hosts
+          size: h3
+      - at: { x: 6, y: 9, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_hosts_total
+              - column: labels
+                function: EQUALS_TO
+                args:
+                  - type="all"
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 9, y: 8, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Active Hosts
+          size: h3
+      - at: { x: 9, y: 9, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_hosts_total
+              - column: labels
+                function: EQUALS_TO
+                args:
+                  - type="active"
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 0, y: 10, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Schedules
+          size: h3
+      - at: { x: 0, y: 11, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_schedules_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 3, y: 10, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Virtual Envs
+          size: h3
+      - at: { x: 3, y: 11, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_custom_virtualenvs_total
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 6, y: 10, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Instance Capacity
+          size: h3
+      - at: { x: 6, y: 11, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_instance_capacity
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+      - at: { x: 9, y: 10, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Remaining Capacity
+          size: h3
+      - at: { x: 9, y: 11, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - awx_instance_remaining_capacity
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics

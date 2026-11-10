@@ -14,8 +14,8 @@ describe("parseDynamicPage", () => {
 
     expect(result.type).toBe("page");
     expect(result.props?.name).toBe("test-page");
-    expect(result.items).toHaveLength(1);
-    expect(result.items![0].component.type).toBe("title");
+    expect(result.grid).toHaveLength(1);
+    expect(result.grid![0].component.type).toBe("title");
   });
 
   it("applies property substitution", () => {
@@ -28,7 +28,7 @@ describe("parseDynamicPage", () => {
     };
 
     const result = parseDynamicPage(raw);
-    const titleProps = result.items![0].component.props as Record<string, unknown>;
+    const titleProps = result.grid![0].component.props as Record<string, unknown>;
     expect(titleProps.text).toBe("Hello World");
   });
 

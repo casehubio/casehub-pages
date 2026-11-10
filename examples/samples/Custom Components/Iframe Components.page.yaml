@@ -20,100 +20,70 @@ datasets:
         type: NUMBER
 pages:
   - name: Custom Components
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Custom Iframe Components
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              **Iframe components** are standalone React microfrontends that run in
-              isolated iframes. They communicate with the host dashboard via the
-              `@casehubio/pages-iframe-api` message protocol — receiving datasets
-              and dispatching filter events without sharing a JavaScript context.
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Custom Iframe Components
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            **Iframe components** are standalone React microfrontends that run in
+            isolated iframes. They communicate with the host dashboard via the
+            `@casehubio/pages-iframe-api` message protocol — receiving datasets
+            and dispatching filter events without sharing a JavaScript context.
 
-              The **SVG Heatmap** below is a working iframe component. It maps dataset
-              values to SVG path fill colours, creating a data-driven floor plan.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: iframe-plugin
-          properties:
-            componentId: svg-heatmap
-            settings:
-              svg: |-
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200">
-                  <rect id="zone_a" x="10" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                  <rect id="zone_b" x="100" y="10" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                  <rect id="zone_c" x="270" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                  <rect id="zone_d" x="360" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                  <rect id="zone_e" x="450" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                  <rect id="zone_f" x="540" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                  <rect id="zone_g" x="10" y="100" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                  <rect id="zone_h" x="180" y="100" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
-                </svg>
-            lookup:
-              uuid: floor-data
-            width: 100%
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: floor-data
-            sortable: true
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Component Architecture
-            size: h3
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              The iframe component model has three layers:
+            The **SVG Heatmap** below is a working iframe component. It maps dataset
+            values to SVG path fill colours, creating a data-driven floor plan.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: iframe-plugin
+        properties:
+          componentId: svg-heatmap
+          settings:
+            svg: |-
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200">
+                <rect id="zone_a" x="10" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+                <rect id="zone_b" x="100" y="10" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+                <rect id="zone_c" x="270" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+                <rect id="zone_d" x="360" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+                <rect id="zone_e" x="450" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+                <rect id="zone_f" x="540" y="10" width="80" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+                <rect id="zone_g" x="10" y="100" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+                <rect id="zone_h" x="180" y="100" width="160" height="80" rx="4" fill="oklch(0.60 0 0)"/>
+              </svg>
+          lookup:
+            uuid: floor-data
+          width: 100%
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: floor-data
+          sortable: true
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Component Architecture
+          size: h3
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            The iframe component model has three layers:
 
-              - **`@casehubio/pages-iframe-api`** — the controller library.
-                The component calls `connectToHost()` to receive datasets and
-                send filter events via `postMessage`.
+            - **`@casehubio/pages-iframe-api`** — the controller library.
+              The component calls `connectToHost()` to receive datasets and
+              send filter events via `postMessage`.
 
-              - **`host-panel`** — the dashboard-side container that creates
-                the iframe, forwards datasets, and relays events back to the
-                data pipeline.
+            - **`host-panel`** — the dashboard-side container that creates
+              the iframe, forwards datasets, and relays events back to the
+              data pipeline.
 
-              - **`iframe-plugin`** — loads an external component by URL into
-                a host-panel. Used for third-party or separately-deployed
-                visualisations.
+            - **`iframe-plugin`** — loads an external component by URL into
+              a host-panel. Used for third-party or separately-deployed
+              visualisations.
 
-              `host-panel` and `iframe-plugin` require a built component bundle
-              served at a URL — they cannot be demonstrated with inline YAML alone.
+            `host-panel` and `iframe-plugin` require a built component bundle
+            served at a URL — they cannot be demonstrated with inline YAML alone.

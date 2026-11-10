@@ -9,12 +9,11 @@ pages:
           - span: 12
             components:
               - type: grid
-                items:
-                  - placement: { x: 0, y: 0, w: 6, h: 1 }
-                    component:
-                      type: chart
-                      properties:
-                        title: Nested Chart
+                grid:
+                  - at: { x: 0, y: 0, w: 6, h: 1 }
+                    type: chart
+                    properties:
+                      title: Nested Chart
 `;
 
 describe('grid-items slot kind', () => {
@@ -27,7 +26,7 @@ describe('grid-items slot kind', () => {
     expect(gridComp.isContainer()).toBe(true);
     const children = gridComp.getChildren();
     expect(children.descriptor.type).toBe('grid');
-    const items = children.slots['items'];
+    const items = children.slots['grid'];
     expect(items).toBeDefined();
     expect(items).toHaveLength(1);
     expect(items![0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 1 });
