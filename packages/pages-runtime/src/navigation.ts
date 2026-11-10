@@ -37,8 +37,8 @@ function walkPages(
     index.set(path, component);
   }
 
-  if (component.items) {
-    for (const item of component.items) {
+  if (component.grid) {
+    for (const item of component.grid) {
       if (item.component) walkPages(item.component, paths, index);
     }
   }
@@ -137,11 +137,11 @@ function findInteractiveWithSlot(
     const children = resolved
       ? [
           ...(resolved.slots ? Object.values(resolved.slots).flat() : []),
-          ...(resolved.items ? resolved.items.map((i) => i.component).filter(Boolean) : []),
+          ...(resolved.grid ? resolved.grid.map((i) => i.component).filter(Boolean) : []),
         ]
       : [
           ...(node.slots ? Object.values(node.slots).flat() : []),
-          ...(node.items ? node.items.map((i) => i.component).filter(Boolean) : []),
+          ...(node.grid ? node.grid.map((i) => i.component).filter(Boolean) : []),
         ];
 
     if (children.length > 0) {

@@ -2,154 +2,95 @@ pages:
   - name: index
     properties:
       margin: 10px
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            width: 100%
-            navGroupId: MetricsNav
-            targetDivId: metrics_div
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          div: metrics_div
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          width: 100%
+          navGroupId: MetricsNav
+          targetDivId: metrics_div
+      - at: { x: 0, y: 1, w: 12, h: 1 }
   - name: Metric
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: Metric components render an HTML template based on data. Users can customize the HTML and Javascript based on data.
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          html: <h4><strong>Default Metric</strong></h4><br />
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Products
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: metric
-          properties:
-            visible: true
-            chart:
-              height: 100
-              width: 150
-            lookup:
-              uuid: products
-              group:
-                - functions:
-                    - source: Quantity
-                      function: SUM
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          html: "The following metric uses custom HTML and Javascript template:"
-          properties:
-            margin-top: 20px
-            margin-bottom: 20px
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Products
-            size: h3
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          type: metric
-          properties:
-            visible: true
-            lookup:
-              uuid: products
-              group:
-                - functions:
-                    - source: Quantity
-                      function: SUM
-            html:
-              html: <h2><strong>&#10026; Total Products:</strong>&nbsp;<span id="${this}">${value}</span></h2>
-              javascript: |-
-                ${this}.onmouseover = function() {
-                      ${this}.style.color = "red";
-                  };
-                  ${this}.onmouseout = function() {
-                      ${this}.style.color = "black";
-                  };
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Total Products
+          size: h3
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: metric
+        properties:
+          visible: true
+          chart:
+            height: 100
+            width: 150
+          lookup:
+            uuid: products
+            group:
+              - functions:
+                  - source: Quantity
+                    function: SUM
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        properties:
+          margin-top: 20px
+          margin-bottom: 20px
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Total Products
+          size: h3
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+        type: metric
+        properties:
+          visible: true
+          lookup:
+            uuid: products
+            group:
+              - functions:
+                  - source: Quantity
+                    function: SUM
+          html:
+            html: <h2><strong>&#10026; Total Products:</strong>&nbsp;<span id="${this}">${value}</span></h2>
+            javascript: |-
+              ${this}.onmouseover = function() {
+                    ${this}.style.color = "red";
+                };
+                ${this}.onmouseout = function() {
+                    ${this}.style.color = "black";
+                };
   - name: Meter
     properties:
       font-size: x-large
       text-align: center
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Memory Usage
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: meter
-          properties:
-            chart:
-              resizable: false
-              legend:
-                show: "true"
-                position: bottom
-            lookup:
-              uuid: memory_usage
-              group:
-                - columnGroup:
-                    source: Server
-                  functions:
-                    - source: Server
-                    - source: Usage
-                      function: SUM
-            meter:
-              end: "4120"
-              critical: "3000"
-              warning: "2000"
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Memory Usage
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: meter
+        properties:
+          chart:
+            resizable: false
+            legend:
+              show: "true"
+              position: bottom
+          lookup:
+            uuid: memory_usage
+            group:
+              - columnGroup:
+                  source: Server
+                functions:
+                  - source: Server
+                  - source: Usage
+                    function: SUM
+          meter:
+            end: "4120"
+            critical: "3000"
+            warning: "2000"
 navTree:
   root_items:
     - type: GROUP

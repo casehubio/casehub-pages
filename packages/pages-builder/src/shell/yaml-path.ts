@@ -115,7 +115,7 @@ export function classifyPath(path: readonly (string | number)[]): TreeNodeType |
   }
   for (let i = path.length - 1; i >= 0; i--) {
     const seg = path[i];
-    if (seg === 'items' && i + 1 < path.length && typeof path[i + 1] === 'number') {
+    if ((seg === 'grid' || seg === 'items') && i + 1 < path.length && typeof path[i + 1] === 'number') {
       const afterItem = i + 2 < path.length ? path[i + 2] : undefined;
       if (afterItem === 'component' || afterItem === 'properties') return 'component';
       return 'grid-item';

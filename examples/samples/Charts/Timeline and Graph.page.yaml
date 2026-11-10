@@ -46,58 +46,8 @@ datasets:
         type: NUMBER
 pages:
   - name: Timeline and Graph
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            targetPage: true
-          tabs:
-            Timeline:
-              components:
-                - type: markdown
-                  properties:
-                    content: |
-                      **Timeline** — Gantt-style visualisation of project milestones. Each bar spans from `startColumn` to `endColumn`, grouped by `categoryColumn`.
-                - type: timeline
-                  properties:
-                    lookup:
-                      uuid: milestones
-                    startColumn: start
-                    endColumn: end
-                    labelColumn: task
-                    categoryColumn: phase
-            Graph:
-              components:
-                - type: markdown
-                  properties:
-                    content: |
-                      **Graph** — force-directed network showing system dependencies. Nodes are auto-extracted from `sourceColumn` and `targetColumn`. Edge thickness reflects the `valueColumn` weight.
-                - type: graph
-                  properties:
-                    lookup:
-                      uuid: dependencies
-                    sourceColumn: from
-                    targetColumn: to
-                    valueColumn: weight
-                    layout: force
-                    directed: true
-            Circular Layout:
-              components:
-                - type: markdown
-                  properties:
-                    content: |
-                      **Circular layout** — same dependency data arranged in a ring.
-                - type: graph
-                  properties:
-                    lookup:
-                      uuid: dependencies
-                    sourceColumn: from
-                    targetColumn: to
-                    valueColumn: weight
-                    layout: circular
-                    directed: true
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          targetPage: true

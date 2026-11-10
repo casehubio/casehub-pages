@@ -27,70 +27,18 @@ datasets:
         type: NUMBER
 pages:
   - name: Live Polling
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Live Data Polling
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              **refreshTime** on a dataset triggers automatic re-evaluation at the specified interval. Combined with **accumulate**, each refresh appends new rows — building a live timeseries. The **expression** uses JSONata to generate timestamped data points on each tick.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            targetPage: true
-          tabs:
-            Single Metric:
-              components:
-                - type: markdown
-                  properties:
-                    content: |
-                      CPU usage polling every **3 seconds**. The chart grows as rows accumulate, capped at 30 rows by `cacheMaxRows`.
-                - type: timeseries
-                  properties:
-                    lookup:
-                      uuid: live-metrics
-                    chart:
-                      resizable: true
-            Multi-Series:
-              components:
-                - type: markdown
-                  properties:
-                    content: |
-                      Memory and disk usage on the same chart, polling every **5 seconds**. The expression emits two rows per tick — one per series.
-                - type: timeseries
-                  properties:
-                    lookup:
-                      uuid: multi-metrics
-                    chart:
-                      resizable: true
-            Raw Data:
-              components:
-                - type: markdown
-                  properties:
-                    content: |
-                      The same polling dataset rendered as a **table** — watch rows appear in real time as the expression evaluates.
-                - type: data-table
-                  properties:
-                    lookup:
-                      uuid: live-metrics
-                    pageSize: 10
-                    sortable: true
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Live Data Polling
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            **refreshTime** on a dataset triggers automatic re-evaluation at the specified interval. Combined with **accumulate**, each refresh appends new rows — building a live timeseries. The **expression** uses JSONata to generate timestamped data points on each tick.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: tabs
+        properties:
+          targetPage: true

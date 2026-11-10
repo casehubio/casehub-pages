@@ -1,44 +1,28 @@
 pages:
-- name: Grid Layout
-  items:
-    - placement: { x: 0, y: 0, w: 4, h: 2 }
-      component:
+  - name: Grid Layout
+    grid:
+      - at: { x: 0, y: 0, w: 4, h: 2 }
         type: title
         properties:
           text: Revenue Overview
           size: h3
-
-    - placement: { x: 4, y: 0, w: 8, h: 2 }
-      component:
+      - at: { x: 4, y: 0, w: 8, h: 2 }
         type: markdown
         properties:
-          content: >
-            Try DnD editing: hover over the preview, click "Edit layout",
-            then drag panels to reposition or resize. Click a + zone to
-            insert a new panel. Changes round-trip through the YAML editor
-            on the left. Use Ctrl+Z to undo.
-
-    - placement: { x: 0, y: 2, w: 6, h: 3 }
-      component:
+          content: |
+            Try DnD editing: hover over the preview, click "Edit layout", then drag panels to reposition or resize. Click a + zone to insert a new panel. Changes round-trip through the YAML editor on the left. Use Ctrl+Z to undo.
+      - at: { x: 0, y: 2, w: 6, h: 3 }
         type: markdown
         properties:
-          content: >
-            **Panel A** — Drag me to a new position or resize from an edge.
-            The YAML source updates in real time.
-
-    - placement: { x: 6, y: 2, w: 6, h: 3 }
-      component:
+          content: |
+            **Panel A** — Drag me to a new position or resize from an edge. The YAML source updates in real time.
+      - at: { x: 6, y: 2, w: 6, h: 3 }
         type: markdown
         properties:
-          content: >
-            **Panel B** — Works alongside Panel A. The grid overlay shows
-            insertion zones (+) at empty cells.
-
-    - placement: { x: 0, y: 5, w: 12, h: 2 }
-      component:
+          content: |
+            **Panel B** — Works alongside Panel A. The grid overlay shows insertion zones (+) at empty cells.
+      - at: { x: 0, y: 5, w: 12, h: 2 }
         type: markdown
         properties:
-          content: >
-            **Full-width panel** — Spans all 12 columns. Delete via the tree
-            view (right-click > Delete), or move up/down with keyboard
-            shortcuts.
+          content: |
+            **Full-width panel** — Spans all 12 columns. Delete via the tree view (right-click > Delete), or move up/down with keyboard shortcuts.

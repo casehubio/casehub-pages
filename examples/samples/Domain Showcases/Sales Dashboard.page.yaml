@@ -120,579 +120,399 @@ datasets:
         type: DATE
 pages:
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: sidebar
-          properties:
-            navGroupId: SalesNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: sidebar
+        properties:
+          navGroupId: SalesNav
   - name: Overview
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Revenue
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - functions:
-                    - source: amount
-                      function: SUM
-            columns:
-              - id: amount
-                pattern: $#,###
-      - placement:
-          x: 3
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Won Deals
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - functions:
-                    - source: amount
-                      function: COUNT
-            columns:
-              - id: amount
-                pattern: "#"
-      - placement:
-          x: 6
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Deal Size
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales_transactions
-              group:
-                - functions:
-                    - source: amount
-                      function: AVERAGE
-            columns:
-              - id: amount
-                pattern: $#,###
-      - placement:
-          x: 9
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Deals
-            size: h3
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales_transactions
-              group:
-                - functions:
-                    - source: amount
-                      function: COUNT
-            columns:
-              - id: amount
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 8
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue by Region
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 8
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: column-stacked
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Total Revenue
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales_transactions
             filter:
-              listening: true
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - columnGroup:
-                    source: region
-                  functions:
-                    - source: region
-                    - source: amount
-                      function: SUM
-      - placement:
-          x: 8
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue by Category
-            size: h3
-      - placement:
-          x: 8
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - functions:
+                  - source: amount
+                    function: SUM
+          columns:
+            - id: amount
+              pattern: $#,###
+      - at: { x: 3, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Won Deals
+          size: h3
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales_transactions
             filter:
-              listening: true
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - columnGroup:
-                    source: category
-                  functions:
-                    - source: category
-                    - source: amount
-                      function: SUM
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - functions:
+                  - source: amount
+                    function: COUNT
+          columns:
+            - id: amount
+              pattern: "#"
+      - at: { x: 6, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Avg Deal Size
+          size: h3
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales_transactions
+            group:
+              - functions:
+                  - source: amount
+                    function: AVERAGE
+          columns:
+            - id: amount
+              pattern: $#,###
+      - at: { x: 9, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Total Deals
+          size: h3
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales_transactions
+            group:
+              - functions:
+                  - source: amount
+                    function: COUNT
+          columns:
+            - id: amount
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 8, h: 1 }
+        type: title
+        properties:
+          text: Revenue by Region
+          size: h3
+      - at: { x: 0, y: 3, w: 8, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: column-stacked
+          filter:
+            listening: true
+          lookup:
+            uuid: sales_transactions
             filter:
-              selfApply: true
-              notification: true
-            lookup:
-              uuid: sales_transactions
-              group:
-                - columnGroup:
-                    source: region
-                  functions:
-                    - source: region
-      - placement:
-          x: 0
-          y: 5
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Monthly Revenue
-            size: h3
-      - placement:
-          x: 0
-          y: 6
-          w: 6
-          h: 1
-        component:
-          type: line-chart
-          properties:
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - columnGroup:
+                  source: region
+                functions:
+                  - source: region
+                  - source: amount
+                    function: SUM
+      - at: { x: 8, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Revenue by Category
+          size: h3
+      - at: { x: 8, y: 3, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          filter:
+            listening: true
+          lookup:
+            uuid: sales_transactions
             filter:
-              listening: true
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - columnGroup:
-                    source: date
-                    strategy: fixedCalendar
-                    unit: MONTH
-                  functions:
-                    - source: date
-                    - source: amount
-                      function: ${GoalsFunction}
-      - placement:
-          x: 6
-          y: 5
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Top Reps
-            size: h3
-      - placement:
-          x: 6
-          y: 6
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
+                  - source: amount
+                    function: SUM
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            selfApply: true
+            notification: true
+          lookup:
+            uuid: sales_transactions
+            group:
+              - columnGroup:
+                  source: region
+                functions:
+                  - source: region
+      - at: { x: 0, y: 5, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Monthly Revenue
+          size: h3
+      - at: { x: 0, y: 6, w: 6, h: 1 }
+        type: line-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: sales_transactions
             filter:
-              listening: true
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              sort:
-                - column: Revenue
-                  order: DESCENDING
-              group:
-                - columnGroup:
-                    source: rep
-                  functions:
-                    - source: rep
-                    - source: amount
-                      function: SUM
-                      column: Revenue
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - columnGroup:
+                  source: date
+                  strategy: fixedCalendar
+                  unit: MONTH
+                functions:
+                  - source: date
+                  - source: amount
+                    function: ${GoalsFunction}
+      - at: { x: 6, y: 5, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Top Reps
+          size: h3
+      - at: { x: 6, y: 6, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: sales_transactions
+            filter:
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            sort:
+              - column: Revenue
+                order: DESCENDING
+            group:
+              - columnGroup:
+                  source: rep
+                functions:
+                  - source: rep
+                  - source: amount
+                    function: SUM
+                    column: Revenue
   - name: Pipeline
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Pipeline Value
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: pipeline
-              group:
-                - functions:
-                    - source: value
-                      function: SUM
-            columns:
-              - id: value
-                pattern: $#,###
-      - placement:
-          x: 4
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Probability
-            size: h3
-      - placement:
-          x: 4
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: pipeline
-              group:
-                - functions:
-                    - source: probability
-                      function: AVERAGE
-            columns:
-              - id: probability
-                pattern: "#"
-      - placement:
-          x: 8
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Active Deals
-            size: h3
-      - placement:
-          x: 8
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: pipeline
-              group:
-                - functions:
-                    - source: value
-                      function: COUNT
-            columns:
-              - id: value
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 10
-            sortable: true
-            lookup:
-              uuid: pipeline
-      - placement:
-          x: 0
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Pipeline by Stage
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: bar
-            chart:
-              margin:
-                left: 100
-            lookup:
-              uuid: pipeline
-              group:
-                - columnGroup:
-                    source: stage
-                  functions:
-                    - source: stage
-                    - source: value
-                      function: SUM
-      - placement:
-          x: 6
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Pipeline by Rep
-            size: h3
-      - placement:
-          x: 6
-          y: 4
-          w: 6
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
-            lookup:
-              uuid: pipeline
-              group:
-                - columnGroup:
-                    source: rep
-                  functions:
-                    - source: rep
-                    - source: value
-                      function: SUM
+    grid:
+      - at: { x: 0, y: 0, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Pipeline Value
+          size: h3
+      - at: { x: 0, y: 1, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: pipeline
+            group:
+              - functions:
+                  - source: value
+                    function: SUM
+          columns:
+            - id: value
+              pattern: $#,###
+      - at: { x: 4, y: 0, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Avg Probability
+          size: h3
+      - at: { x: 4, y: 1, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: pipeline
+            group:
+              - functions:
+                  - source: probability
+                    function: AVERAGE
+          columns:
+            - id: probability
+              pattern: "#"
+      - at: { x: 8, y: 0, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Active Deals
+          size: h3
+      - at: { x: 8, y: 1, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: pipeline
+            group:
+              - functions:
+                  - source: value
+                    function: COUNT
+          columns:
+            - id: value
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 10
+          sortable: true
+          lookup:
+            uuid: pipeline
+      - at: { x: 0, y: 3, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Pipeline by Stage
+          size: h3
+      - at: { x: 0, y: 4, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            margin:
+              left: 100
+          lookup:
+            uuid: pipeline
+            group:
+              - columnGroup:
+                  source: stage
+                functions:
+                  - source: stage
+                  - source: value
+                    function: SUM
+      - at: { x: 6, y: 3, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Pipeline by Rep
+          size: h3
+      - at: { x: 6, y: 4, w: 6, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          lookup:
+            uuid: pipeline
+            group:
+              - columnGroup:
+                  source: rep
+                functions:
+                  - source: rep
+                  - source: value
+                    function: SUM
   - name: Trends
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue Trend
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: line-chart
-          properties:
-            subtype: smooth
-            chart:
-              zoom: true
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - columnGroup:
-                    source: date
-                    strategy: fixedCalendar
-                    unit: MONTH
-                  functions:
-                    - source: date
-                    - source: amount
-                      function: SUM
-      - placement:
-          x: 0
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Quarterly Revenue
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - columnGroup:
-                    source: date
-                    strategy: fixedCalendar
-                    unit: QUARTER
-                  functions:
-                    - source: date
-                    - source: amount
-                      function: SUM
-      - placement:
-          x: 6
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Category Trend
-            size: h3
-      - placement:
-          x: 6
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: column-stacked
-            lookup:
-              uuid: sales_transactions
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - Won
-              group:
-                - columnGroup:
-                    source: category
-                  functions:
-                    - source: category
-                    - source: amount
-                      function: SUM
-  - name: Deals
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 15
-            sortable: true
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Revenue Trend
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: line-chart
+        properties:
+          subtype: smooth
+          chart:
+            zoom: true
+          lookup:
+            uuid: sales_transactions
             filter:
-              enabled: true
-              notification: true
-            lookup:
-              uuid: sales_transactions
-            columns:
-              - id: amount
-                pattern: $#,###
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - columnGroup:
+                  source: date
+                  strategy: fixedCalendar
+                  unit: MONTH
+                functions:
+                  - source: date
+                  - source: amount
+                    function: SUM
+      - at: { x: 0, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Quarterly Revenue
+          size: h3
+      - at: { x: 0, y: 3, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: sales_transactions
+            filter:
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - columnGroup:
+                  source: date
+                  strategy: fixedCalendar
+                  unit: QUARTER
+                functions:
+                  - source: date
+                  - source: amount
+                    function: SUM
+      - at: { x: 6, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Category Trend
+          size: h3
+      - at: { x: 6, y: 3, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: column-stacked
+          lookup:
+            uuid: sales_transactions
+            filter:
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - Won
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
+                  - source: amount
+                    function: SUM
+  - name: Deals
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 15
+          sortable: true
+          filter:
+            enabled: true
+            notification: true
+          lookup:
+            uuid: sales_transactions
+          columns:
+            - id: amount
+              pattern: $#,###
 navTree:
   root_items:
     - type: GROUP

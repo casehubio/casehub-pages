@@ -118,7 +118,7 @@ describe('GridItemNode', () => {
       const doc = parse(`pages:\n  - title: Test\n    components:\n      - type: chart\n`);
       expect(() => doc.getPages()[0]!.addItem(
         { mode: 'auto', w: 1, h: 1 }, 'table'
-      )).toThrow('addItem() requires items: layout mode');
+      )).toThrow('addItem() requires grid: or items: layout mode');
     });
 
     it('addItem appends item with placement', () => {

@@ -34,13 +34,13 @@ if (shell && yaml) {
           const c = parseSpan(col);
           const r = parseSpan(row);
           return {
-            placement: c && r
+            at: c && r
               ? { mode: 'positioned' as const, x: c.start, y: r.start, w: c.span, h: r.span }
               : { mode: 'auto' as const, w: 1, h: 1 },
             component: { type: el.dataset.componentType ?? '', id: el.dataset.componentId },
           };
         });
-        if (gridItems.some(gi => gi.placement.mode === 'positioned')) {
+        if (gridItems.some(gi => gi.at.mode === 'positioned')) {
           attachGridEditController(gridEl, gridItems, 12);
         }
       }

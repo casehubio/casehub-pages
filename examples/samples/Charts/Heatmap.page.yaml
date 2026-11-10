@@ -31,39 +31,24 @@ datasets:
       - id: correlation
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Correlation Heatmap
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: heatmap-chart
-          properties:
-            title: Metric Correlations
-            minColor: "#313695"
-            maxColor: "#a50026"
-            chart:
-              height: 400
-            lookup:
-              uuid: correlation
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: correlation
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Correlation Heatmap
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: heatmap-chart
+        properties:
+          title: Metric Correlations
+          minColor: "#313695"
+          maxColor: "#a50026"
+          chart:
+            height: 400
+          lookup:
+            uuid: correlation
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: correlation

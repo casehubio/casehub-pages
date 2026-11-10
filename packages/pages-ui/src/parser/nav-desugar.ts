@@ -128,7 +128,7 @@ function resolvePanelRef(panel: Component, pages: Component[]): Component {
     ...panel,
     type: "panel",
     props: { ...panel.props, title: pageName },
-    ...(matchingPage.items ? { items: matchingPage.items } : {}),
+    ...(matchingPage.grid ? { items: matchingPage.grid } : {}),
     ...(matchingPage.slots ? { slots: matchingPage.slots } : {}),
   };
 }

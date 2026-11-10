@@ -1,18 +1,13 @@
 pages:
   - name: Grid Builder
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: html
-          properties:
-            content: |
-              <div id="grid-builder-mount"
-                   style="height: calc(100vh - 80px); width: 100%; border: 1px solid var(--pages-border-color, #dadce0); border-radius: 8px; overflow: hidden;">
-                <div style="padding: 24px; color: var(--pages-text-secondary, #5f6368); text-align: center;">
-                  Loading builder...
-                </div>
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: html
+        properties:
+          content: |
+            <div id="grid-builder-mount"
+                 style="height: calc(100vh - 80px); width: 100%; border: 1px solid var(--pages-border-color, #dadce0); border-radius: 8px; overflow: hidden;">
+              <div style="padding: 24px; color: var(--pages-text-secondary, #5f6368); text-align: center;">
+                Loading builder...
               </div>
+            </div>

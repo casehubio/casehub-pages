@@ -62,7 +62,7 @@ function renderNode(
     el.style.padding = "var(--pages-space-4, 16px)";
     el.style.height = "100%";
     el.style.boxSizing = "border-box";
-    if (component.items && component.items.length > 0) {
+    if (component.grid && component.grid.length > 0) {
       el.style.display = "grid";
       const columns = isGrid(component) ? (component.props?.columns ?? 12) : 12;
       el.style.gridTemplateColumns = `repeat(${String(columns)}, 1fr)`;
@@ -101,7 +101,7 @@ function renderNode(
   onNode?.(el, component);
 
   // 6. Render children — items take precedence over slots
-  if (component.items && component.items.length > 0) {
+  if (component.grid && component.grid.length > 0) {
     el.style.display = "grid";
     const columns = isGrid(component) ? (component.props?.columns ?? 12) : 12;
     el.style.gridTemplateColumns = `repeat(${String(columns)}, 1fr)`;
@@ -112,21 +112,21 @@ function renderNode(
     el.style.alignContent = "start";
     el.style.gap = "var(--pages-space-3, 12px)";
 
-    const hasAutoItems = component.items.some(item => item.placement.mode === "auto");
+    const hasAutoItems = component.grid.some(item => item.at.mode === "auto");
     if (hasAutoItems) {
       el.style.gridAutoFlow = "row";
     }
 
-    const positioned = component.items
+    const positioned = component.grid
       .map((item, i) => ({ item, originalIndex: i }))
-      .filter(e => e.item.placement.mode === "positioned");
-    const auto = component.items
+      .filter(e => e.item.at.mode === "positioned");
+    const auto = component.grid
       .map((item, i) => ({ item, originalIndex: i }))
-      .filter(e => e.item.placement.mode === "auto");
+      .filter(e => e.item.at.mode === "auto");
 
     positioned.sort((a, b) => {
-      const ap = a.item.placement as { mode: "positioned"; x: number; y: number; w: number; h: number };
-      const bp = b.item.placement as { mode: "positioned"; x: number; y: number; w: number; h: number };
+      const ap = a.item.at as { mode: "positioned"; x: number; y: number; w: number; h: number };
+      const bp = b.item.at as { mode: "positioned"; x: number; y: number; w: number; h: number };
       return ap.y !== bp.y ? ap.y - bp.y : ap.x - bp.x;
     });
 
@@ -136,15 +136,15 @@ function renderNode(
         const empty = document.createElement("div");
         empty.className = "pages-empty-container";
         el.appendChild(empty);
-      } else if (item.placement.mode === "positioned") {
-        renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);
+      } else if (item.at.mode === "positioned") {
+        renderNode(el, item.component, id, item.at.x, item.at.y, permissions, doc, onNode);
       } else {
         renderNode(el, item.component, id, "auto", originalIndex, permissions, doc, onNode);
       }
       const child = el.lastElementChild;
       if (child instanceof HTMLElement) {
         child.dataset.itemId = String(originalIndex);
-        applyGridPlacement(child, item.placement);
+        applyGridPlacement(child, item.at);
         if (rowHeight !== undefined) {
           child.style.overflow = "hidden";
         }

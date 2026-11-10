@@ -42,13 +42,14 @@ export class GridEditBridge {
   private _applyPlacements(doc: PageDocument, items: GridItem[]): void {
     const page = doc.getPages()[0];
     if (!page) return;
-    if (page.getLayoutMode() !== 'items') {
-      this._convertToItems(doc, page, items);
+    const mode = page.getLayoutMode();
+    if (mode !== 'grid' && mode !== 'items') {
+      this._convertToGrid(doc, page, items);
       return;
     }
     const gridItems = page.getItems();
     for (let i = 0; i < items.length && i < gridItems.length; i++) {
-      const eventPlacement = items[i]!.placement;
+      const eventPlacement = items[i]!.at;
       const current = gridItems[i]!.getPlacement();
       if (!this._placementEqual(current, eventPlacement)) {
         gridItems[i]!.setPlacement(eventPlacement);
@@ -56,7 +57,7 @@ export class GridEditBridge {
     }
   }
 
-  private _convertToItems(doc: PageDocument, page: PageNode, eventItems: GridItem[]): void {
+  private _convertToGrid(doc: PageDocument, page: PageNode, eventItems: GridItem[]): void {
     const mode = page.getLayoutMode();
     const yamlDoc = doc._getDoc();
     const pagePath = [...page.path];
@@ -67,6 +68,7 @@ export class GridEditBridge {
       for (const comp of comps) {
         componentJsons.push(yamlDoc.getIn([...comp.path])?.toJSON?.() ?? { type: comp.type });
       }
+      yamlDoc.deleteIn([...pagePath, 'flat']);
       yamlDoc.deleteIn([...pagePath, 'components']);
     } else if (mode === 'rows') {
       const rows = page.getRows();
@@ -89,17 +91,17 @@ export class GridEditBridge {
     }
 
     const entries = componentJsons.map((compJson, i) => {
-      const ep = eventItems[i]?.placement ?? { mode: 'positioned' as const, x: 0, y: i, w: 12, h: 1 };
-      const placementObj: Record<string, number> = { w: ep.w, h: ep.h };
+      const ep = eventItems[i]?.at ?? { mode: 'positioned' as const, x: 0, y: i, w: 12, h: 1 };
+      const atObj: Record<string, number> = { w: ep.w, h: ep.h };
       if (ep.mode === 'positioned') {
-        placementObj['x'] = ep.x;
-        placementObj['y'] = ep.y;
+        atObj['x'] = ep.x;
+        atObj['y'] = ep.y;
       }
-      return { placement: placementObj, ...(compJson ? { component: compJson } : {}) };
+      return { at: atObj, ...(compJson ?? {}) };
     });
 
-    const itemsNode = yamlDoc.createNode(entries);
-    yamlDoc.setIn([...pagePath, 'items'], itemsNode);
+    const gridNode = yamlDoc.createNode(entries);
+    yamlDoc.setIn([...pagePath, 'grid'], gridNode);
   }
 
   private _insertItem(
@@ -108,7 +110,7 @@ export class GridEditBridge {
     componentType: string,
   ): void {
     const page = doc.getPages()[0];
-    if (!page || page.getLayoutMode() !== 'items') return;
+    { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     page.addItem(placement, componentType);
   }
 
@@ -118,7 +120,7 @@ export class GridEditBridge {
     direction: 'horizontal' | 'vertical',
   ): void {
     const page = doc.getPages()[0];
-    if (!page || page.getLayoutMode() !== 'items') return;
+    { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     const items = page.getItems();
     const target = items[targetIndex];
     if (!target) return;
@@ -140,7 +142,7 @@ export class GridEditBridge {
 
   private _mergeItems(doc: PageDocument, indices: number[]): void {
     const page = doc.getPages()[0];
-    if (!page || page.getLayoutMode() !== 'items') return;
+    { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     const items = page.getItems();
     const placements = indices
       .map(i => ({ index: i, placement: items[i]?.getPlacement() }))
@@ -168,7 +170,7 @@ export class GridEditBridge {
 
   private _swapItems(doc: PageDocument, indexA: number, indexB: number): void {
     const page = doc.getPages()[0];
-    if (!page || page.getLayoutMode() !== 'items') return;
+    { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     const items = page.getItems();
     const a = items[indexA];
     const b = items[indexB];
@@ -181,13 +183,13 @@ export class GridEditBridge {
 
   private _removeItem(doc: PageDocument, index: number): void {
     const page = doc.getPages()[0];
-    if (!page || page.getLayoutMode() !== 'items') return;
+    { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     page.removeItem(index);
   }
 
   private _addEmptyContainer(doc: PageDocument, placement: GridPlacement): void {
     const page = doc.getPages()[0];
-    if (!page || page.getLayoutMode() !== 'items') return;
+    { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     page.addEmptyItem(placement);
   }
 

@@ -1,593 +1,355 @@
 pages:
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <div style="padding: 12px 20px; background: linear-gradient(135deg, oklch(0.20 0.03 260), oklch(0.25 0.05 260)); color: var(--pages-text-secondary, oklch(0.80 0 0)); margin-bottom: 16px; border-radius: 8px">
-              <strong style="font-size: 1.3em">Navigation Rebinding</strong>
-              <span style="margin-left: 12px; opacity: 0.7">Same three-level content hierarchy, different navigation wrappers —
-            switch pills to compare</span> </div>
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: pills
-          properties:
-            width: 100%
-            navGroupId: Variants
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: pills
+        properties:
+          width: 100%
+          navGroupId: Variants
   - name: Tree View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tree
-          properties:
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tree
+        properties:
+          navGroupId: MainNav
   - name: Tabs View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            width: 100%
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          width: 100%
+          navGroupId: MainNav
   - name: Menu View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: menu
-          properties:
-            width: 100%
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: menu
+        properties:
+          width: 100%
+          navGroupId: MainNav
   - name: Sidebar View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: sidebar
-          properties:
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: sidebar
+        properties:
+          navGroupId: MainNav
   - name: Tiles View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tiles
-          properties:
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tiles
+        properties:
+          navGroupId: MainNav
   - name: Carousel View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: carousel
-          properties:
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: carousel
+        properties:
+          navGroupId: MainNav
   - name: Accordion View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: accordion
-          properties:
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: accordion
+        properties:
+          navGroupId: MainNav
   - name: App Grid View
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: app_grid
-          properties:
-            navGroupId: MainNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: app_grid
+        properties:
+          navGroupId: MainNav
   - name: Dashboard
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Revenue
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - functions:
-                    - source: Revenue
-                      function: SUM
-            columns:
-              - id: Revenue
-                pattern: $#,##0
-      - placement:
-          x: 3
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Products
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - columnGroup:
-                    source: Product
-                  functions:
-                    - source: Product
-                      function: COUNT
-            columns:
-              - id: Product
-                pattern: "#"
-      - placement:
-          x: 6
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Regions
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - columnGroup:
-                    source: Region
-                  functions:
-                    - source: Region
-                      function: COUNT
-            columns:
-              - id: Region
-                pattern: "#"
-      - placement:
-          x: 9
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Deal
-            size: h3
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - functions:
-                    - source: Revenue
-                      function: AVERAGE
-            columns:
-              - id: Revenue
-                pattern: $#,##0
-      - placement:
-          x: 0
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue by Product
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - columnGroup:
-                    source: Product
-                  functions:
-                    - source: Product
-                    - source: Revenue
-                      function: SUM
-      - placement:
-          x: 6
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Monthly Trend
-            size: h3
-      - placement:
-          x: 6
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: line-chart
-          properties:
-            subtype: smooth
-            chart:
-              height: 250
-            lookup:
-              uuid: monthly
-              group:
-                - columnGroup:
-                    source: Month
-                  functions:
-                    - source: Month
-                    - source: Revenue
-                    - source: Target
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Total Revenue
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - functions:
+                  - source: Revenue
+                    function: SUM
+          columns:
+            - id: Revenue
+              pattern: $#,##0
+      - at: { x: 3, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Products
+          size: h3
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: Product
+                functions:
+                  - source: Product
+                    function: COUNT
+          columns:
+            - id: Product
+              pattern: "#"
+      - at: { x: 6, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Regions
+          size: h3
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: Region
+                functions:
+                  - source: Region
+                    function: COUNT
+          columns:
+            - id: Region
+              pattern: "#"
+      - at: { x: 9, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Avg Deal
+          size: h3
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - functions:
+                  - source: Revenue
+                    function: AVERAGE
+          columns:
+            - id: Revenue
+              pattern: $#,##0
+      - at: { x: 0, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Revenue by Product
+          size: h3
+      - at: { x: 0, y: 3, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: Product
+                functions:
+                  - source: Product
+                  - source: Revenue
+                    function: SUM
+      - at: { x: 6, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Monthly Trend
+          size: h3
+      - at: { x: 6, y: 3, w: 6, h: 1 }
+        type: line-chart
+        properties:
+          subtype: smooth
+          chart:
+            height: 250
+          lookup:
+            uuid: monthly
+            group:
+              - columnGroup:
+                  source: Month
+                functions:
+                  - source: Month
+                  - source: Revenue
+                  - source: Target
   - name: Settings
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: SettingsPages
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: SettingsPages
   - name: Profile
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
-              ↳ Profile settings
-            </div>
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: User Profile Fields
-            size: h3
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 5
-            sortable: true
-            lookup:
-              uuid: profile
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: title
+        properties:
+          text: User Profile Fields
+          size: h3
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 5
+          sortable: true
+          lookup:
+            uuid: profile
   - name: Security
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Security Audit Log
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 5
-            sortable: true
-            lookup:
-              uuid: security-log
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Security Audit Log
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 5
+          sortable: true
+          lookup:
+            uuid: security-log
   - name: Reports
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
-              ↳ Reports overview
-            </div>
-      - placement:
-          x: 0
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Reports Generated
-            size: h3
-      - placement:
-          x: 0
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: report-stats
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - Generated
-              group:
-                - functions:
-                    - source: Count
-                      function: SUM
-            columns:
-              - id: Count
-                pattern: "#,##0"
-      - placement:
-          x: 4
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Generation Time
-            size: h3
-      - placement:
-          x: 4
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: report-stats
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - AvgTime
-              group:
-                - functions:
-                    - source: Count
-                      function: SUM
-            columns:
-              - id: Count
-                pattern: "#,##0 ms"
-      - placement:
-          x: 8
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Failed Reports
-            size: h3
-      - placement:
-          x: 8
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: report-stats
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - Failed
-              group:
-                - functions:
-                    - source: Count
-                      function: SUM
-            columns:
-              - id: Count
-                pattern: "#,##0"
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Recent Report Runs
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 6
-            sortable: true
-            lookup:
-              uuid: report-runs
-  - name: Sales
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: SalesPages
-  - name: Revenue
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue by Product
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - columnGroup:
-                    source: Product
-                  functions:
-                    - source: Product
-                    - source: Revenue
-                      function: SUM
-      - placement:
-          x: 6
-          y: 0
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue Share
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
-            lookup:
-              uuid: sales
-              group:
-                - columnGroup:
-                    source: Region
-                  functions:
-                    - source: Region
-                    - source: Revenue
-                      function: SUM
-  - name: Transactions
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: pills
-          properties:
-            navGroupId: TransactionViews
-  - name: Txn Table
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Recent Transactions
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 8
-            sortable: true
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Reports Generated
+          size: h3
+      - at: { x: 0, y: 2, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: report-stats
             filter:
-              enabled: true
-              notification: true
-            lookup:
-              uuid: sales
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - Generated
+            group:
+              - functions:
+                  - source: Count
+                    function: SUM
+          columns:
+            - id: Count
+              pattern: "#,##0"
+      - at: { x: 4, y: 1, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Avg Generation Time
+          size: h3
+      - at: { x: 4, y: 2, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: report-stats
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - AvgTime
+            group:
+              - functions:
+                  - source: Count
+                    function: SUM
+          columns:
+            - id: Count
+              pattern: "#,##0 ms"
+      - at: { x: 8, y: 1, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Failed Reports
+          size: h3
+      - at: { x: 8, y: 2, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: report-stats
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - Failed
+            group:
+              - functions:
+                  - source: Count
+                    function: SUM
+          columns:
+            - id: Count
+              pattern: "#,##0"
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Recent Report Runs
+          size: h3
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 6
+          sortable: true
+          lookup:
+            uuid: report-runs
+  - name: Sales
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: SalesPages
+  - name: Revenue
+    grid:
+      - at: { x: 0, y: 0, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Revenue by Product
+          size: h3
+      - at: { x: 0, y: 1, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: Product
+                functions:
+                  - source: Product
+                  - source: Revenue
+                    function: SUM
+      - at: { x: 6, y: 0, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Revenue Share
+          size: h3
+      - at: { x: 6, y: 1, w: 6, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: Region
+                functions:
+                  - source: Region
+                  - source: Revenue
+                    function: SUM
+  - name: Transactions
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: pills
+        properties:
+          navGroupId: TransactionViews
+  - name: Txn Table
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Recent Transactions
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 8
+          sortable: true
+          filter:
+            enabled: true
+            notification: true
+          lookup:
+            uuid: sales
   - name: Txn Form
     dataScope:
       dataset: sales
@@ -596,355 +358,213 @@ pages:
       trigger: auto
       delay: 500
       adapter: local
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <div style="display:flex;gap:8px;padding:0 0 12px">
-              <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'prev'}}))"
-                style="padding:6px 16px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:6px;background:var(--pages-surface-primary, oklch(0.99 0 0));cursor:pointer;font-size:13px">←
-            Previous</button>
-              <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'next'}}))"
-                style="padding:6px 16px;border:1px solid var(--pages-border-subtle, oklch(0.50 0 0 / 0.2));border-radius:6px;background:var(--pages-surface-primary, oklch(0.99 0 0));cursor:pointer;font-size:13px">Next
-            →</button> </div>
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          input:
-            field: Product
-            label: Product
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          input:
-            field: Region
-            label: Region
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          number-input:
-            field: Revenue
-            label: Revenue
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
   - name: Pipeline
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Revenue
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - functions:
-                    - source: Revenue
-                      function: SUM
-            columns:
-              - id: Revenue
-                pattern: $#,##0
-      - placement:
-          x: 4
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Deal Size
-            size: h3
-      - placement:
-          x: 4
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - functions:
-                    - source: Revenue
-                      function: AVERAGE
-            columns:
-              - id: Revenue
-                pattern: $#,##0
-      - placement:
-          x: 8
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Deals
-            size: h3
-      - placement:
-          x: 8
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sales
-              group:
-                - functions:
-                    - source: Revenue
-                      function: COUNT
-            columns:
-              - id: Revenue
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue Trend
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: line-chart
-          properties:
-            subtype: smooth
-            chart:
-              height: 250
-            lookup:
-              uuid: monthly
-              group:
-                - columnGroup:
-                    source: Month
-                  functions:
-                    - source: Month
-                    - source: Revenue
-                    - source: Target
+    grid:
+      - at: { x: 0, y: 0, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Total Revenue
+          size: h3
+      - at: { x: 0, y: 1, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - functions:
+                  - source: Revenue
+                    function: SUM
+          columns:
+            - id: Revenue
+              pattern: $#,##0
+      - at: { x: 4, y: 0, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Avg Deal Size
+          size: h3
+      - at: { x: 4, y: 1, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - functions:
+                  - source: Revenue
+                    function: AVERAGE
+          columns:
+            - id: Revenue
+              pattern: $#,##0
+      - at: { x: 8, y: 0, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Total Deals
+          size: h3
+      - at: { x: 8, y: 1, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sales
+            group:
+              - functions:
+                  - source: Revenue
+                    function: COUNT
+          columns:
+            - id: Revenue
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Revenue Trend
+          size: h3
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: line-chart
+        properties:
+          subtype: smooth
+          chart:
+            height: 250
+          lookup:
+            uuid: monthly
+            group:
+              - columnGroup:
+                  source: Month
+                functions:
+                  - source: Month
+                  - source: Revenue
+                  - source: Target
   - name: Operations
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: OpsPages
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: OpsPages
   - name: Monitoring
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: CPU
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: ops
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - CPU
-              group:
-                - functions:
-                    - source: Value
-                      function: MAX
-      - placement:
-          x: 3
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Memory
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: ops
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - Memory
-              group:
-                - functions:
-                    - source: Value
-                      function: MAX
-      - placement:
-          x: 6
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Disk
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: ops
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - Disk
-              group:
-                - functions:
-                    - source: Value
-                      function: MAX
-      - placement:
-          x: 9
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Network
-            size: h3
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: ops
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - Network
-              group:
-                - functions:
-                    - source: Value
-                      function: MAX
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: CPU
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: ops
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - CPU
+            group:
+              - functions:
+                  - source: Value
+                    function: MAX
+      - at: { x: 3, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Memory
+          size: h3
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: ops
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - Memory
+            group:
+              - functions:
+                  - source: Value
+                    function: MAX
+      - at: { x: 6, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Disk
+          size: h3
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: ops
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - Disk
+            group:
+              - functions:
+                  - source: Value
+                    function: MAX
+      - at: { x: 9, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Network
+          size: h3
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: ops
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - Network
+            group:
+              - functions:
+                  - source: Value
+                    function: MAX
   - name: Services
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Request Latency (ms)
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            chart:
-              margin:
-                left: 100
-            lookup:
-              uuid: services
-              sort:
-                - column: Latency
-                  sortOrder: DESCENDING
-              group:
-                - columnGroup:
-                    source: Service
-                  functions:
-                    - source: Service
-                    - source: Latency
-                      function: AVERAGE
-      - placement:
-          x: 6
-          y: 0
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Error Rate (%)
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: services
-              sort:
-                - column: ErrorRate
-                  sortOrder: DESCENDING
-              group:
-                - columnGroup:
-                    source: Service
-                  functions:
-                    - source: Service
-                    - source: ErrorRate
-                      function: AVERAGE
+    grid:
+      - at: { x: 0, y: 0, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Request Latency (ms)
+          size: h3
+      - at: { x: 0, y: 1, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          chart:
+            margin:
+              left: 100
+          lookup:
+            uuid: services
+            sort:
+              - column: Latency
+                sortOrder: DESCENDING
+            group:
+              - columnGroup:
+                  source: Service
+                functions:
+                  - source: Service
+                  - source: Latency
+                    function: AVERAGE
+      - at: { x: 6, y: 0, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Error Rate (%)
+          size: h3
+      - at: { x: 6, y: 1, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: services
+            sort:
+              - column: ErrorRate
+                sortOrder: DESCENDING
+            group:
+              - columnGroup:
+                  source: Service
+                functions:
+                  - source: Service
+                  - source: ErrorRate
+                    function: AVERAGE
 navTree:
   root_items:
     - type: GROUP

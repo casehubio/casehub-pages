@@ -31,76 +31,55 @@ datasets:
       - id: Value
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          title: Jupyter Hub Metrics Histograms
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            chart:
-              resizable: true
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_proxy_add_duration_seconds_bucket
-              uuid: metrics
-              group:
-                - columnGroup:
-                    source: Label
-                  functions:
-                    - source: Label
-                    - source: Value
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_proxy_delete_duration_seconds_bucket
-              uuid: metrics
-              group:
-                - columnGroup:
-                    source: Label
-                  functions:
-                    - source: Label
-                    - source: Value
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_server_spawn_duration_seconds_bucket
-              uuid: metrics
-              group:
-                - columnGroup:
-                    source: Label
-                  functions:
-                    - source: Label
-                    - source: Value
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          chart:
+            resizable: true
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_proxy_add_duration_seconds_bucket
+            uuid: metrics
+            group:
+              - columnGroup:
+                  source: Label
+                functions:
+                  - source: Label
+                  - source: Value
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_proxy_delete_duration_seconds_bucket
+            uuid: metrics
+            group:
+              - columnGroup:
+                  source: Label
+                functions:
+                  - source: Label
+                  - source: Value
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_server_spawn_duration_seconds_bucket
+            uuid: metrics
+            group:
+              - columnGroup:
+                  source: Label
+                functions:
+                  - source: Label
+                  - source: Value

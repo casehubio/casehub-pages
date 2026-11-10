@@ -24,80 +24,55 @@ datasets:
         type: DATE
 pages:
   - name: Column Settings
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Column Expressions & Cross-Filtering
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              **Column expressions** transform how values display. The `columns`
-              property applies an `expression` per column — a formula that
-              receives the raw `value` and returns formatted text:
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Column Expressions & Cross-Filtering
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            **Column expressions** transform how values display. The `columns`
+            property applies an `expression` per column — a formula that
+            receives the raw `value` and returns formatted text:
 
-              - `salary` expression: `"$" & value` — prepends a dollar sign
-              - `growth` expression: `value & "%"` — appends a percent sign
+            - `salary` expression: `"$" & value` — prepends a dollar sign
+            - `growth` expression: `value & "%"` — appends a percent sign
 
-              **Cross-filtering** is enabled by default on tables. Click any
-              **department** cell to filter — the bar chart below responds.
-              Click again to clear.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: sales
-            sortable: true
-            filter:
-              notification: true
-            columns:
-              - id: salary
-                expression: "'$' & value"
-              - id: growth
-                expression: value & '%'
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Salary by Department
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: sales
-              group:
-                - columnGroup:
-                    source: department
-                  functions:
-                    - source: department
-                    - source: salary
-                      function: SUM
+            **Cross-filtering** is enabled by default on tables. Click any
+            **department** cell to filter — the bar chart below responds.
+            Click again to clear.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: sales
+          sortable: true
+          filter:
+            notification: true
+          columns:
+            - id: salary
+              expression: "'$' & value"
+            - id: growth
+              expression: value & '%'
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Salary by Department
+          size: h3
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: department
+                functions:
+                  - source: department
+                  - source: salary
+                    function: SUM

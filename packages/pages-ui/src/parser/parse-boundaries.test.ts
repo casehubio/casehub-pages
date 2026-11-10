@@ -55,7 +55,7 @@ describe("global defaults propagation", () => {
       }],
     });
     const page = root.slots!["content"]![0]!;
-    const component = page.items![0]!.component;
+    const component = page.grid![0]!.component;
     const lookup = component.props?.["lookup"] as DataSetLookup | undefined;
     expect(lookup?.dataSetId).toBe("shared-ds");
   });
@@ -79,7 +79,7 @@ describe("global defaults propagation", () => {
       }],
     });
     const page = root.slots!["content"]![0]!;
-    const component = page.items![0]!.component;
+    const component = page.grid![0]!.component;
     const lookup = component.props?.["lookup"] as DataSetLookup;
     expect(lookup.dataSetId).toBe("override-ds");
     expect(component.props?.["resizable"]).toBe(true);
@@ -104,7 +104,7 @@ describe("global defaults propagation", () => {
       }],
     });
     const page = root.slots!["content"]![0]!;
-    const component = page.items![0]!.component;
+    const component = page.grid![0]!.component;
     expect(component.type).toBe("line-chart");
     expect(component.props?.["resizable"]).toBe(true);
     expect(component.props?.["height"]).toBe(500); // component override wins
@@ -124,10 +124,10 @@ describe("global defaults propagation", () => {
       }],
     });
     const page = root.slots!["content"]![0]!;
-    expect(page.items![0]!.component.type).toBe("html");
-    expect(page.items![0]!.component.props?.["resizable"]).toBeUndefined();
-    expect(page.items![1]!.component.type).toBe("markdown");
-    expect(page.items![2]!.component.type).toBe("title");
+    expect(page.grid![0]!.component.type).toBe("html");
+    expect(page.grid![0]!.component.props?.["resizable"]).toBeUndefined();
+    expect(page.grid![1]!.component.type).toBe("markdown");
+    expect(page.grid![2]!.component.type).toBe("title");
   });
 
 });

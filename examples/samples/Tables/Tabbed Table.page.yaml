@@ -1,6 +1,6 @@
 datasets:
   - uuid: team
-    content: >-
+    content: |-
       [
         ["Alice", "Engineering", "Senior"],
         ["Bob", "Marketing", "Manager"],
@@ -13,7 +13,6 @@ datasets:
         type: LABEL
       - id: role
         type: LABEL
-
 pages:
   - tabs:
       - name: Team

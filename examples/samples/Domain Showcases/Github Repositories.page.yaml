@@ -38,49 +38,27 @@ datasets:
       - id: description
         type: text
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          title: Top 10 GitHub Repositories by Stars
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              rowCount: 10
-              group:
-                - columnGroup:
-                    source: name
-                  functions:
-                    - source: name
-                    - source: stars
-              uuid: github_repos
-            axis:
-              x:
-                labels_angle: -10
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          title: List of top repositories by stars
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: github_repos
-            sortable: true
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            rowCount: 10
+            group:
+              - columnGroup:
+                  source: name
+                functions:
+                  - source: name
+                  - source: stars
+            uuid: github_repos
+          axis:
+            x:
+              labels_angle: -10
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: github_repos
+          sortable: true

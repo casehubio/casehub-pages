@@ -138,6 +138,6 @@ export function autoShrinkHeight(items: readonly IdRect[]): number {
   return Math.max(...items.map(i => i.y + i.h));
 }
 
-export function isNestedGrid(item: { component?: { type?: string; items?: readonly unknown[] } }): boolean {
-  return item.component?.type === "grid" && Array.isArray(item.component.items) && item.component.items.length > 0;
+export function isNestedGrid(item: { component?: { type?: string; grid?: readonly unknown[] } }): boolean {
+  return item.component?.type === "grid" && Array.isArray(item.component.grid) && item.component.grid.length > 0;
 }

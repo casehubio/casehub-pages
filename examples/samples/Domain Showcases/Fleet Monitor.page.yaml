@@ -95,489 +95,319 @@ datasets:
         type: LABEL
 pages:
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: sidebar
-          properties:
-            navGroupId: IoTNav
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: sidebar
+        properties:
+          navGroupId: IoTNav
   - name: Fleet Status
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Devices Online
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: devices
-              filter:
-                - column: status
-                  function: NOT_IN
-                  args:
-                    - Offline
-              group:
-                - functions:
-                    - source: deviceId
-                      function: COUNT
-            columns:
-              - id: deviceId
-                pattern: "#"
-      - placement:
-          x: 3
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Temperature
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sensor_readings
-              group:
-                - functions:
-                    - source: temperature
-                      function: AVERAGE
-      - placement:
-          x: 6
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Humidity
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sensor_readings
-              group:
-                - functions:
-                    - source: humidity
-                      function: AVERAGE
-      - placement:
-          x: 9
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Low Battery
-            size: h3
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: sensor_readings
-              filter:
-                - column: battery
-                  function: LOWER_THAN
-                  args:
-                    - "20"
-              group:
-                - functions:
-                    - source: battery
-                      function: COUNT
-            columns:
-              - id: battery
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 8
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Device Registry
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 8
-          h: 1
-        component:
-          type: data-table
-          properties:
-            sortable: true
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Devices Online
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: devices
             filter:
-              listening: true
-            lookup:
-              uuid: devices
-      - placement:
-          x: 8
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Temperature
-            size: h3
-      - placement:
-          x: 8
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: meter
-          properties:
+              - column: status
+                function: NOT_IN
+                args:
+                  - Offline
+            group:
+              - functions:
+                  - source: deviceId
+                    function: COUNT
+          columns:
+            - id: deviceId
+              pattern: "#"
+      - at: { x: 3, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Avg Temperature
+          size: h3
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sensor_readings
+            group:
+              - functions:
+                  - source: temperature
+                    function: AVERAGE
+      - at: { x: 6, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Avg Humidity
+          size: h3
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sensor_readings
+            group:
+              - functions:
+                  - source: humidity
+                    function: AVERAGE
+      - at: { x: 9, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Low Battery
+          size: h3
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: sensor_readings
             filter:
-              listening: true
-            lookup:
-              uuid: sensor_readings
-              group:
-                - functions:
-                    - source: temperature
-                      function: AVERAGE
-            meter:
-              end: 60
-              warning: 30
-              critical: 40
-      - placement:
-          x: 8
-          y: 4
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Humidity
-            size: h3
-      - placement:
-          x: 8
-          y: 5
-          w: 4
-          h: 1
-        component:
-          type: meter
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: sensor_readings
-              group:
-                - functions:
-                    - source: humidity
-                      function: AVERAGE
-            meter:
-              end: 100
-              warning: 70
-              critical: 85
-      - placement:
-          x: 8
-          y: 6
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Pressure (hPa)
-            size: h3
-      - placement:
-          x: 8
-          y: 7
-          w: 4
-          h: 1
-        component:
-          type: meter
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: sensor_readings
-              group:
-                - functions:
-                    - source: pressure
-                      function: AVERAGE
-            meter:
-              end: 1060
-              warning: 1020
-              critical: 1040
-      - placement:
-          x: 0
-          y: 8
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
-            filter:
-              notification: true
-            lookup:
-              uuid: sensor_readings
-              group:
-                - columnGroup:
-                    source: location
-                  functions:
-                    - source: location
+              - column: battery
+                function: LOWER_THAN
+                args:
+                  - "20"
+            group:
+              - functions:
+                  - source: battery
+                    function: COUNT
+          columns:
+            - id: battery
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 8, h: 1 }
+        type: title
+        properties:
+          text: Device Registry
+          size: h3
+      - at: { x: 0, y: 3, w: 8, h: 1 }
+        type: data-table
+        properties:
+          sortable: true
+          filter:
+            listening: true
+          lookup:
+            uuid: devices
+      - at: { x: 8, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Temperature
+          size: h3
+      - at: { x: 8, y: 3, w: 4, h: 1 }
+        type: meter
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: sensor_readings
+            group:
+              - functions:
+                  - source: temperature
+                    function: AVERAGE
+          meter:
+            end: 60
+            warning: 30
+            critical: 40
+      - at: { x: 8, y: 4, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Humidity
+          size: h3
+      - at: { x: 8, y: 5, w: 4, h: 1 }
+        type: meter
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: sensor_readings
+            group:
+              - functions:
+                  - source: humidity
+                    function: AVERAGE
+          meter:
+            end: 100
+            warning: 70
+            critical: 85
+      - at: { x: 8, y: 6, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Pressure (hPa)
+          size: h3
+      - at: { x: 8, y: 7, w: 4, h: 1 }
+        type: meter
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: sensor_readings
+            group:
+              - functions:
+                  - source: pressure
+                    function: AVERAGE
+          meter:
+            end: 1060
+            warning: 1020
+            critical: 1040
+      - at: { x: 0, y: 8, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            notification: true
+          lookup:
+            uuid: sensor_readings
+            group:
+              - columnGroup:
+                  source: location
+                functions:
+                  - source: location
   - name: Sensor History
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Temperature by Device
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: area-chart
-          properties:
-            subtype: area-stacked
-            chart:
-              zoom: true
-            lookup:
-              uuid: sensor_readings
-              group:
-                - columnGroup:
-                    source: deviceId
-                  functions:
-                    - source: deviceId
-                    - source: temperature
-                      function: AVERAGE
-      - placement:
-          x: 0
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Humidity by Device
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: line-chart
-          properties:
-            subtype: smooth
-            lookup:
-              uuid: sensor_readings
-              group:
-                - columnGroup:
-                    source: deviceId
-                  functions:
-                    - source: deviceId
-                    - source: humidity
-                      function: AVERAGE
-      - placement:
-          x: 6
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Pressure by Device
-            size: h3
-      - placement:
-          x: 6
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: area-chart
-          properties:
-            lookup:
-              uuid: sensor_readings
-              group:
-                - columnGroup:
-                    source: deviceId
-                  functions:
-                    - source: deviceId
-                    - source: pressure
-                      function: AVERAGE
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Battery Level
-            size: h3
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: timeseries
-          properties:
-            lookup:
-              uuid: sensor_readings
-              group:
-                - columnGroup:
-                    source: timestamp
-                  functions:
-                    - source: timestamp
-                    - source: battery
-                      function: AVERAGE
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Temperature by Device
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: area-chart
+        properties:
+          subtype: area-stacked
+          chart:
+            zoom: true
+          lookup:
+            uuid: sensor_readings
+            group:
+              - columnGroup:
+                  source: deviceId
+                functions:
+                  - source: deviceId
+                  - source: temperature
+                    function: AVERAGE
+      - at: { x: 0, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Humidity by Device
+          size: h3
+      - at: { x: 0, y: 3, w: 6, h: 1 }
+        type: line-chart
+        properties:
+          subtype: smooth
+          lookup:
+            uuid: sensor_readings
+            group:
+              - columnGroup:
+                  source: deviceId
+                functions:
+                  - source: deviceId
+                  - source: humidity
+                    function: AVERAGE
+      - at: { x: 6, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Pressure by Device
+          size: h3
+      - at: { x: 6, y: 3, w: 6, h: 1 }
+        type: area-chart
+        properties:
+          lookup:
+            uuid: sensor_readings
+            group:
+              - columnGroup:
+                  source: deviceId
+                functions:
+                  - source: deviceId
+                  - source: pressure
+                    function: AVERAGE
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Battery Level
+          size: h3
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: timeseries
+        properties:
+          lookup:
+            uuid: sensor_readings
+            group:
+              - columnGroup:
+                  source: timestamp
+                functions:
+                  - source: timestamp
+                  - source: battery
+                    function: AVERAGE
   - name: Device Detail
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Devices
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            sortable: true
-            filter:
-              listening: true
-              notification: true
-            lookup:
-              uuid: devices
-      - placement:
-          x: 0
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Readings by Device
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: sensor_readings
-              group:
-                - columnGroup:
-                    source: deviceId
-                  functions:
-                    - source: deviceId
-                    - source: temperature
-                      function: AVERAGE
-                    - source: humidity
-                      function: AVERAGE
-      - placement:
-          x: 6
-          y: 2
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Devices by Type
-            size: h3
-      - placement:
-          x: 6
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
-            filter:
-              listening: true
-            lookup:
-              uuid: devices
-              group:
-                - columnGroup:
-                    source: type
-                  functions:
-                    - source: type
-                    - source: type
-                      function: COUNT
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Sensor Readings
-            size: h3
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 10
-            sortable: true
-            filter:
-              listening: true
-            lookup:
-              uuid: sensor_readings
-            columns:
-              - id: battery
-                pattern: "##%"
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Devices
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          sortable: true
+          filter:
+            listening: true
+            notification: true
+          lookup:
+            uuid: devices
+      - at: { x: 0, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Readings by Device
+          size: h3
+      - at: { x: 0, y: 3, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: sensor_readings
+            group:
+              - columnGroup:
+                  source: deviceId
+                functions:
+                  - source: deviceId
+                  - source: temperature
+                    function: AVERAGE
+                  - source: humidity
+                    function: AVERAGE
+      - at: { x: 6, y: 2, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Devices by Type
+          size: h3
+      - at: { x: 6, y: 3, w: 6, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          filter:
+            listening: true
+          lookup:
+            uuid: devices
+            group:
+              - columnGroup:
+                  source: type
+                functions:
+                  - source: type
+                  - source: type
+                    function: COUNT
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Sensor Readings
+          size: h3
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 10
+          sortable: true
+          filter:
+            listening: true
+          lookup:
+            uuid: sensor_readings
+          columns:
+            - id: battery
+              pattern: "##%"
 navTree:
   root_items:
     - type: GROUP

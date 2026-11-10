@@ -434,7 +434,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._selectionOverlay.update(bounds, nodeType, path, { isContainer });
     this._overlayScrollBase = container.scrollTop;
 
-    const isGridPage = nodeType === 'page' && this._findPageAtPath(path)?.getLayoutMode() === 'items';
+    const pageMode = this._findPageAtPath(path)?.getLayoutMode();
+    const isGridPage = nodeType === 'page' && (pageMode === 'grid' || pageMode === 'items');
     if (!isGridPage && (isContainer || nodeType === 'page' || nodeType === 'column' || nodeType === 'row')) {
       const childBounds = elements.length > 1
         ? elements.map(el => {
@@ -670,7 +671,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     type: string, basePath: readonly (string | number)[], startCount: number, targetIndex: number
   ): { path: readonly (string | number)[] | undefined; count: number } {
     let count = startCount;
-    if (parent.getLayoutMode?.() === 'items' && parent.getItems) {
+    const lm = parent.getLayoutMode?.();
+    if ((lm === 'grid' || lm === 'items') && parent.getItems) {
       for (const item of parent.getItems()) {
         const comp = item.getComponent();
         if (comp && comp.type === type) {
@@ -1030,7 +1032,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         if (nt === 'page') {
           const page = this._findPageAtPath(path);
           if (!page) return;
-          if (page.getLayoutMode() === 'items') {
+          if (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items') {
             const items = page.getItems();
             const refItem = items[insertIndex] ?? items[items.length - 1];
             const rp = refItem?.getPlacement();
@@ -1089,7 +1091,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       if (nt === 'page') {
         const page = this._findPageAtPath(path);
         if (page) {
-          if (page.getLayoutMode() === 'items') {
+          if (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items') {
             const items = page.getItems();
             const maxY = items.reduce((m, it) => {
               const p = it.getPlacement();
@@ -1155,7 +1157,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         case 'move-down': this._moveAtPath(path, 1); break;
         case 'add-item': {
           const page = this._findPageAtPath(path);
-          if (page && page.getLayoutMode() === 'items') {
+          if (page && (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items')) {
             const items = page.getItems();
             const maxY = items.reduce((m, it) => {
               const p = it.getPlacement();
@@ -1167,7 +1169,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         }
         case 'split-horizontal':
         case 'split-vertical': {
-          if (path[2] === 'items' && typeof path[3] === 'number') {
+          if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
             this._gridBridge.applyGridEdit(this._document, {
               type: 'split',
               targetIndex: path[3],
@@ -1183,7 +1185,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           if (!page) break;
           const compJson = this._document._getDoc().getIn([...path])?.toJSON?.();
           if (!compJson) break;
-          if (path[2] === 'items' && typeof path[3] === 'number') {
+          if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
             const item = page.getItems()[path[3]];
             if (!item) break;
             const placement = item.getPlacement();
@@ -1215,7 +1217,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (nodeType === 'row') { this._findPageAtPath(['pages', path[1] as number])?.removeChild(path[3] as number); return; }
     if (nodeType === 'column') { this._findRowAtPath(path.slice(0, 4))?.removeColumn(idx); return; }
     if (nodeType === 'component') {
-      if (path[2] === 'items') this._findPageAtPath(['pages', path[1] as number])?.removeItem(path[3] as number);
+      if ((path[2] === 'grid' || path[2] === 'items')) this._findPageAtPath(['pages', path[1] as number])?.removeItem(path[3] as number);
       else if (path[2] === 'components') this._findPageAtPath(['pages', path[1] as number])?.removeChild(idx);
       else if (path.length >= 8 && path[6] === 'components') this._findColumnAtPath(path.slice(0, 6))?.removeComponent(idx);
       else if (path.length >= 6 && path[4] === 'components') this._findColumnAtPath(path.slice(0, 4))?.removeComponent(idx);
@@ -1223,7 +1225,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _moveAtPath(path: readonly (string | number)[], direction: number): void {
-    if (path[2] === 'items') {
+    if ((path[2] === 'grid' || path[2] === 'items')) {
       const page = this._findPageAtPath(['pages', path[1] as number]);
       if (!page) return;
       const items = page.getItems();
@@ -1243,7 +1245,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _handleTreeDrop(e: CustomEvent<{ sourcePath: readonly (string | number)[]; dropTarget: { parent: { path: readonly (string | number)[] }; index: number } }>): void {
     const { sourcePath, dropTarget } = e.detail;
     this._applyEdit('tree', () => {
-      if (sourcePath[2] === 'items') {
+      if (sourcePath[2] === 'grid' || sourcePath[2] === 'items') {
         const page = this._findPageAtPath(['pages', sourcePath[1] as number]);
         if (!page) return;
         const items = page.getItems();
@@ -1591,7 +1593,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         const pages = this._document.getPages();
         if (pages.length > 0) {
           const page = pages[0]!;
-          if (page.getLayoutMode() === 'items') {
+          if (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items') {
             page.addItem({ mode: 'auto', w: 1, h: 1 }, entry.type, props);
           } else {
             page.addComponent(entry.type, props);
@@ -1605,7 +1607,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
       if (nt === 'page') {
         const page = this._findPageAtPath(path);
-        if (page?.getLayoutMode() === 'items') {
+        const m = page?.getLayoutMode();
+        if (m === 'grid' || m === 'items') {
           page.addItem({ mode: 'auto', w: 1, h: 1 }, entry.type, props);
         } else {
           page?.addComponent(entry.type, props);
@@ -1622,7 +1625,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       } else if (nt === 'component') {
         const page = this._findPageAtPath(['pages', path[1] as number]);
         if (!page) return;
-        if (path[2] === 'items') {
+        if ((path[2] === 'grid' || path[2] === 'items')) {
           page.addItem({ mode: 'auto', w: 1, h: 1 }, entry.type, props);
         } else if (path[2] === 'components') {
           page.addComponent(entry.type, props);
@@ -1712,7 +1715,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (path.length < 3) return undefined;
     const page = this._document.getPages()[path[1] as number];
     if (!page) return undefined;
-    if (path[2] === 'items' && path.length >= 4) {
+    if ((path[2] === 'grid' || path[2] === 'items') && path.length >= 4) {
       return page.getItems()[path[3] as number]?.getComponent();
     }
     if (path[2] === 'components' && path.length >= 4) {

@@ -2,185 +2,114 @@ pages:
   - name: index
     properties:
       margin: 10px
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            width: 100%
-            navGroupId: SelectorsNav
-            targetDivId: selectors_div
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          div: selectors_div
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          width: 100%
+          navGroupId: SelectorsNav
+          targetDivId: selectors_div
+      - at: { x: 0, y: 1, w: 12, h: 1 }
   - name: Selectors
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <p>Melviz Displayers can filter each other. For filtering only we have selectors components. You can enable filter using the filter section, the component that filter others:<br /> <pre> filter:
-                notification: true</pre>
-            </p><p>
-              Then on the component that will be filtered:<pre>
-            filter:
-                listening: true</pre>
-            </p>
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          html: <strong> Default Selector </strong>
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              enabled: true
-              notification: true
-              listening: false
-              selfapply: false
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: Section
-                  functions:
-                    - source: Section
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          html: <br /><strong>subtype SELECTOR_LABELS (used only with LABEL column types)</strong>
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
-            filter:
-              notification: true
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: Section
-                  functions:
-                    - source: Section
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: Product
-                  functions:
-                    - source: Product
-                    - source: Quantity
-                    - source: Quantity2
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: selector
+        properties:
+          filter:
+            enabled: true
+            notification: true
+            listening: false
+            selfapply: false
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: Section
+                functions:
+                  - source: Section
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            notification: true
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: Section
+                functions:
+                  - source: Section
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: Product
+                functions:
+                  - source: Product
+                  - source: Quantity
+                  - source: Quantity2
   - name: Filter with Chart
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            filter:
-              enabled: true
-              notification: true
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: Section
-                  functions:
-                    - source: Section
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: Product
-                  functions:
-                    - source: Product
-                    - source: Quantity
-                      function: SUM
-                    - source: Quantity2
-                      function: SUM
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: selector
+        properties:
+          filter:
+            enabled: true
+            notification: true
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: Section
+                functions:
+                  - source: Section
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: Product
+                functions:
+                  - source: Product
+                  - source: Quantity
+                    function: SUM
+                  - source: Quantity2
+                    function: SUM
   - name: Filter with Table
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
-            filter:
-              notification: true
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: Section
-                  functions:
-                    - source: Section
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: products
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            notification: true
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: Section
+                functions:
+                  - source: Section
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: products
 navTree:
   root_items:
     - type: GROUP

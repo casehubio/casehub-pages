@@ -3,47 +3,32 @@ datasets:
     url: ws://localhost:8090/ws/push
 pages:
   - name: Reconnect Replay Demo
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: html
-          properties:
-            content: |
-              <div style="padding: 20px; background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; margin-bottom: 16px;">
-                <h2 style="margin: 0 0 8px; color: var(--pages-text-primary, #eee); font-size: 20px;">Reconnect Replay</h2>
-                <p style="margin: 0 0 12px; color: var(--pages-text-muted, #999); font-size: 14px;">
-                  Demonstrates EventStore replay on reconnect. Disconnect the WebSocket — events keep arriving on the server.
-                  On reconnect, the <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">listen</code> message includes
-                  <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">since: { "demo:events": lastSeq }</code>,
-                  and the EventStore replays all missed events.
-                </p>
-                <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
-                  ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">./start-server.sh</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
-                </p>
-              </div>
-      - placement:
-          x: 0
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: events
-            label: Total Events
-            value: "#{datasets.events.rowCount}"
-      - placement:
-          x: 4
-          y: 1
-          w: 8
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: events
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: html
+        properties:
+          content: |
+            <div style="padding: 20px; background: var(--pages-surface-tertiary, #1a1a2e); border: 1px solid var(--pages-border-subtle, #333); border-radius: 8px; margin-bottom: 16px;">
+              <h2 style="margin: 0 0 8px; color: var(--pages-text-primary, #eee); font-size: 20px;">Reconnect Replay</h2>
+              <p style="margin: 0 0 12px; color: var(--pages-text-muted, #999); font-size: 14px;">
+                Demonstrates EventStore replay on reconnect. Disconnect the WebSocket — events keep arriving on the server.
+                On reconnect, the <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">listen</code> message includes
+                <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">since: { "demo:events": lastSeq }</code>,
+                and the EventStore replays all missed events.
+              </p>
+              <p style="margin: 0; color: var(--pages-text-muted, #888); font-size: 13px;">
+                ▸ Start the backend: <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">./start-server.sh</code> in <code style="background: var(--pages-surface-secondary, #2a2a3e); padding: 2px 6px; border-radius: 3px;">examples/</code>
+              </p>
+            </div>
+      - at: { x: 0, y: 1, w: 4, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: events
+          label: Total Events
+          value: "#{datasets.events.rowCount}"
+      - at: { x: 4, y: 1, w: 8, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: events

@@ -30,234 +30,168 @@ datasets:
       - id: Value
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          title: Jupyter Hub Metrics Summary
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Users
-            size: h3
-      - placement:
-          x: 0
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_total_users
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-            columns:
-              - id: value
-                pattern: "#"
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Running Servers
-            size: h3
-      - placement:
-          x: 3
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_running_servers
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-            columns:
-              - id: value
-                pattern: "#"
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Memory (mb)
-            size: h3
-      - placement:
-          x: 6
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - process_resident_memory_bytes
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-            columns:
-              - id: value
-                expression: value / 1014 / 1024
-                pattern: "#"
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Startup (seconds)
-            size: h3
-      - placement:
-          x: 9
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              filter:
-                - column: metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_hub_startup_duration_seconds_sum
-              group:
-                - functions:
-                    - source: value
-              uuid: metrics
-            columns:
-              - id: value
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Users
+          size: h3
+      - at: { x: 0, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
             filter:
-              listening: "true"
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_server_spawn_duration_seconds_count
-              group:
-                - columnGroup:
-                    source: Label
-                  functions:
-                    - source: Label
-                    - source: Value
-              uuid: metrics
-      - placement:
-          x: 4
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_total_users
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+          columns:
+            - id: value
+              pattern: "#"
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Running Servers
+          size: h3
+      - at: { x: 3, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
             filter:
-              listening: "true"
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_server_stop_seconds_count
-              group:
-                - columnGroup:
-                    source: Label
-                  functions:
-                    - source: Label
-                    - source: Value
-              uuid: metrics
-      - placement:
-          x: 8
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_proxy_add_duration_seconds_count
-              group:
-                - columnGroup:
-                    source: Label
-                  functions:
-                    - source: Label
-                    - source: Value
-              uuid: metrics
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              filter:
-                - column: Metric
-                  function: EQUALS_TO
-                  args:
-                    - jupyterhub_request_duration_seconds_count
-              uuid: metrics
-              sort:
-                - column: value
-                  sortOrder: DESCENDING
-              group:
-                - columnGroup:
-                    source: Label
-                  functions:
-                    - source: Label
-                    - source: Value
-            columns:
-              - id: Label
-                expression: |-
-                  value.replaceAll("code=", "")
-                       .replaceAll("handler=", "")
-                       .replaceAll("method=", "")
-                       .replaceAll("\"", "")                  
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_running_servers
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+          columns:
+            - id: value
+              pattern: "#"
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Memory (mb)
+          size: h3
+      - at: { x: 6, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - process_resident_memory_bytes
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+          columns:
+            - id: value
+              expression: value / 1014 / 1024
+              pattern: "#"
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Startup (seconds)
+          size: h3
+      - at: { x: 9, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            filter:
+              - column: metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_hub_startup_duration_seconds_sum
+            group:
+              - functions:
+                  - source: value
+            uuid: metrics
+          columns:
+            - id: value
+              pattern: "#"
+      - at: { x: 0, y: 3, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: "true"
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_server_spawn_duration_seconds_count
+            group:
+              - columnGroup:
+                  source: Label
+                functions:
+                  - source: Label
+                  - source: Value
+            uuid: metrics
+      - at: { x: 4, y: 3, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: "true"
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_server_stop_seconds_count
+            group:
+              - columnGroup:
+                  source: Label
+                functions:
+                  - source: Label
+                  - source: Value
+            uuid: metrics
+      - at: { x: 8, y: 3, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_proxy_add_duration_seconds_count
+            group:
+              - columnGroup:
+                  source: Label
+                functions:
+                  - source: Label
+                  - source: Value
+            uuid: metrics
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            filter:
+              - column: Metric
+                function: EQUALS_TO
+                args:
+                  - jupyterhub_request_duration_seconds_count
+            uuid: metrics
+            sort:
+              - column: value
+                sortOrder: DESCENDING
+            group:
+              - columnGroup:
+                  source: Label
+                functions:
+                  - source: Label
+                  - source: Value
+          columns:
+            - id: Label
+              expression: |-
+                value.replaceAll("code=", "")
+                     .replaceAll("handler=", "")
+                     .replaceAll("method=", "")
+                     .replaceAll("\"", "")                  

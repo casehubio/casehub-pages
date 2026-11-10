@@ -9,7 +9,7 @@ export interface Component<
   readonly access?: AccessControl;
   readonly visibleWhen?: string;
   readonly slots?: Readonly<Record<string, readonly Component[]>>;
-  readonly items?: readonly GridItem[];
+  readonly grid?: readonly GridItem[];
 }
 
 export interface AccessControl {
@@ -22,7 +22,7 @@ export type GridPlacement =
   | { readonly mode: "auto"; readonly w: number; readonly h: number };
 
 export interface GridItem {
-  readonly placement: GridPlacement;
+  readonly at: GridPlacement;
   readonly component?: Component;
 }
 

@@ -1001,10 +1001,7 @@
             "retry",
             "timeout",
             "when",
-            "concurrent",
-            "from",
-            "pause",
-            "resume"
+            "concurrent"
           ],
           "tsPath": "Scenarios/Step Modifiers.ts"
         },
@@ -1021,8 +1018,7 @@
             "parallel",
             "barrier",
             "quorum",
-            "select",
-            "race"
+            "select"
           ],
           "tsPath": "Scenarios/Control Flow.ts"
         },
@@ -1052,9 +1048,7 @@
             "channel",
             "spawn",
             "correlation",
-            "deadline",
-            "named-consumer",
-            "from"
+            "deadline"
           ],
           "tsPath": "Scenarios/Concurrency Patterns.ts"
         },
@@ -1083,10 +1077,7 @@
             "trigger",
             "module",
             "forEach",
-            "orchestration",
-            "temporal",
-            "heartbeat",
-            "absence"
+            "orchestration"
           ],
           "tsPath": "Scenarios/Composition.ts"
         },
