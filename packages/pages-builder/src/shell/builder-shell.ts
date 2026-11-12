@@ -216,8 +216,30 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._applyEdit('toolbar', () => this._gridBridge.applyCrossGridEdit(this._document, detail));
     const targetSeq = this._document._getDoc().getIn(detail.targetGridPath) as { items?: unknown[] } | undefined;
     if (targetSeq?.items) {
-      this._selectedPath = [...detail.targetGridPath, targetSeq.items.length - 1];
+      const movedIndex = targetSeq.items.length - 1;
+      this._selectedPath = [...detail.targetGridPath, movedIndex];
       this._selectedNodeType = 'grid-item';
+      const targetPath = detail.targetGridPath;
+      setTimeout(() => {
+        // 400ms: 200ms for re-render + 200ms for selection rectangle animation
+        const preview = this.renderRoot.querySelector('[data-preview-root]') ?? this.renderRoot;
+        let gridEl: Element | null = preview.querySelector('[data-grid-editing]');
+        for (let pi = 3; pi < targetPath.length - 1 && gridEl; pi += 2) {
+          const idx = targetPath[pi];
+          if (typeof idx !== 'number') break;
+          const itemEl = gridEl.querySelector(`:scope > [data-item-id="${idx}"]`);
+          gridEl = itemEl?.querySelector('[data-grid-editing]') ?? null;
+        }
+        const el = gridEl?.querySelector(`:scope > [data-item-id="${movedIndex}"]`) as HTMLElement | null;
+        if (el) {
+          const r = el.getBoundingClientRect();
+          const cx = r.left + r.width / 2;
+          const cy = r.top + r.height / 2;
+          el.dispatchEvent(new PointerEvent('pointerdown', { clientX: cx, clientY: cy, bubbles: true, composed: true }));
+          el.dispatchEvent(new PointerEvent('pointerup', { clientX: cx, clientY: cy, bubbles: true, composed: true }));
+          el.dispatchEvent(new PointerEvent('pointermove', { clientX: cx, clientY: cy, bubbles: true, composed: true }));
+        }
+      }, 400);
     } else {
       this._selectedPath = undefined;
       this._selectedNodeType = undefined;
@@ -437,7 +459,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       return;
     }
     const rects = elements.map(el => el.getBoundingClientRect());
-    const pad = 4;
+    const pad = 0;
     const minX = Math.min(...rects.map(r => r.left)) - containerRect.left - pad;
     const minY = Math.min(...rects.map(r => r.top)) - containerRect.top - pad;
     const maxX = Math.max(...rects.map(r => r.right)) - containerRect.left + pad;

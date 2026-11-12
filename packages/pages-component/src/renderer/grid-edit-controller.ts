@@ -42,6 +42,7 @@ export interface GridEditController {
   acceptForeignItem(item: GridItem, placement: GridPlacement): void;
   clearForeignItem(): void;
   setDragGhostVisible(visible: boolean): void;
+  clearInteractionState(): void;
 }
 
 let lastEditDispatchTime = 0;
@@ -168,7 +169,7 @@ class GridEditControllerImpl implements GridEditController {
           (el.firstElementChild as HTMLElement).style.pointerEvents = "none";
         }
         el.style.outline = "1px dashed var(--pages-neutral-6, #71717a)";
-        el.style.outlineOffset = "-1px";
+        el.style.outlineOffset = "0px";
         el.style.borderRadius = "var(--pages-radius-sm, 4px)";
         el.style.cursor = "grab";
       }
@@ -252,6 +253,16 @@ class GridEditControllerImpl implements GridEditController {
     }
   }
 
+  clearInteractionState(): void {
+    if (this._selectedEl) {
+      this._selectedEl.querySelector("[data-drag-handle]")?.remove();
+      this._selectedEl = null;
+    }
+    this.hoveredId = null;
+    clearSelectionOutlines(this.gridEl);
+    this.selection = clearSelection();
+  }
+
   dispose(): void {
     this.exit();
     removeEditButton(this.gridEl);
@@ -321,12 +332,14 @@ class GridEditControllerImpl implements GridEditController {
     if ((e.target as HTMLElement).closest("[data-mode-toggle]")) return;
     if ((e.target as HTMLElement).closest("[data-pin-toggle]")) return;
 
-    if (getCoordinator().getParent(this)) {
-      e.stopPropagation();
-    }
-
     const target = this.findItemAtPoint(e.clientX, e.clientY);
     if (!target) return;
+
+    const parentCtrl = getCoordinator().getParent(this);
+    if (parentCtrl) {
+      e.stopPropagation();
+      parentCtrl.clearInteractionState();
+    }
 
     const id = target.id;
     const idRects = this.getIdRects();
@@ -746,6 +759,11 @@ class GridEditControllerImpl implements GridEditController {
     }
     this._selectedEl = el;
     if (!el) return;
+    const nestedGridEl = el.querySelector('[data-grid-editing]') as HTMLElement | null;
+    if (nestedGridEl) {
+      const nestedCtrl = getCoordinator().getControllerForEl(nestedGridEl);
+      if (nestedCtrl) nestedCtrl.clearInteractionState();
+    }
     el.querySelector("[data-drag-handle]")?.remove();
     const doc = el.ownerDocument;
     const BTN = "width:20px;height:20px;border:1px solid rgba(255,255,255,0.3);border-radius:3px;background:rgba(0,0,0,0.5);color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;";
@@ -890,7 +908,7 @@ class GridEditControllerImpl implements GridEditController {
     if (!container) return;
     const containerRect = container.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
-    const pad = 4;
+    const pad = 0;
     overlay.style.left = `${String(elRect.left - containerRect.left - pad)}px`;
     overlay.style.top = `${String(elRect.top - containerRect.top - pad)}px`;
     overlay.style.width = `${String(elRect.width + pad * 2)}px`;
@@ -971,8 +989,8 @@ class GridEditControllerImpl implements GridEditController {
       el.style.outlineOffset = "";
       el.style.boxShadow = "";
     } else {
-      el.style.outline = "1px solid var(--pages-neutral-6, #71717a)";
-      el.style.outlineOffset = "-1px";
+      el.style.outline = "";
+      el.style.outlineOffset = "";
       el.style.boxShadow = "";
       el.style.cursor = "pointer";
     }
