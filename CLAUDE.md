@@ -45,6 +45,23 @@ Three packages provide the editor infrastructure:
 
 `pages-code-editor` extends `EditableTextBridge` from editor-core. `pages-aria` re-exports types from editor-core (deprecated `ScenarioEditableText` alias remains for backward compat).
 
+## Grid Editing
+
+`packages/pages-component/src/renderer/` — grid drag-and-drop, compaction, and cross-grid coordination.
+
+Architecture: `GridEditController` (per-grid instance, handles drag/resize/selection) → `GridEditCoordinator` (singleton, manages cross-grid lifecycle and pin state) → `GridEditBridge` (in pages-builder, applies edits to YAML).
+
+Key files:
+- `grid-edit-controller.ts` — pointer events, within-grid displace/swap, passive mode
+- `grid-edit-coordinator.ts` — cross-grid drag, displacement preview, `isPinned`/`togglePin` API
+- `grid-compaction.ts` — pure functions: `compactAll`, `push`, `compact` (all accept optional `pinnedIds`)
+- `grid-edit-bridge.ts` — YAML mutations for move/resize/insert/split/merge/swap/cross-move
+- `grid-overlay.ts` — placeholder, selection outlines, mode toggle
+
+Nested grids: panels with nested grids are pinned by default during displace drags (they don't participate in `compactAll`). Pin state managed by coordinator singleton, survives controller recreation on preview re-render. Pin toggle (📌/📍) on panels with `[data-grid-editing]` children.
+
+Vite cache: after editing controller/coordinator source, `rm -rf packages/pages-builder/node_modules/.vite` or changes don't take effect.
+
 ## Step Viewer
 
 `packages/pages-step-viewer/` — Lit web components for rendering playbook step YAML as visual cards, swim lanes, and control flow diagrams. Gallery at `gallery.html` (run via Vite).
