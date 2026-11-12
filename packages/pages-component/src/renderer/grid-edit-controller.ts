@@ -79,10 +79,12 @@ class GridEditControllerImpl implements GridEditController {
   private _dispatching = false;
   private _dragCursorBadge: HTMLElement | null = null;
   private _nestedGridItemIds: Set<string> | null = null;
+  private _displacedPositions = new Map<string, number>();
 
   private readonly onPointerDown: (e: PointerEvent) => void;
   private readonly onPointerMove: (e: PointerEvent) => void;
   private readonly onPointerUp: (e: PointerEvent) => void;
+  private readonly onPointerLeave: (e: PointerEvent) => void;
   private readonly onKeyDown: (e: KeyboardEvent) => void;
 
   constructor(gridEl: HTMLElement, items: readonly GridItem[], columns: number, rowHeight: number) {
@@ -96,6 +98,7 @@ class GridEditControllerImpl implements GridEditController {
     this.onPointerMove = this.handlePointerMove.bind(this);
     this.onPointerUp = this.handlePointerUp.bind(this);
     this.onKeyDown = this.handleKeyDown.bind(this);
+    this.onPointerLeave = this.handlePointerLeave.bind(this);
 
     if (gridEl.parentElement) {
       this.observer = new MutationObserver((mutations) => {
@@ -149,6 +152,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.addEventListener("pointerdown", this.onPointerDown);
     this.gridEl.addEventListener("pointermove", this.onPointerMove);
     this.gridEl.addEventListener("pointerup", this.onPointerUp);
+    this.gridEl.addEventListener("pointerleave", this.onPointerLeave);
 
     this.initLivePlacements();
     this.storeOriginalPlacements();
@@ -187,6 +191,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.addEventListener("pointerdown", this.onPointerDown);
     this.gridEl.addEventListener("pointermove", this.onPointerMove);
     this.gridEl.addEventListener("pointerup", this.onPointerUp);
+    this.gridEl.addEventListener("pointerleave", this.onPointerLeave);
     this.gridEl.ownerDocument.addEventListener("keydown", this.onKeyDown);
 
     this.storeOriginalPlacements();
@@ -226,6 +231,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.removeEventListener("pointerdown", this.onPointerDown);
     this.gridEl.removeEventListener("pointermove", this.onPointerMove);
     this.gridEl.removeEventListener("pointerup", this.onPointerUp);
+    this.gridEl.removeEventListener("pointerleave", this.onPointerLeave);
     this.gridEl.ownerDocument.removeEventListener("keydown", this.onKeyDown);
 
     this.restoreOriginalPlacements();
@@ -516,14 +522,36 @@ class GridEditControllerImpl implements GridEditController {
 
     {
       const pinnedIds = this.dragHandle === "move" ? this._getPinnedIds() : undefined;
-      const resolved = this.dragHandle === "move"
-        ? compactAll(items, this.dragItemId!, target, pinnedIds)
-        : resizeCompact(items, this.dragItemId!, target);
-
-      const before = this._initialDragPositions ?? this.captureItemPositions();
-      this._initialDragPositions = null;
 
       if (this.dragHandle === "move") {
+        for (const [id, _dy] of this._displacedPositions) {
+          const orig = items.find(i => i.id === id);
+          if (!orig) { this._displacedPositions.delete(id); continue; }
+          const noHOverlap = target.x >= orig.x + orig.w || target.x + target.w <= orig.x;
+          const movedAbove = target.y + target.h <= orig.y;
+          const movedBelow = target.y >= orig.y + orig.h;
+          if (noHOverlap || movedAbove || movedBelow) this._displacedPositions.delete(id);
+        }
+      }
+
+      const baseItems = this.dragHandle === "move"
+        ? items.map(item => {
+            if (item.id === this.dragItemId) return item;
+            const held = this._displacedPositions.get(item.id);
+            return (held != null && held > item.y) ? { ...item, y: held } : item;
+          })
+        : items;
+
+      const resolved = this.dragHandle === "move"
+        ? compactAll(baseItems, this.dragItemId!, target, pinnedIds)
+        : resizeCompact(items, this.dragItemId!, target);
+
+      if (this.dragHandle === "move") {
+        for (const item of resolved) {
+          if (item.id === this.dragItemId) continue;
+          const orig = items.find(i => i.id === item.id);
+          if (orig && item.y > orig.y) this._displacedPositions.set(item.id, item.y);
+        }
         const movedResolved = resolved.find(i => i.id === this.dragItemId);
         showPlaceholder(this.gridEl, movedResolved ?? target);
       } else {
@@ -533,10 +561,12 @@ class GridEditControllerImpl implements GridEditController {
       for (const item of resolved) {
         if (item.id === this.dragItemId && this.dragHandle === "move") continue;
         const el = this.gridEl.querySelector(`[data-item-id="${item.id}"]`) as HTMLElement | null;
-        if (el) applyGridPlacement(el, { mode: "positioned", x: item.x, y: item.y, w: item.w, h: item.h });
+        if (el) {
+          el.style.transition = "";
+          el.style.transform = "";
+          applyGridPlacement(el, { mode: "positioned", x: item.x, y: item.y, w: item.w, h: item.h });
+        }
       }
-
-      this.flipAnimate(before, this.dragItemId!);
 
       if (this.dragHandle !== "move") {
         this.syncBuilderOverlay(this.dragItemId!);
@@ -654,6 +684,16 @@ class GridEditControllerImpl implements GridEditController {
     }
   }
 
+  private handlePointerLeave(_e: PointerEvent): void {
+    if (this.dragging) return;
+    if (this.hoveredId != null) {
+      const hovEl = this.gridEl.querySelector(`[data-item-id="${this.hoveredId}"]`) as HTMLElement | null;
+      if (hovEl) this.clearItemHover(hovEl);
+      this.hoveredId = null;
+      this._toggleDragHandles(null);
+    }
+  }
+
   private cancelDrag(): void {
     const wasDragging = this.dragging || this.dragItemId != null;
     this._crossGridActive = false;
@@ -663,6 +703,7 @@ class GridEditControllerImpl implements GridEditController {
     this.clearSwapTarget();
     this._removeDragBadge();
     this._nestedGridItemIds = null;
+    this._displacedPositions.clear();
     this.lastSnapCell = null;
     this.frozenRows = null;
     this._initialDragPositions = null;
@@ -957,7 +998,13 @@ class GridEditControllerImpl implements GridEditController {
     const el = this.gridEl.querySelector(`[data-item-id="${target.id}"]`) as HTMLElement | null;
     if (!el) return;
 
-    const isSelected = this.selection.items.includes(target.id) || this.hasBuilderOverlayOver(target.rect);
+    const hasOverlay = this.hasBuilderOverlayOver(target.rect);
+    if (hasOverlay && (!this._selectedEl || !this._selectedEl.isConnected)) {
+      this._setSelectedEl(target.id);
+      this._toggleDragHandles(newId);
+    }
+
+    const isSelected = this.selection.items.includes(target.id) || hasOverlay;
 
     if (isSelected) {
       el.style.outline = "";

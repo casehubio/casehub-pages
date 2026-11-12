@@ -36,7 +36,7 @@ export function push(items: readonly IdRect[], movedId: string, pinnedIds?: Read
   });
 }
 
-export function compactDown(items: readonly IdRect[], pinnedId: string): IdRect[] {
+export function compactDown(items: readonly IdRect[], pinnedId: string, pinnedIds?: ReadonlySet<string>): IdRect[] {
   const pinned = items.find(i => i.id === pinnedId);
   if (!pinned) return items.map(i => ({ ...i }));
   const others = items.filter(i => i.id !== pinnedId);
@@ -45,6 +45,7 @@ export function compactDown(items: readonly IdRect[], pinnedId: string): IdRect[
   );
   const result: IdRect[] = [{ ...pinned }];
   for (const item of sorted) {
+    if (pinnedIds?.has(item.id)) { result.push({ ...item }); continue; }
     let bestY = item.y;
     let settled = false;
     while (!settled) {
@@ -120,8 +121,7 @@ export function compactAll(
   pinnedIds?: ReadonlySet<string>,
 ): IdRect[] {
   const placed = place(items, movedId, target);
-  const pushed = push(placed, movedId, pinnedIds);
-  return compact(pushed, movedId, pinnedIds);
+  return compactDown(placed, movedId, pinnedIds);
 }
 
 export function resizeCompact(
