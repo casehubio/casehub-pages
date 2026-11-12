@@ -219,19 +219,39 @@ export class GridEditBridge {
     doc._pushUndoInternal();
     const yamlDoc = doc._getDoc();
     const sourceSeq = yamlDoc.getIn(detail.sourceGridPath) as YAMLSeq;
-    sourceSeq.delete(detail.sourceIndex);
-    const tp = detail.targetPlacement;
-    const atObj: Record<string, number> = tp.mode === 'positioned'
-      ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h }
-      : { w: tp.w, h: tp.h };
-    const entry: Record<string, unknown> = { at: atObj };
-    if (detail.component) {
-      entry['type'] = detail.component.type;
-      if (detail.component.props) entry['properties'] = detail.component.props;
-    }
-    const targetNode = yamlDoc.createNode(entry);
     const targetSeq = yamlDoc.getIn(detail.targetGridPath) as YAMLSeq;
-    targetSeq.add(targetNode);
+
+    if (detail.swapTargetIndex != null) {
+      const swapNode = targetSeq.get(detail.swapTargetIndex, true) as any;
+      const sourceNode = sourceSeq.get(detail.sourceIndex, true) as any;
+      if (swapNode && sourceNode) {
+        const swapAt = swapNode.get('at', true);
+        const sourceAt = sourceNode.get('at', true);
+        const tp = detail.targetPlacement;
+        const newSourceAt = yamlDoc.createNode(tp.mode === 'positioned' ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h } : { w: tp.w, h: tp.h });
+        sourceSeq.delete(detail.sourceIndex);
+        targetSeq.delete(detail.swapTargetIndex);
+        const movedSource = yamlDoc.createNode((sourceNode as any).toJSON());
+        (movedSource as any).set('at', newSourceAt);
+        targetSeq.add(movedSource);
+        const movedTarget = yamlDoc.createNode((swapNode as any).toJSON());
+        (movedTarget as any).set('at', yamlDoc.createNode((sourceAt as any).toJSON()));
+        sourceSeq.add(movedTarget);
+      }
+    } else {
+      sourceSeq.delete(detail.sourceIndex);
+      const tp = detail.targetPlacement;
+      const atObj: Record<string, number> = tp.mode === 'positioned'
+        ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h }
+        : { w: tp.w, h: tp.h };
+      const entry: Record<string, unknown> = { at: atObj };
+      if (detail.component) {
+        entry['type'] = detail.component.type;
+        if (detail.component.props) entry['properties'] = detail.component.props;
+      }
+      const targetNode = yamlDoc.createNode(entry);
+      targetSeq.add(targetNode);
+    }
     doc._notifyInternal();
   }
 

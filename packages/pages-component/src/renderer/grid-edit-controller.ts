@@ -31,6 +31,8 @@ export interface GridEditController {
   readonly gridEl: HTMLElement;
   readonly items: readonly GridItem[];
   readonly columns: number;
+  readonly rowHeight: number;
+  readonly gap: number;
   readonly active: boolean;
   readonly mode: EditorMode;
   enter(): void;
@@ -49,8 +51,8 @@ class GridEditControllerImpl implements GridEditController {
   readonly columns: number;
   private _active = false;
   private _mode: EditorMode = "layout";
-  private readonly rowHeight: number;
-  private readonly gap: number;
+  readonly rowHeight: number;
+  readonly gap: number;
   private geometry: GridGeometry | null = null;
   private overlay: HTMLDivElement | null = null;
   private modeToggle: HTMLElement | null = null;
@@ -58,6 +60,7 @@ class GridEditControllerImpl implements GridEditController {
   private priorPosition = "";
 
   private dragging = false;
+  private _crossGridActive = false;
   private dragItemId: string | null = null;
   private hoveredId: string | null = null;
   private dragHandle: ResizeHandle | "move" = "move";
@@ -413,6 +416,30 @@ class GridEditControllerImpl implements GridEditController {
       }
     }
 
+    if (this.dragIntent === "swap" || this.dragHandle === "move") {
+      const rect = this.gridEl.getBoundingClientRect();
+      const outside = e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom;
+      const coord = getCoordinator();
+      const deepest = coord.deepestGridAt(e.clientX, e.clientY);
+      const enteredOtherGrid = deepest != null && deepest !== this;
+      if (outside || enteredOtherGrid || this._crossGridActive) {
+        if (!this._crossGridActive) {
+          this._crossGridActive = true;
+          this.clearSwapTarget();
+          const itemIndex = Number(this.dragItemId);
+          const item = this.items[itemIndex];
+          if (item) coord.startCrossGridDrag(this, itemIndex, item);
+        }
+        e.stopPropagation();
+        coord.handleCrossGridMove(e.clientX, e.clientY);
+        this._moveDragBadge(e.clientX, e.clientY);
+        return;
+      }
+      if (this._crossGridActive) {
+        this._crossGridActive = false;
+        coord.cancelCrossGridDrag();
+      }
+    }
     if (this.dragIntent === "swap") {
       this.highlightSwapTarget(e.clientX, e.clientY);
       this._moveDragBadge(e.clientX, e.clientY);
@@ -472,6 +499,20 @@ class GridEditControllerImpl implements GridEditController {
     if (!this._active || this.dragItemId == null) return;
     e.preventDefault();
     e.stopPropagation();
+
+    if (this._crossGridActive) {
+      const coord = getCoordinator();
+      const detail = coord.completeCrossGridDrag(e.clientX, e.clientY);
+      this._crossGridActive = false;
+      this._removeDragBadge();
+      this.hideBuilderOverlay();
+      this.cancelDrag();
+      if (detail) {
+        this.gridEl.dispatchEvent(new CustomEvent("pages-grid-cross-edit", { bubbles: true, composed: true, detail }));
+      }
+      setTimeout(() => { this.showBuilderOverlay(); }, 50);
+      return;
+    }
 
     if (this.dragging && this.geometry) {
       const cell = snapToCellWithRows(e.clientX, e.clientY, this.geometry, this.frozenRows);
@@ -566,6 +607,7 @@ class GridEditControllerImpl implements GridEditController {
 
   private cancelDrag(): void {
     const wasDragging = this.dragging || this.dragItemId != null;
+    this._crossGridActive = false;
     this.dragging = false;
     this.dragItemId = null;
     this.dragIntent = "displace";

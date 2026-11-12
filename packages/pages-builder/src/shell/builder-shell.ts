@@ -213,7 +213,16 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _crossGridEditHandler = (e: Event) => {
     const detail = (e as CustomEvent).detail as CrossGridEditDetail;
-    this._applyEdit('grid', () => this._gridBridge.applyCrossGridEdit(this._document, detail));
+    this._applyEdit('toolbar', () => this._gridBridge.applyCrossGridEdit(this._document, detail));
+    const targetSeq = this._document._getDoc().getIn(detail.targetGridPath) as { items?: unknown[] } | undefined;
+    if (targetSeq?.items) {
+      this._selectedPath = [...detail.targetGridPath, targetSeq.items.length - 1];
+      this._selectedNodeType = 'grid-item';
+    } else {
+      this._selectedPath = undefined;
+      this._selectedNodeType = undefined;
+      this._selectionOverlay?.hide();
+    }
   };
 
   override connectedCallback(): void {
@@ -616,7 +625,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         return;
       }
 
-      const path = this._findFirstComponentPathByType(compType, compEl, container);
+      const path = this._resolveClickedPath(compEl, container);
       if (!path) return;
 
       if (this._previewClickTimer) clearTimeout(this._previewClickTimer);
@@ -639,7 +648,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       if (!compEl) return;
       const compType = compEl.dataset.componentType;
       if (!compType) return;
-      const clickedPath = this._findFirstComponentPathByType(compType, compEl, container);
+      const clickedPath = this._resolveClickedPath(compEl, container);
       if (!clickedPath) return;
       const basePath = this._selectedPath ?? clickedPath;
       const parent = getParentPath(basePath);
@@ -688,9 +697,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         overlayRoot.appendChild(this._hoverOverlay);
       }
       this._hoverOverlay.style.display = '';
-      const containerRect = container.getBoundingClientRect();
+      const overlayRect = overlayRoot.getBoundingClientRect();
       const itemRect = itemEl.getBoundingClientRect();
-      this._hoverOverlay.style.cssText = `position: absolute; pointer-events: none; left: ${itemRect.left - containerRect.left}px; top: ${itemRect.top - containerRect.top}px; width: ${itemRect.width}px; height: ${itemRect.height}px; outline: 1px dashed var(--pages-accent-9); outline-offset: -1px; border-radius: 4px; z-index: 9; transition: all 0.1s ease;`;
+      this._hoverOverlay.style.cssText = `position: absolute; pointer-events: none; left: ${itemRect.left - overlayRect.left}px; top: ${itemRect.top - overlayRect.top}px; width: ${itemRect.width}px; height: ${itemRect.height}px; outline: 1px dashed var(--pages-accent-9); outline-offset: -1px; border-radius: 4px; z-index: 9; transition: all 0.1s ease;`;
     };
 
     const leaveHandler = () => {
@@ -710,6 +719,16 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       container.removeEventListener('mousemove', hoverHandler);
       container.removeEventListener('mouseleave', leaveHandler);
     };
+  }
+
+  private _resolveClickedPath(compEl: HTMLElement, container: HTMLElement): readonly (string | number)[] | undefined {
+    const itemEl = compEl.closest('[data-item-id]') as HTMLElement | null;
+    if (!itemEl) return undefined;
+    const index = this._buildRenderedIndex(container);
+    for (const [key, el] of index) {
+      if (el === itemEl) return JSON.parse(key) as (string | number)[];
+    }
+    return undefined;
   }
 
   private _findFirstComponentPathByType(type: string, clickedEl: HTMLElement, container: HTMLElement): readonly (string | number)[] | undefined {
