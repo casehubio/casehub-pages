@@ -147,6 +147,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _insertPosition: 'before' | 'after' | undefined;
   private _insertAtIndex: number | undefined;
   private _selectionOverlay: SelectionOverlay | undefined;
+  private _hoverOverlay: HTMLElement | null = null;
+  private _hoveredEl: HTMLElement | null = null;
   private _overlayScrollBase = 0;
 
   get document(): PageDocument {
@@ -388,6 +390,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _applyPreviewHighlight(path: readonly (string | number)[], nodeType: TreeNodeType): void {
+    if (this._hoverOverlay) this._hoverOverlay.style.display = 'none';
     const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
     const overlayRoot = this.shadowRoot?.querySelector('.overlay-root') as HTMLElement;
     if (!container || !overlayRoot) return;
@@ -560,19 +563,28 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _buildRenderedIndex(container: HTMLElement): Map<string, HTMLElement> {
     const index = new Map<string, HTMLElement>();
-    const allDocComps: ComponentNode[] = [];
-    for (const page of this._document.getPages()) {
-      allDocComps.push(...collectComponentsInScope(this._document, page.path, 'page'));
-    }
-    const typeCounts = new Map<string, number>();
-    for (const comp of allDocComps) {
-      const count = typeCounts.get(comp.type) ?? 0;
-      const els = container.querySelectorAll(`[data-component-type="${comp.type}"]`);
-      const el = els[count] as HTMLElement | undefined;
-      if (el) index.set(JSON.stringify(comp.path), el);
-      typeCounts.set(comp.type, count + 1);
-    }
+    const pageRoot = container.firstElementChild as HTMLElement | null;
+    if (!pageRoot) return index;
+    this._indexGridItems(pageRoot, ['pages', 0, 'grid'], index);
     return index;
+  }
+
+  private _indexGridItems(
+    gridEl: HTMLElement,
+    basePath: (string | number)[],
+    index: Map<string, HTMLElement>,
+  ): void {
+    for (const child of gridEl.children) {
+      if (!(child instanceof HTMLElement)) continue;
+      if (child.dataset.itemId != null) {
+        const itemIdx = Number(child.dataset.itemId);
+        const itemPath = [...basePath, itemIdx];
+        index.set(JSON.stringify(itemPath), child);
+        this._indexGridItems(child, [...itemPath, 'grid'], index);
+      } else {
+        this._indexGridItems(child, basePath, index);
+      }
+    }
   }
 
   private _previewClickTimer: ReturnType<typeof setTimeout> | null = null;
@@ -586,6 +598,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _wirePreviewClicks(container: HTMLElement): () => void {
     const clickHandler = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[data-drag-handle], [data-drag-mode], [data-grid-edit-button]')) return;
       const compEl = this._findComponentFromEvent(e);
       if (!compEl) return;
       const compType = compEl.dataset.componentType;
@@ -621,16 +635,14 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         clearTimeout(this._previewClickTimer);
         this._previewClickTimer = null;
       }
-      let currentPath = this._selectedPath;
-      if (!currentPath) {
-        const compEl = this._findComponentFromEvent(e);
-        if (!compEl) return;
-        const compType = compEl.dataset.componentType;
-        if (!compType) return;
-        currentPath = this._findFirstComponentPathByType(compType, compEl, container);
-        if (!currentPath) return;
-      }
-      const parent = getParentPath(currentPath);
+      const compEl = this._findComponentFromEvent(e);
+      if (!compEl) return;
+      const compType = compEl.dataset.componentType;
+      if (!compType) return;
+      const clickedPath = this._findFirstComponentPathByType(compType, compEl, container);
+      if (!clickedPath) return;
+      const basePath = this._selectedPath ?? clickedPath;
+      const parent = getParentPath(basePath);
       if (parent) {
         const parentType = classifyPath(parent);
         if (parentType) {
@@ -650,13 +662,53 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       }
     };
 
+    const hoverHandler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (container.querySelector('[data-grid-dragging]')) {
+        if (this._hoverOverlay) this._hoverOverlay.style.display = 'none';
+        return;
+      }
+      const itemEl = target.closest('[data-item-id]') as HTMLElement | null;
+      if (!itemEl || itemEl === this._hoveredEl) return;
+      this._hoveredEl = itemEl;
+      if (this._selectionOverlay && this._selectedPath) {
+        const renderedIndex = this._buildRenderedIndex(container);
+        const selectedEl = renderedIndex.get(JSON.stringify(this._selectedPath));
+        if (selectedEl === itemEl) {
+          if (this._hoverOverlay) this._hoverOverlay.style.display = 'none';
+          return;
+        }
+      }
+      const overlayRoot = this.shadowRoot?.querySelector('.overlay-root') as HTMLElement | null;
+      if (!overlayRoot) return;
+      if (!this._hoverOverlay) {
+        this._hoverOverlay = document.createElement('div');
+        this._hoverOverlay.className = 'builder-hover-overlay';
+        overlayRoot.appendChild(this._hoverOverlay);
+      }
+      this._hoverOverlay.style.display = '';
+      const containerRect = container.getBoundingClientRect();
+      const itemRect = itemEl.getBoundingClientRect();
+      this._hoverOverlay.style.cssText = `position: absolute; pointer-events: none; left: ${itemRect.left - containerRect.left}px; top: ${itemRect.top - containerRect.top}px; width: ${itemRect.width}px; height: ${itemRect.height}px; outline: 1px dashed var(--pages-accent-9); outline-offset: -1px; border-radius: 4px; z-index: 9; transition: all 0.1s ease;`;
+    };
+
+    const leaveHandler = () => {
+      this._hoveredEl = null;
+      if (this._hoverOverlay) this._hoverOverlay.style.display = 'none';
+    };
+
     container.addEventListener('click', clickHandler);
     container.addEventListener('dblclick', dblClickHandler);
     container.addEventListener('scroll', scrollHandler);
+    container.addEventListener('mousemove', hoverHandler);
+    container.addEventListener('mouseleave', leaveHandler);
     return () => {
       container.removeEventListener('click', clickHandler);
       container.removeEventListener('dblclick', dblClickHandler);
       container.removeEventListener('scroll', scrollHandler);
+      container.removeEventListener('mousemove', hoverHandler);
+      container.removeEventListener('mouseleave', leaveHandler);
     };
   }
 
@@ -686,6 +738,19 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         if (comp && comp.type === type) {
           if (count === targetIndex) return { path: item.path, count };
           count++;
+        }
+        if (comp?.isContainer()) {
+          const children = comp.getChildren();
+          const gridSlot = children.slots['grid'] ?? children.slots['items'];
+          if (gridSlot) {
+            for (const nested of gridSlot) {
+              const nc = (nested as import('@casehubio/pages-document').GridItemNode).getComponent();
+              if (nc && nc.type === type) {
+                if (count === targetIndex) return { path: (nested as import('@casehubio/pages-document').GridItemNode).path, count };
+                count++;
+              }
+            }
+          }
         }
       }
       return { path: undefined, count };

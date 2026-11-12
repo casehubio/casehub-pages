@@ -59,7 +59,7 @@ function walkForPath(node: unknown, offset: number, path: (string | number)[]): 
   return path.length > 0 ? path : undefined;
 }
 
-const NODE_KEYS = new Set(['pages', 'datasets', 'navTree', 'rows', 'columns', 'components', 'root_items', 'children']);
+const NODE_KEYS = new Set(['pages', 'datasets', 'navTree', 'rows', 'columns', 'components', 'root_items', 'children', 'grid', 'items']);
 
 function trimToNodeBoundary(path: (string | number)[]): (string | number)[] {
   let lastNodeEnd = 0;

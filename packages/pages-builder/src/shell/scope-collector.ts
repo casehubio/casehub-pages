@@ -1,5 +1,34 @@
-import { PageDocument, type PageNode, type ComponentNode } from '@casehubio/pages-document';
+import { PageDocument, type PageNode, type ComponentNode, type GridItemNode } from '@casehubio/pages-document';
 import type { TreeNodeType } from '../tree/builder-tree.js';
+
+function resolveGridItem(
+  page: PageNode,
+  path: readonly (string | number)[],
+): ComponentNode | null {
+  if (path.length < 4) return null;
+  const rootItems = page.getItems();
+  let item: GridItemNode | undefined = rootItems[path[3] as number];
+  if (!item) return null;
+
+  let i = 4;
+  while (i < path.length && item) {
+    if (path[i] === 'grid' || path[i] === 'items') {
+      const comp = item.getComponent();
+      if (!comp || !comp.isContainer()) return comp ?? null;
+      const nextIdx = path[i + 1] as number | undefined;
+      if (nextIdx === undefined) return comp;
+      const children = comp.getChildren();
+      const key = path[i] as string;
+      const nested = children.slots[key];
+      if (!nested) return comp;
+      item = nested[nextIdx] as GridItemNode | undefined;
+      i += 2;
+    } else {
+      break;
+    }
+  }
+  return item ? item.getComponent() : null;
+}
 
 export function collectComponentsInScope(
   doc: PageDocument,
@@ -55,20 +84,13 @@ export function collectComponentsInScope(
         if (col) results.push(...col.getComponents());
       }
     }
-  } else if (nodeType === 'grid-item') {
+  } else if (nodeType === 'grid-item' || nodeType === 'component') {
     const page = doc.getPages()[path[1] as number];
     if (!page) return results;
     if ((path[2] === 'grid' || path[2] === 'items') && path.length >= 4) {
-      const item = page.getItems()[path[3] as number];
-      if (item) { const c = item.getComponent(); if (c) results.push(c); }
-    }
-  } else if (nodeType === 'component') {
-    const page = doc.getPages()[path[1] as number];
-    if (!page) return results;
-    if ((path[2] === 'grid' || path[2] === 'items') && path.length >= 4) {
-      const item = page.getItems()[path[3] as number];
-      if (item) { const c = item.getComponent(); if (c) results.push(c); }
-    } else if (path[2] === 'components' && path.length >= 4) {
+      const c = resolveGridItem(page, path);
+      if (c) results.push(c);
+    } else if (nodeType === 'component' && path[2] === 'components' && path.length >= 4) {
       const c = page.getComponents()[path[3] as number];
       if (c) results.push(c);
     } else if (path[2] === 'rows' && path.length >= 8) {

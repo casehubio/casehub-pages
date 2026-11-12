@@ -257,6 +257,14 @@ class GridEditControllerImpl implements GridEditController {
     this.modeToggle = createModeToggle(this.gridEl, this._mode, (m2) => this.setMode(m2));
   }
 
+  private refreshGeometryIfStale(): void {
+    const rect = this.gridEl.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    if (!this.geometry || rect.x !== this.geometry.gridLeft || rect.y !== this.geometry.gridTop || Math.abs(rect.width - (this.geometry.cellWidth * this.columns + this.geometry.gap * (this.columns - 1))) > 1) {
+      this.geometry = computeGridGeometry(rect, this.columns, this.rowHeight, this.gap);
+    }
+  }
+
   private originalPlacements = new Map<string, { x: number; y: number; w: number; h: number }>();
   private livePlacements = new Map<string, { x: number; y: number; w: number; h: number }>();
 
@@ -356,11 +364,13 @@ class GridEditControllerImpl implements GridEditController {
     this.dragStartX = e.clientX;
     this.dragStartY = e.clientY;
     this.dragOriginCell = snapToCellWithRows(e.clientX, e.clientY, this.geometry, captureRowPositions(this.gridEl));
+    this.gridEl.dataset.gridDragging = "";
   }
 
   private handlePointerMove(e: PointerEvent): void {
     if (!this._active) return;
     if (this.dragItemId == null) {
+      this.refreshGeometryIfStale();
       if (this.geometry) this.updateHover(e.clientX, e.clientY);
       return;
     }
@@ -555,6 +565,7 @@ class GridEditControllerImpl implements GridEditController {
   }
 
   private cancelDrag(): void {
+    const wasDragging = this.dragging || this.dragItemId != null;
     this.dragging = false;
     this.dragItemId = null;
     this.dragIntent = "displace";
@@ -564,6 +575,11 @@ class GridEditControllerImpl implements GridEditController {
     this.frozenRows = null;
     this._initialDragPositions = null;
     hidePlaceholder(this.gridEl);
+    delete this.gridEl.dataset.gridDragging;
+    if (wasDragging) {
+      const suppress = (e: Event) => { e.stopPropagation(); e.preventDefault(); };
+      this.gridEl.addEventListener("click", suppress, { capture: true, once: true });
+    }
   }
 
   private captureItemPositions(): Map<string, DOMRect> {
@@ -827,6 +843,10 @@ class GridEditControllerImpl implements GridEditController {
         el.style.cursor = "";
         this.highlightOverlayEdge(false);
       }
+    } else if (el.querySelector("[data-grid-editing]")) {
+      el.style.outline = "";
+      el.style.outlineOffset = "";
+      el.style.boxShadow = "";
     } else {
       el.style.outline = "1px solid var(--pages-neutral-6, #71717a)";
       el.style.outlineOffset = "-1px";

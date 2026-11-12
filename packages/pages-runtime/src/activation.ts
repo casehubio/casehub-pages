@@ -947,7 +947,8 @@ export function createActivationCallback(
     // Grid edit controller for any component with positioned items
     if (component.grid?.some(i => i.at.mode === "positioned")) {
       const gridProps = component.props as { columns?: number; rowHeight?: number } | undefined;
-      attachGridEditController(el, component.grid, gridProps?.columns ?? 12, gridProps?.rowHeight);
+      const gridEl = (el.querySelector('[data-grid-wrapper]') ?? el) as HTMLElement;
+      attachGridEditController(gridEl, component.grid, gridProps?.columns ?? 12, gridProps?.rowHeight);
     }
 
     // Layout, page, unknown: no activation needed

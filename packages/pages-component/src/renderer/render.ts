@@ -79,18 +79,30 @@ function renderNode(
     }
   }
 
-  // 5. Panel title
+  // 5. Panel title + grid wrapper
+  let gridTarget = el;
   if (component.type === "panel" && component.props) {
     const { title } = component.props;
     if (typeof title === "string" && title) {
       const titleEl = doc.createElement("div");
       titleEl.dataset.panelTitle = "";
       titleEl.textContent = title;
-      titleEl.style.gridColumn = "1 / -1";
       titleEl.style.fontWeight = "600";
       titleEl.style.fontSize = "1.1em";
       titleEl.style.padding = "8px 0";
-      el.appendChild(titleEl);
+      if (component.grid && component.grid.length > 0) {
+        el.style.display = "flex";
+        el.style.flexDirection = "column";
+        el.appendChild(titleEl);
+        const wrapper = doc.createElement("div");
+        wrapper.style.flex = "1";
+        wrapper.dataset.gridWrapper = "";
+        el.appendChild(wrapper);
+        gridTarget = wrapper;
+      } else {
+        titleEl.style.gridColumn = "1 / -1";
+        el.appendChild(titleEl);
+      }
     }
   }
 
@@ -102,19 +114,19 @@ function renderNode(
 
   // 6. Render children — items take precedence over slots
   if (component.grid && component.grid.length > 0) {
-    el.style.display = "grid";
+    gridTarget.style.display = "grid";
     const columns = isGrid(component) ? (component.props?.columns ?? 12) : 12;
-    el.style.gridTemplateColumns = `repeat(${String(columns)}, 1fr)`;
+    gridTarget.style.gridTemplateColumns = `repeat(${String(columns)}, 1fr)`;
     const rowHeight = isGrid(component) ? component.props?.rowHeight : undefined;
     if (rowHeight === undefined) {
-      el.style.gridAutoRows = "min-content";
+      gridTarget.style.gridAutoRows = "min-content";
     }
-    el.style.alignContent = "start";
-    el.style.gap = "var(--pages-space-3, 12px)";
+    gridTarget.style.alignContent = "start";
+    gridTarget.style.gap = "var(--pages-space-3, 12px)";
 
     const hasAutoItems = component.grid.some(item => item.at.mode === "auto");
     if (hasAutoItems) {
-      el.style.gridAutoFlow = "row";
+      gridTarget.style.gridAutoFlow = "row";
     }
 
     const positioned = component.grid
@@ -135,15 +147,16 @@ function renderNode(
       if (!item.component) {
         const empty = document.createElement("div");
         empty.className = "pages-empty-container";
-        el.appendChild(empty);
+        gridTarget.appendChild(empty);
       } else if (item.at.mode === "positioned") {
-        renderNode(el, item.component, id, item.at.x, item.at.y, permissions, doc, onNode);
+        renderNode(gridTarget, item.component, id, item.at.x, item.at.y, permissions, doc, onNode);
       } else {
-        renderNode(el, item.component, id, "auto", originalIndex, permissions, doc, onNode);
+        renderNode(gridTarget, item.component, id, "auto", originalIndex, permissions, doc, onNode);
       }
-      const child = el.lastElementChild;
+      const child = gridTarget.lastElementChild;
       if (child instanceof HTMLElement) {
         child.dataset.itemId = String(originalIndex);
+        child.style.position = "relative";
         applyGridPlacement(child, item.at);
         if (rowHeight !== undefined) {
           child.style.overflow = "hidden";
