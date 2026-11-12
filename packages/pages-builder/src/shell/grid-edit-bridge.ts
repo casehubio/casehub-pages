@@ -239,6 +239,8 @@ export class GridEditBridge {
         sourceSeq.add(movedTarget);
       }
     } else {
+      // Safe: source and target are always different YAML sequences (nested vs parent grid).
+      // If sibling-grid support is added, indices would shift — guard against same-sequence.
       sourceSeq.delete(detail.sourceIndex);
       if (detail.targetItemPlacements) {
         for (const tp of detail.targetItemPlacements) {

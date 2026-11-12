@@ -259,6 +259,8 @@ class GridEditControllerImpl implements GridEditController {
       this._selectedEl = null;
     }
     this.hoveredId = null;
+    this.gridEl.style.cursor = "";
+    this._nestedGridItemIds = null;
     clearSelectionOutlines(this.gridEl);
     this.selection = clearSelection();
   }

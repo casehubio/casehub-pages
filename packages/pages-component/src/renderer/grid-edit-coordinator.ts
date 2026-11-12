@@ -175,7 +175,8 @@ export class GridEditCoordinator {
     const virtualTarget = { x: clamped.x, y: clamped.y, w: scaledW, h };
     items.push({ id: VIRTUAL_INCOMING_ID, ...virtualTarget });
 
-    const resolved = compactAll(items, VIRTUAL_INCOMING_ID, virtualTarget);
+    const pinnedIds = this._buildTargetPinnedIds(target);
+    const resolved = compactAll(items, VIRTUAL_INCOMING_ID, virtualTarget, pinnedIds);
 
     const before = new Map<string, DOMRect>();
     for (const child of target.gridEl.children) {
@@ -214,6 +215,17 @@ export class GridEditCoordinator {
         el.style.transform = "";
       });
     }
+  }
+
+  private _buildTargetPinnedIds(target: GridEditController): Set<string> | undefined {
+    const pinned = new Set<string>();
+    for (let i = 0; i < target.items.length; i++) {
+      const el = target.gridEl.querySelector(`[data-item-id="${i}"]`) as HTMLElement | null;
+      if (el?.querySelector('[data-grid-editing]') && this.isPinned(target, String(i))) {
+        pinned.add(String(i));
+      }
+    }
+    return pinned.size > 0 ? pinned : undefined;
   }
 
   private _restoreDisplacement(): void {
