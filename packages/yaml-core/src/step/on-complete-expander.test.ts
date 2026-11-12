@@ -36,8 +36,8 @@ describe('OnCompleteExpander', () => {
       },
     ];
     const result = OnCompleteExpander.expand(steps);
-    expect(result.steps[0]!['name']).toMatch(/^__oc_/);
-    expect(result.locations.isGenerated(result.steps[0]!['name'] as string)).toBe(true);
+    expect(result.steps[0]!['step']).toMatch(/^__oc_/);
+    expect(result.locations.isGenerated(result.steps[0]!['step'] as string)).toBe(true);
   });
 
   it('preserves existing signal — merges as list', () => {
@@ -103,7 +103,7 @@ describe('OnCompleteExpander', () => {
       },
     ];
     const result = OnCompleteExpander.expand(steps);
-    const genName = result.steps[0]!['name'] as string;
+    const genName = result.steps[0]!['step'] as string;
     expect(result.locations.originalContext(genName)).toContain('on-complete');
   });
 

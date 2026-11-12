@@ -36,11 +36,13 @@ export class OnCompleteExpander {
 
         counter++;
         let name: string;
-        if (expanded['name'] != null) {
+        if (expanded['step'] != null) {
+          name = String(expanded['step']);
+        } else if (expanded['name'] != null) {
           name = String(expanded['name']);
         } else {
           name = `__oc_${counter}`;
-          expanded['name'] = name;
+          expanded['step'] = name;
           locations.record(name, `on-complete block #${counter}`);
         }
 

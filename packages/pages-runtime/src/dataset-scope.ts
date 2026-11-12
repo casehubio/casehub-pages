@@ -76,8 +76,8 @@ function walkScope(
     scope.set(pagePath, current);
   }
 
-  if (component.items) {
-    for (const item of component.items) {
+  if (component.grid) {
+    for (const item of component.grid) {
       if (item.component) walkScope(item.component, current, paths, scope);
     }
   }

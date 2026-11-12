@@ -9,28 +9,18 @@ datasets:
       - id: intensity
         type: NUMBER
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Network Traffic Density
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: density-heatmap
-          properties:
-            height: 450px
-            showTooltip: true
-            showLegend: true
-            aggregation: sum
-            lookup:
-              uuid: traffic-density
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Network Traffic Density
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: density-heatmap
+        properties:
+          height: 450px
+          showTooltip: true
+          showLegend: true
+          aggregation: sum
+          lookup:
+            uuid: traffic-density

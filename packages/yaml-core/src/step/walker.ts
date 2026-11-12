@@ -1,5 +1,13 @@
 import type { MatchPattern } from '../match.js';
 import type { CloudEventSpec } from './types.js';
+import type { FusedStageDescriptor } from './streaming-types.js';
+import { FusionPass } from './fusion-pass.js';
+import { AnnotationParser } from '../annotation/annotation-parser.js';
+import { StepPositionScanner } from '../annotation/step-position-scanner.js';
+import { AnnotationExtractor } from '../annotation/annotation-extractor.js';
+import { AnnotationMap } from '../annotation/annotation-map.js';
+import type { Annotation } from '../annotation/annotation-map.js';
+import { DecoratorAnnotationResolver } from '../annotation/decorator-annotation-resolver.js';
 
 export interface CatalogEntry {
   qualifiedName: string;
@@ -13,7 +21,7 @@ export interface Action {
 
 export type Result =
   | { kind: 'success'; output: Record<string, unknown>; executionMetadata: Record<string, unknown> }
-  | { kind: 'failure'; message: string; failureCategory?: string };
+  | { kind: 'failure'; message: string; failureCategory?: string; detail?: Record<string, unknown> };
 
 export function stepSuccess(output: Record<string, unknown>, metadata?: Record<string, unknown>): Result {
   return { kind: 'success', output, executionMetadata: metadata ?? {} };
@@ -77,7 +85,9 @@ export type ResolvedStep =
   | QuorumStep
   | DelayStep
   | RaceStep
-  | EmitEventStep;
+  | EmitEventStep
+  | ControlStep
+  | FusedPipelineStep;
 
 export interface PluginStep {
   kind: 'plugin';
@@ -85,6 +95,7 @@ export interface PluginStep {
   entry: CatalogEntry;
   params: Record<string, unknown>;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface InvokeStep {
@@ -92,6 +103,7 @@ export interface InvokeStep {
   name: string | null;
   invokeSpec: Record<string, unknown>;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface BlockStep {
@@ -99,6 +111,7 @@ export interface BlockStep {
   name: string | null;
   steps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface IfElseStep {
@@ -108,6 +121,7 @@ export interface IfElseStep {
   thenSteps: ResolvedStep[];
   elseSteps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface MatchStep {
@@ -116,6 +130,7 @@ export interface MatchStep {
   scrutinee: string;
   cases: ResolvedMatchCase[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface NamedBranch {
@@ -132,6 +147,7 @@ export interface ParallelStep {
   cancelRemaining?: boolean;
   collectionTimeout?: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface TryCatchFinallyStep {
@@ -141,6 +157,7 @@ export interface TryCatchFinallyStep {
   catchSteps: ResolvedStep[];
   finallySteps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface SelectStep {
@@ -148,6 +165,7 @@ export interface SelectStep {
   name: string | null;
   branches: SelectBranch[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface BarrierStep {
@@ -156,6 +174,7 @@ export interface BarrierStep {
   awaitSteps: string[];
   timeout?: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface QuorumStep {
@@ -165,6 +184,7 @@ export interface QuorumStep {
   ofSteps: string[];
   timeout?: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface DelayStep {
@@ -172,6 +192,7 @@ export interface DelayStep {
   name: string | null;
   duration: number;
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface RaceStep {
@@ -179,6 +200,7 @@ export interface RaceStep {
   name: string | null;
   steps: ResolvedStep[];
   decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 export interface EmitEventStep {
@@ -187,20 +209,41 @@ export interface EmitEventStep {
   events: CloudEventSpec[];
   emitTo: 'scope' | 'pages-event' | 'both';
   decorators: Record<string, unknown>;
+  annotations: unknown[];
+}
+
+export interface ControlStep {
+  kind: 'control';
+  name: string | null;
+  control: 'pause' | 'resume';
+  target: string;
+  decorators: Record<string, unknown>;
+  annotations: unknown[];
+}
+
+export interface FusedPipelineStep {
+  kind: 'fused-pipeline';
+  name: string | null;
+  stages: FusedStageDescriptor[];
+  decorators: Record<string, unknown>;
+  annotations: unknown[];
 }
 
 const RESERVED_KEYS = new Set([
-  'step', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
+  'step', 'name', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
   'try', 'catch', 'finally', 'select',
   'on-success', 'on-failure', 'forEach', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'parallel', 'semaphore', 'barrier', 'quorum', 'race',
+  'parallel', 'concurrent', 'semaphore', 'barrier', 'quorum', 'race',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'advance-after', 'cancel-remaining', 'collection-timeout',
   'emit-event', 'emit-to',
   'simulation',
+  'pause', 'resume',
+  'at', 'on-complete', 'resource', 'priority', 'capture',
+  'vars', 'params',
 ]);
 
 const DECORATOR_KEYS = new Set([
@@ -211,6 +254,7 @@ const DECORATOR_KEYS = new Set([
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'simulation',
+  'at', 'on-complete', 'resource', 'priority', 'capture',
 ]);
 
 const PROMOTABLE_DECORATORS = new Set(['forEach', 'retry', 'timeout', 'when', 'mutex', 'loop']);
@@ -221,7 +265,8 @@ const REMOVED_KEYS = new Set(['steps', 'do']);
 
 const COMBINED_KEY_PREFIXES = new Set([
   ...PROMOTABLE_DECORATORS,
-  'block', 'parallel', 'try', 'select', 'race', 'if', 'match',
+  'block', 'parallel', 'concurrent', 'try', 'select', 'race', 'if', 'match',
+  'barrier', 'quorum',
 ]);
 
 function matchCombinedKey(key: string): string | null {
@@ -235,24 +280,33 @@ const MAX_DEPTH = 32;
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Walker {
-  static resolve(steps: Record<string, unknown>[], catalog: Catalog): ResolvedStep[] {
+  static resolve(steps: Record<string, unknown>[], catalog: Catalog, rawYaml?: string): ResolvedStep[] {
     const seenNames = new Set<string>();
-    const resolved = Walker.resolveAtDepth(steps, catalog, 0, 'root', seenNames);
+    let annotationMap = AnnotationMap.empty();
+    if (rawYaml) {
+      const parsedAnnotations = AnnotationParser.parse(rawYaml);
+      const stepPositions = StepPositionScanner.scan(rawYaml);
+      annotationMap = AnnotationExtractor.extract(parsedAnnotations, stepPositions);
+    }
+    const resolved = Walker.resolveAtDepth(steps, catalog, 0, 'root', seenNames, annotationMap);
     Walker.validateRefs(resolved, seenNames);
-    return resolved;
+    return FusionPass.fuse(resolved);
   }
 
   private static resolveAtDepth(
     steps: Record<string, unknown>[], catalog: Catalog, depth: number,
-    path: string, seenNames: Set<string>,
+    path: string, seenNames: Set<string>, annotationMap: AnnotationMap, baseAddress?: string,
   ): ResolvedStep[] {
     if (depth > MAX_DEPTH) throw new Error(`${path}: step nesting exceeds maximum depth of ${MAX_DEPTH}`);
-    return steps.map((step, i) => Walker.resolveOne(step, catalog, depth, `${path} → Step ${i}`, seenNames));
+    return steps.map((step, i) => {
+      const address = baseAddress !== undefined ? `${baseAddress}.${i}` : String(i);
+      return Walker.resolveOne(step, catalog, depth, `${path} → Step ${i}`, seenNames, annotationMap, address);
+    });
   }
 
   private static resolveOne(
     step: Record<string, unknown>, catalog: Catalog, depth: number,
-    stepPath: string, seenNames: Set<string>,
+    stepPath: string, seenNames: Set<string>, annotationMap: AnnotationMap = AnnotationMap.empty(), stepAddress: string = '0',
   ): ResolvedStep {
     let stepName: string | null = null;
     let structuralType: string | null = null;
@@ -263,20 +317,26 @@ export class Walker {
     let invokeSpec: Record<string, unknown> | null = null;
     const decorators: Record<string, unknown> = {};
     const companions: Record<string, unknown> = {};
+    const unknownKeys: [string, unknown][] = [];
 
     for (const [key, value] of Object.entries(step)) {
       if (REMOVED_KEYS.has(key)) {
         throw new Error(`${stepPath}: '${key}' is no longer valid — use inline sibling keys, or 'block' for multiple actions`);
       }
       if (key === 'step') {
+        throw new Error(`${stepPath}: use 'name:' instead of 'step:' for step naming, or combined-key form`);
+      } else if (key === 'name') {
         stepName = value as string;
         if (stepName !== null && seenNames.has(stepName)) {
           throw new Error(`${stepPath}: duplicate step name '${stepName}'`);
         }
         if (stepName !== null) seenNames.add(stepName);
       } else if (key === 'invoke') {
-        invokeSpec = value as Record<string, unknown>;
-      } else if (key === 'block' || key === 'parallel' || key === 'try' || key === 'select' || key === 'race') {
+        throw new Error(`${stepPath}: verbose 'invoke:' form is no longer valid — use compact invoke syntax (e.g., 'rest-request GET /url:')`);
+      } else if (key === 'block' || key === 'parallel' || key === 'concurrent' || key === 'try' || key === 'select' || key === 'race') {
+        structuralType = key === 'concurrent' ? 'parallel' : key;
+        structuralValue = value;
+      } else if (key === 'pause' || key === 'resume') {
         structuralType = key;
         structuralValue = value;
       } else if (key === 'if' && step['then'] !== undefined) {
@@ -306,19 +366,20 @@ export class Walker {
         structuralValue = value;
       } else if (DECORATOR_KEYS.has(key) && !(key === 'if' && step['then'] !== undefined)) {
         decorators[key] = value;
-      } else if (matchCombinedKey(key) && Array.isArray(value)) {
+      } else if (matchCombinedKey(key) && (Array.isArray(value) || (typeof value === 'object' && value !== null))) {
         if (structuralType) {
           throw new Error(`${stepPath}: step has both structural type '${structuralType}' and structural decorator '${key}'`);
         }
         const spaceIdx = key.indexOf(' ');
         const prefix = key.substring(0, spaceIdx);
         const param = key.substring(spaceIdx + 1);
+        const normalizedPrefix = prefix === 'concurrent' ? 'parallel' : prefix;
         if (PROMOTABLE_DECORATORS.has(prefix)) {
           structuralType = prefix;
           structuralValue = { [param]: value };
         } else {
           stepName = stepName ?? param;
-          structuralType = prefix;
+          structuralType = normalizedPrefix;
           structuralValue = value;
         }
       } else if (!RESERVED_KEYS.has(key)) {
@@ -328,8 +389,33 @@ export class Walker {
           actionValue = value;
           actionEntry = resolved;
         } else {
-          throw new Error(`${stepPath}: unknown step key '${key}' — not a reserved keyword and not found in catalog`);
+          const spaceIdx = key.indexOf(' ');
+          if (spaceIdx > 0) {
+            const prefix = key.substring(0, spaceIdx);
+            const suffix = key.substring(spaceIdx + 1);
+            const prefixResolved = catalog.resolve(prefix) ?? catalog.resolveInferred?.(prefix);
+            if (prefixResolved) {
+              actionKey = prefix;
+              const params = (typeof value === 'object' && value !== null && !Array.isArray(value))
+                ? { _subject: suffix, ...(value as Record<string, unknown>) }
+                : { _subject: suffix };
+              actionValue = params;
+              actionEntry = prefixResolved;
+            } else {
+              unknownKeys.push([key, value]);
+            }
+          } else {
+            unknownKeys.push([key, value]);
+          }
         }
+      }
+    }
+
+    if (unknownKeys.length > 0) {
+      const canAbsorb = actionEntry?.definition.absorbSiblings === true;
+      if (!canAbsorb) {
+        const [firstKey] = unknownKeys[0]!;
+        throw new Error(`${stepPath}: unknown step key '${firstKey}' — not a reserved keyword and not found in catalog`);
       }
     }
 
@@ -350,6 +436,15 @@ export class Walker {
       throw new Error(`${stepPath}: step has both structural type '${structuralType}' and invoke`);
     }
 
+    const stepAnns: Annotation[] = annotationMap.forStep(stepAddress);
+    const mergedDecorators = stepAnns.length > 0
+      ? DecoratorAnnotationResolver.mergeDecorators(stepAnns, decorators)
+      : decorators;
+
+    if (structuralType === 'pause' || structuralType === 'resume') {
+      return { kind: 'control', name: stepName, control: structuralType, target: structuralValue as string, decorators: mergedDecorators, annotations: stepAnns };
+    }
+
     if (structuralType === 'emit-event') {
       const emitTo = (step['emit-to'] as string | undefined) ?? 'both';
       if (emitTo !== 'scope' && emitTo !== 'pages-event' && emitTo !== 'both') {
@@ -368,23 +463,23 @@ export class Walker {
         }
         return spec as unknown as CloudEventSpec;
       });
-      return { kind: 'emit-event', name: stepName, events, emitTo: emitTo as 'scope' | 'pages-event' | 'both', decorators };
+      return { kind: 'emit-event', name: stepName, events, emitTo: emitTo as 'scope' | 'pages-event' | 'both', decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'block') {
-      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → block`, seenNames);
-      return { kind: 'block', name: stepName, steps: substeps, decorators };
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → block`, seenNames, annotationMap, stepAddress);
+      return { kind: 'block', name: stepName, steps: substeps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'parallel') {
       let steps: ResolvedStep[];
       let branches: NamedBranch[] | undefined;
       if (Array.isArray(structuralValue)) {
-        steps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames);
+        steps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames, annotationMap, stepAddress);
       } else if (typeof structuralValue === 'object' && structuralValue !== null) {
         const namedBranches = Object.entries(structuralValue as Record<string, unknown>).map(([bName, bSteps]) => ({
           name: bName,
-          steps: Walker.resolveAtDepth(bSteps as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel:${bName}`, seenNames),
+          steps: Walker.resolveAtDepth(bSteps as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel:${bName}`, seenNames, annotationMap, stepAddress),
         }));
         branches = namedBranches;
         steps = namedBranches.flatMap(b => b.steps);
@@ -402,15 +497,16 @@ export class Walker {
         ...(cancelRemaining !== undefined ? { cancelRemaining } : {}),
         ...(collectionTimeout !== undefined ? { collectionTimeout } : {}),
         decorators,
+        annotations: [],
       };
     }
 
     if (structuralType === 'if') {
       const thenRaw = (companions['then'] as Record<string, unknown>[] | undefined) ?? [];
       const elseRaw = (companions['else'] as Record<string, unknown>[] | undefined) ?? [];
-      const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, `${stepPath} → then`, seenNames);
-      const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, `${stepPath} → else`, seenNames);
-      return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators };
+      const thenSteps = Walker.resolveAtDepth(thenRaw, catalog, depth + 1, `${stepPath} → then`, seenNames, annotationMap, stepAddress);
+      const elseSteps = Walker.resolveAtDepth(elseRaw, catalog, depth + 1, `${stepPath} → else`, seenNames, annotationMap, stepAddress);
+      return { kind: 'if-else', name: stepName, condition: structuralValue as string, thenSteps, elseSteps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'match') {
@@ -431,12 +527,12 @@ export class Walker {
         if (isDefault) {
           pattern = { type: 'default' };
           caseSteps = Walker.resolveAtDepth(
-            (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, casePath, seenNames);
+            (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, casePath, seenNames, annotationMap, stepAddress);
         } else {
           pattern = Walker.parsePattern(c['pattern'] ?? c['when']);
           const rest = Walker.stripKeys(c, ['pattern', 'when', 'guard']);
           caseSteps = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, casePath, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, casePath, seenNames, annotationMap, stepAddress)]
             : [];
         }
         const guard = (c['guard'] as string) ?? null;
@@ -445,16 +541,16 @@ export class Walker {
         }
         return { pattern, guard, steps: caseSteps };
       });
-      return { kind: 'match', name: stepName, scrutinee: structuralValue as string, cases, decorators };
+      return { kind: 'match', name: stepName, scrutinee: structuralValue as string, cases, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'try') {
-      const trySteps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → try`, seenNames);
+      const trySteps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → try`, seenNames, annotationMap, stepAddress);
       const catchRaw = (companions['catch'] as Record<string, unknown>[] | undefined) ?? [];
       const finallyRaw = (companions['finally'] as Record<string, unknown>[] | undefined) ?? [];
-      const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, `${stepPath} → catch`, seenNames);
-      const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, `${stepPath} → finally`, seenNames);
-      return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators };
+      const catchSteps = Walker.resolveAtDepth(catchRaw, catalog, depth + 1, `${stepPath} → catch`, seenNames, annotationMap, stepAddress);
+      const finallySteps = Walker.resolveAtDepth(finallyRaw, catalog, depth + 1, `${stepPath} → finally`, seenNames, annotationMap, stepAddress);
+      return { kind: 'try-catch-finally', name: stepName, trySteps, catchSteps, finallySteps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'select') {
@@ -466,25 +562,25 @@ export class Walker {
           const channelName = typeof sub === 'string' ? sub : (sub['channel'] as string);
           const rest = Walker.stripKeys(b, ['subscribe']);
           const branchStep = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames, annotationMap, stepAddress)]
             : [];
           return { type: 'subscribe' as const, name: channelName, steps: branchStep };
         }
         if (b['wait']) {
           const rest = Walker.stripKeys(b, ['wait']);
           const branchStep = Object.keys(rest).length > 0
-            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames)]
+            ? [Walker.resolveOne(rest, catalog, depth + 1, branchPath, seenNames, annotationMap, stepAddress)]
             : [];
           return { type: 'wait' as const, name: b['wait'] as string, steps: branchStep };
         }
         throw new Error(`${branchPath}: select branch must have subscribe or wait`);
       });
-      return { kind: 'select', name: stepName, branches, decorators };
+      return { kind: 'select', name: stepName, branches, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'race') {
-      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → race`, seenNames);
-      return { kind: 'race', name: stepName, steps: substeps, decorators };
+      const substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → race`, seenNames, annotationMap, stepAddress);
+      return { kind: 'race', name: stepName, steps: substeps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'barrier') {
@@ -492,7 +588,7 @@ export class Walker {
       const awaitSteps = barrierVal['await'] as string[];
       const timeoutRaw = barrierVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'barrier', name: stepName, awaitSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
+      return { kind: 'barrier', name: stepName, awaitSteps, ...(timeout !== undefined ? { timeout } : {}), decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType === 'quorum') {
@@ -501,13 +597,13 @@ export class Walker {
       const ofSteps = quorumVal['of'] as string[];
       const timeoutRaw = quorumVal['timeout'] as string | undefined;
       const timeout = timeoutRaw ? parseDurationMs(timeoutRaw) : undefined;
-      return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators };
+      return { kind: 'quorum', name: stepName, required, ofSteps, ...(timeout !== undefined ? { timeout } : {}), decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (structuralType && PROMOTABLE_DECORATORS.has(structuralType)) {
       let substeps: ResolvedStep[];
       if (Array.isArray(structuralValue)) {
-        substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames);
+        substeps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames, annotationMap, stepAddress);
         decorators[structuralType] = true;
       } else {
         const entries = Object.entries(structuralValue as Record<string, unknown>);
@@ -518,32 +614,37 @@ export class Walker {
         if (!Array.isArray(stepsRaw)) {
           throw new Error(`${stepPath}: structural '${structuralType}' parameter '${param}' must map to a steps array`);
         }
-        substeps = Walker.resolveAtDepth(stepsRaw as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames);
+        substeps = Walker.resolveAtDepth(stepsRaw as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → ${structuralType}`, seenNames, annotationMap, stepAddress);
         decorators[structuralType] = param;
       }
-      return { kind: 'block', name: stepName, steps: substeps, decorators };
+      return { kind: 'block', name: stepName, steps: substeps, decorators: mergedDecorators, annotations: stepAnns };
     }
 
-    if (!structuralType && !actionKey && !invokeSpec && decorators['delay'] !== undefined) {
-      const duration = parseDurationMs(decorators['delay'] as string);
-      const { delay: _, ...rest } = decorators;
-      return { kind: 'delay', name: stepName, duration, decorators: rest };
+    if (!structuralType && !actionKey && !invokeSpec && mergedDecorators['delay'] !== undefined) {
+      const duration = parseDurationMs(mergedDecorators['delay'] as string);
+      const { delay: _, ...rest } = mergedDecorators;
+      return { kind: 'delay', name: stepName, duration, decorators: rest, annotations: stepAnns };
     }
 
     if (!structuralType && !actionKey && !invokeSpec && decorators['simulation'] !== undefined) {
-      return { kind: 'delay', name: stepName, duration: 0, decorators };
+      return { kind: 'delay', name: stepName, duration: 0, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (invokeSpec) {
-      return { kind: 'invoke', name: stepName, invokeSpec, decorators };
+      return { kind: 'invoke', name: stepName, invokeSpec, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     if (actionKey) {
       const entry = actionEntry ?? catalog.resolve(actionKey)!;
-      const params = (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue))
-        ? actionValue as Record<string, unknown>
-        : { value: actionValue };
-      return { kind: 'plugin', name: stepName, entry, params, decorators };
+      let params: Record<string, unknown>;
+      if (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue)) {
+        params = { ...(actionValue as Record<string, unknown>) };
+      } else {
+        const primaryKey = primaryInput(entry.definition);
+        params = { [primaryKey]: actionValue };
+      }
+      for (const [k, v] of unknownKeys) params[k] = v;
+      return { kind: 'plugin', name: stepName, entry, params, decorators: mergedDecorators, annotations: stepAnns };
     }
 
     throw new Error(`${stepPath}: no step type identified. Keys: ${Object.keys(step).join(', ')}`);
@@ -606,6 +707,13 @@ export class Walker {
     }
     return { type: 'value', value: raw };
   }
+}
+
+function primaryInput(definition: import('./types').Definition): string {
+  for (const [name, param] of Object.entries(definition.inputs)) {
+    if (param.required) return name;
+  }
+  return '_subject';
 }
 
 function parseDurationMs(duration: string): number {

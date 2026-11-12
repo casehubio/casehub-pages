@@ -21,7 +21,7 @@ function getButtonsForNodeType(
       evt === 'selection-add' || evt === 'selection-delete')];
   }
   if (nodeType === 'grid-item') {
-    return [EDIT_LAYOUT_BTN, ...ALL_BUTTONS];
+    return ALL_BUTTONS;
   }
   if (nodeType === 'component' && !isContainer) {
     return ALL_BUTTONS.filter(([, , evt]) => evt !== 'selection-add');
@@ -134,6 +134,7 @@ export class SelectionOverlay {
       buttonsContainer.style.maxWidth = '200px';
       buttonsContainer.style.opacity = '1';
     }
+
   }
 
   lockToolbar(): void {

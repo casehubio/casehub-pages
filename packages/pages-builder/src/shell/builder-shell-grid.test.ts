@@ -23,8 +23,8 @@ describe('grid edit integration', () => {
     bridge.applyGridEdit(doc, {
       type: 'move',
       items: [
-        { placement: { mode: 'positioned', x: 0, y: 1, w: 6, h: 2 }, component: { type: 'chart' } },
-        { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+        { at: { mode: 'positioned', x: 0, y: 1, w: 6, h: 2 }, component: { type: 'chart' } },
+        { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
       ],
     });
 
@@ -42,8 +42,8 @@ describe('grid edit integration', () => {
     bridge.applyGridEdit(doc, {
       type: 'move',
       items: [
-        { placement: { mode: 'positioned', x: 3, y: 0, w: 6, h: 2 }, component: { type: 'chart' } },
-        { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+        { at: { mode: 'positioned', x: 3, y: 0, w: 6, h: 2 }, component: { type: 'chart' } },
+        { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
       ],
     });
 
@@ -88,13 +88,13 @@ describe('grid edit integration', () => {
     bridge.applyGridEdit(doc, {
       type: 'move',
       items: [
-        { placement: { mode: 'positioned', x: 0, y: 0, w: 12, h: 1 }, component: { type: 'chart' } },
-        { placement: { mode: 'positioned', x: 0, y: 1, w: 6, h: 1 }, component: { type: 'table' } },
+        { at: { mode: 'positioned', x: 0, y: 0, w: 12, h: 1 }, component: { type: 'chart' } },
+        { at: { mode: 'positioned', x: 0, y: 1, w: 6, h: 1 }, component: { type: 'table' } },
       ],
     });
 
     const reparsed = PageDocument.parse(doc.toString());
-    expect(reparsed.getPages()[0]!.getLayoutMode()).toBe('items');
+    expect(reparsed.getPages()[0]!.getLayoutMode()).toBe('grid');
     expect(reparsed.getPages()[0]!.getItems()[1]!.getPlacement().w).toBe(6);
   });
 });

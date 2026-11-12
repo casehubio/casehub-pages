@@ -2,9 +2,12 @@ export type {
   Parameter, Definition, DefinitionFile,
   InvokeBinding, McpBinding, RestBinding, GraphqlBinding,
   ScriptBinding, AgentBinding, ProcessBinding,
+  AgentSessionOpenBinding, AgentSessionQueryBinding,
+  AgentSessionClearBinding, AgentSessionCloseBinding,
   AriaBinding, GraphqlDomainBinding, SimulatedBinding, VerifySimulationBinding, ElementMethodBinding,
   CloudEventSpec,
 } from './types.js';
+export type { SessionPipeline, AgentSession, AgentEvent, AgentSessionInit, ClearingPolicy } from './invoke/session-pipeline.js';
 export { CE_NAMED_FIELDS } from './types.js';
 
 export type { EventEmitter } from './emit-event-emitter.js';
@@ -23,10 +26,16 @@ export type {
   ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, DelayStep, RaceStep, SelectBranch, ResolvedMatchCase,
-  EmitEventStep,
+  EmitEventStep, ControlStep, FusedPipelineStep,
   Action, Result, ServiceRegistry, Catalog, CatalogEntry,
 } from './walker.js';
-export { Walker, MapServiceRegistry, stepSuccess, stepFailure } from './walker.js';
+export { Walker, MapServiceRegistry, stepSuccess, stepFailure, stepFailureWithCategory } from './walker.js';
+
+export type { StreamingTypeInfo, StreamingStepFactory, FusedStageDescriptor } from './streaming-types.js';
+export { FusionPass } from './fusion-pass.js';
+
+export type { ErrorCategory } from './error-category.js';
+export { ERROR_CATEGORIES } from './error-category.js';
 
 export type { CatalogSource } from './catalog.js';
 export { CompositeCatalog, ImportScopedCatalog } from './catalog.js';
@@ -63,6 +72,10 @@ export { GraphqlInvokeHandler } from './invoke/graphql-handler.js';
 export { ScriptInvokeHandler } from './invoke/script-handler.js';
 export { AgentInvokeHandler } from './invoke/agent-handler.js';
 export { ProcessInvokeHandler } from './invoke/process-handler.js';
+export { AgentSessionOpenHandler } from './invoke/agent-session-open-handler.js';
+export { AgentSessionQueryHandler } from './invoke/agent-session-query-handler.js';
+export { AgentSessionClearHandler } from './invoke/agent-session-clear-handler.js';
+export { AgentSessionCloseHandler } from './invoke/agent-session-close-handler.js';
 
 export { YamlDefinitionSource } from './sources/yaml-source.js';
 export { McpToolSource } from './sources/mcp-source.js';

@@ -90,6 +90,58 @@ export function cellRectToPixel(
   };
 }
 
+export type RowBounds = readonly [number, { readonly top: number; readonly bottom: number }];
+
+export function captureRowPositions(gridEl: HTMLElement): RowBounds[] | null {
+  const computed = getComputedStyle(gridEl);
+  const templateRows = computed.gridTemplateRows;
+  if (!templateRows || templateRows === "none") return null;
+
+  const rowHeights = templateRows.split(/\s+/).map(s => parseFloat(s));
+  if (rowHeights.length === 0 || rowHeights.some(h => isNaN(h))) return null;
+
+  const gap = parseFloat(computed.rowGap) || 0;
+  const rect = gridEl.getBoundingClientRect();
+  const paddingTop = parseFloat(computed.paddingTop) || 0;
+
+  let top = rect.top + paddingTop;
+  const result: RowBounds[] = [];
+  for (let i = 0; i < rowHeights.length; i++) {
+    const height = rowHeights[i]!;
+    result.push([i, { top, bottom: top + height }]);
+    top += height + gap;
+  }
+
+  return result;
+}
+
+export function snapToCellWithRows(
+  pointerX: number,
+  pointerY: number,
+  geometry: GridGeometry,
+  frozenRows: RowBounds[] | null,
+): CellCoord {
+  const relX = pointerX - geometry.gridLeft;
+  const xStep = geometry.cellWidth + geometry.gap;
+  const x = Math.max(0, Math.floor(relX / xStep));
+
+  if (!frozenRows || frozenRows.length === 0) {
+    return snapToCell(pointerX, pointerY, geometry);
+  }
+
+  let y = 0;
+  for (const [row, bounds] of frozenRows) {
+    if (pointerY >= bounds.top) y = row;
+    else break;
+  }
+  const lastRow = frozenRows[frozenRows.length - 1];
+  if (lastRow && pointerY > lastRow[1].bottom) {
+    y = lastRow[0] + 1;
+  }
+
+  return { x: Math.max(0, x), y: Math.max(0, y) };
+}
+
 export function hitTestHandle(
   pointerX: number,
   pointerY: number,

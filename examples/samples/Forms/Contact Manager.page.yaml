@@ -27,36 +27,19 @@ datasets:
         type: NUMBER
 pages:
   - name: Contact List
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          title: Contact Manager
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 10
-            sortable: true
-            filter:
-              enabled: true
-              notification: true
-            lookup:
-              uuid: contacts
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          page: Contact Form
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 10
+          sortable: true
+          filter:
+            enabled: true
+            notification: true
+          lookup:
+            uuid: contacts
+      - at: { x: 0, y: 2, w: 12, h: 1 }
   - name: Contact Form
     dataScope:
       dataset: contacts
@@ -65,90 +48,15 @@ pages:
       trigger: auto
       delay: 2000
       adapter: local
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          input:
-            field: name
-            label: Full Name
-            required: true
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          input:
-            field: email
-            label: Email
-            required: true
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          input:
-            field: phone
-            label: Phone
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          number-input:
-            field: priority
-            label: Priority
-            min: 1
-            max: 5
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          select:
-            field: category
-            label: Category
-            options:
-              values:
-                - Work
-                - Personal
-                - Family
-                - Other
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          checkbox:
-            field: active
-            label: Active
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          date-picker:
-            field: startDate
-            label: Start Date
-      - placement:
-          x: 0
-          y: 7
-          w: 12
-          h: 1
-        component:
-          textarea:
-            field: notes
-            label: Notes
-            rows: 3
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+      - at: { x: 0, y: 7, w: 12, h: 1 }
   - name: Contact Form (Schema)
     dataScope:
       dataset: contacts
@@ -157,171 +65,30 @@ pages:
       trigger: auto
       delay: 2000
       adapter: local
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Contact Form (Schema-Driven)
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              Same contact data, but the form is auto-generated from a schema.
-              Field types, labels, and constraints come from the JSON Schema.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          schema-form:
-            schema:
-              properties:
-                name:
-                  type: string
-                  minLength: 1
-                email:
-                  type: string
-                  minLength: 1
-                phone:
-                  type: string
-                priority:
-                  type: integer
-                  minimum: 1
-                  maximum: 5
-                category:
-                  type: string
-                  enum:
-                    - Work
-                    - Personal
-                    - Family
-                    - Other
-                active:
-                  type: boolean
-                startDate:
-                  type: string
-                  format: date
-                notes:
-                  type: string
-                  format: textarea
-              required:
-                - name
-                - email
-            excludeFields:
-              - id
-            labels:
-              name: Full Name
-              startDate: Start Date
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Contact Form (Schema-Driven)
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            Same contact data, but the form is auto-generated from a schema.
+            Field types, labels, and constraints come from the JSON Schema.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
   - name: Contact Form (Nested)
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Contact Form (Nested Schema)
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              Nested schema form — address as a sub-object, contact method as a
-              discriminated oneOf, and tags as an array. All from one JSON Schema.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          schema-form:
-            schema:
-              properties:
-                name:
-                  type: string
-                  minLength: 1
-                address:
-                  type: object
-                  title: Address
-                  properties:
-                    street:
-                      type: string
-                    city:
-                      type: string
-                    zip:
-                      type: string
-                      pattern: ^\d{5}$
-                    country:
-                      type: string
-                      enum:
-                        - US
-                        - UK
-                        - DE
-                        - FR
-                        - JP
-                  required:
-                    - street
-                    - city
-                contactMethod:
-                  title: Preferred Contact
-                  oneOf:
-                    - properties:
-                        type:
-                          const: email
-                        address:
-                          type: string
-                          title: Email Address
-                      required:
-                        - type
-                        - address
-                    - properties:
-                        type:
-                          const: phone
-                        number:
-                          type: string
-                          title: Phone Number
-                      required:
-                        - type
-                        - number
-                    - properties:
-                        type:
-                          const: slack
-                        handle:
-                          type: string
-                          title: Slack Handle
-                      required:
-                        - type
-                        - handle
-                tags:
-                  type: array
-                  title: Tags
-                  items:
-                    type: string
-                  minItems: 0
-                  maxItems: 5
-                notes:
-                  type: string
-                  format: textarea
-              required:
-                - name
-            excludeFields:
-              - id
-            forceCreate: true
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Contact Form (Nested Schema)
+          size: h3
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            Nested schema form — address as a sub-object, contact method as a
+            discriminated oneOf, and tags as an array. All from one JSON Schema.
+      - at: { x: 0, y: 2, w: 12, h: 1 }

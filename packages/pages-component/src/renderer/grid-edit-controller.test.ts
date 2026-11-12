@@ -5,16 +5,16 @@ import type { GridItem } from "../model/types.js";
 
 function makeItems(): GridItem[] {
   return [
-    { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 }, component: { type: "html", id: "a" } },
-    { placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 2 }, component: { type: "html", id: "b" } },
+    { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 }, component: { type: "html", id: "a" } },
+    { at: { mode: "positioned", x: 6, y: 0, w: 6, h: 2 }, component: { type: "html", id: "b" } },
   ];
 }
 
 function makeItemsWithEmpty(): GridItem[] {
   return [
-    { placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 }, component: { type: "html", id: "a" } },
-    { placement: { mode: "positioned", x: 6, y: 0, w: 6, h: 2 } },
-    { placement: { mode: "positioned", x: 0, y: 2, w: 12, h: 1 }, component: { type: "html", id: "c" } },
+    { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 }, component: { type: "html", id: "a" } },
+    { at: { mode: "positioned", x: 6, y: 0, w: 6, h: 2 } },
+    { at: { mode: "positioned", x: 0, y: 2, w: 12, h: 1 }, component: { type: "html", id: "c" } },
   ];
 }
 
@@ -30,9 +30,9 @@ function setupGrid(items: GridItem[]): HTMLElement {
     if (item.component?.id) {
       el.dataset.componentId = item.component.id;
     }
-    if (item.placement.mode === "positioned") {
-      el.style.gridColumn = `${item.placement.x + 1} / span ${item.placement.w}`;
-      el.style.gridRow = `${item.placement.y + 1} / span ${item.placement.h}`;
+    if (item.at.mode === "positioned") {
+      el.style.gridColumn = `${item.at.x + 1} / span ${item.at.w}`;
+      el.style.gridRow = `${item.at.y + 1} / span ${item.at.h}`;
     }
     const content = document.createElement("div");
     content.textContent = "content";
@@ -48,25 +48,25 @@ describe("GridEditController", () => {
     document.body.removeAttribute("data-grid-editing-active");
   });
 
-  it("starts inactive", () => {
+  it("starts active for positioned items (enterPassive runs synchronously)", () => {
     const items = makeItems();
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
-    expect(ctrl.active).toBe(false);
+    expect(ctrl.active).toBe(true);
     ctrl.dispose();
   });
 
-  it("creates edit button when grid has positioned items", () => {
+  it("has data-grid-editing attribute when grid has positioned items", () => {
     const items = makeItems();
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
-    expect(grid.querySelector("[data-grid-edit-button]")).not.toBeNull();
+    expect(grid.hasAttribute("data-grid-editing")).toBe(true);
     ctrl.dispose();
   });
 
   it("does not create edit button when grid has no positioned items", () => {
     const items: GridItem[] = [
-      { placement: { mode: "auto", w: 6, h: 1 }, component: { type: "html", id: "c" } },
+      { at: { mode: "auto", w: 6, h: 1 }, component: { type: "html", id: "c" } },
     ];
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
@@ -74,11 +74,11 @@ describe("GridEditController", () => {
     ctrl.dispose();
   });
 
-  it("has mode property defaulting to layout", () => {
+  it("has mode property defaulting to content (passive)", () => {
     const items = makeItems();
     const grid = setupGrid(items);
     const ctrl = attachGridEditController(grid, items, 12, 60);
-    expect(ctrl.mode).toBe("layout");
+    expect(ctrl.mode).toBe("content");
     ctrl.dispose();
   });
 
@@ -143,14 +143,13 @@ describe("GridEditController", () => {
     ctrl.dispose();
   });
 
-  it("exit restores position on grid element", () => {
+  it("exit restores position to passive state (relative)", () => {
     const items = makeItems();
     const grid = setupGrid(items);
-    grid.style.position = "static";
     const ctrl = attachGridEditController(grid, items, 12, 60);
     ctrl.enter();
     ctrl.exit();
-    expect(grid.style.position).toBe("static");
+    expect(grid.style.position).toBe("relative");
     ctrl.dispose();
   });
 
@@ -177,19 +176,19 @@ describe("GridEditController", () => {
     ctrl.dispose();
   });
 
-  it("mutual exclusion — entering second controller exits the first", () => {
+  it("multiple controllers can be active simultaneously", () => {
     const itemsA = makeItems();
     const gridA = setupGrid(itemsA);
     const ctrlA = attachGridEditController(gridA, itemsA, 12, 60);
     const itemsB: GridItem[] = [
-      { placement: { mode: "positioned", x: 0, y: 0, w: 12, h: 1 }, component: { type: "html", id: "d" } },
+      { at: { mode: "positioned", x: 0, y: 0, w: 12, h: 1 }, component: { type: "html", id: "d" } },
     ];
     const gridB = setupGrid(itemsB);
     const ctrlB = attachGridEditController(gridB, itemsB, 12, 60);
     ctrlA.enter();
     expect(ctrlA.active).toBe(true);
     ctrlB.enter();
-    expect(ctrlA.active).toBe(false);
+    expect(ctrlA.active).toBe(true);
     expect(ctrlB.active).toBe(true);
     ctrlA.dispose();
     ctrlB.dispose();
@@ -253,7 +252,86 @@ describe("GridEditController", () => {
     expect(ctrl.gridEl).toBe(grid);
     expect(ctrl.items).toBe(items);
     expect(ctrl.columns).toBe(12);
-    expect(ctrl.mode).toBe("layout");
+    expect(ctrl.mode).toBe("content");
     ctrl.dispose();
+  });
+
+  it("nested controller stopPropagation prevents parent pointerdown", () => {
+    const root = document.createElement("div");
+    root.style.display = "grid";
+    root.style.gridTemplateColumns = "repeat(12, 1fr)";
+    document.body.appendChild(root);
+    const rootItem = document.createElement("div");
+    rootItem.dataset.itemId = "0";
+    root.appendChild(rootItem);
+
+    const nested = document.createElement("div");
+    nested.style.display = "grid";
+    nested.style.gridTemplateColumns = "repeat(6, 1fr)";
+    rootItem.appendChild(nested);
+    const nestedItem = document.createElement("div");
+    nestedItem.dataset.itemId = "0";
+    nested.appendChild(nestedItem);
+
+    const rootItems: GridItem[] = [
+      { at: { mode: "positioned", x: 0, y: 0, w: 12, h: 2 }, component: { type: "html", id: "r0" } },
+    ];
+    const nestedItems: GridItem[] = [
+      { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "n0" } },
+    ];
+    const rootCtrl = attachGridEditController(root, rootItems, 12, 60);
+    const nestedCtrl = attachGridEditController(nested, nestedItems, 6, 60);
+
+    const parentSpy = vi.fn();
+    root.addEventListener("pointerdown", parentSpy);
+
+    const pe = new Event("pointerdown", { bubbles: true }) as any;
+    pe.clientX = 10;
+    pe.clientY = 10;
+    nested.dispatchEvent(pe);
+
+    expect(parentSpy).not.toHaveBeenCalled();
+
+    rootCtrl.dispose();
+    nestedCtrl.dispose();
+  });
+
+  describe("cross-grid API", () => {
+    it("releaseItem hides the element", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      ctrl.releaseItem(0);
+      const el = grid.querySelector('[data-item-id="0"]') as HTMLElement;
+      expect(el.style.display).toBe("none");
+      ctrl.dispose();
+    });
+
+    it("acceptForeignItem shows a placeholder", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      ctrl.acceptForeignItem(
+        { at: { mode: "positioned", x: 0, y: 4, w: 6, h: 1 }, component: { type: "html" } },
+        { mode: "positioned", x: 0, y: 4, w: 6, h: 1 },
+      );
+      const placeholder = grid.querySelector("[data-grid-placeholder]");
+      expect(placeholder).not.toBeNull();
+      ctrl.dispose();
+    });
+
+    it("clearForeignItem removes the placeholder", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      ctrl.acceptForeignItem(
+        { at: { mode: "positioned", x: 0, y: 4, w: 6, h: 1 }, component: { type: "html" } },
+        { mode: "positioned", x: 0, y: 4, w: 6, h: 1 },
+      );
+      ctrl.clearForeignItem();
+      const placeholder = grid.querySelector("[data-grid-placeholder]");
+      expect(placeholder).toBeNull();
+      ctrl.dispose();
+    });
   });
 });

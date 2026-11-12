@@ -107,17 +107,17 @@ var SW_EXAMPLES = [
     tags: ['barrier', 'await', 'dependency'],
     description: 'A barrier blocks until all named steps have completed. Use it to express "wait for A and B before proceeding."',
     yaml: [
-      '- step: fetch-data',
+      '- name: fetch-data',
       '  log: { message: "Fetching data" }',
-      '- step: load-config',
+      '- name: load-config',
       '  log: { message: "Loading config" }',
       '- barrier:',
       '    await: [fetch-data, load-config]',
       '- log: { message: "Both done — proceeding" }',
     ].join('\n'),
     steps: [
-      { step: 'fetch-data', log: { message: 'Fetching data' } },
-      { step: 'load-config', log: { message: 'Loading config' } },
+      { name: 'fetch-data', log: { message: 'Fetching data' } },
+      { name: 'load-config', log: { message: 'Loading config' } },
       { barrier: { await: ['fetch-data', 'load-config'] } },
       { log: { message: 'Both done — proceeding' } },
     ],
@@ -127,11 +127,11 @@ var SW_EXAMPLES = [
     tags: ['quorum', 'n-of-m', 'partial completion'],
     description: 'Quorum succeeds when N of M named steps have completed — does not require all. Use for "any 2 of 3" patterns.',
     yaml: [
-      '- step: primary',
+      '- name: primary',
       '  log: { message: "Primary completed" }',
-      '- step: secondary',
+      '- name: secondary',
       '  log: { message: "Secondary completed" }',
-      '- step: tertiary',
+      '- name: tertiary',
       '  log: { message: "Tertiary completed" }',
       '- quorum:',
       '    required: 2',
@@ -139,17 +139,17 @@ var SW_EXAMPLES = [
       '- log: { message: "Quorum met — 2 of 3 done" }',
     ].join('\n'),
     steps: [
-      { step: 'primary', log: { message: 'Primary completed' } },
-      { step: 'secondary', log: { message: 'Secondary completed' } },
-      { step: 'tertiary', log: { message: 'Tertiary completed' } },
+      { name: 'primary', log: { message: 'Primary completed' } },
+      { name: 'secondary', log: { message: 'Secondary completed' } },
+      { name: 'tertiary', log: { message: 'Tertiary completed' } },
       { quorum: { required: 2, of: ['primary', 'secondary', 'tertiary'] } },
       { log: { message: 'Quorum met — 2 of 3 done' } },
     ],
   },
   {
-    name: 'Select (first-to-complete)',
-    tags: ['select', 'race', 'first-to-complete'],
-    description: 'Select races multiple branches — the first to complete wins. Wait branches block on named signals; the first signal to fire determines which branch executes.',
+    name: 'Select (signal multiplexing)',
+    tags: ['select', 'signal', 'multiplexing'],
+    description: 'Channel and signal multiplexing — wait on multiple named signals, the first signal to fire determines which branch executes. For first-to-complete over arbitrary concurrent blocks, use race: instead.',
     yaml: [
       '- select:',
       '  - wait: fast-signal',
@@ -166,6 +166,27 @@ var SW_EXAMPLES = [
     preRun: function(runner) {
       runner.scope.signal('fast-signal').signal();
     },
+  },
+  {
+    name: 'Race (first-to-complete)',
+    tags: ['race', 'first-to-complete', 'cancellation'],
+    description: 'First-to-complete over arbitrary blocks — branches execute concurrently, the first to finish wins, the loser is cancelled. Unlike select (signal-based), race works with any step sequence.',
+    yaml: [
+      '- race:',
+      '  - block:',
+      '    - delay: 200ms',
+      '    - log: { message: "Slow branch finished" }',
+      '  - log: { message: "Fast branch finished" }',
+    ].join('\n'),
+    steps: [
+      { race: [
+        { block: [
+          { delay: '200ms' },
+          { log: { message: 'Slow branch finished' } },
+        ] },
+        { log: { message: 'Fast branch finished' } },
+      ] },
+    ],
   },
 ];
 

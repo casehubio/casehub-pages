@@ -22,53 +22,33 @@ datasets:
         type: NUMBER
 pages:
   - name: Column with Rows
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Nested Layout — Columns with Rows
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              Demonstrates **nested layout**: a two-column split where the right column contains stacked rows. This pattern is common for dashboards with a main chart and supporting metrics.
-      - placement:
-          x: 0
-          y: 2
-          w: 7
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Revenue by Quarter
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 7
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            chart:
-              height: 350
-            lookup:
-              uuid: sales
-              group:
-                - columnGroup:
-                    source: Quarter
-                  functions:
-                    - source: Quarter
-                    - source: Revenue
-                      function: SUM
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Nested Layout — Columns with Rows
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            Demonstrates **nested layout**: a two-column split where the right column contains stacked rows. This pattern is common for dashboards with a main chart and supporting metrics.
+      - at: { x: 0, y: 2, w: 7, h: 1 }
+        type: title
+        properties:
+          text: Revenue by Quarter
+          size: h3
+      - at: { x: 0, y: 3, w: 7, h: 1 }
+        type: bar-chart
+        properties:
+          chart:
+            height: 350
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: Quarter
+                functions:
+                  - source: Quarter
+                  - source: Revenue
+                    function: SUM

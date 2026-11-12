@@ -68,7 +68,7 @@ describe("backwards compatibility — existing samples", () => {
       const indexPage = root.slots!["content"]!.find(
         (p: Component) => (p.props as Record<string, unknown>)["name"] === "index",
       )!;
-      const contentTabs = indexPage.items!.find(
+      const contentTabs = indexPage.grid!.find(
         (item: { component: Component }) => item.component.type === "tabs" && item.component.slots,
       );
       expect(contentTabs).toBeDefined();
@@ -85,7 +85,7 @@ describe("backwards compatibility — existing samples", () => {
 
     it("parses lowercase type: barchart as bar-chart", () => {
       const page = root.slots!["content"]![0]!;
-      const chart = page.items!.find((item) => item.component.type === "bar-chart");
+      const chart = page.grid!.find((item) => item.component.type === "bar-chart");
       expect(chart).toBeDefined();
     });
 
@@ -107,7 +107,7 @@ describe("backwards compatibility — existing samples", () => {
 
     it("handles empty displayer (null value)", () => {
       const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBeGreaterThan(0);
+      expect(page.grid!.length).toBeGreaterThan(0);
     });
   });
 
@@ -120,7 +120,7 @@ describe("backwards compatibility — existing samples", () => {
     it("parses dashboard with inline dataSet", () => {
       expect(root.type).toBe("page");
       const page = root.slots!["content"]![0]!;
-      expect(page.items!.length).toBeGreaterThan(0);
+      expect(page.grid!.length).toBeGreaterThan(0);
     });
   });
 });

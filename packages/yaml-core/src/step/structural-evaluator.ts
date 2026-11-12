@@ -2,7 +2,7 @@ import type {
   ResolvedStep, Result, PluginStep, BlockStep, ParallelStep,
   IfElseStep, MatchStep, TryCatchFinallyStep, SelectStep,
   BarrierStep, QuorumStep, InvokeStep, DelayStep, RaceStep,
-  EmitEventStep,
+  EmitEventStep, ControlStep, FusedPipelineStep,
 } from './walker.js';
 import { stepSuccess, stepFailure } from './walker.js';
 import { mergeAbortSignals } from './abort-utils.js';
@@ -14,6 +14,11 @@ import { matches } from '../match.js';
 import type { InvokeHandler } from './invoke/invoke-handler.js';
 import type { EventEmitter } from './emit-event-emitter.js';
 import { DefinitionParser } from './definition-parser.js';
+import type { ObjectVariableSource } from '../types.js';
+import { InjectionResolver } from '../annotation/injection-resolver.js';
+import type { Annotation } from '../annotation/annotation-map.js';
+import { hasExpressionParams, resolvePluginParams } from './expression-resolver.js';
+import type { ExpressionEngineRegistry } from '../expression/expression-engine-registry.js';
 
 export class StructuralEvaluator {
   private readonly invokeHandlers: InvokeHandler[];
@@ -22,7 +27,15 @@ export class StructuralEvaluator {
     this.invokeHandlers = invokeHandlers;
   }
   async evaluate(step: ResolvedStep, context: Context): Promise<Result> {
-    const result = await this.dispatch(step, context);
+    let processedStep = step;
+    if (step.annotations?.length > 0 && 'params' in step) {
+      const anns = step.annotations as Annotation[];
+      if (anns.some(a => a.name === 'Inject')) {
+        const augmented = InjectionResolver.resolve(anns, (step as { params: Record<string, unknown> }).params, context.services);
+        processedStep = { ...step, params: augmented } as ResolvedStep;
+      }
+    }
+    const result = await this.dispatch(processedStep, context);
     if (step.name && result.kind === 'success') {
       context.scope.resultStore().recordSuccess(step.name, result.output);
     } else if (step.name && result.kind === 'failure') {
@@ -50,12 +63,25 @@ export class StructuralEvaluator {
       case 'delay': return this.evaluateDelay(step);
       case 'race': return this.evaluateRace(step, context);
       case 'emit-event': return this.evaluateEmitEvent(step, context);
+      case 'control': return this.evaluateControl(step, context);
+      case 'fused-pipeline': return this.evaluateFusedPipeline(step, context);
     }
   }
 
   private async evaluatePlugin(step: PluginStep, context: Context): Promise<Result> {
+    let resolvedParams: Record<string, unknown>;
+    const declaredInputs = step.entry.definition?.inputs;
+    if (declaredInputs && hasExpressionParams(declaredInputs)) {
+      const registry = context.services.lookup({ name: 'ExpressionEngineRegistry' }) as ExpressionEngineRegistry | undefined;
+      if (!registry) {
+        return stepFailure(`Plugin '${step.name ?? 'anonymous'}': ExpressionEngineRegistry not registered in ServiceRegistry`);
+      }
+      resolvedParams = resolvePluginParams(step.params, declaredInputs, context.resolver, registry);
+    } else {
+      resolvedParams = context.resolver.resolveMap(step.params, step.name ?? 'anonymous');
+    }
     const chain = DecoratorChain.build(step.decorators, step.entry.action);
-    return chain.execute({ ...context, params: step.params, stepName: step.name ?? 'anonymous' });
+    return chain.execute({ ...context, params: resolvedParams, stepName: step.name ?? 'anonymous' });
   }
 
   private async evaluateInvoke(step: InvokeStep, context: Context): Promise<Result> {
@@ -169,16 +195,39 @@ export class StructuralEvaluator {
 
   private async evaluateTryCatchFinally(step: TryCatchFinallyStep, context: Context): Promise<Result> {
     let tryResult: Result = stepSuccess({});
+    let lastFailedStepName: string | null = null;
 
-    for (const child of step.trySteps) {
+    for (let i = 0; i < step.trySteps.length; i++) {
+      const child = step.trySteps[i]!;
       tryResult = await this.evaluate(child, context);
-      if (tryResult.kind === 'failure') break;
+      if (tryResult.kind === 'failure') {
+        lastFailedStepName = child.name ?? `root → Step ${i}`;
+        break;
+      }
     }
 
     if (tryResult.kind === 'failure' && step.catchSteps.length > 0) {
+      const failureResult = tryResult;
+      const errorSource: ObjectVariableSource = {
+        resolve(name: string): unknown {
+          if (name === 'type') return failureResult.failureCategory ?? 'UNKNOWN';
+          if (name === 'message') return failureResult.message;
+          if (name === 'step') return lastFailedStepName;
+          if (name.startsWith('detail.') && failureResult.detail) {
+            const field = name.substring(7);
+            return (failureResult.detail as Record<string, unknown>)[field];
+          }
+          if (name === 'detail') return failureResult.detail ? JSON.stringify(failureResult.detail) : '';
+          return undefined;
+        },
+        allowContainerReturn() { return false; },
+      };
+      const scopedResolver = context.resolver.withObjectScope('error', errorSource);
+      const catchContext: Context = { ...context, resolver: scopedResolver };
+
       let catchResult: Result = stepSuccess({});
       for (const child of step.catchSteps) {
-        catchResult = await this.evaluate(child, context);
+        catchResult = await this.evaluate(child, catchContext);
         if (catchResult.kind === 'failure') break;
       }
       tryResult = catchResult;
@@ -292,5 +341,42 @@ export class StructuralEvaluator {
       if (i !== winner.index) controllers[i]!.abort();
     }
     return winner.result;
+  }
+
+  private async evaluateControl(step: ControlStep, context: Context): Promise<Result> {
+    const handle = context.scope.consumer(step.target);
+    if (step.control === 'pause') {
+      handle.pause();
+    } else {
+      handle.resume();
+    }
+    return stepSuccess({ control: step.control, target: step.target });
+  }
+
+  private async evaluateFusedPipeline(step: FusedPipelineStep, context: Context): Promise<Result> {
+    const emptyIterable: AsyncIterable<unknown> = { async *[Symbol.asyncIterator]() {} };
+    let currentIterable: AsyncIterable<unknown> = emptyIterable;
+
+    try {
+      for (const stage of step.stages) {
+        const resolvedParams = context.resolver.resolveMap(stage.params, stage.stepName ?? 'anonymous');
+        currentIterable = stage.factory(resolvedParams, currentIterable, context.services);
+      }
+
+      const outputs: unknown[] = [];
+      for await (const value of currentIterable) {
+        outputs.push(value);
+      }
+
+      const output = outputs.length === 1 && typeof outputs[0] === 'object' && outputs[0] !== null
+        ? outputs[0] as Record<string, unknown>
+        : { values: outputs };
+
+      return stepSuccess(output);
+    } catch (err) {
+      return stepFailure(
+        `Fused pipeline '${step.name ?? 'anonymous'}' failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 }

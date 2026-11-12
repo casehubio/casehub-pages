@@ -9,256 +9,160 @@ datasets:
     type: prometheus
     url: ${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          properties:
-            background-color: oklch(0.55 0.15 55)
-            color: white
-            padding: 16px 24px
-            border-radius: 8px
-            margin-bottom: 16px
-          html: '<strong style="font-size: 20px; font-family: sans-serif;">Prometheus Metrics Explorer</strong> <br/><span style="opacity: 0.8; font-size: 13px;">Query: <code>${query}</code> &middot; Source: <code>${prometheusUrl}</code></span>'
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Data Points
-            size: h3
-      - placement:
-          x: 0
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: prometheus
-              group:
-                - functions:
-                    - source: value
-                      function: COUNT
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Max Value
-            size: h3
-      - placement:
-          x: 3
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: prometheus
-              group:
-                - functions:
-                    - source: value
-                      function: MAX
-            columns:
-              - id: value
-                pattern: "#,000"
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Min Value
-            size: h3
-      - placement:
-          x: 6
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: prometheus
-              group:
-                - functions:
-                    - source: value
-                      function: MIN
-            columns:
-              - id: value
-                pattern: "#,000"
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Average
-            size: h3
-      - placement:
-          x: 9
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: prometheus
-              group:
-                - functions:
-                    - source: value
-                      function: AVERAGE
-            columns:
-              - id: value
-                pattern: "#,000.00"
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Metric Values Over Time
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: timeseries
-          properties:
-            chart:
-              height: 350
-            lookup:
-              uuid: prometheus
-              group:
-                - functions:
-                    - source: __name__
-                    - source: timestamp
-                    - source: value
-      - placement:
-          x: 0
-          y: 5
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Value Distribution (Area)
-            size: h3
-      - placement:
-          x: 0
-          y: 6
-          w: 6
-          h: 1
-        component:
-          type: area-chart
-          properties:
-            chart:
-              height: 280
-            lookup:
-              uuid: prometheus
-              group:
-                - functions:
-                    - source: handler
-                    - source: timestamp
-                    - source: value
-      - placement:
-          x: 6
-          y: 5
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total by Endpoint
-            size: h3
-      - placement:
-          x: 6
-          y: 6
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            chart:
-              height: 280
-            lookup:
-              uuid: prometheus_instant
-              group:
-                - columnGroup:
-                    source: handler
-                  functions:
-                    - source: handler
-                    - source: value
-                      function: SUM
-      - placement:
-          x: 0
-          y: 7
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Request Share by Method
-            size: h3
-      - placement:
-          x: 0
-          y: 8
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            chart:
-              height: 300
-            lookup:
-              uuid: prometheus_instant
-              group:
-                - columnGroup:
-                    source: method
-                  functions:
-                    - source: method
-                    - source: value
-                      function: SUM
-      - placement:
-          x: 4
-          y: 7
-          w: 8
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Raw Metrics
-            size: h3
-      - placement:
-          x: 4
-          y: 8
-          w: 8
-          h: 1
-        component:
-          type: data-table
-          properties:
-            sortable: true
-            show_column_picker: true
-            lookup:
-              uuid: prometheus
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        properties:
+          background-color: oklch(0.55 0.15 55)
+          color: white
+          padding: 16px 24px
+          border-radius: 8px
+          margin-bottom: 16px
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Data Points
+          size: h3
+      - at: { x: 0, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: prometheus
+            group:
+              - functions:
+                  - source: value
+                    function: COUNT
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Max Value
+          size: h3
+      - at: { x: 3, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: prometheus
+            group:
+              - functions:
+                  - source: value
+                    function: MAX
+          columns:
+            - id: value
+              pattern: "#,000"
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Min Value
+          size: h3
+      - at: { x: 6, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: prometheus
+            group:
+              - functions:
+                  - source: value
+                    function: MIN
+          columns:
+            - id: value
+              pattern: "#,000"
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Average
+          size: h3
+      - at: { x: 9, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: prometheus
+            group:
+              - functions:
+                  - source: value
+                    function: AVERAGE
+          columns:
+            - id: value
+              pattern: "#,000.00"
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Metric Values Over Time
+          size: h3
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: timeseries
+        properties:
+          chart:
+            height: 350
+          lookup:
+            uuid: prometheus
+            group:
+              - functions:
+                  - source: __name__
+                  - source: timestamp
+                  - source: value
+      - at: { x: 0, y: 5, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Value Distribution (Area)
+          size: h3
+      - at: { x: 0, y: 6, w: 6, h: 1 }
+        type: area-chart
+        properties:
+          chart:
+            height: 280
+          lookup:
+            uuid: prometheus
+            group:
+              - functions:
+                  - source: handler
+                  - source: timestamp
+                  - source: value
+      - at: { x: 6, y: 5, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Total by Endpoint
+          size: h3
+      - at: { x: 6, y: 6, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          chart:
+            height: 280
+          lookup:
+            uuid: prometheus_instant
+            group:
+              - columnGroup:
+                  source: handler
+                functions:
+                  - source: handler
+                  - source: value
+                    function: SUM
+      - at: { x: 0, y: 7, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Request Share by Method
+          size: h3
+      - at: { x: 0, y: 8, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          chart:
+            height: 300
+          lookup:
+            uuid: prometheus_instant
+            group:
+              - columnGroup:
+                  source: method
+                functions:
+                  - source: method
+                  - source: value
+                    function: SUM
+      - at: { x: 4, y: 7, w: 8, h: 1 }
+        type: title
+        properties:
+          text: Raw Metrics
+          size: h3
+      - at: { x: 4, y: 8, w: 8, h: 1 }
+        type: data-table
+        properties:
+          sortable: true
+          show_column_picker: true
+          lookup:
+            uuid: prometheus

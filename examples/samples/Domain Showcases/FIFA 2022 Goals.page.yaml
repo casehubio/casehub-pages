@@ -74,300 +74,190 @@ datasets:
       - id: Match Name
         type: LABEL
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <p>
-                <p style="font-size: xx-large">
-                FIFA World Cup Qatar 2022™
-                </p>
-                <small>
-                    Goals Score Statistics
-                </small>
-                <hr />
-            </p>
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Total Goals
-            size: h3
-      - placement:
-          x: 0
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: fifa_matches
-              group:
-                - functions:
-                    - source: Total Goals
-                      function: SUM
-            columns:
-              - id: Total Goals
-                pattern: "#"
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Average Goals by Match
-            size: h3
-      - placement:
-          x: 3
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: fifa_matches
-              group:
-                - functions:
-                    - source: Total Goals
-                      function: AVERAGE
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Average Temperature
-            size: h3
-      - placement:
-          x: 6
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: fifa_matches
-              group:
-                - functions:
-                    - source: Temperature
-                      function: AVERAGE
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Average Attendance
-            size: h3
-      - placement:
-          x: 9
-          y: 2
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: fifa_matches
-              group:
-                - functions:
-                    - source: Attendance
-                      function: AVERAGE
-      - placement:
-          x: 0
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Goals by Day
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 6
-          h: 1
-        component:
-          type: line-chart
-          properties:
-            lookup:
-              uuid: fifa_matches
-              group:
-                - columnGroup:
-                    source: Day
-                  functions:
-                    - source: Day
-                    - source: Total Goals
-                      column: Goals
-                      function: ${GoalsFunction}
-            axis:
-              x:
-                labels_angle: 30
-      - placement:
-          x: 6
-          y: 3
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Goals by Stadium
-            size: h3
-      - placement:
-          x: 6
-          y: 4
-          w: 6
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: fifa_matches
-              sort:
-                - column: Goals
-                  order: DESCENDING
-              group:
-                - columnGroup:
-                    source: Stadium Name
-                  functions:
-                    - source: Stadium Name
-                    - source: Total Goals
-                      function: ${GoalsFunction}
-                      column: Goals
-            axis:
-              x:
-                labels_angle: 15
-      - placement:
-          x: 0
-          y: 5
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Goals by Weather
-            size: h3
-      - placement:
-          x: 0
-          y: 6
-          w: 6
-          h: 1
-        component:
-          type: bubble-chart
-          properties:
-            lookup:
-              uuid: fifa_matches
-              sort:
-                - column: TOTAL MATCHES
-                  order: ASCENDING
-              group:
-                - columnGroup:
-                    source: Weather
-                  functions:
-                    - source: Weather
-                    - source: Total Goals
-                      function: ${GoalsFunction}
-                      column: Goals
-                    - source: Weather
-                      function: COUNT
-                      column: TOTAL MATCHES
-                    - source: Weather
-                      function: COUNT
-                      column: TOTAL MATCHES
-      - placement:
-          x: 6
-          y: 5
-          w: 6
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Goals by Attendance
-            size: h3
-      - placement:
-          x: 6
-          y: 6
-          w: 6
-          h: 1
-        component:
-          type: bubble-chart
-          properties:
-            chart:
-              zoom: true
-            lookup:
-              uuid: fifa_matches
-              group:
-                - columnGroup:
-                    source: Match Name
-                  functions:
-                    - source: Match Name
-                    - source: Attendance
-                      column: Attendance
-                    - source: Total Goals
-                      column: Goals
-                    - source: Total Goals
-                      column: Goals
-            axis:
-              x:
-                labels_show: false
-              y:
-                title: Attendance
-      - placement:
-          x: 0
-          y: 7
-          w: 12
-          h: 1
-        component:
-          html: |-
-            <hr style="width: 2px; border: dashed 1px" /> <p style="margin: 1px 10px 30px 10px; font-size: x-large">
-
-                <strong>All Matches</strong>
-            </p>
-      - placement:
-          x: 0
-          y: 8
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            chart:
-              resizable: true
-            lookup:
-              uuid: fifa_matches
-              group:
-                - functions:
-                    - source: Temperature
-                    - source: ID
-                    - source: Date
-                    - source: Team 1 Score
-                    - source: Match Name
-                    - source: Team 2 Score
-                    - source: Weather
-                    - source: Stadium Name
-                    - source: Attendance
-            columns:
-              - id: Date
-                expression: new Date(value).toLocaleDateString() + " " + new Date(value).toLocaleTimeString()
-              - id: Team 1 Score
-                pattern: "#"
-              - id: Team 2 Score
-                pattern: "#"
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Total Goals
+          size: h3
+      - at: { x: 0, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: fifa_matches
+            group:
+              - functions:
+                  - source: Total Goals
+                    function: SUM
+          columns:
+            - id: Total Goals
+              pattern: "#"
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Average Goals by Match
+          size: h3
+      - at: { x: 3, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: fifa_matches
+            group:
+              - functions:
+                  - source: Total Goals
+                    function: AVERAGE
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Average Temperature
+          size: h3
+      - at: { x: 6, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: fifa_matches
+            group:
+              - functions:
+                  - source: Temperature
+                    function: AVERAGE
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Average Attendance
+          size: h3
+      - at: { x: 9, y: 2, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: fifa_matches
+            group:
+              - functions:
+                  - source: Attendance
+                    function: AVERAGE
+      - at: { x: 0, y: 3, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Goals by Day
+          size: h3
+      - at: { x: 0, y: 4, w: 6, h: 1 }
+        type: line-chart
+        properties:
+          lookup:
+            uuid: fifa_matches
+            group:
+              - columnGroup:
+                  source: Day
+                functions:
+                  - source: Day
+                  - source: Total Goals
+                    column: Goals
+                    function: ${GoalsFunction}
+          axis:
+            x:
+              labels_angle: 30
+      - at: { x: 6, y: 3, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Goals by Stadium
+          size: h3
+      - at: { x: 6, y: 4, w: 6, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: fifa_matches
+            sort:
+              - column: Goals
+                order: DESCENDING
+            group:
+              - columnGroup:
+                  source: Stadium Name
+                functions:
+                  - source: Stadium Name
+                  - source: Total Goals
+                    function: ${GoalsFunction}
+                    column: Goals
+          axis:
+            x:
+              labels_angle: 15
+      - at: { x: 0, y: 5, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Goals by Weather
+          size: h3
+      - at: { x: 0, y: 6, w: 6, h: 1 }
+        type: bubble-chart
+        properties:
+          lookup:
+            uuid: fifa_matches
+            sort:
+              - column: TOTAL MATCHES
+                order: ASCENDING
+            group:
+              - columnGroup:
+                  source: Weather
+                functions:
+                  - source: Weather
+                  - source: Total Goals
+                    function: ${GoalsFunction}
+                    column: Goals
+                  - source: Weather
+                    function: COUNT
+                    column: TOTAL MATCHES
+                  - source: Weather
+                    function: COUNT
+                    column: TOTAL MATCHES
+      - at: { x: 6, y: 5, w: 6, h: 1 }
+        type: title
+        properties:
+          text: Goals by Attendance
+          size: h3
+      - at: { x: 6, y: 6, w: 6, h: 1 }
+        type: bubble-chart
+        properties:
+          chart:
+            zoom: true
+          lookup:
+            uuid: fifa_matches
+            group:
+              - columnGroup:
+                  source: Match Name
+                functions:
+                  - source: Match Name
+                  - source: Attendance
+                    column: Attendance
+                  - source: Total Goals
+                    column: Goals
+                  - source: Total Goals
+                    column: Goals
+          axis:
+            x:
+              labels_show: false
+            y:
+              title: Attendance
+      - at: { x: 0, y: 7, w: 12, h: 1 }
+      - at: { x: 0, y: 8, w: 12, h: 1 }
+        type: data-table
+        properties:
+          chart:
+            resizable: true
+          lookup:
+            uuid: fifa_matches
+            group:
+              - functions:
+                  - source: Temperature
+                  - source: ID
+                  - source: Date
+                  - source: Team 1 Score
+                  - source: Match Name
+                  - source: Team 2 Score
+                  - source: Weather
+                  - source: Stadium Name
+                  - source: Attendance
+          columns:
+            - id: Date
+              expression: new Date(value).toLocaleDateString() + " " + new Date(value).toLocaleTimeString()
+            - id: Team 1 Score
+              pattern: "#"
+            - id: Team 2 Score
+              pattern: "#"

@@ -36,6 +36,34 @@ export function push(items: readonly IdRect[], movedId: string): IdRect[] {
   });
 }
 
+export function compactDown(items: readonly IdRect[], pinnedId: string): IdRect[] {
+  const pinned = items.find(i => i.id === pinnedId);
+  if (!pinned) return items.map(i => ({ ...i }));
+  const others = items.filter(i => i.id !== pinnedId);
+  const sorted = [...others].sort((a, b) =>
+    a.y !== b.y ? a.y - b.y : a.x - b.x,
+  );
+  const result: IdRect[] = [{ ...pinned }];
+  for (const item of sorted) {
+    let bestY = item.y;
+    let settled = false;
+    while (!settled) {
+      settled = true;
+      for (const placed of result) {
+        if (overlaps({ ...item, y: bestY }, placed)) {
+          const newY = placed.y + placed.h;
+          if (newY > bestY) {
+            bestY = newY;
+            settled = false;
+          }
+        }
+      }
+    }
+    result.push({ ...item, y: bestY });
+  }
+  return result;
+}
+
 export function compact(items: readonly IdRect[], pinnedId?: string): IdRect[] {
   const sorted = [...items].sort((a, b) =>
     a.y !== b.y ? a.y - b.y : a.x - b.x,
@@ -65,6 +93,26 @@ export function compact(items: readonly IdRect[], pinnedId?: string): IdRect[] {
   return result;
 }
 
+export function cascadePush(items: readonly IdRect[], movedId: string): IdRect[] {
+  const result = items.map(i => ({ ...i }));
+  const moved = result.find(i => i.id === movedId);
+  if (!moved) return result;
+  const queue = [moved];
+  const processed = new Set([movedId]);
+  while (queue.length > 0) {
+    const pusher = queue.shift()!;
+    for (const item of result) {
+      if (processed.has(item.id)) continue;
+      if (overlaps(pusher, item)) {
+        item.y = pusher.y + pusher.h;
+        processed.add(item.id);
+        queue.push(item);
+      }
+    }
+  }
+  return result;
+}
+
 export function compactAll(
   items: readonly IdRect[],
   movedId: string,
@@ -75,11 +123,21 @@ export function compactAll(
   return compact(pushed, movedId);
 }
 
+export function resizeCompact(
+  items: readonly IdRect[],
+  movedId: string,
+  target: Rect,
+): IdRect[] {
+  const placed = place(items, movedId, target);
+  const cascaded = cascadePush(placed, movedId);
+  return compact(cascaded, movedId);
+}
+
 export function autoShrinkHeight(items: readonly IdRect[]): number {
   if (items.length === 0) return 0;
   return Math.max(...items.map(i => i.y + i.h));
 }
 
-export function isNestedGrid(item: { component?: { type?: string; items?: readonly unknown[] } }): boolean {
-  return item.component?.type === "grid" && Array.isArray(item.component.items) && item.component.items.length > 0;
+export function isNestedGrid(item: { component?: { type?: string; grid?: readonly unknown[] } }): boolean {
+  return item.component?.type === "grid" && Array.isArray(item.component.grid) && item.component.grid.length > 0;
 }

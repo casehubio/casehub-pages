@@ -23,88 +23,43 @@ datasets:
         type: LABEL
 pages:
   - name: Dynamic Visibility
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Dynamic Visibility with visibleWhen
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              Select a **category** below. The charts and details only appear when a filter is active — they use `visibleWhen` to show/hide based on the current filter state.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
-            filter:
-              notification: true
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: category
-                  functions:
-                    - source: category
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          visibleWhen: "#{filter.category}"
-          properties:
-            content: "### Showing: #{filter.category}"
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: columns
-          visibleWhen: "#{filter.category}"
-          properties:
-            span: 6,6
-          columns:
-            - components:
-                - type: bar-chart
-                  properties:
-                    filter:
-                      listening: true
-                    lookup:
-                      uuid: products
-            - components:
-                - type: data-table
-                  properties:
-                    filter:
-                      listening: true
-                    lookup:
-                      uuid: products
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          visibleWhen: "#{filter.category}"
-          properties:
-            content: |
-              *This section appears only when a category is selected. Clear the filter to hide it again.*
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Dynamic Visibility with visibleWhen
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            Select a **category** below. The charts and details only appear when a filter is active — they use `visibleWhen` to show/hide based on the current filter state.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            notification: true
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: "### Showing: #{filter.category}"
+        visibleWhen: "#{filter.category}"
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: columns
+        properties:
+          span: 6,6
+        visibleWhen: "#{filter.category}"
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            *This section appears only when a category is selected. Clear the filter to hide it again.*
+        visibleWhen: "#{filter.category}"

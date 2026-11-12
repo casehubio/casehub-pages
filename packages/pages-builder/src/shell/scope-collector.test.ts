@@ -115,6 +115,31 @@ describe('collectComponentsInScope', () => {
     });
   });
 
+  describe('grid: format', () => {
+    const GRID_YAML = `pages:\n- name: Dashboard\n  grid:\n    - at: { x: 0, y: 0, w: 6, h: 2 }\n      type: metric\n      properties:\n        title: Revenue\n    - at: { x: 6, y: 0, w: 6, h: 2 }\n      type: chart\n      properties:\n        title: Sales\n    - at: { x: 0, y: 2, w: 12, h: 1 }\n      type: data-table\n`;
+
+    it('page scope collects all components from grid: format', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const comps = collectComponentsInScope(doc, ['pages', 0], 'page');
+      expect(comps).toHaveLength(3);
+      expect(comps.map(c => c.type)).toEqual(['metric', 'chart', 'data-table']);
+    });
+
+    it('grid-item scope collects component from grid: format', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const comps = collectComponentsInScope(doc, ['pages', 0, 'grid', 0], 'grid-item');
+      expect(comps).toHaveLength(1);
+      expect(comps[0]!.type).toBe('metric');
+    });
+
+    it('component scope collects from grid: path', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const comps = collectComponentsInScope(doc, ['pages', 0, 'grid', 1], 'component');
+      expect(comps).toHaveLength(1);
+      expect(comps[0]!.type).toBe('chart');
+    });
+  });
+
   describe('invariant: scope always returns a contiguous set', () => {
     it('page scope components are all from the same page', () => {
       const doc = PageDocument.parse(ROWS_YAML);

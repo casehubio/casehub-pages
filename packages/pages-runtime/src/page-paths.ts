@@ -29,8 +29,8 @@ function walk(
 
   map.set(component, path);
 
-  if (component.items) {
-    for (const item of component.items) {
+  if (component.grid) {
+    for (const item of component.grid) {
       if (!item.component) continue;
       const itemSlotName = item.component.type === "page"
         ? (item.component.props as Record<string, unknown> | undefined)?.name as string | undefined

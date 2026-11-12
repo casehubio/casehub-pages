@@ -151,6 +151,44 @@ export class DefinitionParser {
     if (raw['verify-simulation'] != null) {
       return { kind: 'verify-simulation' };
     }
-    throw new Error(`Unknown invoke binding type. Expected one of: mcp, python, node, script, graphql, rest, agent, process, aria, graphql-domain, simulated, verify-simulation`);
+    if (raw['agent-session-open']) {
+      const spec = raw['agent-session-open'] as Record<string, unknown>;
+      return {
+        kind: 'agent-session-open' as const,
+        descriptor: spec['session'] as string,
+        system: spec['system'] as string | undefined,
+        model: spec['model'] as string | undefined,
+        modelQuery: (spec['model-query'] ?? spec['modelQuery']) as string | undefined,
+        modelChain: (spec['model-chain'] ?? spec['modelChain']) as string[] | undefined,
+        pool: spec['pool'] as string | undefined,
+        timeout: spec['timeout'] as string | undefined,
+        checkoutTimeout: (spec['checkout-timeout'] ?? spec['checkoutTimeout']) as string | undefined,
+      };
+    }
+    if (raw['agent-query']) {
+      const spec = raw['agent-query'] as Record<string, unknown>;
+      return {
+        kind: 'agent-session-query' as const,
+        sessionRef: spec['session'] as string,
+        user: spec['user'] as string,
+        responseFormat: (spec['response-format'] ?? spec['responseFormat']) as string | undefined,
+        output: spec['output'] as string | undefined,
+        priority: spec['priority'] === true,
+        timeout: spec['timeout'] as string | undefined,
+      };
+    }
+    if (raw['agent-session-clear']) {
+      const val = raw['agent-session-clear'];
+      if (typeof val === 'string') return { kind: 'agent-session-clear' as const, sessionRef: val };
+      const spec = val as Record<string, unknown>;
+      return { kind: 'agent-session-clear' as const, sessionRef: spec['session'] as string };
+    }
+    if (raw['agent-session-close']) {
+      const val = raw['agent-session-close'];
+      if (typeof val === 'string') return { kind: 'agent-session-close' as const, sessionRef: val };
+      const spec = val as Record<string, unknown>;
+      return { kind: 'agent-session-close' as const, sessionRef: spec['session'] as string };
+    }
+    throw new Error(`Unknown invoke binding type. Expected one of: mcp, python, node, script, graphql, rest, agent, process, aria, graphql-domain, simulated, verify-simulation, agent-session-open, agent-query, agent-session-clear, agent-session-close`);
   }
 }

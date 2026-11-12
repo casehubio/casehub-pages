@@ -1,5 +1,6 @@
 import type { ParameterType } from '../types.js';
 import type { Portability } from './portability.js';
+import type { StreamingTypeInfo } from './streaming-types.js';
 
 export interface Parameter {
   type: ParameterType;
@@ -16,6 +17,10 @@ export type InvokeBinding =
   | GraphqlBinding
   | ScriptBinding
   | AgentBinding
+  | AgentSessionOpenBinding
+  | AgentSessionQueryBinding
+  | AgentSessionClearBinding
+  | AgentSessionCloseBinding
   | ProcessBinding
   | AriaBinding
   | GraphqlDomainBinding
@@ -54,8 +59,44 @@ export interface AgentBinding {
   kind: 'agent';
   descriptor: string;
   model?: string;
+  modelQuery?: string;
+  modelChain?: string[];
+  pool?: string;
+  responseFormat?: string;
   timeout?: string;
   structuredOutput: boolean;
+}
+
+export interface AgentSessionOpenBinding {
+  kind: 'agent-session-open';
+  descriptor: string;
+  system?: string;
+  model?: string;
+  modelQuery?: string;
+  modelChain?: string[];
+  pool?: string;
+  timeout?: string;
+  checkoutTimeout?: string;
+}
+
+export interface AgentSessionQueryBinding {
+  kind: 'agent-session-query';
+  sessionRef: string;
+  user: string;
+  responseFormat?: string;
+  output?: string;
+  priority?: boolean;
+  timeout?: string;
+}
+
+export interface AgentSessionClearBinding {
+  kind: 'agent-session-clear';
+  sessionRef: string;
+}
+
+export interface AgentSessionCloseBinding {
+  kind: 'agent-session-close';
+  sessionRef: string;
 }
 
 export interface ProcessBinding {
@@ -85,6 +126,8 @@ export interface Definition {
   outputs: Record<string, Parameter>;
   invoke?: InvokeBinding;
   portability?: Portability;
+  absorbSiblings?: boolean;
+  streamingType?: StreamingTypeInfo;
 }
 
 export interface DefinitionFile {

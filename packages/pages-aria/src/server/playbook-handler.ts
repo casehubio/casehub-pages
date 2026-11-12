@@ -561,7 +561,7 @@ function buildAriaTarget(params: Record<string, unknown>): AriaTarget | undefine
 
 async function executeAriaAction(action: string, params: Record<string, unknown>, currentSpeed: number, isPaused: boolean, calloutMsPerChar: number, narrativeTarget: EventTarget): Promise<void> {
   const target = buildAriaTarget(params);
-  const value = params.value as string | undefined;
+  const value = (params._subject ?? params.value) as string | undefined;
   const fastMode = currentSpeed >= 100;
 
   injectStyles();
@@ -724,7 +724,7 @@ export function createPlaybookHandler(
             if ((step.params.display as string) === 'modal') {
               showOrExtendModalDeck(
                 {
-                  markdown: ((step.params.value ?? step.params.content) as string) ?? '',
+                  markdown: ((step.params._subject ?? step.params.value ?? step.params.content) as string) ?? '',
                   label: step.label ?? step.name,
                 },
                 eventTarget,

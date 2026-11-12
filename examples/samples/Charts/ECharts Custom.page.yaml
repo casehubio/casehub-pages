@@ -1,60 +1,45 @@
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: ECharts Custom Options
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              **extraConfiguration** merges custom ECharts option JSON into the generated chart config — toolbox features, mark lines, visual styling, and any other ECharts option the built-in chart types don't expose directly.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            title: Products
-            chart:
-              height: 400
-              resizable: true
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: product
-                  functions:
-                    - source: product
-                    - source: quantity
-                    - source: quantity2
-            extraConfiguration: |-
-              {
-                "toolbox": {
-                  "feature": {
-                    "dataZoom": {},
-                    "magicType": { "type": ["line", "bar", "stack"] },
-                    "saveAsImage": {}
-                  }
-                },
-                "series": [
-                  { "type": "bar", "markLine": { "data": [{ "type": "max" }] } },
-                  { "type": "bar", "markLine": { "data": [{ "type": "max" }] } }
-                ]
-              }
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: ECharts Custom Options
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            **extraConfiguration** merges custom ECharts option JSON into the generated chart config — toolbox features, mark lines, visual styling, and any other ECharts option the built-in chart types don't expose directly.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          title: Products
+          chart:
+            height: 400
+            resizable: true
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: product
+                functions:
+                  - source: product
+                  - source: quantity
+                  - source: quantity2
+          extraConfiguration: |-
+            {
+              "toolbox": {
+                "feature": {
+                  "dataZoom": {},
+                  "magicType": { "type": ["line", "bar", "stack"] },
+                  "saveAsImage": {}
+                }
+              },
+              "series": [
+                { "type": "bar", "markLine": { "data": [{ "type": "max" }] } },
+                { "type": "bar", "markLine": { "data": [{ "type": "max" }] } }
+              ]
+            }
 datasets:
   - uuid: products
     content: |-

@@ -45,280 +45,200 @@ datasets:
         type: LABEL
 pages:
   - name: index
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            navGroupId: TasksNav
-            width: 100%
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: tabs
+        properties:
+          navGroupId: TasksNav
+          width: 100%
   - name: Task Board
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Open Tasks
-            size: h3
-      - placement:
-          x: 0
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tasks
-              filter:
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - DONE
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CANCELLED
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 3
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Critical
-            size: h3
-      - placement:
-          x: 3
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tasks
-              filter:
-                - column: priority
-                  function: EQUALS_TO
-                  args:
-                    - CRITICAL
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - DONE
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 6
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: In Progress
-            size: h3
-      - placement:
-          x: 6
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tasks
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - IN_PROGRESS
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 9
-          y: 0
-          w: 3
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Done
-            size: h3
-      - placement:
-          x: 9
-          y: 1
-          w: 3
-          h: 1
-        component:
-          type: metric
-          properties:
-            lookup:
-              uuid: tasks
-              filter:
-                - column: status
-                  function: EQUALS_TO
-                  args:
-                    - DONE
-              group:
-                - functions:
-                    - source: id
-                      function: COUNT
-            columns:
-              - id: id
-                pattern: "#"
-      - placement:
-          x: 0
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: By Priority
-            size: h3
-      - placement:
-          x: 0
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
+    grid:
+      - at: { x: 0, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Open Tasks
+          size: h3
+      - at: { x: 0, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tasks
             filter:
-              listening: true
-            lookup:
-              uuid: tasks
-              filter:
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - DONE
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - CANCELLED
-              group:
-                - columnGroup:
-                    source: priority
-                  functions:
-                    - source: priority
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 4
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: By Status
-            size: h3
-      - placement:
-          x: 4
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - DONE
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CANCELLED
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 3, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Critical
+          size: h3
+      - at: { x: 3, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tasks
             filter:
-              listening: true
-            lookup:
-              uuid: tasks
-              group:
-                - columnGroup:
-                    source: status
-                  functions:
-                    - source: status
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 8
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: By Assignee
-            size: h3
-      - placement:
-          x: 8
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
+              - column: priority
+                function: EQUALS_TO
+                args:
+                  - CRITICAL
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - DONE
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 6, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: In Progress
+          size: h3
+      - at: { x: 6, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tasks
             filter:
-              listening: true
-            lookup:
-              uuid: tasks
-              filter:
-                - column: status
-                  function: NOT_EQUALS_TO
-                  args:
-                    - DONE
-                - column: assignee
-                  function: NOT_NULL
-              group:
-                - columnGroup:
-                    source: assignee
-                  functions:
-                    - source: assignee
-                    - source: id
-                      function: COUNT
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 15
-            sortable: true
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - IN_PROGRESS
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 9, y: 0, w: 3, h: 1 }
+        type: title
+        properties:
+          text: Done
+          size: h3
+      - at: { x: 9, y: 1, w: 3, h: 1 }
+        type: metric
+        properties:
+          lookup:
+            uuid: tasks
             filter:
-              listening: true
-              notification: true
-            lookup:
-              uuid: tasks
-            columns:
-              - id: title
-              - id: priority
-              - id: status
-              - id: assignee
-              - id: dueDate
+              - column: status
+                function: EQUALS_TO
+                args:
+                  - DONE
+            group:
+              - functions:
+                  - source: id
+                    function: COUNT
+          columns:
+            - id: id
+              pattern: "#"
+      - at: { x: 0, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: By Priority
+          size: h3
+      - at: { x: 0, y: 3, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: tasks
+            filter:
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - DONE
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - CANCELLED
+            group:
+              - columnGroup:
+                  source: priority
+                functions:
+                  - source: priority
+                  - source: id
+                    function: COUNT
+      - at: { x: 4, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: By Status
+          size: h3
+      - at: { x: 4, y: 3, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: tasks
+            group:
+              - columnGroup:
+                  source: status
+                functions:
+                  - source: status
+                  - source: id
+                    function: COUNT
+      - at: { x: 8, y: 2, w: 4, h: 1 }
+        type: title
+        properties:
+          text: By Assignee
+          size: h3
+      - at: { x: 8, y: 3, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          filter:
+            listening: true
+          lookup:
+            uuid: tasks
+            filter:
+              - column: status
+                function: NOT_EQUALS_TO
+                args:
+                  - DONE
+              - column: assignee
+                function: NOT_NULL
+            group:
+              - columnGroup:
+                  source: assignee
+                functions:
+                  - source: assignee
+                  - source: id
+                    function: COUNT
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 15
+          sortable: true
+          filter:
+            listening: true
+            notification: true
+          lookup:
+            uuid: tasks
+          columns:
+            - id: title
+            - id: priority
+            - id: status
+            - id: assignee
+            - id: dueDate
   - name: Task Detail
     dataScope:
       dataset: tasks
@@ -327,181 +247,57 @@ pages:
       trigger: auto
       delay: 2000
       adapter: rest
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Task Detail
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          input:
-            field: title
-            label: Title
-            required: true
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          textarea:
-            field: description
-            label: Description
-            rows: 4
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          select:
-            field: priority
-            label: Priority
-            options:
-              values:
-                - LOW
-                - MEDIUM
-                - HIGH
-                - CRITICAL
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          select:
-            field: status
-            label: Status
-            options:
-              values:
-                - TODO
-                - IN_PROGRESS
-                - REVIEW
-                - DONE
-                - CANCELLED
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          input:
-            field: assignee
-            label: Assignee
-      - placement:
-          x: 0
-          y: 6
-          w: 12
-          h: 1
-        component:
-          input:
-            field: dueDate
-            label: Due Date
-      - placement:
-          x: 0
-          y: 7
-          w: 12
-          h: 1
-        component:
-          input:
-            field: tags
-            label: Tags
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Task Detail
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+      - at: { x: 0, y: 6, w: 12, h: 1 }
+      - at: { x: 0, y: 7, w: 12, h: 1 }
   - name: New Task
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Create Task
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          schema-form:
-            schema:
-              properties:
-                title:
-                  type: string
-                  minLength: 1
-                description:
-                  type: string
-                  format: textarea
-                priority:
-                  type: string
-                  enum:
-                    - LOW
-                    - MEDIUM
-                    - HIGH
-                    - CRITICAL
-                assignee:
-                  type: string
-                dueDate:
-                  type: string
-                tags:
-                  type: string
-              required:
-                - title
-                - priority
-            forceCreate: true
-            submitUrl: /api/apps/tasks/tasks
-            submitMethod: POST
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Create Task
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
   - name: Notes
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 4
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
-            filter:
-              selfApply: true
-              notification: true
-            lookup:
-              uuid: notes
-              group:
-                - columnGroup:
-                    source: category
-                  functions:
-                    - source: category
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 10
-            sortable: true
-            filter:
-              listening: true
-            lookup:
-              uuid: notes
-            columns:
-              - id: title
-              - id: category
-              - id: author
-              - id: pinned
+    grid:
+      - at: { x: 0, y: 0, w: 4, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            selfApply: true
+            notification: true
+          lookup:
+            uuid: notes
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 10
+          sortable: true
+          filter:
+            listening: true
+          lookup:
+            uuid: notes
+          columns:
+            - id: title
+            - id: category
+            - id: author
+            - id: pinned
 navTree:
   root_items:
     - type: GROUP

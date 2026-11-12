@@ -69,10 +69,10 @@ describe("parsePage", () => {
         pages: [{ components: [{ html: "A" }, { html: "B" }] }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items).toBeDefined();
-      expect(page.items!.length).toBe(2);
-      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 12, h: 1 });
-      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 0, y: 1, w: 12, h: 1 });
+      expect(page.grid).toBeDefined();
+      expect(page.grid!.length).toBe(2);
+      expect(page.grid![0]!.at).toEqual({ mode: "positioned", x: 0, y: 0, w: 12, h: 1 });
+      expect(page.grid![1]!.at).toEqual({ mode: "positioned", x: 0, y: 1, w: 12, h: 1 });
     });
 
     it("desugars html shorthand to html component", () => {
@@ -80,7 +80,7 @@ describe("parsePage", () => {
         pages: [{ components: [{ html: "<b>Bold</b>" }] }],
       });
       const page = root.slots!["content"]![0]!;
-      const comp = page.items![0]!.component;
+      const comp = page.grid![0]!.component;
       expect(comp.type).toBe("html");
       expect(comp.props!["content"]).toBe("<b>Bold</b>");
     });
@@ -94,7 +94,7 @@ describe("parsePage", () => {
         ],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.component.type).toBe("bar-chart");
+      expect(page.grid![0]!.component.type).toBe("bar-chart");
     });
   });
 
@@ -105,7 +105,7 @@ describe("parsePage", () => {
         pages: [{ components: [{ html: "Hello ${name}" }] }],
       });
       const page = root.slots!["content"]![0]!;
-      const htmlComp = page.items![0]!.component;
+      const htmlComp = page.grid![0]!.component;
       expect(htmlComp.props!["content"]).toBe("Hello World");
     });
 
@@ -133,9 +133,9 @@ describe("parsePage", () => {
         pages: [{ components: [{ html: "A" }, { html: "B" }] }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.component.id).toBeDefined();
-      expect(page.items![1]!.component.id).toBeDefined();
-      expect(page.items![0]!.component.id).not.toBe(page.items![1]!.component.id);
+      expect(page.grid![0]!.component.id).toBeDefined();
+      expect(page.grid![1]!.component.id).toBeDefined();
+      expect(page.grid![0]!.component.id).not.toBe(page.grid![1]!.component.id);
     });
 
     it("IDs include page index for uniqueness across pages", () => {
@@ -147,7 +147,7 @@ describe("parsePage", () => {
       });
       const page0 = root.slots!["content"]![0]!;
       const page1 = root.slots!["content"]![1]!;
-      expect(page0.items![0]!.component.id).not.toBe(page1.items![0]!.component.id);
+      expect(page0.grid![0]!.component.id).not.toBe(page1.grid![0]!.component.id);
     });
   });
 
@@ -271,10 +271,10 @@ describe("parsePage", () => {
       const mainPage = root.slots!["content"]![0]!;
       expect(mainPage).toBeDefined();
       // Nav component (tabs) keeps nav role, content goes to target location
-      const navItem = mainPage.items!.find((item) => item.component.type === "tabs" && !item.component.slots);
+      const navItem = mainPage.grid!.find((item) => item.component.type === "tabs" && !item.component.slots);
       expect(navItem).toBeDefined();
       // The slot-target is replaced with a tabs component containing page slots
-      const contentItem = mainPage.items!.find((item) => item.component.type === "tabs" && item.component.slots);
+      const contentItem = mainPage.grid!.find((item) => item.component.type === "tabs" && item.component.slots);
       expect(contentItem).toBeDefined();
       expect(contentItem!.component.slots!["SubPage1"]).toBeDefined();
       expect(contentItem!.component.slots!["SubPage2"]).toBeDefined();
@@ -297,7 +297,7 @@ describe("parsePage", () => {
         },
       });
       const mainPage = root.slots!["content"]![0]!;
-      const slotTargets = mainPage.items!.filter((item) => item.component.type === "slot-target");
+      const slotTargets = mainPage.grid!.filter((item) => item.component.type === "slot-target");
       expect(slotTargets.length).toBe(0);
     });
   });
@@ -319,10 +319,10 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      const outer = page.items![0]!;
+      const outer = page.grid![0]!;
       expect(outer.component!.type).toBe("grid");
-      expect(outer.component!.items).toHaveLength(1);
-      expect(outer.component!.items![0]!.component!.type).toBe("html");
+      expect(outer.component!.grid).toHaveLength(1);
+      expect(outer.component!.grid![0]!.component!.type).toBe("html");
     });
 
     it("preserves placement on nested items", () => {
@@ -340,9 +340,9 @@ describe("parsePage", () => {
           }],
         }],
       });
-      const nested = root.slots!["content"]![0]!.items![0]!.component!.items!;
-      expect(nested[0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
-      expect(nested[1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
+      const nested = root.slots!["content"]![0]!.grid![0]!.component!.grid!;
+      expect(nested[0]!.at).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
+      expect(nested[1]!.at).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
     });
   });
 
@@ -352,7 +352,7 @@ describe("parsePage", () => {
         pages: [{}],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items).toEqual([]);
+      expect(page.grid).toEqual([]);
     });
 
     it("handles multiple pages", () => {
@@ -404,7 +404,7 @@ describe("parsePage", () => {
         pages: [{ components: [{ displayer: { type: "BARCHART" } }] }],
       });
       const page = root.slots!["content"]![0]!;
-      const chart = page.items![0]!.component;
+      const chart = page.grid![0]!.component;
       expect(chart.props?.["resizable"]).toBe(true);
       const chartProps = getProps(chart, "bar-chart");
       expect(chartProps.lookup.dataSetId).toBe("ds");
@@ -470,7 +470,7 @@ describe("parsePage", () => {
         ],
       });
       const indexPage = root.slots!["content"]![0]!;
-      const panelItem = indexPage.items![0]!.component;
+      const panelItem = indexPage.grid![0]!.component;
       expect(panelItem.type).toBe("panel");
       expect(panelItem.props?.["title"]).toBe("Charts");
     });
@@ -513,7 +513,7 @@ describe("parsePage", () => {
       // ${title} resolved by page properties (no dot separator)
       expect(page.props!["name"]).toBe("Dashboard");
       // ${app.env} resolved by yaml-core (dot-separated prefix)
-      const comp = page.items![0]!.component;
+      const comp = page.grid![0]!.component;
       expect(comp.props!["content"]).toBe("production");
     });
 
@@ -538,9 +538,9 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items).toHaveLength(2);
-      expect(page.items![0]!.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 2 });
-      expect(page.items![1]!.placement).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
+      expect(page.grid).toHaveLength(2);
+      expect(page.grid![0]!.at).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 2 });
+      expect(page.grid![1]!.at).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
     });
 
     it("parses auto items with span only", () => {
@@ -552,8 +552,8 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items).toHaveLength(1);
-      expect(page.items![0]!.placement).toEqual({ mode: "auto", w: 4, h: 1 });
+      expect(page.grid).toHaveLength(1);
+      expect(page.grid![0]!.at).toEqual({ mode: "auto", w: 4, h: 1 });
     });
 
     it("parses mixed positioned and auto items", () => {
@@ -566,9 +566,9 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items).toHaveLength(2);
-      expect(page.items![0]!.placement.mode).toBe("positioned");
-      expect(page.items![1]!.placement.mode).toBe("auto");
+      expect(page.grid).toHaveLength(2);
+      expect(page.grid![0]!.at.mode).toBe("positioned");
+      expect(page.grid![1]!.at.mode).toBe("auto");
     });
 
     it("treats placement without mode as positioned (backward compat)", () => {
@@ -580,7 +580,7 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.placement.mode).toBe("positioned");
+      expect(page.grid![0]!.at.mode).toBe("positioned");
     });
 
     it("items format takes priority over components format", () => {
@@ -593,8 +593,8 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items).toHaveLength(1);
-      expect(page.items![0]!.placement.mode).toBe("auto");
+      expect(page.grid).toHaveLength(1);
+      expect(page.grid![0]!.at.mode).toBe("auto");
     });
 
     it("clamps w to 12 columns by default", () => {
@@ -606,7 +606,7 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.placement.w).toBe(12);
+      expect(page.grid![0]!.at.w).toBe(12);
     });
   });
 
@@ -616,7 +616,7 @@ describe("parsePage", () => {
         pages: [{ components: [{ html: "Hello" }] }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.items![0]!.placement.mode).toBe("positioned");
+      expect(page.grid![0]!.at.mode).toBe("positioned");
     });
 
     it("type: columns desugar produces mode: positioned", () => {
@@ -631,10 +631,10 @@ describe("parsePage", () => {
         }],
       });
       const page = root.slots!["content"]![0]!;
-      const gridItem = page.items![0]!;
+      const gridItem = page.grid![0]!;
       const nestedGrid = gridItem.component;
       expect(nestedGrid.type).toBe("grid");
-      expect(nestedGrid.items![0]!.placement.mode).toBe("positioned");
+      expect(nestedGrid.grid![0]!.at.mode).toBe("positioned");
     });
   });
 });

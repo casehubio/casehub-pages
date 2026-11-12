@@ -1,4 +1,4 @@
-import type { Component, GridPlacement } from "../model/types.js";
+import type { Component, GridItem, GridPlacement } from "../model/types.js";
 import { z } from "zod";
 import { componentSchemaRegistry } from "@casehubio/pages-schema";
 import { desugarDisplayer } from "./displayer-desugar.js";
@@ -393,33 +393,36 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     };
   }
 
-  // Grid layout component — type: grid with items: [...]
-  if ("type" in raw && raw.type === "grid" && "items" in raw) {
-    const itemsRaw = raw.items as Array<Record<string, unknown>>;
+  // Grid layout component — type: grid with grid: [...] or items: [...]
+  if ("type" in raw && raw.type === "grid" && ("grid" in raw || "items" in raw)) {
+    const entriesRaw = (raw.grid ?? raw.items) as Array<Record<string, unknown>>;
     const visibleWhen = raw.visibleWhen as string | undefined;
     const style = extractStyle(raw.properties ?? raw.style);
     const rawId = raw.id as string | undefined;
 
-    const items: { placement: GridPlacement; component?: Component }[] = itemsRaw.map((entryRaw) => {
-      const placementRaw = entryRaw.placement as Record<string, unknown> | undefined;
+    const items: GridItem[] = entriesRaw.map((entryRaw) => {
+      const atRaw = (entryRaw.at ?? entryRaw.placement) as Record<string, unknown> | undefined;
       const componentRaw = entryRaw.component as Record<string, unknown> | undefined;
+      const inlineType = entryRaw.type as string | undefined;
 
-      let placement: GridPlacement;
-      if (placementRaw && "x" in placementRaw && "y" in placementRaw) {
-        placement = { mode: "positioned" as const, x: Number(placementRaw.x), y: Number(placementRaw.y), w: Number(placementRaw.w ?? 1), h: Number(placementRaw.h ?? 1) };
-      } else if (placementRaw) {
-        placement = { mode: "auto" as const, w: Number(placementRaw.w ?? 1), h: Number(placementRaw.h ?? 1) };
+      let at: GridPlacement;
+      if (atRaw && "x" in atRaw && "y" in atRaw) {
+        at = { mode: "positioned" as const, x: Number(atRaw.x), y: Number(atRaw.y), w: Number(atRaw.w ?? 1), h: Number(atRaw.h ?? 1) };
+      } else if (atRaw) {
+        at = { mode: "auto" as const, w: Number(atRaw.w ?? 1), h: Number(atRaw.h ?? 1) };
       } else {
-        placement = { mode: "auto" as const, w: 1, h: 1 };
+        at = { mode: "auto" as const, w: 1, h: 1 };
       }
 
-      const component = componentRaw ? desugarComponent(componentRaw, displayerDefaults) : undefined;
-      return { placement, ...(component ? { component } : {}) };
+      const component = componentRaw
+        ? desugarComponent(componentRaw, displayerDefaults)
+        : inlineType ? desugarComponent(entryRaw as Record<string, unknown>, displayerDefaults) : undefined;
+      return { at, ...(component ? { component } : {}) };
     });
 
     return {
       type: "grid",
-      items,
+      grid: items,
       ...(rawId ? { id: rawId } : {}),
       ...(style ? { style } : {}),
       ...(visibleWhen ? { visibleWhen } : {}),
@@ -436,7 +439,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       : columnsArray.map(() => Math.floor(12 / columnsArray.length));
     const visibleWhen = raw.visibleWhen as string | undefined;
 
-    const items: { placement: GridPlacement; component: Component }[] = [];
+    const items: GridItem[] = [];
     let x = 0;
     for (let ci = 0; ci < columnsArray.length; ci++) {
       const col = columnsArray[ci]!;
@@ -444,14 +447,14 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       const colComponents = (col.components ?? []) as Array<Record<string, unknown>>;
       for (let ri = 0; ri < colComponents.length; ri++) {
         const component = desugarComponent(colComponents[ri]!, displayerDefaults);
-        items.push({ placement: { mode: "positioned" as const, x, y: ri, w: span, h: 1 }, component });
+        items.push({ at: { mode: "positioned" as const, x, y: ri, w: span, h: 1 }, component });
       }
       x += span;
     }
 
     return {
       type: "grid",
-      items,
+      grid: items,
       ...(visibleWhen ? { visibleWhen } : {}),
     };
   }

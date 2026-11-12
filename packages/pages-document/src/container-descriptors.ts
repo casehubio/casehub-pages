@@ -24,7 +24,7 @@ export const CONTAINER_DESCRIPTORS: ContainerChildDescriptor[] = [
   { type: 'stack', defaultContentSlot: 'sections', slots: [{ kind: 'named-record', yamlKey: 'sections', childKey: 'components' }] },
   { type: 'menu', defaultContentSlot: 'sections', slots: [{ kind: 'named-record', yamlKey: 'sections', childKey: 'components' }] },
   { type: 'tree', defaultContentSlot: 'sections', slots: [{ kind: 'named-record', yamlKey: 'sections', childKey: 'components' }] },
-  { type: 'grid', defaultContentSlot: 'items', slots: [{ kind: 'grid-items', yamlKey: 'items' }] },
+  { type: 'grid', defaultContentSlot: 'grid', slots: [{ kind: 'grid-items', yamlKey: 'grid' }] },
 ];
 
 const descriptorMap = new Map(CONTAINER_DESCRIPTORS.map(d => [d.type, d]));

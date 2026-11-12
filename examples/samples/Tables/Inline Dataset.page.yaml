@@ -25,66 +25,41 @@ datasets:
         type: LABEL
 pages:
   - name: Inline Dataset
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Inline Dataset
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              Data defined directly in YAML using the `content` property —
-              a JSON array of rows. Each row is an array matching the `columns`
-              definition. No external URL needed.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            lookup:
-              uuid: products
-            sortable: true
-            filter:
-              notification: true
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Stock by Category
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 12
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            lookup:
-              uuid: products
-              group:
-                - columnGroup:
-                    source: category
-                  functions:
-                    - source: category
-                    - source: stock
-                      function: SUM
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Inline Dataset
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            Data defined directly in YAML using the `content` property —
+            a JSON array of rows. Each row is an array matching the `columns`
+            definition. No external URL needed.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: data-table
+        properties:
+          lookup:
+            uuid: products
+          sortable: true
+          filter:
+            notification: true
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Stock by Category
+          size: h3
+      - at: { x: 0, y: 4, w: 12, h: 1 }
+        type: bar-chart
+        properties:
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
+                  - source: stock
+                    function: SUM

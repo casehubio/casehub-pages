@@ -117,9 +117,9 @@ export function parsePage(raw: unknown): Component {
   // Track pages embedded via page-ref so they can be excluded from top-level
   const embeddedPageNames = new Set<string>();
   const resolvedPages = childPages.map((page) => {
-    if (page.items) {
+    if (page.grid) {
       // Collect embedded page names
-      for (const item of page.items) {
+      for (const item of page.grid) {
         if (item.component?.type === "page-ref" || item.component?.type === "panel") {
           const refName = item.component.props?.["name"] as string | undefined;
           if (refName) embeddedPageNames.add(refName);
@@ -127,7 +127,7 @@ export function parsePage(raw: unknown): Component {
       }
 
       // Resolve all components together so targetDivId can find its slot-target
-      const allComponents = page.items.filter(item => item.component).map(item => item.component!);
+      const allComponents = page.grid.filter(item => item.component).map(item => item.component!);
       const resolved = resolveNavigation(allComponents, childPages, navTree);
 
       // Map resolved components back to grid items using the original placement.
@@ -139,8 +139,8 @@ export function parsePage(raw: unknown): Component {
 
       // Identify which original items were removed (slot-targets that were either
       // filtered or replaced)
-      for (let i = 0; i < page.items.length; i++) {
-        const origItem = page.items[i];
+      for (let i = 0; i < page.grid.length; i++) {
+        const origItem = page.grid[i];
         if (!origItem) continue;
         const orig = origItem.component;
         if (orig && orig.type === "slot-target" && !resolved.includes(orig)) {
@@ -152,23 +152,23 @@ export function parsePage(raw: unknown): Component {
       let origIdx = 0;
       for (const comp of resolved) {
         // Skip removed originals to stay aligned
-        while (origIdx < page.items.length && removedIndices.has(origIdx)) {
+        while (origIdx < page.grid.length && removedIndices.has(origIdx)) {
           origIdx++;
         }
-        if (origIdx < page.items.length) {
-          const sourceItem = page.items[origIdx];
+        if (origIdx < page.grid.length) {
+          const sourceItem = page.grid[origIdx];
           if (!sourceItem) break;
           resolvedItems.push({ ...sourceItem, component: comp });
           origIdx++;
         } else {
           resolvedItems.push({
-            placement: { mode: "positioned" as const, x: 0, y: resolvedItems.length, w: 12, h: 1 },
+            at: { mode: "positioned" as const, x: 0, y: resolvedItems.length, w: 12, h: 1 },
             component: comp,
           });
         }
       }
 
-      return { ...page, items: resolvedItems };
+      return { ...page, grid: resolvedItems };
     }
 
     return page;
@@ -273,9 +273,57 @@ export function parsePageContent(
   pageRaw: Record<string, unknown>,
   pageIndex: number,
   displayerDefaults?: Record<string, unknown>,
-): { items?: readonly GridItem[] } | { slots?: Readonly<Record<string, readonly Component[]>> } {
+): { grid?: readonly GridItem[] } | { slots?: Readonly<Record<string, readonly Component[]>> } {
+  const gridRaw = pageRaw["grid"] as unknown[] | undefined;
+  const flatRaw = pageRaw["flat"] as unknown[] | undefined;
   const itemsRaw = pageRaw["items"] as unknown[] | undefined;
   const componentsRaw = pageRaw["components"] as unknown[] | undefined;
+
+  if (gridRaw) {
+    const maxColumns = 12;
+    const items: GridItem[] = gridRaw.map((entryRaw, i) => {
+      const entry = entryRaw as Record<string, unknown>;
+      const atRaw = (entry["at"] ?? entry["placement"]) as Record<string, unknown> | undefined;
+      const type = entry["type"] as string | undefined;
+
+      let at: GridPlacement;
+      if (atRaw) {
+        const w = Math.min(Number(atRaw["w"] ?? 1), maxColumns);
+        const h = Number(atRaw["h"] ?? 1);
+        if ("x" in atRaw && "y" in atRaw) {
+          at = { mode: "positioned", x: Number(atRaw["x"]), y: Number(atRaw["y"]), w, h };
+        } else {
+          at = { mode: "auto", w, h };
+        }
+      } else {
+        at = { mode: "auto", w: 1, h: 1 };
+      }
+
+      const component = type
+        ? desugarComponent(entry as Record<string, unknown>, displayerDefaults)
+        : undefined;
+
+      return {
+        at,
+        ...(component
+          ? { component: assignIdIfMissing(component, `grid_${String(pageIndex)}_item_${String(i)}`) }
+          : {}),
+      };
+    });
+    return { grid: items };
+  }
+
+  if (flatRaw) {
+    const items: GridItem[] = flatRaw.map((compRaw, i) => {
+      const component = desugarComponent(compRaw as Record<string, unknown>, displayerDefaults);
+      return {
+        at: { mode: "positioned" as const, x: 0, y: i, w: 12, h: 1 },
+        component: assignIdIfMissing(component, `grid_${String(pageIndex)}_0_${String(i)}`),
+      };
+    });
+    return { grid: items };
+  }
+
   if (itemsRaw) {
     const maxColumns = 12;
     const items: GridItem[] = itemsRaw.map((entryRaw, i) => {
@@ -300,28 +348,28 @@ export function parsePageContent(
       }
 
       return {
-        placement,
+        at: placement,
         ...(component
           ? { component: assignIdIfMissing(component, `grid_${String(pageIndex)}_item_${String(i)}`) }
           : {}),
       };
     });
-    return { items };
+    return { grid: items };
   }
 
   if (componentsRaw) {
     const items: GridItem[] = componentsRaw.map((compRaw, i) => {
       const component = desugarComponent(compRaw as Record<string, unknown>, displayerDefaults);
       return {
-        placement: { mode: "positioned" as const, x: 0, y: i, w: 12, h: 1 },
+        at: { mode: "positioned" as const, x: 0, y: i, w: 12, h: 1 },
         component: assignIdIfMissing(component, `grid_${String(pageIndex)}_0_${String(i)}`),
       };
     });
-    return { items };
+    return { grid: items };
   }
 
   // No content — return empty items
-  return { items: [] };
+  return { grid: [] };
 }
 
 /**
@@ -336,13 +384,13 @@ function patchSlotReferences(
   component: Component,
   resolved: Map<string, Component>,
 ): Component {
-  let newItems = component.items;
+  let newItems = component.grid;
   let newSlots = component.slots;
   let itemsChanged = false;
   let slotsChanged = false;
 
-  if (component.items) {
-    const patched = component.items.map((item) => {
+  if (component.grid) {
+    const patched = component.grid.map((item) => {
       if (!item.component) return item;
       const patchedChild = patchSlotReferences(item.component, resolved);
       if (patchedChild !== item.component) {
@@ -350,7 +398,7 @@ function patchSlotReferences(
       }
       return item;
     });
-    itemsChanged = patched.some((item, i) => item !== component.items?.[i]);
+    itemsChanged = patched.some((item, i) => item !== component.grid?.[i]);
     if (itemsChanged) newItems = patched;
   }
 
@@ -383,8 +431,8 @@ function containsNavGroupRef(page: Component, navTreeGroupIds: Set<string>): boo
   const check = (comp: Component): boolean => {
     const groupId = comp.props?.["navGroupId"] as string | undefined;
     if (groupId && navTreeGroupIds.has(groupId)) return true;
-    if (comp.items) {
-      for (const item of comp.items) {
+    if (comp.grid) {
+      for (const item of comp.grid) {
         if (item.component && check(item.component)) return true;
       }
     }

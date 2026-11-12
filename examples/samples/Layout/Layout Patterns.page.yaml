@@ -18,101 +18,18 @@ datasets:
         type: LABEL
 pages:
   - name: Layout Patterns
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Layout Patterns
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              Interactive containers for organising dashboard content. Click each tab to see the pattern in action.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: tabs
-          properties:
-            targetPage: true
-          tabs:
-            Tabs:
-              components:
-                - type: markdown
-                  properties:
-                    content: "**Tabs** — horizontal tab navigation. Each tab holds independent content."
-                - type: tabs
-                  tabs:
-                    Overview:
-                      components:
-                        - type: metric
-                          properties:
-                            subtype: card
-                            lookup:
-                              uuid: layout-data
-                    Details:
-                      components:
-                        - type: data-table
-                          properties:
-                            lookup:
-                              uuid: layout-data
-                            sortable: true
-                            filter:
-                              notification: true
-            Accordion:
-              components:
-                - type: markdown
-                  properties:
-                    content: "**Accordion** — collapsible sections. Click a header to expand it."
-                - type: accordion
-                  sections:
-                    Section Overview:
-                      components:
-                        - type: data-table
-                          properties:
-                            lookup:
-                              uuid: layout-data
-                            sortable: true
-                    Chart View:
-                      components:
-                        - type: bar-chart
-                          properties:
-                            chart:
-                              height: 250
-                            lookup:
-                              uuid: layout-data
-            Split:
-              components:
-                - type: markdown
-                  properties:
-                    content: "**Split** — resizable side-by-side panes. Drag the divider to resize."
-                - split:
-                    direction: horizontal
-                    ratio:
-                      - 50
-                      - 50
-                    children:
-                      - type: bar-chart
-                        properties:
-                          chart:
-                            height: 300
-                          lookup:
-                            uuid: layout-data
-                      - type: data-table
-                        properties:
-                          lookup:
-                            uuid: layout-data
-                          sortable: true
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Layout Patterns
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            Interactive containers for organising dashboard content. Click each tab to see the pattern in action.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: tabs
+        properties:
+          targetPage: true

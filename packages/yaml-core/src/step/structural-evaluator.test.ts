@@ -3,9 +3,10 @@ import type {
   Action, Result, PluginStep, BlockStep,
   ParallelStep, IfElseStep, MatchStep, TryCatchFinallyStep,
   BarrierStep, QuorumStep, CatalogEntry, InvokeStep,
-  DelayStep, RaceStep,
+  DelayStep, RaceStep, ControlStep, FusedPipelineStep,
 } from './walker.js';
-import { stepSuccess, stepFailure, MapServiceRegistry } from './walker.js';
+import type { StreamingStepFactory } from './streaming-types.js';
+import { stepSuccess, stepFailure, stepFailureWithCategory, MapServiceRegistry } from './walker.js';
 import { StructuralEvaluator } from './structural-evaluator.js';
 import type { Context } from './decorator-chain.js';
 import { DefaultScenarioScope } from '../orchestration/scenario-scope.js';
@@ -535,6 +536,262 @@ describe('StructuralEvaluator', () => {
       const step = makeEmitStep([{ type: 'a.b', data: {} }]);
       const result = await evaluator.evaluate(step, makeContext());
       expect(result.kind).toBe('failure');
+    });
+  });
+
+  describe('typed error catch scope', () => {
+    it('catch block receives ${error.type} from try failure category', async () => {
+      const failEntry = makeEntry('fail', stepFailureWithCategory('timed out', 'TIMEOUT'));
+      const capturedValues: Record<string, unknown> = {};
+      const captureEntry: CatalogEntry = {
+        qualifiedName: 'capture',
+        definition: { name: 'capture', inputs: { expression: { type: 'STRING' as any, required: true } }, outputs: {} },
+        action: { execute: async (params) => { Object.assign(capturedValues, params); return stepSuccess({}); } },
+      };
+
+      const step: TryCatchFinallyStep = {
+        kind: 'try-catch-finally', name: 'error-test', decorators: {}, annotations: [],
+        trySteps: [{ kind: 'plugin', name: 'will-fail', entry: failEntry, params: {}, decorators: {}, annotations: [] }],
+        catchSteps: [{ kind: 'plugin', name: 'catch-step', entry: captureEntry, params: { expression: '${error.type}' }, decorators: {}, annotations: [] }],
+        finallySteps: [],
+      };
+
+      const evaluator = new StructuralEvaluator();
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      expect(capturedValues['expression']).toBe('TIMEOUT');
+    });
+
+    it('catch block receives ${error.message}', async () => {
+      const failEntry = makeEntry('fail', stepFailureWithCategory('connection refused', 'INFRASTRUCTURE'));
+      const capturedValues: Record<string, unknown> = {};
+      const captureEntry: CatalogEntry = {
+        qualifiedName: 'capture',
+        definition: { name: 'capture', inputs: { msg: { type: 'STRING' as any, required: true } }, outputs: {} },
+        action: { execute: async (params) => { Object.assign(capturedValues, params); return stepSuccess({}); } },
+      };
+
+      const step: TryCatchFinallyStep = {
+        kind: 'try-catch-finally', name: null, decorators: {}, annotations: [],
+        trySteps: [{ kind: 'plugin', name: 'fail', entry: failEntry, params: {}, decorators: {}, annotations: [] }],
+        catchSteps: [{ kind: 'plugin', name: null, entry: captureEntry, params: { msg: '${error.message}' }, decorators: {}, annotations: [] }],
+        finallySteps: [],
+      };
+
+      await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(capturedValues['msg']).toBe('connection refused');
+    });
+
+    it('catch block receives ${error.step} with named step', async () => {
+      const failEntry = makeEntry('fail', stepFailure('boom'));
+      const capturedValues: Record<string, unknown> = {};
+      const captureEntry: CatalogEntry = {
+        qualifiedName: 'capture',
+        definition: { name: 'capture', inputs: { s: { type: 'STRING' as any, required: true } }, outputs: {} },
+        action: { execute: async (params) => { Object.assign(capturedValues, params); return stepSuccess({}); } },
+      };
+
+      const step: TryCatchFinallyStep = {
+        kind: 'try-catch-finally', name: null, decorators: {}, annotations: [],
+        trySteps: [{ kind: 'plugin', name: 'my-step', entry: failEntry, params: {}, decorators: {}, annotations: [] }],
+        catchSteps: [{ kind: 'plugin', name: null, entry: captureEntry, params: { s: '${error.step}' }, decorators: {}, annotations: [] }],
+        finallySteps: [],
+      };
+
+      await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(capturedValues['s']).toBe('my-step');
+    });
+
+    it('catch block receives fallback step path for unnamed step', async () => {
+      const failEntry = makeEntry('fail', stepFailure('boom'));
+      const capturedValues: Record<string, unknown> = {};
+      const captureEntry: CatalogEntry = {
+        qualifiedName: 'capture',
+        definition: { name: 'capture', inputs: { s: { type: 'STRING' as any, required: true } }, outputs: {} },
+        action: { execute: async (params) => { Object.assign(capturedValues, params); return stepSuccess({}); } },
+      };
+
+      const step: TryCatchFinallyStep = {
+        kind: 'try-catch-finally', name: null, decorators: {}, annotations: [],
+        trySteps: [{ kind: 'plugin', name: null, entry: failEntry, params: {}, decorators: {}, annotations: [] }],
+        catchSteps: [{ kind: 'plugin', name: null, entry: captureEntry, params: { s: '${error.step}' }, decorators: {}, annotations: [] }],
+        finallySteps: [],
+      };
+
+      await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(capturedValues['s']).toBe('root → Step 0');
+    });
+
+    it('catch block receives ${error.detail.field} deep access', async () => {
+      const failResult: Result = { kind: 'failure', message: 'fail', failureCategory: 'STEP_ACTION_FAILED', detail: { code: 504, reason: 'gateway' } };
+      const failEntry = makeEntry('fail', failResult);
+      const capturedValues: Record<string, unknown> = {};
+      const captureEntry: CatalogEntry = {
+        qualifiedName: 'capture',
+        definition: { name: 'capture', inputs: { v: { type: 'STRING' as any, required: true } }, outputs: {} },
+        action: { execute: async (params) => { Object.assign(capturedValues, params); return stepSuccess({}); } },
+      };
+
+      const step: TryCatchFinallyStep = {
+        kind: 'try-catch-finally', name: null, decorators: {}, annotations: [],
+        trySteps: [{ kind: 'plugin', name: 'fail', entry: failEntry, params: {}, decorators: {}, annotations: [] }],
+        catchSteps: [{ kind: 'plugin', name: null, entry: captureEntry, params: { v: '${error.detail.reason}' }, decorators: {}, annotations: [] }],
+        finallySteps: [],
+      };
+
+      await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(capturedValues['v']).toBe('gateway');
+    });
+
+    it('defaults error.type to UNKNOWN when no failureCategory', async () => {
+      const failEntry = makeEntry('fail', stepFailure('no category'));
+      const capturedValues: Record<string, unknown> = {};
+      const captureEntry: CatalogEntry = {
+        qualifiedName: 'capture',
+        definition: { name: 'capture', inputs: { t: { type: 'STRING' as any, required: true } }, outputs: {} },
+        action: { execute: async (params) => { Object.assign(capturedValues, params); return stepSuccess({}); } },
+      };
+
+      const step: TryCatchFinallyStep = {
+        kind: 'try-catch-finally', name: null, decorators: {}, annotations: [],
+        trySteps: [{ kind: 'plugin', name: null, entry: failEntry, params: {}, decorators: {}, annotations: [] }],
+        catchSteps: [{ kind: 'plugin', name: null, entry: captureEntry, params: { t: '${error.type}' }, decorators: {}, annotations: [] }],
+        finallySteps: [],
+      };
+
+      await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(capturedValues['t']).toBe('UNKNOWN');
+    });
+  });
+
+  describe('control step', () => {
+    it('evaluates pause via consumer handle', async () => {
+      const scope = new DefaultScenarioScope();
+      const step: ControlStep = {
+        kind: 'control', name: 'pause-worker', control: 'pause',
+        target: 'worker-1', decorators: {}, annotations: [],
+      };
+
+      const evaluator = new StructuralEvaluator();
+      const result = await evaluator.evaluate(step, makeContext({ scope }));
+
+      expect(result.kind).toBe('success');
+      expect((result as any).output['control']).toBe('pause');
+      expect((result as any).output['target']).toBe('worker-1');
+      expect(scope.consumer('worker-1').isPaused()).toBe(true);
+    });
+
+    it('evaluates resume via consumer handle', async () => {
+      const scope = new DefaultScenarioScope();
+      scope.consumer('worker-1').pause();
+      expect(scope.consumer('worker-1').isPaused()).toBe(true);
+
+      const step: ControlStep = {
+        kind: 'control', name: 'resume-worker', control: 'resume',
+        target: 'worker-1', decorators: {}, annotations: [],
+      };
+
+      const evaluator = new StructuralEvaluator();
+      const result = await evaluator.evaluate(step, makeContext({ scope }));
+
+      expect(result.kind).toBe('success');
+      expect(scope.consumer('worker-1').isPaused()).toBe(false);
+    });
+
+    it('pause on unregistered target creates handle in paused state', async () => {
+      const scope = new DefaultScenarioScope();
+      const step: ControlStep = {
+        kind: 'control', name: null, control: 'pause',
+        target: 'unknown-consumer', decorators: {}, annotations: [],
+      };
+
+      const evaluator = new StructuralEvaluator();
+      const result = await evaluator.evaluate(step, makeContext({ scope }));
+
+      expect(result.kind).toBe('success');
+      expect(scope.consumer('unknown-consumer').isPaused()).toBe(true);
+    });
+  });
+
+  describe('fused pipeline step', () => {
+    const textToJsonFactory: StreamingStepFactory = async function* (_params, input) {
+      const parts: string[] = [];
+      for await (const chunk of input) parts.push(chunk as string);
+      yield { text: parts.join(''), processed: true };
+    };
+
+    const jsonToTextFactory: StreamingStepFactory = async function* (_params, input) {
+      for await (const item of input) yield `result: ${JSON.stringify(item)}`;
+    };
+
+    const seedFactory: StreamingStepFactory = async function* (params) {
+      yield params['seed'] ?? 'hello';
+    };
+
+    function fusedStep(stages: Array<{ name: string; factory: StreamingStepFactory }>): FusedPipelineStep {
+      return {
+        kind: 'fused-pipeline',
+        name: stages[stages.length - 1].name,
+        stages: stages.map(s => ({
+          stepName: s.name,
+          actionName: s.name,
+          params: {},
+          decorators: {},
+          inputKey: 'input',
+          factory: s.factory,
+        })),
+        decorators: {},
+        annotations: [],
+      };
+    }
+
+    it('evaluates two-stage pipeline', async () => {
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([
+        { name: 'seed', factory: seedFactory },
+        { name: 'toText', factory: jsonToTextFactory },
+      ]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+    });
+
+    it('three-stage pipeline chains correctly', async () => {
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([
+        { name: 'seed', factory: seedFactory },
+        { name: 'toJson', factory: textToJsonFactory },
+        { name: 'toText', factory: jsonToTextFactory },
+      ]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+    });
+
+    it('returns failure when a stage throws', async () => {
+      const failingFactory: StreamingStepFactory = async function* () {
+        throw new Error('stage exploded');
+      };
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([
+        { name: 'fail', factory: failingFactory },
+        { name: 'never', factory: jsonToTextFactory },
+      ]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('failure');
+      if (result.kind === 'failure') expect(result.message).toContain('stage exploded');
+    });
+
+    it('single-object output is unwrapped', async () => {
+      const objectFactory: StreamingStepFactory = async function* () {
+        yield { key: 'value', count: 42 };
+      };
+      const evaluator = new StructuralEvaluator([]);
+      const step = fusedStep([{ name: 'obj', factory: objectFactory }]);
+      const result = await evaluator.evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      if (result.kind === 'success') {
+        expect(result.output.key).toBe('value');
+        expect(result.output.count).toBe(42);
+      }
     });
   });
 });

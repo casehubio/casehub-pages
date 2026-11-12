@@ -10,7 +10,7 @@ export function collectComponentsInScope(
 
   const collectFromPage = (page: PageNode) => {
     const mode = page.getLayoutMode();
-    if (mode === 'items') {
+    if (mode === 'grid' || mode === 'items') {
       for (const item of page.getItems()) {
         const comp = item.getComponent();
         if (comp) results.push(comp);
@@ -58,14 +58,14 @@ export function collectComponentsInScope(
   } else if (nodeType === 'grid-item') {
     const page = doc.getPages()[path[1] as number];
     if (!page) return results;
-    if (path[2] === 'items' && path.length >= 4) {
+    if ((path[2] === 'grid' || path[2] === 'items') && path.length >= 4) {
       const item = page.getItems()[path[3] as number];
       if (item) { const c = item.getComponent(); if (c) results.push(c); }
     }
   } else if (nodeType === 'component') {
     const page = doc.getPages()[path[1] as number];
     if (!page) return results;
-    if (path[2] === 'items' && path.length >= 4) {
+    if ((path[2] === 'grid' || path[2] === 'items') && path.length >= 4) {
       const item = page.getItems()[path[3] as number];
       if (item) { const c = item.getComponent(); if (c) results.push(c); }
     } else if (path[2] === 'components' && path.length >= 4) {
@@ -102,7 +102,7 @@ export function collectComponentsInScope(
         }
       };
       const mode = page.getLayoutMode();
-      if (mode === 'items') {
+      if (mode === 'grid' || mode === 'items') {
         for (const item of page.getItems()) { const c = item.getComponent(); if (c) check(c); }
       } else if (mode === 'rows') {
         for (const row of page.getRows()) for (const col of row.getColumns()) col.getComponents().forEach(check);

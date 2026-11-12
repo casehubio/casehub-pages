@@ -114,7 +114,7 @@ function buildGridItemNode(item: GridItemNode): TreeNodeInfo {
 function buildPageNode(page: PageNode): TreeNodeInfo {
   const mode = page.getLayoutMode();
   let children: TreeNodeInfo[];
-  if (mode === 'items') {
+  if (mode === 'grid' || mode === 'items') {
     const items = page.getItems();
     const sorted = [...items].sort((a, b) => {
       const pa = a.getPlacement();

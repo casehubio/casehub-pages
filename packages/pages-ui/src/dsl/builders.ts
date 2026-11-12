@@ -155,7 +155,7 @@ export function grid(columns: number, ...items: GridItem[]): TypedComponent<"gri
     type: "grid" as const,
     id: gridId,
     props,
-    items,
+    grid: items,
   });
 }
 
@@ -167,14 +167,14 @@ export function at(
   component: Component
 ): GridItem {
   return freeze({
-    placement: freeze({ mode: "positioned" as const, x, y, w, h }),
+    at: freeze({ mode: "positioned" as const, x, y, w, h }),
     component,
   });
 }
 
 export function emptyContainer(x: number, y: number, w: number, h: number): GridItem {
   return freeze({
-    placement: freeze({ mode: "positioned" as const, x, y, w, h }),
+    at: freeze({ mode: "positioned" as const, x, y, w, h }),
   });
 }
 

@@ -65,197 +65,137 @@ datasets:
       - id: startDate
         type: DATE
 pages:
-  - items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: selector
-          properties:
-            subtype: labels
-            filter:
-              enabled: true
-              notification: true
-            lookup:
-              uuid: employees
-              group:
-                - columnGroup:
-                    source: department
-                  functions:
-                    - source: department
-      - placement:
-          x: 0
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Headcount
-            size: h3
-      - placement:
-          x: 0
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            subtype: donut
-            filter:
-              listening: true
-            lookup:
-              uuid: employees
-              group:
-                - columnGroup:
-                    source: department
-                  functions:
-                    - source: department
-                    - source: department
-                      function: COUNT
-                      column: count
-      - placement:
-          x: 4
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Level Distribution
-            size: h3
-      - placement:
-          x: 4
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: column-stacked
-            filter:
-              listening: true
-            lookup:
-              uuid: employees
-              group:
-                - columnGroup:
-                    source: level
-                  functions:
-                    - source: level
-                    - source: level
-                      function: COUNT
-                      column: count
-      - placement:
-          x: 8
-          y: 1
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Avg Salary by Level
-            size: h3
-      - placement:
-          x: 8
-          y: 2
-          w: 4
-          h: 1
-        component:
-          type: bar-chart
-          properties:
-            subtype: bar
-            chart:
-              margin:
-                left: 80
-            filter:
-              listening: true
-            lookup:
-              uuid: employees
-              sort:
-                - column: Salary
-                  order: ASCENDING
-              group:
-                - columnGroup:
-                    source: level
-                  functions:
-                    - source: level
-                    - source: salary
-                      function: AVERAGE
-                      column: Salary
-      - placement:
-          x: 0
-          y: 3
-          w: 8
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Tenure vs Salary
-            size: h3
-      - placement:
-          x: 0
-          y: 4
-          w: 8
-          h: 1
-        component:
-          type: scatter-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: employees
-              group:
-                - columnGroup:
-                    source: name
-                  functions:
-                    - source: tenure
-                    - source: salary
-      - placement:
-          x: 8
-          y: 3
-          w: 4
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Rating Distribution
-            size: h3
-      - placement:
-          x: 8
-          y: 4
-          w: 4
-          h: 1
-        component:
-          type: pie-chart
-          properties:
-            filter:
-              listening: true
-            lookup:
-              uuid: employees
-              group:
-                - columnGroup:
-                    source: rating
-                  functions:
-                    - source: rating
-                    - source: rating
-                      function: COUNT
-                      column: count
-      - placement:
-          x: 0
-          y: 5
-          w: 12
-          h: 1
-        component:
-          type: data-table
-          properties:
-            pageSize: 15
-            sortable: true
-            filter:
-              listening: true
-            lookup:
-              uuid: employees
-            columns:
-              - id: salary
-                pattern: $#,###
+  - grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: selector
+        properties:
+          subtype: labels
+          filter:
+            enabled: true
+            notification: true
+          lookup:
+            uuid: employees
+            group:
+              - columnGroup:
+                  source: department
+                functions:
+                  - source: department
+      - at: { x: 0, y: 1, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Headcount
+          size: h3
+      - at: { x: 0, y: 2, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          subtype: donut
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+              - columnGroup:
+                  source: department
+                functions:
+                  - source: department
+                  - source: department
+                    function: COUNT
+                    column: count
+      - at: { x: 4, y: 1, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Level Distribution
+          size: h3
+      - at: { x: 4, y: 2, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: column-stacked
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+              - columnGroup:
+                  source: level
+                functions:
+                  - source: level
+                  - source: level
+                    function: COUNT
+                    column: count
+      - at: { x: 8, y: 1, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Avg Salary by Level
+          size: h3
+      - at: { x: 8, y: 2, w: 4, h: 1 }
+        type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            margin:
+              left: 80
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            sort:
+              - column: Salary
+                order: ASCENDING
+            group:
+              - columnGroup:
+                  source: level
+                functions:
+                  - source: level
+                  - source: salary
+                    function: AVERAGE
+                    column: Salary
+      - at: { x: 0, y: 3, w: 8, h: 1 }
+        type: title
+        properties:
+          text: Tenure vs Salary
+          size: h3
+      - at: { x: 0, y: 4, w: 8, h: 1 }
+        type: scatter-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+              - columnGroup:
+                  source: name
+                functions:
+                  - source: tenure
+                  - source: salary
+      - at: { x: 8, y: 3, w: 4, h: 1 }
+        type: title
+        properties:
+          text: Rating Distribution
+          size: h3
+      - at: { x: 8, y: 4, w: 4, h: 1 }
+        type: pie-chart
+        properties:
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+              - columnGroup:
+                  source: rating
+                functions:
+                  - source: rating
+                  - source: rating
+                    function: COUNT
+                    column: count
+      - at: { x: 0, y: 5, w: 12, h: 1 }
+        type: data-table
+        properties:
+          pageSize: 15
+          sortable: true
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+          columns:
+            - id: salary
+              pattern: $#,###

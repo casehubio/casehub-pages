@@ -10,7 +10,7 @@ describe("form input desugaring", () => {
     });
     const content = root.slots!.content!;
     const grid = content[0]!;
-    const item = grid.items![0]!;
+    const item = grid.grid![0]!;
     expect(item.component.type).toBe("input");
     expect(item.component.props).toEqual({ field: "name", label: "Name" });
   });
@@ -19,7 +19,7 @@ describe("form input desugaring", () => {
     const root = parsePage({
       pages: [{ components: [{ "number-input": { field: "age", min: 0 } }] }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("number-input");
     expect(item.component.props).toEqual({ field: "age", min: 0 });
   });
@@ -28,7 +28,7 @@ describe("form input desugaring", () => {
     const root = parsePage({
       pages: [{ components: [{ select: { field: "dept", options: { values: ["A", "B"] } } }] }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("select");
   });
 
@@ -36,7 +36,7 @@ describe("form input desugaring", () => {
     const root = parsePage({
       pages: [{ components: [{ checkbox: { field: "active" } }] }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("checkbox");
   });
 
@@ -44,7 +44,7 @@ describe("form input desugaring", () => {
     const root = parsePage({
       pages: [{ components: [{ "date-picker": { field: "start" } }] }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("date-picker");
   });
 
@@ -52,7 +52,7 @@ describe("form input desugaring", () => {
     const root = parsePage({
       pages: [{ components: [{ textarea: { field: "notes", rows: 5 } }] }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("textarea");
   });
 
@@ -67,7 +67,7 @@ describe("form input desugaring", () => {
         }],
       }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("schema-form");
     expect(item.component.props).toEqual({
       schema: { properties: { name: { type: "string" } } },
@@ -87,7 +87,7 @@ describe("form input desugaring", () => {
         }],
       }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("schema-form");
   });
 });
@@ -101,7 +101,7 @@ describe("page src desugaring", () => {
         ],
       }],
     });
-    const item = root.slots!.content![0]!.items![0]!;
+    const item = root.slots!.content![0]!.grid![0]!;
     expect(item.component.type).toBe("lazy-page");
     expect(item.component.props).toEqual({ name: "Employee Form", href: "./form.yaml" });
   });

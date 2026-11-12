@@ -178,9 +178,9 @@ describe('mock invoke test helpers', () => {
   });
 
   describe('createMockInvokeHandlers', () => {
-    it('returns all six handler types', () => {
+    it('returns all ten handler types', () => {
       const handlers = createMockInvokeHandlers();
-      expect(handlers).toHaveLength(6);
+      expect(handlers).toHaveLength(10);
     });
 
     it('each handler supports its binding kind', () => {
@@ -192,6 +192,10 @@ describe('mock invoke test helpers', () => {
         { kind: 'script' as const, runtime: 'node', script: '', timeout: '1s', env: {} },
         { kind: 'agent' as const, descriptor: 'a', structuredOutput: false },
         { kind: 'process' as const, command: 'echo', args: [], output: 'stdout', env: {}, onError: 'stderr' },
+        { kind: 'agent-session-open' as const, descriptor: 's1' },
+        { kind: 'agent-session-query' as const, sessionRef: 's1', user: 'hi' },
+        { kind: 'agent-session-clear' as const, sessionRef: 's1' },
+        { kind: 'agent-session-close' as const, sessionRef: 's1' },
       ];
       for (const binding of bindings) {
         const supporting = handlers.filter(h => h.supports(binding));

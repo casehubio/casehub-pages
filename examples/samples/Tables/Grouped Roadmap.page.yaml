@@ -48,94 +48,74 @@ datasets:
         type: TEXT
 pages:
   - name: Grouped Roadmap
-    items:
-      - placement:
-          x: 0
-          y: 0
-          w: 12
-          h: 1
-        component:
-          type: title
-          properties:
-            text: Cross-Repo Roadmap — Multi-Level Grouped View
-            size: h2
-      - placement:
-          x: 0
-          y: 1
-          w: 12
-          h: 1
-        component:
-          type: markdown
-          properties:
-            content: |
-              Demonstrates **recursive multi-level grouping**: data grouped by Phase (top level),
-              then by Status (sub-level). Tables render at leaf nodes only. Each level has
-              independent expand/collapse.
-      - placement:
-          x: 0
-          y: 2
-          w: 12
-          h: 1
-        component:
-          type: legend
-          properties:
-            entries:
-              - label: devtown
-                color: oklch(0.55 0.15 245)
-              - label: blocks
-                color: oklch(0.60 0.12 130)
-              - label: blocks-ui
-                color: oklch(0.65 0.15 55)
-              - label: pages
-                color: oklch(0.55 0.15 350)
-              - label: parent
-                color: oklch(0.55 0.03 230)
-              - label: work
-                color: oklch(0.55 0.12 275)
-            layout: linear
-      - placement:
-          x: 0
-          y: 3
-          w: 12
-          h: 1
-        component:
-          type: grouped-view
-          style:
-            border: "1px solid var(--pages-neutral-4, #e5e5e5)"
-            border-radius: var(--pages-radius-md, 8px)
-            overflow: hidden
-            padding: var(--pages-space-2, 8px)
-          properties:
-            lookup:
-              uuid: roadmap
-            groupBy:
-              - column: phase
-              - column: status
-            preset: sectioned
-            defaultExpanded: true
-            showGroupSummary: true
-            rowAccent:
-              column: status
-              colorMap:
-                newly-done: oklch(0.55 0.12 145)
-                critical: oklch(0.55 0.15 25)
-                blocked: oklch(0.55 0.12 55)
-            rowStyle:
-              - condition: "#{row.status} == 'done'"
-                style:
-                  backgroundColor: oklch(0.65 0.10 145 / 0.10)
-                  color: oklch(0.55 0.12 145)
-              - condition: "#{row.status} == 'newly-done'"
-                style:
-                  backgroundColor: oklch(0.65 0.10 145 / 0.15)
-                  color: oklch(0.55 0.12 145)
-              - condition: "#{row.status} == 'blocked'"
-                style:
-                  backgroundColor: oklch(0.70 0.08 55 / 0.12)
-                  color: oklch(0.55 0.12 55)
-              - condition: "#{row.status} == 'critical'"
-                style:
-                  backgroundColor: oklch(0.65 0.10 25 / 0.12)
-              - condition: "#{row.status} == 'new'"
-                style:
-                  backgroundColor: oklch(0.65 0.08 245 / 0.10)
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Cross-Repo Roadmap — Multi-Level Grouped View
+          size: h2
+      - at: { x: 0, y: 1, w: 12, h: 1 }
+        type: markdown
+        properties:
+          content: |
+            Demonstrates **recursive multi-level grouping**: data grouped by Phase (top level),
+            then by Status (sub-level). Tables render at leaf nodes only. Each level has
+            independent expand/collapse.
+      - at: { x: 0, y: 2, w: 12, h: 1 }
+        type: legend
+        properties:
+          entries:
+            - label: devtown
+              color: oklch(0.55 0.15 245)
+            - label: blocks
+              color: oklch(0.60 0.12 130)
+            - label: blocks-ui
+              color: oklch(0.65 0.15 55)
+            - label: pages
+              color: oklch(0.55 0.15 350)
+            - label: parent
+              color: oklch(0.55 0.03 230)
+            - label: work
+              color: oklch(0.55 0.12 275)
+          layout: linear
+      - at: { x: 0, y: 3, w: 12, h: 1 }
+        type: grouped-view
+        properties:
+          lookup:
+            uuid: roadmap
+          groupBy:
+            - column: phase
+            - column: status
+          preset: sectioned
+          defaultExpanded: true
+          showGroupSummary: true
+          rowAccent:
+            column: status
+            colorMap:
+              newly-done: oklch(0.55 0.12 145)
+              critical: oklch(0.55 0.15 25)
+              blocked: oklch(0.55 0.12 55)
+          rowStyle:
+            - condition: "#{row.status} == 'done'"
+              style:
+                backgroundColor: oklch(0.65 0.10 145 / 0.10)
+                color: oklch(0.55 0.12 145)
+            - condition: "#{row.status} == 'newly-done'"
+              style:
+                backgroundColor: oklch(0.65 0.10 145 / 0.15)
+                color: oklch(0.55 0.12 145)
+            - condition: "#{row.status} == 'blocked'"
+              style:
+                backgroundColor: oklch(0.70 0.08 55 / 0.12)
+                color: oklch(0.55 0.12 55)
+            - condition: "#{row.status} == 'critical'"
+              style:
+                backgroundColor: oklch(0.65 0.10 25 / 0.12)
+            - condition: "#{row.status} == 'new'"
+              style:
+                backgroundColor: oklch(0.65 0.08 245 / 0.10)
+        style:
+          border: "1px solid var(--pages-neutral-4, #e5e5e5)"
+          border-radius: var(--pages-radius-md, 8px)
+          overflow: hidden
+          padding: var(--pages-space-2, 8px)

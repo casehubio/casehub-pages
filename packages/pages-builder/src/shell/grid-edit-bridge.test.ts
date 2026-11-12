@@ -36,8 +36,8 @@ describe('GridEditBridge', () => {
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 3, y: 1, w: 6, h: 2 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 3, y: 1, w: 6, h: 2 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
         ],
       });
 
@@ -54,8 +54,8 @@ describe('GridEditBridge', () => {
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 0, y: 0, w: 6, h: 2 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 0, y: 0, w: 6, h: 2 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
         ],
       });
 
@@ -71,8 +71,8 @@ describe('GridEditBridge', () => {
       bridge.applyGridEdit(doc, {
         type: 'resize',
         items: [
-          { placement: { mode: 'positioned', x: 1, y: 1, w: 5, h: 1 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 1, y: 1, w: 5, h: 1 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
         ],
       });
 
@@ -231,26 +231,28 @@ describe('GridEditBridge', () => {
           title: Users
 `;
 
-    it('silently converts components: to items: with full-width stacked placement', () => {
+    it('silently converts components: to grid: with full-width stacked placement', () => {
       const doc = PageDocument.parse(COMPONENTS_YAML);
       const bridge = new GridEditBridge();
 
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 0, y: 0, w: 12, h: 1 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 0, y: 0, w: 12, h: 1 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'table' } },
         ],
       });
 
       const page = PageDocument.parse(doc.toString()).getPages()[0]!;
-      expect(page.getLayoutMode()).toBe('items');
+      expect(page.getLayoutMode()).toBe('grid');
       const items = page.getItems();
       expect(items).toHaveLength(2);
       expect(items[0]!.type).toBe('chart');
       expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 12, h: 1 });
       expect(items[1]!.type).toBe('table');
       expect(doc.toString()).not.toContain('components:');
+      expect(doc.toString()).toContain('grid:');
+      expect(doc.toString()).toContain('at:');
     });
 
     const ROWS_YAML = `pages:
@@ -275,23 +277,111 @@ describe('GridEditBridge', () => {
                   title: Total
 `;
 
-    it('converts rows: to items: with inferred placements', () => {
+    it('converts rows: to grid: with inferred placements', () => {
       const doc = PageDocument.parse(ROWS_YAML);
       const bridge = new GridEditBridge();
 
       bridge.applyGridEdit(doc, {
         type: 'move',
         items: [
-          { placement: { mode: 'positioned', x: 0, y: 0, w: 6, h: 1 }, component: { type: 'chart' } },
-          { placement: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
-          { placement: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'summary' } },
+          { at: { mode: 'positioned', x: 0, y: 0, w: 6, h: 1 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
+          { at: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'summary' } },
         ],
       });
 
       const page = PageDocument.parse(doc.toString()).getPages()[0]!;
-      expect(page.getLayoutMode()).toBe('items');
+      expect(page.getLayoutMode()).toBe('grid');
       expect(page.getItems()).toHaveLength(3);
       expect(doc.toString()).not.toContain('rows:');
+      expect(doc.toString()).toContain('grid:');
+    });
+  });
+
+  describe('path-routed mutations', () => {
+    const NESTED_GRID_YAML = `pages:
+  - title: Test
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 4 }
+        type: panel
+        grid:
+          - at: { x: 0, y: 0, w: 3, h: 2 }
+            type: chart
+          - at: { x: 3, y: 0, w: 3, h: 2 }
+            type: table
+`;
+
+    it('routes move to nested grid when gridPath is provided', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'move',
+        gridPath: ['pages', 0, 'grid', 0, 'grid'],
+        items: [
+          { at: { mode: 'positioned', x: 1, y: 1, w: 3, h: 2 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 3, y: 0, w: 3, h: 2 }, component: { type: 'table' } },
+        ],
+      });
+
+      const rootItems = doc.getPages()[0]!.getItems();
+      expect(rootItems[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 12, h: 4 });
+
+      const reparsed = PageDocument.parse(doc.toString());
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      const nestedAt0 = nestedSeq?.get(0)?.get('at')?.toJSON();
+      expect(nestedAt0).toEqual({ x: 1, y: 1, w: 3, h: 2 });
+    });
+
+    it('falls back to root when gridPath is absent', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'move',
+        items: [
+          { at: { mode: 'positioned', x: 2, y: 1, w: 12, h: 4 }, component: { type: 'panel' } },
+        ],
+      });
+
+      const rootItems = doc.getPages()[0]!.getItems();
+      expect(rootItems[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 2, y: 1, w: 12, h: 4 });
+    });
+  });
+
+  describe('cross-grid mutation', () => {
+    const NESTED_GRID_YAML_2 = `pages:
+  - title: Test
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 4 }
+        type: panel
+        grid:
+          - at: { x: 0, y: 0, w: 3, h: 2 }
+            type: chart
+          - at: { x: 3, y: 0, w: 3, h: 2 }
+            type: table
+`;
+
+    it('removes item from source and inserts into target atomically', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML_2);
+      const bridge = new GridEditBridge();
+
+      bridge.applyCrossGridEdit(doc, {
+        type: 'cross-move',
+        sourceGridPath: ['pages', 0, 'grid', 0, 'grid'],
+        targetGridPath: ['pages', 0, 'grid'],
+        sourceIndex: 0,
+        targetPlacement: { mode: 'positioned', x: 0, y: 4, w: 6, h: 2 },
+        component: { type: 'chart' },
+      });
+
+      const yaml = doc.toString();
+      const reparsed = PageDocument.parse(yaml);
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      expect(nestedSeq.items.length).toBe(1);
+
+      const rootSeq = reparsed._getDoc().getIn(['pages', 0, 'grid']) as any;
+      expect(rootSeq.items.length).toBe(2);
     });
   });
 });

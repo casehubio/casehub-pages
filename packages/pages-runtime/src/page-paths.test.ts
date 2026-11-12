@@ -72,7 +72,7 @@ describe("buildPagePathMap", () => {
     const grid: Component = {
       type: "grid",
       props: { columns: 12 },
-      items: [{ placement: { x: 0, y: 0, w: 12, h: 1 }, component: chart }],
+      grid: [{ at: { x: 0, y: 0, w: 12, h: 1 }, component: chart }],
     };
     const root: Component = {
       type: "page",

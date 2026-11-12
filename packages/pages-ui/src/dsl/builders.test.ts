@@ -131,9 +131,9 @@ describe("builders", () => {
 
       expect(result.type).toBe("grid");
       expect(result.props).toEqual({ columns: 2 });
-      expect(result.items).toHaveLength(2);
-      expect(result.items?.[0]!.placement).toEqual({ x: 0, y: 0, w: 1, h: 1 });
-      expect(result.items?.[1]!.placement).toEqual({ x: 1, y: 0, w: 1, h: 1 });
+      expect(result.grid).toHaveLength(2);
+      expect(result.grid?.[0]!.at).toEqual({ mode: "positioned", x: 0, y: 0, w: 1, h: 1 });
+      expect(result.grid?.[1]!.at).toEqual({ mode: "positioned", x: 1, y: 0, w: 1, h: 1 });
     });
 
     it("generates deterministic ID for grid container", () => {
@@ -148,8 +148,8 @@ describe("builders", () => {
       expect(result.id).toMatch(/^grid_\d+$/);
 
       // Items without withId() do not get auto-assigned IDs
-      expect(result.items?.[0]!.component.id).toBeUndefined();
-      expect(result.items?.[1]!.component.id).toBeUndefined();
+      expect(result.grid?.[0]!.component.id).toBeUndefined();
+      expect(result.grid?.[1]!.component.id).toBeUndefined();
     });
 
     it("does not override existing component IDs", () => {
@@ -158,7 +158,7 @@ describe("builders", () => {
 
       const result = grid(1, item);
 
-      expect(result.items?.[0]!.component.id).toBe("custom-id");
+      expect(result.grid?.[0]!.component.id).toBe("custom-id");
     });
 
     it("generates sequential grid IDs across calls", () => {
@@ -182,14 +182,14 @@ describe("builders", () => {
       const comp = html("test");
       const result = at(1, 2, 3, 4, comp);
 
-      expect(result.placement).toEqual({ x: 1, y: 2, w: 3, h: 4 });
+      expect(result.at).toEqual({ mode: "positioned", x: 1, y: 2, w: 3, h: 4 });
       expect(result.component).toBe(comp);
     });
 
     it("freezes returned GridItem and placement", () => {
       const result = at(0, 0, 1, 1, html("a"));
       expect(Object.isFrozen(result)).toBe(true);
-      expect(Object.isFrozen(result.placement)).toBe(true);
+      expect(Object.isFrozen(result.at)).toBe(true);
     });
   });
 
@@ -487,10 +487,10 @@ describe("builders", () => {
       expect(grid1.id).not.toBe(grid2.id);
 
       // Items without withId() don't get auto-assigned IDs
-      expect(grid1.items?.[0]?.component.id).toBeUndefined();
-      expect(grid1.items?.[1]?.component.id).toBeUndefined();
-      expect(grid2.items?.[0]?.component.id).toBeUndefined();
-      expect(grid2.items?.[1]?.component.id).toBeUndefined();
+      expect(grid1.grid?.[0]?.component.id).toBeUndefined();
+      expect(grid1.grid?.[1]?.component.id).toBeUndefined();
+      expect(grid2.grid?.[0]?.component.id).toBeUndefined();
+      expect(grid2.grid?.[1]?.component.id).toBeUndefined();
     });
   });
 
@@ -499,7 +499,7 @@ describe("builders", () => {
       const g = grid(12,
         at(0, 0, 6, 1, { type: "bar-chart", props: { lookup: { dataSetId: "x", operations: [] } } }),
       );
-      const item = g.items![0]!;
+      const item = g.grid![0]!;
       expect(item.component.id).toBeUndefined();
     });
 
@@ -507,7 +507,7 @@ describe("builders", () => {
       const g = grid(12,
         at(0, 0, 6, 1, withId("my-chart", { type: "bar-chart", props: { lookup: { dataSetId: "x", operations: [] } } })),
       );
-      const item = g.items![0]!;
+      const item = g.grid![0]!;
       expect(item.component.id).toBe("my-chart");
     });
 
@@ -1098,14 +1098,14 @@ describe("dockWorkbench builder", () => {
   describe("emptyContainer()", () => {
     it("creates a GridItem with no component", () => {
       const item = emptyContainer(0, 0, 6, 2);
-      expect(item.placement).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 2 });
+      expect(item.at).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 2 });
       expect(item.component).toBeUndefined();
     });
 
     it("creates a frozen object", () => {
       const item = emptyContainer(3, 1, 4, 3);
       expect(Object.isFrozen(item)).toBe(true);
-      expect(Object.isFrozen(item.placement)).toBe(true);
+      expect(Object.isFrozen(item.at)).toBe(true);
     });
   });
 });
