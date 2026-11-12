@@ -63,7 +63,7 @@ export class SelectionOverlay {
       position: absolute; pointer-events: none;
       left: ${bounds.x}px; top: ${bounds.y}px;
       width: ${bounds.width}px; height: ${bounds.height}px;
-      outline: 2px solid var(--pages-primary, #4285f4);
+      outline: 2px solid var(--pages-accent-9);
       outline-offset: 0;
       border-radius: 6px;
       background: rgba(66, 133, 244, 0.04);
@@ -208,12 +208,12 @@ export class SelectionOverlay {
       `;
 
       const lineL = document.createElement('span');
-      lineL.style.cssText = 'flex: 1; height: 1px; background: var(--pages-primary, #4285f4);';
+      lineL.style.cssText = 'flex: 1; height: 1px; background: var(--pages-accent-9);';
       const icon = document.createElement('span');
       icon.textContent = '+';
-      icon.style.cssText = 'font-size: 10px; color: var(--pages-primary, #4285f4); padding: 0 4px; font-weight: bold;';
+      icon.style.cssText = 'font-size: 10px; color: var(--pages-accent-9); padding: 0 4px; font-weight: bold;';
       const lineR = document.createElement('span');
-      lineR.style.cssText = 'flex: 1; height: 1px; background: var(--pages-primary, #4285f4);';
+      lineR.style.cssText = 'flex: 1; height: 1px; background: var(--pages-accent-9);';
 
       point.appendChild(lineL);
       point.appendChild(icon);

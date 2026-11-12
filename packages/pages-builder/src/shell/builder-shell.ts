@@ -1860,6 +1860,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       display: block;
       height: 100%;
       font-family: var(--pages-font-family, sans-serif);
+      background: var(--pages-neutral-1);
+      color: var(--pages-neutral-12);
     }
 
     .shell {
@@ -1873,21 +1875,22 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       align-items: center;
       gap: 4px;
       padding: 4px 8px;
-      border-bottom: 1px solid var(--pages-border-color, #dadce0);
-      background: var(--pages-toolbar-bg, #f8f9fa);
+      border-bottom: 1px solid var(--pages-neutral-6);
+      background: var(--pages-neutral-2);
     }
 
     .toolbar-btn {
       padding: 4px 12px;
-      border: 1px solid var(--pages-border-color, #dadce0);
-      border-radius: 4px;
-      background: var(--pages-surface-bg, #fff);
+      border: 1px solid var(--pages-neutral-6);
+      border-radius: var(--pages-radius-sm, 4px);
+      background: var(--pages-neutral-3);
+      color: var(--pages-neutral-12);
       cursor: pointer;
-      font-size: 12px;
+      font-size: var(--pages-font-size-sm, 12px);
     }
 
     .toolbar-btn:hover:not(:disabled) {
-      background: var(--pages-hover-bg, #e8eaed);
+      background: var(--pages-neutral-4);
     }
 
     .toolbar-btn:disabled {
@@ -1912,34 +1915,35 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
 
     .tree-toggle.active {
-      background: var(--pages-selected-bg, rgba(66, 133, 244, 0.12));
-      color: var(--pages-primary, #1967d2);
-      border-color: var(--pages-primary, #1967d2);
+      background: var(--pages-accent-4);
+      color: var(--pages-accent-9);
+      border-color: var(--pages-accent-9);
     }
 
     .view-tabs {
       display: flex;
       gap: 0;
-      border: 1px solid var(--pages-border-color, #dadce0);
-      border-radius: 4px;
+      border: 1px solid var(--pages-neutral-6);
+      border-radius: var(--pages-radius-sm, 4px);
       overflow: hidden;
     }
 
     .view-tab {
       padding: 3px 10px;
       border: none;
-      border-right: 1px solid var(--pages-border-color, #dadce0);
-      background: var(--pages-surface-bg, #fff);
+      border-right: 1px solid var(--pages-neutral-6);
+      background: var(--pages-neutral-3);
       cursor: pointer;
-      font-size: 11px;
+      font-size: var(--pages-font-size-xs, 11px);
+      color: var(--pages-neutral-11);
     }
 
     .view-tab:last-child { border-right: none; }
-    .view-tab:hover { background: var(--pages-hover-bg, #e8eaed); }
+    .view-tab:hover { background: var(--pages-neutral-4); }
 
     .view-tab.active {
-      background: var(--pages-primary, #1967d2);
-      color: #fff;
+      background: var(--pages-accent-9);
+      color: var(--pages-neutral-1);
     }
 
     .panel-editor {
@@ -1959,7 +1963,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
 
     .editor-source.split {
-      border-right: 1px solid var(--pages-border-color, #dadce0);
+      border-right: 1px solid var(--pages-neutral-6);
     }
 
     .editor-source > pages-code-editor {
@@ -1968,7 +1972,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
 
     .editor-visual {
-      background: var(--pages-surface-bg, #fff);
+      background: var(--pages-neutral-2);
     }
 
     .editor-source.hidden, .editor-visual.hidden {
@@ -1986,14 +1990,14 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       align-items: center;
       justify-content: center;
       height: 100%;
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
       font-size: 14px;
     }
 
     .empty-panel {
       padding: 32px;
       text-align: center;
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
       font-size: 14px;
     }
 
@@ -2012,18 +2016,18 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
 
     .dock-section + .dock-section {
-      border-top: 1px solid var(--pages-border-color, #dadce0);
+      border-top: 1px solid var(--pages-neutral-6);
     }
 
     .dock-section-header {
       display: flex;
       align-items: center;
       padding: 6px 12px;
-      border-bottom: 1px solid var(--pages-border-color, #dadce0);
-      background: var(--pages-toolbar-bg, #f8f9fa);
+      border-bottom: 1px solid var(--pages-neutral-6);
+      background: var(--pages-neutral-2);
       font-size: 11px;
       font-weight: 600;
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       flex-shrink: 0;
@@ -2055,18 +2059,18 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       background: none;
       cursor: pointer;
       border-radius: 4px;
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
       width: 32px;
     }
 
     .dock-icon:hover {
-      background: var(--pages-hover-bg, rgba(0, 0, 0, 0.06));
-      color: var(--pages-text-primary, #202124);
+      background: var(--pages-neutral-4);
+      color: var(--pages-neutral-12);
     }
 
     .dock-icon.active {
-      background: var(--pages-selected-bg, rgba(66, 133, 244, 0.12));
-      color: var(--pages-primary, #1967d2);
+      background: var(--pages-accent-4);
+      color: var(--pages-accent-9);
     }
 
     .dock-icon-glyph {

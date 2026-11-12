@@ -1558,6 +1558,7 @@ __metadata:
     "@casehubio/pages-property-palette": "workspace:*"
     "@casehubio/pages-schema": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-ui-tokens": "workspace:*"
     "@casehubio/yaml-core": "workspace:*"
     "@codemirror/autocomplete": "npm:^6.18.6"
     "@codemirror/state": "npm:^6.5.2"

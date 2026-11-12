@@ -163,16 +163,16 @@ describe("nested compaction independence", () => {
 });
 
 describe("isNestedGrid", () => {
-  it("returns true for grid component with items", () => {
-    expect(isNestedGrid({ component: { type: "grid", items: [{ placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 } }] } })).toBe(true);
+  it("returns true for grid component with grid items", () => {
+    expect(isNestedGrid({ component: { type: "grid", grid: [{ placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 } }] } })).toBe(true);
   });
 
   it("returns false for non-grid component", () => {
     expect(isNestedGrid({ component: { type: "html" } })).toBe(false);
   });
 
-  it("returns false for grid component with empty items", () => {
-    expect(isNestedGrid({ component: { type: "grid", items: [] } })).toBe(false);
+  it("returns false for grid component with empty grid", () => {
+    expect(isNestedGrid({ component: { type: "grid", grid: [] } })).toBe(false);
   });
 
   it("returns false for item without component", () => {

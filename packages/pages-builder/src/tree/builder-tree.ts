@@ -47,14 +47,29 @@ function buildComponentNode(comp: ComponentNode): TreeNodeInfo {
 
   if (comp.isContainer()) {
     const containerChildren = comp.getChildren();
+    const isGridSlot = containerChildren.descriptor.slots.some(s => s.kind === 'grid-items');
     for (const [slotName, comps] of Object.entries(containerChildren.slots)) {
-      children.push({
-        label: slotName,
-        icon: 'folder_open',
-        nodeType: 'section',
-        path: [...comp.path, slotName],
-        children: comps.map(buildComponentNode),
-      });
+      if (isGridSlot) {
+        const sorted = [...comps as unknown as GridItemNode[]].sort((a, b) => {
+          const pa = a.getPlacement();
+          const pb = b.getPlacement();
+          const ya = pa.mode === 'positioned' ? pa.y : Infinity;
+          const yb = pb.mode === 'positioned' ? pb.y : Infinity;
+          if (ya !== yb) return ya - yb;
+          const xa = pa.mode === 'positioned' ? pa.x : Infinity;
+          const xb = pb.mode === 'positioned' ? pb.x : Infinity;
+          return xa - xb;
+        });
+        children.push(...sorted.map(buildGridItemNode));
+      } else {
+        children.push({
+          label: slotName,
+          icon: 'folder_open',
+          nodeType: 'section',
+          path: [...comp.path, slotName],
+          children: comps.map(buildComponentNode),
+        });
+      }
     }
   }
 
@@ -100,13 +115,40 @@ function buildGridItemNode(item: GridItemNode): TreeNodeInfo {
       annotation: placement,
     };
   }
-  const compChild = buildComponentNode(comp);
+  const children: TreeNodeInfo[] = [];
+  if (comp.isContainer()) {
+    const containerChildren = comp.getChildren();
+    const isGridSlot = containerChildren.descriptor.slots.some(s => s.kind === 'grid-items');
+    for (const [slotName, comps] of Object.entries(containerChildren.slots)) {
+      if (isGridSlot) {
+        const sorted = [...comps as unknown as GridItemNode[]].sort((a, b) => {
+          const pa = a.getPlacement();
+          const pb = b.getPlacement();
+          const ya = pa.mode === 'positioned' ? pa.y : Infinity;
+          const yb = pb.mode === 'positioned' ? pb.y : Infinity;
+          if (ya !== yb) return ya - yb;
+          const xa = pa.mode === 'positioned' ? pa.x : Infinity;
+          const xb = pb.mode === 'positioned' ? pb.x : Infinity;
+          return xa - xb;
+        });
+        children.push(...sorted.map(buildGridItemNode));
+      } else {
+        children.push({
+          label: slotName,
+          icon: 'folder_open',
+          nodeType: 'section',
+          path: [...comp.path, slotName],
+          children: comps.map(buildComponentNode),
+        });
+      }
+    }
+  }
   return {
     label: componentLabel(comp),
     icon: 'grid_view',
     nodeType: 'grid-item',
     path: [...item.path],
-    children: [compChild],
+    children,
     annotation: placement,
   };
 }
@@ -667,7 +709,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     }
 
     .tree-item:hover {
-      background: var(--pages-hover-bg, rgba(0, 0, 0, 0.04));
+      background: var(--pages-neutral-4);
     }
 
     .tree-item:focus-visible {
@@ -676,7 +718,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     }
 
     .tree-item.selected {
-      background: var(--pages-selected-bg, rgba(66, 133, 244, 0.12));
+      background: var(--pages-accent-4);
       color: var(--pages-selected-color, #1967d2);
     }
 
@@ -708,7 +750,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
 
     .annotation {
       font-size: 10px;
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
       opacity: 0.7;
       margin-left: 4px;
       white-space: nowrap;
@@ -720,10 +762,10 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       justify-content: center;
       width: 20px;
       height: 20px;
-      border: 1px solid var(--pages-border-color, #dadce0);
+      border: 1px solid var(--pages-neutral-6);
       border-radius: 4px;
-      background: var(--pages-surface-bg, #fff);
-      color: var(--pages-text-secondary, #5f6368);
+      background: var(--pages-neutral-2);
+      color: var(--pages-neutral-11);
       cursor: pointer;
       font-size: 14px;
       line-height: 1;
@@ -738,10 +780,10 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       justify-content: center;
       width: 20px;
       height: 20px;
-      border: 1px solid var(--pages-border-color, #dadce0);
+      border: 1px solid var(--pages-neutral-6);
       border-radius: 4px;
-      background: var(--pages-surface-bg, #fff);
-      color: var(--pages-text-secondary, #5f6368);
+      background: var(--pages-neutral-2);
+      color: var(--pages-neutral-11);
       cursor: pointer;
       font-size: 12px;
       line-height: 1;
@@ -762,13 +804,13 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     }
 
     .add-btn:hover, .insert-btn:hover, .cut-btn:hover, .copy-btn:hover {
-      background: var(--pages-primary, #1967d2);
+      background: var(--pages-accent-9);
       color: #fff;
-      border-color: var(--pages-primary, #1967d2);
+      border-color: var(--pages-accent-9);
     }
 
     .tree-item.paste-target {
-      outline: 2px solid var(--pages-primary, #1967d2);
+      outline: 2px solid var(--pages-accent-9);
       outline-offset: -2px;
       border-radius: 4px;
     }
@@ -776,8 +818,8 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     .tree-item.paste-target .add-btn,
     .tree-item.paste-target .insert-btn {
       opacity: 1;
-      color: var(--pages-primary, #1967d2);
-      border-color: var(--pages-primary, #1967d2);
+      color: var(--pages-accent-9);
+      border-color: var(--pages-accent-9);
     }
 
     .tree-insertion-point {
@@ -798,12 +840,12 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     .insertion-line {
       flex: 1;
       height: 1px;
-      background: var(--pages-primary, #4285f4);
+      background: var(--pages-accent-9);
     }
 
     .insertion-icon {
       font-size: 10px;
-      color: var(--pages-primary, #4285f4);
+      color: var(--pages-accent-9);
       padding: 0 4px;
       font-weight: bold;
       line-height: 1;

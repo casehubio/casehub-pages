@@ -609,6 +609,50 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     }
   }
 
+  // Generic component with type: — handles any component not matched above
+  if ("type" in raw && typeof raw.type === "string") {
+    const rawType = raw.type;
+    const props = (raw.properties as Record<string, unknown> | undefined) ?? {};
+    const style = extractStyle(raw.style);
+    const visibleWhen = raw.visibleWhen as string | undefined;
+    const rawId = raw.id as string | undefined;
+    const access = raw.access as { roles?: string[]; permissions?: string[] } | undefined;
+
+    let grid: GridItem[] | undefined;
+    const gridRaw = (raw.grid ?? raw.items) as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(gridRaw)) {
+      grid = gridRaw.map((entryRaw) => {
+        const atRaw = (entryRaw.at ?? entryRaw.placement) as Record<string, unknown> | undefined;
+        const inlineType = entryRaw.type as string | undefined;
+
+        let at: GridPlacement;
+        if (atRaw && "x" in atRaw && "y" in atRaw) {
+          at = { mode: "positioned" as const, x: Number(atRaw.x), y: Number(atRaw.y), w: Number(atRaw.w ?? 1), h: Number(atRaw.h ?? 1) };
+        } else if (atRaw) {
+          at = { mode: "auto" as const, w: Number(atRaw.w ?? 1), h: Number(atRaw.h ?? 1) };
+        } else {
+          at = { mode: "auto" as const, w: 1, h: 1 };
+        }
+
+        const componentRaw = entryRaw.component as Record<string, unknown> | undefined;
+        const component = componentRaw
+          ? desugarComponent(componentRaw, displayerDefaults)
+          : inlineType ? desugarComponent(entryRaw, displayerDefaults) : undefined;
+        return { at, ...(component ? { component } : {}) };
+      });
+    }
+
+    return {
+      type: rawType,
+      props,
+      ...(grid ? { grid } : {}),
+      ...(rawId ? { id: rawId } : {}),
+      ...(style ? { style } : {}),
+      ...(visibleWhen ? { visibleWhen } : {}),
+      ...(access ? { access } : {}),
+    };
+  }
+
   // Unknown component — wrap as generic
   return {
     type: "unknown",

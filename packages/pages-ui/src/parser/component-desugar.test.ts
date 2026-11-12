@@ -352,16 +352,13 @@ describe("desugarComponent", () => {
   });
 
   describe("unknown components", () => {
-    it("unknown type → generic wrapper", () => {
+    it("generic type with properties", () => {
       const result = desugarComponent({
         type: "CUSTOM",
-        someKey: "value",
+        properties: { someKey: "value" },
       });
-      expect(result.type).toBe("unknown");
-      expect(result.props).toEqual({
-        type: "CUSTOM",
-        someKey: "value",
-      });
+      expect(result.type).toBe("CUSTOM");
+      expect(result.props).toEqual({ someKey: "value" });
     });
 
     it("empty object → unknown", () => {

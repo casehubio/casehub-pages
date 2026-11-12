@@ -88,8 +88,8 @@ export class PagesPositionPicker extends LitElement {
       flex-direction: column;
       gap: 1px;
       padding: 3px;
-      background: var(--pages-surface-bg, #fff);
-      border: 1px solid var(--pages-border-color, #dadce0);
+      background: var(--pages-neutral-2);
+      border: 1px solid var(--pages-neutral-6);
       border-radius: var(--pages-radius-sm, 4px);
       box-shadow: var(--pages-shadow-2, 0 2px 4px rgba(0, 0, 0, 0.08));
     }
@@ -98,10 +98,10 @@ export class PagesPositionPicker extends LitElement {
       width: 20px;
       height: 20px;
       padding: 0;
-      border: 1px solid var(--pages-border-color, #dadce0);
+      border: 1px solid var(--pages-neutral-6);
       border-radius: 4px;
-      background: var(--pages-surface-bg, #fff);
-      color: var(--pages-text-secondary, #5f6368);
+      background: var(--pages-neutral-2);
+      color: var(--pages-neutral-11);
       cursor: pointer;
       font-size: 12px;
       line-height: 1;
@@ -111,9 +111,9 @@ export class PagesPositionPicker extends LitElement {
     }
 
     button:hover {
-      background: var(--pages-primary, #1967d2);
+      background: var(--pages-accent-9);
       color: #fff;
-      border-color: var(--pages-primary, #1967d2);
+      border-color: var(--pages-accent-9);
     }
   `;
 }

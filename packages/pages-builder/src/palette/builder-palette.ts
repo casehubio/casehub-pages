@@ -125,13 +125,13 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      border-bottom: 1px solid var(--pages-border-color, #dadce0);
+      border-bottom: 1px solid var(--pages-neutral-6);
     }
 
     .palette-search {
       flex: 1;
       padding: 8px 12px;
-      border: 1px solid var(--pages-border-color, #dadce0);
+      border: 1px solid var(--pages-neutral-6);
       border-radius: 8px;
       font-size: inherit;
       outline: none;
@@ -148,7 +148,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       gap: 4px;
       padding: 8px 16px;
       overflow-x: auto;
-      border-bottom: 1px solid var(--pages-border-color, #dadce0);
+      border-bottom: 1px solid var(--pages-neutral-6);
     }
 
     .category-tab {
@@ -156,7 +156,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       border: none;
       border-radius: 16px;
       background: var(--pages-chip-bg, #f1f3f4);
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
       cursor: pointer;
       font-size: 12px;
       white-space: nowrap;
@@ -167,7 +167,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
     }
 
     .category-tab.active {
-      background: var(--pages-primary, #1967d2);
+      background: var(--pages-accent-9);
       color: #fff;
     }
 
@@ -185,9 +185,9 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       flex-direction: column;
       gap: 2px;
       padding: 12px;
-      border: 1px solid var(--pages-border-color, #dadce0);
+      border: 1px solid var(--pages-neutral-6);
       border-radius: 8px;
-      background: var(--pages-surface-bg, #fff);
+      background: var(--pages-neutral-2);
       cursor: pointer;
       text-align: left;
       outline: none;
@@ -195,7 +195,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
     }
 
     .palette-tile:hover {
-      border-color: var(--pages-primary, #1967d2);
+      border-color: var(--pages-accent-9);
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     }
 
@@ -221,7 +221,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
 
     .tile-type {
       font-size: 11px;
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
     }
 
     .tile-hint {
@@ -234,7 +234,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       grid-column: 1 / -1;
       text-align: center;
       padding: 32px;
-      color: var(--pages-text-secondary, #5f6368);
+      color: var(--pages-neutral-11);
     }
   `;
 }

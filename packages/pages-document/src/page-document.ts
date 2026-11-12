@@ -650,12 +650,29 @@ export class ComponentNode {
   }
 
   isContainer(): boolean {
-    return getContainerDescriptor(this.type) !== undefined;
+    if (getContainerDescriptor(this.type)) return true;
+    const doc = this._doc._getDoc();
+    return isSeq(doc.getIn([...this.path, 'grid'])) || isSeq(doc.getIn([...this.path, 'items']));
   }
 
   getChildren(): ContainerChildren {
     const desc = getContainerDescriptor(this.type);
-    if (!desc) return { slots: {}, descriptor: { type: this.type, slots: [], defaultContentSlot: '' } };
+    if (!desc) {
+      const doc = this._doc._getDoc();
+      const gridKey = isSeq(doc.getIn([...this.path, 'grid'])) ? 'grid'
+        : isSeq(doc.getIn([...this.path, 'items'])) ? 'items' : null;
+      if (gridKey) {
+        const seq = doc.getIn([...this.path, gridKey]) as YAMLSeq;
+        const gridSlots: Record<string, ComponentNode[]> = {
+          [gridKey]: seq.items.map((_: unknown, i: number) =>
+            new GridItemNode(this._doc, [...this.path, gridKey, i])
+          ) as any,
+        };
+        const synth: ContainerChildDescriptor = { type: this.type, defaultContentSlot: gridKey, slots: [{ kind: 'grid-items', yamlKey: gridKey }] };
+        return { slots: gridSlots, descriptor: synth };
+      }
+      return { slots: {}, descriptor: { type: this.type, slots: [], defaultContentSlot: '' } };
+    }
     const doc = this._doc._getDoc();
     const slots: Record<string, ComponentNode[]> = {};
 

@@ -1,4 +1,4 @@
-import type { GridItem } from "../model/types.js";
+import type { GridItem, GridPlacement } from "../model/types.js";
 import type { IdRect, Rect } from "./grid-compaction.js";
 import { compactAll, resizeCompact, compact, overlaps } from "./grid-compaction.js";
 import { selectItem, extendSelection, clearSelection } from "./grid-selection.js";
@@ -232,7 +232,9 @@ class GridEditControllerImpl implements GridEditController {
 
   acceptForeignItem(_item: GridItem, placement: GridPlacement): void {
     this.clearForeignItem();
-    showPlaceholder(this.gridEl, placement);
+    if (placement.mode === "positioned") {
+      showPlaceholder(this.gridEl, placement);
+    }
   }
 
   clearForeignItem(): void {
