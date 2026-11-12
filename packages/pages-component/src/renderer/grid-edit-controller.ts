@@ -41,6 +41,7 @@ export interface GridEditController {
   releaseItem(index: number): void;
   acceptForeignItem(item: GridItem, placement: GridPlacement): void;
   clearForeignItem(): void;
+  setDragGhostVisible(visible: boolean): void;
 }
 
 let lastEditDispatchTime = 0;
@@ -244,6 +245,12 @@ class GridEditControllerImpl implements GridEditController {
     hidePlaceholder(this.gridEl);
   }
 
+  setDragGhostVisible(visible: boolean): void {
+    if (this._dragCursorBadge) {
+      this._dragCursorBadge.style.display = visible ? "" : "none";
+    }
+  }
+
   dispose(): void {
     this.exit();
     removeEditButton(this.gridEl);
@@ -421,14 +428,46 @@ class GridEditControllerImpl implements GridEditController {
       const outside = e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom;
       const coord = getCoordinator();
       const deepest = coord.deepestGridAt(e.clientX, e.clientY);
-      const enteredOtherGrid = deepest != null && deepest !== this;
+      let enteredOtherGrid = deepest != null && deepest !== this;
+      if (!enteredOtherGrid && !outside && !this._crossGridActive && this.dragHandle === "move" && this.geometry) {
+        const cell = snapToCellWithRows(e.clientX, e.clientY, this.geometry, this.frozenRows);
+        for (let i = 0; i < this.items.length; i++) {
+          if (String(i) === this.dragItemId) continue;
+          const item = this.items[i]!;
+          if (item.at.mode !== "positioned") continue;
+          const el = this.gridEl.querySelector(`[data-item-id="${i}"]`) as HTMLElement | null;
+          if (!el || !el.querySelector('[data-grid-editing]')) continue;
+          if (cell.x >= item.at.x && cell.x < item.at.x + item.at.w && cell.y >= item.at.y && cell.y < item.at.y + item.at.h) {
+            enteredOtherGrid = true;
+            break;
+          }
+        }
+      }
       if (outside || enteredOtherGrid || this._crossGridActive) {
         if (!this._crossGridActive) {
           this._crossGridActive = true;
           this.clearSwapTarget();
+          this.restoreOriginalPlacements();
+          hidePlaceholder(this.gridEl);
           const itemIndex = Number(this.dragItemId);
           const item = this.items[itemIndex];
-          if (item) coord.startCrossGridDrag(this, itemIndex, item);
+          if (item) coord.startCrossGridDrag(this, itemIndex, item, this.dragIntent);
+          if (!this._dragCursorBadge) {
+            if (this.dragIntent === "swap") {
+              this._showDragBadge("⇄");
+            } else {
+              const itemIdx = Number(this.dragItemId);
+              const srcItem = this.items[itemIdx];
+              if (srcItem?.at.mode === "positioned" && this.geometry) {
+                const pw = srcItem.at.w * (this.geometry.cellWidth + this.geometry.gap) - this.geometry.gap;
+                const ph = srcItem.at.h * (this.geometry.cellHeight + this.geometry.gap) - this.geometry.gap;
+                const ghost = this.gridEl.ownerDocument.createElement("div");
+                ghost.style.cssText = `position:fixed;z-index:9999;pointer-events:none;width:${pw}px;height:${ph}px;background:var(--pages-accent-3, rgba(59,130,246,0.15));border:2px dashed var(--pages-accent-7, #3b82f6);border-radius:var(--pages-radius-sm, 4px);opacity:0.8;`;
+                this.gridEl.ownerDocument.body.appendChild(ghost);
+                this._dragCursorBadge = ghost;
+              }
+            }
+          }
         }
         e.stopPropagation();
         coord.handleCrossGridMove(e.clientX, e.clientY);
@@ -762,8 +801,10 @@ class GridEditControllerImpl implements GridEditController {
 
   private _moveDragBadge(clientX: number, clientY: number): void {
     if (this._dragCursorBadge) {
-      this._dragCursorBadge.style.left = `${String(clientX + 12)}px`;
-      this._dragCursorBadge.style.top = `${String(clientY + 12)}px`;
+      const w = this._dragCursorBadge.offsetWidth || 24;
+      const h = this._dragCursorBadge.offsetHeight || 24;
+      this._dragCursorBadge.style.left = `${String(clientX - w / 2)}px`;
+      this._dragCursorBadge.style.top = `${String(clientY - h / 2)}px`;
     }
   }
 

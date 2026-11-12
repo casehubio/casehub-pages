@@ -2,6 +2,12 @@ import type { GridEditController } from "./grid-edit-controller.js";
 import type { GridItem, GridPlacement, Component } from "../model/types.js";
 import { scaleWidth } from "./grid-scale.js";
 import { computeGridGeometry, snapToCell, clampPlacement } from "./grid-drag.js";
+import type { IdRect } from "./grid-compaction.js";
+import { compactAll } from "./grid-compaction.js";
+import { applyGridPlacement } from "./grid.js";
+import { showPlaceholder, hidePlaceholder } from "./grid-overlay.js";
+
+const VIRTUAL_INCOMING_ID = "__incoming__";
 
 export interface CrossGridEditDetail {
   type: "cross-move";
@@ -11,6 +17,7 @@ export interface CrossGridEditDetail {
   targetPlacement: GridPlacement;
   component: Component;
   swapTargetIndex?: number;
+  targetItemPlacements?: Array<{ index: number; x: number; y: number; w: number; h: number }>;
 }
 
 export class GridEditCoordinator {
@@ -21,7 +28,10 @@ export class GridEditCoordinator {
     source: GridEditController;
     itemIndex: number;
     item: GridItem;
+    intent: "displace" | "swap";
     currentTarget: GridEditController | null;
+    displaceOriginals: Map<string, { x: number; y: number; w: number; h: number }> | null;
+    displaceLastCell: { x: number; y: number } | null;
   } | null = null;
 
   get controllers(): ReadonlySet<GridEditController> {
@@ -85,8 +95,8 @@ export class GridEditCoordinator {
     return ["pages", 0, ...segments, "grid"];
   }
 
-  startCrossGridDrag(source: GridEditController, itemIndex: number, item: GridItem): void {
-    this._crossGridState = { source, itemIndex, item, currentTarget: null };
+  startCrossGridDrag(source: GridEditController, itemIndex: number, item: GridItem, intent: "displace" | "swap" = "swap"): void {
+    this._crossGridState = { source, itemIndex, item, intent, currentTarget: null, displaceOriginals: null, displaceLastCell: null };
     source.releaseItem(itemIndex);
   }
 
@@ -97,25 +107,116 @@ export class GridEditCoordinator {
 
     if (target !== this._crossGridState.currentTarget) {
       this._clearCrossGridHighlight();
+      this._restoreDisplacement();
       this._crossGridState.currentTarget?.clearForeignItem();
       this._crossGridState.currentTarget = target;
     }
 
     if (target && target !== this._crossGridState.source) {
-      const hitEl = this._findItemElAt(target, clientX, clientY);
-      this._highlightCrossGridTarget(target, hitEl);
-      if (!hitEl) {
-        const sourceAt = this._crossGridState.item.at;
-        if (sourceAt.mode !== "positioned") return;
-        const scaledW = scaleWidth(sourceAt.w, this._crossGridState.source.columns, target.columns);
-        const nextRow = this._nextAvailableRow(target);
-        target.acceptForeignItem(this._crossGridState.item, {
-          mode: "positioned", x: 0, y: nextRow, w: scaledW, h: sourceAt.h,
-        });
+      const sourceAt = this._crossGridState.item.at;
+      if (sourceAt.mode !== "positioned") return;
+      const scaledW = scaleWidth(sourceAt.w, this._crossGridState.source.columns, target.columns);
+      if (this._crossGridState.intent === "swap") {
+        const hitEl = this._findItemElAt(target, clientX, clientY);
+        this._highlightCrossGridTarget(target, hitEl);
+        if (!hitEl) {
+          const nextRow = this._nextAvailableRow(target);
+          target.acceptForeignItem(this._crossGridState.item, {
+            mode: "positioned", x: 0, y: nextRow, w: scaledW, h: sourceAt.h,
+          });
+        } else {
+          target.clearForeignItem();
+        }
       } else {
-        target.clearForeignItem();
+        this._handleDisplacePreview(target, clientX, clientY, scaledW, sourceAt.h);
       }
     }
+  }
+
+  private _handleDisplacePreview(target: GridEditController, clientX: number, clientY: number, scaledW: number, h: number): void {
+    const state = this._crossGridState!;
+    const geometry = computeGridGeometry(target.gridEl.getBoundingClientRect(), target.columns, target.rowHeight, target.gap);
+    const cell = snapToCell(clientX, clientY, geometry);
+    const clamped = clampPlacement(cell.x, cell.y, scaledW, h, target.columns);
+
+    if (state.displaceLastCell && state.displaceLastCell.x === clamped.x && state.displaceLastCell.y === clamped.y) return;
+
+    if (!state.displaceOriginals) {
+      state.displaceOriginals = new Map();
+      for (let i = 0; i < target.items.length; i++) {
+        const item = target.items[i]!;
+        if (item.at.mode === "positioned") {
+          state.displaceOriginals.set(String(i), { x: item.at.x, y: item.at.y, w: item.at.w, h: item.at.h });
+        }
+      }
+      state.source.setDragGhostVisible(false);
+    }
+    state.displaceLastCell = { x: clamped.x, y: clamped.y };
+
+    const items: IdRect[] = [];
+    for (const [id, p] of state.displaceOriginals) {
+      items.push({ id, ...p });
+    }
+    const virtualTarget = { x: clamped.x, y: clamped.y, w: scaledW, h };
+    items.push({ id: VIRTUAL_INCOMING_ID, ...virtualTarget });
+
+    const resolved = compactAll(items, VIRTUAL_INCOMING_ID, virtualTarget);
+
+    const before = new Map<string, DOMRect>();
+    for (const child of target.gridEl.children) {
+      const el = child as HTMLElement;
+      const id = el.dataset.itemId;
+      if (id != null) {
+        el.style.transition = "none";
+        el.style.transform = "";
+        before.set(id, el.getBoundingClientRect());
+      }
+    }
+
+    for (const item of resolved) {
+      if (item.id === VIRTUAL_INCOMING_ID) continue;
+      const el = target.gridEl.querySelector(`[data-item-id="${item.id}"]`) as HTMLElement | null;
+      if (el) applyGridPlacement(el, { mode: "positioned", x: item.x, y: item.y, w: item.w, h: item.h });
+    }
+
+    const virtualResolved = resolved.find(i => i.id === VIRTUAL_INCOMING_ID);
+    showPlaceholder(target.gridEl, virtualResolved ?? virtualTarget);
+
+    for (const child of target.gridEl.children) {
+      const el = child as HTMLElement;
+      const id = el.dataset.itemId;
+      if (id == null) continue;
+      const oldRect = before.get(id);
+      if (!oldRect) continue;
+      const newRect = el.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left;
+      const dy = oldRect.top - newRect.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+      el.style.transition = "none";
+      el.style.transform = `translate(${String(dx)}px, ${String(dy)}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = "transform 200ms ease";
+        el.style.transform = "";
+      });
+    }
+  }
+
+  private _restoreDisplacement(): void {
+    const state = this._crossGridState;
+    if (!state?.displaceOriginals || !state.currentTarget) return;
+    const target = state.currentTarget;
+    for (const [id, p] of state.displaceOriginals) {
+      const el = target.gridEl.querySelector(`[data-item-id="${id}"]`) as HTMLElement | null;
+      if (el) {
+        applyGridPlacement(el, { mode: "positioned", ...p });
+        el.style.transform = "";
+        el.style.transition = "";
+      }
+    }
+    hidePlaceholder(target.gridEl);
+    state.source.setDragGhostVisible(true);
+    state.displaceOriginals = null;
+    state.displaceLastCell = null;
   }
 
   private _findItemElAt(controller: GridEditController, clientX: number, clientY: number): HTMLElement | null {
@@ -167,23 +268,54 @@ export class GridEditCoordinator {
       this.cancelCrossGridDrag();
       return null;
     }
-    const { source, itemIndex, item } = this._crossGridState;
+    const { source, itemIndex, item, intent } = this._crossGridState;
     const sourceAt = item.at;
     if (sourceAt.mode !== "positioned") { this.cancelCrossGridDrag(); return null; }
     const scaledW = scaleWidth(sourceAt.w, source.columns, target.columns);
 
-    const hitEl = this._findItemElAt(target, clientX, clientY);
-    const swapTargetIndex = hitEl ? Number(hitEl.dataset.itemId) : undefined;
+    let swapTargetIndex: number | undefined;
     let placement: { x: number; y: number; w: number; h: number };
-    if (hitEl && swapTargetIndex != null) {
-      const targetItem = target.items[swapTargetIndex];
-      if (targetItem?.at.mode === "positioned") {
-        placement = { x: targetItem.at.x, y: targetItem.at.y, w: scaledW, h: sourceAt.h };
+    let targetItemPlacements: Array<{ index: number; x: number; y: number; w: number; h: number }> | undefined;
+
+    if (intent === "swap") {
+      const hitEl = this._findItemElAt(target, clientX, clientY);
+      swapTargetIndex = hitEl ? Number(hitEl.dataset.itemId) : undefined;
+      if (hitEl && swapTargetIndex != null) {
+        const targetItem = target.items[swapTargetIndex];
+        if (targetItem?.at.mode === "positioned") {
+          placement = { x: targetItem.at.x, y: targetItem.at.y, w: scaledW, h: sourceAt.h };
+        } else {
+          placement = { x: 0, y: this._nextAvailableRow(target), w: scaledW, h: sourceAt.h };
+        }
       } else {
         placement = { x: 0, y: this._nextAvailableRow(target), w: scaledW, h: sourceAt.h };
       }
     } else {
-      placement = { x: 0, y: this._nextAvailableRow(target), w: scaledW, h: sourceAt.h };
+      const geometry = computeGridGeometry(
+        target.gridEl.getBoundingClientRect(), target.columns, target.rowHeight, target.gap
+      );
+      const cell = snapToCell(clientX, clientY, geometry);
+      const clamped = clampPlacement(cell.x, cell.y, scaledW, sourceAt.h, target.columns);
+
+      const items: IdRect[] = [];
+      for (let i = 0; i < target.items.length; i++) {
+        const tItem = target.items[i]!;
+        if (tItem.at.mode === "positioned") {
+          items.push({ id: String(i), x: tItem.at.x, y: tItem.at.y, w: tItem.at.w, h: tItem.at.h });
+        }
+      }
+      const virtualTarget = { x: clamped.x, y: clamped.y, w: scaledW, h: sourceAt.h };
+      items.push({ id: VIRTUAL_INCOMING_ID, ...virtualTarget });
+      const resolved = compactAll(items, VIRTUAL_INCOMING_ID, virtualTarget);
+
+      const virtualResolved = resolved.find(r => r.id === VIRTUAL_INCOMING_ID);
+      placement = virtualResolved
+        ? { x: virtualResolved.x, y: virtualResolved.y, w: virtualResolved.w, h: virtualResolved.h }
+        : { x: clamped.x, y: clamped.y, w: scaledW, h: sourceAt.h };
+
+      targetItemPlacements = resolved
+        .filter(r => r.id !== VIRTUAL_INCOMING_ID)
+        .map(r => ({ index: Number(r.id), x: r.x, y: r.y, w: r.w, h: r.h }));
     }
 
     const detail: CrossGridEditDetail = {
@@ -194,8 +326,10 @@ export class GridEditCoordinator {
       targetPlacement: { mode: "positioned", ...placement },
       component: item.component!,
       swapTargetIndex,
+      targetItemPlacements,
     };
     target.clearForeignItem();
+    this._restoreDisplacement();
     this._crossGridState = null;
     return detail;
   }
@@ -203,6 +337,7 @@ export class GridEditCoordinator {
   cancelCrossGridDrag(): void {
     if (!this._crossGridState) return;
     this._clearCrossGridHighlight();
+    this._restoreDisplacement();
     this._crossGridState.currentTarget?.clearForeignItem();
     const el = this._crossGridState.source.gridEl.querySelector(
       `[data-item-id="${this._crossGridState.itemIndex}"]`

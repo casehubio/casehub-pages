@@ -240,6 +240,15 @@ export class GridEditBridge {
       }
     } else {
       sourceSeq.delete(detail.sourceIndex);
+      if (detail.targetItemPlacements) {
+        for (const tp of detail.targetItemPlacements) {
+          const existingEntry = (targetSeq as YAMLSeq).get(tp.index) as any;
+          if (existingEntry) {
+            const atNode = yamlDoc.createNode({ x: tp.x, y: tp.y, w: tp.w, h: tp.h });
+            existingEntry.set('at', atNode);
+          }
+        }
+      }
       const tp = detail.targetPlacement;
       const atObj: Record<string, number> = tp.mode === 'positioned'
         ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h }
