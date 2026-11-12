@@ -24,11 +24,11 @@ export function place(items: readonly IdRect[], movedId: string, target: Rect): 
   );
 }
 
-export function push(items: readonly IdRect[], movedId: string): IdRect[] {
+export function push(items: readonly IdRect[], movedId: string, pinnedIds?: ReadonlySet<string>): IdRect[] {
   const moved = items.find(i => i.id === movedId);
   if (!moved) return items.map(i => ({ ...i }));
   return items.map(item => {
-    if (item.id === movedId) return { ...item };
+    if (item.id === movedId || pinnedIds?.has(item.id)) return { ...item };
     if (overlaps(moved, item)) {
       return { ...item, y: moved.y + moved.h };
     }
@@ -64,13 +64,13 @@ export function compactDown(items: readonly IdRect[], pinnedId: string): IdRect[
   return result;
 }
 
-export function compact(items: readonly IdRect[], pinnedId?: string): IdRect[] {
+export function compact(items: readonly IdRect[], pinnedId?: string, pinnedIds?: ReadonlySet<string>): IdRect[] {
   const sorted = [...items].sort((a, b) =>
     a.y !== b.y ? a.y - b.y : a.x - b.x,
   );
   const result: IdRect[] = [];
   for (const item of sorted) {
-    if (item.id === pinnedId) {
+    if (item.id === pinnedId || pinnedIds?.has(item.id)) {
       result.push({ ...item });
       continue;
     }
@@ -117,10 +117,11 @@ export function compactAll(
   items: readonly IdRect[],
   movedId: string,
   target: Rect,
+  pinnedIds?: ReadonlySet<string>,
 ): IdRect[] {
   const placed = place(items, movedId, target);
-  const pushed = push(placed, movedId);
-  return compact(pushed, movedId);
+  const pushed = push(placed, movedId, pinnedIds);
+  return compact(pushed, movedId, pinnedIds);
 }
 
 export function resizeCompact(

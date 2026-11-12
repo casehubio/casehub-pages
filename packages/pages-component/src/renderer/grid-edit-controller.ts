@@ -77,6 +77,7 @@ class GridEditControllerImpl implements GridEditController {
   private _selectedEl: HTMLElement | null = null;
   private _dispatching = false;
   private _dragCursorBadge: HTMLElement | null = null;
+  private _nestedGridItemIds: Set<string> | null = null;
 
   private readonly onPointerDown: (e: PointerEvent) => void;
   private readonly onPointerMove: (e: PointerEvent) => void;
@@ -318,6 +319,7 @@ class GridEditControllerImpl implements GridEditController {
     if (this.dragging || !this.geometry) return;
     if ((e.target as HTMLElement).dataset.gridEditButton !== undefined) return;
     if ((e.target as HTMLElement).closest("[data-mode-toggle]")) return;
+    if ((e.target as HTMLElement).closest("[data-pin-toggle]")) return;
 
     if (getCoordinator().getParent(this)) {
       e.stopPropagation();
@@ -428,55 +430,47 @@ class GridEditControllerImpl implements GridEditController {
       const outside = e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom;
       const coord = getCoordinator();
       const deepest = coord.deepestGridAt(e.clientX, e.clientY);
-      let enteredOtherGrid = deepest != null && deepest !== this;
-      if (!enteredOtherGrid && !outside && !this._crossGridActive && this.dragHandle === "move" && this.geometry) {
-        const cell = snapToCellWithRows(e.clientX, e.clientY, this.geometry, this.frozenRows);
-        for (let i = 0; i < this.items.length; i++) {
-          if (String(i) === this.dragItemId) continue;
-          const item = this.items[i]!;
-          if (item.at.mode !== "positioned") continue;
-          const el = this.gridEl.querySelector(`[data-item-id="${i}"]`) as HTMLElement | null;
-          if (!el || !el.querySelector('[data-grid-editing]')) continue;
-          if (cell.x >= item.at.x && cell.x < item.at.x + item.at.w && cell.y >= item.at.y && cell.y < item.at.y + item.at.h) {
-            enteredOtherGrid = true;
-            break;
-          }
-        }
-      }
+      const enteredOtherGrid = deepest != null && deepest !== this;
       if (outside || enteredOtherGrid || this._crossGridActive) {
-        if (!this._crossGridActive) {
-          this._crossGridActive = true;
-          this.clearSwapTarget();
-          this.restoreOriginalPlacements();
-          hidePlaceholder(this.gridEl);
-          const itemIndex = Number(this.dragItemId);
-          const item = this.items[itemIndex];
-          if (item) coord.startCrossGridDrag(this, itemIndex, item, this.dragIntent);
-          if (!this._dragCursorBadge) {
-            if (this.dragIntent === "swap") {
-              this._showDragBadge("⇄");
-            } else {
-              const itemIdx = Number(this.dragItemId);
-              const srcItem = this.items[itemIdx];
-              if (srcItem?.at.mode === "positioned" && this.geometry) {
-                const pw = srcItem.at.w * (this.geometry.cellWidth + this.geometry.gap) - this.geometry.gap;
-                const ph = srcItem.at.h * (this.geometry.cellHeight + this.geometry.gap) - this.geometry.gap;
-                const ghost = this.gridEl.ownerDocument.createElement("div");
-                ghost.style.cssText = `position:fixed;z-index:9999;pointer-events:none;width:${pw}px;height:${ph}px;background:var(--pages-accent-3, rgba(59,130,246,0.15));border:2px dashed var(--pages-accent-7, #3b82f6);border-radius:var(--pages-radius-sm, 4px);opacity:0.8;`;
-                this.gridEl.ownerDocument.body.appendChild(ghost);
-                this._dragCursorBadge = ghost;
+        if (this._crossGridActive && !outside && !enteredOtherGrid) {
+          this._crossGridActive = false;
+          coord.cancelCrossGridDrag();
+          this._removeDragBadge();
+          if (this.dragIntent === "displace") {
+            const el = this.gridEl.querySelector(`[data-item-id="${this.dragItemId}"]`) as HTMLElement | null;
+            if (el) el.style.display = "none";
+          }
+          this.lastSnapCell = null;
+        } else {
+          if (!this._crossGridActive) {
+            this._crossGridActive = true;
+            this.clearSwapTarget();
+            hidePlaceholder(this.gridEl);
+            const itemIndex = Number(this.dragItemId);
+            const item = this.items[itemIndex];
+            if (item) coord.startCrossGridDrag(this, itemIndex, item, this.dragIntent);
+            if (!this._dragCursorBadge) {
+              if (this.dragIntent === "swap") {
+                this._showDragBadge("⇄");
+              } else {
+                const itemIdx = Number(this.dragItemId);
+                const srcItem = this.items[itemIdx];
+                if (srcItem?.at.mode === "positioned" && this.geometry) {
+                  const pw = srcItem.at.w * (this.geometry.cellWidth + this.geometry.gap) - this.geometry.gap;
+                  const ph = srcItem.at.h * (this.geometry.cellHeight + this.geometry.gap) - this.geometry.gap;
+                  const ghost = this.gridEl.ownerDocument.createElement("div");
+                  ghost.style.cssText = `position:fixed;z-index:9999;pointer-events:none;width:${pw}px;height:${ph}px;background:var(--pages-accent-3, rgba(59,130,246,0.15));border:2px dashed var(--pages-accent-7, #3b82f6);border-radius:var(--pages-radius-sm, 4px);opacity:0.8;`;
+                  this.gridEl.ownerDocument.body.appendChild(ghost);
+                  this._dragCursorBadge = ghost;
+                }
               }
             }
           }
+          e.stopPropagation();
+          coord.handleCrossGridMove(e.clientX, e.clientY);
+          this._moveDragBadge(e.clientX, e.clientY);
+          return;
         }
-        e.stopPropagation();
-        coord.handleCrossGridMove(e.clientX, e.clientY);
-        this._moveDragBadge(e.clientX, e.clientY);
-        return;
-      }
-      if (this._crossGridActive) {
-        this._crossGridActive = false;
-        coord.cancelCrossGridDrag();
       }
     }
     if (this.dragIntent === "swap") {
@@ -506,8 +500,9 @@ class GridEditControllerImpl implements GridEditController {
     }
 
     {
+      const pinnedIds = this.dragHandle === "move" ? this._getPinnedIds() : undefined;
       const resolved = this.dragHandle === "move"
-        ? compactAll(items, this.dragItemId!, target)
+        ? compactAll(items, this.dragItemId!, target, pinnedIds)
         : resizeCompact(items, this.dragItemId!, target);
 
       const before = this._initialDragPositions ?? this.captureItemPositions();
@@ -580,7 +575,7 @@ class GridEditControllerImpl implements GridEditController {
               resolvedItems = items.map(i => ({ ...i }));
             }
           } else {
-            resolvedItems = compactAll(items, this.dragItemId!, target);
+            resolvedItems = compactAll(items, this.dragItemId!, target, this._getPinnedIds());
           }
         } else {
           const newPlacement = this.computeResize(current, cell);
@@ -652,6 +647,7 @@ class GridEditControllerImpl implements GridEditController {
     this.dragIntent = "displace";
     this.clearSwapTarget();
     this._removeDragBadge();
+    this._nestedGridItemIds = null;
     this.lastSnapCell = null;
     this.frozenRows = null;
     this._initialDragPositions = null;
@@ -701,6 +697,33 @@ class GridEditControllerImpl implements GridEditController {
     }
   }
 
+  private _getNestedGridItemIds(): Set<string> {
+    if (!this._nestedGridItemIds) {
+      this._nestedGridItemIds = new Set<string>();
+      for (const child of this.gridEl.children) {
+        const el = child as HTMLElement;
+        const id = el.dataset.itemId;
+        if (id != null && el.querySelector('[data-grid-editing]')) {
+          this._nestedGridItemIds.add(id);
+        }
+      }
+    }
+    return this._nestedGridItemIds;
+  }
+
+  private _getPinnedIds(): Set<string> | undefined {
+    const nestedIds = this._getNestedGridItemIds();
+    if (nestedIds.size === 0) return undefined;
+    const coord = getCoordinator();
+    const pinned = new Set<string>();
+    for (const id of nestedIds) {
+      if (coord.isPinned(this, id)) {
+        pinned.add(id);
+      }
+    }
+    return pinned.size > 0 ? pinned : undefined;
+  }
+
   private restoreDragStyles(): void {
     for (const child of this.gridEl.children) {
       const el = child as HTMLElement;
@@ -741,6 +764,23 @@ class GridEditControllerImpl implements GridEditController {
     swapBtn.dataset.dragMode = "swap";
     bar.appendChild(displaceBtn);
     bar.appendChild(swapBtn);
+    if (el.querySelector('[data-grid-editing]')) {
+      const coord = getCoordinator();
+      const isPinned = coord.isPinned(this, id);
+      const pinBtn = doc.createElement("button");
+      pinBtn.title = isPinned ? "Pinned — click to allow displacement" : "Unpinned — click to pin";
+      pinBtn.textContent = isPinned ? "📌" : "📍";
+      pinBtn.style.cssText = BTN;
+      pinBtn.dataset.pinToggle = "";
+      pinBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        const nowPinned = coord.togglePin(this, id);
+        pinBtn.textContent = nowPinned ? "📌" : "📍";
+        pinBtn.title = nowPinned ? "Pinned — click to allow displacement" : "Unpinned — click to pin";
+      });
+      bar.appendChild(pinBtn);
+    }
     el.appendChild(bar);
     if (this.hoveredId === id) bar.style.display = "flex";
   }

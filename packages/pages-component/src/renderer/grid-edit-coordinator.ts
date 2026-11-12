@@ -24,6 +24,7 @@ export class GridEditCoordinator {
   private _controllers = new Set<GridEditController>();
   private _parents = new Map<GridEditController, GridEditController | null>();
   private _dirty = true;
+  private _unpinnedByPath = new Map<string, Set<string>>();
   private _crossGridState: {
     source: GridEditController;
     itemIndex: number;
@@ -93,6 +94,20 @@ export class GridEditCoordinator {
       return ["pages", 0, "grid"];
     }
     return ["pages", 0, ...segments, "grid"];
+  }
+
+  isPinned(controller: GridEditController, itemId: string): boolean {
+    const key = this.resolveGridPath(controller).join(".");
+    return !(this._unpinnedByPath.get(key)?.has(itemId) ?? false);
+  }
+
+  togglePin(controller: GridEditController, itemId: string): boolean {
+    const key = this.resolveGridPath(controller).join(".");
+    let set = this._unpinnedByPath.get(key);
+    if (!set) { set = new Set(); this._unpinnedByPath.set(key, set); }
+    if (set.has(itemId)) { set.delete(itemId); return true; }
+    set.add(itemId);
+    return false;
   }
 
   startCrossGridDrag(source: GridEditController, itemIndex: number, item: GridItem, intent: "displace" | "swap" = "swap"): void {
