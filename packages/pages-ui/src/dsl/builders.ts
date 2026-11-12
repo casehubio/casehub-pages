@@ -172,6 +172,12 @@ export function at(
   });
 }
 
+export function emptyContainer(x: number, y: number, w: number, h: number): GridItem {
+  return freeze({
+    placement: freeze({ mode: "positioned" as const, x, y, w, h }),
+  });
+}
+
 export function columns(
   distribution: number[],
   ...slotContents: Component[][]

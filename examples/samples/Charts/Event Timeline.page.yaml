@@ -1,6 +1,6 @@
 datasets:
   - uuid: events
-    content: >-
+    content: |-
       [
         ["1", "Case Started", "completed", "2026-01-15T09:00:00Z", "System", "lifecycle"],
         ["2", "Task Created", "completed", "2026-01-15T09:05:00Z", "Alice", "task"],
@@ -20,11 +20,16 @@ datasets:
         type: LABEL
       - id: category
         type: LABEL
-
 pages:
-  - components:
-      - type: event-timeline
-        properties:
-          layout: vertical
-          lookup:
-            uuid: events
+  - items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: event-timeline
+          properties:
+            layout: vertical
+            lookup:
+              uuid: events

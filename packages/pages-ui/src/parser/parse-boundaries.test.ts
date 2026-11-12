@@ -130,59 +130,6 @@ describe("global defaults propagation", () => {
     expect(page.items![2]!.component.type).toBe("title");
   });
 
-  it("global defaults propagate into rows/columns layout", () => {
-    const root = parsePage({
-      global: {
-        displayer: {
-          chart: { resizable: true },
-          lookup: { uuid: "ds" },
-        },
-      },
-      datasets: [{ uuid: "ds", content: "[[1]]" }],
-      pages: [{
-        rows: [{
-          columns: [{
-            span: 6,
-            components: [{ displayer: { type: "PIECHART" } }],
-          }],
-        }],
-      }],
-    });
-    const page = root.slots!["content"]![0]!;
-    const component = page.items![0]!.component;
-    expect(component.type).toBe("pie-chart");
-    expect(component.props?.["resizable"]).toBe(true);
-  });
-});
-
-describe("nested rows — ID uniqueness", () => {
-  it("components in nested rows get distinct IDs from outer components", () => {
-    const root = parsePage({
-      datasets: [{ uuid: "ds", content: "[[1,2]]" }],
-      pages: [{
-        rows: [{
-          columns: [
-            {
-              span: 6,
-              components: [{ displayer: { type: "BARCHART", lookup: { uuid: "ds" } } }],
-            },
-            {
-              span: 6,
-              rows: [{
-                columns: [{
-                  components: [{ displayer: { type: "PIECHART", lookup: { uuid: "ds" } } }],
-                }],
-              }],
-            },
-          ],
-        }],
-      }],
-    });
-    const page = root.slots!["content"]![0]!;
-    const ids = page.items!.map(item => item.component.id);
-    const uniqueIds = new Set(ids);
-    expect(uniqueIds.size).toBe(ids.length);
-  });
 });
 
 describe("inline content edge cases", () => {

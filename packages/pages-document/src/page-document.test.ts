@@ -9,31 +9,6 @@ const MINIMAL_PAGE = `pages:
           text: Hello
 `;
 
-const ROWS_PAGE = `pages:
-- name: Overview
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: bar-chart
-        properties:
-          subtype: column
-    - span: 6
-      components:
-      - type: pie-chart
-`;
-
-const COLUMNS_PAGE = `pages:
-- name: Overview
-  columns:
-  - span: 4
-    components:
-    - type: metric
-  - span: 8
-    components:
-    - type: data-table
-`;
-
 const WITH_DATASETS = `datasets:
 - uuid: sales_tx
   url: /api/sales
@@ -172,87 +147,11 @@ describe('PageDocument', () => {
       expect(doc.getPages()[0]!.getLayoutMode()).toBe('flat');
     });
 
-    it('detects rows layout', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      expect(doc.getPages()[0]!.getLayoutMode()).toBe('rows');
-    });
-
-    it('detects columns layout', () => {
-      const doc = PageDocument.parse(COLUMNS_PAGE);
-      expect(doc.getPages()[0]!.getLayoutMode()).toBe('columns');
-    });
-
     it('reads flat components', () => {
       const doc = PageDocument.parse(MINIMAL_PAGE);
       const comps = doc.getPages()[0]!.getComponents();
       expect(comps).toHaveLength(1);
       expect(comps[0]!.type).toBe('title');
-    });
-  });
-
-  describe('rows and columns', () => {
-    it('reads rows', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const rows = doc.getPages()[0]!.getRows();
-      expect(rows).toHaveLength(1);
-    });
-
-    it('reads columns within rows', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const cols = doc.getPages()[0]!.getRows()[0]!.getColumns();
-      expect(cols).toHaveLength(2);
-      expect(cols[0]!.span).toBe(6);
-      expect(cols[1]!.span).toBe(6);
-    });
-
-    it('reads components within columns', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const comps = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents();
-      expect(comps).toHaveLength(1);
-      expect(comps[0]!.type).toBe('bar-chart');
-    });
-
-    it('adds a row', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      doc.getPages()[0]!.addRow();
-      expect(doc.getPages()[0]!.getRows()).toHaveLength(2);
-    });
-
-    it('inserts a row at a specific index', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const page = doc.getPages()[0]!;
-      const rowsBefore = page.getRows().length;
-      page.insertRowAt(0);
-      const rowsAfter = page.getRows();
-      expect(rowsAfter).toHaveLength(rowsBefore + 1);
-      const newRow = rowsAfter[0]!;
-      expect(newRow.getColumns()).toHaveLength(1);
-      expect(newRow.getColumns()[0]!.span).toBe(12);
-    });
-
-    it('adds a component to a column', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
-      col.addComponent('metric', { subtype: 'card' });
-      expect(col.getComponents()).toHaveLength(2);
-      expect(col.getComponents()[1]!.type).toBe('metric');
-    });
-
-    it('preserves formatting after column mutation', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const comp = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents()[0]!;
-      comp.setProperty('title', 'Revenue');
-      const yaml = doc.toString();
-      expect(yaml).toContain('bar-chart');
-      expect(yaml).toContain('title: Revenue');
-    });
-
-    it('reads columns-layout columns', () => {
-      const doc = PageDocument.parse(COLUMNS_PAGE);
-      const cols = doc.getPages()[0]!.getColumns();
-      expect(cols).toHaveLength(2);
-      expect(cols[0]!.span).toBe(4);
-      expect(cols[0]!.getComponents()[0]!.type).toBe('metric');
     });
   });
 
@@ -412,18 +311,6 @@ describe('PageDocument', () => {
   });
 
   describe('positional insert', () => {
-    it('insertComponentAt inserts at specific index in column', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
-      const before = col.getComponents().length;
-
-      col.insertComponentAt(0, 'title', { text: 'Header' });
-
-      const comps = col.getComponents();
-      expect(comps).toHaveLength(before + 1);
-      expect(comps[0]!.type).toBe('title');
-    });
-
     it('insertChildAt inserts component at index in flat page', () => {
       const doc = PageDocument.parse(MINIMAL_PAGE);
       const page = doc.getPages()[0]!;
@@ -434,30 +321,6 @@ describe('PageDocument', () => {
       expect(comps).toHaveLength(2);
       expect(comps[0]!.type).toBe('metric');
       expect(comps[1]!.type).toBe('title');
-    });
-
-    it('insertColumnAt inserts column at specific index in row', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const row = doc.getPages()[0]!.getRows()[0]!;
-      const before = row.getColumns().length;
-
-      row.insertColumnAt(1, 4);
-
-      const cols = row.getColumns();
-      expect(cols).toHaveLength(before + 1);
-      expect(cols[1]!.span).toBe(4);
-    });
-
-    it('insertComponentAt supports undo', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
-      const before = col.getComponents().length;
-
-      col.insertComponentAt(0, 'title');
-      expect(col.getComponents()).toHaveLength(before + 1);
-
-      doc.undo();
-      expect(doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents()).toHaveLength(before);
     });
 
     it('insertChildAt appends at end when index equals length', () => {
@@ -709,51 +572,6 @@ describe('PageDocument', () => {
     });
   });
 
-  describe('wrapInRow', () => {
-    it('wraps flat-mode components into a row', () => {
-      const doc = PageDocument.parse(`pages:
-  - name: p1
-    components:
-      - type: bar-chart
-      - type: line-chart
-      - type: pie-chart`);
-      const page = doc.getPages()[0]!;
-      expect(page.getLayoutMode()).toBe('flat');
-
-      page.wrapInRow([0, 1]);
-
-      expect(page.getLayoutMode()).toBe('rows');
-      const rows = page.getRows();
-      expect(rows).toHaveLength(2);
-      const wrappedComps = rows[0]!.getColumns()[0]!.getComponents();
-      expect(wrappedComps).toHaveLength(2);
-      expect(wrappedComps[0]!.type).toBe('bar-chart');
-      expect(wrappedComps[1]!.type).toBe('line-chart');
-      const remainingComps = rows[1]!.getColumns()[0]!.getComponents();
-      expect(remainingComps).toHaveLength(1);
-      expect(remainingComps[0]!.type).toBe('pie-chart');
-    });
-
-    it('throws in columns mode', () => {
-      const doc = PageDocument.parse(COLUMNS_PAGE);
-      const page = doc.getPages()[0]!;
-      expect(() => page.wrapInRow([0])).toThrow();
-    });
-
-    it('is atomic — single undo restores original', () => {
-      const doc = PageDocument.parse(`pages:
-  - name: p1
-    components:
-      - type: bar-chart
-      - type: line-chart`);
-      doc.getPages()[0]!.wrapInRow([0, 1]);
-
-      doc.undo();
-      expect(doc.getPages()[0]!.getLayoutMode()).toBe('flat');
-      expect(doc.getPages()[0]!.getComponents()).toHaveLength(2);
-    });
-  });
-
   describe('replaceWith', () => {
     it('replaces type and preserves compatible properties', () => {
       const doc = PageDocument.parse(`pages:
@@ -943,9 +761,8 @@ describe('PageDocument', () => {
     it('coordinated transaction preserves atomicity', () => {
       const doc = PageDocument.parseCoordinated(MINIMAL_PAGE);
       const page = doc.getPages()[0]!;
-      expect(page.getLayoutMode()).toBe('flat');
-      page.wrapInRow([0]);
-      expect(page.getLayoutMode()).toBe('rows');
+      page.addComponent('metric');
+      expect(page.getComponents()).toHaveLength(2);
       expect(doc.canUndo()).toBe(false);
     });
 

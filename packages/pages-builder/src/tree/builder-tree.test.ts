@@ -214,28 +214,40 @@ describe('computeMenuItems', () => {
     expect(items.find(i => i.action === 'add-child')).toBeUndefined();
   });
 
-  it('returns wrap submenu for components', () => {
+  it('returns wrap-tabs action for components', () => {
     const items = computeMenuItems('component', false);
-    const wrapItem = items.find(i => i.label === 'Wrap in…');
-    expect(wrapItem).toBeDefined();
-    expect(wrapItem!.children).toBeDefined();
-    expect(wrapItem!.children!.find(c => c.action === 'wrap-tabs')).toBeDefined();
+    expect(items.find(i => i.action === 'wrap-tabs')).toBeDefined();
   });
 
-  it('returns row actions for row nodes', () => {
-    const items = computeMenuItems('row', false);
+  it('does not include wrap-row or wrap-column for components', () => {
+    const items = computeMenuItems('component', false);
+    const allActions = items.flatMap(i => i.children ? i.children.map(c => c.action) : [i.action]);
+    expect(allActions).not.toContain('wrap-row');
+    expect(allActions).not.toContain('wrap-column');
+  });
+
+  it('returns grid-item actions for grid-item nodes', () => {
+    const items = computeMenuItems('grid-item', false);
     const actions = items.filter(i => !i.separator).map(i => i.action);
     expect(actions).toContain('move-up');
-    expect(actions).toContain('add-column');
+    expect(actions).toContain('move-down');
+    expect(actions).toContain('split-horizontal');
+    expect(actions).toContain('split-vertical');
     expect(actions).toContain('delete');
+  });
+
+  it('returns no row or column menus', () => {
+    expect(computeMenuItems('row', false)).toHaveLength(0);
+    expect(computeMenuItems('column', false)).toHaveLength(0);
   });
 
   it('returns page actions for page nodes', () => {
     const items = computeMenuItems('page', false);
     const actions = items.filter(i => !i.separator).map(i => i.action);
-    expect(actions).toContain('add-row');
+    expect(actions).toContain('add-item');
     expect(actions).toContain('add-child');
     expect(actions).toContain('delete');
+    expect(actions).not.toContain('add-row');
   });
 
   it('returns dataset actions for dataset nodes', () => {

@@ -1,6 +1,6 @@
 datasets:
   - uuid: features
-    content: >-
+    content: |-
       [
         ["Pages Runtime", "true", "true", "false", "true"],
         ["Data Pipeline", "true", "true", "true", "false"],
@@ -19,9 +19,8 @@ datasets:
         type: LABEL
       - id: a11y
         type: LABEL
-
   - uuid: service-status
-    content: >-
+    content: |-
       [
         ["API Gateway", "#22c55e", "#22c55e", "#22c55e", "#eab308", "#22c55e"],
         ["Auth Service", "#22c55e", "#eab308", "#22c55e", "#22c55e", "#22c55e"],
@@ -42,9 +41,8 @@ datasets:
         type: LABEL
       - id: fri
         type: LABEL
-
   - uuid: scorecard
-    content: >-
+    content: |-
       [
         ["Revenue", "2340000", "2100000", "Active"],
         ["Customers", "18420", "15800", "Active"],
@@ -61,9 +59,8 @@ datasets:
         type: LABEL
       - id: status
         type: LABEL
-
   - uuid: comparison
-    content: >-
+    content: |-
       [
         ["Language", "TypeScript", "Java", "Python"],
         ["Typing", "Structural", "Nominal", "Duck"],
@@ -80,9 +77,8 @@ datasets:
         type: LABEL
       - id: col3
         type: LABEL
-
   - uuid: schedule
-    content: >-
+    content: |-
       [
         ["Alice", "Sprint planning", "Dev", "Dev", "Code review", "Retro"],
         ["Bob", "Dev", "Dev", "Design review", "Dev", "Retro"],
@@ -102,9 +98,8 @@ datasets:
         type: LABEL
       - id: fri
         type: LABEL
-
   - uuid: kpi
-    content: >-
+    content: |-
       [
         ["Status", "Running"],
         ["Uptime", "48h 23m"],
@@ -118,9 +113,8 @@ datasets:
         type: LABEL
       - id: value
         type: LABEL
-
   - uuid: permissions
-    content: >-
+    content: |-
       [
         ["Admin", "true", "true", "true", "true"],
         ["Editor", "true", "true", "true", "false"],
@@ -139,9 +133,8 @@ datasets:
         type: LABEL
       - id: admin
         type: LABEL
-
   - uuid: quarterly
-    content: >-
+    content: |-
       [
         ["North", "1200", "1350", "1180", "1420"],
         ["South", "980", "1020", "1100", "1050"],
@@ -159,279 +152,422 @@ datasets:
         type: LABEL
       - id: q4
         type: LABEL
-
 pages:
   - name: Grid Tables
-    components:
-      - type: title
-        properties:
-          text: Grid Table Patterns
-          size: h2
-
-      - type: markdown
-        properties:
-          content: |
-            The `grid-table` component renders information grids — fixed-layout
-            displays for feature matrices, status dashboards, scorecards, and
-            cross-tabulations. Unlike `data-table`, there is no sorting, filtering,
-            or pagination — just clean, styled information display.
-
-      # ── Feature Matrix (boolean cells, cross-matrix) ──────────────
-      - type: title
-        properties:
-          text: "Feature Matrix — boolean cells"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: features
-          columnHeaders: true
-          rowHeaders: true
-          cellDisplay:
-            tests: boolean
-            docs: boolean
-            i18n: boolean
-            a11y: boolean
-
-      # ── Service Status Dashboard (color cells) ────────────────────
-      - type: title
-        properties:
-          text: "Service Status — color cells"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: service-status
-          columnHeaders: true
-          rowHeaders: true
-          cellDisplay:
-            mon: color
-            tue: color
-            wed: color
-            thu: color
-            fri: color
-
-      # ── KPI Summary (row headers, no column headers) ──────────────
-      - type: title
-        properties:
-          text: "KPI Summary — row headers only"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: kpi
-          columnHeaders: false
-          rowHeaders: true
-
-      # ── Scorecard (badge + number cells) ───────────────────────────
-      - type: title
-        properties:
-          text: "Scorecard — badge + number cells"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: scorecard
-          columnHeaders: true
-          rowHeaders: true
-          cellDisplay:
-            current: number
-            previous: number
-            status: badge
-
-      # ── Permission Matrix (boolean cross-matrix) ───────────────────
-      - type: title
-        properties:
-          text: "Permission Matrix — boolean cross-matrix"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: permissions
-          columnHeaders: true
-          rowHeaders: true
-          cellDisplay:
-            read: boolean
-            write: boolean
-            approve: boolean
-            admin: boolean
-
-      # ── Comparison Table (text cross-matrix) ──────────────────────
-      - type: title
-        properties:
-          text: "Comparison Table — text cross-matrix"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: comparison
-          columnHeaders: false
-          rowHeaders: true
-
-      # ── Quarterly Revenue (number cells, cross-matrix) ─────────────
-      - type: title
-        properties:
-          text: "Quarterly Revenue — number cells"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: quarterly
-          columnHeaders: true
-          rowHeaders: true
-          cellDisplay:
-            q1: number
-            q2: number
-            q3: number
-            q4: number
-
-      # ── Schedule Grid (plain text, all headers) ────────────────────
-      - type: title
-        properties:
-          text: "Schedule Grid — plain text"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: schedule
-          columnHeaders: true
-          rowHeaders: true
-
-      # ── Data-only Grid (no headers) ────────────────────────────────
-      - type: title
-        properties:
-          text: "Data-only Grid — no headers"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: quarterly
-          columnHeaders: false
-          rowHeaders: false
-          cellDisplay:
-            q1: number
-            q2: number
-            q3: number
-            q4: number
-
-      # ── Compact Grids ──────────────────────────────────────────────
-      - type: title
-        properties:
-          text: "Compact Grids — fixed width, tight padding"
-          size: h3
-
-      - type: markdown
-        properties:
-          content: |
-            `compact: true` shrinks the table to fit its content — no
-            stretching to fill the container. Tighter padding and
-            `nowrap` on cells.
-
-      - type: columns
-        properties:
-          distribution: [1, 1]
-        columns:
-          - components:
-              - type: grid-table
-                properties:
-                  lookup:
-                    uuid: kpi
-                  columnHeaders: false
-                  rowHeaders: true
-                  compact: true
-          - components:
-              - type: grid-table
-                properties:
-                  lookup:
-                    uuid: permissions
-                  columnHeaders: true
-                  rowHeaders: true
-                  compact: true
-                  cellDisplay:
-                    read: boolean
-                    write: boolean
-                    approve: boolean
-                    admin: boolean
-
-      # ── Striped Rows ───────────────────────────────────────────────
-      - type: title
-        properties:
-          text: "Striped Rows — alternating row backgrounds"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: schedule
-          columnHeaders: true
-          rowHeaders: true
-          stripe: rows
-
-      # ── Striped Columns ────────────────────────────────────────────
-      - type: title
-        properties:
-          text: "Striped Columns — alternating column backgrounds"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: quarterly
-          columnHeaders: true
-          rowHeaders: true
-          stripe: columns
-          cellDisplay:
-            q1: number
-            q2: number
-            q3: number
-            q4: number
-
-      # ── Full Grid — vertical lines + row stripes ───────────────────
-      - type: title
-        properties:
-          text: "Full Grid — vertical lines + row stripes"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: permissions
-          columnHeaders: true
-          rowHeaders: true
-          verticalLines: true
-          stripe: rows
-          cellDisplay:
-            read: boolean
-            write: boolean
-            approve: boolean
-            admin: boolean
-
-      # ── Compact Full Grid ──────────────────────────────────────────
-      - type: title
-        properties:
-          text: "Compact Full Grid — all options combined"
-          size: h3
-
-      - type: grid-table
-        properties:
-          lookup:
-            uuid: features
-          columnHeaders: true
-          rowHeaders: true
-          compact: true
-          verticalLines: true
-          stripe: both
-          cellDisplay:
-            tests: boolean
-            docs: boolean
-            i18n: boolean
-            a11y: boolean
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Grid Table Patterns
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              The `grid-table` component renders information grids — fixed-layout
+              displays for feature matrices, status dashboards, scorecards, and
+              cross-tabulations. Unlike `data-table`, there is no sorting, filtering,
+              or pagination — just clean, styled information display.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Feature Matrix — boolean cells
+            size: h3
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: features
+            columnHeaders: true
+            rowHeaders: true
+            cellDisplay:
+              tests: boolean
+              docs: boolean
+              i18n: boolean
+              a11y: boolean
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Service Status — color cells
+            size: h3
+      - placement:
+          x: 0
+          y: 5
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: service-status
+            columnHeaders: true
+            rowHeaders: true
+            cellDisplay:
+              mon: color
+              tue: color
+              wed: color
+              thu: color
+              fri: color
+      - placement:
+          x: 0
+          y: 6
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: KPI Summary — row headers only
+            size: h3
+      - placement:
+          x: 0
+          y: 7
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: kpi
+            columnHeaders: false
+            rowHeaders: true
+      - placement:
+          x: 0
+          y: 8
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Scorecard — badge + number cells
+            size: h3
+      - placement:
+          x: 0
+          y: 9
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: scorecard
+            columnHeaders: true
+            rowHeaders: true
+            cellDisplay:
+              current: number
+              previous: number
+              status: badge
+      - placement:
+          x: 0
+          y: 10
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Permission Matrix — boolean cross-matrix
+            size: h3
+      - placement:
+          x: 0
+          y: 11
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: permissions
+            columnHeaders: true
+            rowHeaders: true
+            cellDisplay:
+              read: boolean
+              write: boolean
+              approve: boolean
+              admin: boolean
+      - placement:
+          x: 0
+          y: 12
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Comparison Table — text cross-matrix
+            size: h3
+      - placement:
+          x: 0
+          y: 13
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: comparison
+            columnHeaders: false
+            rowHeaders: true
+      - placement:
+          x: 0
+          y: 14
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Quarterly Revenue — number cells
+            size: h3
+      - placement:
+          x: 0
+          y: 15
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: quarterly
+            columnHeaders: true
+            rowHeaders: true
+            cellDisplay:
+              q1: number
+              q2: number
+              q3: number
+              q4: number
+      - placement:
+          x: 0
+          y: 16
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Schedule Grid — plain text
+            size: h3
+      - placement:
+          x: 0
+          y: 17
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: schedule
+            columnHeaders: true
+            rowHeaders: true
+      - placement:
+          x: 0
+          y: 18
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Data-only Grid — no headers
+            size: h3
+      - placement:
+          x: 0
+          y: 19
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: quarterly
+            columnHeaders: false
+            rowHeaders: false
+            cellDisplay:
+              q1: number
+              q2: number
+              q3: number
+              q4: number
+      - placement:
+          x: 0
+          y: 20
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Compact Grids — fixed width, tight padding
+            size: h3
+      - placement:
+          x: 0
+          y: 21
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              `compact: true` shrinks the table to fit its content — no
+              stretching to fill the container. Tighter padding and
+              `nowrap` on cells.
+      - placement:
+          x: 0
+          y: 22
+          w: 12
+          h: 1
+        component:
+          type: columns
+          properties:
+            distribution:
+              - 1
+              - 1
+          columns:
+            - components:
+                - type: grid-table
+                  properties:
+                    lookup:
+                      uuid: kpi
+                    columnHeaders: false
+                    rowHeaders: true
+                    compact: true
+            - components:
+                - type: grid-table
+                  properties:
+                    lookup:
+                      uuid: permissions
+                    columnHeaders: true
+                    rowHeaders: true
+                    compact: true
+                    cellDisplay:
+                      read: boolean
+                      write: boolean
+                      approve: boolean
+                      admin: boolean
+      - placement:
+          x: 0
+          y: 23
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Striped Rows — alternating row backgrounds
+            size: h3
+      - placement:
+          x: 0
+          y: 24
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: schedule
+            columnHeaders: true
+            rowHeaders: true
+            stripe: rows
+      - placement:
+          x: 0
+          y: 25
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Striped Columns — alternating column backgrounds
+            size: h3
+      - placement:
+          x: 0
+          y: 26
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: quarterly
+            columnHeaders: true
+            rowHeaders: true
+            stripe: columns
+            cellDisplay:
+              q1: number
+              q2: number
+              q3: number
+              q4: number
+      - placement:
+          x: 0
+          y: 27
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Full Grid — vertical lines + row stripes
+            size: h3
+      - placement:
+          x: 0
+          y: 28
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: permissions
+            columnHeaders: true
+            rowHeaders: true
+            verticalLines: true
+            stripe: rows
+            cellDisplay:
+              read: boolean
+              write: boolean
+              approve: boolean
+              admin: boolean
+      - placement:
+          x: 0
+          y: 29
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Compact Full Grid — all options combined
+            size: h3
+      - placement:
+          x: 0
+          y: 30
+          w: 12
+          h: 1
+        component:
+          type: grid-table
+          properties:
+            lookup:
+              uuid: features
+            columnHeaders: true
+            rowHeaders: true
+            compact: true
+            verticalLines: true
+            stripe: both
+            cellDisplay:
+              tests: boolean
+              docs: boolean
+              i18n: boolean
+              a11y: boolean

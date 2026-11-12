@@ -9,7 +9,7 @@ import { computeMenuItems } from './tree-context-menu.js';
 
 import '@casehubio/pages-primitives/context-menu';
 
-export type TreeNodeType = 'page' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section';
+export type TreeNodeType = 'page' | 'grid-item' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section';
 
 export interface TreeNodeInfo {
   readonly label: string;
@@ -89,33 +89,25 @@ function buildRowNode(row: RowNode): TreeNodeInfo {
 
 function buildGridItemNode(item: GridItemNode): TreeNodeInfo {
   const comp = item.getComponent();
-  const entry = catalogByType.get(comp.type);
-  const children: TreeNodeInfo[] = [];
-
-  if (comp.isContainer()) {
-    const containerChildren = comp.getChildren();
-    for (const [slotName, slotChildren] of Object.entries(containerChildren.slots)) {
-      const slotDesc = containerChildren.descriptor?.slots.find(s => s.yamlKey === slotName);
-      const childNodes = slotDesc?.kind === 'grid-items'
-        ? (slotChildren as GridItemNode[]).map(buildGridItemNode)
-        : (slotChildren as ComponentNode[]).map(buildComponentNode);
-      children.push({
-        label: slotName,
-        icon: 'folder_open',
-        nodeType: 'section',
-        path: [...comp.path, slotName],
-        children: childNodes,
-      });
-    }
+  const placement = formatPlacement(item.getPlacement());
+  if (!comp) {
+    return {
+      label: `Empty ${placement}`,
+      icon: 'check_box_outline_blank',
+      nodeType: 'grid-item',
+      children: [],
+      path: item.path,
+      annotation: placement,
+    };
   }
-
+  const compChild = buildComponentNode(comp);
   return {
     label: componentLabel(comp),
-    icon: entry?.icon ?? 'widgets',
-    nodeType: 'component',
+    icon: 'grid_view',
+    nodeType: 'grid-item',
     path: [...item.path],
-    children,
-    annotation: formatPlacement(item.getPlacement()),
+    children: [compChild],
+    annotation: placement,
   };
 }
 
@@ -123,7 +115,18 @@ function buildPageNode(page: PageNode): TreeNodeInfo {
   const mode = page.getLayoutMode();
   let children: TreeNodeInfo[];
   if (mode === 'items') {
-    children = page.getItems().map(buildGridItemNode);
+    const items = page.getItems();
+    const sorted = [...items].sort((a, b) => {
+      const pa = a.getPlacement();
+      const pb = b.getPlacement();
+      const ya = pa.mode === 'positioned' ? pa.y : Infinity;
+      const yb = pb.mode === 'positioned' ? pb.y : Infinity;
+      if (ya !== yb) return ya - yb;
+      const xa = pa.mode === 'positioned' ? pa.x : Infinity;
+      const xb = pb.mode === 'positioned' ? pb.x : Infinity;
+      return xa - xb;
+    });
+    children = sorted.map(buildGridItemNode);
   } else if (mode === 'rows') {
     children = page.getRows().map(buildRowNode);
   } else if (mode === 'columns') {
@@ -277,6 +280,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   @property({ attribute: false }) selectedPath: readonly (string | number)[] | undefined;
   @property({ attribute: false }) clipboardFragmentType: string | undefined;
   @property({ type: Boolean }) insertMode = false;
+  @property({ type: Boolean }) pickerActive = false;
 
   @state() private _expandedPaths = new Set<string>();
   @state() private _treeModel: TreeNodeInfo[] = [];
@@ -403,7 +407,8 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   }
 
   private _isContainerNode(node: TreeNodeInfo): boolean {
-    return node.nodeType === 'page' || node.nodeType === 'row' || node.nodeType === 'column' ||
+    return node.nodeType === 'page' ||
+      node.nodeType === 'grid-item' ||
       (node.nodeType === 'component' && node.children.length > 0);
   }
 
@@ -521,7 +526,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   private _isPasteTarget(node: TreeNodeInfo): boolean {
     if (!this.insertMode || !this.clipboardFragmentType || node.nodeType === 'section') return false;
     const ft = this.clipboardFragmentType;
-    if (ft === 'component') return node.nodeType === 'column' || node.nodeType === 'page' || node.nodeType === 'component';
+    if (ft === 'component') return node.nodeType === 'column' || node.nodeType === 'page' || node.nodeType === 'component' || node.nodeType === 'grid-item';
     if (ft === 'row') return node.nodeType === 'page' || node.nodeType === 'row';
     if (ft === 'column') return node.nodeType === 'row' || node.nodeType === 'column';
     return false;
@@ -541,7 +546,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
           aria-level="${level}"
           aria-expanded="${hasChildren ? String(expanded) : nothing}"
           aria-selected="${selected}"
-          class="tree-item${selected ? ' selected' : ''}${isSection ? ' section' : ''}${pasteTarget ? ' paste-target' : ''}"
+          class="tree-item${selected ? ' selected' : ''}${isSection ? ' section' : ''}${pasteTarget ? ' paste-target' : ''}${selected && this.pickerActive ? ' picker-active' : ''}"
           style="padding-left: ${level * 16}px"
           tabindex="-1"
           data-path="${pathKey(node.path)}"
@@ -748,7 +753,11 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     .tree-item:hover .add-btn,
     .tree-item:hover .insert-btn,
     .tree-item:hover .cut-btn,
-    .tree-item:hover .copy-btn {
+    .tree-item:hover .copy-btn,
+    .tree-item.picker-active .add-btn,
+    .tree-item.picker-active .insert-btn,
+    .tree-item.picker-active .cut-btn,
+    .tree-item.picker-active .copy-btn {
       opacity: 1;
     }
 

@@ -1,6 +1,6 @@
 datasets:
   - uuid: inventory
-    content: >-
+    content: |-
       [
         ["Widgets", "Widget A", 142, "In Stock"],
         ["Widgets", "Widget B", 38, "Low Stock"],
@@ -21,143 +21,162 @@ datasets:
         type: NUMBER
       - id: status
         type: LABEL
-
 pages:
   - name: Split and Dock
-    components:
-      - type: title
-        properties:
-          text: Split and Dock
-          size: h2
-
-      - type: markdown
-        properties:
-          content: >
-            **Split** creates resizable panes with a draggable divider.
-            Drag the handle between panes to resize.
-
-      - type: tabs
-        properties:
-          targetPage: true
-        tabs:
-          Horizontal Split:
-            components:
-              - type: markdown
-                properties:
-                  content: "**Horizontal** — side-by-side panes. Drag the divider to resize."
-              - split:
-                  direction: horizontal
-                  ratio: [60, 40]
-                  children:
-                    - type: data-table
-                      properties:
-                        lookup:
-                          uuid: inventory
-                        sortable: true
-                        filter:
-                          notification: true
-                    - type: bar-chart
-                      properties:
-                        chart:
-                          height: 300
-                        filter:
-                          listening: true
-                        lookup:
-                          uuid: inventory
-
-          Vertical Split:
-            components:
-              - type: markdown
-                properties:
-                  content: "**Vertical** — top and bottom panes."
-              - split:
-                  direction: vertical
-                  ratio: [40, 60]
-                  children:
-                    - type: metric
-                      properties:
-                        subtype: card
-                        lookup:
-                          uuid: inventory
-                    - type: data-table
-                      properties:
-                        lookup:
-                          uuid: inventory
-                        sortable: true
-
-          Dock Bar:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **dock-bar** renders icon buttons that toggle panel visibility.
-                    Each item's `panelId` matches a component `id` — clicking the
-                    button shows or hides that panel.
-              - dock-bar:
-                  orientation: horizontal
-                  items:
-                    - icon: "\U0001F4CA"
-                      label: Charts
-                      panelId: charts-panel
-                      defaultOpen: true
-                    - icon: "\U0001F4CB"
-                      label: Data
-                      panelId: data-panel
-              - split:
-                  direction: horizontal
-                  ratio: [50, 50]
-                  children:
-                    - type: bar-chart
-                      id: charts-panel
-                      properties:
-                        chart:
-                          height: 300
-                        lookup:
-                          uuid: inventory
-                    - type: data-table
-                      id: data-panel
-                      properties:
-                        lookup:
-                          uuid: inventory
-                        sortable: true
-
-          Three Panel:
-            components:
-              - type: markdown
-                properties:
-                  content: "**Nested** — horizontal split with a vertical split inside the right pane."
-              - split:
-                  direction: horizontal
-                  ratio: [30, 70]
-                  children:
-                    - type: selector
-                      properties:
-                        subtype: labels
-                        filter:
-                          notification: true
-                        lookup:
-                          uuid: inventory
-                          group:
-                          - columnGroup:
-                                source: category
-                            functions:
-                            - source: category
-                    - split:
-                        direction: vertical
-                        ratio: [50, 50]
-                        children:
-                          - type: bar-chart
-                            properties:
-                              chart:
-                                height: 250
-                              filter:
-                                listening: true
-                              lookup:
-                                uuid: inventory
-                          - type: data-table
-                            properties:
-                              lookup:
-                                uuid: inventory
-                              sortable: true
-                              filter:
-                                listening: true
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Split and Dock
+            size: h2
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              **Split** creates resizable panes with a draggable divider. Drag the handle between panes to resize.
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            targetPage: true
+          tabs:
+            Horizontal Split:
+              components:
+                - type: markdown
+                  properties:
+                    content: "**Horizontal** — side-by-side panes. Drag the divider to resize."
+                - split:
+                    direction: horizontal
+                    ratio:
+                      - 60
+                      - 40
+                    children:
+                      - type: data-table
+                        properties:
+                          lookup:
+                            uuid: inventory
+                          sortable: true
+                          filter:
+                            notification: true
+                      - type: bar-chart
+                        properties:
+                          chart:
+                            height: 300
+                          filter:
+                            listening: true
+                          lookup:
+                            uuid: inventory
+            Vertical Split:
+              components:
+                - type: markdown
+                  properties:
+                    content: "**Vertical** — top and bottom panes."
+                - split:
+                    direction: vertical
+                    ratio:
+                      - 40
+                      - 60
+                    children:
+                      - type: metric
+                        properties:
+                          subtype: card
+                          lookup:
+                            uuid: inventory
+                      - type: data-table
+                        properties:
+                          lookup:
+                            uuid: inventory
+                          sortable: true
+            Dock Bar:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **dock-bar** renders icon buttons that toggle panel visibility. Each item's `panelId` matches a component `id` — clicking the button shows or hides that panel.
+                - dock-bar:
+                    orientation: horizontal
+                    items:
+                      - icon: 📊
+                        label: Charts
+                        panelId: charts-panel
+                        defaultOpen: true
+                      - icon: 📋
+                        label: Data
+                        panelId: data-panel
+                - split:
+                    direction: horizontal
+                    ratio:
+                      - 50
+                      - 50
+                    children:
+                      - type: bar-chart
+                        id: charts-panel
+                        properties:
+                          chart:
+                            height: 300
+                          lookup:
+                            uuid: inventory
+                      - type: data-table
+                        id: data-panel
+                        properties:
+                          lookup:
+                            uuid: inventory
+                          sortable: true
+            Three Panel:
+              components:
+                - type: markdown
+                  properties:
+                    content: "**Nested** — horizontal split with a vertical split inside the right pane."
+                - split:
+                    direction: horizontal
+                    ratio:
+                      - 30
+                      - 70
+                    children:
+                      - type: selector
+                        properties:
+                          subtype: labels
+                          filter:
+                            notification: true
+                          lookup:
+                            uuid: inventory
+                            group:
+                              - columnGroup:
+                                  source: category
+                                functions:
+                                  - source: category
+                      - split:
+                          direction: vertical
+                          ratio:
+                            - 50
+                            - 50
+                          children:
+                            - type: bar-chart
+                              properties:
+                                chart:
+                                  height: 250
+                                filter:
+                                  listening: true
+                                lookup:
+                                  uuid: inventory
+                            - type: data-table
+                              properties:
+                                lookup:
+                                  uuid: inventory
+                                sortable: true
+                                filter:
+                                  listening: true

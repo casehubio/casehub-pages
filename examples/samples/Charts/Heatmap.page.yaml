@@ -1,6 +1,6 @@
 datasets:
   - uuid: correlation
-    content: >-
+    content: |-
       [
         ["Revenue", "Costs", 0.92],
         ["Revenue", "Marketing", 0.78],
@@ -30,23 +30,40 @@ datasets:
         type: LABEL
       - id: correlation
         type: NUMBER
-
 pages:
-  - components:
-      - type: title
-        properties:
-          text: Correlation Heatmap
-          size: h3
-      - type: heatmap-chart
-        properties:
-          title: Metric Correlations
-          minColor: "#313695"
-          maxColor: "#a50026"
-          chart:
-            height: 400
-          lookup:
-            uuid: correlation
-      - type: data-table
-        properties:
-          lookup:
-            uuid: correlation
+  - items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Correlation Heatmap
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: heatmap-chart
+          properties:
+            title: Metric Correlations
+            minColor: "#313695"
+            maxColor: "#a50026"
+            chart:
+              height: 400
+            lookup:
+              uuid: correlation
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: data-table
+          properties:
+            lookup:
+              uuid: correlation

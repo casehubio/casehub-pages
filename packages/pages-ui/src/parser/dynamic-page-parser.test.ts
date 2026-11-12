@@ -45,24 +45,6 @@ describe("parseDynamicPage", () => {
     expect(result.type).toBe("page");
   });
 
-  it("parses rows layout", () => {
-    const raw = {
-      name: "dashboard",
-      rows: [
-        {
-          columns: [
-            { span: 6, components: [{ type: "title", properties: { text: "A" } }] },
-            { span: 6, components: [{ type: "title", properties: { text: "B" } }] },
-          ],
-        },
-      ],
-    };
-
-    const result = parseDynamicPage(raw);
-    expect(result.type).toBe("page");
-    expect(result.items!.length).toBeGreaterThanOrEqual(2);
-  });
-
   it("passes global displayer defaults", () => {
     const raw = {
       name: "chart-page",

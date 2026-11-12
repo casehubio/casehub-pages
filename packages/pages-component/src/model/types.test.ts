@@ -90,6 +90,16 @@ describe("Component<T, P>", () => {
   });
 });
 
+describe("GridItem", () => {
+  it("allows GridItem without component (empty container)", () => {
+    const item: GridItem = {
+      placement: { mode: "positioned", x: 0, y: 0, w: 6, h: 2 },
+    };
+    expect(item.placement.w).toBe(6);
+    expect(item.component).toBeUndefined();
+  });
+});
+
 describe("LayoutState type", () => {
   it("accepts valid layout state", () => {
     const state: LayoutState = {

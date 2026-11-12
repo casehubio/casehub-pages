@@ -1,13 +1,24 @@
 pages:
   - name: Basic Pipeline
-    components:
-      - type: markdown
-        properties:
-          content: |
-            Static rendering of a data pipeline graph with custom stencils and ELK auto-layout.
-            Five node types (**Source**, **Transform**, **Filter**, **Join**, **Sink**) with distinct colors and icons.
-
-      - type: html
-        properties:
-          content: |
-            <graph-canvas-core id="pipeline-canvas" style="width: 100%; height: 500px; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></graph-canvas-core>
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: markdown
+          properties:
+            content: |
+              Static rendering of a data pipeline graph with custom stencils and ELK auto-layout.
+              Five node types (**Source**, **Transform**, **Filter**, **Join**, **Sink**) with distinct colors and icons.
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: html
+          properties:
+            content: |
+              <graph-canvas-core id="pipeline-canvas" style="width: 100%; height: 500px; display: block; border: 1px solid var(--pages-neutral-4, #d1d5db); border-radius: 8px; overflow: hidden;"></graph-canvas-core>

@@ -1693,6 +1693,7 @@ __metadata:
     rimraf: "npm:^6.1.0"
     typescript: "npm:~5.8.0"
     vitest: "npm:^3.0.0"
+    yaml: "npm:^2.9.0"
   languageName: unknown
   linkType: soft
 

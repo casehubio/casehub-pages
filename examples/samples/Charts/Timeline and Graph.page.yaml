@@ -1,6 +1,6 @@
 datasets:
   - uuid: milestones
-    content: >
+    content: |
       [
         ["Planning", "Research & Discovery", "2026-01-15T00:00:00Z", "2026-02-28T00:00:00Z"],
         ["Planning", "Requirements Finalised", "2026-03-01T00:00:00Z", "2026-03-15T00:00:00Z"],
@@ -21,9 +21,8 @@ datasets:
         type: DATE
       - id: end
         type: DATE
-
   - uuid: dependencies
-    content: >
+    content: |
       [
         ["API Gateway", "Auth Service", "3"],
         ["API Gateway", "Rate Limiter", "2"],
@@ -45,61 +44,60 @@ datasets:
         type: TEXT
       - id: weight
         type: NUMBER
-
 pages:
   - name: Timeline and Graph
-    components:
-      - type: tabs
-        properties:
-          targetPage: true
-        tabs:
-          Timeline:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **Timeline** — Gantt-style visualisation of project milestones.
-                    Each bar spans from `startColumn` to `endColumn`, grouped by
-                    `categoryColumn`.
-              - type: timeline
-                properties:
-                  lookup:
-                    uuid: milestones
-                  startColumn: start
-                  endColumn: end
-                  labelColumn: task
-                  categoryColumn: phase
-
-          Graph:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **Graph** — force-directed network showing system dependencies.
-                    Nodes are auto-extracted from `sourceColumn` and `targetColumn`.
-                    Edge thickness reflects the `valueColumn` weight.
-              - type: graph
-                properties:
-                  lookup:
-                    uuid: dependencies
-                  sourceColumn: from
-                  targetColumn: to
-                  valueColumn: weight
-                  layout: force
-                  directed: true
-
-          Circular Layout:
-            components:
-              - type: markdown
-                properties:
-                  content: >
-                    **Circular layout** — same dependency data arranged in a ring.
-              - type: graph
-                properties:
-                  lookup:
-                    uuid: dependencies
-                  sourceColumn: from
-                  targetColumn: to
-                  valueColumn: weight
-                  layout: circular
-                  directed: true
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            targetPage: true
+          tabs:
+            Timeline:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Timeline** — Gantt-style visualisation of project milestones. Each bar spans from `startColumn` to `endColumn`, grouped by `categoryColumn`.
+                - type: timeline
+                  properties:
+                    lookup:
+                      uuid: milestones
+                    startColumn: start
+                    endColumn: end
+                    labelColumn: task
+                    categoryColumn: phase
+            Graph:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Graph** — force-directed network showing system dependencies. Nodes are auto-extracted from `sourceColumn` and `targetColumn`. Edge thickness reflects the `valueColumn` weight.
+                - type: graph
+                  properties:
+                    lookup:
+                      uuid: dependencies
+                    sourceColumn: from
+                    targetColumn: to
+                    valueColumn: weight
+                    layout: force
+                    directed: true
+            Circular Layout:
+              components:
+                - type: markdown
+                  properties:
+                    content: |
+                      **Circular layout** — same dependency data arranged in a ring.
+                - type: graph
+                  properties:
+                    lookup:
+                      uuid: dependencies
+                    sourceColumn: from
+                    targetColumn: to
+                    valueColumn: weight
+                    layout: circular
+                    directed: true

@@ -5,6 +5,7 @@ import { customElement, property } from 'lit/decorators.js';
 export class PagesPositionPicker extends LitElement {
   @property({ type: Boolean, reflect: true }) open = false;
   @property({ attribute: false }) anchor: HTMLElement | undefined;
+  @property({ type: Boolean }) showReplace = false;
 
   private _dismissTimer: ReturnType<typeof setTimeout> | undefined;
   private _escHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') this._dismiss(); };
@@ -30,9 +31,8 @@ export class PagesPositionPicker extends LitElement {
   private _positionNearAnchor(): void {
     if (!this.anchor) return;
     const anchorRect = this.anchor.getBoundingClientRect();
-    const parentRect = this.offsetParent?.getBoundingClientRect() ?? { top: 0, left: 0 };
-    this.style.top = `${anchorRect.bottom - parentRect.top}px`;
-    this.style.left = `${anchorRect.left - parentRect.left}px`;
+    this.style.top = `${anchorRect.bottom}px`;
+    this.style.left = `${anchorRect.left}px`;
   }
 
   private _dismiss(): void {
@@ -64,15 +64,16 @@ export class PagesPositionPicker extends LitElement {
         @mouseleave=${this._handleMouseLeave}
         @mouseenter=${this._handleMouseEnter}
       >
-        <button @click=${() => this._select('before')}>Before</button>
-        <button @click=${() => this._select('after')}>After</button>
+        <button title="Insert before" @click=${() => this._select('before')}>⬆</button>
+        ${this.showReplace ? html`<button title="Replace component" @click=${() => this._select('replace')}>⇄</button>` : ''}
+        <button title="Insert after" @click=${() => this._select('after')}>⬇</button>
       </div>
     `;
   }
 
   static override styles = css`
     :host {
-      position: absolute;
+      position: fixed;
       z-index: 1001;
       font-family: var(--pages-font-family, sans-serif);
       font-size: var(--pages-font-size-sm, 13px);
@@ -84,22 +85,29 @@ export class PagesPositionPicker extends LitElement {
 
     .position-popover {
       display: flex;
-      gap: 4px;
-      padding: 6px;
+      flex-direction: column;
+      gap: 1px;
+      padding: 3px;
       background: var(--pages-surface-bg, #fff);
       border: 1px solid var(--pages-border-color, #dadce0);
-      border-radius: var(--pages-radius-md, 8px);
-      box-shadow: var(--pages-shadow-3, 0 4px 16px rgba(0, 0, 0, 0.12));
+      border-radius: var(--pages-radius-sm, 4px);
+      box-shadow: var(--pages-shadow-2, 0 2px 4px rgba(0, 0, 0, 0.08));
     }
 
     button {
-      padding: 4px 12px;
+      width: 20px;
+      height: 20px;
+      padding: 0;
       border: 1px solid var(--pages-border-color, #dadce0);
-      border-radius: var(--pages-radius-sm, 4px);
+      border-radius: 4px;
       background: var(--pages-surface-bg, #fff);
-      color: var(--pages-text-primary, #333);
+      color: var(--pages-text-secondary, #5f6368);
       cursor: pointer;
-      font-size: inherit;
+      font-size: 12px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     button:hover {

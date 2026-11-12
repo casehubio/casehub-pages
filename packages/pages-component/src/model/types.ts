@@ -23,7 +23,7 @@ export type GridPlacement =
 
 export interface GridItem {
   readonly placement: GridPlacement;
-  readonly component: Component;
+  readonly component?: Component;
 }
 
 export interface PermissionContext {

@@ -3,277 +3,380 @@ properties:
 global:
   mode: dark
 datasets:
-- uuid: metrics
-  content: >-
-    [
-      ["kepler_container_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1842.5"],
-      ["kepler_container_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "956.3"],
-      ["kepler_container_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "412.8"],
-      ["kepler_container_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "2134.1"],
-      ["kepler_container_core_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1105.5"],
-      ["kepler_container_core_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "573.8"],
-      ["kepler_container_core_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "247.7"],
-      ["kepler_container_core_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "1280.5"],
-      ["kepler_container_dram_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "368.5"],
-      ["kepler_container_dram_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "191.3"],
-      ["kepler_container_dram_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "82.6"],
-      ["kepler_container_dram_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "426.8"],
-      ["kepler_container_uncore_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "92.1"],
-      ["kepler_container_uncore_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "47.8"],
-      ["kepler_container_package_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1197.6"],
-      ["kepler_container_package_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "621.6"],
-      ["kepler_container_package_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "330.3"],
-      ["kepler_container_package_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "1707.3"],
-      ["kepler_container_gpu_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "143.4"],
-      ["kepler_container_other_host_components_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "276.4"],
-      ["kepler_node_core_joules_total", "instance=\"node-01\",job=\"kepler\"", "8432.5"],
-      ["kepler_node_core_joules_total", "instance=\"node-02\",job=\"kepler\"", "6218.3"],
-      ["kepler_node_dram_joules_total", "instance=\"node-01\",job=\"kepler\"", "2108.1"],
-      ["kepler_node_dram_joules_total", "instance=\"node-02\",job=\"kepler\"", "1554.6"],
-      ["kepler_node_uncore_joules_total", "instance=\"node-01\",job=\"kepler\"", "421.6"],
-      ["kepler_node_uncore_joules_total", "instance=\"node-02\",job=\"kepler\"", "310.9"],
-      ["kepler_node_package_joules_total", "instance=\"node-01\",job=\"kepler\"", "8854.1"],
-      ["kepler_node_package_joules_total", "instance=\"node-02\",job=\"kepler\"", "6529.2"],
-      ["kepler_node_gpu_joules_total", "instance=\"node-01\",job=\"kepler\"", "1245.0"],
-      ["kepler_node_other_host_components_joules_total", "instance=\"node-01\",job=\"kepler\"", "1685.7"],
-      ["kepler_node_other_host_components_joules_total", "instance=\"node-02\",job=\"kepler\"", "1243.0"]
-    ]
-- uuid: joules_by_container
-  content: >-
-    [
-      ["api-server", "api-server-7d4f9", 1842.5, 1105.5, 368.5, 92.1, 1197.6, 276.4, 0],
-      ["worker", "worker-3a8b2", 956.3, 573.8, 191.3, 47.8, 621.6, 0, 143.4],
-      ["redis", "redis-master-0", 412.8, 247.7, 82.6, 0, 330.3, 0, 0],
-      ["postgres", "postgres-primary-0", 2134.1, 1280.5, 426.8, 0, 1707.3, 0, 0]
-    ]
-  columns:
-  - id: Container
-  - id: Pod
-  - id: Total
-    type: NUMBER
-  - id: Core
-    type: NUMBER
-  - id: DRAM
-    type: NUMBER
-  - id: Uncore
-    type: NUMBER
-  - id: Package
-    type: NUMBER
-  - id: Other Host
-    type: NUMBER
-  - id: GPU
-    type: NUMBER
-- uuid: joules_by_node
-  content: >-
-    [
-      ["node-01", 8432.5, 2108.1, 421.6, 8854.1, 1685.7, 1245.0, 22747.0],
-      ["node-02", 6218.3, 1554.6, 310.9, 6529.2, 1243.0, 0, 15856.0]
-    ]
-  columns:
-  - id: Node
-  - id: Core
-    type: NUMBER
-  - id: DRAM
-    type: NUMBER
-  - id: Uncore
-    type: NUMBER
-  - id: Package
-    type: NUMBER
-  - id: Other Host
-    type: NUMBER
-  - id: GPU
-    type: NUMBER
-  - id: Value
-    type: NUMBER
-- uuid: monitoring
-  content: >-
-    [
-      ["prod", "api-server", 1842.5, 1719849600000],
-      ["prod", "worker", 956.3, 1719849600000],
-      ["cache", "redis", 412.8, 1719849600000],
-      ["data", "postgres", 2134.1, 1719849600000]
-    ]
-  columns:
-  - id: Namespace
-  - id: Container
-  - id: Total
-    type: NUMBER
-  - id: Timestamp
-    type: NUMBER
-pages:
-- name: index
-  properties:
-    margin: 10px
-  components:
-  - title: Kepler Metrics
-  - type: tabs
-    properties:
-      navGroupId: Metrics
-      targetDivId: Metrics_Div
-  - div: Metrics_Div
-- name: Monitoring
-  rows:
-  - properties:
-      margin: 10px
-      margin-top: 30px
+  - uuid: metrics
+    content: |-
+      [
+        ["kepler_container_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1842.5"],
+        ["kepler_container_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "956.3"],
+        ["kepler_container_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "412.8"],
+        ["kepler_container_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "2134.1"],
+        ["kepler_container_core_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1105.5"],
+        ["kepler_container_core_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "573.8"],
+        ["kepler_container_core_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "247.7"],
+        ["kepler_container_core_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "1280.5"],
+        ["kepler_container_dram_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "368.5"],
+        ["kepler_container_dram_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "191.3"],
+        ["kepler_container_dram_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "82.6"],
+        ["kepler_container_dram_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "426.8"],
+        ["kepler_container_uncore_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "92.1"],
+        ["kepler_container_uncore_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "47.8"],
+        ["kepler_container_package_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1197.6"],
+        ["kepler_container_package_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "621.6"],
+        ["kepler_container_package_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "330.3"],
+        ["kepler_container_package_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "1707.3"],
+        ["kepler_container_gpu_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "143.4"],
+        ["kepler_container_other_host_components_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "276.4"],
+        ["kepler_node_core_joules_total", "instance=\"node-01\",job=\"kepler\"", "8432.5"],
+        ["kepler_node_core_joules_total", "instance=\"node-02\",job=\"kepler\"", "6218.3"],
+        ["kepler_node_dram_joules_total", "instance=\"node-01\",job=\"kepler\"", "2108.1"],
+        ["kepler_node_dram_joules_total", "instance=\"node-02\",job=\"kepler\"", "1554.6"],
+        ["kepler_node_uncore_joules_total", "instance=\"node-01\",job=\"kepler\"", "421.6"],
+        ["kepler_node_uncore_joules_total", "instance=\"node-02\",job=\"kepler\"", "310.9"],
+        ["kepler_node_package_joules_total", "instance=\"node-01\",job=\"kepler\"", "8854.1"],
+        ["kepler_node_package_joules_total", "instance=\"node-02\",job=\"kepler\"", "6529.2"],
+        ["kepler_node_gpu_joules_total", "instance=\"node-01\",job=\"kepler\"", "1245.0"],
+        ["kepler_node_other_host_components_joules_total", "instance=\"node-01\",job=\"kepler\"", "1685.7"],
+        ["kepler_node_other_host_components_joules_total", "instance=\"node-02\",job=\"kepler\"", "1243.0"]
+      ]
+  - uuid: joules_by_container
+    content: |-
+      [
+        ["api-server", "api-server-7d4f9", 1842.5, 1105.5, 368.5, 92.1, 1197.6, 276.4, 0],
+        ["worker", "worker-3a8b2", 956.3, 573.8, 191.3, 47.8, 621.6, 0, 143.4],
+        ["redis", "redis-master-0", 412.8, 247.7, 82.6, 0, 330.3, 0, 0],
+        ["postgres", "postgres-primary-0", 2134.1, 1280.5, 426.8, 0, 1707.3, 0, 0]
+      ]
     columns:
-    - components:
-      - type: title
-        properties:
-          text: Joules by Container over time
-          size: h3
-      - type: timeseries
-        properties:
-          filter:
-            listening: true
-          lookup:
-            uuid: monitoring
-            group:
-            - functions:
-              - source: Container
-              - source: Timestamp
-              - source: Total
-- name: Joules by Node
-  properties:
-    margin: 20px
-  components:
-  - markdown: '### **Filter**'
-  - type: selector
-    properties:
-      filter:
-        notification: true
-      lookup:
-        uuid: joules_by_node
-        group:
-        - columnGroup:
-            source: Node
-          functions:
-          - source: Node
-  - type: title
-    properties:
-      text: Total Joules by Node
-      size: h3
-  - type: metric
-    properties:
-      filter:
-        listening: true
-      lookup:
-        uuid: joules_by_node
-        group:
-        - functions:
-          - source: Value
-            function: SUM
-      columns:
+      - id: Container
+      - id: Pod
       - id: Total
-        pattern: '###,###.000'
-  - type: title
-    properties:
-      text: Joules by Node
-      size: h3
-  - type: bar-chart
-    properties:
-      chart:
-        height: 400
-      filter:
-        listening: true
-      lookup:
-        uuid: joules_by_node
-        group:
-        - columnGroup:
-            source: Node
-          functions:
-          - source: Node
-          - source: Package
-            function: SUM
-          - source: Core
-            function: SUM
-          - source: DRAM
-            function: SUM
-          - source: Uncore
-            function: SUM
-          - source: Other Host
-            function: SUM
-          - source: GPU
-            function: SUM
-- name: Joules by Container
-  properties:
-    margin: 20px
-  components:
-  - markdown: '### **Filter**'
-  - type: selector
-    properties:
-      filter:
-        notification: true
-      lookup:
-        uuid: joules_by_container
-        group:
-        - columnGroup:
-            source: Container
-          functions:
-          - source: Container
-  - type: selector
-    properties:
-      filter:
-        notification: true
-        listening: true
-      lookup:
-        uuid: joules_by_container
-        group:
-        - columnGroup:
-            source: Pod
-          functions:
-          - source: Pod
-  - type: title
-    properties:
-      text: Total Joules by Container
-      size: h3
-  - type: metric
-    properties:
-      filter:
-        listening: true
-      lookup:
-        uuid: joules_by_container
-        group:
-        - functions:
-          - source: Total
-            function: SUM
-      columns:
+        type: NUMBER
+      - id: Core
+        type: NUMBER
+      - id: DRAM
+        type: NUMBER
+      - id: Uncore
+        type: NUMBER
+      - id: Package
+        type: NUMBER
+      - id: Other Host
+        type: NUMBER
+      - id: GPU
+        type: NUMBER
+  - uuid: joules_by_node
+    content: |-
+      [
+        ["node-01", 8432.5, 2108.1, 421.6, 8854.1, 1685.7, 1245.0, 22747.0],
+        ["node-02", 6218.3, 1554.6, 310.9, 6529.2, 1243.0, 0, 15856.0]
+      ]
+    columns:
+      - id: Node
+      - id: Core
+        type: NUMBER
+      - id: DRAM
+        type: NUMBER
+      - id: Uncore
+        type: NUMBER
+      - id: Package
+        type: NUMBER
+      - id: Other Host
+        type: NUMBER
+      - id: GPU
+        type: NUMBER
+      - id: Value
+        type: NUMBER
+  - uuid: monitoring
+    content: |-
+      [
+        ["prod", "api-server", 1842.5, 1719849600000],
+        ["prod", "worker", 956.3, 1719849600000],
+        ["cache", "redis", 412.8, 1719849600000],
+        ["data", "postgres", 2134.1, 1719849600000]
+      ]
+    columns:
+      - id: Namespace
+      - id: Container
       - id: Total
-        pattern: '###,###.000'
-  - type: title
+        type: NUMBER
+      - id: Timestamp
+        type: NUMBER
+pages:
+  - name: index
     properties:
-      text: Joules by Container
-      size: h3
-  - type: bar-chart
+      margin: 10px
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          title: Kepler Metrics
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: tabs
+          properties:
+            navGroupId: Metrics
+            targetDivId: Metrics_Div
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          div: Metrics_Div
+  - name: Monitoring
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Joules by Container over time
+            size: h3
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: timeseries
+          properties:
+            filter:
+              listening: true
+            lookup:
+              uuid: monitoring
+              group:
+                - functions:
+                    - source: Container
+                    - source: Timestamp
+                    - source: Total
+  - name: Joules by Node
     properties:
-      chart:
-        height: 400
-      filter:
-        listening: true
-      lookup:
-        uuid: joules_by_container
-        group:
-        - columnGroup:
-            source: Container
-          functions:
-          - source: Container
-          - source: Package
-            function: SUM
-          - source: Core
-            function: SUM
-          - source: DRAM
-            function: SUM
-          - source: Uncore
-            function: SUM
-          - source: Other Host
-            function: SUM
-          - source: GPU
-            function: SUM
+      margin: 20px
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          markdown: "### **Filter**"
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: selector
+          properties:
+            filter:
+              notification: true
+            lookup:
+              uuid: joules_by_node
+              group:
+                - columnGroup:
+                    source: Node
+                  functions:
+                    - source: Node
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Total Joules by Node
+            size: h3
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: metric
+          properties:
+            filter:
+              listening: true
+            lookup:
+              uuid: joules_by_node
+              group:
+                - functions:
+                    - source: Value
+                      function: SUM
+            columns:
+              - id: Total
+                pattern: "###,###.000"
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Joules by Node
+            size: h3
+      - placement:
+          x: 0
+          y: 5
+          w: 12
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            chart:
+              height: 400
+            filter:
+              listening: true
+            lookup:
+              uuid: joules_by_node
+              group:
+                - columnGroup:
+                    source: Node
+                  functions:
+                    - source: Node
+                    - source: Package
+                      function: SUM
+                    - source: Core
+                      function: SUM
+                    - source: DRAM
+                      function: SUM
+                    - source: Uncore
+                      function: SUM
+                    - source: Other Host
+                      function: SUM
+                    - source: GPU
+                      function: SUM
+  - name: Joules by Container
+    properties:
+      margin: 20px
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          markdown: "### **Filter**"
+      - placement:
+          x: 0
+          y: 1
+          w: 12
+          h: 1
+        component:
+          type: selector
+          properties:
+            filter:
+              notification: true
+            lookup:
+              uuid: joules_by_container
+              group:
+                - columnGroup:
+                    source: Container
+                  functions:
+                    - source: Container
+      - placement:
+          x: 0
+          y: 2
+          w: 12
+          h: 1
+        component:
+          type: selector
+          properties:
+            filter:
+              notification: true
+              listening: true
+            lookup:
+              uuid: joules_by_container
+              group:
+                - columnGroup:
+                    source: Pod
+                  functions:
+                    - source: Pod
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Total Joules by Container
+            size: h3
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          type: metric
+          properties:
+            filter:
+              listening: true
+            lookup:
+              uuid: joules_by_container
+              group:
+                - functions:
+                    - source: Total
+                      function: SUM
+            columns:
+              - id: Total
+                pattern: "###,###.000"
+      - placement:
+          x: 0
+          y: 5
+          w: 12
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Joules by Container
+            size: h3
+      - placement:
+          x: 0
+          y: 6
+          w: 12
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            chart:
+              height: 400
+            filter:
+              listening: true
+            lookup:
+              uuid: joules_by_container
+              group:
+                - columnGroup:
+                    source: Container
+                  functions:
+                    - source: Container
+                    - source: Package
+                      function: SUM
+                    - source: Core
+                      function: SUM
+                    - source: DRAM
+                      function: SUM
+                    - source: Uncore
+                      function: SUM
+                    - source: Other Host
+                      function: SUM
+                    - source: GPU
+                      function: SUM
 navTree:
   root_items:
-  - type: GROUP
-    id: Metrics
-    children:
-    - page: Joules by Node
-    - page: Joules by Container
-    - page: Monitoring
+    - type: GROUP
+      id: Metrics
+      children:
+        - page: Joules by Node
+        - page: Joules by Container
+        - page: Monitoring

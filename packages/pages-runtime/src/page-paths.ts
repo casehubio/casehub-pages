@@ -31,6 +31,7 @@ function walk(
 
   if (component.items) {
     for (const item of component.items) {
+      if (!item.component) continue;
       const itemSlotName = item.component.type === "page"
         ? (item.component.props as Record<string, unknown> | undefined)?.name as string | undefined
         : undefined;

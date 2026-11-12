@@ -4,185 +4,242 @@ properties:
   modelMeshMetricsUrl: metrics
   titleFontSize: 40px
 datasets:
-- uuid: metrics
-  content: >-
-    [
-      ["modelmesh_models_managed_total", "", 24],
-      ["modelmesh_models_with_failure_total", "", 2],
-      ["modelmesh_loadmodel_milliseconds_sum", "", 18750],
-      ["modelmesh_loaded_model_size_bytes_sum", "", 5242880],
-      ["modelmesh_request_size_bytes_sum", "", 1048576],
-      ["modelmesh_request_size_bytes_count", "", 8432],
-      ["modelmesh_response_size_bytes_sum", "", 3145728],
-      ["modelmesh_response_size_bytes_count", "", 8432],
-      ["jvm_memory_pool_bytes_used", "pool=\"G1 Eden Space\",", 41943040],
-      ["jvm_memory_pool_bytes_used", "pool=\"G1 Old Gen\",", 125829120],
-      ["jvm_memory_pool_bytes_used", "pool=\"G1 Survivor Space\",", 8388608],
-      ["jvm_memory_pool_bytes_used", "pool=\"Metaspace\",", 67108864],
-      ["jvm_memory_pool_bytes_used", "pool=\"CodeCache\",", 33554432],
-      ["jvm_memory_pool_bytes_committed", "pool=\"G1 Eden Space\",", 67108864],
-      ["jvm_memory_pool_bytes_committed", "pool=\"G1 Old Gen\",", 268435456],
-      ["jvm_memory_pool_bytes_committed", "pool=\"G1 Survivor Space\",", 16777216],
-      ["jvm_memory_pool_bytes_committed", "pool=\"Metaspace\",", 75497472],
-      ["jvm_memory_pool_bytes_committed", "pool=\"CodeCache\",", 50331648],
-      ["modelmesh_invoke_model_milliseconds_sum", "", 42560],
-      ["modelmesh_invoke_model_milliseconds_count", "", 8432],
-      ["modelmesh_models_loaded_total", "", 18],
-      ["modelmesh_cache_miss_total", "", 156]
-    ]
-  columns:
-  - id: metric
-    type: LABEL
-  - id: labels
-    type: LABEL
-  - id: value
-    type: number
-- uuid: request_response_size
-  content: >-
-    [
-      ["Size", 124.36, 373.09]
-    ]
-  columns:
-  - id: Metric
-    type: LABEL
-  - id: Request
-    type: number
-  - id: Response
-    type: number
-- uuid: jvm_memory
-  content: >-
-    [
-      ["pool=\"G1 Eden Space\",", 41943040, 67108864],
-      ["pool=\"G1 Old Gen\",", 125829120, 268435456],
-      ["pool=\"G1 Survivor Space\",", 8388608, 16777216],
-      ["pool=\"Metaspace\",", 67108864, 75497472],
-      ["pool=\"CodeCache\",", 33554432, 50331648]
-    ]
-  columns:
-  - id: Pool
-    type: LABEL
-  - id: Used
-    type: number
-  - id: Committed
-    type: number
+  - uuid: metrics
+    content: |-
+      [
+        ["modelmesh_models_managed_total", "", 24],
+        ["modelmesh_models_with_failure_total", "", 2],
+        ["modelmesh_loadmodel_milliseconds_sum", "", 18750],
+        ["modelmesh_loaded_model_size_bytes_sum", "", 5242880],
+        ["modelmesh_request_size_bytes_sum", "", 1048576],
+        ["modelmesh_request_size_bytes_count", "", 8432],
+        ["modelmesh_response_size_bytes_sum", "", 3145728],
+        ["modelmesh_response_size_bytes_count", "", 8432],
+        ["jvm_memory_pool_bytes_used", "pool=\"G1 Eden Space\",", 41943040],
+        ["jvm_memory_pool_bytes_used", "pool=\"G1 Old Gen\",", 125829120],
+        ["jvm_memory_pool_bytes_used", "pool=\"G1 Survivor Space\",", 8388608],
+        ["jvm_memory_pool_bytes_used", "pool=\"Metaspace\",", 67108864],
+        ["jvm_memory_pool_bytes_used", "pool=\"CodeCache\",", 33554432],
+        ["jvm_memory_pool_bytes_committed", "pool=\"G1 Eden Space\",", 67108864],
+        ["jvm_memory_pool_bytes_committed", "pool=\"G1 Old Gen\",", 268435456],
+        ["jvm_memory_pool_bytes_committed", "pool=\"G1 Survivor Space\",", 16777216],
+        ["jvm_memory_pool_bytes_committed", "pool=\"Metaspace\",", 75497472],
+        ["jvm_memory_pool_bytes_committed", "pool=\"CodeCache\",", 50331648],
+        ["modelmesh_invoke_model_milliseconds_sum", "", 42560],
+        ["modelmesh_invoke_model_milliseconds_count", "", 8432],
+        ["modelmesh_models_loaded_total", "", 18],
+        ["modelmesh_cache_miss_total", "", 156]
+      ]
+    columns:
+      - id: metric
+        type: LABEL
+      - id: labels
+        type: LABEL
+      - id: value
+        type: number
+  - uuid: request_response_size
+    content: |-
+      [
+        ["Size", 124.36, 373.09]
+      ]
+    columns:
+      - id: Metric
+        type: LABEL
+      - id: Request
+        type: number
+      - id: Response
+        type: number
+  - uuid: jvm_memory
+    content: |-
+      [
+        ["pool=\"G1 Eden Space\",", 41943040, 67108864],
+        ["pool=\"G1 Old Gen\",", 125829120, 268435456],
+        ["pool=\"G1 Survivor Space\",", 8388608, 16777216],
+        ["pool=\"Metaspace\",", 67108864, 75497472],
+        ["pool=\"CodeCache\",", 33554432, 50331648]
+      ]
+    columns:
+      - id: Pool
+        type: LABEL
+      - id: Used
+        type: number
+      - id: Committed
+        type: number
 pages:
-- properties:
-    padding: 10px
-  rows:
-  - columns:
-    - components:
-      - html: <p>Model Mesh Metrics</p> <hr />
-        properties:
-          font-size: ${titleFontSize}
-  - columns:
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Managed Models
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - modelmesh_models_managed_total
-            group:
-            - functions:
-              - source: value
-            uuid: metrics
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Models with Failure
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - modelmesh_models_with_failure_total
-            group:
-            - functions:
-              - source: value
-            uuid: metrics
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Load Model (ms)
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - modelmesh_loadmodel_milliseconds_sum
-            group:
-            - functions:
-              - source: value
-            uuid: metrics
-    - span: '3'
-      components:
-      - type: title
-        properties:
-          text: Models Size (kb)
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            filter:
-            - column: metric
-              function: EQUALS_TO
-              args:
-              - modelmesh_loaded_model_size_bytes_sum
-            group:
-            - functions:
-              - source: value
-                column: value_kb
-            uuid: metrics
-          columns:
-          - id: value_kb
-            pattern: '#'
-            expression: value / 1024
-  - columns:
-    - components:
-      - html: <hr />
-  - columns:
-    - components:
-      - html: '<p style="font-size: 25px; font-weight: 600"> JVM Memory </p>'
-      - type: bar-chart
-        properties:
-          chart:
-            resizable: true
-            height: 400
-            grid:
-              x: false
-          lookup:
-            uuid: jvm_memory
-            group:
-            - columnGroup:
-                source: Pool
-              functions:
-              - source: Pool
-              - source: Used
-              - source: Committed
-          columns:
-          - id: Pool
-            expression: value.replace("pool=\"", "").replace("\",", "")
-          extraConfiguration: >-
-            {
-                "color": [
-                "oklch(0.50 0.10 200)",
-                "oklch(0.55 0.12 150)",
-                "oklch(0.65 0.12 80)",
-                "oklch(0.50 0.15 25)"
-                ]
-            }
+  - properties:
+      padding: 10px
+    items:
+      - placement:
+          x: 0
+          y: 0
+          w: 12
+          h: 1
+        component:
+          html: <p>Model Mesh Metrics</p> <hr />
+          properties:
+            font-size: ${titleFontSize}
+      - placement:
+          x: 0
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Managed Models
+            size: h3
+      - placement:
+          x: 0
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - modelmesh_models_managed_total
+              group:
+                - functions:
+                    - source: value
+              uuid: metrics
+      - placement:
+          x: 3
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Models with Failure
+            size: h3
+      - placement:
+          x: 3
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - modelmesh_models_with_failure_total
+              group:
+                - functions:
+                    - source: value
+              uuid: metrics
+      - placement:
+          x: 6
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Load Model (ms)
+            size: h3
+      - placement:
+          x: 6
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - modelmesh_loadmodel_milliseconds_sum
+              group:
+                - functions:
+                    - source: value
+              uuid: metrics
+      - placement:
+          x: 9
+          y: 1
+          w: 3
+          h: 1
+        component:
+          type: title
+          properties:
+            text: Models Size (kb)
+            size: h3
+      - placement:
+          x: 9
+          y: 2
+          w: 3
+          h: 1
+        component:
+          type: metric
+          properties:
+            lookup:
+              filter:
+                - column: metric
+                  function: EQUALS_TO
+                  args:
+                    - modelmesh_loaded_model_size_bytes_sum
+              group:
+                - functions:
+                    - source: value
+                      column: value_kb
+              uuid: metrics
+            columns:
+              - id: value_kb
+                pattern: "#"
+                expression: value / 1024
+      - placement:
+          x: 0
+          y: 3
+          w: 12
+          h: 1
+        component:
+          html: <hr />
+      - placement:
+          x: 0
+          y: 4
+          w: 12
+          h: 1
+        component:
+          html: '<p style="font-size: 25px; font-weight: 600"> JVM Memory </p>'
+      - placement:
+          x: 0
+          y: 5
+          w: 12
+          h: 1
+        component:
+          type: bar-chart
+          properties:
+            chart:
+              resizable: true
+              height: 400
+              grid:
+                x: false
+            lookup:
+              uuid: jvm_memory
+              group:
+                - columnGroup:
+                    source: Pool
+                  functions:
+                    - source: Pool
+                    - source: Used
+                    - source: Committed
+            columns:
+              - id: Pool
+                expression: value.replace("pool=\"", "").replace("\",", "")
+            extraConfiguration: |-
+              {
+                  "color": [
+                  "oklch(0.50 0.10 200)",
+                  "oklch(0.55 0.12 150)",
+                  "oklch(0.65 0.12 80)",
+                  "oklch(0.50 0.15 25)"
+                  ]
+              }

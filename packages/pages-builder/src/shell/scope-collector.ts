@@ -11,7 +11,10 @@ export function collectComponentsInScope(
   const collectFromPage = (page: PageNode) => {
     const mode = page.getLayoutMode();
     if (mode === 'items') {
-      for (const item of page.getItems()) results.push(item.getComponent());
+      for (const item of page.getItems()) {
+        const comp = item.getComponent();
+        if (comp) results.push(comp);
+      }
     } else if (mode === 'rows') {
       for (const row of page.getRows()) for (const col of row.getColumns()) results.push(...col.getComponents());
     } else if (mode === 'columns') {
@@ -52,12 +55,19 @@ export function collectComponentsInScope(
         if (col) results.push(...col.getComponents());
       }
     }
+  } else if (nodeType === 'grid-item') {
+    const page = doc.getPages()[path[1] as number];
+    if (!page) return results;
+    if (path[2] === 'items' && path.length >= 4) {
+      const item = page.getItems()[path[3] as number];
+      if (item) { const c = item.getComponent(); if (c) results.push(c); }
+    }
   } else if (nodeType === 'component') {
     const page = doc.getPages()[path[1] as number];
     if (!page) return results;
     if (path[2] === 'items' && path.length >= 4) {
       const item = page.getItems()[path[3] as number];
-      if (item) results.push(item.getComponent());
+      if (item) { const c = item.getComponent(); if (c) results.push(c); }
     } else if (path[2] === 'components' && path.length >= 4) {
       const c = page.getComponents()[path[3] as number];
       if (c) results.push(c);
@@ -93,7 +103,7 @@ export function collectComponentsInScope(
       };
       const mode = page.getLayoutMode();
       if (mode === 'items') {
-        for (const item of page.getItems()) check(item.getComponent());
+        for (const item of page.getItems()) { const c = item.getComponent(); if (c) check(c); }
       } else if (mode === 'rows') {
         for (const row of page.getRows()) for (const col of row.getColumns()) col.getComponents().forEach(check);
       } else if (mode === 'columns') {
