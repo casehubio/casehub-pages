@@ -108,7 +108,9 @@ jobs:
         id: static-assets-build
         if: steps.js-changes.outputs.js == 'true'
         continue-on-error: true
-        run: mvn -f static-assets/pom.xml --batch-mode install
+        run: |
+          mvn --batch-mode -N install -Dexec.skip=true
+          mvn -f static-assets/pom.xml --batch-mode install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -163,10 +165,11 @@ jobs:
             if ('${{ steps.js-changes.outputs.js }}' === 'true') {
               const installOutcome = '${{ steps.js-install.outcome }}';
               const buildOutcome = '${{ steps.js-build.outcome }}';
+              const assetsOutcome = '${{ steps.static-assets-build.outcome }}';
               const testOutcome = '${{ steps.js-test.outcome }}';
-              if (installOutcome === 'success' && buildOutcome === 'success' && testOutcome === 'success') {
+              if (installOutcome === 'success' && buildOutcome === 'success' && assetsOutcome === 'success' && testOutcome === 'success') {
                 jsStatus = 'success';
-              } else if (installOutcome === 'failure' || buildOutcome === 'failure' || testOutcome === 'failure') {
+              } else if (installOutcome === 'failure' || buildOutcome === 'failure' || assetsOutcome === 'failure' || testOutcome === 'failure') {
                 jsStatus = 'failure';
               } else {
                 jsStatus = 'error';
