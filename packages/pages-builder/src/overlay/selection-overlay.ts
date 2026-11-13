@@ -1,6 +1,6 @@
 import type { TreeNodeType } from '../tree/builder-tree.js';
 
-type ButtonDef = readonly [cls: string, label: string, event: string];
+export type ButtonDef = readonly [cls: string, label: string, event: string];
 
 const ALL_BUTTONS: ButtonDef[] = [
   ['sel-add-btn', '+', 'selection-add'],
@@ -10,9 +10,18 @@ const ALL_BUTTONS: ButtonDef[] = [
   ['sel-delete-btn', '✕', 'selection-delete'],
 ];
 
+const GRID_ITEM_BUTTONS: ButtonDef[] = [
+  ['sel-split-h-btn', '⬌', 'selection-split-h'],
+  ['sel-split-v-btn', '⬍', 'selection-split-v'],
+  ['sel-merge-btn', '⊞', 'selection-merge'],
+  ['sel-swap-btn', '⇄', 'selection-swap'],
+  ['sel-delete-btn', '✕', 'selection-delete'],
+  ['sel-add-empty-btn', '+', 'selection-add-empty'],
+];
+
 const EDIT_LAYOUT_BTN: ButtonDef = ['sel-edit-layout-btn', '⊞', 'selection-edit-layout'];
 
-function getButtonsForNodeType(
+export function getButtonsForNodeType(
   nodeType: TreeNodeType,
   isContainer: boolean,
 ): ButtonDef[] {
@@ -21,7 +30,7 @@ function getButtonsForNodeType(
       evt === 'selection-add' || evt === 'selection-delete')];
   }
   if (nodeType === 'grid-item') {
-    return ALL_BUTTONS;
+    return GRID_ITEM_BUTTONS;
   }
   if (nodeType === 'component' && !isContainer) {
     return ALL_BUTTONS.filter(([, , evt]) => evt !== 'selection-add');
@@ -42,6 +51,7 @@ export class SelectionOverlay {
   private _insertionPoints: HTMLElement[] = [];
   private _buttonsContainer: HTMLElement | null = null;
   private _toolbarLocked = false;
+  private _isGridItemToolbar = false;
 
   constructor(overlayRoot: HTMLElement) {
     this._overlayRoot = overlayRoot;
@@ -82,11 +92,14 @@ export class SelectionOverlay {
 
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'toolbar-buttons';
-    buttonsContainer.style.cssText = `
-      display: flex; gap: 2px;
-      max-width: 0; overflow: hidden; opacity: 0;
-      transition: max-width 150ms ease, opacity 150ms ease;
-    `;
+    const isGridItemToolbar = nodeType === 'grid-item';
+    buttonsContainer.style.cssText = isGridItemToolbar
+      ? `display: grid; grid-template-columns: repeat(3, 20px); gap: 2px;
+         max-height: 0; overflow: hidden; opacity: 0;
+         transition: max-height 150ms ease, opacity 150ms ease;`
+      : `display: flex; gap: 2px;
+         max-width: 0; overflow: hidden; opacity: 0;
+         transition: max-width 150ms ease, opacity 150ms ease;`;
 
     const buttons = getButtonsForNodeType(nodeType, options?.isContainer ?? false);
     for (const [cls, label, eventName] of buttons) {
@@ -118,20 +131,33 @@ export class SelectionOverlay {
     toolbar.appendChild(buttonsContainer);
     toolbar.appendChild(trigger);
     this._buttonsContainer = buttonsContainer;
+    this._isGridItemToolbar = isGridItemToolbar;
 
     toolbar.addEventListener('mouseenter', () => {
-      buttonsContainer.style.maxWidth = '200px';
+      if (isGridItemToolbar) {
+        buttonsContainer.style.maxHeight = '50px';
+      } else {
+        buttonsContainer.style.maxWidth = '200px';
+      }
       buttonsContainer.style.opacity = '1';
     });
     toolbar.addEventListener('mouseleave', () => {
       if (this._toolbarLocked) return;
-      buttonsContainer.style.maxWidth = '0';
+      if (isGridItemToolbar) {
+        buttonsContainer.style.maxHeight = '0';
+      } else {
+        buttonsContainer.style.maxWidth = '0';
+      }
       buttonsContainer.style.opacity = '0';
     });
 
     this._overlay.appendChild(toolbar);
     if (this._toolbarLocked) {
-      buttonsContainer.style.maxWidth = '200px';
+      if (isGridItemToolbar) {
+        buttonsContainer.style.maxHeight = '50px';
+      } else {
+        buttonsContainer.style.maxWidth = '200px';
+      }
       buttonsContainer.style.opacity = '1';
     }
 
@@ -140,7 +166,11 @@ export class SelectionOverlay {
   lockToolbar(): void {
     this._toolbarLocked = true;
     if (this._buttonsContainer) {
-      this._buttonsContainer.style.maxWidth = '200px';
+      if (this._isGridItemToolbar) {
+        this._buttonsContainer.style.maxHeight = '50px';
+      } else {
+        this._buttonsContainer.style.maxWidth = '200px';
+      }
       this._buttonsContainer.style.opacity = '1';
     }
   }
