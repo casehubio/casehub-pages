@@ -231,8 +231,8 @@ describe('computeMenuItems', () => {
     const actions = items.filter(i => !i.separator).map(i => i.action);
     expect(actions).toContain('move-up');
     expect(actions).toContain('move-down');
-    expect(actions).toContain('split-horizontal');
-    expect(actions).toContain('split-vertical');
+    expect(actions).not.toContain('split-horizontal');
+    expect(actions).not.toContain('split-vertical');
     expect(actions).toContain('delete');
   });
 
