@@ -182,6 +182,7 @@ wksp
 # Ignore all build artifacts
 *.class
 *.jar
+!plugins/intellij/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.zip
