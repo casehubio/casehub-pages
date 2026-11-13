@@ -1,4 +1,4 @@
-import { parseDocument, type Document, isMap, isSeq, type YAMLMap, type YAMLSeq } from 'yaml';
+import { parseDocument, type Document, isMap, isSeq, type YAMLMap, type YAMLSeq, isNode } from 'yaml';
 import type { Diagnostic, LayoutMode, Unsubscribe } from './types.js';
 import { getContainerDescriptor, type ContainerChildDescriptor } from './container-descriptors.js';
 import { zodToFieldSchema } from './zod-to-fieldschema.js';
@@ -606,7 +606,7 @@ export class ColumnNode {
 }
 
 export interface ContainerChildren {
-  slots: Record<string, ComponentNode[]>;
+  slots: Record<string, (ComponentNode | GridItemNode)[]>;
   descriptor: ContainerChildDescriptor;
 }
 
@@ -663,10 +663,10 @@ export class ComponentNode {
         : isSeq(doc.getIn([...this.path, 'items'])) ? 'items' : null;
       if (gridKey) {
         const seq = doc.getIn([...this.path, gridKey]) as YAMLSeq;
-        const gridSlots: Record<string, ComponentNode[]> = {
+        const gridSlots: Record<string, (ComponentNode | GridItemNode)[]> = {
           [gridKey]: seq.items.map((_: unknown, i: number) =>
             new GridItemNode(this._doc, [...this.path, gridKey, i])
-          ) as any,
+          ),
         };
         const synth: ContainerChildDescriptor = { type: this.type, defaultContentSlot: gridKey, slots: [{ kind: 'grid-items', yamlKey: gridKey }] };
         return { slots: gridSlots, descriptor: synth };
@@ -674,7 +674,7 @@ export class ComponentNode {
       return { slots: {}, descriptor: { type: this.type, slots: [], defaultContentSlot: '' } };
     }
     const doc = this._doc._getDoc();
-    const slots: Record<string, ComponentNode[]> = {};
+    const slots: Record<string, (ComponentNode | GridItemNode)[]> = {};
 
     for (const slot of desc.slots) {
       if (slot.kind === 'named-record') {
@@ -717,7 +717,7 @@ export class ComponentNode {
         if (isSeq(seq)) {
           slots[slot.yamlKey] = (seq as YAMLSeq).items.map((_: unknown, i: number) =>
             new GridItemNode(this._doc, [...this.path, slot.yamlKey, i])
-          ) as any;
+          );
         }
       }
     }
@@ -761,7 +761,8 @@ export class ComponentNode {
       const compsPath = [...entryPath, slotDesc.childKey];
       this._doc._notifyInternal();
       return new ComponentNode(this._doc, [...compsPath, idx]);
-    } else if (slotDesc.kind === 'array') {
+    } else if (slotDesc.kind === 'array' || slotDesc.kind === 'grid-items') {
+      if (slotDesc.kind === 'grid-items') compNode.set(doc.createNode('at'), doc.createNode({ w: 1, h: 1 }));
       const arrPath = [...this.path, slotDesc.yamlKey];
       let seq = doc.getIn(arrPath);
       if (!isSeq(seq)) {
@@ -877,8 +878,9 @@ export class ComponentNode {
       let containerYaml: Record<string, unknown>;
       if (slotDesc.kind === 'named-record') {
         containerYaml = { type: containerType, [slotDesc.yamlKey]: { 'Tab 1': { [slotDesc.childKey]: [sourceJson] } } };
-      } else if (slotDesc.kind === 'array') {
-        containerYaml = { type: containerType, [slotDesc.yamlKey]: [sourceJson] };
+      } else if (slotDesc.kind === 'array' || slotDesc.kind === 'grid-items') {
+        containerYaml = { type: containerType, [slotDesc.yamlKey]: slotDesc.kind === 'grid-items'
+          ? [{ at: { w: 1, h: 1 }, ...sourceJson }] : [sourceJson] };
       } else {
         containerYaml = { type: containerType, [slotDesc.yamlKey]: { [slotDesc.childKey]: [sourceJson] } };
       }
@@ -1172,7 +1174,9 @@ export class GridItemNode {
     const seq = doc.getIn(itemsPath);
     const idx = this.path[this.path.length - 1] as number;
     if (!isSeq(seq)) return;
-    const clone = doc.createNode((seq as YAMLSeq).items[idx].toJSON());
+    const node = seq.items[idx];
+    if (node === undefined) return;
+    const clone = isNode(node) ? node.clone() : doc.createNode(node);
     (seq as YAMLSeq).items.splice(idx + 1, 0, clone);
     this._doc._notifyInternal();
   }

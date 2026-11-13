@@ -1796,7 +1796,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   private _toggleColumnPicker = (): void => {
     this._columnPickerOpen = !this._columnPickerOpen;
     if (this._columnPickerOpen) {
-      this.updateComplete.then(() => this._positionPickerDropdown());
+      void this.updateComplete.then(() => this._positionPickerDropdown());
       setTimeout(() => {
         document.addEventListener('click', this._handleClickOutsidePicker, true);
       }, 0);

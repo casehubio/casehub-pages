@@ -3,6 +3,7 @@ export interface StepLineInfo {
   address: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class StepPositionScanner {
   static scan(rawYaml: string): StepLineInfo[] {
     const lines = rawYaml.split('\n');

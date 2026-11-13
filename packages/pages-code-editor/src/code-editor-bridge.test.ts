@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { CodeEditorBridge } from './code-editor-bridge.js';
-import { editableTextComplianceTests } from '@casehubio/pages-editor-core/dist/compliance.js';
+import { editableTextComplianceTests } from '@casehubio/pages-editor-core/compliance';
 
 function mockView(doc: string) {
   const lines = doc.split('\n');

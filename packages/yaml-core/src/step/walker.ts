@@ -314,7 +314,7 @@ export class Walker {
     let actionKey: string | null = null;
     let actionValue: unknown = undefined;
     let actionEntry: CatalogEntry | undefined = undefined;
-    let invokeSpec: Record<string, unknown> | null = null;
+    const invokeSpec: Record<string, unknown> | null = null;
     const decorators: Record<string, unknown> = {};
     const companions: Record<string, unknown> = {};
     const unknownKeys: [string, unknown][] = [];

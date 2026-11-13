@@ -22,6 +22,7 @@ const DECORATOR_ANNOTATION_MAP: Record<string, (args: Record<string, string>) =>
   Mutex: (args) => ['mutex', args['0'] ?? args['value']],
 };
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class DecoratorAnnotationResolver {
   static mergeDecorators(
     annotations: Annotation[],

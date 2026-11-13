@@ -177,10 +177,10 @@ describe("rest-adapter", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("VALIDATION_FAILED");
     expect(result.fieldErrors).toHaveLength(2);
-    expect(result.fieldErrors![0].field).toBe("name");
-    expect(result.fieldErrors![0].constraint).toBe("minLength");
-    expect(result.fieldErrors![0].params).toEqual({ min: 5 });
-    expect(result.fieldErrors![1].constraint).toBe("pattern");
+    expect(result.fieldErrors![0]!.field).toBe("name");
+    expect(result.fieldErrors![0]!.constraint).toBe("minLength");
+    expect(result.fieldErrors![0]!.params).toEqual({ min: 5 });
+    expect(result.fieldErrors![1]!.constraint).toBe("pattern");
   });
 
   it("should fall back to statusText for non-422 errors", async () => {

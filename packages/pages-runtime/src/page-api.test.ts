@@ -17,7 +17,7 @@ describe("PageApiClient", () => {
     const client = new PageApiClient("helpdesk", fetchFn as unknown as typeof fetch);
     const pages = await client.list();
     expect(pages).toHaveLength(2);
-    expect(pages[0].name).toBe("Dashboard");
+    expect(pages[0]!.name).toBe("Dashboard");
     expect(fetchFn).toHaveBeenCalledWith("/api/apps/helpdesk/pages", expect.any(Object));
   });
 

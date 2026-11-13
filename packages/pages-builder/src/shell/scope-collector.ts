@@ -1,4 +1,4 @@
-import { PageDocument, type PageNode, type ComponentNode, type GridItemNode } from '@casehubio/pages-document';
+import { PageDocument, type PageNode, type ComponentNode, GridItemNode } from '@casehubio/pages-document';
 import type { TreeNodeType } from '../tree/builder-tree.js';
 
 function resolveGridItem(
@@ -13,21 +13,22 @@ function resolveGridItem(
   let i = 4;
   while (i < path.length && item) {
     if (path[i] === 'grid' || path[i] === 'items') {
-      const comp = item.getComponent();
+      const comp: ComponentNode | undefined = item.getComponent();
       if (!comp || !comp.isContainer()) return comp ?? null;
       const nextIdx = path[i + 1] as number | undefined;
       if (nextIdx === undefined) return comp;
-      const children = comp.getChildren();
+      const children: ReturnType<ComponentNode['getChildren']> = comp.getChildren();
       const key = path[i] as string;
-      const nested = children.slots[key];
+      const nested: (ComponentNode | GridItemNode)[] | undefined = children.slots[key];
       if (!nested) return comp;
-      item = nested[nextIdx] as GridItemNode | undefined;
+      const child: ComponentNode | GridItemNode | undefined = nested[nextIdx];
+      item = child instanceof GridItemNode ? child : undefined;
       i += 2;
     } else {
       break;
     }
   }
-  return item ? item.getComponent() : null;
+  return item?.getComponent() ?? null;
 }
 
 export function collectComponentsInScope(
@@ -41,7 +42,7 @@ export function collectComponentsInScope(
     const mode = page.getLayoutMode();
     if (mode === 'grid' || mode === 'items') {
       for (const item of page.getItems()) {
-        const comp = item.getComponent();
+        const comp: ComponentNode | undefined = item.getComponent();
         if (comp) results.push(comp);
       }
     } else if (mode === 'rows') {

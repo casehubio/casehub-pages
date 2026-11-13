@@ -1,3 +1,4 @@
+import { createTypedRow, columnId, ColumnType, type Column, type CellValue } from "@casehubio/pages-data";
 import { describe, it, expect, vi } from "vitest";
 import type { Component } from "@casehubio/pages-component";
 import { ALLOW_ALL } from "@casehubio/pages-component";
@@ -484,14 +485,13 @@ describe("selectionKey alias resolution", () => {
     expect(vizEl).toBeTruthy();
     expect(typeof vizEl.getRowKey).toBe("function");
 
-    const { createTypedRow } = require("@casehubio/pages-data");
-    const columns = [
-      { id: "Topology", name: "Topology", type: "TEXT" },
-      { id: "Description", name: "Description", type: "TEXT" },
+    const columns: Column[] = [
+      { id: columnId("Topology"), name: "Topology", type: ColumnType.TEXT },
+      { id: columnId("Description"), name: "Description", type: ColumnType.TEXT },
     ];
-    const cells = [
-      { type: "TEXT", value: "01-hello-llm" },
-      { type: "TEXT", value: "Hello LLM topology" },
+    const cells: CellValue[] = [
+      { type: ColumnType.TEXT, value: "01-hello-llm" },
+      { type: ColumnType.TEXT, value: "Hello LLM topology" },
     ];
     const mockRow = createTypedRow(cells, columns);
     const getRowKey = vizEl.getRowKey as (row: unknown) => string;

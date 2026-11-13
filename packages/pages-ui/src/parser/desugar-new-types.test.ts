@@ -167,9 +167,9 @@ describe("desugar-new-types", () => {
       expect(result.grid![0]!.at.w).toBe(4);
       expect(result.grid![1]!.at.w).toBe(4);
       expect(result.grid![2]!.at.w).toBe(4);
-      expect(result.grid![0]!.component.type).toBe("html");
-      expect(result.grid![1]!.component.type).toBe("html");
-      expect(result.grid![2]!.component.type).toBe("html");
+      expect(result.grid![0]!.component!.type).toBe("html");
+      expect(result.grid![1]!.component!.type).toBe("html");
+      expect(result.grid![2]!.component!.type).toBe("html");
     });
 
     it("should default span to equal distribution", () => {

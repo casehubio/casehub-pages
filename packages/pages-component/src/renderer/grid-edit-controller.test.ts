@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { attachGridEditController } from "./grid-edit-controller.js";
-import type { GridEditController } from "./grid-edit-controller.js";
 import type { GridItem } from "../model/types.js";
 
 function makeItems(): GridItem[] {
@@ -279,6 +278,9 @@ describe("GridEditController", () => {
     const nestedItems: GridItem[] = [
       { at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 }, component: { type: "html", id: "n0" } },
     ];
+    vi.spyOn(nestedItem, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(0, 0, 60, 60),
+    );
     const rootCtrl = attachGridEditController(root, rootItems, 12, 60);
     const nestedCtrl = attachGridEditController(nested, nestedItems, 6, 60);
 

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { OutcomeCollector } from './outcome.js';
-import type { ExecutionOutcome, StepOutcomeEntry } from './outcome.js';
 import type { JournalEntry } from './simulation-runtime.js';
 
 describe('OutcomeCollector', () => {

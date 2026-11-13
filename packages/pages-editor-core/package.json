@@ -13,7 +13,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./compliance": "./src/compliance.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

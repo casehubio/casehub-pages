@@ -22,6 +22,11 @@ function edge(id: string, source: string, target: string): GraphEdge {
 }
 
 function rfNode(id: string, x: number, y: number, w = 100, h = 50) {
+  const el = document.createElement('div');
+  el.classList.add('react-flow__node');
+  el.dataset['id'] = id;
+  vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(new DOMRect(x, y, w, h));
+  document.querySelector('.react-flow__viewport')!.appendChild(el);
   return { id, position: { x, y }, measured: { width: w, height: h }, type: 'custom', data: {} };
 }
 

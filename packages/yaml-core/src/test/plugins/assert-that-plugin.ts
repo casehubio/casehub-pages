@@ -29,8 +29,6 @@ const MATCHERS: Record<string, (actual: unknown, expected: unknown) => boolean> 
   },
 };
 
-const MATCHER_KEYS = new Set(Object.keys(MATCHERS));
-
 const assertThatDefinition: Definition = {
   name: 'assertThat',
   inputs: { expression: { type: 'STRING' as any, required: true } },

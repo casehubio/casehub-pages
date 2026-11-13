@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { InvokeStep } from '@casehubio/yaml-core/step';
 import { renderDecorators } from './decorator-config.js';

@@ -1,6 +1,6 @@
 import type { InvokeHandler } from '@casehubio/yaml-core/step';
 import type { Action, Result, ServiceRegistry } from '@casehubio/yaml-core/step';
-import { stepSuccess, stepFailure } from '@casehubio/yaml-core/step';
+import { stepSuccess } from '@casehubio/yaml-core/step';
 import type { Definition, InvokeBinding } from '@casehubio/yaml-core/step';
 import type { SimulationRuntime } from '@casehubio/yaml-core/step';
 

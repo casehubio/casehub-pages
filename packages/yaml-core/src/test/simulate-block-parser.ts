@@ -19,6 +19,7 @@ const ALIAS_TABLE: Record<string, AliasSpec> = {
   process: { qualifiedName: 'process-exec' },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class SimulateBlockParser {
   static parse(raw: Record<string, unknown>): SimulationConfig {
     const strategies: Record<string, string> = {};

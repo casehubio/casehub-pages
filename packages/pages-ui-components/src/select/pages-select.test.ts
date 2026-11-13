@@ -29,7 +29,7 @@ describe('PagesSelect', () => {
       { value: 'b', label: 'Beta' },
     ];
     await (el as any).updateComplete;
-    const options = el.shadowRoot!.querySelectorAll('option');
+    const options = el.shadowRoot!.querySelectorAll('option:not([disabled])');
     expect(options.length).toBe(2);
     expect(options[0]!.value).toBe('a');
     expect(options[0]!.textContent.trim()).toBe('Alpha');
@@ -94,16 +94,20 @@ describe('PagesSelect', () => {
     expect(fired).toBe(true);
   });
 
-  it('renders empty when no options', async () => {
+  it('renders only an empty placeholder when no options', async () => {
     await (el as any).updateComplete;
     const options = el.shadowRoot!.querySelectorAll('option');
-    expect(options.length).toBe(0);
+    expect(options.length).toBe(1);
+    expect(options[0]!.value).toBe('');
+    expect(options[0]!.disabled).toBe(true);
+    expect(options[0]!.selected).toBe(true);
   });
 
   it('sets required on select', async () => {
     (el as any).required = true;
     await (el as any).updateComplete;
     expect(el.shadowRoot!.querySelector('select')!.required).toBe(true);
+    expect(el.shadowRoot!.querySelector('option[disabled]')!.textContent.trim()).toBe('— select —');
   });
 
   it('sets aria-label on inner select when label is provided', async () => {

@@ -30,7 +30,7 @@ describe("DynamicPageLoader", () => {
     const loader = new DynamicPageLoader(client as any);
     const meta = await loader.fetchIndex();
     expect(meta).toHaveLength(1);
-    expect(meta[0].name).toBe("custom");
+    expect(meta[0]!.name).toBe("custom");
   });
 
   it("fetches and parses a single page", async () => {

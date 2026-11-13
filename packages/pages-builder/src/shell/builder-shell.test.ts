@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import './builder-shell.js';
 import type { PagesBuilderShell } from './builder-shell.js';
-import type { PagesBuilderTree } from '../tree/builder-tree.js';
 
 const MINIMAL_PAGE = `pages:
 - name: Overview

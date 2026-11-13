@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { EditSessionActiveError } from '@casehubio/pages-editor-core';
-import { editableTextComplianceTests } from '@casehubio/pages-editor-core/dist/compliance.js';
+import { editableTextComplianceTests } from '@casehubio/pages-editor-core/compliance';
 import { MarkdownEditorBridge } from './markdown-editor-bridge.js';
 
 function mockEditorView(doc: string) {

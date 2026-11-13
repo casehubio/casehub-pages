@@ -637,6 +637,7 @@ describe('Keyboard shortcuts', () => {
 
     const leftBar = el.querySelector('.dock-bar-left') as HTMLElement;
     expect(leftBar).toBeTruthy();
-    expect(leftBar.querySelector('[data-dock-empty]')).toBeNull();
+    expect(leftBar.querySelector('[data-dock-zone="bottom"]')).toBeNull();
+    expect(leftBar.querySelector('[data-dock-zone="top-second"][data-dock-empty]')).not.toBeNull();
   });
 });

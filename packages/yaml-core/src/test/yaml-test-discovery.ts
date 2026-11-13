@@ -1,6 +1,7 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class YamlTestDiscovery {
   static scan(dir: string): string[] {
     const results: string[] = [];

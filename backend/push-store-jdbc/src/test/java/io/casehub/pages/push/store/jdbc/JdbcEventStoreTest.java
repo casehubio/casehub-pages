@@ -5,10 +5,12 @@ import io.casehub.pages.push.StoredEvent;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,6 +23,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JdbcEventStoreTest {
 
     @Inject EventStore eventStore;
+    private String topicPrefix;
+
+    @BeforeEach
+    void isolateTopics() {
+        topicPrefix = UUID.randomUUID() + "/";
+    }
+
+    private String topic(String name) {
+        return topicPrefix + name;
+    }
 
     @Test
     void is_jdbc_implementation() {
@@ -29,9 +41,9 @@ class JdbcEventStoreTest {
 
     @Test
     void append_assigns_monotonic_seq() {
-        long seq1 = eventStore.append("jdbc-mono", "{\"v\":1}");
-        long seq2 = eventStore.append("jdbc-mono", "{\"v\":2}");
-        long seq3 = eventStore.append("jdbc-mono", "{\"v\":3}");
+        long seq1 = eventStore.append(topic("jdbc-mono"), "{\"v\":1}");
+        long seq2 = eventStore.append(topic("jdbc-mono"), "{\"v\":2}");
+        long seq3 = eventStore.append(topic("jdbc-mono"), "{\"v\":3}");
 
         assertThat(seq1).isEqualTo(1);
         assertThat(seq2).isEqualTo(2);
@@ -40,8 +52,8 @@ class JdbcEventStoreTest {
 
     @Test
     void append_per_topic_isolation() {
-        long seqA = eventStore.append("jdbc-iso-a", "{\"a\":1}");
-        long seqB = eventStore.append("jdbc-iso-b", "{\"b\":1}");
+        long seqA = eventStore.append(topic("jdbc-iso-a"), "{\"a\":1}");
+        long seqB = eventStore.append(topic("jdbc-iso-b"), "{\"b\":1}");
 
         assertThat(seqA).isEqualTo(1);
         assertThat(seqB).isEqualTo(1);
@@ -49,12 +61,12 @@ class JdbcEventStoreTest {
 
     @Test
     void replay_returns_events_after_sinceSeq() {
-        eventStore.append("jdbc-replay", "{\"v\":1}");
-        eventStore.append("jdbc-replay", "{\"v\":2}");
-        eventStore.append("jdbc-replay", "{\"v\":3}");
-        eventStore.append("jdbc-replay", "{\"v\":4}");
+        eventStore.append(topic("jdbc-replay"), "{\"v\":1}");
+        eventStore.append(topic("jdbc-replay"), "{\"v\":2}");
+        eventStore.append(topic("jdbc-replay"), "{\"v\":3}");
+        eventStore.append(topic("jdbc-replay"), "{\"v\":4}");
 
-        List<StoredEvent> events = eventStore.replay("jdbc-replay", 2, Integer.MAX_VALUE);
+        List<StoredEvent> events = eventStore.replay(topic("jdbc-replay"), 2, Integer.MAX_VALUE);
 
         assertThat(events).hasSize(2);
         assertThat(events.get(0).seq()).isEqualTo(3);
@@ -64,10 +76,10 @@ class JdbcEventStoreTest {
     @Test
     void replay_respects_limit() {
         for (int i = 0; i < 10; i++) {
-            eventStore.append("jdbc-limit", "{\"i\":" + i + "}");
+            eventStore.append(topic("jdbc-limit"), "{\"i\":" + i + "}");
         }
 
-        List<StoredEvent> events = eventStore.replay("jdbc-limit", 0, 3);
+        List<StoredEvent> events = eventStore.replay(topic("jdbc-limit"), 0, 3);
 
         assertThat(events).hasSize(3);
         assertThat(events.get(0).seq()).isEqualTo(1);
@@ -76,7 +88,7 @@ class JdbcEventStoreTest {
 
     @Test
     void replay_empty_topic() {
-        List<StoredEvent> events = eventStore.replay("jdbc-nonexistent", 0, Integer.MAX_VALUE);
+        List<StoredEvent> events = eventStore.replay(topic("jdbc-nonexistent"), 0, Integer.MAX_VALUE);
         assertThat(events).isEmpty();
     }
 
@@ -88,21 +100,21 @@ class JdbcEventStoreTest {
 
     @Test
     void topics_returns_all_with_events() {
-        eventStore.append("jdbc-topics-a", "{}");
-        eventStore.append("jdbc-topics-b", "{}");
+        eventStore.append(topic("jdbc-topics-a"), "{}");
+        eventStore.append(topic("jdbc-topics-b"), "{}");
 
         Set<String> topics = eventStore.topics();
 
-        assertThat(topics).contains("jdbc-topics-a", "jdbc-topics-b");
+        assertThat(topics).contains(topic("jdbc-topics-a"), topic("jdbc-topics-b"));
     }
 
     @Test
     void stored_event_has_timestamp() {
         Instant before = Instant.now().minusSeconds(1);
-        eventStore.append("jdbc-ts", "{\"v\":1}");
+        eventStore.append(topic("jdbc-ts"), "{\"v\":1}");
         Instant after = Instant.now().plusSeconds(1);
 
-        List<StoredEvent> events = eventStore.replay("jdbc-ts", 0, Integer.MAX_VALUE);
+        List<StoredEvent> events = eventStore.replay(topic("jdbc-ts"), 0, Integer.MAX_VALUE);
 
         assertThat(events.get(0).createdAt()).isAfter(before).isBefore(after);
     }
@@ -110,10 +122,10 @@ class JdbcEventStoreTest {
     @Test
     void bounded_capacity_eviction() {
         for (int i = 0; i < 110; i++) {
-            eventStore.append("jdbc-cap", "{\"i\":" + i + "}");
+            eventStore.append(topic("jdbc-cap"), "{\"i\":" + i + "}");
         }
 
-        List<StoredEvent> events = eventStore.replay("jdbc-cap", 0, Integer.MAX_VALUE);
+        List<StoredEvent> events = eventStore.replay(topic("jdbc-cap"), 0, Integer.MAX_VALUE);
 
         assertThat(events).hasSize(100);
         assertThat(events.get(0).seq()).isEqualTo(11);
@@ -127,13 +139,13 @@ class JdbcEventStoreTest {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
 
-        long seqBefore = eventStore.append("jdbc-concurrent", "{\"before\":true}");
+        long seqBefore = eventStore.append(topic("jdbc-concurrent"), "{\"before\":true}");
 
         for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 try {
                     for (int j = 0; j < appendsPerThread; j++) {
-                        eventStore.append("jdbc-concurrent", "{\"j\":" + j + "}");
+                        eventStore.append(topic("jdbc-concurrent"), "{\"j\":" + j + "}");
                     }
                 } finally {
                     latch.countDown();
@@ -144,7 +156,7 @@ class JdbcEventStoreTest {
         assertThat(latch.await(30, TimeUnit.SECONDS)).isTrue();
         executor.shutdown();
 
-        List<StoredEvent> all = eventStore.replay("jdbc-concurrent", seqBefore, Integer.MAX_VALUE);
+        List<StoredEvent> all = eventStore.replay(topic("jdbc-concurrent"), seqBefore, Integer.MAX_VALUE);
         assertThat(all).hasSize(totalAppends);
 
         for (int i = 1; i < all.size(); i++) {

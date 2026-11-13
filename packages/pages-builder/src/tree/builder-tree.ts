@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { RovingTabindexMixin, KeyboardShortcutMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
-import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, type GridItemNode } from '@casehubio/pages-document';
+import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, GridItemNode } from '@casehubio/pages-document';
 import type { GridPlacement } from '@casehubio/pages-component';
 import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
 import { lookupRecord } from '../data/lookup-record.js';
@@ -50,7 +50,7 @@ function buildComponentNode(comp: ComponentNode): TreeNodeInfo {
     const isGridSlot = containerChildren.descriptor.slots.some(s => s.kind === 'grid-items');
     for (const [slotName, comps] of Object.entries(containerChildren.slots)) {
       if (isGridSlot) {
-        const sorted = [...comps as unknown as GridItemNode[]].sort((a, b) => {
+        const sorted = [...comps.filter((node): node is GridItemNode => node instanceof GridItemNode)].sort((a, b) => {
           const pa = a.getPlacement();
           const pb = b.getPlacement();
           const ya = pa.mode === 'positioned' ? pa.y : Infinity;
@@ -67,7 +67,7 @@ function buildComponentNode(comp: ComponentNode): TreeNodeInfo {
           icon: 'folder_open',
           nodeType: 'section',
           path: [...comp.path, slotName],
-          children: comps.map(buildComponentNode),
+          children: comps.filter((node): node is ComponentNode => !(node instanceof GridItemNode)).map(buildComponentNode),
         });
       }
     }
@@ -121,7 +121,7 @@ function buildGridItemNode(item: GridItemNode): TreeNodeInfo {
     const isGridSlot = containerChildren.descriptor.slots.some(s => s.kind === 'grid-items');
     for (const [slotName, comps] of Object.entries(containerChildren.slots)) {
       if (isGridSlot) {
-        const sorted = [...comps as unknown as GridItemNode[]].sort((a, b) => {
+        const sorted = [...comps.filter((node): node is GridItemNode => node instanceof GridItemNode)].sort((a, b) => {
           const pa = a.getPlacement();
           const pb = b.getPlacement();
           const ya = pa.mode === 'positioned' ? pa.y : Infinity;
@@ -138,7 +138,7 @@ function buildGridItemNode(item: GridItemNode): TreeNodeInfo {
           icon: 'folder_open',
           nodeType: 'section',
           path: [...comp.path, slotName],
-          children: comps.map(buildComponentNode),
+          children: comps.filter((node): node is ComponentNode => !(node instanceof GridItemNode)).map(buildComponentNode),
         });
       }
     }

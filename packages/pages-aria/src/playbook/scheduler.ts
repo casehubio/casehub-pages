@@ -319,7 +319,7 @@ export function createScheduler(
               retryState.delete(posKey);
               const failDecNames = Object.keys(decorators).filter(k => decorators[k] != null);
               collector.stepCompleted(posKey, stepName, 'failure',
-                { message: result.message, failureCategory: result.failureCategory },
+                { message: result.message, ...(result.failureCategory !== undefined ? { failureCategory: result.failureCategory } : {}) },
                 failDecNames.length > 0 ? failDecNames : undefined);
               hadFailure = true;
               queue.state = 'done';
