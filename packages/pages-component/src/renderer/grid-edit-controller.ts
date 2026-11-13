@@ -26,6 +26,8 @@ import {
 } from "./grid-overlay.js";
 import type { EditorMode } from "./grid-overlay.js";
 import { getCoordinator } from "./grid-edit-coordinator.js";
+import { computeMergeDirection, computeMergeTargets } from "./grid-merge-targets.js";
+import { mergeItems } from "./grid-split-merge.js";
 
 export interface GridEditController {
   readonly gridEl: HTMLElement;
@@ -37,6 +39,8 @@ export interface GridEditController {
   readonly mode: EditorMode;
   enter(): void;
   exit(): void;
+  enterMerge(rootId: string): void;
+  exitMerge(): void;
   dispose(): void;
   releaseItem(index: number): void;
   acceptForeignItem(item: GridItem, placement: GridPlacement): void;
@@ -80,12 +84,17 @@ class GridEditControllerImpl implements GridEditController {
   private _dragCursorBadge: HTMLElement | null = null;
   private _nestedGridItemIds: Set<string> | null = null;
   private _displacedPositions = new Map<string, number>();
+  private _mergeActive = false;
+  private _mergeRootId: string | null = null;
+  private _mergeTargetIds: string[] = [];
+  private _mergeDragStart: { x: number; y: number } | null = null;
 
   private readonly onPointerDown: (e: PointerEvent) => void;
   private readonly onPointerMove: (e: PointerEvent) => void;
   private readonly onPointerUp: (e: PointerEvent) => void;
   private readonly onPointerLeave: (e: PointerEvent) => void;
   private readonly onKeyDown: (e: KeyboardEvent) => void;
+  private readonly onMergeActivate: (e: Event) => void;
 
   constructor(gridEl: HTMLElement, items: readonly GridItem[], columns: number, rowHeight: number) {
     this.gridEl = gridEl;
@@ -99,6 +108,10 @@ class GridEditControllerImpl implements GridEditController {
     this.onPointerUp = this.handlePointerUp.bind(this);
     this.onKeyDown = this.handleKeyDown.bind(this);
     this.onPointerLeave = this.handlePointerLeave.bind(this);
+    this.onMergeActivate = (e: Event) => {
+      const { rootId } = (e as CustomEvent).detail as { rootId: string };
+      this.enterMerge(rootId);
+    };
 
     if (gridEl.parentElement) {
       this.observer = new MutationObserver((mutations) => {
@@ -153,6 +166,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.addEventListener("pointermove", this.onPointerMove);
     this.gridEl.addEventListener("pointerup", this.onPointerUp);
     this.gridEl.addEventListener("pointerleave", this.onPointerLeave);
+    this.gridEl.addEventListener("pages-grid-merge", this.onMergeActivate);
 
     this.initLivePlacements();
     this.storeOriginalPlacements();
@@ -192,6 +206,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.addEventListener("pointermove", this.onPointerMove);
     this.gridEl.addEventListener("pointerup", this.onPointerUp);
     this.gridEl.addEventListener("pointerleave", this.onPointerLeave);
+    this.gridEl.addEventListener("pages-grid-merge", this.onMergeActivate);
     this.gridEl.ownerDocument.addEventListener("keydown", this.onKeyDown);
 
     this.storeOriginalPlacements();
@@ -232,9 +247,35 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.removeEventListener("pointermove", this.onPointerMove);
     this.gridEl.removeEventListener("pointerup", this.onPointerUp);
     this.gridEl.removeEventListener("pointerleave", this.onPointerLeave);
+    this.gridEl.removeEventListener("pages-grid-merge", this.onMergeActivate);
     this.gridEl.ownerDocument.removeEventListener("keydown", this.onKeyDown);
 
     this.restoreOriginalPlacements();
+  }
+
+  enterMerge(rootId: string): void {
+    if (!this._active) return;
+    this._mergeActive = true;
+    this._mergeRootId = rootId;
+    this._mergeTargetIds = [];
+    this._mergeDragStart = null;
+    this.gridEl.dataset.mergeActive = "";
+    const rootEl = this.gridEl.querySelector(`[data-item-id="${rootId}"]`) as HTMLElement | null;
+    if (rootEl) rootEl.dataset.mergeRoot = "";
+  }
+
+  exitMerge(): void {
+    this._mergeActive = false;
+    this._mergeRootId = null;
+    this._mergeTargetIds = [];
+    this._mergeDragStart = null;
+    delete this.gridEl.dataset.mergeActive;
+    for (const el of this.gridEl.querySelectorAll("[data-merge-root]")) {
+      delete (el as HTMLElement).dataset.mergeRoot;
+    }
+    for (const el of this.gridEl.querySelectorAll("[data-merge-target]")) {
+      delete (el as HTMLElement).dataset.mergeTarget;
+    }
   }
 
   releaseItem(index: number): void {
@@ -335,6 +376,16 @@ class GridEditControllerImpl implements GridEditController {
   }
 
   private handlePointerDown(e: PointerEvent): void {
+    if (this._mergeActive) {
+      const target = this.findItemAtPoint(e.clientX, e.clientY);
+      if (target && target.id === this._mergeRootId) {
+        this._mergeDragStart = { x: e.clientX, y: e.clientY };
+        this.gridEl.setPointerCapture(e.pointerId);
+      } else {
+        this.exitMerge();
+      }
+      return;
+    }
     if (this.dragging || !this.geometry) return;
     if ((e.target as HTMLElement).dataset.gridEditButton !== undefined) return;
     if ((e.target as HTMLElement).closest("[data-mode-toggle]")) return;
@@ -402,6 +453,25 @@ class GridEditControllerImpl implements GridEditController {
 
   private handlePointerMove(e: PointerEvent): void {
     if (!this._active) return;
+    if (this._mergeActive && this._mergeDragStart) {
+      const dx = e.clientX - this._mergeDragStart.x;
+      const dy = e.clientY - this._mergeDragStart.y;
+      const dir = computeMergeDirection(dx, dy);
+      if (!dir) return;
+      const cellSize = this.geometry ? this.geometry.cellWidth + this.geometry.gap : 80;
+      const dist = Math.max(1, Math.floor(Math.max(Math.abs(dx), Math.abs(dy)) / cellSize));
+      const idRects = this.getIdRects();
+      const newTargets = computeMergeTargets(idRects, this._mergeRootId!, dir, dist);
+      for (const el of this.gridEl.querySelectorAll("[data-merge-target]")) {
+        delete (el as HTMLElement).dataset.mergeTarget;
+      }
+      this._mergeTargetIds = newTargets;
+      for (const id of newTargets) {
+        const el = this.gridEl.querySelector(`[data-item-id="${id}"]`) as HTMLElement | null;
+        if (el) el.dataset.mergeTarget = "";
+      }
+      return;
+    }
     if (this.dragItemId == null) {
       this.refreshGeometryIfStale();
       if (this.geometry) this.updateHover(e.clientX, e.clientY);
@@ -575,6 +645,20 @@ class GridEditControllerImpl implements GridEditController {
   }
 
   private handlePointerUp(e: PointerEvent): void {
+    if (this._mergeActive && this._mergeDragStart) {
+      this._mergeDragStart = null;
+      if (this._mergeTargetIds.length > 0) {
+        const allIds = [this._mergeRootId!, ...this._mergeTargetIds];
+        const idRects = this.getIdRects();
+        const merged = mergeItems(idRects, allIds, this._mergeRootId!);
+        this.dispatchEdit("merge", merged);
+        for (const el of this.gridEl.querySelectorAll("[data-merge-target]")) {
+          delete (el as HTMLElement).dataset.mergeTarget;
+        }
+        this._mergeTargetIds = [];
+      }
+      return;
+    }
     if (!this._active || this.dragItemId == null) return;
     e.preventDefault();
     e.stopPropagation();
@@ -673,7 +757,9 @@ class GridEditControllerImpl implements GridEditController {
   private handleKeyDown(e: KeyboardEvent): void {
     if (!this._active) return;
     if (e.key === "Escape") {
-      if (this.dragging) {
+      if (this._mergeActive) {
+        this.exitMerge();
+      } else if (this.dragging) {
         this.showBuilderOverlay();
         this.restoreDragStyles();
         this.restoreOriginalPlacements();

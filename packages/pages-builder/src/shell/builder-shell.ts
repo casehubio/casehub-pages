@@ -563,9 +563,15 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const onMerge = (e: Event) => {
       const { path } = (e as CustomEvent).detail;
       this._selectionOverlay?.hide();
-      overlayRoot.dispatchEvent(new CustomEvent('grid-merge-activate', {
-        bubbles: true, detail: { path },
-      }));
+      if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
+        const preview = this.renderRoot.querySelector('[data-preview-root]') ?? this.renderRoot;
+        const gridEl = preview.querySelector('[data-grid-editing]') as HTMLElement | null;
+        if (gridEl) {
+          gridEl.dispatchEvent(new CustomEvent('pages-grid-merge', {
+            bubbles: false, detail: { rootId: String(path[3]) },
+          }));
+        }
+      }
     };
     const onSwap = (e: Event) => {
       const { path } = (e as CustomEvent).detail;
