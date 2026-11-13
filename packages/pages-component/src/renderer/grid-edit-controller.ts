@@ -82,6 +82,7 @@ class GridEditControllerImpl implements GridEditController {
   private _initialDragPositions: Map<string, DOMRect> | null = null;
   private _priorGridAutoRows = "";
   private _selectedEl: HTMLElement | null = null;
+  private _barShowTimer: ReturnType<typeof setTimeout> | undefined;
   private _dispatching = false;
   private _dragCursorBadge: HTMLElement | null = null;
   private _nestedGridItemIds: Set<string> | null = null;
@@ -235,6 +236,7 @@ class GridEditControllerImpl implements GridEditController {
       }
     }
     this.hoveredId = null;
+    clearTimeout(this._barShowTimer);
 
     if (this.dragging) this.restoreDragStyles();
     this.cancelDrag();
@@ -305,6 +307,7 @@ class GridEditControllerImpl implements GridEditController {
   }
 
   clearInteractionState(): void {
+    clearTimeout(this._barShowTimer);
     if (this._selectedEl) {
       this._selectedEl.querySelector("[data-drag-handle]")?.remove();
       this._selectedEl = null;
@@ -758,7 +761,6 @@ class GridEditControllerImpl implements GridEditController {
 
         const editType = this.dragHandle === "move" ? "move" : "resize";
         const draggedId = this.dragItemId!;
-        const wasResize = this.dragHandle !== "move";
         this.hideBuilderOverlay();
         this.cancelDrag();
         this.dispatchEdit(editType, resolvedItems);
@@ -923,7 +925,9 @@ class GridEditControllerImpl implements GridEditController {
     const BTN = "width:20px;height:20px;border:1px solid rgba(255,255,255,0.3);border-radius:3px;background:rgba(0,0,0,0.5);color:#fff;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0;pointer-events:auto;";
     const bar = doc.createElement("div");
     bar.dataset.dragHandle = "";
-    bar.style.cssText = "position:absolute;top:2px;left:2px;display:none;gap:2px;z-index:10;pointer-events:auto;";
+    bar.style.cssText = "position:absolute;top:2px;left:2px;right:2px;display:none;justify-content:space-between;z-index:10;pointer-events:auto;";
+    const leftGroup = doc.createElement("div");
+    leftGroup.style.cssText = "display:flex;gap:2px;";
     const displaceBtn = doc.createElement("button");
     displaceBtn.title = "Drag to displace";
     displaceBtn.textContent = "⇵";
@@ -934,8 +938,8 @@ class GridEditControllerImpl implements GridEditController {
     swapBtn.textContent = "⇄";
     swapBtn.style.cssText = BTN;
     swapBtn.dataset.dragMode = "swap";
-    bar.appendChild(displaceBtn);
-    bar.appendChild(swapBtn);
+    leftGroup.appendChild(displaceBtn);
+    leftGroup.appendChild(swapBtn);
     if (el.querySelector('[data-grid-editing]')) {
       const coord = getCoordinator();
       const isPinned = coord.isPinned(this, id);
@@ -951,10 +955,47 @@ class GridEditControllerImpl implements GridEditController {
         pinBtn.textContent = nowPinned ? "📌" : "📍";
         pinBtn.title = nowPinned ? "Pinned — click to allow displacement" : "Unpinned — click to pin";
       });
-      bar.appendChild(pinBtn);
+      leftGroup.appendChild(pinBtn);
     }
+    const rightGroup = doc.createElement("div");
+    rightGroup.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;";
+    const trigger = doc.createElement("div");
+    trigger.textContent = "⋮";
+    trigger.style.cssText = BTN;
+    const actionGrid = doc.createElement("div");
+    actionGrid.style.cssText = "display:grid;grid-template-columns:repeat(3,20px);gap:2px;max-height:0;overflow:hidden;opacity:0;transition:max-height 150ms ease,opacity 150ms ease;margin-top:2px;";
+    const ACTIONS: [string, string, string][] = [
+      ["⬌", "split-h", "Split horizontally"],
+      ["⬍", "split-v", "Split vertically"],
+      ["⊞", "merge", "Merge"],
+      ["✕", "delete", "Delete"],
+      ["+", "add-empty", "Add empty"],
+    ];
+    for (let ai = 0; ai < ACTIONS.length; ai++) {
+      const [label, action, title] = ACTIONS[ai]!;
+      if (ai === 3) actionGrid.appendChild(doc.createElement("div"));
+      const abtn = doc.createElement("button");
+      abtn.textContent = label;
+      abtn.title = title;
+      abtn.style.cssText = BTN;
+      abtn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        this.gridEl.dispatchEvent(new CustomEvent("pages-grid-action", { bubbles: true, composed: true, detail: { action } }));
+      });
+      actionGrid.appendChild(abtn);
+    }
+    rightGroup.addEventListener("mouseenter", () => { actionGrid.style.maxHeight = "50px"; actionGrid.style.opacity = "1"; });
+    rightGroup.addEventListener("mouseleave", () => { actionGrid.style.maxHeight = "0"; actionGrid.style.opacity = "0"; });
+    rightGroup.appendChild(trigger);
+    rightGroup.appendChild(actionGrid);
+    bar.appendChild(leftGroup);
+    bar.appendChild(rightGroup);
     el.appendChild(bar);
-    if (this.hoveredId === id) bar.style.display = "flex";
+    clearTimeout(this._barShowTimer);
+    this._barShowTimer = setTimeout(() => {
+      if (this.hoveredId === id && bar.isConnected) bar.style.display = "flex";
+    }, 150);
   }
 
   private _swapTargetId: string | null = null;
@@ -1037,6 +1078,7 @@ class GridEditControllerImpl implements GridEditController {
     if (!overlay) return;
     overlay.style.transition = "none";
     overlay.style.display = "";
+    requestAnimationFrame(() => { overlay.style.transition = ""; });
   }
 
   private highlightOverlayEdge(active: boolean): void {
