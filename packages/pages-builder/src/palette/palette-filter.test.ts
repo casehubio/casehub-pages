@@ -100,7 +100,7 @@ describe('filterCatalog', () => {
     const results = filterCatalog(ctx);
     expect(results.find(r => r.entry.type === 'bar-chart')).toBeUndefined();
     expect(results.find(r => r.entry.type === 'metric')).toBeUndefined();
-    expect(results.find(r => r.entry.type === 'rows')).toBeDefined();
+    expect(results.find(r => r.entry.type === 'columns')).toBeDefined();
     expect(results.find(r => r.entry.type === 'grid')).toBeDefined();
   });
 

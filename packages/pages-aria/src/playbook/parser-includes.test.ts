@@ -14,7 +14,7 @@ params:
     type: string
     required: true
 steps:
-  - step: seed-message
+  - name: seed-message
     click:
       role: button
       name: "\${params.sender}"
@@ -30,13 +30,13 @@ steps:
 
   it('expands includes before resolving steps', async () => {
     const yaml = `
-scenario: include-demo
+playbook: include-demo
 includes:
   - file: seeds/chat.yaml
     params:
       sender: Alice
 steps:
-  - step: main-step
+  - name: main-step
     click:
       role: button
       name: Submit
@@ -50,9 +50,9 @@ steps:
 
   it('parseScenario still works synchronously without includes', () => {
     const yaml = `
-scenario: no-includes
+playbook: no-includes
 steps:
-  - step: only-step
+  - name: only-step
     click:
       role: button
       name: Go

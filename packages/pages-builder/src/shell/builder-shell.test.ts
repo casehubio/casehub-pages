@@ -1112,7 +1112,7 @@ describe('PagesBuilderShell', () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
     el.yaml = MINIMAL_PAGE;
     el.renderPreview = (container) => {
-      container.innerHTML = '<div data-component-type="title" style="width:100px;height:50px;">Hello</div>';
+      container.innerHTML = '<div data-component-type="page"><div data-item-id="0" data-component-type="title" style="width:100px;height:50px;">Hello</div></div>';
     };
     document.body.appendChild(el);
     await awaitReady(el);

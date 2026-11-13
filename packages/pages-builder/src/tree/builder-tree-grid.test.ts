@@ -40,14 +40,12 @@ describe('buildTreeModel for items layout', () => {
     expect(item0.label).toContain('Revenue');
     expect(item0.annotation).toBe('[0,0 6×2]');
     expect(item0.nodeType).toBe('grid-item');
-    expect(item0.children).toHaveLength(1);
-    expect(item0.children[0]!.nodeType).toBe('component');
-    expect(item0.children[0]!.label).toContain('Revenue');
+    expect(item0.children).toHaveLength(0);
+    expect(item0.label).toContain('Revenue');
     const item1 = pageNode.children[1]!;
     expect(item1.label).toContain('table');
     expect(item1.annotation).toBe('[6,0 6×1]');
-    expect(item1.children).toHaveLength(1);
-    expect(item1.children[0]!.nodeType).toBe('component');
+    expect(item1.children).toHaveLength(0);
   });
 
   it('sorts grid items by placement y then x', () => {

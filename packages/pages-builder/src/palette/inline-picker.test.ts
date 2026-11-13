@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import './inline-picker.js';
 import type { PagesBuilderInlinePicker } from './inline-picker.js';
 import type { PaletteContext } from '../catalog/palette-context.js';
@@ -141,6 +141,7 @@ describe('PagesBuilderInlinePicker', () => {
     anchor.style.position = 'absolute';
     anchor.style.top = '100px';
     anchor.style.left = '50px';
+    vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue(new DOMRect(50, 100, 80, 24));
     document.body.appendChild(anchor);
 
     el = createPicker();
@@ -151,8 +152,8 @@ describe('PagesBuilderInlinePicker', () => {
     el.open = true;
     await el.updateComplete;
 
-    expect(el.style.top).toBeTruthy();
-    expect(el.style.left).toBeTruthy();
+    expect(el.style.top).toBe('124px');
+    expect(el.style.left).toBe('50px');
 
     anchor.remove();
   });

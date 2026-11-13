@@ -31,7 +31,7 @@ const catalog = buildTestCatalog(ALL_ACTIONS);
 describe('scenario parser', () => {
   it('resolves ARIA shorthand via catalog as PluginStep', () => {
     const yaml = `
-scenario: test-form
+playbook: test-form
 steps:
   - click:
       role: button
@@ -49,7 +49,7 @@ steps:
 
   it('resolves multiple step types via catalog', () => {
     const yaml = `
-scenario: full-flow
+playbook: full-flow
 steps:
   - navigate: /login
   - fill:
@@ -72,7 +72,7 @@ steps:
 
   it('passes within scoping through params', () => {
     const yaml = `
-scenario: scoped-click
+playbook: scoped-click
 steps:
   - click:
       role: button
@@ -88,19 +88,19 @@ steps:
 
   it('wraps navigate string value as { value: path }', () => {
     const yaml = `
-scenario: nav
+playbook: nav
 steps:
   - navigate: /login
 `;
     const scenario = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = scenario.steps[0] as PluginStep;
     expect(step.entry.qualifiedName).toBe('navigate');
-    expect(step.params).toEqual({ value: '/login' });
+    expect(step.params).toEqual({ _subject: '/login' });
   });
 
   it('resolves graphql shorthand via catalog', () => {
     const yaml = `
-scenario: graphql-test
+playbook: graphql-test
 steps:
   - graphql:
       domain: connectors
@@ -120,7 +120,7 @@ steps:
 
   it('resolves simulated shorthand via catalog', () => {
     const yaml = `
-scenario: simulated-test
+playbook: simulated-test
 steps:
   - simulated:
       dataset: helpdesk-tickets
@@ -137,7 +137,7 @@ steps:
 
   it('resolves hybrid scenario with mixed catalog entries', () => {
     const yaml = `
-scenario: hybrid
+playbook: hybrid
 steps:
   - navigate: /helpdesk
   - click:
@@ -156,7 +156,7 @@ steps:
   });
 
   it('throws on invalid scenario — missing steps and sections', () => {
-    expect(() => parsePlaybook('scenario: test', catalog)).toThrow('must have');
+    expect(() => parsePlaybook('playbook: test', catalog)).toThrow('must have');
   });
 
   it('parses without scenario name — steps only', () => {
@@ -171,7 +171,7 @@ steps:
 
   it('throws on unknown step key', () => {
     const yaml = `
-scenario: bad
+playbook: bad
 steps:
   - unknown: value
 `;
@@ -182,7 +182,7 @@ steps:
 describe('parseScenario — sectioned format', () => {
   it('parses sections with inline content', () => {
     const yaml = `
-scenario: test-tutorial
+playbook: test-tutorial
 meta:
   title: Test
   description: A test tutorial
@@ -214,7 +214,7 @@ sections:
 
   it('normalizes missing steps to empty array', () => {
     const yaml = `
-scenario: slides-only
+playbook: slides-only
 sections:
   - title: Slide 1
     content:
@@ -228,7 +228,7 @@ sections:
 
   it('rejects when both steps and sections present', () => {
     const yaml = `
-scenario: invalid
+playbook: invalid
 steps:
   - click:
       role: button
@@ -242,14 +242,14 @@ sections:
 
   it('rejects when neither steps nor sections present', () => {
     const yaml = `
-scenario: empty
+playbook: empty
 `;
     expect(() => parsePlaybook(yaml, catalog)).toThrow('must have');
   });
 
   it('parses template content reference', () => {
     const yaml = `
-scenario: template-test
+playbook: template-test
 sections:
   - title: Slide
     content:
@@ -265,7 +265,7 @@ sections:
 
   it('preserves meta on flat scenarios', () => {
     const yaml = `
-scenario: flat-with-meta
+playbook: flat-with-meta
 meta:
   title: Flat Test
   description: A flat scenario with meta
@@ -283,13 +283,13 @@ steps:
 
 describe('isSectioned type guard', () => {
   it('returns false for flat scenarios', () => {
-    const flat: FlatPlaybook = { scenario: 'test', steps: [] };
+    const flat: FlatPlaybook = { playbook: 'test', steps: [] };
     expect(isSectioned(flat)).toBe(false);
   });
 
   it('returns true for sectioned scenarios', () => {
     const sectioned: SectionedPlaybook = {
-      scenario: 'test',
+      playbook: 'test',
       sections: [{ title: 'Intro', steps: [] }],
     };
     expect(isSectioned(sectioned)).toBe(true);
@@ -297,8 +297,8 @@ describe('isSectioned type guard', () => {
 
   it('preserves meta on both variants', () => {
     const meta = { title: 'T', description: 'D', area: 'a' };
-    const flat: FlatPlaybook = { scenario: 'test', steps: [], meta };
-    const sectioned: SectionedPlaybook = { scenario: 'test', sections: [], meta };
+    const flat: FlatPlaybook = { playbook: 'test', steps: [], meta };
+    const sectioned: SectionedPlaybook = { playbook: 'test', sections: [], meta };
     expect(flat.meta).toEqual(meta);
     expect(sectioned.meta).toEqual(meta);
   });
@@ -306,7 +306,7 @@ describe('isSectioned type guard', () => {
 
 describe('editor actions', () => {
   it('resolves editor-insert via catalog', () => {
-    const yaml = `scenario: test
+    const yaml = `playbook: test
 sections:
   - title: Test
     steps:
@@ -324,7 +324,7 @@ sections:
   });
 
   it('resolves spotlight via catalog with nested target in params', () => {
-    const yaml = `scenario: test
+    const yaml = `playbook: test
 sections:
   - title: Test
     steps:
@@ -342,7 +342,7 @@ sections:
   });
 
   it('resolves editor-highlight via catalog', () => {
-    const yaml = `scenario: test
+    const yaml = `playbook: test
 sections:
   - title: Test
     steps:
@@ -361,7 +361,7 @@ sections:
   });
 
   it('resolves editor-set-content via catalog', () => {
-    const yaml = `scenario: test
+    const yaml = `playbook: test
 sections:
   - title: Test
     steps:
@@ -377,7 +377,7 @@ sections:
   });
 
   it('resolves editor-cursor via catalog', () => {
-    const yaml = `scenario: test
+    const yaml = `playbook: test
 sections:
   - title: Test
     steps:
@@ -394,7 +394,7 @@ sections:
   });
 
   it('resolves editor-completion via catalog', () => {
-    const yaml = `scenario: test
+    const yaml = `playbook: test
 sections:
   - title: Test
     steps:
@@ -412,7 +412,7 @@ sections:
 describe('multi-document YAML format', () => {
   it('parses front matter + content', () => {
     const yaml = `
-scenario: multi-doc-test
+playbook: multi-doc-test
 meta:
   title: "Multi-Doc"
 ---
@@ -430,7 +430,7 @@ steps:
 playbook: "1.0"
 schema: client
 ---
-scenario: playbook-test
+playbook: playbook-test
 steps:
   - click: { role: button, name: "A" }
 `;
@@ -445,7 +445,7 @@ playbook: "1.0"
 schema: client
 name: my-playbook
 ---
-scenario: playbook-test
+playbook: playbook-test
 steps:
   - click: { role: button, name: "A" }
 `;
@@ -454,23 +454,23 @@ steps:
     expect(doc.frontMatter!.version).toBe('1.0');
     expect(doc.frontMatter!.schema).toBe('client');
     expect(doc.frontMatter!.name).toBe('my-playbook');
-    expect(doc.scenario.steps).toHaveLength(1);
+    expect(doc.playbook.steps).toHaveLength(1);
   });
 
   it('parseScenarioDocument returns null frontMatter for legacy', () => {
     const yaml = `
-scenario: legacy
+playbook: legacy
 steps:
   - click: { role: button, name: "A" }
 `;
     const doc = parsePlaybookDocument(yaml, catalog);
     expect(doc.frontMatter).toBeNull();
-    expect(doc.scenario.playbook).toBe('legacy');
+    expect(doc.playbook.playbook).toBe('legacy');
   });
 
   it('multi-doc sections format', () => {
     const yaml = `
-scenario: multi-doc-sections
+playbook: multi-doc-sections
 meta:
   title: "Sections"
 ---

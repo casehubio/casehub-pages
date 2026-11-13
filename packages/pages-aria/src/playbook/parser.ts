@@ -155,7 +155,7 @@ function splitMultiDoc(yamlString: string): { meta: Record<string, unknown> | nu
 
   const firstDoc = docs[0]!.toJSON() as Record<string, unknown>;
 
-  if (docs.length >= 3 && 'playbook' in firstDoc) {
+  if (docs.length >= 3 && 'playbook' in firstDoc && 'schema' in firstDoc) {
     const rawSecond = docs[1]!.toJSON();
     if (typeof rawSecond !== 'object' || rawSecond === null || Array.isArray(rawSecond)) {
       throw new Error('Second YAML document must be a mapping');
@@ -173,12 +173,12 @@ function splitMultiDoc(yamlString: string): { meta: Record<string, unknown> | nu
   }
   const secondDoc = rawSecond as Record<string, unknown>;
 
-  if ('playbook' in firstDoc) {
+  if ('playbook' in firstDoc && 'schema' in firstDoc) {
     return { meta: firstDoc, content: secondDoc };
   }
 
   const merged = { ...firstDoc, ...secondDoc };
-  return { meta: firstDoc, content: merged };
+  return { meta: null, content: merged };
 }
 
 export function parsePlaybook(yamlString: string, catalog: Catalog): Playbook {

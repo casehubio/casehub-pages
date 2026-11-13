@@ -58,7 +58,7 @@ describe('pages-tutorial-host', () => {
   });
 
   it('does not show controller initially', () => {
-    const controller = el.shadowRoot?.querySelector('pages-scenario-controller');
+    const controller = el.shadowRoot?.querySelector('pages-playbook-controller');
     expect(controller).toBeNull();
   });
 
@@ -83,10 +83,10 @@ describe('pages-tutorial-host', () => {
     await new Promise(r => setTimeout(r, 100));
     await el.updateComplete;
 
-    const controller = el.shadowRoot?.querySelector('pages-scenario-controller');
+    const controller = el.shadowRoot?.querySelector('pages-playbook-controller');
     expect(controller).not.toBeNull();
 
-    const narrative = el.shadowRoot?.querySelector('pages-scenario-narrative');
+    const narrative = el.shadowRoot?.querySelector('pages-playbook-narrative');
     expect(narrative).not.toBeNull();
 
     const back = el.shadowRoot?.querySelector('.back-btn');
@@ -121,7 +121,7 @@ describe('pages-tutorial-host', () => {
     const catalogBack = el.shadowRoot?.querySelector('pages-tutorial-catalog');
     expect(catalogBack).not.toBeNull();
 
-    const controllerGone = el.shadowRoot?.querySelector('pages-scenario-controller');
+    const controllerGone = el.shadowRoot?.querySelector('pages-playbook-controller');
     expect(controllerGone).toBeNull();
   });
 
@@ -141,7 +141,7 @@ describe('pages-tutorial-host', () => {
     await new Promise(r => setTimeout(r, 100));
     await el.updateComplete;
 
-    const narrative = el.shadowRoot?.querySelector('pages-scenario-narrative');
+    const narrative = el.shadowRoot?.querySelector('pages-playbook-narrative');
     expect(narrative?.htmlMode).toBe('sanitized');
   });
 

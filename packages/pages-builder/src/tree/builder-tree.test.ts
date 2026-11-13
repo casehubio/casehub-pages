@@ -645,8 +645,14 @@ describe('Tree insertion points', () => {
 
   it('row shows insertion points between columns', async () => {
     await setup(ROWS_PAGE, ['pages', 0, 'rows', 0, 'columns', 0]);
-    const rowGroup = el.shadowRoot!.querySelectorAll('.tree-insertion-point');
-    expect(rowGroup.length).toBeGreaterThanOrEqual(3);
+    const rowGroup = el.shadowRoot!.querySelectorAll('.tree-insertion-point[aria-label$="in Row"]');
+    expect(rowGroup).toHaveLength(3);
+  });
+
+  it('column shows insertion points before and after its component', async () => {
+    await setup(ROWS_PAGE, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
+    const points = el.shadowRoot!.querySelectorAll('.tree-insertion-point[aria-label$="in Column (6)"]');
+    expect(points).toHaveLength(2);
   });
 
   it('does not render insertion points for section nodes', async () => {
