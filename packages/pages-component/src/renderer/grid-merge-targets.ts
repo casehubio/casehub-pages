@@ -25,52 +25,52 @@ export function computeMergeTargets(
     case "right": {
       edge = root.x + root.w;
       for (let d = 0; d < distance; d++) {
-        const next = items.find(i =>
+        const tier = items.filter(i =>
           i.id !== rootId && !targets.includes(i.id) &&
-          i.x === edge && i.y <= root.y && i.y + i.h >= root.y + root.h,
+          i.x === edge && i.y < root.y + root.h && i.y + i.h > root.y,
         );
-        if (!next) break;
-        targets.push(next.id);
-        edge = next.x + next.w;
+        if (tier.length === 0) break;
+        for (const t of tier) targets.push(t.id);
+        edge = Math.max(...tier.map(t => t.x + t.w));
       }
       break;
     }
     case "left": {
       edge = root.x;
       for (let d = 0; d < distance; d++) {
-        const next = items.find(i =>
+        const tier = items.filter(i =>
           i.id !== rootId && !targets.includes(i.id) &&
-          i.x + i.w === edge && i.y <= root.y && i.y + i.h >= root.y + root.h,
+          i.x + i.w === edge && i.y < root.y + root.h && i.y + i.h > root.y,
         );
-        if (!next) break;
-        targets.push(next.id);
-        edge = next.x;
+        if (tier.length === 0) break;
+        for (const t of tier) targets.push(t.id);
+        edge = Math.min(...tier.map(t => t.x));
       }
       break;
     }
     case "down": {
       edge = root.y + root.h;
       for (let d = 0; d < distance; d++) {
-        const next = items.find(i =>
+        const tier = items.filter(i =>
           i.id !== rootId && !targets.includes(i.id) &&
-          i.y === edge && i.x <= root.x && i.x + i.w >= root.x + root.w,
+          i.y === edge && i.x < root.x + root.w && i.x + i.w > root.x,
         );
-        if (!next) break;
-        targets.push(next.id);
-        edge = next.y + next.h;
+        if (tier.length === 0) break;
+        for (const t of tier) targets.push(t.id);
+        edge = Math.max(...tier.map(t => t.y + t.h));
       }
       break;
     }
     case "up": {
       edge = root.y;
       for (let d = 0; d < distance; d++) {
-        const next = items.find(i =>
+        const tier = items.filter(i =>
           i.id !== rootId && !targets.includes(i.id) &&
-          i.y + i.h === edge && i.x <= root.x && i.x + i.w >= root.x + root.w,
+          i.y + i.h === edge && i.x < root.x + root.w && i.x + i.w > root.x,
         );
-        if (!next) break;
-        targets.push(next.id);
-        edge = next.y;
+        if (tier.length === 0) break;
+        for (const t of tier) targets.push(t.id);
+        edge = Math.min(...tier.map(t => t.y));
       }
       break;
     }

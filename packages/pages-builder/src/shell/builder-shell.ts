@@ -151,6 +151,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _hoveredEl: HTMLElement | null = null;
   private _overlayScrollBase = 0;
 
+
   get document(): PageDocument {
     return this._document;
   }
@@ -207,7 +208,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _gridEditHandler = (e: Event) => {
     const detail = (e as CustomEvent).detail as GridEditDetail;
-    const origin: EditOrigin = detail.type === 'insert' ? 'palette' : 'grid';
+    const origin: EditOrigin = detail.type === 'insert' ? 'palette' : detail.type === 'merge' ? 'toolbar' : 'grid';
     this._applyEdit(origin, () => this._gridBridge.applyGridEdit(this._document, detail));
   };
 
