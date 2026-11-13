@@ -14,12 +14,24 @@ const GRID_ITEM_BUTTONS: ButtonDef[] = [
   ['sel-split-h-btn', '⬌', 'selection-split-h'],
   ['sel-split-v-btn', '⬍', 'selection-split-v'],
   ['sel-merge-btn', '⊞', 'selection-merge'],
-  ['sel-swap-btn', '⇄', 'selection-swap'],
   ['sel-delete-btn', '✕', 'selection-delete'],
   ['sel-add-empty-btn', '+', 'selection-add-empty'],
 ];
 
 const EDIT_LAYOUT_BTN: ButtonDef = ['sel-edit-layout-btn', '⊞', 'selection-edit-layout'];
+
+const BUTTON_TOOLTIPS: Record<string, string> = {
+  'selection-split-h': 'Split horizontally',
+  'selection-split-v': 'Split vertically',
+  'selection-merge': 'Merge',
+  'selection-delete': 'Delete',
+  'selection-add-empty': 'Add empty',
+  'selection-add': 'Add',
+  'selection-insert': 'Insert',
+  'selection-cut': 'Cut',
+  'selection-copy': 'Copy',
+  'selection-edit-layout': 'Edit layout',
+};
 
 export function getButtonsForNodeType(
   nodeType: TreeNodeType,
@@ -84,15 +96,17 @@ export class SelectionOverlay {
     this._overlay.innerHTML = '';
     const toolbar = document.createElement('div');
     toolbar.className = 'selection-toolbar';
-    toolbar.style.cssText = `
-      position: absolute; top: -2px; right: -2px;
-      display: flex; align-items: center;
-      pointer-events: auto; z-index: 11;
-    `;
+    const isGridItemToolbar = nodeType === 'grid-item';
+    toolbar.style.cssText = isGridItemToolbar
+      ? `position: absolute; top: -2px; right: -2px;
+         display: flex; flex-direction: column; align-items: flex-end;
+         pointer-events: auto; z-index: 11;`
+      : `position: absolute; top: -2px; right: -2px;
+         display: flex; align-items: center;
+         pointer-events: auto; z-index: 11;`;
 
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'toolbar-buttons';
-    const isGridItemToolbar = nodeType === 'grid-item';
     buttonsContainer.style.cssText = isGridItemToolbar
       ? `display: grid; grid-template-columns: repeat(3, 20px); gap: 2px;
          max-height: 0; overflow: hidden; opacity: 0;
@@ -102,10 +116,16 @@ export class SelectionOverlay {
          transition: max-width 150ms ease, opacity 150ms ease;`;
 
     const buttons = getButtonsForNodeType(nodeType, options?.isContainer ?? false);
-    for (const [cls, label, eventName] of buttons) {
+    for (let i = 0; i < buttons.length; i++) {
+      const [cls, label, eventName] = buttons[i]!;
+      if (isGridItemToolbar && i === 3) {
+        const spacer = document.createElement('div');
+        buttonsContainer.appendChild(spacer);
+      }
       const btn = document.createElement('button');
       btn.className = cls;
       btn.textContent = label;
+      btn.title = BUTTON_TOOLTIPS[eventName] ?? '';
       btn.style.cssText = BTN_STYLE;
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -128,8 +148,13 @@ export class SelectionOverlay {
       border: 1px solid #dadce0; border-radius: 4px;
     `;
 
-    toolbar.appendChild(buttonsContainer);
-    toolbar.appendChild(trigger);
+    if (isGridItemToolbar) {
+      toolbar.appendChild(trigger);
+      toolbar.appendChild(buttonsContainer);
+    } else {
+      toolbar.appendChild(buttonsContainer);
+      toolbar.appendChild(trigger);
+    }
     this._buttonsContainer = buttonsContainer;
     this._isGridItemToolbar = isGridItemToolbar;
 
