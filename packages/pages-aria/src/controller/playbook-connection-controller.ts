@@ -98,7 +98,7 @@ export class PlaybookConnectionController implements ReactiveController {
       }));
       return;
     }
-    await fetch(`${this.restBase}/scenario${path}`, {
+    await fetch(`${this.restBase}/playbook${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       ...(body ? { body: JSON.stringify(body) } : {}),

@@ -10,7 +10,7 @@ function mockConnection(): EventConnection & { sent: object[]; commandResults: o
       return sent.filter((m) => (m as Record<string, unknown>).op === 'command-result');
     },
     send(msg: object) { sent.push(msg); },
-    listen: vi.fn().mockResolvedValue({ topics: ['scenario:exec'] }),
+    listen: vi.fn().mockResolvedValue({ topics: ['playbook:exec'] }),
     unlisten: vi.fn().mockResolvedValue(undefined),
     close: vi.fn(),
     get connected() { return true; },
@@ -20,7 +20,7 @@ function mockConnection(): EventConnection & { sent: object[]; commandResults: o
 
 function fireCommand(target: EventTarget, data: Record<string, unknown>): void {
   target.dispatchEvent(new CustomEvent('pages-event', {
-    detail: { topic: 'scenario:exec', payload: data },
+    detail: { topic: 'playbook:exec', payload: data },
   }));
 }
 
@@ -31,10 +31,10 @@ describe('PlaybookHandler', () => {
     eventTarget = new EventTarget();
   });
 
-  it('subscribes to scenario:exec on creation', async () => {
+  it('subscribes to playbook:exec on creation', async () => {
     const conn = mockConnection();
     const handler = createPlaybookHandler(conn, eventTarget);
-    expect(conn.listen).toHaveBeenCalledWith(['scenario:exec']);
+    expect(conn.listen).toHaveBeenCalledWith(['playbook:exec']);
     handler.dispose();
   });
 
@@ -107,7 +107,7 @@ describe('PlaybookHandler', () => {
     handler.dispose();
   });
 
-  it('sends error result when target not found', () => {
+  it('sends error result when target not found', async () => {
     const conn = mockConnection();
     const handler = createPlaybookHandler(conn, eventTarget);
 
@@ -116,6 +116,8 @@ describe('PlaybookHandler', () => {
       action: 'click',
       element: { role: 'button', name: 'Nonexistent' },
     });
+
+    await vi.waitFor(() => expect(conn.commandResults).toHaveLength(1));
 
     expect(conn.commandResults).toHaveLength(1);
     expect(conn.commandResults[0]).toMatchObject({
@@ -128,27 +130,35 @@ describe('PlaybookHandler', () => {
     handler.dispose();
   });
 
-  it('sends error for unknown action', () => {
+  it('sends error for unknown action', async () => {
     const conn = mockConnection();
     const handler = createPlaybookHandler(conn, eventTarget);
 
+    const button = document.createElement('button');
+    button.setAttribute('role', 'button');
+    button.setAttribute('aria-label', 'X');
+    document.body.appendChild(button);
+
     fireCommand(eventTarget, {
       id: 'cmd-4',
-      action: 'hover',
+      action: 'unsupported-action',
       element: { role: 'button', name: 'X' },
     });
+
+    await vi.waitFor(() => expect(conn.commandResults).toHaveLength(1));
 
     expect(conn.commandResults[0]).toMatchObject({
       op: 'command-result',
       id: 'cmd-4',
       ok: false,
     });
-    expect((conn.commandResults[0] as Record<string, unknown>).error).toContain('hover');
+    expect((conn.commandResults[0] as Record<string, unknown>).error).toContain('unsupported-action');
 
+    button.remove();
     handler.dispose();
   });
 
-  it('executes ready action — no-op that confirms handler is active', () => {
+  it('executes ready action — no-op that confirms handler is active', async () => {
     const conn = mockConnection();
     const handler = createPlaybookHandler(conn, eventTarget);
 
@@ -156,6 +166,8 @@ describe('PlaybookHandler', () => {
       id: 'cmd-ready',
       action: 'ready',
     });
+
+    await vi.waitFor(() => expect(conn.commandResults).toHaveLength(1));
 
     expect(conn.commandResults).toHaveLength(1);
     expect(conn.commandResults[0]).toEqual({
@@ -168,7 +180,7 @@ describe('PlaybookHandler', () => {
     handler.dispose();
   });
 
-  it('ignores non-scenario:exec topics', () => {
+  it('ignores non-playbook:exec topics', () => {
     const conn = mockConnection();
     const handler = createPlaybookHandler(conn, eventTarget);
 
@@ -188,7 +200,7 @@ describe('PlaybookHandler', () => {
     const conn = mockConnection();
     const handler = createPlaybookHandler(conn, eventTarget);
     handler.dispose();
-    expect(conn.unlisten).toHaveBeenCalledWith(['scenario:exec']);
+    expect(conn.unlisten).toHaveBeenCalledWith(['playbook:exec']);
   });
 });
 
@@ -601,12 +613,12 @@ describe('PlaybookHandler sequence protocol', () => {
     }));
 
     await vi.waitFor(() => {
-      const overlay = document.querySelector('.scenario-modal-overlay');
+      const overlay = document.querySelector('.playbook-modal-overlay');
       expect(overlay).not.toBeNull();
       expect(overlay!.querySelector('h2')!.textContent).toBe('Slide 1');
     });
 
-    document.querySelector('.scenario-modal-overlay')?.remove();
+    document.querySelector('.playbook-modal-overlay')?.remove();
   });
 
   it('collects consecutive modal steps into a deck', async () => {
@@ -626,15 +638,15 @@ describe('PlaybookHandler sequence protocol', () => {
     }));
 
     await vi.waitFor(() => {
-      const overlay = document.querySelector('.scenario-modal-overlay');
+      const overlay = document.querySelector('.playbook-modal-overlay');
       expect(overlay).not.toBeNull();
-      const dots = overlay!.querySelectorAll('.scenario-modal-dot');
+      const dots = overlay!.querySelectorAll('.playbook-modal-dot');
       expect(dots.length).toBe(2);
-      const pos = overlay!.querySelector('.scenario-modal-position');
+      const pos = overlay!.querySelector('.playbook-modal-position');
       expect(pos!.textContent).toBe('Slide 1 of 2');
     });
 
-    document.querySelector('.scenario-modal-overlay')?.remove();
+    document.querySelector('.playbook-modal-overlay')?.remove();
   });
 
   it('Escape key dismisses modal overlay', async () => {
@@ -650,9 +662,9 @@ describe('PlaybookHandler sequence protocol', () => {
       },
     }));
 
-    await vi.waitFor(() => { expect(document.querySelector('.scenario-modal-overlay')).not.toBeNull(); });
+    await vi.waitFor(() => { expect(document.querySelector('.playbook-modal-overlay')).not.toBeNull(); });
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(document.querySelector('.scenario-modal-overlay')).toBeNull();
+    expect(document.querySelector('.playbook-modal-overlay')).toBeNull();
   });
 
   it('single-slide modal has no dot navigation', async () => {
@@ -669,13 +681,13 @@ describe('PlaybookHandler sequence protocol', () => {
     }));
 
     await vi.waitFor(() => {
-      const overlay = document.querySelector('.scenario-modal-overlay');
+      const overlay = document.querySelector('.playbook-modal-overlay');
       expect(overlay).not.toBeNull();
-      expect(overlay!.querySelector('.scenario-modal-dots')).toBeNull();
-      expect(overlay!.querySelector('.scenario-modal-position')).toBeNull();
+      expect(overlay!.querySelector('.playbook-modal-dots')).toBeNull();
+      expect(overlay!.querySelector('.playbook-modal-position')).toBeNull();
     });
 
-    document.querySelector('.scenario-modal-overlay')?.remove();
+    document.querySelector('.playbook-modal-overlay')?.remove();
   });
 
   it('stop control clears queue and sends failure results', async () => {

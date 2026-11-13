@@ -20,8 +20,8 @@ describe('PagesPositionPicker', () => {
     await el.updateComplete;
     const btns = el.shadowRoot!.querySelectorAll('button');
     expect(btns.length).toBe(2);
-    expect(btns[0]!.textContent?.trim()).toBe('Before');
-    expect(btns[1]!.textContent?.trim()).toBe('After');
+    expect(btns[0]!.title).toBe('Insert before');
+    expect(btns[1]!.title).toBe('Insert after');
   });
 
   it('fires position-select with before', async () => {

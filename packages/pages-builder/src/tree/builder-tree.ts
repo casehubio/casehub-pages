@@ -449,7 +449,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   }
 
   private _isContainerNode(node: TreeNodeInfo): boolean {
-    return node.nodeType === 'page' ||
+    return node.nodeType === 'page' || node.nodeType === 'row' || node.nodeType === 'column' ||
       node.nodeType === 'grid-item' ||
       (node.nodeType === 'component' && node.children.length > 0);
   }
