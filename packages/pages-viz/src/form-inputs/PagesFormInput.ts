@@ -28,7 +28,7 @@ export abstract class PagesFormInput<
   @property({ attribute: false }) errorMessage: string | undefined;
   @property({ type: Boolean, attribute: false }) required = false;
   @property({ attribute: false }) describedBy: string | undefined;
-  @property({ attribute: false }) serverViolations?: readonly FieldViolation[];
+  @property({ attribute: false }) serverViolations: readonly FieldViolation[] | undefined;
   @property({ type: Boolean }) validateOnBlur = true;
   @property({ attribute: false }) fieldSchema?: FieldSchema;
 

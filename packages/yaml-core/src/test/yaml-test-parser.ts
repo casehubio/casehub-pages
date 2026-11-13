@@ -5,15 +5,16 @@ export interface TestCase {
 
 export interface TestFile {
   name: string;
-  simulate?: Record<string, unknown>;
-  setup?: Record<string, unknown>[];
-  teardown?: Record<string, unknown>[];
-  vars?: Record<string, unknown>;
-  params?: Record<string, unknown>;
+  simulate?: Record<string, unknown> | undefined;
+  setup?: Record<string, unknown>[] | undefined;
+  teardown?: Record<string, unknown>[] | undefined;
+  vars?: Record<string, unknown> | undefined;
+  params?: Record<string, unknown> | undefined;
   tests: TestCase[];
-  rawYaml?: string;
+  rawYaml?: string | undefined;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class YamlTestParser {
   static parse(raw: Record<string, unknown>, rawYaml?: string): TestFile {
     const name = (raw['name'] as string) ?? 'unnamed';

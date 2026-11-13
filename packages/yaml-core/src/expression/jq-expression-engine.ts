@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- Include the jqjs shim for consumers of source exports.
+/// <reference path="./jqjs.d.ts" />
 import jq from '@sscots/jqjs';
 import type { ExpressionEngine } from './expression-engine.js';
 import type { CompiledExpression } from './compiled-expression.js';

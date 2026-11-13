@@ -16,8 +16,8 @@ export interface CrossGridEditDetail {
   sourceIndex: number;
   targetPlacement: GridPlacement;
   component: Component;
-  swapTargetIndex?: number;
-  targetItemPlacements?: Array<{ index: number; x: number; y: number; w: number; h: number }>;
+  swapTargetIndex?: number | undefined;
+  targetItemPlacements?: Array<{ index: number; x: number; y: number; w: number; h: number }> | undefined;
 }
 
 export class GridEditCoordinator {

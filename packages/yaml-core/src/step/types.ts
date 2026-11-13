@@ -70,23 +70,23 @@ export interface AgentBinding {
 export interface AgentSessionOpenBinding {
   kind: 'agent-session-open';
   descriptor: string;
-  system?: string;
-  model?: string;
-  modelQuery?: string;
-  modelChain?: string[];
-  pool?: string;
-  timeout?: string;
-  checkoutTimeout?: string;
+  system?: string | undefined;
+  model?: string | undefined;
+  modelQuery?: string | undefined;
+  modelChain?: string[] | undefined;
+  pool?: string | undefined;
+  timeout?: string | undefined;
+  checkoutTimeout?: string | undefined;
 }
 
 export interface AgentSessionQueryBinding {
   kind: 'agent-session-query';
   sessionRef: string;
   user: string;
-  responseFormat?: string;
-  output?: string;
+  responseFormat?: string | undefined;
+  output?: string | undefined;
   priority?: boolean;
-  timeout?: string;
+  timeout?: string | undefined;
 }
 
 export interface AgentSessionClearBinding {
