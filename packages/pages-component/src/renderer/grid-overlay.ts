@@ -130,3 +130,34 @@ export function removeEditButton(gridEl: HTMLElement): void {
   gridEl.querySelector("[data-grid-edit-button]")?.remove();
 }
 
+export function applyMergeStyles(gridEl: HTMLElement): void {
+  if (gridEl.querySelector("[data-merge-styles]")) return;
+  const style = gridEl.ownerDocument.createElement("style");
+  style.dataset.mergeStyles = "";
+  style.textContent = `
+    [data-merge-active] > [data-item-id] {
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 150ms ease;
+    }
+    [data-merge-active] > [data-merge-root] {
+      opacity: 1;
+      outline: 2px solid var(--pages-accent-9, #2563eb);
+      outline-offset: -1px;
+      pointer-events: auto;
+      cursor: grab;
+    }
+    [data-merge-active] > [data-merge-target] {
+      opacity: 0.8;
+      outline: 2px dashed var(--pages-warning-7, #f59e0b);
+      outline-offset: -1px;
+      pointer-events: none;
+    }
+  `;
+  gridEl.appendChild(style);
+}
+
+export function removeMergeStyles(gridEl: HTMLElement): void {
+  gridEl.querySelector("[data-merge-styles]")?.remove();
+}
+

@@ -74,4 +74,28 @@ describe("computeMergeTargets", () => {
     const targets = computeMergeTargets(items, "0", "right", 0);
     expect(targets).toEqual([]);
   });
+
+  it("dragging down from wide root collects all overlapping items", () => {
+    const grid: IdRect[] = [
+      { id: "0", x: 0, y: 0, w: 12, h: 2 },
+      { id: "1", x: 0, y: 2, w: 6, h: 4 },
+      { id: "2", x: 6, y: 2, w: 6, h: 4 },
+    ];
+    const targets = computeMergeTargets(grid, "0", "down", 1);
+    expect(targets).toContain("1");
+    expect(targets).toContain("2");
+    expect(targets).toHaveLength(2);
+  });
+
+  it("dragging right from tall root collects all overlapping items", () => {
+    const grid: IdRect[] = [
+      { id: "0", x: 0, y: 0, w: 4, h: 4 },
+      { id: "1", x: 4, y: 0, w: 8, h: 2 },
+      { id: "2", x: 4, y: 2, w: 8, h: 2 },
+    ];
+    const targets = computeMergeTargets(grid, "0", "right", 1);
+    expect(targets).toContain("1");
+    expect(targets).toContain("2");
+    expect(targets).toHaveLength(2);
+  });
 });

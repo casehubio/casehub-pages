@@ -23,6 +23,8 @@ import {
   showSelectionOutline,
   createModeToggle,
   removeEditButton,
+  applyMergeStyles,
+  removeMergeStyles,
 } from "./grid-overlay.js";
 import type { EditorMode } from "./grid-overlay.js";
 import { getCoordinator } from "./grid-edit-coordinator.js";
@@ -260,6 +262,7 @@ class GridEditControllerImpl implements GridEditController {
     this._mergeTargetIds = [];
     this._mergeDragStart = null;
     this.gridEl.dataset.mergeActive = "";
+    applyMergeStyles(this.gridEl);
     const rootEl = this.gridEl.querySelector(`[data-item-id="${rootId}"]`) as HTMLElement | null;
     if (rootEl) rootEl.dataset.mergeRoot = "";
   }
@@ -270,6 +273,7 @@ class GridEditControllerImpl implements GridEditController {
     this._mergeTargetIds = [];
     this._mergeDragStart = null;
     delete this.gridEl.dataset.mergeActive;
+    removeMergeStyles(this.gridEl);
     for (const el of this.gridEl.querySelectorAll("[data-merge-root]")) {
       delete (el as HTMLElement).dataset.mergeRoot;
     }
@@ -379,12 +383,12 @@ class GridEditControllerImpl implements GridEditController {
     if (this._mergeActive) {
       const target = this.findItemAtPoint(e.clientX, e.clientY);
       if (target && target.id === this._mergeRootId) {
+        e.preventDefault();
         this._mergeDragStart = { x: e.clientX, y: e.clientY };
         this.gridEl.setPointerCapture(e.pointerId);
-      } else {
-        this.exitMerge();
+        return;
       }
-      return;
+      this.exitMerge();
     }
     if (this.dragging || !this.geometry) return;
     if ((e.target as HTMLElement).dataset.gridEditButton !== undefined) return;
@@ -458,10 +462,31 @@ class GridEditControllerImpl implements GridEditController {
       const dy = e.clientY - this._mergeDragStart.y;
       const dir = computeMergeDirection(dx, dy);
       if (!dir) return;
-      const cellSize = this.geometry ? this.geometry.cellWidth + this.geometry.gap : 80;
-      const dist = Math.max(1, Math.floor(Math.max(Math.abs(dx), Math.abs(dy)) / cellSize));
-      const idRects = this.getIdRects();
-      const newTargets = computeMergeTargets(idRects, this._mergeRootId!, dir, dist);
+      const hit = this.findItemAtPoint(e.clientX, e.clientY);
+      let newTargets: string[] = [];
+      if (hit && hit.id !== this._mergeRootId) {
+        const idRects = this.getIdRects();
+        const root = idRects.find(r => r.id === this._mergeRootId);
+        const hitRect = idRects.find(r => r.id === hit.id);
+        if (root && hitRect) {
+          const isHoriz = dir === "right" || dir === "left";
+          if (isHoriz) {
+            const minX = dir === "right" ? root.x + root.w : hitRect.x;
+            const maxX = dir === "right" ? hitRect.x + hitRect.w : root.x;
+            newTargets = idRects.filter(r =>
+              r.id !== root.id && r.x >= minX && r.x + r.w <= maxX &&
+              r.y < root.y + root.h && r.y + r.h > root.y,
+            ).map(r => r.id);
+          } else {
+            const minY = dir === "down" ? root.y + root.h : hitRect.y;
+            const maxY = dir === "down" ? hitRect.y + hitRect.h : root.y;
+            newTargets = idRects.filter(r =>
+              r.id !== root.id && r.y >= minY && r.y + r.h <= maxY &&
+              r.x < root.x + root.w && r.x + r.w > root.x,
+            ).map(r => r.id);
+          }
+        }
+      }
       for (const el of this.gridEl.querySelectorAll("[data-merge-target]")) {
         delete (el as HTMLElement).dataset.mergeTarget;
       }
@@ -649,13 +674,13 @@ class GridEditControllerImpl implements GridEditController {
       this._mergeDragStart = null;
       if (this._mergeTargetIds.length > 0) {
         const allIds = [this._mergeRootId!, ...this._mergeTargetIds];
-        const idRects = this.getIdRects();
-        const merged = mergeItems(idRects, allIds, this._mergeRootId!);
-        this.dispatchEdit("merge", merged);
-        for (const el of this.gridEl.querySelectorAll("[data-merge-target]")) {
-          delete (el as HTMLElement).dataset.mergeTarget;
-        }
-        this._mergeTargetIds = [];
+        const indices = allIds.map(id => Number(id));
+        this.gridEl.dispatchEvent(new CustomEvent("pages-grid-edit", {
+          bubbles: true,
+          composed: true,
+          detail: { type: "merge", indices, gridPath: getCoordinator().resolveGridPath(this) },
+        }));
+        this.exitMerge();
       }
       return;
     }

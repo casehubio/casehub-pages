@@ -5,48 +5,54 @@ import '../src/index.js';
 import { PagesBuilderShell } from '../src/shell/builder-shell.js';
 
 const SAMPLE_YAML = `pages:
-- name: Grid Layout
+- name: Color Grid
+  properties:
+    rowHeight: 60
   grid:
-    - at: { x: 0, y: 0, w: 4, h: 2 }
-      type: title
+    - at: { x: 0, y: 0, w: 3, h: 2 }
+      type: html
       properties:
-        text: Revenue Overview
-        size: h3
-    - at: { x: 4, y: 0, w: 8, h: 2 }
-      type: markdown
+        content: '<div style="background:#ef4444;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">A</div>'
+    - at: { x: 3, y: 0, w: 3, h: 2 }
+      type: html
       properties:
-        content: >
-          Nested grid test — the panel below contains a nested grid.
-          Try drag-and-drop inside the nested grid, and try dragging
-          items between the parent and nested grids.
-    - at: { x: 0, y: 2, w: 6, h: 4 }
-      type: panel
+        content: '<div style="background:#f97316;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">B</div>'
+    - at: { x: 6, y: 0, w: 3, h: 2 }
+      type: html
       properties:
-        title: Nested Grid Panel
-      grid:
-        - at: { x: 0, y: 0, w: 3, h: 2 }
-          type: markdown
-          properties:
-            content: Nested A
-        - at: { x: 3, y: 0, w: 3, h: 2 }
-          type: markdown
-          properties:
-            content: Nested B
-        - at: { x: 0, y: 2, w: 6, h: 1 }
-          type: markdown
-          properties:
-            content: Nested C — full width
-    - at: { x: 6, y: 2, w: 6, h: 4 }
-      type: markdown
+        content: '<div style="background:#eab308;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">C</div>'
+    - at: { x: 9, y: 0, w: 3, h: 2 }
+      type: html
       properties:
-        content: >
-          Panel D — in the parent grid. Try dragging this into the
-          nested grid panel on the left.
-    - at: { x: 0, y: 6, w: 12, h: 2 }
-      type: markdown
+        content: '<div style="background:#22c55e;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">D</div>'
+    - at: { x: 0, y: 2, w: 3, h: 2 }
+      type: html
       properties:
-        content: >
-          Full-width panel — spans all 12 columns.
+        content: '<div style="background:#06b6d4;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">E</div>'
+    - at: { x: 3, y: 2, w: 3, h: 2 }
+      type: html
+      properties:
+        content: '<div style="background:#3b82f6;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">F</div>'
+    - at: { x: 6, y: 2, w: 3, h: 2 }
+      type: html
+      properties:
+        content: '<div style="background:#8b5cf6;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">G</div>'
+    - at: { x: 9, y: 2, w: 3, h: 2 }
+      type: html
+      properties:
+        content: '<div style="background:#ec4899;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">H</div>'
+    - at: { x: 0, y: 4, w: 4, h: 2 }
+      type: html
+      properties:
+        content: '<div style="background:#64748b;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">I</div>'
+    - at: { x: 4, y: 4, w: 4, h: 2 }
+      type: html
+      properties:
+        content: '<div style="background:#78716c;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">J</div>'
+    - at: { x: 8, y: 4, w: 4, h: 2 }
+      type: html
+      properties:
+        content: '<div style="background:#a3a3a3;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">K</div>'
 `;
 
 injectTheme(DEFAULT_THEME);
