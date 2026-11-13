@@ -151,7 +151,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _hoveredEl: HTMLElement | null = null;
   private _overlayScrollBase = 0;
 
-
   get document(): PageDocument {
     return this._document;
   }
@@ -222,7 +221,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       this._selectedNodeType = 'grid-item';
       const targetPath = detail.targetGridPath;
       setTimeout(() => {
-        // 400ms: 200ms for re-render + 200ms for selection rectangle animation
         const preview = this.renderRoot.querySelector('[data-preview-root]') ?? this.renderRoot;
         let gridEl: Element | null = preview.querySelector('[data-grid-editing]');
         for (let pi = 3; pi < targetPath.length - 1 && gridEl; pi += 2) {
@@ -248,6 +246,17 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
   };
 
+  private _gridActionHandler = (e: Event) => {
+    const { action } = (e as CustomEvent).detail as { action: string };
+    if (!this._selectedPath || !this._selectedNodeType) return;
+    const overlayRoot = this.shadowRoot?.querySelector('.overlay-root') as HTMLElement | null;
+    if (!overlayRoot) return;
+    overlayRoot.dispatchEvent(new CustomEvent(`selection-${action}`, {
+      bubbles: true,
+      detail: { path: this._selectedPath, nodeType: this._selectedNodeType },
+    }));
+  };
+
   override connectedCallback(): void {
     super.connectedCallback();
     this._document = this.yaml ? this._parseDocument(this.yaml) : PageDocument.empty();
@@ -259,6 +268,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._clipboardUnsub = getClipboard().subscribe(() => this._syncTree());
     this.addEventListener('pages-grid-edit', this._gridEditHandler);
     this.addEventListener('pages-grid-cross-edit', this._crossGridEditHandler);
+    this.addEventListener('pages-grid-action', this._gridActionHandler);
   }
 
   override disconnectedCallback(): void {
@@ -272,6 +282,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this._selectionOverlayCleanup?.();
     this.removeEventListener('pages-grid-edit', this._gridEditHandler);
     this.removeEventListener('pages-grid-cross-edit', this._crossGridEditHandler);
+    this.removeEventListener('pages-grid-action', this._gridActionHandler);
   }
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
@@ -712,12 +723,15 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       const path = this._resolveClickedPath(compEl, container);
       if (!path) return;
 
+      const nodeType = classifyPath(path) ?? 'component';
+      this._applyPreviewHighlight(path, nodeType);
+
       if (this._previewClickTimer) clearTimeout(this._previewClickTimer);
       this._previewClickTimer = setTimeout(() => {
         this._previewClickTimer = null;
         this._syncSource = 'visual';
         this._selectedPath = path;
-        this._selectedNodeType = classifyPath(path) ?? 'component';
+        this._selectedNodeType = nodeType;
         this._updatePropertySource();
       }, 200);
     };

@@ -1,6 +1,6 @@
 import type { TreeNodeType } from '../tree/builder-tree.js';
 
-export type ButtonDef = readonly [cls: string, label: string, event: string];
+type ButtonDef = readonly [cls: string, label: string, event: string];
 
 const ALL_BUTTONS: ButtonDef[] = [
   ['sel-add-btn', '+', 'selection-add'],
@@ -10,22 +10,10 @@ const ALL_BUTTONS: ButtonDef[] = [
   ['sel-delete-btn', '✕', 'selection-delete'],
 ];
 
-const GRID_ITEM_BUTTONS: ButtonDef[] = [
-  ['sel-split-h-btn', '⬌', 'selection-split-h'],
-  ['sel-split-v-btn', '⬍', 'selection-split-v'],
-  ['sel-merge-btn', '⊞', 'selection-merge'],
-  ['sel-delete-btn', '✕', 'selection-delete'],
-  ['sel-add-empty-btn', '+', 'selection-add-empty'],
-];
-
 const EDIT_LAYOUT_BTN: ButtonDef = ['sel-edit-layout-btn', '⊞', 'selection-edit-layout'];
 
 const BUTTON_TOOLTIPS: Record<string, string> = {
-  'selection-split-h': 'Split horizontally',
-  'selection-split-v': 'Split vertically',
-  'selection-merge': 'Merge',
   'selection-delete': 'Delete',
-  'selection-add-empty': 'Add empty',
   'selection-add': 'Add',
   'selection-insert': 'Insert',
   'selection-cut': 'Cut',
@@ -33,16 +21,13 @@ const BUTTON_TOOLTIPS: Record<string, string> = {
   'selection-edit-layout': 'Edit layout',
 };
 
-export function getButtonsForNodeType(
+function getButtonsForNodeType(
   nodeType: TreeNodeType,
   isContainer: boolean,
 ): ButtonDef[] {
   if (nodeType === 'page') {
     return [EDIT_LAYOUT_BTN, ...ALL_BUTTONS.filter(([, , evt]) =>
       evt === 'selection-add' || evt === 'selection-delete')];
-  }
-  if (nodeType === 'grid-item') {
-    return GRID_ITEM_BUTTONS;
   }
   if (nodeType === 'component' && !isContainer) {
     return ALL_BUTTONS.filter(([, , evt]) => evt !== 'selection-add');
@@ -63,7 +48,6 @@ export class SelectionOverlay {
   private _insertionPoints: HTMLElement[] = [];
   private _buttonsContainer: HTMLElement | null = null;
   private _toolbarLocked = false;
-  private _isGridItemToolbar = false;
 
   constructor(overlayRoot: HTMLElement) {
     this._overlayRoot = overlayRoot;
@@ -94,96 +78,66 @@ export class SelectionOverlay {
     `;
 
     this._overlay.innerHTML = '';
-    const toolbar = document.createElement('div');
-    toolbar.className = 'selection-toolbar';
-    const isGridItemToolbar = nodeType === 'grid-item';
-    toolbar.style.cssText = isGridItemToolbar
-      ? `position: absolute; top: -2px; right: -2px;
-         display: flex; flex-direction: column; align-items: flex-end;
-         pointer-events: auto; z-index: 11;`
-      : `position: absolute; top: -2px; right: -2px;
+    if (nodeType !== 'grid-item') {
+      const toolbar = document.createElement('div');
+      toolbar.className = 'selection-toolbar';
+      toolbar.style.cssText = `position: absolute; top: -2px; right: -2px;
          display: flex; align-items: center;
          pointer-events: auto; z-index: 11;`;
 
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'toolbar-buttons';
-    buttonsContainer.style.cssText = isGridItemToolbar
-      ? `display: grid; grid-template-columns: repeat(3, 20px); gap: 2px;
-         max-height: 0; overflow: hidden; opacity: 0;
-         transition: max-height 150ms ease, opacity 150ms ease;`
-      : `display: flex; gap: 2px;
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.className = 'toolbar-buttons';
+      buttonsContainer.style.cssText = `display: flex; gap: 2px;
          max-width: 0; overflow: hidden; opacity: 0;
          transition: max-width 150ms ease, opacity 150ms ease;`;
 
-    const buttons = getButtonsForNodeType(nodeType, options?.isContainer ?? false);
-    for (let i = 0; i < buttons.length; i++) {
-      const [cls, label, eventName] = buttons[i]!;
-      if (isGridItemToolbar && i === 3) {
-        const spacer = document.createElement('div');
-        buttonsContainer.appendChild(spacer);
+      const buttons = getButtonsForNodeType(nodeType, options?.isContainer ?? false);
+      for (const [cls, label, eventName] of buttons) {
+        const btn = document.createElement('button');
+        btn.className = cls;
+        btn.textContent = label;
+        btn.title = BUTTON_TOOLTIPS[eventName] ?? '';
+        btn.style.cssText = BTN_STYLE;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._overlayRoot.dispatchEvent(new CustomEvent(eventName, {
+            bubbles: true,
+            detail: { path, nodeType, target: btn },
+          }));
+        });
+        buttonsContainer.appendChild(btn);
       }
-      const btn = document.createElement('button');
-      btn.className = cls;
-      btn.textContent = label;
-      btn.title = BUTTON_TOOLTIPS[eventName] ?? '';
-      btn.style.cssText = BTN_STYLE;
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this._overlayRoot.dispatchEvent(new CustomEvent(eventName, {
-          bubbles: true,
-          detail: { path, nodeType, target: btn },
-        }));
+
+      const trigger = document.createElement('div');
+      trigger.className = 'toolbar-trigger';
+      trigger.textContent = '⋮';
+      trigger.style.cssText = `
+        width: 20px; height: 20px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 14px; font-weight: bold;
+        color: #5f6368; background: #fff;
+        border: 1px solid #dadce0; border-radius: 4px;
+      `;
+
+      toolbar.appendChild(buttonsContainer);
+      toolbar.appendChild(trigger);
+      this._buttonsContainer = buttonsContainer;
+
+      toolbar.addEventListener('mouseenter', () => {
+        buttonsContainer.style.maxWidth = '200px';
+        buttonsContainer.style.opacity = '1';
       });
-      buttonsContainer.appendChild(btn);
-    }
-
-    const trigger = document.createElement('div');
-    trigger.className = 'toolbar-trigger';
-    trigger.textContent = '⋮';
-    trigger.style.cssText = `
-      width: 20px; height: 20px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 14px; font-weight: bold;
-      color: #5f6368; background: #fff;
-      border: 1px solid #dadce0; border-radius: 4px;
-    `;
-
-    if (isGridItemToolbar) {
-      toolbar.appendChild(trigger);
-      toolbar.appendChild(buttonsContainer);
-    } else {
-      toolbar.appendChild(buttonsContainer);
-      toolbar.appendChild(trigger);
-    }
-    this._buttonsContainer = buttonsContainer;
-    this._isGridItemToolbar = isGridItemToolbar;
-
-    toolbar.addEventListener('mouseenter', () => {
-      if (isGridItemToolbar) {
-        buttonsContainer.style.maxHeight = '50px';
-      } else {
-        buttonsContainer.style.maxWidth = '200px';
-      }
-      buttonsContainer.style.opacity = '1';
-    });
-    toolbar.addEventListener('mouseleave', () => {
-      if (this._toolbarLocked) return;
-      if (isGridItemToolbar) {
-        buttonsContainer.style.maxHeight = '0';
-      } else {
+      toolbar.addEventListener('mouseleave', () => {
+        if (this._toolbarLocked) return;
         buttonsContainer.style.maxWidth = '0';
-      }
-      buttonsContainer.style.opacity = '0';
-    });
+        buttonsContainer.style.opacity = '0';
+      });
 
-    this._overlay.appendChild(toolbar);
-    if (this._toolbarLocked) {
-      if (isGridItemToolbar) {
-        buttonsContainer.style.maxHeight = '50px';
-      } else {
+      this._overlay.appendChild(toolbar);
+      if (this._toolbarLocked) {
         buttonsContainer.style.maxWidth = '200px';
+        buttonsContainer.style.opacity = '1';
       }
-      buttonsContainer.style.opacity = '1';
     }
 
   }
@@ -191,11 +145,7 @@ export class SelectionOverlay {
   lockToolbar(): void {
     this._toolbarLocked = true;
     if (this._buttonsContainer) {
-      if (this._isGridItemToolbar) {
-        this._buttonsContainer.style.maxHeight = '50px';
-      } else {
-        this._buttonsContainer.style.maxWidth = '200px';
-      }
+      this._buttonsContainer.style.maxWidth = '200px';
       this._buttonsContainer.style.opacity = '1';
     }
   }
