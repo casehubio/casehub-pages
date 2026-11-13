@@ -21,12 +21,13 @@ function collectReferencedNames(steps: ResolvedStep[]): Set<string> {
     if ('params' in step) {
       const json = JSON.stringify(step.params);
       let m;
-      while ((m = pattern.exec(json)) !== null) refs.add(m[1]);
+      while ((m = pattern.exec(json)) !== null) refs.add(m[1]!);
     }
   }
   return refs;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class FusionPass {
   static fuse(steps: ResolvedStep[]): ResolvedStep[] {
     if (steps.length < 2) return steps;
@@ -38,7 +39,7 @@ export class FusionPass {
     const flush = () => {
       if (chain.length === 0) return;
       if (chain.length === 1) {
-        result.push(chain[0]);
+        result.push(chain[0]!);
       } else {
         const stages: FusedStageDescriptor[] = chain.map(s => ({
           stepName: s.name,
@@ -50,10 +51,10 @@ export class FusionPass {
         }));
         const fused: FusedPipelineStep = {
           kind: 'fused-pipeline',
-          name: chain[chain.length - 1].name,
+          name: chain[chain.length - 1]!.name,
           stages,
-          decorators: chain[0].decorators,
-          annotations: chain[0].annotations,
+          decorators: chain[0]!.decorators,
+          annotations: chain[0]!.annotations,
         };
         result.push(fused);
       }
@@ -79,7 +80,7 @@ export class FusionPass {
         continue;
       }
 
-      const prevStreaming = chain[chain.length - 1].entry.definition.streamingType!;
+      const prevStreaming = chain[chain.length - 1]!.entry.definition.streamingType!;
       if (prevStreaming.outputType !== streaming.inputType) {
         flush();
         chain.push(step);

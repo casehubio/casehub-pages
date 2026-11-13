@@ -26,6 +26,7 @@ interface ParsedValue {
 
 function parseValue(type: ParameterType, value: string): ParsedValue {
   switch (type) {
+    case 'EXPRESSION':
     case 'STRING':
       return { type: 'string', raw: value };
     case 'ARRAY':

@@ -16,7 +16,7 @@ export class PageApiClient {
   readonly #appId: string;
   readonly #fetch: typeof globalThis.fetch;
   readonly #baseUrl: string;
-  readonly #tokenFn?: () => string | undefined;
+  readonly #tokenFn: (() => string | undefined) | undefined;
 
   constructor(appId: string, fetchFn?: typeof globalThis.fetch, baseUrl?: string, tokenFn?: () => string | undefined) {
     this.#appId = encodeURIComponent(appId);
@@ -31,7 +31,7 @@ export class PageApiClient {
       headers: this.#headers(),
     });
     if (!res.ok) throw new Error(await this.#errorMessage(res));
-    return res.json();
+    return res.json() as Promise<PageMetadata[]>;
   }
 
   async get(name: string): Promise<PageDocument> {
@@ -39,7 +39,7 @@ export class PageApiClient {
       headers: this.#headers(),
     });
     if (!res.ok) throw new Error(await this.#errorMessage(res));
-    return res.json();
+    return res.json() as Promise<PageDocument>;
   }
 
   async create(page: { name: string; yaml: string; description?: string; icon?: string; order?: number; labels?: string[] }): Promise<PageDocument> {
@@ -49,7 +49,7 @@ export class PageApiClient {
       body: JSON.stringify(page),
     });
     if (!res.ok) throw new Error(await this.#errorMessage(res));
-    return res.json();
+    return res.json() as Promise<PageDocument>;
   }
 
   async update(name: string, changes: Partial<PageDocument>, etag?: string): Promise<PageDocument> {
@@ -61,7 +61,7 @@ export class PageApiClient {
       body: JSON.stringify(changes),
     });
     if (!res.ok) throw new Error(await this.#errorMessage(res));
-    return res.json();
+    return res.json() as Promise<PageDocument>;
   }
 
   async delete(name: string): Promise<void> {

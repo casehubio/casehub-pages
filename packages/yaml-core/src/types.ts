@@ -9,6 +9,7 @@ export type ParsedValue =
 
 export function parseValue(paramType: ParameterType, raw: string): ParsedValue {
   switch (paramType) {
+    case 'EXPRESSION':
     case 'STRING': return { type: 'string', value: raw };
     case 'INTEGER': {
       const n = parseInt(raw, 10);
@@ -70,6 +71,7 @@ export function validateParamValue(type: ParameterType, value: unknown): boolean
 
 export function parseScalarParam(type: ParameterType, raw: string): unknown {
   switch (type) {
+    case 'EXPRESSION':
     case 'STRING': return raw;
     case 'INTEGER': {
       const n = parseInt(raw, 10);
