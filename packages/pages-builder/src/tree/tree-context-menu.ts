@@ -19,9 +19,6 @@ export function computeMenuItems(nodeType: TreeNodeType, isContainer: boolean): 
         { label: 'Move up', action: 'move-up' },
         { label: 'Move down', action: 'move-down' },
         { separator: true, label: '' },
-        { label: 'Split horizontally', action: 'split-horizontal' },
-        { label: 'Split vertically', action: 'split-vertical' },
-        { separator: true, label: '' },
         { label: 'Delete', action: 'delete', shortcut: '⌫' },
       ];
     case 'page':
