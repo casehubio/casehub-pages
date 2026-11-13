@@ -96,7 +96,7 @@ describe("compact", () => {
 });
 
 describe("compactAll", () => {
-  it("place + push + compact in one call", () => {
+  it("place + compactDown in one call", () => {
     const items: IdRect[] = [
       { id: "a", x: 0, y: 0, w: 6, h: 2 },
       { id: "b", x: 0, y: 4, w: 6, h: 2 },
@@ -107,8 +107,8 @@ describe("compactAll", () => {
     const b = result.find(i => i.id === "b")!;
     const c = result.find(i => i.id === "c")!;
     expect(a.y).toBe(3);
-    expect(b.y).toBe(0);
-    expect(c.y).toBe(5);
+    expect(b.y).toBe(5);
+    expect(c.y).toBe(7);
   });
 
   it("is idempotent", () => {
