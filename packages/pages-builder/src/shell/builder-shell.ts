@@ -540,6 +540,53 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const onInsertAt = (e: Event) => {
       this._handleInsertAt(e as Parameters<typeof this._handleInsertAt>[0]);
     };
+    const onSplitH = (e: Event) => {
+      const { path } = (e as CustomEvent).detail;
+      if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
+        this._applyEdit('toolbar', () => {
+          this._gridBridge.applyGridEdit(this._document, {
+            type: 'split', targetIndex: path[3] as number, direction: 'horizontal',
+          });
+        });
+      }
+    };
+    const onSplitV = (e: Event) => {
+      const { path } = (e as CustomEvent).detail;
+      if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
+        this._applyEdit('toolbar', () => {
+          this._gridBridge.applyGridEdit(this._document, {
+            type: 'split', targetIndex: path[3] as number, direction: 'vertical',
+          });
+        });
+      }
+    };
+    const onMerge = (e: Event) => {
+      const { path } = (e as CustomEvent).detail;
+      this._selectionOverlay?.hide();
+      overlayRoot.dispatchEvent(new CustomEvent('grid-merge-activate', {
+        bubbles: true, detail: { path },
+      }));
+    };
+    const onSwap = (e: Event) => {
+      const { path } = (e as CustomEvent).detail;
+      overlayRoot.dispatchEvent(new CustomEvent('grid-swap-activate', {
+        bubbles: true, detail: { path },
+      }));
+    };
+    const onAddEmpty = (e: Event) => {
+      const { path } = (e as CustomEvent).detail;
+      const page = this._findPageAtPath(['pages', path[1] as number]);
+      if (page) {
+        this._applyEdit('toolbar', () => {
+          const items = page.getItems();
+          const maxY = items.reduce((m, it) => {
+            const p = it.getPlacement();
+            return p.mode === 'positioned' ? Math.max(m, p.y + p.h) : m;
+          }, 0);
+          page.addEmptyItem({ mode: 'positioned', x: 0, y: maxY, w: 12, h: 1 });
+        });
+      }
+    };
 
     overlayRoot.addEventListener('selection-add', onAdd);
     overlayRoot.addEventListener('selection-insert', onInsert);
@@ -547,6 +594,11 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     overlayRoot.addEventListener('selection-cut', onCut);
     overlayRoot.addEventListener('selection-copy', onCopy);
     overlayRoot.addEventListener('selection-delete', onDelete);
+    overlayRoot.addEventListener('selection-split-h', onSplitH);
+    overlayRoot.addEventListener('selection-split-v', onSplitV);
+    overlayRoot.addEventListener('selection-merge', onMerge);
+    overlayRoot.addEventListener('selection-swap', onSwap);
+    overlayRoot.addEventListener('selection-add-empty', onAddEmpty);
 
     this._selectionOverlayCleanup = () => {
       overlayRoot.removeEventListener('selection-add', onAdd);
@@ -555,6 +607,11 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       overlayRoot.removeEventListener('selection-cut', onCut);
       overlayRoot.removeEventListener('selection-copy', onCopy);
       overlayRoot.removeEventListener('selection-delete', onDelete);
+      overlayRoot.removeEventListener('selection-split-h', onSplitH);
+      overlayRoot.removeEventListener('selection-split-v', onSplitV);
+      overlayRoot.removeEventListener('selection-merge', onMerge);
+      overlayRoot.removeEventListener('selection-swap', onSwap);
+      overlayRoot.removeEventListener('selection-add-empty', onAddEmpty);
     };
   }
 
@@ -1278,17 +1335,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
               return p.mode === 'positioned' ? Math.max(m, p.y + p.h) : m;
             }, 0);
             page.addEmptyItem({ mode: 'positioned', x: 0, y: maxY, w: 12, h: 1 });
-          }
-          break;
-        }
-        case 'split-horizontal':
-        case 'split-vertical': {
-          if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
-            this._gridBridge.applyGridEdit(this._document, {
-              type: 'split',
-              targetIndex: path[3],
-              direction: action === 'split-horizontal' ? 'horizontal' : 'vertical',
-            });
           }
           break;
         }

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { SelectionOverlay } from './selection-overlay.js';
+import { SelectionOverlay, getButtonsForNodeType } from './selection-overlay.js';
 
 describe('SelectionOverlay', () => {
   let overlayRoot: HTMLDivElement;
@@ -302,6 +302,60 @@ describe('SelectionOverlay', () => {
         'column',
       );
       expect(overlayRoot.querySelectorAll('.visual-insertion-point').length).toBe(2);
+    });
+  });
+
+  describe('grid-item spatial buttons', () => {
+    it('returns spatial action buttons for grid-item', () => {
+      const buttons = getButtonsForNodeType('grid-item', false);
+      const events = buttons.map(([, , evt]) => evt);
+      expect(events).toContain('selection-split-h');
+      expect(events).toContain('selection-split-v');
+      expect(events).toContain('selection-merge');
+      expect(events).toContain('selection-swap');
+      expect(events).toContain('selection-delete');
+      expect(events).toContain('selection-add-empty');
+    });
+
+    it('returns exactly 6 buttons for grid-item', () => {
+      const buttons = getButtonsForNodeType('grid-item', false);
+      expect(buttons).toHaveLength(6);
+    });
+
+    it('does not include spatial buttons for component', () => {
+      const buttons = getButtonsForNodeType('component', false);
+      const events = buttons.map(([, , evt]) => evt);
+      expect(events).not.toContain('selection-split-h');
+      expect(events).not.toContain('selection-merge');
+    });
+
+    it('renders 2x3 grid layout for grid-item toolbar', () => {
+      setup();
+      overlay.update(makeBounds(), 'grid-item', ['pages', 0, 'grid', 0]);
+      const container = overlayRoot.querySelector('.toolbar-buttons') as HTMLElement;
+      expect(container.style.display).toBe('grid');
+      expect(container.style.gridTemplateColumns).toContain('repeat(3');
+    });
+
+    it('dispatches selection-split-h on split-h button click', () => {
+      setup();
+      const path = ['pages', 0, 'grid', 0] as const;
+      overlay.update(makeBounds(), 'grid-item', path);
+      const events: CustomEvent[] = [];
+      overlayRoot.addEventListener('selection-split-h', (e: Event) => { events.push(e as CustomEvent); });
+      (overlayRoot.querySelector('.sel-split-h-btn') as HTMLButtonElement).click();
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail.path).toEqual(path);
+    });
+
+    it('dispatches selection-merge on merge button click', () => {
+      setup();
+      const path = ['pages', 0, 'grid', 0] as const;
+      overlay.update(makeBounds(), 'grid-item', path);
+      const events: CustomEvent[] = [];
+      overlayRoot.addEventListener('selection-merge', (e: Event) => { events.push(e as CustomEvent); });
+      (overlayRoot.querySelector('.sel-merge-btn') as HTMLButtonElement).click();
+      expect(events).toHaveLength(1);
     });
   });
 });
