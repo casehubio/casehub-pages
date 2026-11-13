@@ -153,12 +153,12 @@ export class GridEditBridge {
       const topH = Math.floor(p.h / 2);
       const bottomH = p.h - topH;
       target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: p.w, h: topH });
-      page.addEmptyItem({ mode: 'positioned', x: p.x, y: p.y + topH, w: p.w, h: bottomH });
+      page.addItem({ mode: 'positioned', x: p.x, y: p.y + topH, w: p.w, h: bottomH }, 'markdown', { content: ' ' });
     } else {
       const leftW = Math.floor(p.w / 2);
       const rightW = p.w - leftW;
       target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: leftW, h: p.h });
-      page.addEmptyItem({ mode: 'positioned', x: p.x + leftW, y: p.y, w: rightW, h: p.h });
+      page.addItem({ mode: 'positioned', x: p.x + leftW, y: p.y, w: rightW, h: p.h }, 'markdown', { content: ' ' });
     }
   }
 

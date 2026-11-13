@@ -357,9 +357,15 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           this._selectionOverlay = new SelectionOverlay(overlayRoot);
           this._wireSelectionOverlayEvents(overlayRoot);
         }
-        if (this._selectedPath && this._selectedNodeType) {
-          this._applyPreviewHighlight(this._selectedPath, this._selectedNodeType);
-        }
+        requestAnimationFrame(() => {
+          const topGrid = container.querySelector('[data-grid-editing]') as HTMLElement | null;
+          if (topGrid && !topGrid.style.gridAutoRows.endsWith('px')) {
+            topGrid.style.gridAutoRows = '60px';
+          }
+          if (this._selectedPath && this._selectedNodeType) {
+            this._applyPreviewHighlight(this._selectedPath, this._selectedNodeType);
+          }
+        });
       };
 
       if (this.renderPreview) {
