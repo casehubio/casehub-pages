@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { YamlTestExecutor } from './yaml-test-executor.js';
 import type { TestFile } from './yaml-test-parser.js';
-import type { Catalog, CatalogEntry, Action, Result } from '../step/walker.js';
+import type { Catalog, CatalogEntry, Action } from '../step/walker.js';
 import { stepSuccess, MapServiceRegistry } from '../step/walker.js';
 
 function makeCatalog(entries: Record<string, Action> = {}): Catalog {

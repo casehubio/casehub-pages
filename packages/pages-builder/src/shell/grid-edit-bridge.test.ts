@@ -362,6 +362,39 @@ describe('GridEditBridge', () => {
             type: table
 `;
 
+    it('swaps cross-grid components while preserving properties and placements', () => {
+      const doc = PageDocument.parse(`pages:
+  - grid:
+      - type: grid
+        grid:
+          - at: { x: 0, y: 0, w: 3, h: 2 }
+            type: chart
+            properties: { title: Source }
+      - type: grid
+        grid:
+          - at: { x: 1, y: 1, w: 4, h: 2 }
+            type: table
+            properties: { title: Target }
+`);
+      new GridEditBridge().applyCrossGridEdit(doc, {
+        type: 'cross-move',
+        sourceGridPath: ['pages', 0, 'grid', 0, 'grid'],
+        targetGridPath: ['pages', 0, 'grid', 1, 'grid'],
+        sourceIndex: 0,
+        swapTargetIndex: 0,
+        targetPlacement: { mode: 'positioned', x: 1, y: 1, w: 3, h: 2 },
+        component: { type: 'chart' },
+      });
+      const yaml = doc._getDoc().toJS() as { pages: { grid: { grid: Record<string, unknown>[] }[] }[] };
+      const [source, target] = yaml.pages[0]!.grid;
+      expect(source!.grid[0]).toEqual({
+        at: { x: 0, y: 0, w: 3, h: 2 }, type: 'table', properties: { title: 'Target' },
+      });
+      expect(target!.grid[0]).toEqual({
+        at: { x: 1, y: 1, w: 3, h: 2 }, type: 'chart', properties: { title: 'Source' },
+      });
+    });
+
     it('removes item from source and inserts into target atomically', () => {
       const doc = PageDocument.parse(NESTED_GRID_YAML_2);
       const bridge = new GridEditBridge();

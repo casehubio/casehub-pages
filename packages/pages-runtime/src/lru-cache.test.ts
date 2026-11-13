@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { LruCache } from "./lru-cache.js";
 
 describe("LruCache", () => {
@@ -128,7 +128,7 @@ describe("LruCache", () => {
       expect(cache.get("a")).toBe(1);
     });
 
-    vi.useRealTimers;
+    afterEach(() => vi.useRealTimers());
   });
 
   describe("manual invalidation", () => {

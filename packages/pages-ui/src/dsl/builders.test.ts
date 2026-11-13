@@ -148,8 +148,8 @@ describe("builders", () => {
       expect(result.id).toMatch(/^grid_\d+$/);
 
       // Items without withId() do not get auto-assigned IDs
-      expect(result.grid?.[0]!.component.id).toBeUndefined();
-      expect(result.grid?.[1]!.component.id).toBeUndefined();
+      expect(result.grid?.[0]!.component!.id).toBeUndefined();
+      expect(result.grid?.[1]!.component!.id).toBeUndefined();
     });
 
     it("does not override existing component IDs", () => {
@@ -158,7 +158,7 @@ describe("builders", () => {
 
       const result = grid(1, item);
 
-      expect(result.grid?.[0]!.component.id).toBe("custom-id");
+      expect(result.grid?.[0]!.component!.id).toBe("custom-id");
     });
 
     it("generates sequential grid IDs across calls", () => {
@@ -487,10 +487,10 @@ describe("builders", () => {
       expect(grid1.id).not.toBe(grid2.id);
 
       // Items without withId() don't get auto-assigned IDs
-      expect(grid1.grid?.[0]?.component.id).toBeUndefined();
-      expect(grid1.grid?.[1]?.component.id).toBeUndefined();
-      expect(grid2.grid?.[0]?.component.id).toBeUndefined();
-      expect(grid2.grid?.[1]?.component.id).toBeUndefined();
+      expect(grid1.grid?.[0]?.component!.id).toBeUndefined();
+      expect(grid1.grid?.[1]?.component!.id).toBeUndefined();
+      expect(grid2.grid?.[0]?.component!.id).toBeUndefined();
+      expect(grid2.grid?.[1]?.component!.id).toBeUndefined();
     });
   });
 
@@ -500,7 +500,7 @@ describe("builders", () => {
         at(0, 0, 6, 1, { type: "bar-chart", props: { lookup: { dataSetId: "x", operations: [] } } }),
       );
       const item = g.grid![0]!;
-      expect(item.component.id).toBeUndefined();
+      expect(item.component!.id).toBeUndefined();
     });
 
     it("grid items with withId preserve their ID", () => {
@@ -508,7 +508,7 @@ describe("builders", () => {
         at(0, 0, 6, 1, withId("my-chart", { type: "bar-chart", props: { lookup: { dataSetId: "x", operations: [] } } })),
       );
       const item = g.grid![0]!;
-      expect(item.component.id).toBe("my-chart");
+      expect(item.component!.id).toBe("my-chart");
     });
 
     it("grid container itself gets auto-ID", () => {

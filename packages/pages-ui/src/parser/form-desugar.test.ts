@@ -11,8 +11,8 @@ describe("form input desugaring", () => {
     const content = root.slots!.content!;
     const grid = content[0]!;
     const item = grid.grid![0]!;
-    expect(item.component.type).toBe("input");
-    expect(item.component.props).toEqual({ field: "name", label: "Name" });
+    expect(item.component!.type).toBe("input");
+    expect(item.component!.props).toEqual({ field: "name", label: "Name" });
   });
 
   it("desugars number-input shorthand", () => {
@@ -20,8 +20,8 @@ describe("form input desugaring", () => {
       pages: [{ components: [{ "number-input": { field: "age", min: 0 } }] }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("number-input");
-    expect(item.component.props).toEqual({ field: "age", min: 0 });
+    expect(item.component!.type).toBe("number-input");
+    expect(item.component!.props).toEqual({ field: "age", min: 0 });
   });
 
   it("desugars select with fixed options", () => {
@@ -29,7 +29,7 @@ describe("form input desugaring", () => {
       pages: [{ components: [{ select: { field: "dept", options: { values: ["A", "B"] } } }] }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("select");
+    expect(item.component!.type).toBe("select");
   });
 
   it("desugars checkbox shorthand", () => {
@@ -37,7 +37,7 @@ describe("form input desugaring", () => {
       pages: [{ components: [{ checkbox: { field: "active" } }] }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("checkbox");
+    expect(item.component!.type).toBe("checkbox");
   });
 
   it("desugars date-picker shorthand", () => {
@@ -45,7 +45,7 @@ describe("form input desugaring", () => {
       pages: [{ components: [{ "date-picker": { field: "start" } }] }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("date-picker");
+    expect(item.component!.type).toBe("date-picker");
   });
 
   it("desugars textarea shorthand", () => {
@@ -53,7 +53,7 @@ describe("form input desugaring", () => {
       pages: [{ components: [{ textarea: { field: "notes", rows: 5 } }] }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("textarea");
+    expect(item.component!.type).toBe("textarea");
   });
 
   it("desugars schema-form shorthand", () => {
@@ -68,8 +68,8 @@ describe("form input desugaring", () => {
       }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("schema-form");
-    expect(item.component.props).toEqual({
+    expect(item.component!.type).toBe("schema-form");
+    expect(item.component!.props).toEqual({
       schema: { properties: { name: { type: "string" } } },
       excludeFields: ["id"],
     });
@@ -88,7 +88,7 @@ describe("form input desugaring", () => {
       }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("schema-form");
+    expect(item.component!.type).toBe("schema-form");
   });
 });
 
@@ -102,8 +102,8 @@ describe("page src desugaring", () => {
       }],
     });
     const item = root.slots!.content![0]!.grid![0]!;
-    expect(item.component.type).toBe("lazy-page");
-    expect(item.component.props).toEqual({ name: "Employee Form", href: "./form.yaml" });
+    expect(item.component!.type).toBe("lazy-page");
+    expect(item.component!.props).toEqual({ name: "Employee Form", href: "./form.yaml" });
   });
 
   it("desugars page without src to page-ref", () => {

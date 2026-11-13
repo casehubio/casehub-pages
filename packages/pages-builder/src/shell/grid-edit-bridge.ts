@@ -1,7 +1,7 @@
 import type { PageDocument, PageNode } from '@casehubio/pages-document';
-import type { GridPlacement, GridItem, Component } from '@casehubio/pages-component';
+import type { GridPlacement, GridItem } from '@casehubio/pages-component';
 import type { CrossGridEditDetail } from '@casehubio/pages-component';
-import { isSeq, type YAMLSeq } from 'yaml';
+import { isSeq, isMap, type YAMLSeq, type YAMLMap } from 'yaml';
 
 export type GridEditDetail =
   | { type: 'move'; items: GridItem[]; gridPath?: (string | number)[] }
@@ -50,9 +50,10 @@ export class GridEditBridge {
       for (let i = 0; i < items.length && i < (seq as YAMLSeq).items.length; i++) {
         const eventAt = items[i]!.at;
         if (eventAt.mode !== 'positioned') continue;
-        const entry = (seq as YAMLSeq).get(i) as any;
-        if (!entry) continue;
-        const currentAt = entry.get?.('at')?.toJSON?.();
+        const entry = seq.get(i, true);
+        if (!isMap(entry)) continue;
+        const at = entry.get('at', true);
+        const currentAt = isMap(at) ? at.toJSON() as Record<string, unknown> : undefined;
         if (currentAt && currentAt.x === eventAt.x && currentAt.y === eventAt.y &&
             currentAt.w === eventAt.w && currentAt.h === eventAt.h) continue;
         const atNode = yamlDoc.createNode({ x: eventAt.x, y: eventAt.y, w: eventAt.w, h: eventAt.h });
@@ -86,7 +87,8 @@ export class GridEditBridge {
     if (mode === 'flat') {
       const comps = page.getComponents();
       for (const comp of comps) {
-        componentJsons.push(yamlDoc.getIn([...comp.path])?.toJSON?.() ?? { type: comp.type });
+        const node = yamlDoc.getIn([...comp.path]);
+        componentJsons.push(isMap(node) ? node.toJSON() as Record<string, unknown> : { type: comp.type });
       }
       yamlDoc.deleteIn([...pagePath, 'flat']);
       yamlDoc.deleteIn([...pagePath, 'components']);
@@ -95,7 +97,8 @@ export class GridEditBridge {
       for (const row of rows) {
         for (const col of row.getColumns()) {
           for (const comp of col.getComponents()) {
-            componentJsons.push(yamlDoc.getIn([...comp.path])?.toJSON?.() ?? { type: comp.type });
+            const node = yamlDoc.getIn([...comp.path]);
+        componentJsons.push(isMap(node) ? node.toJSON() as Record<string, unknown> : { type: comp.type });
           }
         }
       }
@@ -104,7 +107,8 @@ export class GridEditBridge {
       const cols = page.getColumns();
       for (const col of cols) {
         for (const comp of col.getComponents()) {
-          componentJsons.push(yamlDoc.getIn([...comp.path])?.toJSON?.() ?? { type: comp.type });
+          const node = yamlDoc.getIn([...comp.path]);
+        componentJsons.push(isMap(node) ? node.toJSON() as Record<string, unknown> : { type: comp.type });
         }
       }
       yamlDoc.deleteIn([...pagePath, 'columns']);
@@ -218,32 +222,32 @@ export class GridEditBridge {
   applyCrossGridEdit(doc: PageDocument, detail: CrossGridEditDetail): void {
     doc._pushUndoInternal();
     const yamlDoc = doc._getDoc();
-    const sourceSeq = yamlDoc.getIn(detail.sourceGridPath) as YAMLSeq;
-    const targetSeq = yamlDoc.getIn(detail.targetGridPath) as YAMLSeq;
+    const sourceSeq = yamlDoc.getIn(detail.sourceGridPath);
+    const targetSeq = yamlDoc.getIn(detail.targetGridPath);
+    if (!isSeq(sourceSeq) || !isSeq(targetSeq)) return;
 
     if (detail.swapTargetIndex != null) {
-      const swapNode = targetSeq.get(detail.swapTargetIndex, true) as any;
-      const sourceNode = sourceSeq.get(detail.sourceIndex, true) as any;
-      if (swapNode && sourceNode) {
-        const swapAt = swapNode.get('at', true);
+      const swapNode = targetSeq.get(detail.swapTargetIndex, true);
+      const sourceNode = sourceSeq.get(detail.sourceIndex, true);
+      if (isMap(swapNode) && isMap(sourceNode)) {
         const sourceAt = sourceNode.get('at', true);
         const tp = detail.targetPlacement;
         const newSourceAt = yamlDoc.createNode(tp.mode === 'positioned' ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h } : { w: tp.w, h: tp.h });
         sourceSeq.delete(detail.sourceIndex);
         targetSeq.delete(detail.swapTargetIndex);
-        const movedSource = yamlDoc.createNode((sourceNode as any).toJSON());
-        (movedSource as any).set('at', newSourceAt);
+        const movedSource = sourceNode.clone() as YAMLMap;
+        movedSource.set('at', newSourceAt);
         targetSeq.add(movedSource);
-        const movedTarget = yamlDoc.createNode((swapNode as any).toJSON());
-        (movedTarget as any).set('at', yamlDoc.createNode((sourceAt as any).toJSON()));
+        const movedTarget = swapNode.clone() as YAMLMap;
+        movedTarget.set('at', isMap(sourceAt) ? sourceAt.clone() : yamlDoc.createNode({ w: 1, h: 1 }));
         sourceSeq.add(movedTarget);
       }
     } else {
       sourceSeq.delete(detail.sourceIndex);
       if (detail.targetItemPlacements) {
         for (const tp of detail.targetItemPlacements) {
-          const existingEntry = (targetSeq as YAMLSeq).get(tp.index) as any;
-          if (existingEntry) {
+          const existingEntry = targetSeq.get(tp.index, true);
+          if (isMap(existingEntry)) {
             const atNode = yamlDoc.createNode({ x: tp.x, y: tp.y, w: tp.w, h: tp.h });
             existingEntry.set('at', atNode);
           }

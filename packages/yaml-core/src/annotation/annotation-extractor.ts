@@ -3,6 +3,7 @@ import type { StepLineInfo } from './step-position-scanner.js';
 import { AnnotationMap } from './annotation-map.js';
 import type { Annotation } from './annotation-map.js';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class AnnotationExtractor {
   static extract(annotations: ParsedAnnotation[], stepPositions: StepLineInfo[]): AnnotationMap {
     const stepMap = new Map<string, Annotation[]>();

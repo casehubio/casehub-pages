@@ -69,10 +69,10 @@ describe("backwards compatibility — existing samples", () => {
         (p: Component) => (p.props as Record<string, unknown>)["name"] === "index",
       )!;
       const contentTabs = indexPage.grid!.find(
-        (item: { component: Component }) => item.component.type === "tabs" && item.component.slots,
+        (item) => item.component?.type === "tabs" && item.component.slots,
       );
       expect(contentTabs).toBeDefined();
-      expect(contentTabs!.component.slots!["PageA"]).toBeDefined();
+      expect(contentTabs!.component!.slots!["PageA"]).toBeDefined();
     });
   });
 
@@ -85,7 +85,7 @@ describe("backwards compatibility — existing samples", () => {
 
     it("parses lowercase type: barchart as bar-chart", () => {
       const page = root.slots!["content"]![0]!;
-      const chart = page.grid!.find((item) => item.component.type === "bar-chart");
+      const chart = page.grid!.find((item) => item.component!.type === "bar-chart");
       expect(chart).toBeDefined();
     });
 

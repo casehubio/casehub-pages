@@ -41,7 +41,7 @@ export class PagesPositionPicker extends LitElement {
     this.dispatchEvent(new CustomEvent('picker-close', { bubbles: true, composed: true }));
   }
 
-  private _select(position: 'before' | 'after'): void {
+  private _select(position: 'before' | 'after' | 'replace'): void {
     this.dispatchEvent(new CustomEvent('position-select', {
       bubbles: true, composed: true,
       detail: { position },

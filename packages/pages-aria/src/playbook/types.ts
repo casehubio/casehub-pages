@@ -1,4 +1,4 @@
-import type { ResolvedStep } from '@casehubio/yaml-core/step';
+import type { CorpusDatum, ResolvedStep } from '@casehubio/yaml-core/step';
 import type { AriaTarget } from '@casehubio/pages-primitives';
 
 export type PreExtractedStep =
@@ -34,7 +34,7 @@ export interface TutorialSection {
 }
 
 export interface InlineCorpus {
-  inline: Record<string, Array<{ input: unknown; output: unknown; realism?: string }>>;
+  inline: Record<string, CorpusDatum[]>;
 }
 
 export interface SimulationBlock {

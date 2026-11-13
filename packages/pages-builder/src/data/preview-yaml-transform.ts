@@ -1,4 +1,4 @@
-import { PageDocument, type ComponentNode } from '@casehubio/pages-document';
+import { PageDocument, GridItemNode, type ComponentNode } from '@casehubio/pages-document';
 import type { PreviewDataStrategy, DatasetSnapshot } from './preview-data-registry.js';
 
 export function transformYamlForPreview(
@@ -58,7 +58,11 @@ function collectSnapshots(
     if (comp.isContainer()) {
       const children = comp.getChildren();
       for (const slotComps of Object.values(children.slots)) {
-        collectSnapshots(slotComps, registry, datasets, snapshots);
+        const components = slotComps.flatMap(node => {
+          const comp = node instanceof GridItemNode ? node.getComponent() : node;
+          return comp ? [comp] : [];
+        });
+        collectSnapshots(components, registry, datasets, snapshots);
       }
     }
   }

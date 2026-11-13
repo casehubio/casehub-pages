@@ -13,7 +13,7 @@ describe('loadScenarioDefinitions', () => {
     expect(rest.inputs.headers).toBeDefined();
     expect(rest.inputs.body).toBeDefined();
     expect(rest.inputs.expectedStatus).toBeDefined();
-    expect(rest.invoke).toEqual({ kind: 'rest' });
+    expect(rest.invoke).toEqual({ kind: 'rest', method: '', url: '', headers: {}, body: {} });
     expect(rest.portability).toBe('universal');
   });
 

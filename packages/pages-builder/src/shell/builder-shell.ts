@@ -4,7 +4,7 @@ import type { PagesCodeEditor } from '@casehubio/pages-code-editor';
 import type { PagesDockWorkbench } from '@casehubio/pages-primitives/dock';
 import { customElement, property, state } from 'lit/decorators.js';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
-import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, allowedTypesAt, getContainerDescriptor } from '@casehubio/pages-document';
+import { PageDocument, GridItemNode, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, allowedTypesAt, getContainerDescriptor } from '@casehubio/pages-document';
 import { expand } from '@casehubio/yaml-core/expand';
 import { EditorView } from '@codemirror/view';
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
@@ -13,7 +13,7 @@ import { buildYamlContext, navigateSchema, schemaToCompletions, isArrayField, ty
 import { dashboardSchema } from '@casehubio/pages-schema';
 import { yamlCoreDocumentSchema } from '@casehubio/yaml-core/schema';
 import { z } from 'zod';
-import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import { parse as parseYaml, stringify as stringifyYaml, isMap } from 'yaml';
 import type { PropertyPaletteSource } from '@casehubio/pages-property-palette/types';
 import type { PaletteContext } from '../catalog/palette-context.js';
 import type { ComponentCatalogEntry } from '../catalog/component-catalog.js';
@@ -144,7 +144,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   @state() private _positionPickerOpen = false;
   @state() private _positionPickerShowReplace = false;
   private _positionPickerAnchor: HTMLElement | undefined;
-  private _insertPosition: 'before' | 'after' | undefined;
+  private _insertPosition: 'before' | 'after' | 'replace' | undefined;
   private _insertAtIndex: number | undefined;
   private _selectionOverlay: SelectionOverlay | undefined;
   private _hoverOverlay: HTMLElement | null = null;
@@ -785,9 +785,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           const gridSlot = children.slots['grid'] ?? children.slots['items'];
           if (gridSlot) {
             for (const nested of gridSlot) {
-              const nc = (nested as import('@casehubio/pages-document').GridItemNode).getComponent();
+              const nc = nested instanceof GridItemNode ? nested.getComponent() : nested;
               if (nc && nc.type === type) {
-                if (count === targetIndex) return { path: (nested as import('@casehubio/pages-document').GridItemNode).path, count };
+                if (count === targetIndex) return { path: nested.path, count };
                 count++;
               }
             }
@@ -956,7 +956,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const nt = this._inlinePickerNodeType ?? 'component';
     const path = this._inlinePickerPath ?? [];
 
-    if (e.detail.position === 'replace' && path.includes('items')) {
+    if (e.detail.position === 'replace') {
+      if (!path.includes('items')) return;
       const gridItemPath = path.slice(0, path.indexOf('items') + 2) as (string | number)[];
       this._inlinePickerPath = gridItemPath;
       this._inlinePickerNodeType = 'grid-item';
@@ -1297,7 +1298,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           if (!comp) break;
           const page = this._findPageAtPath(['pages', path[1] as number]);
           if (!page) break;
-          const compJson = this._document._getDoc().getIn([...path])?.toJSON?.();
+          const compNode = this._document._getDoc().getIn([...path]);
+          const compJson = isMap(compNode) ? compNode.toJSON() as Record<string, unknown> : undefined;
           if (!compJson) break;
           if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
             const item = page.getItems()[path[3]];
@@ -1722,7 +1724,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       if (nt === 'page') {
         const page = this._findPageAtPath(path);
         const m = page?.getLayoutMode();
-        if (m === 'grid' || m === 'items') {
+        if (page && (m === 'grid' || m === 'items')) {
           page.addItem({ mode: 'auto', w: 1, h: 1 }, entry.type, props);
         } else {
           page?.addComponent(entry.type, props);

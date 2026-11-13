@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { overlaps, compact, place, push, compactAll, autoShrinkHeight, isNestedGrid } from "./grid-compaction.js";
-import type { Rect, IdRect } from "./grid-compaction.js";
+import type { IdRect } from "./grid-compaction.js";
 
 describe("overlaps", () => {
   it("returns true for intersecting rectangles", () => {

@@ -56,7 +56,7 @@ describe("global defaults propagation", () => {
     });
     const page = root.slots!["content"]![0]!;
     const component = page.grid![0]!.component;
-    const lookup = component.props?.["lookup"] as DataSetLookup | undefined;
+    const lookup = component!.props?.["lookup"] as DataSetLookup | undefined;
     expect(lookup?.dataSetId).toBe("shared-ds");
   });
 
@@ -80,9 +80,9 @@ describe("global defaults propagation", () => {
     });
     const page = root.slots!["content"]![0]!;
     const component = page.grid![0]!.component;
-    const lookup = component.props?.["lookup"] as DataSetLookup;
+    const lookup = component!.props?.["lookup"] as DataSetLookup;
     expect(lookup.dataSetId).toBe("override-ds");
-    expect(component.props?.["resizable"]).toBe(true);
+    expect(component!.props?.["resizable"]).toBe(true);
   });
 
   it("global.displayer.chart settings propagate to typed displayer", () => {
@@ -105,9 +105,9 @@ describe("global defaults propagation", () => {
     });
     const page = root.slots!["content"]![0]!;
     const component = page.grid![0]!.component;
-    expect(component.type).toBe("line-chart");
-    expect(component.props?.["resizable"]).toBe(true);
-    expect(component.props?.["height"]).toBe(500); // component override wins
+    expect(component!.type).toBe("line-chart");
+    expect(component!.props?.["resizable"]).toBe(true);
+    expect(component!.props?.["height"]).toBe(500); // component override wins
   });
 
   it("global defaults do not affect non-displayer components", () => {
@@ -124,10 +124,10 @@ describe("global defaults propagation", () => {
       }],
     });
     const page = root.slots!["content"]![0]!;
-    expect(page.grid![0]!.component.type).toBe("html");
-    expect(page.grid![0]!.component.props?.["resizable"]).toBeUndefined();
-    expect(page.grid![1]!.component.type).toBe("markdown");
-    expect(page.grid![2]!.component.type).toBe("title");
+    expect(page.grid![0]!.component!.type).toBe("html");
+    expect(page.grid![0]!.component!.props?.["resizable"]).toBeUndefined();
+    expect(page.grid![1]!.component!.type).toBe("markdown");
+    expect(page.grid![2]!.component!.type).toBe("title");
   });
 
 });

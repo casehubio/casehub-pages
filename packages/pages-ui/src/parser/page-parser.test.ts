@@ -81,8 +81,8 @@ describe("parsePage", () => {
       });
       const page = root.slots!["content"]![0]!;
       const comp = page.grid![0]!.component;
-      expect(comp.type).toBe("html");
-      expect(comp.props!["content"]).toBe("<b>Bold</b>");
+      expect(comp!.type).toBe("html");
+      expect(comp!.props!["content"]).toBe("<b>Bold</b>");
     });
 
     it("desugars displayer components", () => {
@@ -94,7 +94,7 @@ describe("parsePage", () => {
         ],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.grid![0]!.component.type).toBe("bar-chart");
+      expect(page.grid![0]!.component!.type).toBe("bar-chart");
     });
   });
 
@@ -106,7 +106,7 @@ describe("parsePage", () => {
       });
       const page = root.slots!["content"]![0]!;
       const htmlComp = page.grid![0]!.component;
-      expect(htmlComp.props!["content"]).toBe("Hello World");
+      expect(htmlComp!.props!["content"]).toBe("Hello World");
     });
 
     it("preserves properties on root", () => {
@@ -133,9 +133,9 @@ describe("parsePage", () => {
         pages: [{ components: [{ html: "A" }, { html: "B" }] }],
       });
       const page = root.slots!["content"]![0]!;
-      expect(page.grid![0]!.component.id).toBeDefined();
-      expect(page.grid![1]!.component.id).toBeDefined();
-      expect(page.grid![0]!.component.id).not.toBe(page.grid![1]!.component.id);
+      expect(page.grid![0]!.component!.id).toBeDefined();
+      expect(page.grid![1]!.component!.id).toBeDefined();
+      expect(page.grid![0]!.component!.id).not.toBe(page.grid![1]!.component!.id);
     });
 
     it("IDs include page index for uniqueness across pages", () => {
@@ -147,7 +147,7 @@ describe("parsePage", () => {
       });
       const page0 = root.slots!["content"]![0]!;
       const page1 = root.slots!["content"]![1]!;
-      expect(page0.grid![0]!.component.id).not.toBe(page1.grid![0]!.component.id);
+      expect(page0.grid![0]!.component!.id).not.toBe(page1.grid![0]!.component!.id);
     });
   });
 
@@ -271,13 +271,13 @@ describe("parsePage", () => {
       const mainPage = root.slots!["content"]![0]!;
       expect(mainPage).toBeDefined();
       // Nav component (tabs) keeps nav role, content goes to target location
-      const navItem = mainPage.grid!.find((item) => item.component.type === "tabs" && !item.component.slots);
+      const navItem = mainPage.grid!.find((item) => item.component!.type === "tabs" && !item.component!.slots);
       expect(navItem).toBeDefined();
       // The slot-target is replaced with a tabs component containing page slots
-      const contentItem = mainPage.grid!.find((item) => item.component.type === "tabs" && item.component.slots);
+      const contentItem = mainPage.grid!.find((item) => item.component!.type === "tabs" && item.component!.slots);
       expect(contentItem).toBeDefined();
-      expect(contentItem!.component.slots!["SubPage1"]).toBeDefined();
-      expect(contentItem!.component.slots!["SubPage2"]).toBeDefined();
+      expect(contentItem!.component!.slots!["SubPage1"]).toBeDefined();
+      expect(contentItem!.component!.slots!["SubPage2"]).toBeDefined();
     });
 
     it("removes slot-target components from grid items during resolution", () => {
@@ -297,7 +297,7 @@ describe("parsePage", () => {
         },
       });
       const mainPage = root.slots!["content"]![0]!;
-      const slotTargets = mainPage.grid!.filter((item) => item.component.type === "slot-target");
+      const slotTargets = mainPage.grid!.filter((item) => item.component!.type === "slot-target");
       expect(slotTargets.length).toBe(0);
     });
   });
@@ -405,8 +405,8 @@ describe("parsePage", () => {
       });
       const page = root.slots!["content"]![0]!;
       const chart = page.grid![0]!.component;
-      expect(chart.props?.["resizable"]).toBe(true);
-      const chartProps = getProps(chart, "bar-chart");
+      expect(chart!.props?.["resizable"]).toBe(true);
+      const chartProps = getProps(chart!, "bar-chart");
       expect(chartProps.lookup.dataSetId).toBe("ds");
     });
   });
@@ -471,8 +471,8 @@ describe("parsePage", () => {
       });
       const indexPage = root.slots!["content"]![0]!;
       const panelItem = indexPage.grid![0]!.component;
-      expect(panelItem.type).toBe("panel");
-      expect(panelItem.props?.["title"]).toBe("Charts");
+      expect(panelItem!.type).toBe("panel");
+      expect(panelItem!.props?.["title"]).toBe("Charts");
     });
   });
 
@@ -514,7 +514,7 @@ describe("parsePage", () => {
       expect(page.props!["name"]).toBe("Dashboard");
       // ${app.env} resolved by yaml-core (dot-separated prefix)
       const comp = page.grid![0]!.component;
-      expect(comp.props!["content"]).toBe("production");
+      expect(comp!.props!["content"]).toBe("production");
     });
 
     it("strips yaml-core keys from output", () => {
@@ -633,8 +633,8 @@ describe("parsePage", () => {
       const page = root.slots!["content"]![0]!;
       const gridItem = page.grid![0]!;
       const nestedGrid = gridItem.component;
-      expect(nestedGrid.type).toBe("grid");
-      expect(nestedGrid.grid![0]!.at.mode).toBe("positioned");
+      expect(nestedGrid!.type).toBe("grid");
+      expect(nestedGrid!.grid![0]!.at.mode).toBe("positioned");
     });
   });
 });

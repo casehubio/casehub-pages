@@ -6,6 +6,7 @@ export interface ParsedAnnotation {
 
 const ANNOTATION_RE = /^\s*#@(\w+)(?:\(([^)]*)\))?\s*$/;
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class AnnotationParser {
   static parse(rawYaml: string): ParsedAnnotation[] {
     const annotations: ParsedAnnotation[] = [];

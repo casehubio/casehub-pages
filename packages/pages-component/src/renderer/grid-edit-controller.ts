@@ -1,16 +1,14 @@
 import type { GridItem, GridPlacement } from "../model/types.js";
 import type { IdRect, Rect } from "./grid-compaction.js";
-import { compactAll, resizeCompact, compact, overlaps } from "./grid-compaction.js";
+import { compactAll, resizeCompact } from "./grid-compaction.js";
 import { selectItem, extendSelection, clearSelection } from "./grid-selection.js";
 import type { GridSelection } from "./grid-selection.js";
 import type { GridGeometry, CellCoord, ResizeHandle, RowBounds } from "./grid-drag.js";
 import {
   computeGridGeometry,
-  snapToCell,
   snapToCellWithRows,
   captureRowPositions,
   clampPlacement,
-  hitTestHandle,
   DRAG_THRESHOLD,
 } from "./grid-drag.js";
 import { applyGridPlacement } from "./grid.js";
@@ -649,7 +647,6 @@ class GridEditControllerImpl implements GridEditController {
 
         const editType = this.dragHandle === "move" ? "move" : "resize";
         const draggedId = this.dragItemId!;
-        const wasResize = this.dragHandle !== "move";
         this.hideBuilderOverlay();
         this.cancelDrag();
         this.dispatchEdit(editType, resolvedItems);

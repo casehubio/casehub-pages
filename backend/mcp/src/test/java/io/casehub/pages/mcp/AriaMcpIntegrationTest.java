@@ -22,7 +22,6 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,13 +111,13 @@ class AriaMcpIntegrationTest {
     }
 
     @Nested
-    @org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     class DispatchChain {
 
         private AriaCommandBridge bridge;
         private AriaResolver resolver;
         private AtomicReference<String> lastTopic;
         private ObjectMapper mapper;
+        private String browserError;
 
         @BeforeEach
         void setUp() {
@@ -129,6 +128,10 @@ class AriaMcpIntegrationTest {
                 @Override
                 public <T> long broadcast(String topic, T event) {
                     lastTopic.set(topic);
+                    if (event instanceof AriaCommandBridge.CommandPayload command) {
+                        bridge.handleResult(new PushRequest.CommandResult(
+                                command.id(), browserError == null, browserError));
+                    }
                     return 1L;
                 }
             };
@@ -150,14 +153,6 @@ class AriaMcpIntegrationTest {
         @Test
         void reflectiveDispatchClickReacheBridge() {
             // Simulate browser responding to the command
-            CompletableFuture.runAsync(() -> {
-                try { Thread.sleep(50); } catch (InterruptedException ignored) {}
-                String topic = lastTopic.get();
-                if (topic != null) {
-                    String cmdId = topic.replace("scenario/cmd-", "");
-                    bridge.handleResult(new PushRequest.CommandResult(cmdId, true, null));
-                }
-            });
 
             // Simulate what ReflectiveOperationDispatcher does:
             // casehub_action(domain="aria", operation="click", params={role: "button", name: "Submit"})
@@ -185,7 +180,7 @@ class AriaMcpIntegrationTest {
                 assertThat(result).isInstanceOf(AriaResult.class);
                 var ariaResult = (AriaResult) result;
                 assertThat(ariaResult.ok()).isTrue();
-                assertThat(lastTopic.get()).startsWith("scenario/cmd-");
+                assertThat(lastTopic.get()).startsWith("playbook/cmd-");
             } catch (Exception e) {
                 throw new RuntimeException("Reflective dispatch failed", e);
             }
@@ -193,14 +188,6 @@ class AriaMcpIntegrationTest {
 
         @Test
         void reflectiveDispatchFillWithValue() {
-            CompletableFuture.runAsync(() -> {
-                try { Thread.sleep(50); } catch (InterruptedException ignored) {}
-                String topic = lastTopic.get();
-                if (topic != null) {
-                    String cmdId = topic.replace("scenario/cmd-", "");
-                    bridge.handleResult(new PushRequest.CommandResult(cmdId, true, null));
-                }
-            });
 
             Map<String, Object> params = Map.of(
                     "role", "textbox",
@@ -233,14 +220,6 @@ class AriaMcpIntegrationTest {
 
         @Test
         void reflectiveDispatchWithNestedWithinTarget() {
-            CompletableFuture.runAsync(() -> {
-                try { Thread.sleep(50); } catch (InterruptedException ignored) {}
-                String topic = lastTopic.get();
-                if (topic != null) {
-                    String cmdId = topic.replace("scenario/cmd-", "");
-                    bridge.handleResult(new PushRequest.CommandResult(cmdId, true, null));
-                }
-            });
 
             // Simulate: casehub_action("aria", "click", {role:"button", name:"Save", within:{role:"group", name:"Security"}})
             Map<String, Object> params = Map.of(
@@ -279,15 +258,7 @@ class AriaMcpIntegrationTest {
 
         @Test
         void browserErrorPropagatesBackThroughMcp() {
-            CompletableFuture.runAsync(() -> {
-                try { Thread.sleep(50); } catch (InterruptedException ignored) {}
-                String topic = lastTopic.get();
-                if (topic != null) {
-                    String cmdId = topic.replace("scenario/cmd-", "");
-                    bridge.handleResult(new PushRequest.CommandResult(
-                            cmdId, false, "No element found: button \"NonExistent\""));
-                }
-            });
+            browserError = "No element found: button \"NonExistent\"";
 
             Map<String, Object> params = Map.of("role", "button", "name", "NonExistent");
 

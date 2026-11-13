@@ -22,7 +22,7 @@ function createMockFetch(
 
     const pageMatch = url.match(/\/pages\/([^/?]+)/);
     if (pageMatch) {
-      const name = decodeURIComponent(pageMatch[1]);
+      const name = decodeURIComponent(pageMatch[1]!);
       const yaml = pages[name];
       if (yaml) {
         return Promise.resolve(new Response(JSON.stringify({ name, yaml }), {

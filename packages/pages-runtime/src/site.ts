@@ -431,7 +431,7 @@ export async function loadSite(
         .then(component => {
           if (gen !== _navGeneration) return;
           extendPagePathMap(component, pageName, pagePathMap);
-          const inheritedScope = dataSetScope.get(pageName) ?? new Map();
+          const inheritedScope = dataSetScope.get(pageName) ?? new Map<DataSetId, import("./dataset-scope.js").DataSetEntry>();
           extendDataSetScope(component, inheritedScope, pagePathMap, dataSetScope);
           const dynamicContainer = ensureDynamicContainer(target);
           dynamicContainer.innerHTML = "";
