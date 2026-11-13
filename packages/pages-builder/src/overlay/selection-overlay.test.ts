@@ -312,14 +312,13 @@ describe('SelectionOverlay', () => {
       expect(events).toContain('selection-split-h');
       expect(events).toContain('selection-split-v');
       expect(events).toContain('selection-merge');
-      expect(events).toContain('selection-swap');
       expect(events).toContain('selection-delete');
       expect(events).toContain('selection-add-empty');
     });
 
-    it('returns exactly 6 buttons for grid-item', () => {
+    it('returns exactly 5 buttons for grid-item', () => {
       const buttons = getButtonsForNodeType('grid-item', false);
-      expect(buttons).toHaveLength(6);
+      expect(buttons).toHaveLength(5);
     });
 
     it('does not include spatial buttons for component', () => {

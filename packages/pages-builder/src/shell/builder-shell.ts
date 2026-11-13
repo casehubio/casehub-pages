@@ -573,12 +573,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         }
       }
     };
-    const onSwap = (e: Event) => {
-      const { path } = (e as CustomEvent).detail;
-      overlayRoot.dispatchEvent(new CustomEvent('grid-swap-activate', {
-        bubbles: true, detail: { path },
-      }));
-    };
     const onAddEmpty = (e: Event) => {
       const { path } = (e as CustomEvent).detail;
       const page = this._findPageAtPath(['pages', path[1] as number]);
@@ -603,7 +597,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     overlayRoot.addEventListener('selection-split-h', onSplitH);
     overlayRoot.addEventListener('selection-split-v', onSplitV);
     overlayRoot.addEventListener('selection-merge', onMerge);
-    overlayRoot.addEventListener('selection-swap', onSwap);
     overlayRoot.addEventListener('selection-add-empty', onAddEmpty);
 
     this._selectionOverlayCleanup = () => {
@@ -616,7 +609,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       overlayRoot.removeEventListener('selection-split-h', onSplitH);
       overlayRoot.removeEventListener('selection-split-v', onSplitV);
       overlayRoot.removeEventListener('selection-merge', onMerge);
-      overlayRoot.removeEventListener('selection-swap', onSwap);
       overlayRoot.removeEventListener('selection-add-empty', onAddEmpty);
     };
   }
