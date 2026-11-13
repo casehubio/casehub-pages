@@ -451,7 +451,7 @@ class GridEditControllerImpl implements GridEditController {
       const outside = e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom;
       const coord = getCoordinator();
       const deepest = coord.deepestGridAt(e.clientX, e.clientY);
-      const enteredOtherGrid = deepest != null && deepest !== this;
+      const enteredOtherGrid = deepest != null && deepest !== this && !coord.isChildOfUnpinnedItem(this, deepest);
       if (outside || enteredOtherGrid || this._crossGridActive) {
         if (this._crossGridActive && !outside && !enteredOtherGrid) {
           this._crossGridActive = false;

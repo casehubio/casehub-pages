@@ -101,6 +101,14 @@ export class GridEditCoordinator {
     return !(this._unpinnedByPath.get(key)?.has(itemId) ?? false);
   }
 
+  isChildOfUnpinnedItem(parent: GridEditController, child: GridEditController): boolean {
+    this._rebuildIfDirty();
+    if (this._parents.get(child) !== parent) return false;
+    const itemEl = child.gridEl.closest("[data-item-id]") as HTMLElement | null;
+    if (!itemEl) return false;
+    return !this.isPinned(parent, itemEl.dataset.itemId!);
+  }
+
   togglePin(controller: GridEditController, itemId: string): boolean {
     const key = this.resolveGridPath(controller).join(".");
     let set = this._unpinnedByPath.get(key);
