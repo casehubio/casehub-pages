@@ -8,6 +8,8 @@ paths-ignore:
   # Exclude distribution/build outputs
   - "**/dist/**"
   - "**/build/**"
+  # Generated standalone bundle; analyze its canonical packages/pages-aria/src TypeScript instead.
+  - "backend/playbook-runtime/src/main/resources/META-INF/resources/playbook/controller.js"
 
 queries:
   - uses: security-and-quality
