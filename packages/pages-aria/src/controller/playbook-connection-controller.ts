@@ -2,6 +2,7 @@ import type { ReactiveController, ReactiveControllerHost } from 'lit';
 import { createEventConnection, type EventConnection } from '@casehubio/pages-data';
 
 export interface PlaybookState {
+  playbook?: string | null;
   scenario: string | null;
   chapter: string | null;
   section: string | null;
@@ -56,7 +57,8 @@ export class PlaybookConnectionController implements ReactiveController {
   private _eventHandler = (e: Event): void => {
     const detail = (e as CustomEvent).detail as { topic?: string; payload?: unknown };
     if (detail?.topic !== 'scenario:state') return;
-    this.state = detail.payload as PlaybookState;
+    const state = detail.payload as PlaybookState;
+    this.state = { ...state, scenario: state.playbook ?? state.scenario ?? null };
     this._opts.onState?.(this.state);
     this._host.requestUpdate();
   };
@@ -135,7 +137,8 @@ export class PlaybookConnectionController implements ReactiveController {
     try {
       const resp = await fetch(`${this.restBase}/playbook/state`);
       if (resp.ok) {
-        this.state = await resp.json() as PlaybookState;
+        const state = await resp.json() as PlaybookState;
+        this.state = { ...state, scenario: state.playbook ?? state.scenario ?? null };
         this._opts.onState?.(this.state);
         this._host.requestUpdate();
       }
