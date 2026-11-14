@@ -126,6 +126,22 @@ describe('getFilteredCatalog', () => {
     expect(types).not.toContain('lazy-page');
   });
 
+  it('hides page-level-only types inside grid context', () => {
+    const ctx: PaletteContext = {
+      parentType: 'grid',
+      acceptsComponents: true,
+      availableDatasets: ['ds1'],
+      siblingTypes: [],
+    };
+    const filtered = getFilteredCatalog(ctx);
+    const types = filtered.map(e => e.entry.type);
+    expect(types).not.toContain('page');
+    expect(types).not.toContain('lazy-page');
+    expect(types).toContain('bar-chart');
+    expect(types).toContain('markdown');
+    expect(types).toContain('metric');
+  });
+
   it('shows page-level types at root level', () => {
     const ctx: PaletteContext = {
       parentType: undefined,

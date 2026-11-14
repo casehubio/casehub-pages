@@ -1757,6 +1757,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (!this._selectedPath || !this._selectedNodeType) return undefined;
     const nt = this._selectedNodeType;
     if (nt === 'column' || nt === 'row') return nt;
+    if (nt === 'grid-item') return 'grid';
     if (nt === 'component') {
       const node = this._findComponentAtPath(this._selectedPath);
       if (node?.isContainer()) return node.type;
@@ -1803,6 +1804,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       } else if (nt === 'column') {
         const col = this._findColumnAtPath(path);
         col?.addComponent(entry.type, props);
+      } else if (nt === 'grid-item') {
+        const item = this._findGridItemAtPath(path);
+        item?.setComponent(entry.type, props);
       } else if (nt === 'component') {
         const page = this._findPageAtPath(['pages', path[1] as number]);
         if (!page) return;
