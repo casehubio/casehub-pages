@@ -137,6 +137,8 @@ describe('getFilteredCatalog', () => {
     const types = filtered.map(e => e.entry.type);
     expect(types).not.toContain('page');
     expect(types).not.toContain('lazy-page');
+    expect(types).not.toContain('columns');
+    expect(types).toContain('grid');
     expect(types).toContain('bar-chart');
     expect(types).toContain('markdown');
     expect(types).toContain('metric');
@@ -175,7 +177,7 @@ describe('getFilteredCatalog', () => {
     };
     const filtered = getFilteredCatalog(ctx);
     expect(filtered.length).toBeGreaterThan(0);
-    expect(filtered.every(r => ['columns', 'grid'].includes(r.entry.type))).toBe(true);
+    expect(filtered.every(r => r.entry.type === 'columns')).toBe(true);
   });
 
   it('data components have prereqHint set', () => {
