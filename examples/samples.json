@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 119,
+  "totalSamples": 116,
   "categories": [
     {
       "category": "Charts",
@@ -1372,31 +1372,6 @@
         }
       ],
       "requiresServer": true
-    },
-    {
-      "category": "Grid Editing",
-      "samples": [
-        {
-          "name": "Color Grid",
-          "path": "Grid Editing/Color Grid.page.yaml",
-          "category": "Grid Editing",
-          "file": "Color Grid.page.yaml",
-          "tsPath": "Grid Editing/Color Grid.ts"
-        },
-        {
-          "name": "Content Layout",
-          "path": "Grid Editing/Content Layout.page.yaml",
-          "category": "Grid Editing",
-          "file": "Content Layout.page.yaml",
-          "tsPath": "Grid Editing/Content Layout.ts"
-        },
-        {
-          "name": "Two Forms",
-          "path": "Grid Editing/Two Forms.page.yaml",
-          "category": "Grid Editing",
-          "file": "Two Forms.page.yaml"
-        }
-      ]
     }
   ]
 }
