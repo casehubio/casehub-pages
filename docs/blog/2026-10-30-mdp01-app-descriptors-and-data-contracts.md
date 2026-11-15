@@ -2,7 +2,7 @@
 layout: post
 title: "App Descriptors and the Case for Declarative Data Contracts"
 date: 2026-10-30
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/casehub-pages]
 tags: [data, yaml, schema, architecture, casehub]

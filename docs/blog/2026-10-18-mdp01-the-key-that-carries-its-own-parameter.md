@@ -2,7 +2,7 @@
 layout: post
 title: "The Key That Carries Its Own Parameter"
 date: 2026-10-18
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/casehub-pages]
 tags: [walker, yaml, dsl, structural-keys, decorators]
