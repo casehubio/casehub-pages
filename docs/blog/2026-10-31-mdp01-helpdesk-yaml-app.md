@@ -2,7 +2,7 @@
 layout: post
 title: "41 Java Files, 4 YAML Files, and the Bugs That Proved It Works"
 date: 2026-10-31
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/casehub-pages]
 tags: [json-app, yaml, crud, schema-form, architecture, casehub]
