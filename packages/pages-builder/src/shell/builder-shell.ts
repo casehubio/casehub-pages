@@ -207,7 +207,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _gridEditHandler = (e: Event) => {
     const detail = (e as CustomEvent).detail as GridEditDetail;
-    const origin: EditOrigin = detail.type === 'insert' ? 'palette' : detail.type === 'merge' ? 'toolbar' : 'grid';
+    const origin: EditOrigin = detail.type === 'move' || detail.type === 'resize' ? 'grid' : detail.type === 'insert' ? 'palette' : 'toolbar';
     this._applyEdit(origin, () => this._gridBridge.applyGridEdit(this._document, detail));
   };
 

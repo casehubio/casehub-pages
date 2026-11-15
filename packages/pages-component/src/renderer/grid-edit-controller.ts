@@ -979,7 +979,19 @@ class GridEditControllerImpl implements GridEditController {
       abtn.addEventListener("click", (ev) => {
         ev.stopPropagation();
         ev.preventDefault();
-        this.gridEl.dispatchEvent(new CustomEvent("pages-grid-action", { bubbles: true, composed: true, detail: { action } }));
+        const idx = Number(id);
+        if (action === "split-h" || action === "split-v") {
+          this.gridEl.dispatchEvent(new CustomEvent("pages-grid-edit", { bubbles: true, composed: true, detail: { type: "split", targetIndex: idx, direction: action === "split-h" ? "horizontal" : "vertical" } }));
+        } else if (action === "delete") {
+          this.gridEl.dispatchEvent(new CustomEvent("pages-grid-edit", { bubbles: true, composed: true, detail: { type: "remove", index: idx } }));
+        } else if (action === "merge") {
+          this.gridEl.dispatchEvent(new CustomEvent("pages-grid-merge", { bubbles: false, detail: { rootId: id } }));
+        } else if (action === "add-empty") {
+          const maxY = this.items.reduce((m, it) => it.at.mode === "positioned" ? Math.max(m, it.at.y + it.at.h) : m, 0);
+          this.gridEl.dispatchEvent(new CustomEvent("pages-grid-edit", { bubbles: true, composed: true, detail: { type: "add-empty", placement: { mode: "positioned", x: 0, y: maxY, w: this.columns, h: 1 } } }));
+        } else {
+          this.gridEl.dispatchEvent(new CustomEvent("pages-grid-action", { bubbles: true, composed: true, detail: { action } }));
+        }
       });
       actionGrid.appendChild(abtn);
     }
