@@ -10,9 +10,8 @@ import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";
 
 applyTheme('casehub-dark');
 
-const yaml = document.getElementById('grid-yaml')?.textContent?.trim() ?? '';
 const shell = document.querySelector('pages-builder-shell') as any;
-if (shell && yaml) {
+if (shell) {
   shell.renderPreview = (container: HTMLElement, yamlText: string) => {
     container.innerHTML = '';
     return loadSite(container, yamlText, {}).then(site => {
@@ -46,12 +45,15 @@ if (shell && yaml) {
       }
     }).catch(() => {});
   };
-  shell.yaml = yaml;
-  shell.updateComplete.then(() => {
-    if (shell._document?.getPages?.()?.length === 0) {
-      shell._document = shell._parseDocument(yaml);
-      shell._syncViews('editor');
-      shell.requestUpdate();
-    }
-  });
+  const yaml = document.getElementById('grid-yaml')?.textContent?.trim() ?? '';
+  if (yaml) {
+    shell.yaml = yaml;
+    shell.updateComplete.then(() => {
+      if (shell._document?.getPages?.()?.length === 0) {
+        shell._document = shell._parseDocument(yaml);
+        shell._syncViews('editor');
+        shell.requestUpdate();
+      }
+    });
+  }
 }

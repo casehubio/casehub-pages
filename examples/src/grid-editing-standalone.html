@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grid Editing — CaseHub Pages</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; }
+    .header { padding: 8px 16px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 12px; }
+    .header h1 { font-size: 16px; font-weight: 500; }
+    .header a { color: #60a5fa; text-decoration: none; font-size: 13px; }
+    .page-pills { display: flex; gap: 0; border-radius: 6px; overflow: hidden; margin-left: auto; }
+    .pill { padding: 6px 16px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); transition: all 150ms; font-family: inherit; }
+    .pill:hover { background: rgba(255,255,255,0.15); }
+    .pill.active { background: #3b82f6; color: #fff; }
+    pages-builder-shell { display: block; height: calc(100vh - 41px); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Grid Editing</h1>
+    <a href="/">Back to Gallery</a>
+    <div class="page-pills" id="page-pills"></div>
+  </div>
+  <pages-builder-shell id="builder-shell"></pages-builder-shell>
+  <script>
+    var PAGES = {
+      'Color Grid': 'samples/Grid Editing/includes/color-grid.yaml',
+      'Content Layout': 'samples/Grid Editing/includes/content-layout.yaml',
+      'Two Forms': 'samples/Grid Editing/includes/two-forms.yaml'
+    };
+    var activePage = 'Color Grid';
+    var pills = document.getElementById('page-pills');
+    var shell = document.getElementById('builder-shell');
+
+    function loadPage(name) {
+      activePage = name;
+      Array.from(pills.children).forEach(function (btn) {
+        btn.classList.toggle('active', btn.textContent === name);
+      });
+      fetch(PAGES[name])
+        .then(function (r) { return r.text(); })
+        .then(function (yaml) { shell.yaml = yaml; });
+    }
+
+    Object.keys(PAGES).forEach(function (name) {
+      var btn = document.createElement('button');
+      btn.textContent = name;
+      btn.className = name === activePage ? 'pill active' : 'pill';
+      btn.addEventListener('click', function () { loadPage(name); });
+      pills.appendChild(btn);
+    });
+
+    // Initial load deferred until builder-bundle registers the component
+    var check = setInterval(function () {
+      if (customElements.get('pages-builder-shell')) {
+        clearInterval(check);
+        loadPage(activePage);
+      }
+    }, 100);
+    setTimeout(function () { clearInterval(check); }, 5000);
+  </script>
+  <script src="builder-bundle.js"></script>
+</body>
+</html>
