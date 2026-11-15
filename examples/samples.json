@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 113,
+  "totalSamples": 116,
   "categories": [
     {
       "category": "Charts",
@@ -641,6 +641,51 @@
             "subgraph"
           ],
           "tsPath": "Graph Editing/Nested Pipeline.ts"
+        }
+      ]
+    },
+    {
+      "category": "Grid Editing",
+      "samples": [
+        {
+          "name": "Color Grid",
+          "path": "Grid Editing/Color Grid.page.yaml",
+          "category": "Grid Editing",
+          "file": "Color Grid.page.yaml",
+          "tags": [
+            "grid",
+            "editing",
+            "drag-drop",
+            "builder"
+          ],
+          "tsPath": "Grid Editing/Color Grid.ts"
+        },
+        {
+          "name": "Content Layout",
+          "path": "Grid Editing/Content Layout.page.yaml",
+          "category": "Grid Editing",
+          "file": "Content Layout.page.yaml",
+          "tags": [
+            "grid",
+            "editing",
+            "nested",
+            "builder"
+          ],
+          "tsPath": "Grid Editing/Content Layout.ts"
+        },
+        {
+          "name": "Two Forms",
+          "path": "Grid Editing/Two Forms.page.yaml",
+          "category": "Grid Editing",
+          "file": "Two Forms.page.yaml",
+          "tags": [
+            "grid",
+            "editing",
+            "forms",
+            "nested",
+            "builder"
+          ],
+          "tsPath": "Grid Editing/Two Forms.ts"
         }
       ]
     },
