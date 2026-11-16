@@ -28,6 +28,18 @@ describe('chunkToStream', () => {
     expect((deltas[1] as { text: string }).text).toBe('i');
   });
 
+  it('keeps combining marks and compound emoji in one character chunk', async () => {
+    const events = await collectEvents(chunkToStream({
+      text: 'e\u0301👩🏽‍💻🇨🇦', chunkStrategy: 'char', delayMs: 0,
+    }));
+    expect(events.filter(e => e.kind === 'text-delta')).toEqual([
+      { kind: 'text-delta', text: 'e\u0301' },
+      { kind: 'text-delta', text: '👩🏽‍💻' },
+      { kind: 'text-delta', text: '🇨🇦' },
+    ]);
+    expect(events[events.length - 1]!.kind).toBe('invocation-complete');
+  });
+
   it('includes token counts in invocation-complete', async () => {
     const events = await collectEvents(chunkToStream({
       text: 'test', chunkStrategy: 'word', delayMs: 0,
