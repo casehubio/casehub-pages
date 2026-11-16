@@ -49,7 +49,7 @@ function convertLegacy(legacy: LegacyConfig): { config: SimulationConfig; corpus
     config: new MapSimulationConfig({
       strategies: legacy.strategies,
       capture: legacy.capture,
-      fallthroughRealism: legacy.fallthroughRealism,
+      fallthroughRealism: legacy.fallthroughRealism ?? {},
     }),
     corpus,
   };

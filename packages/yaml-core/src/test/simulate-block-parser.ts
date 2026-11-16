@@ -199,8 +199,8 @@ export class SimulateBlockParser {
     const init: MapSimulationConfigInit = {
       strategies,
       capture,
-      exhaustionPolicies: Object.keys(exhaustionPolicies).length > 0 ? exhaustionPolicies : undefined,
-      corpusSelections: Object.keys(corpusSelections).length > 0 ? corpusSelections : undefined,
+      exhaustionPolicies,
+      corpusSelections,
     };
 
     return { config: new MapSimulationConfig(init), corpus };
@@ -223,7 +223,7 @@ export function legacyConfigToSimulation(legacy: LegacySimulationConfig): Simula
   const init: MapSimulationConfigInit = {
     strategies: legacy.strategies,
     capture: legacy.capture,
-    fallthroughRealism: legacy.fallthroughRealism,
+    fallthroughRealism: legacy.fallthroughRealism ?? {},
   };
 
   return { config: new MapSimulationConfig(init), corpus };
