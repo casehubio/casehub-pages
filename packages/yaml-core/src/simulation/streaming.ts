@@ -15,7 +15,7 @@ function delayMs(ms: number): Promise<void> {
 export async function* chunkToStream(datum: StreamingCorpusDatum): AsyncGenerator<AgentEvent> {
   const chunks = datum.chunkStrategy === 'word'
     ? datum.text.split(/(\s+)/).filter(c => c.length > 0)
-    : [...datum.text];
+    : Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(datum.text), s => s.segment);
   const startTime = Date.now();
   for (const chunk of chunks) {
     if (datum.delayMs > 0) await delayMs(datum.delayMs);
