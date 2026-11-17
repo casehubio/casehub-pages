@@ -557,39 +557,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const onInsertAt = (e: Event) => {
       this._handleInsertAt(e as Parameters<typeof this._handleInsertAt>[0]);
     };
-    const onSplitH = (e: Event) => {
-      const { path } = (e as CustomEvent).detail;
-      if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
-        this._applyEdit('toolbar', () => {
-          this._gridBridge.applyGridEdit(this._document, {
-            type: 'split', targetIndex: path[3] as number, direction: 'horizontal',
-          });
-        });
-      }
-    };
-    const onSplitV = (e: Event) => {
-      const { path } = (e as CustomEvent).detail;
-      if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
-        this._applyEdit('toolbar', () => {
-          this._gridBridge.applyGridEdit(this._document, {
-            type: 'split', targetIndex: path[3] as number, direction: 'vertical',
-          });
-        });
-      }
-    };
-    const onMerge = (e: Event) => {
-      const { path } = (e as CustomEvent).detail;
-      this._selectionOverlay?.hide();
-      if ((path[2] === 'grid' || path[2] === 'items') && typeof path[3] === 'number') {
-        const preview = this.renderRoot.querySelector('[data-preview-root]') ?? this.renderRoot;
-        const gridEl = preview.querySelector('[data-grid-editing]') as HTMLElement | null;
-        if (gridEl) {
-          gridEl.dispatchEvent(new CustomEvent('pages-grid-merge', {
-            bubbles: false, detail: { rootId: String(path[3]) },
-          }));
-        }
-      }
-    };
     const onAddEmpty = (e: Event) => {
       const { path } = (e as CustomEvent).detail;
       const page = this._findPageAtPath(['pages', path[1] as number]);
@@ -611,9 +578,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     overlayRoot.addEventListener('selection-cut', onCut);
     overlayRoot.addEventListener('selection-copy', onCopy);
     overlayRoot.addEventListener('selection-delete', onDelete);
-    overlayRoot.addEventListener('selection-split-h', onSplitH);
-    overlayRoot.addEventListener('selection-split-v', onSplitV);
-    overlayRoot.addEventListener('selection-merge', onMerge);
     overlayRoot.addEventListener('selection-add-empty', onAddEmpty);
 
     this._selectionOverlayCleanup = () => {
@@ -623,9 +587,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       overlayRoot.removeEventListener('selection-cut', onCut);
       overlayRoot.removeEventListener('selection-copy', onCopy);
       overlayRoot.removeEventListener('selection-delete', onDelete);
-      overlayRoot.removeEventListener('selection-split-h', onSplitH);
-      overlayRoot.removeEventListener('selection-split-v', onSplitV);
-      overlayRoot.removeEventListener('selection-merge', onMerge);
       overlayRoot.removeEventListener('selection-add-empty', onAddEmpty);
     };
   }
