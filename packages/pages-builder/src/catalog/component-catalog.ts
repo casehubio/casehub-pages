@@ -38,16 +38,8 @@ const NEEDS_DATASET_TYPES = new Set([
 ]);
 
 const PAGE_LEVEL_ONLY = new Set(['page', 'lazy-page']);
-const LEGACY_LAYOUT_TYPES = new Set(['columns']);
-const LAYOUT_BLOCKED_PARENTS = new Set(['page', 'column', 'row', 'grid']);
-
 function defaultRelevance(ctx: PaletteContext): ContextRelevance {
   return ctx.acceptsComponents ? 'normal' : 'hidden';
-}
-
-function layoutRelevance(ctx: PaletteContext): ContextRelevance {
-  if (ctx.parentType && LAYOUT_BLOCKED_PARENTS.has(ctx.parentType)) return 'hidden';
-  return 'normal';
 }
 
 function dataRelevance(ctx: PaletteContext): ContextRelevance {
@@ -77,7 +69,7 @@ function metricInGridRelevance(ctx: PaletteContext): ContextRelevance {
 
 function relevanceFor(type: string): (ctx: PaletteContext) => ContextRelevance {
   if (PAGE_LEVEL_ONLY.has(type)) return pageLevelRelevance;
-  if (LEGACY_LAYOUT_TYPES.has(type)) return layoutRelevance;
+
   if (FORM_TYPES.has(type)) return formRelevance;
   if (type === 'metric') return metricInGridRelevance;
   if (NEEDS_DATASET_TYPES.has(type)) return dataRelevance;
@@ -104,7 +96,7 @@ const dp = 'Add a dataset first';
 export const COMPONENT_CATALOG: readonly ComponentCatalogEntry[] = [
   // Layout
   entry('grid', 'Grid', 'Layout', 'grid_view', 'CSS grid container'),
-  entry('columns', 'Columns', 'Layout', 'view_column', 'Multi-column layout'),
+
   entry('stack', 'Stack', 'Layout', 'layers', 'Vertical stack of sections', {}, undefined, { sampleChildren: 2 }),
   entry('tabs', 'Tabs', 'Layout', 'tab', 'Tabbed container', {}, undefined, { sampleChildren: 2 }),
   entry('pills', 'Pills', 'Layout', 'toggle_on', 'Pill-style tabbed container', {}, undefined, { sampleChildren: 2 }),

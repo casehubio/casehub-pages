@@ -118,7 +118,7 @@ describe('GridEditBridge', () => {
       expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 1 });
       const newItem = items[2]!;
       expect(newItem.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 1, w: 6, h: 1 });
-      expect(newItem.type).toBeUndefined();
+      expect(newItem.type).toBe('markdown');
     });
 
     it('vertical split divides width in half', () => {

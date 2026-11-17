@@ -1675,9 +1675,11 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _findGridItemAtPath(path: readonly (string | number)[]): import('@casehubio/pages-document').GridItemNode | undefined {
-    if (path.length < 4 || path[0] !== 'pages' || path[2] !== 'items') return undefined;
+    if (path.length < 4 || path[0] !== 'pages' || (path[2] !== 'items' && path[2] !== 'grid')) return undefined;
     const page = this._document.getPages()[path[1] as number];
-    if (!page || page.getLayoutMode() !== 'items') return undefined;
+    if (!page) return undefined;
+    const mode = page.getLayoutMode();
+    if (mode !== 'items' && mode !== 'grid') return undefined;
     return page.getItems()[path[3] as number];
   }
 

@@ -3,7 +3,7 @@ import { COMPONENT_CATALOG, getFilteredCatalog, getCatalogCategories } from './c
 import type { PaletteContext } from './palette-context.js';
 
 const ALL_COMPONENT_TYPES = [
-  'grid', 'columns', 'stack', 'tabs', 'pills', 'sidebar', 'tree',
+  'grid', 'stack', 'tabs', 'pills', 'sidebar', 'tree',
   'menu', 'accordion', 'carousel', 'split', 'dock-bar', 'host-panel',
   'floating-workspace', 'panel', 'html', 'markdown', 'title', 'lazy-page',
   'page', 'bar-chart', 'line-chart', 'area-chart', 'pie-chart',
@@ -137,7 +137,7 @@ describe('getFilteredCatalog', () => {
     const types = filtered.map(e => e.entry.type);
     expect(types).not.toContain('page');
     expect(types).not.toContain('lazy-page');
-    expect(types).not.toContain('columns');
+
     expect(types).toContain('grid');
     expect(types).toContain('bar-chart');
     expect(types).toContain('markdown');
@@ -157,18 +157,7 @@ describe('getFilteredCatalog', () => {
     expect(types).toContain('lazy-page');
   });
 
-  it('hides all components when acceptsComponents false and layout-blocked parent', () => {
-    const ctx: PaletteContext = {
-      parentType: 'row',
-      acceptsComponents: false,
-      availableDatasets: ['ds1'],
-      siblingTypes: [],
-    };
-    const filtered = getFilteredCatalog(ctx);
-    expect(filtered).toHaveLength(0);
-  });
-
-  it('shows layout types even when acceptsComponents is false (no blocked parent)', () => {
+  it('hides all types when acceptsComponents is false', () => {
     const ctx: PaletteContext = {
       parentType: undefined,
       acceptsComponents: false,
@@ -176,8 +165,7 @@ describe('getFilteredCatalog', () => {
       siblingTypes: [],
     };
     const filtered = getFilteredCatalog(ctx);
-    expect(filtered.length).toBeGreaterThan(0);
-    expect(filtered.every(r => r.entry.type === 'columns')).toBe(true);
+    expect(filtered).toHaveLength(0);
   });
 
   it('data components have prereqHint set', () => {
