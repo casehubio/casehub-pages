@@ -1,88 +1,84 @@
 pages:
 - name: Reports Detail
-  rows:
-  - columns:
-    - components:
-      - html: >-
-          <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
-            ↳ Loaded from <code>reports.dash.yml</code>
-          </div>
-  - columns:
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Reports Generated
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: report-stats
-            filter:
-            - column: Metric
-              function: EQUALS_TO
-              args:
-              - Generated
-            group:
-            - functions:
-              - source: Count
-                function: SUM
-          columns:
-          - id: Count
-            pattern: '#,##0'
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Avg Generation Time
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: report-stats
-            filter:
-            - column: Metric
-              function: EQUALS_TO
-              args:
-              - AvgTime
-            group:
-            - functions:
-              - source: Count
-                function: SUM
-          columns:
-          - id: Count
-            pattern: '#,##0 ms'
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Failed Reports
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: report-stats
-            filter:
-            - column: Metric
-              function: EQUALS_TO
-              args:
-              - Failed
-            group:
-            - functions:
-              - source: Count
-                function: SUM
-          columns:
-          - id: Count
-            pattern: '#,##0'
-  - columns:
-    - components:
-      - type: title
-        properties:
-          text: Recent Report Runs
-          size: h3
-      - type: data-table
-        properties:
-          pageSize: 6
-          sortable: true
-          lookup:
-            uuid: report-runs
+  grid:
+  - at: {x: 0, y: 0, w: 12, h: 1}
+    html: "<div style=\"padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px\">\n  ↳ Loaded from <code>reports.dash.yml</code>\n\
+      </div>"
+  - at: {x: 0, y: 1, w: 4, h: 1}
+    type: title
+    properties:
+      text: Reports Generated
+      size: h3
+  - at: {x: 0, y: 2, w: 4, h: 1}
+    type: metric
+    properties:
+      lookup:
+        uuid: report-stats
+        filter:
+        - column: Metric
+          function: EQUALS_TO
+          args:
+          - Generated
+        group:
+        - functions:
+          - source: Count
+            function: SUM
+      columns:
+      - id: Count
+        pattern: '#,##0'
+  - at: {x: 4, y: 1, w: 4, h: 1}
+    type: title
+    properties:
+      text: Avg Generation Time
+      size: h3
+  - at: {x: 4, y: 2, w: 4, h: 1}
+    type: metric
+    properties:
+      lookup:
+        uuid: report-stats
+        filter:
+        - column: Metric
+          function: EQUALS_TO
+          args:
+          - AvgTime
+        group:
+        - functions:
+          - source: Count
+            function: SUM
+      columns:
+      - id: Count
+        pattern: '#,##0 ms'
+  - at: {x: 8, y: 1, w: 4, h: 1}
+    type: title
+    properties:
+      text: Failed Reports
+      size: h3
+  - at: {x: 8, y: 2, w: 4, h: 1}
+    type: metric
+    properties:
+      lookup:
+        uuid: report-stats
+        filter:
+        - column: Metric
+          function: EQUALS_TO
+          args:
+          - Failed
+        group:
+        - functions:
+          - source: Count
+            function: SUM
+      columns:
+      - id: Count
+        pattern: '#,##0'
+  - at: {x: 0, y: 3, w: 12, h: 1}
+    type: title
+    properties:
+      text: Recent Report Runs
+      size: h3
+  - at: {x: 0, y: 4, w: 12, h: 1}
+    type: data-table
+    properties:
+      pageSize: 6
+      sortable: true
+      lookup:
+        uuid: report-runs

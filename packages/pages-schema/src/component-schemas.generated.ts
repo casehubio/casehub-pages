@@ -39,11 +39,6 @@ export const gridPropsSchema = z.object({
   rowHeight: z.number().optional(),
 });
 
-export const columnsPropsSchema = z.object({
-  distribution: z.array(z.number()),
-});
-
-export const rowsPropsSchema = z.object({});
 
 export const stackPropsSchema = z.object({});
 

@@ -1,21 +1,18 @@
 pages:
 - name: Team Detail
-  rows:
-  - columns:
-    - components:
-      - html: >-
-          <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
-            ↳ Loaded from <code>team-detail.dash.yml</code>
-          </div>
-  - columns:
-    - components:
-      - type: title
-        properties:
-          text: All Team Members
-          size: h3
-      - type: data-table
-        properties:
-          pageSize: 15
-          sortable: true
-          lookup:
-            uuid: team_members
+  grid:
+  - at: {x: 0, y: 0, w: 12, h: 1}
+    html: "<div style=\"padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px\">\n  ↳ Loaded from <code>team-detail.dash.yml</code>\n\
+      </div>"
+  - at: {x: 0, y: 1, w: 12, h: 1}
+    type: title
+    properties:
+      text: All Team Members
+      size: h3
+  - at: {x: 0, y: 2, w: 12, h: 1}
+    type: data-table
+    properties:
+      pageSize: 15
+      sortable: true
+      lookup:
+        uuid: team_members

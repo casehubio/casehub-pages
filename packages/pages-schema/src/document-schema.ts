@@ -11,7 +11,7 @@ import {
   mapPropsSchema, badgePropsSchema, countdownPropsSchema,
   timelinePropsSchema, graphPropsSchema, eventTimelinePropsSchema,
   groupedViewPropsSchema,
-  gridPropsSchema, columnsPropsSchema, rowsPropsSchema, stackPropsSchema,
+  gridPropsSchema, stackPropsSchema,
   tabsPropsSchema, pillsPropsSchema, sidebarPropsSchema, treePropsSchema,
   menuPropsSchema, accordionPropsSchema, carouselPropsSchema,
   splitPropsSchema, dockBarPropsSchema, hostPanelPropsSchema,
@@ -34,8 +34,7 @@ const componentBase = z.object({
 
 export const componentSchema: z.ZodType = z.discriminatedUnion("type", [
   componentBase.extend({ type: z.literal("grid"), properties: gridPropsSchema.optional() }),
-  componentBase.extend({ type: z.literal("columns"), properties: columnsPropsSchema.optional() }),
-  componentBase.extend({ type: z.literal("rows"), properties: rowsPropsSchema.optional() }),
+
   componentBase.extend({ type: z.literal("stack"), properties: stackPropsSchema.optional() }),
   componentBase.extend({ type: z.literal("tabs"), properties: tabsPropsSchema.optional() }),
   componentBase.extend({ type: z.literal("pills"), properties: pillsPropsSchema.optional() }),
@@ -104,22 +103,9 @@ const navTreeSchema = z.object({
   root_items: z.array(navItemSchema).optional(),
 });
 
-const columnSchema = z.object({
-  span: z.number().optional(),
-  components: z.array(componentSchema).optional(),
-  properties: z.record(z.string(), z.unknown()).optional(),
-});
-
-const rowSchema = z.object({
-  columns: z.array(columnSchema).optional(),
-  properties: z.record(z.string(), z.unknown()).optional(),
-});
-
 const pageEntrySchema = z.object({
   name: z.string().optional(),
   components: z.array(componentSchema).optional(),
-  rows: z.array(rowSchema).optional(),
-  columns: z.array(columnSchema).optional(),
   properties: z.record(z.string(), z.string()).optional(),
 });
 

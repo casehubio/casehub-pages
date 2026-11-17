@@ -14,6 +14,6 @@ export interface Diagnostic {
   readonly range: Range;
 }
 
-export type LayoutMode = 'grid' | 'flat' | 'items' | 'rows' | 'columns';
+export type LayoutMode = 'grid' | 'flat' | 'items';
 
 export type Unsubscribe = () => void;

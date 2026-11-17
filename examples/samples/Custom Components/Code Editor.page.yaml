@@ -47,56 +47,49 @@ pages:
           content: |
             <pre id="sample-yaml-data" style="display:none">pages:
             - name: index
-              rows:
-              - columns:
-                - span: 4
-                  components:
-                  - type: metric
-                    properties:
-                      text: Revenue
-                      value: "$48,200"
-                - span: 4
-                  components:
-                  - type: metric
-                    properties:
-                      text: Orders
-                      value: "1,247"
-                - span: 4
-                  components:
-                  - type: metric
-                    properties:
-                      text: Customers
-                      value: "892"
-              - columns:
-                - span: 8
-                  components:
-                  - type: bar-chart
-                    properties:
-                      chart:
-                        title: Monthly Sales
-                      lookup:
-                        uuid: sales
-                        group:
-                        - columnGroup:
-                            source: Month
-                          functions:
-                          - source: Month
-                          - source: Revenue
-                          - source: Orders
-                - span: 4
-                  components:
-                  - type: pie-chart
-                    properties:
-                      chart:
-                        title: Sales by Region
-                      lookup:
-                        uuid: regions
-                        group:
-                        - columnGroup:
-                            source: Region
-                          functions:
-                          - source: Region
-                          - source: Revenue
+              grid:
+              - at: {x: 0, y: 0, w: 4, h: 1}
+                type: metric
+                properties:
+                  text: Revenue
+                  value: "$48,200"
+              - at: {x: 4, y: 0, w: 4, h: 1}
+                type: metric
+                properties:
+                  text: Orders
+                  value: "1,247"
+              - at: {x: 8, y: 0, w: 4, h: 1}
+                type: metric
+                properties:
+                  text: Customers
+                  value: "892"
+              - at: {x: 0, y: 1, w: 8, h: 1}
+                type: bar-chart
+                properties:
+                  chart:
+                    title: Monthly Sales
+                  lookup:
+                    uuid: sales
+                    group:
+                    - columnGroup:
+                        source: Month
+                      functions:
+                      - source: Month
+                      - source: Revenue
+                      - source: Orders
+              - at: {x: 8, y: 1, w: 4, h: 1}
+                type: pie-chart
+                properties:
+                  chart:
+                    title: Sales by Region
+                  lookup:
+                    uuid: regions
+                    group:
+                    - columnGroup:
+                        source: Region
+                      functions:
+                      - source: Region
+                      - source: Revenue
             datasets:
             - uuid: sales
               content: >-

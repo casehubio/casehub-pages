@@ -1,8 +1,6 @@
 import type { Component } from "./types.js";
 import type {
   GridProps,
-  ColumnsProps,
-  RowsProps,
   StackProps,
   TabsProps,
   PillsProps,
@@ -66,8 +64,7 @@ import type { PageProps } from "./page-props.js";
 export interface ComponentTypeRegistry {
   // Layout components
   grid: GridProps;
-  columns: ColumnsProps;
-  rows: RowsProps;
+
   stack: StackProps;
   tabs: TabsProps;
   pills: PillsProps;
@@ -162,13 +159,6 @@ export function isGrid(c: Component): c is TypedComponent<"grid"> {
   return c.type === "grid";
 }
 
-export function isColumns(c: Component): c is TypedComponent<"columns"> {
-  return c.type === "columns";
-}
-
-export function isRows(c: Component): c is TypedComponent<"rows"> {
-  return c.type === "rows";
-}
 
 export function isStack(c: Component): c is TypedComponent<"stack"> {
   return c.type === "stack";

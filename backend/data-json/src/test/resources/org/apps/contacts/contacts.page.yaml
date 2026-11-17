@@ -25,7 +25,6 @@ datasets:
     type: LABEL
   - id: status
     type: LABEL
-
 pages:
 - name: index
   components:
@@ -33,59 +32,53 @@ pages:
     properties:
       navGroupId: ContactsNav
       width: 100%
-
 - name: All Contacts
-  rows:
-  - columns:
-    - span: 4
-      components:
-      - type: selector
-        properties:
-          subtype: labels
-          filter:
-            selfApply: true
-            notification: true
-          lookup:
-            uuid: contacts
-            group:
-            - columnGroup:
-                source: category
-              functions:
-              - source: category
-    - span: 4
-      components:
-      - type: selector
-        properties:
-          subtype: labels
-          filter:
-            selfApply: true
-            notification: true
-          lookup:
-            uuid: contacts
-            group:
-            - columnGroup:
-                source: status
-              functions:
-              - source: status
-  - columns:
-    - components:
-      - type: data-table
-        properties:
-          pageSize: 15
-          sortable: true
-          filter:
-            listening: true
-            notification: true
-          lookup:
-            uuid: contacts
-          columns:
-          - id: firstName
-          - id: lastName
-          - id: email
-          - id: company
-          - id: category
-          - id: status
-
+  grid:
+  - at: {x: 0, y: 0, w: 4, h: 1}
+    type: selector
+    properties:
+      subtype: labels
+      filter:
+        selfApply: true
+        notification: true
+      lookup:
+        uuid: contacts
+        group:
+        - columnGroup:
+            source: category
+          functions:
+          - source: category
+  - at: {x: 4, y: 0, w: 4, h: 1}
+    type: selector
+    properties:
+      subtype: labels
+      filter:
+        selfApply: true
+        notification: true
+      lookup:
+        uuid: contacts
+        group:
+        - columnGroup:
+            source: status
+          functions:
+          - source: status
+  - at: {x: 0, y: 1, w: 12, h: 1}
+    type: data-table
+    properties:
+      pageSize: 15
+      sortable: true
+      filter:
+        listening: true
+        notification: true
+      lookup:
+        uuid: contacts
+      columns:
+      - id: firstName
+      - id: lastName
+      - id: email
+      - id: company
+      - id: category
+      - id: status
 - name: Contact Detail
   dataScope:
     dataset: contacts
@@ -136,7 +129,6 @@ pages:
         - ACTIVE
         - INACTIVE
         - ARCHIVED
-
 - name: New Contact
   components:
   - type: title
@@ -146,73 +138,87 @@ pages:
   - schema-form:
       schema:
         properties:
-          firstName: { type: string, minLength: 1 }
-          lastName: { type: string, minLength: 1 }
-          email: { type: string }
-          phone: { type: string }
-          company: { type: string }
-          role: { type: string }
-          category: { type: string, enum: [CUSTOMER, PARTNER, VENDOR, INTERNAL] }
-        required: [firstName, lastName, category]
+          firstName:
+            type: string
+            minLength: 1
+          lastName:
+            type: string
+            minLength: 1
+          email:
+            type: string
+          phone:
+            type: string
+          company:
+            type: string
+          role:
+            type: string
+          category:
+            type: string
+            enum:
+            - CUSTOMER
+            - PARTNER
+            - VENDOR
+            - INTERNAL
+        required:
+        - firstName
+        - lastName
+        - category
       forceCreate: true
       labels:
         firstName: First Name
         lastName: Last Name
       submitUrl: /api/apps/contacts/contacts
       submitMethod: POST
-
 - name: By Company
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: Contacts by Company
-          size: h3
-      - type: bar-chart
-        properties:
-          filter:
-            listening: true
-          lookup:
-            uuid: contacts
-            filter:
-            - column: status
-              function: EQUALS_TO
-              args:
-              - ACTIVE
-            group:
-            - columnGroup:
-                source: company
-              functions:
-              - source: company
-              - source: id
-                function: COUNT
-    - span: 6
-      components:
-      - type: title
-        properties:
-          text: By Category
-          size: h3
-      - type: pie-chart
-        properties:
-          filter:
-            listening: true
-          lookup:
-            uuid: contacts
-            filter:
-            - column: status
-              function: EQUALS_TO
-              args:
-              - ACTIVE
-            group:
-            - columnGroup:
-                source: category
-              functions:
-              - source: category
-              - source: id
-                function: COUNT
-
+  grid:
+  - at: {x: 0, y: 0, w: 6, h: 1}
+    type: title
+    properties:
+      text: Contacts by Company
+      size: h3
+  - at: {x: 0, y: 1, w: 6, h: 1}
+    type: bar-chart
+    properties:
+      filter:
+        listening: true
+      lookup:
+        uuid: contacts
+        filter:
+        - column: status
+          function: EQUALS_TO
+          args:
+          - ACTIVE
+        group:
+        - columnGroup:
+            source: company
+          functions:
+          - source: company
+          - source: id
+            function: COUNT
+  - at: {x: 6, y: 0, w: 6, h: 1}
+    type: title
+    properties:
+      text: By Category
+      size: h3
+  - at: {x: 6, y: 1, w: 6, h: 1}
+    type: pie-chart
+    properties:
+      filter:
+        listening: true
+      lookup:
+        uuid: contacts
+        filter:
+        - column: status
+          function: EQUALS_TO
+          args:
+          - ACTIVE
+        group:
+        - columnGroup:
+            source: category
+          functions:
+          - source: category
+          - source: id
+            function: COUNT
 navTree:
   root_items:
   - type: GROUP

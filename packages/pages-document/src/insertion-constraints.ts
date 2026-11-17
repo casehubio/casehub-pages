@@ -6,7 +6,7 @@ export interface InsertionConstraint {
 }
 
 const ALL_COMPONENT_TYPES: readonly string[] = [
-  'grid', 'columns', 'stack', 'tabs', 'pills', 'sidebar',
+  'grid', 'stack', 'tabs', 'pills', 'sidebar',
   'tree', 'menu', 'accordion', 'carousel',
   'split', 'dock-bar', 'host-panel', 'floating-workspace', 'dock-workbench',
   'panel', 'html', 'markdown', 'title',
@@ -38,13 +38,12 @@ const COMPONENT_CONTAINER_CONSTRAINT: InsertionConstraint = {
 
 export function allowedTypesAt(parentNodeType: string): InsertionConstraint {
   if (parentNodeType === 'page') return PAGE_CONSTRAINT;
-  if (parentNodeType === 'column') return COMPONENT_CONTAINER_CONSTRAINT;
   if (getContainerDescriptor(parentNodeType)) return COMPONENT_CONTAINER_CONSTRAINT;
   return EMPTY;
 }
 
 export function allowedTypesForSiblingOf(nodeType: string): InsertionConstraint {
-  if (nodeType === 'component') return allowedTypesAt('column');
+  if (nodeType === 'component') return allowedTypesAt('page');
   if (nodeType === 'grid-item') return allowedTypesAt('page');
   return EMPTY;
 }

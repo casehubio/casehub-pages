@@ -10,7 +10,7 @@ import { resolveNavigation, collectNavTreePageNames, collectNavTreeGroupIds } fr
  * Orchestrates:
  * 1. Property substitution (${name} → value)
  * 2. Component desugaring (YAML shorthands → typed components)
- * 3. Layout desugaring (components list / rows+columns → grid items)
+ * 3. Layout desugaring (components list → grid items)
  * 4. Navigation resolution (navGroupId + navTree → slots)
  * 5. Deterministic ID generation for grid items
  *
@@ -83,7 +83,7 @@ export function parsePage(raw: unknown): Component {
       };
     }
 
-    // Parse content — either "components" shorthand or "rows" explicit layout
+    // Parse content — grid, items, flat components, or components shorthand
     const displayerDefaults = (global?.["displayer"] ?? global?.["settings"]) as Record<string, unknown> | undefined;
     const layout = parsePageContent(p, pageIndex, displayerDefaults);
 
@@ -255,19 +255,7 @@ export function parsePage(raw: unknown): Component {
  *   - displayer: { type: BARCHART }
  * ```
  * Each component becomes a grid item at (x:0, y:row, w:12, h:1).
- *
- * **2. `rows` explicit layout** — rows with columns and optional `span`:
- * ```yaml
- * rows:
- *   - columns:
- *       - span: 6
- *         components:
- *           - html: "left"
- *       - span: 6
- *         components:
- *           - html: "right"
- * ```
- * Items are placed left-to-right within rows, top-to-bottom across rows.
+
  */
 export function parsePageContent(
   pageRaw: Record<string, unknown>,

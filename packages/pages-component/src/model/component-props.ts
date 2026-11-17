@@ -6,11 +6,6 @@ export interface GridProps {
   readonly rowHeight?: number;
 }
 
-export interface ColumnsProps {
-  readonly distribution: readonly number[];
-}
-
-export type RowsProps = Record<string, never>;
 export type StackProps = Record<string, never>;
 
 export type TabsProps = Record<string, never>;

@@ -15,7 +15,7 @@ export { canSplit, splitItem, mergeItems, validSplitDirections } from "./grid-sp
 export type { SplitDirection } from "./grid-split-merge.js";
 export { resizeItem } from "./grid-resize.js";
 export type { ResizeEdge } from "./grid-resize.js";
-export { needsMigration, migrateRowsToItems } from "./grid-migration.js";
+
 export type { EditorMode } from "./grid-overlay.js";
 export { computeGridGeometry, snapToCell, clampPlacement, cellRectToPixel, DRAG_THRESHOLD } from "./grid-drag.js";
 export type { GridGeometry, CellCoord, ResizeHandle } from "./grid-drag.js";

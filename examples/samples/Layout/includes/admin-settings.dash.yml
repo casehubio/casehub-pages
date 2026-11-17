@@ -1,64 +1,60 @@
 pages:
 - name: Admin Settings
-  rows:
-  - columns:
-    - components:
-      - html: >-
-          <div style="padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px">
-            ↳ Loaded from <code>admin-settings.dash.yml</code> — Admin access required
-          </div>
-  - columns:
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Total Teams
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: team_members
-            group:
-            - functions:
-              - source: Team
-                function: COUNT
-                column: Count
-          columns:
-          - id: Count
-            pattern: '#,##0'
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Total Members
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: team_members
-            group:
-            - functions:
-              - source: Member
-                function: COUNT
-                column: Count
-          columns:
-          - id: Count
-            pattern: '#,##0'
-    - span: 4
-      components:
-      - type: title
-        properties:
-          text: Departments
-          size: h3
-      - type: metric
-        properties:
-          lookup:
-            uuid: team_members
-            group:
-            - functions:
-              - source: Department
-                function: COUNT
-                column: Count
-          columns:
-          - id: Count
-            pattern: '#,##0'
+  grid:
+  - at: {x: 0, y: 0, w: 12, h: 1}
+    html: "<div style=\"padding: 4px 0 12px; color: oklch(0.55 0 0); font-size: 12px\">\n  ↳ Loaded from <code>admin-settings.dash.yml</code>\
+      \ — Admin access required\n</div>"
+  - at: {x: 0, y: 1, w: 4, h: 1}
+    type: title
+    properties:
+      text: Total Teams
+      size: h3
+  - at: {x: 0, y: 2, w: 4, h: 1}
+    type: metric
+    properties:
+      lookup:
+        uuid: team_members
+        group:
+        - functions:
+          - source: Team
+            function: COUNT
+            column: Count
+      columns:
+      - id: Count
+        pattern: '#,##0'
+  - at: {x: 4, y: 1, w: 4, h: 1}
+    type: title
+    properties:
+      text: Total Members
+      size: h3
+  - at: {x: 4, y: 2, w: 4, h: 1}
+    type: metric
+    properties:
+      lookup:
+        uuid: team_members
+        group:
+        - functions:
+          - source: Member
+            function: COUNT
+            column: Count
+      columns:
+      - id: Count
+        pattern: '#,##0'
+  - at: {x: 8, y: 1, w: 4, h: 1}
+    type: title
+    properties:
+      text: Departments
+      size: h3
+  - at: {x: 8, y: 2, w: 4, h: 1}
+    type: metric
+    properties:
+      lookup:
+        uuid: team_members
+        group:
+        - functions:
+          - source: Department
+            function: COUNT
+            column: Count
+      columns:
+      - id: Count
+        pattern: '#,##0'
