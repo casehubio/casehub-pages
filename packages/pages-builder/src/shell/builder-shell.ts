@@ -1907,6 +1907,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       padding: 16px;
     }
 
+    .preview-container [data-item-id] {
+      outline: 1px dashed var(--pages-neutral-5);
+      outline-offset: -1px;
+      border-radius: var(--pages-radius-sm, 4px);
+    }
+
     .preview-placeholder {
       display: flex;
       align-items: center;

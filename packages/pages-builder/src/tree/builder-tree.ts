@@ -687,13 +687,13 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
     }
 
     .tree-item:focus-visible {
-      outline: 2px solid var(--pages-focus-ring, #4285f4);
+      outline: 2px solid var(--pages-focus-ring, var(--pages-accent-9));
       outline-offset: -2px;
     }
 
     .tree-item.selected {
       background: var(--pages-accent-4);
-      color: var(--pages-selected-color, #1967d2);
+      color: var(--pages-accent-11);
     }
 
     .tree-item.section {
@@ -701,7 +701,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       text-transform: uppercase;
       font-size: 0.85em;
       letter-spacing: 0.05em;
-      color: var(--pages-section-color, #5f6368);
+      color: var(--pages-neutral-9);
     }
 
     .toggle {
@@ -724,8 +724,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
 
     .annotation {
       font-size: 10px;
-      color: var(--pages-neutral-11);
-      opacity: 0.7;
+      color: var(--pages-neutral-8);
       margin-left: 4px;
       white-space: nowrap;
     }
@@ -779,7 +778,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
 
     .add-btn:hover, .insert-btn:hover, .cut-btn:hover, .copy-btn:hover {
       background: var(--pages-accent-9);
-      color: #fff;
+      color: var(--pages-neutral-1);
       border-color: var(--pages-accent-9);
     }
 

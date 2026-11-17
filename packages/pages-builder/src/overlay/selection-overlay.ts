@@ -36,8 +36,8 @@ function getButtonsForNodeType(
 }
 
 const BTN_STYLE = `
-  width: 20px; height: 20px; border: 1px solid #dadce0;
-  border-radius: 4px; background: #fff; color: #5f6368;
+  width: 20px; height: 20px; border: 1px solid var(--pages-neutral-6);
+  border-radius: 4px; background: var(--pages-neutral-2); color: var(--pages-neutral-11);
   cursor: pointer; font-size: 12px; line-height: 1; padding: 0;
   display: flex; align-items: center; justify-content: center;
 `;
@@ -72,7 +72,7 @@ export class SelectionOverlay {
       outline: 2px solid var(--pages-accent-9);
       outline-offset: 0;
       border-radius: 6px;
-      background: rgba(66, 133, 244, 0.04);
+      background: color-mix(in oklch, var(--pages-accent-9) 4%, transparent);
       z-index: 10;
       transition: all 0.15s ease;
     `;
@@ -115,8 +115,8 @@ export class SelectionOverlay {
         width: 20px; height: 20px;
         display: flex; align-items: center; justify-content: center;
         cursor: pointer; font-size: 14px; font-weight: bold;
-        color: #5f6368; background: #fff;
-        border: 1px solid #dadce0; border-radius: 4px;
+        color: var(--pages-neutral-11); background: var(--pages-neutral-2);
+        border: 1px solid var(--pages-neutral-6); border-radius: 4px;
       `;
 
       toolbar.appendChild(buttonsContainer);
