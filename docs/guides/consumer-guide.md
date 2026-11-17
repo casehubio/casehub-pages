@@ -122,7 +122,7 @@ YAML -> @casehubio/pages-ui (parse) -> @casehubio/pages-data (resolve)
 **Entry point:** `loadSite(config, options)` from `@casehubio/pages-runtime`.
 
 **Flow:**
-1. `loadSite()` parses YAML, builds `DataSetScope` (all datasets), `PageIndex` (navigation structure)
+1. `loadSite()` parses YAML, builds `DataSetScope` (all datasets), `PageIndex` (navigation structure). Dataset scope is hierarchical -- child pages inherit parent datasets. Navigation components (tabs, pills, etc.) with `targetPage: true` wrap each slot in a virtual page, giving each tab its own scope entry with inherited datasets.
 2. Calls `renderLayout()` via `renderComponent()` from `@casehubio/pages-component` -- creates CSS grid layout
 3. For each panel, calls `createDataPipeline()` -- wires dataset resolution, operations, and delivery to the component via `DataReceiver`
 4. Components emit `pages-event` on user interaction (filter, sort) -- pipeline re-evaluates -- fresh data delivered

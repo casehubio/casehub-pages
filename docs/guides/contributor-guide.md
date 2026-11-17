@@ -17,7 +17,7 @@ YAML -> @casehubio/pages-ui (parse) -> @casehubio/pages-data (resolve)
 ```
 
 **`loadSite(config, options)`** from `@casehubio/pages-runtime` is the entry point:
-1. Parses YAML, builds `DataSetScope` (all datasets), `PageIndex` (navigation structure)
+1. Parses YAML, builds `DataSetScope` (all datasets with hierarchical page inheritance), `PageIndex` (navigation structure). Navigation components with `targetPage: true` produce virtual page wrappers at desugar time (`component-desugar.ts`), giving each slot its own page path and inherited dataset scope.
 2. Calls `renderComponent()` from `@casehubio/pages-component` -- creates CSS grid layout
 3. For each panel, calls `createDataPipeline()` -- wires dataset resolution, operations, and delivery via `DataReceiver`
 4. Components emit `pages-event` on user interaction (filter, sort) -- pipeline re-evaluates -- fresh data delivered
