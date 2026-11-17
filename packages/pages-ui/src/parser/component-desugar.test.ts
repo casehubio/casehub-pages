@@ -563,7 +563,6 @@ describe("desugarComponent", () => {
     it("type: tabs with inline tabs content builds slots", () => {
       const result = desugarComponent({
         type: "tabs",
-        properties: { targetPage: true },
         tabs: {
           "Tab A": { components: [{ html: "Content A" }] },
           "Tab B": { components: [{ html: "Content B" }] },
@@ -575,6 +574,28 @@ describe("desugarComponent", () => {
       expect(result.slots?.["Tab A"]?.[0]?.type).toBe("html");
       expect(result.slots?.["Tab B"]).toHaveLength(1);
       expect(result.slots?.["Tab B"]?.[0]?.type).toBe("html");
+    });
+
+    it("targetPage wraps each tab slot in a virtual page", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        properties: { targetPage: true },
+        tabs: {
+          "Tab A": { components: [{ html: "Content A" }] },
+          "Tab B": { components: [{ html: "Content B" }] },
+        },
+      });
+      expect(result.type).toBe("tabs");
+      expect(result.props).toBeUndefined();
+      expect(result.slots?.["Tab A"]).toHaveLength(1);
+      const pageA = result.slots?.["Tab A"]?.[0];
+      expect(pageA?.type).toBe("page");
+      expect(pageA?.props).toEqual({ name: "Tab A" });
+      expect(pageA?.slots?.default).toHaveLength(1);
+      expect(pageA?.slots?.default?.[0]?.type).toBe("html");
+      const pageB = result.slots?.["Tab B"]?.[0];
+      expect(pageB?.type).toBe("page");
+      expect(pageB?.slots?.default?.[0]?.type).toBe("html");
     });
 
     it("type: accordion with inline sections builds slots", () => {

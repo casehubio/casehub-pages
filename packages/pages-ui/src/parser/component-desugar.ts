@@ -454,6 +454,17 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
         }
       }
 
+      // targetPage: wrap each tab/section slot in a virtual page so it gets
+      // its own page path and inherits the parent's dataset scope
+      let effectiveProps = props;
+      if (slots && props?.targetPage === true) {
+        for (const [name, children] of Object.entries(slots)) {
+          slots[name] = [{ type: "page", props: { name }, slots: { default: children } } as Component];
+        }
+        const { targetPage: _, ...rest } = props;
+        effectiveProps = Object.keys(rest).length > 0 ? rest : undefined;
+      }
+
       // Sidebar has sidebar: (nav) and content: (main) slots
       if (raw.sidebar && Array.isArray(raw.sidebar)) {
         slots = slots ?? {};
@@ -466,7 +477,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
 
       return {
         type: mappedNavType,
-        ...(props ? { props } : {}),
+        ...(effectiveProps ? { props: effectiveProps } : {}),
         ...(visibleWhen ? { visibleWhen } : {}),
         ...(slots ? { slots } : {}),
       };
