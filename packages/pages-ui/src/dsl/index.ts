@@ -7,8 +7,7 @@ export {
   grid,
   at,
   emptyContainer,
-  columns,
-  rows,
+
   metricGrid,
   stack,
   // Navigation builders

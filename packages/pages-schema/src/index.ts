@@ -17,7 +17,7 @@ export {
   timelinePropsSchema, graphPropsSchema, graphCanvasPropsSchema,
   eventTimelinePropsSchema,
   groupedViewPropsSchema,
-  gridPropsSchema, columnsPropsSchema, rowsPropsSchema, stackPropsSchema,
+  gridPropsSchema, stackPropsSchema,
   tabsPropsSchema, pillsPropsSchema, sidebarPropsSchema, treePropsSchema,
   menuPropsSchema, accordionPropsSchema, carouselPropsSchema,
   splitPropsSchema, dockBarPropsSchema, hostPanelPropsSchema,

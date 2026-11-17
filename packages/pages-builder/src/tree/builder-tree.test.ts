@@ -11,18 +11,15 @@ const MINIMAL_PAGE = `pages:
       text: Hello
 `;
 
-const ROWS_PAGE = `pages:
+const GRID_PAGE = `pages:
 - name: Dashboard
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: bar-chart
-        properties:
-          subtype: column
-    - span: 6
-      components:
-      - type: pie-chart
+  grid:
+    - at: { x: 0, y: 0, w: 6, h: 1 }
+      type: bar-chart
+      properties:
+        subtype: column
+    - at: { x: 6, y: 0, w: 6, h: 1 }
+      type: pie-chart
 `;
 
 const WITH_DATASETS = `datasets:
@@ -89,22 +86,19 @@ describe('buildTreeModel', () => {
     expect(comp.label).toBe('Hello');
   });
 
-  it('builds row > column > component hierarchy', () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+  it('builds grid-item hierarchy', () => {
+    const doc = PageDocument.parse(GRID_PAGE);
     const model = buildTreeModel(doc);
     const page = model[0]!.children[0]!;
-    expect(page.children).toHaveLength(1);
+    expect(page.children).toHaveLength(2);
 
-    const row = page.children[0]!;
-    expect(row.nodeType).toBe('row');
-    expect(row.label).toBe('Row');
-    expect(row.children).toHaveLength(2);
+    const item0 = page.children[0]!;
+    expect(item0.nodeType).toBe('grid-item');
+    expect(item0.label).toContain('Bar Chart');
 
-    const col1 = row.children[0]!;
-    expect(col1.nodeType).toBe('column');
-    expect(col1.label).toBe('Column (6)');
-    expect(col1.children).toHaveLength(1);
-    expect(col1.children[0]!.label).toBe('Bar Chart');
+    const item1 = page.children[1]!;
+    expect(item1.nodeType).toBe('grid-item');
+    expect(item1.label).toContain('Pie Chart');
   });
 
   it('builds Datasets section', () => {
@@ -271,7 +265,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('shows + button on container nodes on hover', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -309,7 +303,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('fires tree-add on + button click', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -326,7 +320,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('tree-add event includes target element for picker positioning', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -343,7 +337,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('renders insert button on every non-section node', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -355,7 +349,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('renders cut and copy buttons on every non-section node', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -369,7 +363,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('fires tree-cut on cut button click', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -387,7 +381,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('fires tree-copy on copy button click', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -404,7 +398,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('fires tree-insert on insert button click', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -422,7 +416,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('highlights valid paste targets when insert mode active for component', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     document.body.appendChild(el);
@@ -439,7 +433,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('does not highlight sections as paste targets', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     el.clipboardFragmentType = 'component';
@@ -452,7 +446,7 @@ describe('PagesBuilderTree interactions', () => {
   });
 
   it('clears paste-target class when insert mode is false', async () => {
-    const doc = PageDocument.parse(ROWS_PAGE);
+    const doc = PageDocument.parse(GRID_PAGE);
     el = document.createElement('pages-builder-tree') as PagesBuilderTree;
     el.document = doc;
     el.clipboardFragmentType = 'component';
@@ -643,17 +637,6 @@ describe('Tree insertion points', () => {
     expect(point?.getAttribute('aria-label')).toContain('Insert');
   });
 
-  it('row shows insertion points between columns', async () => {
-    await setup(ROWS_PAGE, ['pages', 0, 'rows', 0, 'columns', 0]);
-    const rowGroup = el.shadowRoot!.querySelectorAll('.tree-insertion-point[aria-label$="in Row"]');
-    expect(rowGroup).toHaveLength(3);
-  });
-
-  it('column shows insertion points before and after its component', async () => {
-    await setup(ROWS_PAGE, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
-    const points = el.shadowRoot!.querySelectorAll('.tree-insertion-point[aria-label$="in Column (6)"]');
-    expect(points).toHaveLength(2);
-  });
 
   it('does not render insertion points for section nodes', async () => {
     await setup(THREE_COMPS, ['pages', 0, 'components', 0]);

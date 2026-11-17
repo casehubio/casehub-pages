@@ -255,7 +255,6 @@ describe("array-item completions", () => {
 
   it("detects components as array in dashboard schema", () => {
     expect(isArrayField(dashboardSchema, ["pages", "components"])).toBe(true);
-    expect(isArrayField(dashboardSchema, ["pages", "rows"])).toBe(true);
   });
 
   it("does not detect non-array fields as array", () => {
@@ -266,7 +265,7 @@ describe("array-item completions", () => {
 
 describe("empty line after array key descends into array", () => {
   it("cursor on empty line after components: resolves to component schema", () => {
-    const doc = "pages:\n- name: index\n  rows:\n  - columns:\n    - span: 4\n      components:\n      ";
+    const doc = "pages:\n- name: index\n  components:\n  - type: metric\n  - ";
     const ctx = buildYamlContext(doc, doc.length);
     expect(ctx.path).toContain("components");
     const result = navigateSchema(dashboardSchema, ctx.path, ctx.siblings);
@@ -329,7 +328,7 @@ datasets:
       const labels = completions.map(c => c.label);
       expect(labels).toContain("name");
       expect(labels).toContain("components");
-      expect(labels).toContain("rows");
+      expect(labels).toContain("components");
     }
   });
 

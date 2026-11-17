@@ -21,41 +21,11 @@ export function computeValidPasteLines(doc: PageDocument, fragmentType: string):
       addChildEntry(entries, doc, pagePath, lineOffsets);
 
       const mode = page.getLayoutMode();
-      if (mode === 'rows') {
-        const rows = page.getRows();
-        for (let ri = 0; ri < rows.length; ri++) {
-          const cols = rows[ri]!.getColumns();
-          for (let ci = 0; ci < cols.length; ci++) {
-            const colPath: readonly (string | number)[] = ['pages', pi, 'rows', ri, 'columns', ci];
-            addChildEntry(entries, doc, colPath, lineOffsets);
-            const comps = cols[ci]!.getComponents();
-            for (let cpi = 0; cpi < comps.length; cpi++) {
-              const compPath: readonly (string | number)[] = [...colPath, 'components', cpi];
-              addSiblingEntries(entries, doc, compPath, lineOffsets);
-            }
-          }
-        }
-      } else if (mode === 'flat') {
+      if (mode === 'flat') {
         const comps = page.getComponents();
         for (let ci = 0; ci < comps.length; ci++) {
           const compPath: readonly (string | number)[] = ['pages', pi, 'components', ci];
           addSiblingEntries(entries, doc, compPath, lineOffsets);
-        }
-      }
-    } else if (fragmentType === 'row') {
-      addChildEntry(entries, doc, pagePath, lineOffsets);
-      const rows = page.getRows();
-      for (let ri = 0; ri < rows.length; ri++) {
-        addSiblingEntries(entries, doc, ['pages', pi, 'rows', ri], lineOffsets);
-      }
-    } else if (fragmentType === 'column') {
-      const rows = page.getRows();
-      for (let ri = 0; ri < rows.length; ri++) {
-        const rowPath: readonly (string | number)[] = ['pages', pi, 'rows', ri];
-        addChildEntry(entries, doc, rowPath, lineOffsets);
-        const cols = rows[ri]!.getColumns();
-        for (let ci = 0; ci < cols.length; ci++) {
-          addSiblingEntries(entries, doc, ['pages', pi, 'rows', ri, 'columns', ci], lineOffsets);
         }
       }
     }

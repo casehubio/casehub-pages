@@ -19,7 +19,7 @@ describe("schema generator", () => {
   it("exports a schema for every ComponentTypeRegistry entry", () => {
     const content = readFileSync(generatedPath, "utf-8");
     const expectedKeys = [
-      "grid", "columns", "rows", "stack", "tabs", "pills", "sidebar",
+      "grid", "stack", "tabs", "pills", "sidebar",
       "tree", "menu", "accordion", "carousel", "split", "dockBar",
       "hostPanel", "floatingWorkspace", "panel", "html", "markdown",
       "title", "lazyPage", "page", "barChart", "lineChart", "areaChart",

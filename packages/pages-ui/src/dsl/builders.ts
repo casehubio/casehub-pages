@@ -10,7 +10,6 @@ import type {
   TitleProps,
   PanelProps,
   GridProps,
-  ColumnsProps,
 } from "../model/component-props.js";
 import type {
   SplitProps,
@@ -178,36 +177,25 @@ export function emptyContainer(x: number, y: number, w: number, h: number): Grid
   });
 }
 
-export function columns(
-  distribution: number[],
-  ...slotContents: Component[][]
-): TypedComponent<"columns"> {
-  if (distribution.length !== slotContents.length) {
-    throw new Error(
-      `Distribution length (${String(distribution.length)}) must match slotContents length (${String(slotContents.length)})`
-    );
-  }
+function rows(...children: Component[]): Component {
+  return freeze({
+    type: "panel",
+    style: freeze({ display: "flex", "flex-direction": "column" }),
+    slots: freeze({ default: freeze(children) }),
+  });
+}
 
+function columns(distribution: number[], ...slotContents: Component[][]): Component {
   const slots: Record<string, readonly Component[]> = {};
   for (let i = 0; i < slotContents.length; i++) {
     const content = slotContents[i];
     if (!content) continue;
     slots[`col-${String(i)}`] = content;
   }
-
-  const props: ColumnsProps = { distribution };
-
   return freeze({
-    type: "columns" as const,
-    props,
+    type: "panel",
+    style: freeze({ display: "grid", "grid-template-columns": distribution.map(n => `${String(n)}fr`).join(" "), gap: "1px" }),
     slots: freeze(slots),
-  });
-}
-
-export function rows(...children: Component[]): Component {
-  return freeze({
-    type: "rows",
-    slots: { default: children },
   });
 }
 

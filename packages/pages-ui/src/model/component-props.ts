@@ -1,7 +1,6 @@
 export type {
   GridProps,
-  ColumnsProps,
-  RowsProps,
+
   StackProps,
   TabsProps,
   PillsProps,

@@ -255,47 +255,6 @@ describe('GridEditBridge', () => {
       expect(doc.toString()).toContain('at:');
     });
 
-    const ROWS_YAML = `pages:
-  - title: Test
-    rows:
-      - columns:
-          - span: 6
-            components:
-              - type: chart
-                properties:
-                  title: Revenue
-          - span: 6
-            components:
-              - type: table
-                properties:
-                  title: Users
-      - columns:
-          - span: 12
-            components:
-              - type: summary
-                properties:
-                  title: Total
-`;
-
-    it('converts rows: to grid: with inferred placements', () => {
-      const doc = PageDocument.parse(ROWS_YAML);
-      const bridge = new GridEditBridge();
-
-      bridge.applyGridEdit(doc, {
-        type: 'move',
-        items: [
-          { at: { mode: 'positioned', x: 0, y: 0, w: 6, h: 1 }, component: { type: 'chart' } },
-          { at: { mode: 'positioned', x: 6, y: 0, w: 6, h: 1 }, component: { type: 'table' } },
-          { at: { mode: 'positioned', x: 0, y: 1, w: 12, h: 1 }, component: { type: 'summary' } },
-        ],
-      });
-
-      const page = PageDocument.parse(doc.toString()).getPages()[0]!;
-      expect(page.getLayoutMode()).toBe('grid');
-      expect(page.getItems()).toHaveLength(3);
-      expect(doc.toString()).not.toContain('rows:');
-      expect(doc.toString()).toContain('grid:');
-    });
   });
 
   describe('path-routed mutations', () => {

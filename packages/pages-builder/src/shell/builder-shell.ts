@@ -4,7 +4,7 @@ import type { PagesCodeEditor } from '@casehubio/pages-code-editor';
 import type { PagesDockWorkbench } from '@casehubio/pages-primitives/dock';
 import { customElement, property, state } from 'lit/decorators.js';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
-import { PageDocument, GridItemNode, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, allowedTypesAt, getContainerDescriptor } from '@casehubio/pages-document';
+import { PageDocument, GridItemNode, type PageNode, type ComponentNode, type DatasetNode, type NavTreeNode, allowedTypesAt, getContainerDescriptor } from '@casehubio/pages-document';
 import { expand } from '@casehubio/yaml-core/expand';
 import { EditorView } from '@codemirror/view';
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
@@ -361,7 +361,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       if (!container) return;
 
       const afterRender = () => {
-        this._injectEmptyColumnPlaceholders(container);
         this._previewClickCleanup?.();
         this._previewClickCleanup = this._wirePreviewClicks(container);
         const overlayRoot = this.shadowRoot?.querySelector('.overlay-root') as HTMLElement;
@@ -496,7 +495,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
     const pageMode = this._findPageAtPath(path)?.getLayoutMode();
     const isGridPage = nodeType === 'page' && (pageMode === 'grid' || pageMode === 'items');
-    if (!isGridPage && (isContainer || nodeType === 'page' || nodeType === 'column' || nodeType === 'row')) {
+    if (!isGridPage && (isContainer || nodeType === 'page')) {
       const childBounds = elements.length > 1
         ? elements.map(el => {
             const r = el.getBoundingClientRect();
@@ -632,38 +631,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
 
-  private _injectEmptyColumnPlaceholders(container: HTMLElement): void {
-    container.querySelectorAll('.empty-column-placeholder').forEach(el => el.remove());
-    const allPageEls = Array.from(container.querySelectorAll('[data-component-type="page"]')) as HTMLElement[];
-    const gridPageEls = allPageEls.filter(el => getComputedStyle(el).display === 'grid');
-    for (const [pi, page] of this._document.getPages().entries()) {
-      const pageEl = gridPageEls[pi];
-      if (!pageEl) continue;
-      const rows = page.getRows();
-      let y = 0;
-      for (let ri = 0; ri < rows.length; ri++) {
-        const row = rows[ri]!;
-        let x = 0;
-        let maxComps = 1;
-        const cols = row.getColumns();
-        for (let ci = 0; ci < cols.length; ci++) {
-          const col = cols[ci]!;
-          const compCount = col.getComponents().length;
-          if (compCount > maxComps) maxComps = compCount;
-          if (compCount === 0) {
-            const ph = document.createElement('div');
-            ph.className = 'empty-column-placeholder';
-            ph.dataset.componentType = '__empty';
-            ph.dataset.columnPath = JSON.stringify([...page.path, 'rows', ri, 'columns', ci]);
-            ph.style.cssText = `grid-column: ${x + 1} / span ${col.span}; grid-row: ${y + 1} / span 1; min-height: 32px; border: 1px dashed var(--pages-neutral-4, #94a3b8); border-radius: 4px; opacity: 0.4;`;
-            pageEl.appendChild(ph);
-          }
-          x += col.span;
-        }
-        y += maxComps;
-      }
-    }
-  }
 
   private _buildRenderedIndex(container: HTMLElement): Map<string, HTMLElement> {
     const index = new Map<string, HTMLElement>();
@@ -709,16 +676,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       const compType = compEl.dataset.componentType;
       if (!compType) return;
 
-      if (compType === '__empty' && compEl.dataset.columnPath) {
-        try {
-          const colPath = JSON.parse(compEl.dataset.columnPath) as (string | number)[];
-          this._syncSource = 'visual';
-          this._selectedPath = colPath;
-          this._selectedNodeType = 'column';
-          this._updatePropertySource();
-        } catch { /* malformed path — ignore click */ }
-        return;
-      }
 
       const path = this._resolveClickedPath(compEl, container);
       if (!path) return;
@@ -844,7 +801,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _searchComponentsForType(
-    parent: { getComponents?: () => ComponentNode[]; getRows?: () => { getColumns: () => { getComponents: () => ComponentNode[] }[] }[]; getItems?: () => import('@casehubio/pages-document').GridItemNode[]; getLayoutMode?: () => string },
+    parent: { getComponents?: () => ComponentNode[]; getItems?: () => import('@casehubio/pages-document').GridItemNode[]; getLayoutMode?: () => string },
     type: string, basePath: readonly (string | number)[], startCount: number, targetIndex: number
   ): { path: readonly (string | number)[] | undefined; count: number } {
     let count = startCount;
@@ -881,19 +838,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         }
       }
     }
-    if (parent.getRows) {
-      for (const row of parent.getRows()) {
-        for (const col of row.getColumns()) {
-          const comps = col.getComponents();
-          for (let i = 0; i < comps.length; i++) {
-            if (comps[i]!.type === type) {
-              if (count === targetIndex) return { path: comps[i]!.path, count };
-              count++;
-            }
-          }
-        }
-      }
-    }
+
     return { path: undefined, count };
   }
 
@@ -979,16 +924,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (!parsed) return;
 
     this._applyEdit('tree', () => {
-      if (targetNodeType === 'column' || targetNodeType === 'page') {
+      if (targetNodeType === 'page') {
         const yamlObj = parseYaml(clipboard.fragment!) as Record<string, unknown>;
         const type = yamlObj['type'] as string | undefined;
         const props = yamlObj['properties'] as Record<string, unknown> | undefined;
         if (type) {
-          if (targetNodeType === 'column') {
-            this._findColumnAtPath(targetPath)?.addComponent(type, props);
-          } else {
-            this._findPageAtPath(targetPath)?.addComponent(type, props);
-          }
+          this._findPageAtPath(targetPath)?.addComponent(type, props);
         }
       }
     });
@@ -1116,12 +1057,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           page.addItem({ mode: 'positioned', x: tp.x, y: tp.y, w: tp.w, h: 1 }, type);
           target.setPlacement({ mode: 'positioned', x: tp.x, y: tp.y + 1, w: tp.w, h: tp.h });
         }
-      } else if (siblingNodeType === 'component') {
-        const col = this._findColumnAtPath(siblingPath.slice(0, -2) as (string | number)[]);
-        if (!col) return;
-        const compIndex = siblingPath[siblingPath.length - 1] as number;
-        const insertIndex = position === 'before' ? compIndex : compIndex + 1;
-        col.insertComponentAt(insertIndex, type, props);
       }
     });
 
@@ -1143,41 +1078,10 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       : parentNodeType;
     const constraint = allowedTypesAt(resolvedParentType);
 
-    if (constraint.componentTypes.length === 0 && constraint.structuralTypes.length > 0) {
-      let newPath: readonly (string | number)[] | undefined;
-      this._applyEdit('tree', () => {
-        if (parentNodeType === 'row') {
-          const row = this._findRowAtPath(parentPath);
-          if (row) {
-            const cols = row.getColumns();
-            const totalSpan = cols.reduce((sum, c) => sum + c.span, 0);
-            const newSpan = Math.max(1, Math.floor(12 / (cols.length + 1)));
-            const shrinkBy = Math.max(0, totalSpan + newSpan - 12);
-            if (shrinkBy > 0 && cols.length > 0) {
-              const perCol = Math.ceil(shrinkBy / cols.length);
-              for (const c of cols) {
-                c.span = Math.max(1, c.span - perCol);
-              }
-            }
-            newPath = row.insertColumnAt(index, newSpan).path;
-          }
-        }
-      });
-      if (newPath) {
-        this._selectedPath = newPath;
-        this._selectedNodeType = parentNodeType === 'row' ? 'column' : 'row';
-        this._expandAfterAdd(parentPath, parentNodeType);
-        this._updatePropertySource();
-      }
-      this._syncTree();
-      return;
-    }
 
     const datasets = this._document.getDatasets();
     this._paletteContext = {
-      parentType: parentNodeType === 'column' || parentNodeType === 'row'
-        ? parentNodeType
-        : parentNodeType === 'component'
+      parentType: parentNodeType === 'component'
           ? this._findComponentAtPath(parentPath)?.type
           : undefined,
       acceptsComponents: constraint.componentTypes.length > 0,
@@ -1233,12 +1137,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           } else {
             newPath = page.insertChildAt(insertIndex, entry.type, props).path;
           }
-        } else if (nt === 'column') {
-          const col = this._findColumnAtPath(path);
-          if (col) newPath = col.insertComponentAt(insertIndex, entry.type, props).path;
-        } else if (nt === 'row') {
-          const row = this._findRowAtPath(path);
-          if (row) newPath = row.insertColumnAt(insertIndex).path;
         } else if (nt === 'component') {
           const node = this._findComponentAtPath(path);
           if (node?.isContainer()) {
@@ -1251,7 +1149,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       });
       if (newPath) {
         this._selectedPath = newPath;
-        this._selectedNodeType = nt === 'row' ? 'column' : 'component';
+        this._selectedNodeType = 'component';
         this._expandAfterAdd(path, nt);
         this._updatePropertySource();
       }
@@ -1259,23 +1157,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       return;
     }
 
-    if (insertPos && nt === 'component') {
-      let newPath: readonly (string | number)[] | undefined;
-      this._applyEdit('tree', () => {
-        const col = this._findColumnAtPath(path.slice(0, -2) as (string | number)[]);
-        if (!col) return;
-        const compIndex = path[path.length - 1] as number;
-        const insertIndex = insertPos === 'before' ? compIndex : compIndex + 1;
-        const comp = col.insertComponentAt(insertIndex, entry.type, props);
-        newPath = comp.path;
-      });
-      if (newPath) {
-        this._selectedPath = newPath;
-        this._selectedNodeType = 'component';
-        this._updatePropertySource();
-      }
-      return;
-    }
 
     let newChildPath: readonly (string | number)[] | undefined;
     this._applyEdit('tree', () => {
@@ -1292,18 +1173,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
             newChildPath = item.path;
           } else {
             const comp = page.addComponent(entry.type, props);
-            newChildPath = comp.path;
-          }
-        }
-      } else if (nt === 'column') {
-        const comp = this._findColumnAtPath(path)?.addComponent(entry.type, props);
-        if (comp) newChildPath = comp.path;
-      } else if (nt === 'row') {
-        const row = this._findRowAtPath(path);
-        if (row) {
-          const cols = row.getColumns();
-          if (cols.length > 0) {
-            const comp = cols[0]!.addComponent(entry.type, props);
             newChildPath = comp.path;
           }
         }
@@ -1374,15 +1243,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
             const tabsItem = page.addItem(placement, 'tabs');
             const tabsComp = tabsItem.getComponent();
             if (tabsComp) tabsComp.addChild('Tab 1', compJson['type'] as string, compJson['properties'] as Record<string, unknown> | undefined);
-          } else {
-            const parentPath = path.slice(0, -2);
-            const idx = path[path.length - 1] as number;
-            const col = this._findColumnAtPath(parentPath as (string | number)[]);
-            if (col) {
-              col.removeComponent(idx);
-              const tabsComp = col.addComponent('tabs');
-              tabsComp.addChild('Tab 1', compJson['type'] as string, compJson['properties'] as Record<string, unknown> | undefined);
-            }
           }
           break;
         }
@@ -1395,13 +1255,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (nodeType === 'page') { this._document.removePage(idx); return; }
     if (nodeType === 'dataset') { this._document.removeDataset(idx); return; }
     if (nodeType === 'grid-item') { this._findPageAtPath(['pages', path[1] as number])?.removeItem(path[3] as number); return; }
-    if (nodeType === 'row') { this._findPageAtPath(['pages', path[1] as number])?.removeChild(path[3] as number); return; }
-    if (nodeType === 'column') { this._findRowAtPath(path.slice(0, 4))?.removeColumn(idx); return; }
     if (nodeType === 'component') {
       if ((path[2] === 'grid' || path[2] === 'items')) this._findPageAtPath(['pages', path[1] as number])?.removeItem(path[3] as number);
       else if (path[2] === 'components') this._findPageAtPath(['pages', path[1] as number])?.removeChild(idx);
-      else if (path.length >= 8 && path[6] === 'components') this._findColumnAtPath(path.slice(0, 6))?.removeComponent(idx);
-      else if (path.length >= 6 && path[4] === 'components') this._findColumnAtPath(path.slice(0, 4))?.removeComponent(idx);
     }
   }
 
@@ -1531,36 +1387,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       return;
     }
 
-    if (nt === 'row') {
-      const resolve = () => this._findRowAtPath(path);
-      if (!resolve()) { this._propertySource = undefined; return; }
-      this._propertySource = {
-        schema: { type: 'object', properties: {
-          columns: { type: 'number', title: 'Column Count', readOnly: true },
-        }},
-        get data() { return { columns: resolve()?.getColumns().length ?? 0 }; },
-        onChange: () => {},
-      };
-      return;
-    }
-
-    if (nt === 'column') {
-      const resolve = () => this._findColumnAtPath(path);
-      if (!resolve()) { this._propertySource = undefined; return; }
-      this._propertySource = {
-        schema: { type: 'object', properties: {
-          span: { type: 'number', title: 'Column Span', minimum: 1, maximum: 12 },
-        }},
-        get data() { return { span: resolve()?.span ?? 0 }; },
-        onChange: (field, value) => {
-          this._applyEdit('properties', () => {
-            const n = resolve();
-            if (n && String(field[0]) === 'span') n.span = Number(value);
-          });
-        },
-      };
-      return;
-    }
 
     if (nt === 'component') {
       const resolve = () => this._findComponentAtPath(path);
@@ -1732,7 +1558,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     const parentType = this._getParentType();
     this._paletteContext = {
       parentType,
-      acceptsComponents: nt !== 'row',
+      acceptsComponents: true,
       availableDatasets: datasets.map(d => d.uuid),
       siblingTypes: [],
     };
@@ -1740,14 +1566,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _refreshPaletteContextForSibling(_path: readonly (string | number)[], nodeType: TreeNodeType): void {
     const datasets = this._document.getDatasets();
-    const parentNt = nodeType === 'component' ? 'column'
+    const parentNt = nodeType === 'component' ? 'page'
       : nodeType === 'grid-item' ? 'page'
-      : nodeType === 'column' ? 'row'
-      : nodeType === 'row' ? undefined
       : undefined;
     this._paletteContext = {
       parentType: parentNt,
-      acceptsComponents: nodeType !== 'row',
+      acceptsComponents: true,
       availableDatasets: datasets.map(d => d.uuid),
       siblingTypes: [],
     };
@@ -1756,7 +1580,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   private _getParentType(): string | undefined {
     if (!this._selectedPath || !this._selectedNodeType) return undefined;
     const nt = this._selectedNodeType;
-    if (nt === 'column' || nt === 'row') return nt;
     if (nt === 'grid-item') return 'grid';
     if (nt === 'component') {
       const node = this._findComponentAtPath(this._selectedPath);
@@ -1795,15 +1618,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         } else {
           page?.addComponent(entry.type, props);
         }
-      } else if (nt === 'row') {
-        const row = this._findRowAtPath(path);
-        if (row) {
-          const cols = row.getColumns();
-          if (cols.length > 0) cols[0]!.addComponent(entry.type, props);
-        }
-      } else if (nt === 'column') {
-        const col = this._findColumnAtPath(path);
-        col?.addComponent(entry.type, props);
       } else if (nt === 'grid-item') {
         const item = this._findGridItemAtPath(path);
         item?.setComponent(entry.type, props);
@@ -1814,13 +1628,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
           page.addItem({ mode: 'auto', w: 1, h: 1 }, entry.type, props);
         } else if (path[2] === 'components') {
           page.addComponent(entry.type, props);
-        } else if (path[2] === 'rows' && path.length >= 6) {
-          const row = page.getRows()[path[3] as number];
-          const col = row?.getColumns()[path[5] as number];
-          col?.addComponent(entry.type, props);
-        } else if (path[2] === 'columns' && path.length >= 4) {
-          const col = page.getColumns()[path[3] as number];
-          col?.addComponent(entry.type, props);
         }
       }
     });
@@ -1874,27 +1681,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     return page.getItems()[path[3] as number];
   }
 
-  private _findRowAtPath(path: readonly (string | number)[]): RowNode | undefined {
-    if (path.length < 4 || path[0] !== 'pages') return undefined;
-    const page = this._document.getPages()[path[1] as number];
-    if (!page || path[2] !== 'rows') return undefined;
-    return page.getRows()[path[3] as number];
-  }
-
-  private _findColumnAtPath(path: readonly (string | number)[]): ColumnNode | undefined {
-    if (path.length < 4 || path[0] !== 'pages') return undefined;
-    const page = this._document.getPages()[path[1] as number];
-    if (!page) return undefined;
-    if (path[2] === 'columns' && path.length >= 4) {
-      return page.getColumns()[path[3] as number];
-    }
-    if (path[2] === 'rows' && path.length >= 6) {
-      const row = page.getRows()[path[3] as number];
-      if (!row || path[4] !== 'columns') return undefined;
-      return row.getColumns()[path[5] as number];
-    }
-    return undefined;
-  }
 
   private _findComponentAtPath(path: readonly (string | number)[]): ComponentNode | undefined {
     if (path.length < 3) return undefined;
@@ -1905,18 +1691,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
     if (path[2] === 'components' && path.length >= 4) {
       return page.getComponents()[path[3] as number];
-    }
-    if (path[2] === 'rows' && path.length >= 8) {
-      const row = page.getRows()[path[3] as number];
-      if (!row || path[4] !== 'columns') return undefined;
-      const col = row.getColumns()[path[5] as number];
-      if (!col || path[6] !== 'components') return undefined;
-      return col.getComponents()[path[7] as number];
-    }
-    if (path[2] === 'columns' && path.length >= 6) {
-      const col = page.getColumns()[path[3] as number];
-      if (!col || path[4] !== 'components') return undefined;
-      return col.getComponents()[path[5] as number];
     }
     return undefined;
   }

@@ -11,8 +11,7 @@ export {
   getProps,
   isComponentType,
   isGrid,
-  isColumns,
-  isRows,
+
   isStack,
   isTabs,
   isPills,

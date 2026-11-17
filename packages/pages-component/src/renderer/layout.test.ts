@@ -5,8 +5,7 @@ import type { Component } from "../model/types.js";
 describe("isLayoutType", () => {
   it("recognises layout types", () => {
     expect(isLayoutType("grid")).toBe(true);
-    expect(isLayoutType("columns")).toBe(true);
-    expect(isLayoutType("rows")).toBe(true);
+
     expect(isLayoutType("stack")).toBe(true);
     expect(isLayoutType("tabs")).toBe(true);
     expect(isLayoutType("pills")).toBe(true);
@@ -35,23 +34,6 @@ describe("applyLayoutCSS", () => {
     expect(el.style.gridTemplateColumns).toBe("repeat(12, 1fr)");
   });
 
-  it("applies columns CSS with distribution and gap", () => {
-    const el = document.createElement("div");
-    const component: Component = { type: "columns", props: { distribution: [2, 1] } };
-    applyLayoutCSS(el, component);
-    expect(el.style.display).toBe("grid");
-    expect(el.style.gridTemplateColumns).toBe("2fr 1fr");
-    expect(el.style.gap).toBe("var(--pages-space-3, 12px)");
-  });
-
-  it("applies rows CSS with gap", () => {
-    const el = document.createElement("div");
-    const component: Component = { type: "rows" };
-    applyLayoutCSS(el, component);
-    expect(el.style.display).toBe("flex");
-    expect(el.style.flexDirection).toBe("column");
-    expect(el.style.gap).toBe("var(--pages-space-3, 12px)");
-  });
 
   it("stack does not set display:grid", () => {
     const el = document.createElement("div");

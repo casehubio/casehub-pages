@@ -149,61 +149,6 @@ describe("desugar-new-types", () => {
     });
   });
 
-  describe("columns layout component", () => {
-    it("should desugar type: columns with span into grid with child items", () => {
-      const result = desugarComponent({
-        type: "columns",
-        properties: { span: "4,4,4" },
-        columns: [
-          { components: [{ html: "Left" }] },
-          { components: [{ html: "Middle" }] },
-          { components: [{ html: "Right" }] },
-        ],
-      });
-
-      expect(result.type).toBe("grid");
-      expect(result.grid).toBeDefined();
-      expect(result.grid).toHaveLength(3);
-      expect(result.grid![0]!.at.w).toBe(4);
-      expect(result.grid![1]!.at.w).toBe(4);
-      expect(result.grid![2]!.at.w).toBe(4);
-      expect(result.grid![0]!.component!.type).toBe("html");
-      expect(result.grid![1]!.component!.type).toBe("html");
-      expect(result.grid![2]!.component!.type).toBe("html");
-    });
-
-    it("should default span to equal distribution", () => {
-      const result = desugarComponent({
-        type: "columns",
-        columns: [
-          { components: [{ html: "Left" }] },
-          { components: [{ html: "Right" }] },
-        ],
-      });
-
-      expect(result.type).toBe("grid");
-      expect(result.grid).toHaveLength(2);
-      expect(result.grid![0]!.at.w).toBe(6);
-      expect(result.grid![1]!.at.w).toBe(6);
-    });
-
-    it("should handle multiple components per column", () => {
-      const result = desugarComponent({
-        type: "columns",
-        properties: { span: "6,6" },
-        columns: [
-          { components: [{ html: "Top" }, { html: "Bottom" }] },
-          { components: [{ html: "Single" }] },
-        ],
-      });
-
-      expect(result.type).toBe("grid");
-      expect(result.grid).toHaveLength(3);
-      expect(result.grid![0]!.at).toEqual({ mode: "positioned", x: 0, y: 0, w: 6, h: 1 });
-      expect(result.grid![1]!.at).toEqual({ mode: "positioned", x: 0, y: 1, w: 6, h: 1 });
-      expect(result.grid![2]!.at).toEqual({ mode: "positioned", x: 6, y: 0, w: 6, h: 1 });
-    });
-  });
 
   describe("id preservation", () => {
     it("should preserve id on data components", () => {

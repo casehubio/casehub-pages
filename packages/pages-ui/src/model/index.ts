@@ -11,8 +11,7 @@ export { ALLOW_ALL } from "./types.js";
 // Component props
 export type {
   GridProps,
-  ColumnsProps,
-  RowsProps,
+
   StackProps,
   TabsProps,
   PillsProps,
@@ -89,8 +88,7 @@ export type { ComponentTypeRegistry } from "./type-guards.js";
 export {
   getProps,
   isGrid,
-  isColumns,
-  isRows,
+
   isStack,
   isTabs,
   isPills,

@@ -11,13 +11,9 @@ export function transformYamlForPreview(
 
   for (const page of doc.getPages()) {
     collectSnapshots(page.getComponents(), registry, datasets, snapshots);
-    for (const row of page.getRows()) {
-      for (const col of row.getColumns()) {
-        collectSnapshots(col.getComponents(), registry, datasets, snapshots);
-      }
-    }
-    for (const col of page.getColumns()) {
-      collectSnapshots(col.getComponents(), registry, datasets, snapshots);
+    for (const item of page.getItems()) {
+      const comp = item.getComponent();
+      if (comp) collectSnapshots([comp], registry, datasets, snapshots);
     }
   }
 

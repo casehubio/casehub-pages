@@ -92,26 +92,6 @@ export class GridEditBridge {
       }
       yamlDoc.deleteIn([...pagePath, 'flat']);
       yamlDoc.deleteIn([...pagePath, 'components']);
-    } else if (mode === 'rows') {
-      const rows = page.getRows();
-      for (const row of rows) {
-        for (const col of row.getColumns()) {
-          for (const comp of col.getComponents()) {
-            const node = yamlDoc.getIn([...comp.path]);
-        componentJsons.push(isMap(node) ? node.toJSON() as Record<string, unknown> : { type: comp.type });
-          }
-        }
-      }
-      yamlDoc.deleteIn([...pagePath, 'rows']);
-    } else if (mode === 'columns') {
-      const cols = page.getColumns();
-      for (const col of cols) {
-        for (const comp of col.getComponents()) {
-          const node = yamlDoc.getIn([...comp.path]);
-        componentJsons.push(isMap(node) ? node.toJSON() as Record<string, unknown> : { type: comp.type });
-        }
-      }
-      yamlDoc.deleteIn([...pagePath, 'columns']);
     }
 
     const entries = componentJsons.map((compJson, i) => {

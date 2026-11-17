@@ -19,7 +19,8 @@ import {
   formScope,
   textInput,
   numberInput,
-  columns,
+  grid,
+  at,
 } from "./builders.js";
 import { lookup, groupBy, col, sum } from "./lookup-helpers.js";
 import { isBarChart, isDataTable, isGridTable, isMetric } from "../model/type-guards.js";
@@ -178,16 +179,16 @@ describe("data component builders", () => {
         schema: { properties: { name: { type: "string" }, age: { type: "number" } }, required: ["name"] },
         validateOnBlur: true,
       },
-      columns([6, 6],
-        [textInput({ field: "name", label: "Name" })],
-        [numberInput({ field: "age", label: "Age" })],
+      grid(2,
+        at(0, 0, 1, 1, textInput({ field: "name", label: "Name" })),
+        at(1, 0, 1, 1, numberInput({ field: "age", label: "Age" })),
       ),
     );
     expect(c.type).toBe("form-scope");
     expect(c.props!["schema"]!.required).toEqual(["name"]);
     expect(c.props!["validateOnBlur"]).toBe(true);
     expect(c.slots!["default"]).toHaveLength(1);
-    expect((c.slots!["default"]![0] as any).type).toBe("columns");
+    expect((c.slots!["default"]![0] as any).type).toBe("grid");
     expect(Object.isFrozen(c)).toBe(true);
   });
 });

@@ -2,8 +2,6 @@ import { describe, it, expect } from "vitest";
 import type { Component } from "./types.js";
 import {
   isGrid,
-  isColumns,
-  isRows,
   isStack,
   isTabs,
   isPills,
@@ -39,31 +37,6 @@ describe("type guards - layout components", () => {
     expect(isGrid(c)).toBe(false);
   });
 
-  it("isColumns narrows correctly", () => {
-    const c: Component = {
-      type: "columns",
-      props: { distribution: [1, 2, 1] },
-    };
-    expect(isColumns(c)).toBe(true);
-    if (isColumns(c)) {
-      expect(c.props?.distribution).toEqual([1, 2, 1]);
-    }
-  });
-
-  it("isColumns rejects wrong type", () => {
-    const c: Component = { type: "grid", props: {} };
-    expect(isColumns(c)).toBe(false);
-  });
-
-  it("isRows narrows correctly", () => {
-    const c: Component = { type: "rows", props: {} };
-    expect(isRows(c)).toBe(true);
-  });
-
-  it("isRows rejects wrong type", () => {
-    const c: Component = { type: "stack", props: {} };
-    expect(isRows(c)).toBe(false);
-  });
 
   it("isStack narrows correctly", () => {
     const c: Component = { type: "stack", props: {} };
@@ -71,7 +44,7 @@ describe("type guards - layout components", () => {
   });
 
   it("isStack rejects wrong type", () => {
-    const c: Component = { type: "rows", props: {} };
+    const c: Component = { type: "panel", props: {} };
     expect(isStack(c)).toBe(false);
   });
 
@@ -152,7 +125,7 @@ describe("isSplit", () => {
     expect(isSplit(c)).toBe(true);
   });
   it("returns false for non-split", () => {
-    expect(isSplit({ type: "rows" })).toBe(false);
+    expect(isSplit({ type: "panel" })).toBe(false);
   });
 });
 

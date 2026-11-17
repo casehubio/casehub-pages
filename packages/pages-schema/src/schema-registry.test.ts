@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { componentSchemaRegistry } from "./schema-registry.js";
 
 describe("componentSchemaRegistry", () => {
-  it("has entries for all 56 component types", () => {
-    expect(componentSchemaRegistry.size).toBe(56);
+  it("has entries for all 54 component types", () => {
+    expect(componentSchemaRegistry.size).toBe(54);
   });
 
   it("includes chart types", () => {
@@ -26,7 +26,7 @@ describe("componentSchemaRegistry", () => {
 
   it("includes layout components", () => {
     expect(componentSchemaRegistry.has("grid")).toBe(true);
-    expect(componentSchemaRegistry.has("columns")).toBe(true);
+
     expect(componentSchemaRegistry.has("split")).toBe(true);
   });
 

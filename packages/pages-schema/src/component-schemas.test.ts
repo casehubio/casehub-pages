@@ -9,7 +9,7 @@ import {
   mapPropsSchema, badgePropsSchema, countdownPropsSchema,
   timelinePropsSchema, graphPropsSchema, eventTimelinePropsSchema,
   groupedViewPropsSchema,
-  gridPropsSchema, columnsPropsSchema, rowsPropsSchema, stackPropsSchema,
+  gridPropsSchema, stackPropsSchema,
   tabsPropsSchema, pillsPropsSchema, sidebarPropsSchema, treePropsSchema,
   menuPropsSchema, accordionPropsSchema, carouselPropsSchema,
   splitPropsSchema, dockBarPropsSchema, hostPanelPropsSchema,
@@ -186,13 +186,7 @@ describe("component schemas", () => {
       expect(result.columns).toBe(12);
     });
 
-    it("columnsPropsSchema requires distribution", () => {
-      const result = columnsPropsSchema.parse({ distribution: [1, 2, 1] });
-      expect(result.distribution).toEqual([1, 2, 1]);
-    });
-
     it("empty layout schemas accept empty object", () => {
-      expect(() => rowsPropsSchema.parse({})).not.toThrow();
       expect(() => stackPropsSchema.parse({})).not.toThrow();
       expect(() => tabsPropsSchema.parse({})).not.toThrow();
       expect(() => pillsPropsSchema.parse({})).not.toThrow();
@@ -387,7 +381,7 @@ describe("component schemas", () => {
       mapPropsSchema, badgePropsSchema, countdownPropsSchema,
       timelinePropsSchema, graphPropsSchema, eventTimelinePropsSchema,
       groupedViewPropsSchema,
-      gridPropsSchema, columnsPropsSchema, rowsPropsSchema, stackPropsSchema,
+      gridPropsSchema, stackPropsSchema,
       tabsPropsSchema, pillsPropsSchema, sidebarPropsSchema, treePropsSchema,
       menuPropsSchema, accordionPropsSchema, carouselPropsSchema,
       splitPropsSchema, dockBarPropsSchema, hostPanelPropsSchema,
@@ -401,8 +395,8 @@ describe("component schemas", () => {
       iframePluginPropsSchema,
     ];
 
-    it("exports 55 component schemas", () => {
-      expect(allSchemas).toHaveLength(55);
+    it("exports 53 component schemas", () => {
+      expect(allSchemas).toHaveLength(53);
     });
 
     it("every schema is defined", () => {

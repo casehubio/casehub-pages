@@ -84,12 +84,12 @@ describe('buildYamlContext', () => {
   });
 
   it('full path after Enter on components: resolves to component schema', () => {
-    const doc = 'pages:\n- name: Dashboard\n  rows:\n  - columns:\n    - span: 4\n      components:\n        \n    - span: 8\n';
-    const cursorLine = 6;
+    const doc = 'pages:\n- name: Dashboard\n  components:\n  - type: metric\n  - \n';
+    const cursorLine = 4;
     const lines = doc.split('\n');
     let pos = 0;
     for (let i = 0; i < cursorLine; i++) pos += lines[i]!.length + 1;
-    pos += 8;
+    pos += 4;
     const ctx = buildYamlContext(doc, pos);
     const result = navigateSchema(realPageSchema, ctx.path, ctx.siblings);
     expect(result).not.toBeNull();

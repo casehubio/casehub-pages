@@ -241,35 +241,6 @@ describe("renderComponent — layout types", () => {
     expect(item.style.overflow).toBe("hidden");
   });
 
-  it("columns with col-N slots: correct distribution", () => {
-    const target = document.createElement("div");
-    const component: Component = {
-      type: "columns",
-      props: { distribution: [2, 1] },
-      slots: {
-        "col-0": [{ type: "html" }],
-        "col-1": [{ type: "html" }],
-      },
-    };
-    renderComponent(target, component);
-    const el = target.firstElementChild as HTMLElement;
-    expect(el.style.display).toBe("grid");
-    expect(el.style.gridTemplateColumns).toBe("2fr 1fr");
-    const slots = el.querySelectorAll("[data-slot]");
-    expect(slots).toHaveLength(2);
-  });
-
-  it("rows with flex column", () => {
-    const target = document.createElement("div");
-    const component: Component = {
-      type: "rows",
-      slots: { default: [{ type: "html" }] },
-    };
-    renderComponent(target, component);
-    const el = target.firstElementChild as HTMLElement;
-    expect(el.style.display).toBe("flex");
-    expect(el.style.flexDirection).toBe("column");
-  });
 
   it("sidebar with nav and main slots", () => {
     const target = document.createElement("div");

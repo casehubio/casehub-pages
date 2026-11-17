@@ -9,7 +9,7 @@ import {
   mapPropsSchema, badgePropsSchema, countdownPropsSchema,
   timelinePropsSchema, graphPropsSchema, graphCanvasPropsSchema,
   eventTimelinePropsSchema, groupedViewPropsSchema,
-  gridPropsSchema, columnsPropsSchema, rowsPropsSchema, stackPropsSchema,
+  gridPropsSchema, stackPropsSchema,
   tabsPropsSchema, pillsPropsSchema, sidebarPropsSchema, treePropsSchema,
   menuPropsSchema, accordionPropsSchema, carouselPropsSchema,
   splitPropsSchema, dockBarPropsSchema, hostPanelPropsSchema,
@@ -25,8 +25,7 @@ import {
 
 export const componentSchemaRegistry: ReadonlyMap<string, z.ZodType> = new Map([
   ["grid", gridPropsSchema],
-  ["columns", columnsPropsSchema],
-  ["rows", rowsPropsSchema],
+
   ["stack", stackPropsSchema],
   ["tabs", tabsPropsSchema],
   ["pills", pillsPropsSchema],

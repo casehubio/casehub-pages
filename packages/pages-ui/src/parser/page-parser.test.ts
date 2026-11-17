@@ -619,22 +619,5 @@ describe("parsePage", () => {
       expect(page.grid![0]!.at.mode).toBe("positioned");
     });
 
-    it("type: columns desugar produces mode: positioned", () => {
-      const root = parsePage({
-        pages: [{
-          components: [
-            { type: "columns", columns: [
-              { components: [{ html: "A" }] },
-              { components: [{ html: "B" }] },
-            ]},
-          ],
-        }],
-      });
-      const page = root.slots!["content"]![0]!;
-      const gridItem = page.grid![0]!;
-      const nestedGrid = gridItem.component;
-      expect(nestedGrid!.type).toBe("grid");
-      expect(nestedGrid!.grid![0]!.at.mode).toBe("positioned");
-    });
   });
 });

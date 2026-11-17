@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { RovingTabindexMixin, KeyboardShortcutMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
-import { PageDocument, type PageNode, type RowNode, type ColumnNode, type ComponentNode, type DatasetNode, type NavTreeNode, GridItemNode } from '@casehubio/pages-document';
+import { PageDocument, type PageNode, type ComponentNode, type DatasetNode, type NavTreeNode, GridItemNode } from '@casehubio/pages-document';
 import type { GridPlacement } from '@casehubio/pages-component';
 import { COMPONENT_CATALOG } from '../catalog/component-catalog.js';
 import { lookupRecord } from '../data/lookup-record.js';
@@ -9,7 +9,7 @@ import { computeMenuItems } from './tree-context-menu.js';
 
 import '@casehubio/pages-primitives/context-menu';
 
-export type TreeNodeType = 'page' | 'grid-item' | 'row' | 'column' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section';
+export type TreeNodeType = 'page' | 'grid-item' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section';
 
 export interface TreeNodeInfo {
   readonly label: string;
@@ -82,25 +82,6 @@ function buildComponentNode(comp: ComponentNode): TreeNodeInfo {
   };
 }
 
-function buildColumnNode(col: ColumnNode): TreeNodeInfo {
-  return {
-    label: `Column (${col.span})`,
-    icon: 'view_column',
-    nodeType: 'column',
-    path: col.path,
-    children: col.getComponents().map(buildComponentNode),
-  };
-}
-
-function buildRowNode(row: RowNode): TreeNodeInfo {
-  return {
-    label: 'Row',
-    icon: 'table_rows',
-    nodeType: 'row',
-    path: row.path,
-    children: row.getColumns().map(buildColumnNode),
-  };
-}
 
 function buildGridItemNode(item: GridItemNode): TreeNodeInfo {
   const comp = item.getComponent();
@@ -169,10 +150,6 @@ function buildPageNode(page: PageNode): TreeNodeInfo {
       return xa - xb;
     });
     children = sorted.map(buildGridItemNode);
-  } else if (mode === 'rows') {
-    children = page.getRows().map(buildRowNode);
-  } else if (mode === 'columns') {
-    children = page.getColumns().map(buildColumnNode);
   } else {
     children = page.getComponents().map(buildComponentNode);
   }
@@ -449,8 +426,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   }
 
   private _isContainerNode(node: TreeNodeInfo): boolean {
-    return node.nodeType === 'page' || node.nodeType === 'row' || node.nodeType === 'column' ||
-      node.nodeType === 'grid-item' ||
+    return node.nodeType === 'page' || node.nodeType === 'grid-item' ||
       (node.nodeType === 'component' && node.children.length > 0);
   }
 
@@ -568,9 +544,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
   private _isPasteTarget(node: TreeNodeInfo): boolean {
     if (!this.insertMode || !this.clipboardFragmentType || node.nodeType === 'section') return false;
     const ft = this.clipboardFragmentType;
-    if (ft === 'component') return node.nodeType === 'column' || node.nodeType === 'page' || node.nodeType === 'component' || node.nodeType === 'grid-item';
-    if (ft === 'row') return node.nodeType === 'page' || node.nodeType === 'row';
-    if (ft === 'column') return node.nodeType === 'row' || node.nodeType === 'column';
+    if (ft === 'component') return node.nodeType === 'page' || node.nodeType === 'component' || node.nodeType === 'grid-item';
     return false;
   }
 

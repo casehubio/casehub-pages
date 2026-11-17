@@ -11,11 +11,6 @@ describe('allowedTypesAt', () => {
     expect(c.componentTypes).not.toContain('rows');
   });
 
-  it('column allows all component types, no structural', () => {
-    const c = allowedTypesAt('column');
-    expect(c.structuralTypes).toEqual([]);
-    expect(c.componentTypes.length).toBeGreaterThan(50);
-  });
 
   it('container component (tabs) allows all component types', () => {
     const c = allowedTypesAt('tabs');
@@ -57,9 +52,6 @@ describe('allowedTypesForSiblingOf', () => {
 });
 
 describe('isAllowedChild', () => {
-  it('bar-chart is allowed in column', () => {
-    expect(isAllowedChild('column', 'bar-chart')).toBe(true);
-  });
 
   it('bar-chart is allowed in page', () => {
     expect(isAllowedChild('page', 'bar-chart')).toBe(true);

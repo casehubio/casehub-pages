@@ -524,23 +524,20 @@ describe('PageDocument', () => {
     it('wraps component in tabs container', () => {
       const doc = PageDocument.parse(`pages:
   - name: p1
-    rows:
-      - columns:
-          - components:
-              - type: bar-chart
-              - type: line-chart`);
-      const col = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
-      const barChart = col.getComponents()[0]!;
+    components:
+      - type: bar-chart
+      - type: line-chart`);
+      const barChart = doc.getPages()[0]!.getComponents()[0]!;
 
       const tabsContainer = barChart.wrapIn('tabs');
 
       expect(tabsContainer.type).toBe('tabs');
       const children = tabsContainer.getChildren();
       expect(children.slots['Tab 1']![0]!.type).toBe('bar-chart');
-      const colComps = doc.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents();
-      expect(colComps).toHaveLength(2);
-      expect(colComps[0]!.type).toBe('tabs');
-      expect(colComps[1]!.type).toBe('line-chart');
+      const comps = doc.getPages()[0]!.getComponents();
+      expect(comps).toHaveLength(2);
+      expect(comps[0]!.type).toBe('tabs');
+      expect(comps[1]!.type).toBe('line-chart');
     });
 
     it('uses defaultContentSlot for sidebar', () => {

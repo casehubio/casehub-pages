@@ -8,8 +8,7 @@ import {
   page,
   grid,
   at,
-  columns,
-  rows,
+
   metricGrid,
   stack,
   tabs,
@@ -193,49 +192,6 @@ describe("builders", () => {
     });
   });
 
-  describe("columns()", () => {
-    it("creates columns with distribution and slot contents", () => {
-      const col1 = [html("a"), html("b")];
-      const col2 = [html("c")];
-
-      const result = columns([60, 40], col1, col2);
-
-      expect(result.type).toBe("columns");
-      expect(result.props).toEqual({ distribution: [60, 40] });
-      expect(result.slots).toEqual({
-        "col-0": col1,
-        "col-1": col2,
-      });
-    });
-
-    it("throws if distribution length !== slotContents length", () => {
-      expect(() => columns([50, 50], [html("a")])).toThrow(
-        "Distribution length (2) must match slotContents length (1)"
-      );
-    });
-
-    it("freezes returned component and slots", () => {
-      const result = columns([100], [html("a")]);
-      expect(Object.isFrozen(result)).toBe(true);
-      expect(Object.isFrozen(result.slots)).toBe(true);
-    });
-  });
-
-  describe("rows()", () => {
-    it("creates rows component with children", () => {
-      const child1 = html("a");
-      const child2 = html("b");
-      const result = rows(child1, child2);
-
-      expect(result.type).toBe("rows");
-      expect(result.slots).toEqual({ default: [child1, child2] });
-    });
-
-    it("freezes returned component", () => {
-      const result = rows();
-      expect(Object.isFrozen(result)).toBe(true);
-    });
-  });
 
   describe("metricGrid()", () => {
     it("creates metric-grid component with children in default slot", () => {
@@ -590,10 +546,9 @@ describe("builders", () => {
           ],
           [
             "Details",
-            columns(
-              [70, 30],
-              [title("Main Content"), html("main")],
-              [title("Sidebar"), html("side")]
+            grid(2,
+              at(0, 0, 1, 1, title("Main Content")),
+              at(1, 0, 1, 1, title("Sidebar")),
             ),
           ]
         )
@@ -710,12 +665,7 @@ describe("builders", () => {
       expect(g.type).toBe("grid");
     });
 
-    it("columns() returns typed component with accessible props", () => {
-      const c = columns([60, 40], [html("a")], [html("b")]);
-      // This should compile without 'as any' — c.props is ColumnsProps
-      expect(c.props?.distribution).toEqual([60, 40]);
-      expect(c.type).toBe("columns");
-    });
+
   });
 
   describe("split builder", () => {

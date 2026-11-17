@@ -28,9 +28,9 @@ describe("componentSchema", () => {
 
   it("validates a simple layout component", () => {
     const result = componentSchema.parse({
-      type: "rows",
+      type: "stack",
     });
-    expect(result.type).toBe("rows");
+    expect(result.type).toBe("stack");
   });
 
   it("validates a title component", () => {
@@ -64,9 +64,9 @@ describe("componentSchema", () => {
     })).toThrow();
   });
 
-  it("validates all 55 type literals", () => {
+  it("validates all 53 type literals", () => {
     const types = [
-      "grid", "columns", "rows", "stack", "tabs", "pills", "sidebar",
+      "grid", "stack", "tabs", "pills", "sidebar",
       "tree", "menu", "accordion", "carousel", "split", "dock-bar",
       "host-panel", "floating-workspace", "panel", "html", "markdown",
       "title", "lazy-page", "page", "bar-chart", "line-chart",
@@ -81,7 +81,7 @@ describe("componentSchema", () => {
     for (const type of types) {
       expect(() => componentSchema.parse({ type }), `type "${type}" should be valid`).not.toThrow();
     }
-    expect(types).toHaveLength(55);
+    expect(types).toHaveLength(53);
   });
 });
 

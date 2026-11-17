@@ -28,8 +28,7 @@ export { ALLOW_ALL } from "./types.js";
 
 export type {
   GridProps,
-  ColumnsProps,
-  RowsProps,
+
   StackProps,
   TabsProps,
   PillsProps,
@@ -170,8 +169,7 @@ export {
   getProps,
   isComponentType,
   isGrid,
-  isColumns,
-  isRows,
+
   isStack,
   isTabs,
   isPills,

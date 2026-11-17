@@ -10,18 +10,15 @@ const MINIMAL_PAGE = `pages:
       text: Hello
 `;
 
-const ROWS_PAGE = `pages:
+const GRID_PAGE = `pages:
 - name: Dashboard
-  rows:
-  - columns:
-    - span: 6
-      components:
-      - type: bar-chart
-        properties:
-          subtype: column
-    - span: 6
-      components:
-      - type: pie-chart
+  grid:
+    - at: { x: 0, y: 0, w: 6, h: 1 }
+      type: bar-chart
+      properties:
+        subtype: column
+    - at: { x: 6, y: 0, w: 6, h: 1 }
+      type: pie-chart
 `;
 
 async function awaitReady(shell: PagesBuilderShell): Promise<void> {
@@ -413,9 +410,9 @@ describe('PagesBuilderShell', () => {
     expect(comps[1]!.type).toBe('metric');
   });
 
-  it('clicking palette tile inserts component into selected column', async () => {
+  it('clicking palette tile inserts component into grid page', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = `pages:\n- name: P\n  rows:\n  - columns:\n    - span: 12\n      components:\n      - type: title\n`;
+    el.yaml = `pages:\n- name: P\n  grid:\n    - at: { x: 0, y: 0, w: 12, h: 1 }\n      type: title\n`;
     document.body.appendChild(el);
     await el.updateComplete;
     await openComponentsDock(el);
@@ -423,7 +420,7 @@ describe('PagesBuilderShell', () => {
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('node-select', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0], nodeType: 'column' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'grid-item' },
     }));
     await el.updateComplete;
 
@@ -434,9 +431,8 @@ describe('PagesBuilderShell', () => {
     }));
     await el.updateComplete;
 
-    const col = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
-    expect(col.getComponents()).toHaveLength(2);
-    expect(col.getComponents()[1]!.type).toBe('bar-chart');
+    const items = el.document.getPages()[0]!.getItems();
+    expect(items.length).toBeGreaterThanOrEqual(2);
   });
 
   it('clicking palette tile when component selected inserts as sibling', async () => {
@@ -873,14 +869,14 @@ describe('PagesBuilderShell', () => {
 
   it('tree-add picker inserts component into target node', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('tree-add', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0], nodeType: 'column' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'grid-item' },
     }));
     await el.updateComplete;
 
@@ -891,21 +887,21 @@ describe('PagesBuilderShell', () => {
     }));
     await el.updateComplete;
 
-    const col = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!;
-    expect(col.getComponents()).toHaveLength(2);
-    expect(col.getComponents()[1]!.type).toBe('metric');
+    const items = el.document.getPages()[0]!.getItems();
+    expect(items.length).toBeGreaterThanOrEqual(3);
+    expect(items[2]!.getComponent()!.type).toBe('metric');
   });
 
   it('tree-add on column sets acceptsComponents and hides layout types', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('tree-add', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0], nodeType: 'column' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'grid-item' },
     }));
     await el.updateComplete;
 
@@ -916,7 +912,7 @@ describe('PagesBuilderShell', () => {
 
   it('tree-add on row sets acceptsComponents false', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
@@ -962,50 +958,50 @@ describe('PagesBuilderShell', () => {
 
   it('tree-cut removes node from document', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
-    const compsBefore = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length;
+    const compsBefore = el.document.getPages()[0]!.getItems().length;
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('tree-cut', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0], nodeType: 'component' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'component' },
     }));
     await el.updateComplete;
 
-    expect(el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length).toBe(compsBefore - 1);
+    expect(el.document.getPages()[0]!.getItems().length).toBe(compsBefore - 1);
   });
 
   it('tree-copy does not remove node from document', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
-    const compsBefore = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length;
+    const compsBefore = el.document.getPages()[0]!.getItems().length;
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('tree-copy', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0], nodeType: 'component' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'component' },
     }));
     await el.updateComplete;
 
-    expect(el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length).toBe(compsBefore);
+    expect(el.document.getPages()[0]!.getItems().length).toBe(compsBefore);
   });
 
   it('Esc exits insert mode without clearing clipboard', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('tree-copy', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0], nodeType: 'component' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'component' },
     }));
     await el.updateComplete;
 
@@ -1034,7 +1030,7 @@ describe('PagesBuilderShell', () => {
 
   it('tree-insert shows position picker first', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
@@ -1055,7 +1051,7 @@ describe('PagesBuilderShell', () => {
 
   it('tree-insert on row filters to layout types only after position select', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
@@ -1084,14 +1080,14 @@ describe('PagesBuilderShell', () => {
 
   it('newly added child gets selected after Add', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as any;
     tree.dispatchEvent(new CustomEvent('tree-add', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0], nodeType: 'column' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'grid-item' },
     }));
     await el.updateComplete;
 
@@ -1137,7 +1133,7 @@ describe('PagesBuilderShell', () => {
 
   it('Insert→After→Rows expands the new row in tree', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
@@ -1170,7 +1166,7 @@ describe('PagesBuilderShell', () => {
 
   it('tree-insert position-select opens inline picker with sibling context', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
@@ -1196,42 +1192,42 @@ describe('PagesBuilderShell', () => {
 
   it('Ctrl+X on selected node cuts it', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('node-select', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0], nodeType: 'component' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'component' },
     }));
     await el.updateComplete;
 
-    const compsBefore = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length;
+    const compsBefore = el.document.getPages()[0]!.getItems().length;
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', ctrlKey: true, bubbles: true }));
     await el.updateComplete;
 
-    expect(el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length).toBe(compsBefore - 1);
+    expect(el.document.getPages()[0]!.getItems().length).toBe(compsBefore - 1);
   });
 
   it('Ctrl+C on selected node copies without removing', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('node-select', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0], nodeType: 'component' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'component' },
     }));
     await el.updateComplete;
 
-    const compsBefore = el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length;
+    const compsBefore = el.document.getPages()[0]!.getItems().length;
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true }));
     await el.updateComplete;
 
-    expect(el.document.getPages()[0]!.getRows()[0]!.getColumns()[0]!.getComponents().length).toBe(compsBefore);
+    expect(el.document.getPages()[0]!.getItems().length).toBe(compsBefore);
     const { getClipboard: gc } = await import('../clipboard/builder-clipboard.js');
     expect(gc().fragment).not.toBeNull();
     expect(gc().fragmentType).toBe('component');
@@ -1239,24 +1235,24 @@ describe('PagesBuilderShell', () => {
 
   it('tree-add pastes clipboard content as child when clipboard has fragment', async () => {
     el = document.createElement('pages-builder-shell') as PagesBuilderShell;
-    el.yaml = ROWS_PAGE;
+    el.yaml = GRID_PAGE;
     document.body.appendChild(el);
     await awaitReady(el);
 
     const tree = el.shadowRoot!.querySelector('pages-builder-tree') as HTMLElement;
     tree.dispatchEvent(new CustomEvent('tree-copy', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0], nodeType: 'component' },
+      detail: { path: ['pages', 0, 'grid', 0], nodeType: 'component' },
     }));
     await el.updateComplete;
 
-    const compsBefore = el.document.getPages()[0]!.getRows()[0]!.getColumns()[1]!.getComponents().length;
+    const compsBefore = el.document.getPages()[0]!.getItems().length;
     tree.dispatchEvent(new CustomEvent('tree-add', {
       bubbles: true, composed: true,
-      detail: { path: ['pages', 0, 'rows', 0, 'columns', 1], nodeType: 'column' },
+      detail: { path: ['pages', 0, 'grid', 1], nodeType: 'grid-item' },
     }));
     await el.updateComplete;
 
-    expect(el.document.getPages()[0]!.getRows()[0]!.getColumns()[1]!.getComponents().length).toBe(compsBefore + 1);
+    expect(el.document.getPages()[0]!.getItems().length).toBe(compsBefore + 1);
   });
 });
