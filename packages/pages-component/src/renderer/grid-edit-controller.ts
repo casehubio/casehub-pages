@@ -96,6 +96,7 @@ class GridEditControllerImpl implements GridEditController {
   private readonly onPointerLeave: (e: PointerEvent) => void;
   private readonly onKeyDown: (e: KeyboardEvent) => void;
   private readonly onMergeActivate: (e: Event) => void;
+  private readonly onExternalSelect: (e: Event) => void;
 
   constructor(gridEl: HTMLElement, items: readonly GridItem[], columns: number, rowHeight: number) {
     this.gridEl = gridEl;
@@ -112,6 +113,12 @@ class GridEditControllerImpl implements GridEditController {
     this.onMergeActivate = (e: Event) => {
       const { rootId } = (e as CustomEvent).detail as { rootId: string };
       this.enterMerge(rootId);
+    };
+    this.onExternalSelect = (e: Event) => {
+      const { itemId } = (e as CustomEvent).detail as { itemId: string };
+      this._setSelectedEl(itemId);
+      this.hoveredId = itemId;
+      this._toggleDragHandles(itemId);
     };
 
     if (gridEl.parentElement) {
@@ -168,6 +175,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.addEventListener("pointerup", this.onPointerUp);
     this.gridEl.addEventListener("pointerleave", this.onPointerLeave);
     this.gridEl.addEventListener("pages-grid-merge", this.onMergeActivate);
+    this.gridEl.addEventListener("pages-grid-select", this.onExternalSelect);
 
     this.initLivePlacements();
     this.storeOriginalPlacements();
@@ -208,6 +216,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.addEventListener("pointerup", this.onPointerUp);
     this.gridEl.addEventListener("pointerleave", this.onPointerLeave);
     this.gridEl.addEventListener("pages-grid-merge", this.onMergeActivate);
+    this.gridEl.addEventListener("pages-grid-select", this.onExternalSelect);
     this.gridEl.ownerDocument.addEventListener("keydown", this.onKeyDown);
 
     this.storeOriginalPlacements();
@@ -250,6 +259,7 @@ class GridEditControllerImpl implements GridEditController {
     this.gridEl.removeEventListener("pointerup", this.onPointerUp);
     this.gridEl.removeEventListener("pointerleave", this.onPointerLeave);
     this.gridEl.removeEventListener("pages-grid-merge", this.onMergeActivate);
+    this.gridEl.removeEventListener("pages-grid-select", this.onExternalSelect);
     this.gridEl.ownerDocument.removeEventListener("keydown", this.onKeyDown);
 
     this.restoreOriginalPlacements();

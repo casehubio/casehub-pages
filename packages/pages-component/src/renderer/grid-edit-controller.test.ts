@@ -337,4 +337,14 @@ describe("GridEditController", () => {
       ctrl.dispose();
     });
   });
+
+  it("pages-grid-select creates handle bar on the targeted item", () => {
+    const items = makeItems();
+    const grid = setupGrid(items);
+    const ctrl = attachGridEditController(grid, items, 12, 60);
+    grid.dispatchEvent(new CustomEvent("pages-grid-select", { detail: { itemId: "0" } }));
+    const bar = grid.querySelector("[data-item-id='0'] [data-drag-handle]");
+    expect(bar).not.toBeNull();
+    ctrl.dispose();
+  });
 });

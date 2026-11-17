@@ -521,6 +521,14 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       this._selectionOverlay.setInsertMode(clipboard.fragmentType);
     }
 
+    if (nodeType === 'grid-item' && elements[0]) {
+      const gridEl = elements[0].closest('[data-grid-editing]') as HTMLElement | null;
+      if (gridEl) {
+        const itemId = elements[0].dataset.itemId ?? String(path[path.length - 1]);
+        gridEl.dispatchEvent(new CustomEvent('pages-grid-select', { detail: { itemId } }));
+      }
+    }
+
     elements[0]!.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }
 
