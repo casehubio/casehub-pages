@@ -1,5 +1,7 @@
 pages:
   - name: Grid Spanning
+    properties:
+      rowHeight: 60
     grid:
       - at: { x: 0, y: 0, w: 12, h: 1 }
         type: title
@@ -14,22 +16,58 @@ pages:
       - at: { x: 0, y: 2, w: 12, h: 1 }
         type: title
         properties:
-          text: Positioned Items — Explicit Coordinates
+          text: "Positioned Items — Explicit Coordinates"
           size: h4
       - at: { x: 0, y: 3, w: 4, h: 3 }
+        type: html
+        properties:
+          content: '<div style="background:#3b82f6;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:18px">4×3</div>'
       - at: { x: 4, y: 3, w: 8, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#ef4444;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:18px">8×1</div>'
       - at: { x: 4, y: 4, w: 4, h: 2 }
+        type: html
+        properties:
+          content: '<div style="background:#22c55e;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:18px">4×2</div>'
       - at: { x: 8, y: 4, w: 2, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#f97316;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px">2×1</div>'
       - at: { x: 10, y: 4, w: 2, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#eab308;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px">2×1</div>'
       - at: { x: 8, y: 5, w: 4, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#8b5cf6;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:18px">4×1</div>'
       - at: { x: 0, y: 6, w: 6, h: 2 }
+        type: html
+        properties:
+          content: '<div style="background:#06b6d4;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:18px">6×2</div>'
       - at: { x: 6, y: 6, w: 6, h: 2 }
+        type: html
+        properties:
+          content: '<div style="background:#ec4899;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:18px">6×2</div>'
       - at: { x: 0, y: 8, w: 12, h: 1 }
         type: title
         properties:
-          text: Auto-Placed Items — Span Only, No Coordinates
+          text: "Auto-Placed Items — Span Only, No Coordinates"
           size: h4
       - at: { w: 3, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#64748b;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600">w:3</div>'
       - at: { w: 3, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#78716c;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600">w:3</div>'
       - at: { w: 6, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#a3a3a3;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600">w:6</div>'
       - at: { w: 12, h: 1 }
+        type: html
+        properties:
+          content: '<div style="background:#57534e;border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600">w:12 (full width)</div>'

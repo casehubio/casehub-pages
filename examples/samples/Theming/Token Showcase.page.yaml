@@ -1,22 +1,28 @@
 pages:
   - name: Token Showcase
     grid:
-      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: {x: 0, y: 0, w: 12, h: 1}
         type: title
         properties:
           text: OKLCH Design Tokens
           size: h2
-      - at: { x: 0, y: 1, w: 12, h: 1 }
+
+      - at: {x: 0, y: 1, w: 12, h: 1}
         type: markdown
         properties:
-          content: |
-            The **pages-ui-tokens** package generates 12-step OKLCH colour scales injected as CSS custom properties. Each scale runs from step 1 (lightest) to step 12 (darkest). Themes override the seed hue — all scales regenerate automatically.
-      - at: { x: 0, y: 2, w: 12, h: 1 }
+          content: >
+            The **pages-ui-tokens** package generates 12-step OKLCH colour scales
+            injected as CSS custom properties. Each scale runs from step 1 (lightest)
+            to step 12 (darkest). Themes override the seed hue — all scales regenerate
+            automatically.
+
+      - at: {x: 0, y: 2, w: 12, h: 1}
         type: title
         properties:
           text: Accent Scale
           size: h3
-      - at: { x: 0, y: 3, w: 12, h: 1 }
+
+      - at: {x: 0, y: 3, w: 12, h: 1}
         type: html
         properties:
           content: |
@@ -38,12 +44,14 @@ pages:
               <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span>
               <span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
             </div>
-      - at: { x: 0, y: 4, w: 12, h: 1 }
+
+      - at: {x: 0, y: 4, w: 12, h: 1}
         type: title
         properties:
           text: Neutral Scale
           size: h3
-      - at: { x: 0, y: 5, w: 12, h: 1 }
+
+      - at: {x: 0, y: 5, w: 12, h: 1}
         type: html
         properties:
           content: |
@@ -61,21 +69,73 @@ pages:
               <div style="background: var(--pages-neutral-11); height: 48px; border-radius: 4px;" title="neutral-11"></div>
               <div style="background: var(--pages-neutral-12); height: 48px; border-radius: 4px;" title="neutral-12"></div>
             </div>
-      - at: { x: 0, y: 6, w: 12, h: 1 }
+
+      - at: {x: 0, y: 6, w: 12, h: 1}
         type: title
         properties:
           text: Semantic Scales
           size: h3
-      - at: { x: 0, y: 7, w: 12, h: 1 }
+
+      - at: {x: 0, y: 7, w: 12, h: 1}
         type: columns
         properties:
-          span: 4,4,4
-      - at: { x: 0, y: 8, w: 12, h: 1 }
+          span: "4,4,4"
+        columns:
+          - components:
+              - type: markdown
+                properties:
+                  content: "**Success**"
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
+                      <div style="background: var(--pages-success-1); height: 36px; border-radius: 4px;" title="success-1"></div>
+                      <div style="background: var(--pages-success-3); height: 36px; border-radius: 4px;" title="success-3"></div>
+                      <div style="background: var(--pages-success-5); height: 36px; border-radius: 4px;" title="success-5"></div>
+                      <div style="background: var(--pages-success-7); height: 36px; border-radius: 4px;" title="success-7"></div>
+                      <div style="background: var(--pages-success-9); height: 36px; border-radius: 4px;" title="success-9"></div>
+                      <div style="background: var(--pages-success-11); height: 36px; border-radius: 4px;" title="success-11"></div>
+                    </div>
+
+          - components:
+              - type: markdown
+                properties:
+                  content: "**Warning**"
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
+                      <div style="background: var(--pages-warning-1); height: 36px; border-radius: 4px;" title="warning-1"></div>
+                      <div style="background: var(--pages-warning-3); height: 36px; border-radius: 4px;" title="warning-3"></div>
+                      <div style="background: var(--pages-warning-5); height: 36px; border-radius: 4px;" title="warning-5"></div>
+                      <div style="background: var(--pages-warning-7); height: 36px; border-radius: 4px;" title="warning-7"></div>
+                      <div style="background: var(--pages-warning-9); height: 36px; border-radius: 4px;" title="warning-9"></div>
+                      <div style="background: var(--pages-warning-11); height: 36px; border-radius: 4px;" title="warning-11"></div>
+                    </div>
+
+          - components:
+              - type: markdown
+                properties:
+                  content: "**Danger**"
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
+                      <div style="background: var(--pages-danger-1); height: 36px; border-radius: 4px;" title="danger-1"></div>
+                      <div style="background: var(--pages-danger-3); height: 36px; border-radius: 4px;" title="danger-3"></div>
+                      <div style="background: var(--pages-danger-5); height: 36px; border-radius: 4px;" title="danger-5"></div>
+                      <div style="background: var(--pages-danger-7); height: 36px; border-radius: 4px;" title="danger-7"></div>
+                      <div style="background: var(--pages-danger-9); height: 36px; border-radius: 4px;" title="danger-9"></div>
+                      <div style="background: var(--pages-danger-11); height: 36px; border-radius: 4px;" title="danger-11"></div>
+                    </div>
+
+      - at: {x: 0, y: 8, w: 12, h: 1}
         type: title
         properties:
           text: Typography & Spacing
           size: h3
-      - at: { x: 0, y: 9, w: 12, h: 1 }
+
+      - at: {x: 0, y: 9, w: 12, h: 1}
         type: html
         properties:
           content: |

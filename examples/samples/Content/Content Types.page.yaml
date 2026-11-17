@@ -1,12 +1,13 @@
 pages:
   - name: Content Types
     grid:
-      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: {x: 0, y: 0, w: 12, h: 1}
         type: title
         properties:
           text: Content Components
           size: h1
-      - at: { x: 0, y: 1, w: 12, h: 1 }
+
+      - at: {x: 0, y: 1, w: 12, h: 1}
         type: markdown
         properties:
           content: |
@@ -24,7 +25,8 @@ pages:
             properties:
               content: "Your markdown here"
             ```
-      - at: { x: 0, y: 2, w: 12, h: 1 }
+
+      - at: {x: 0, y: 2, w: 12, h: 1}
         type: html
         properties:
           content: |
@@ -35,7 +37,33 @@ pages:
                 that goes beyond what Markdown offers.
               </p>
             </div>
-      - at: { x: 0, y: 3, w: 12, h: 1 }
+
+      - at: {x: 0, y: 3, w: 12, h: 1}
         type: columns
         properties:
-          span: 4,4,4
+          span: "4,4,4"
+        columns:
+          - components:
+              - type: title
+                properties:
+                  text: "Heading h2"
+                  size: h2
+              - type: markdown
+                properties:
+                  content: "Titles render as semantic HTML headings at the specified level."
+          - components:
+              - type: title
+                properties:
+                  text: "Heading h3"
+                  size: h3
+              - type: markdown
+                properties:
+                  content: "Use `size: h1` through `size: h6` to control the heading level."
+          - components:
+              - type: title
+                properties:
+                  text: "Heading h4"
+                  size: h4
+              - type: markdown
+                properties:
+                  content: "Smaller headings for subsections and labels."

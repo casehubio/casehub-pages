@@ -1,6 +1,6 @@
 datasets:
   - uuid: sales
-    content: |-
+    content: >-
       [
         ["Q1", "North", 120, 85],
         ["Q1", "South", 95, 70],
@@ -20,25 +20,33 @@ datasets:
         type: NUMBER
       - id: Target
         type: NUMBER
+
 pages:
   - name: Column with Rows
     grid:
-      - at: { x: 0, y: 0, w: 12, h: 1 }
+      - at: {x: 0, y: 0, w: 12, h: 1}
         type: title
         properties:
-          text: Nested Layout — Columns with Rows
+          text: "Nested Layout — Columns with Rows"
           size: h2
-      - at: { x: 0, y: 1, w: 12, h: 1 }
+      - at: {x: 0, y: 1, w: 12, h: 1}
         type: markdown
         properties:
-          content: |
-            Demonstrates **nested layout**: a two-column split where the right column contains stacked rows. This pattern is common for dashboards with a main chart and supporting metrics.
-      - at: { x: 0, y: 2, w: 7, h: 1 }
+          content: >
+            Demonstrates **nested layout**: a two-column split where the right
+            column contains stacked rows. This pattern is common for dashboards
+            with a main chart and supporting metrics.
+      - at: {x: 0, y: 2, w: 7, h: 1}
         type: title
         properties:
           text: Revenue by Quarter
           size: h3
-      - at: { x: 0, y: 3, w: 7, h: 1 }
+      - at: {x: 7, y: 2, w: 5, h: 1}
+        type: title
+        properties:
+          text: Revenue by Region
+          size: h3
+      - at: {x: 0, y: 3, w: 7, h: 3}
         type: bar-chart
         properties:
           chart:
@@ -52,3 +60,31 @@ pages:
                   - source: Quarter
                   - source: Revenue
                     function: SUM
+      - at: {x: 7, y: 3, w: 5, h: 2}
+        type: pie-chart
+        properties:
+          chart:
+            height: 200
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                  source: Region
+                functions:
+                  - source: Region
+                  - source: Revenue
+                    function: SUM
+      - at: {x: 7, y: 5, w: 5, h: 1}
+        type: metric
+        properties:
+          subtype: card
+          lookup:
+            uuid: sales
+            group:
+              - functions:
+                  - source: Revenue
+                    function: SUM
+                    column: Total Revenue
+                  - source: Target
+                    function: SUM
+                    column: Total Target
