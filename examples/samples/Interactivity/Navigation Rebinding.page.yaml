@@ -2,6 +2,10 @@ pages:
   - name: index
     grid:
       - at: { x: 0, y: 0, w: 12, h: 1 }
+        type: title
+        properties:
+          text: Navigation Rebinding
+          size: h2
       - at: { x: 0, y: 1, w: 12, h: 1 }
         type: pills
         properties:

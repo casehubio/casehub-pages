@@ -944,8 +944,9 @@ export function createActivationCallback(
       return;
     }
 
-    // Grid edit controller for any component with positioned items
-    if (component.grid?.some(i => i.at.mode === "positioned")) {
+    // Grid edit controller — only when the host element opts in via data-grid-editing-enabled.
+    // The builder sets this attribute; the gallery/runtime does not.
+    if (component.grid?.some(i => i.at.mode === "positioned") && el.closest('[data-grid-editing-enabled]')) {
       const gridProps = component.props as { columns?: number; rowHeight?: number } | undefined;
       const gridEl = (el.querySelector('[data-grid-wrapper]') ?? el) as HTMLElement;
       attachGridEditController(gridEl, component.grid, gridProps?.columns ?? 12, gridProps?.rowHeight);
