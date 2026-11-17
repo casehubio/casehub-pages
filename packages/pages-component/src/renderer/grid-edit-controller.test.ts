@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { attachGridEditController } from "./grid-edit-controller.js";
 import type { GridItem } from "../model/types.js";
