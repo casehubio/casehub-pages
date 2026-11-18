@@ -26,6 +26,37 @@ export function isDomainSchema(schema: string | null | undefined): boolean {
   return schema != null && schema.includes('-') && !isBuiltInSchema(schema);
 }
 
+export interface TutorialHeaders {
+  level: number;
+  layer: string;
+  teaches: string;
+  buildsOn: string | string[] | null;
+}
+
+export function parseTutorialHeaders(meta: Record<string, unknown>): TutorialHeaders {
+  return {
+    level: meta['level'] as number,
+    layer: meta['layer'] as string,
+    teaches: meta['teaches'] as string,
+    buildsOn: (meta['builds-on'] as string | string[] | undefined) ?? null,
+  };
+}
+
+export function validateTutorialHeaders(meta: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  if (meta['level'] == null) {
+    errors.push("Missing required tutorial header: 'level'");
+  } else {
+    const level = meta['level'] as number;
+    if (level < 1 || level > 5) {
+      errors.push(`Tutorial header 'level' must be 1-5, got ${level}`);
+    }
+  }
+  if (meta['layer'] == null) errors.push("Missing required tutorial header: 'layer'");
+  if (meta['teaches'] == null) errors.push("Missing required tutorial header: 'teaches'");
+  return errors;
+}
+
 const PLAYBOOK_KEY = 'playbook';
 const SCHEMA_KEY = 'schema';
 const NAME_KEY = 'name';

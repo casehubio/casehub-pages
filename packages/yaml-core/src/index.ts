@@ -44,8 +44,8 @@ export { CsvParser } from './csv-parser.js';
 export type { CsvDataSource, CsvColumn, CsvColumnType } from './csv-parser.js';
 export { matches, valuePattern, structuralPattern, defaultPattern, anyOfPattern } from './match.js';
 export type { MatchPattern, ValuePattern, StructuralPattern, AnyOfPattern, DefaultPattern, MatchCase } from './match.js';
-export { parsePlaybookFrontMatter, isBuiltInSchema, isDomainSchema, PLAYBOOK_SCHEMAS } from './playbook.js';
-export type { PlaybookFrontMatter, PlaybookDocument } from './playbook.js';
+export { parsePlaybookFrontMatter, parseTutorialHeaders, validateTutorialHeaders, isBuiltInSchema, isDomainSchema, PLAYBOOK_SCHEMAS } from './playbook.js';
+export type { PlaybookFrontMatter, PlaybookDocument, TutorialHeaders } from './playbook.js';
 export { createPlaybookSchemaRegistry, domainSchema, PLAYBOOK_CAPABILITIES } from './playbook-schema.js';
 export type { PlaybookSchemaDescriptor, PlaybookSchemaRegistry } from './playbook-schema.js';
 
