@@ -21,7 +21,7 @@ const BUTTON_TOOLTIPS: Record<string, string> = {
   'selection-edit-layout': 'Edit layout',
 };
 
-function getButtonsForNodeType(
+export function getButtonsForNodeType(
   nodeType: TreeNodeType,
   isContainer: boolean,
 ): ButtonDef[] {

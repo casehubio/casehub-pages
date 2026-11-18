@@ -177,7 +177,7 @@ export function emptyContainer(x: number, y: number, w: number, h: number): Grid
   });
 }
 
-function rows(...children: Component[]): Component {
+export function rows(...children: Component[]): Component {
   return freeze({
     type: "panel",
     style: freeze({ display: "flex", "flex-direction": "column" }),
@@ -185,7 +185,7 @@ function rows(...children: Component[]): Component {
   });
 }
 
-function columns(distribution: number[], ...slotContents: Component[][]): Component {
+export function columns(distribution: number[], ...slotContents: Component[][]): Component {
   const slots: Record<string, readonly Component[]> = {};
   for (let i = 0; i < slotContents.length; i++) {
     const content = slotContents[i];
