@@ -127,8 +127,19 @@ export class GridEditBridge {
     doc: PageDocument,
     placement: GridPlacement,
     componentType: string,
-    _gridPath?: (string | number)[],
+    gridPath?: (string | number)[],
   ): void {
+    if (gridPath) {
+      const yamlDoc = doc._getDoc();
+      const seq = yamlDoc.getIn(gridPath);
+      if (!isSeq(seq)) return;
+      const atObj = placement.mode === 'positioned'
+        ? { x: placement.x, y: placement.y, w: placement.w, h: placement.h }
+        : { w: placement.w, h: placement.h };
+      const node = yamlDoc.createNode({ at: atObj, type: componentType });
+      (seq as YAMLSeq).add(node);
+      return;
+    }
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     page.addItem(placement, componentType);
@@ -138,8 +149,38 @@ export class GridEditBridge {
     doc: PageDocument,
     targetIndex: number,
     direction: 'horizontal' | 'vertical',
-    _gridPath?: (string | number)[],
+    gridPath?: (string | number)[],
   ): void {
+    if (gridPath) {
+      const yamlDoc = doc._getDoc();
+      const seq = yamlDoc.getIn(gridPath);
+      if (!isSeq(seq)) return;
+      const entry = (seq as YAMLSeq).get(targetIndex, true);
+      if (!isMap(entry)) return;
+      const at = (entry as YAMLMap).get('at', true);
+      if (!isMap(at)) return;
+      const p = (at as YAMLMap).toJSON() as { x: number; y: number; w: number; h: number };
+
+      doc.beginTransaction();
+      try {
+        if (direction === 'horizontal') {
+          const topH = Math.floor(p.h / 2);
+          const bottomH = p.h - topH;
+          (entry as YAMLMap).set('at', yamlDoc.createNode({ x: p.x, y: p.y, w: p.w, h: topH }));
+          (seq as YAMLSeq).add(yamlDoc.createNode({ at: { x: p.x, y: p.y + topH, w: p.w, h: bottomH }, type: 'markdown', properties: { content: ' ' } }));
+        } else {
+          const leftW = Math.floor(p.w / 2);
+          const rightW = p.w - leftW;
+          (entry as YAMLMap).set('at', yamlDoc.createNode({ x: p.x, y: p.y, w: leftW, h: p.h }));
+          (seq as YAMLSeq).add(yamlDoc.createNode({ at: { x: p.x + leftW, y: p.y, w: rightW, h: p.h }, type: 'markdown', properties: { content: ' ' } }));
+        }
+        doc.commitTransaction();
+      } catch (e) {
+        doc.abortTransaction();
+        throw e;
+      }
+      return;
+    }
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     const items = page.getItems();
@@ -168,7 +209,47 @@ export class GridEditBridge {
     }
   }
 
-  private _mergeItems(doc: PageDocument, indices: number[], _gridPath?: (string | number)[]): void {
+  private _mergeItems(doc: PageDocument, indices: number[], gridPath?: (string | number)[]): void {
+    if (gridPath) {
+      const yamlDoc = doc._getDoc();
+      const seq = yamlDoc.getIn(gridPath);
+      if (!isSeq(seq)) return;
+      const placements = indices
+        .map(i => {
+          const e = (seq as YAMLSeq).get(i, true);
+          if (!isMap(e)) return null;
+          const at = (e as YAMLMap).get('at', true);
+          if (!isMap(at)) return null;
+          const p = (at as YAMLMap).toJSON() as { x: number; y: number; w: number; h: number };
+          return { index: i, ...p };
+        })
+        .filter((e): e is { index: number; x: number; y: number; w: number; h: number } => e !== null);
+      if (placements.length < 2) return;
+
+      const minX = Math.min(...placements.map(p => p.x));
+      const minY = Math.min(...placements.map(p => p.y));
+      const maxX = Math.max(...placements.map(p => p.x + p.w));
+      const maxY = Math.max(...placements.map(p => p.y + p.h));
+
+      doc.beginTransaction();
+      try {
+        const keepIndex = indices[0]!;
+        const removeIndices = [...indices].filter(i => i !== keepIndex).sort((a, b) => b - a);
+        for (const idx of removeIndices) {
+          (seq as YAMLSeq).delete(idx);
+        }
+        const adjustedKeep = keepIndex - removeIndices.filter(i => i < keepIndex).length;
+        const kept = (seq as YAMLSeq).get(adjustedKeep, true);
+        if (isMap(kept)) {
+          (kept as YAMLMap).set('at', yamlDoc.createNode({ x: minX, y: minY, w: maxX - minX, h: maxY - minY }));
+        }
+        doc.commitTransaction();
+      } catch (e) {
+        doc.abortTransaction();
+        throw e;
+      }
+      return;
+    }
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     const items = page.getItems();
@@ -204,7 +285,28 @@ export class GridEditBridge {
     }
   }
 
-  private _swapItems(doc: PageDocument, indexA: number, indexB: number, _gridPath?: (string | number)[]): void {
+  private _swapItems(doc: PageDocument, indexA: number, indexB: number, gridPath?: (string | number)[]): void {
+    if (gridPath) {
+      const yamlDoc = doc._getDoc();
+      const seq = yamlDoc.getIn(gridPath);
+      if (!isSeq(seq)) return;
+      const entryA = (seq as YAMLSeq).get(indexA, true);
+      const entryB = (seq as YAMLSeq).get(indexB, true);
+      if (!isMap(entryA) || !isMap(entryB)) return;
+      const atA = (entryA as YAMLMap).get('at', true);
+      const atB = (entryB as YAMLMap).get('at', true);
+      if (!isMap(atA) || !isMap(atB)) return;
+      doc.beginTransaction();
+      try {
+        (entryA as YAMLMap).set('at', (atB as YAMLMap).clone());
+        (entryB as YAMLMap).set('at', (atA as YAMLMap).clone());
+        doc.commitTransaction();
+      } catch (e) {
+        doc.abortTransaction();
+        throw e;
+      }
+      return;
+    }
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     const items = page.getItems();
@@ -224,7 +326,21 @@ export class GridEditBridge {
     }
   }
 
-  private _removeItem(doc: PageDocument, index: number, _gridPath?: (string | number)[]): void {
+  private _removeItem(doc: PageDocument, index: number, gridPath?: (string | number)[]): void {
+    if (gridPath) {
+      const yamlDoc = doc._getDoc();
+      const seq = yamlDoc.getIn(gridPath);
+      if (!isSeq(seq)) return;
+      doc.beginTransaction();
+      try {
+        (seq as YAMLSeq).delete(index);
+        doc.commitTransaction();
+      } catch (e) {
+        doc.abortTransaction();
+        throw e;
+      }
+      return;
+    }
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     doc.beginTransaction();
@@ -238,7 +354,17 @@ export class GridEditBridge {
     }
   }
 
-  private _addEmptyContainer(doc: PageDocument, placement: GridPlacement, _gridPath?: (string | number)[]): void {
+  private _addEmptyContainer(doc: PageDocument, placement: GridPlacement, gridPath?: (string | number)[]): void {
+    if (gridPath) {
+      const yamlDoc = doc._getDoc();
+      const seq = yamlDoc.getIn(gridPath);
+      if (!isSeq(seq)) return;
+      const atObj = placement.mode === 'positioned'
+        ? { x: placement.x, y: placement.y, w: placement.w, h: placement.h }
+        : { w: placement.w, h: placement.h };
+      (seq as YAMLSeq).add(yamlDoc.createNode({ at: atObj }));
+      return;
+    }
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     page.addEmptyItem(placement);

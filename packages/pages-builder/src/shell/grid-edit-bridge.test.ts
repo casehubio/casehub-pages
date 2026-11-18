@@ -374,6 +374,113 @@ describe('GridEditBridge', () => {
       expect(rootItems[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 2, w: 12, h: 4 });
     });
 
+    it('routes insert to nested grid when gridPath is provided', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'insert',
+        gridPath: ['pages', 0, 'grid', 0, 'grid'],
+        placement: { mode: 'positioned', x: 6, y: 0, w: 3, h: 2 },
+        componentType: 'summary',
+      });
+
+      const reparsed = PageDocument.parse(doc.toString());
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      expect(nestedSeq.items.length).toBe(3);
+      const newEntry = nestedSeq.get(2)?.toJSON();
+      expect(newEntry.at).toEqual({ x: 6, y: 0, w: 3, h: 2 });
+      expect(newEntry.type).toBe('summary');
+    });
+
+    it('routes split to nested grid when gridPath is provided', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'split',
+        gridPath: ['pages', 0, 'grid', 0, 'grid'],
+        targetIndex: 0,
+        direction: 'horizontal',
+      });
+
+      const reparsed = PageDocument.parse(doc.toString());
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      expect(nestedSeq.items.length).toBe(3);
+      const originalAt = nestedSeq.get(0)?.get('at')?.toJSON();
+      expect(originalAt).toEqual({ x: 0, y: 0, w: 3, h: 1 });
+      const newAt = nestedSeq.get(2)?.get('at')?.toJSON();
+      expect(newAt).toEqual({ x: 0, y: 1, w: 3, h: 1 });
+    });
+
+    it('routes merge to nested grid when gridPath is provided', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'merge',
+        gridPath: ['pages', 0, 'grid', 0, 'grid'],
+        indices: [0, 1],
+      });
+
+      const reparsed = PageDocument.parse(doc.toString());
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      expect(nestedSeq.items.length).toBe(1);
+      const mergedAt = nestedSeq.get(0)?.get('at')?.toJSON();
+      expect(mergedAt).toEqual({ x: 0, y: 0, w: 6, h: 2 });
+    });
+
+    it('routes swap to nested grid when gridPath is provided', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'swap',
+        gridPath: ['pages', 0, 'grid', 0, 'grid'],
+        indexA: 0,
+        indexB: 1,
+      });
+
+      const reparsed = PageDocument.parse(doc.toString());
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      expect(nestedSeq.get(0)?.get('at')?.toJSON()).toEqual({ x: 3, y: 0, w: 3, h: 2 });
+      expect(nestedSeq.get(1)?.get('at')?.toJSON()).toEqual({ x: 0, y: 0, w: 3, h: 2 });
+    });
+
+    it('routes remove to nested grid when gridPath is provided', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'remove',
+        gridPath: ['pages', 0, 'grid', 0, 'grid'],
+        index: 0,
+      });
+
+      const reparsed = PageDocument.parse(doc.toString());
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      expect(nestedSeq.items.length).toBe(1);
+      expect(nestedSeq.get(0)?.get('type')).toBe('table');
+    });
+
+    it('routes add-empty to nested grid when gridPath is provided', () => {
+      const doc = PageDocument.parse(NESTED_GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'add-empty',
+        gridPath: ['pages', 0, 'grid', 0, 'grid'],
+        placement: { mode: 'positioned', x: 0, y: 2, w: 6, h: 2 },
+      });
+
+      const reparsed = PageDocument.parse(doc.toString());
+      const nestedSeq = reparsed._getDoc().getIn(['pages', 0, 'grid', 0, 'grid']) as any;
+      expect(nestedSeq.items.length).toBe(3);
+      const newEntry = nestedSeq.get(2)?.toJSON();
+      expect(newEntry.at).toEqual({ x: 0, y: 2, w: 6, h: 2 });
+      expect(newEntry.type).toBeUndefined();
+    });
+
     it('falls back to root when gridPath is absent', () => {
       const doc = PageDocument.parse(NESTED_GRID_YAML);
       const bridge = new GridEditBridge();
