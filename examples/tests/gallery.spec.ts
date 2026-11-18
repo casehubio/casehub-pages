@@ -286,3 +286,38 @@ test.describe("Table sample (external API)", () => {
     expect(dataComponents.length).toBeGreaterThanOrEqual(1);
   });
 });
+
+test.describe("Carousel and Stack", () => {
+  test("carousel tab renders bar chart in first slide", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#sample-count").waitFor();
+    await page.locator('.sample-item:has-text("Carousel and Stack")').first().click();
+    await page.locator("#sample-container").waitFor({ state: "visible" });
+
+    await page.waitForFunction(() => {
+      const target = document.getElementById("sample-target");
+      return target?.querySelector("[data-component-type='bar-chart']") !== null;
+    }, { timeout: 10000 });
+
+    const charts = await countRenderedCharts(page);
+    expect(charts).toBeGreaterThanOrEqual(1);
+  });
+
+  test("carousel and stack layout components are present", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#sample-count").waitFor();
+    await page.locator('.sample-item:has-text("Carousel and Stack")').first().click();
+    await page.locator("#sample-container").waitFor({ state: "visible" });
+
+    await page.waitForSelector("[data-component-type='carousel']", { timeout: 10000 });
+
+    const types = await page.evaluate(() => {
+      const target = document.getElementById("sample-target")!;
+      return Array.from(target.querySelectorAll("[data-component-type]"))
+        .map(el => (el as HTMLElement).dataset.componentType!);
+    });
+
+    expect(types).toContain("tabs");
+    expect(types).toContain("carousel");
+  });
+});
