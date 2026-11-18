@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type {
-  GridProps, ColumnsProps, PanelProps, HtmlProps,
+  GridProps, PanelProps, HtmlProps,
   LazyPageProps, FilterSettings, RefreshSettings,
 } from "./component-props.js";
 
@@ -8,11 +8,6 @@ describe("component props", () => {
   it("GridProps has columns", () => {
     const p: GridProps = { columns: 12 };
     expect(p.columns).toBe(12);
-  });
-
-  it("ColumnsProps has distribution", () => {
-    const p: ColumnsProps = { distribution: [1, 2, 1] };
-    expect(p.distribution).toEqual([1, 2, 1]);
   });
 
   it("PanelProps has title", () => {
