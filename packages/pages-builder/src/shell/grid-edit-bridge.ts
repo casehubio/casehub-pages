@@ -20,11 +20,13 @@ export class GridEditBridge {
     switch (detail.type) {
       case 'move':
       case 'resize': {
+        doc.beginTransaction();
         this._applyPlacements(doc, detail.items, gp);
         const page = doc.getPages()[0];
         if (page && (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items')) {
           this._compactGrid(page);
         }
+        doc.commitTransaction();
         break;
       }
       case 'insert':

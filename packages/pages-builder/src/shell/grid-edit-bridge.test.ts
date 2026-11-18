@@ -77,7 +77,7 @@ describe('GridEditBridge', () => {
       });
 
       expect(doc.getPages()[0]!.getItems()[0]!.getPlacement()).toEqual(
-        { mode: 'positioned', x: 1, y: 1, w: 5, h: 1 }
+        { mode: 'positioned', x: 1, y: 0, w: 5, h: 1 }
       );
     });
   });
@@ -304,7 +304,7 @@ describe('GridEditBridge', () => {
       });
 
       const rootItems = doc.getPages()[0]!.getItems();
-      expect(rootItems[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 2, y: 1, w: 12, h: 4 });
+      expect(rootItems[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 2, y: 0, w: 12, h: 4 });
     });
   });
 

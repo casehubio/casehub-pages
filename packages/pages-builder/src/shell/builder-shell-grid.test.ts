@@ -30,7 +30,7 @@ describe('grid edit integration', () => {
 
     const reparsed = PageDocument.parse(doc.toString());
     const items = reparsed.getPages()[0]!.getItems();
-    expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 1, w: 6, h: 2 });
+    expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
     expect(items[0]!.type).toBe('chart');
     expect(items[0]!.getProperties()).toEqual({ title: 'Revenue' });
   });
