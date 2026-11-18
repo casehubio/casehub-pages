@@ -148,16 +148,23 @@ export class GridEditBridge {
     const p = target.getPlacement();
     if (p.mode !== 'positioned') return;
 
-    if (direction === 'horizontal') {
-      const topH = Math.floor(p.h / 2);
-      const bottomH = p.h - topH;
-      target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: p.w, h: topH });
-      page.addItem({ mode: 'positioned', x: p.x, y: p.y + topH, w: p.w, h: bottomH }, 'markdown', { content: ' ' });
-    } else {
-      const leftW = Math.floor(p.w / 2);
-      const rightW = p.w - leftW;
-      target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: leftW, h: p.h });
-      page.addItem({ mode: 'positioned', x: p.x + leftW, y: p.y, w: rightW, h: p.h }, 'markdown', { content: ' ' });
+    doc.beginTransaction();
+    try {
+      if (direction === 'horizontal') {
+        const topH = Math.floor(p.h / 2);
+        const bottomH = p.h - topH;
+        target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: p.w, h: topH });
+        page.addItem({ mode: 'positioned', x: p.x, y: p.y + topH, w: p.w, h: bottomH }, 'markdown', { content: ' ' });
+      } else {
+        const leftW = Math.floor(p.w / 2);
+        const rightW = p.w - leftW;
+        target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: leftW, h: p.h });
+        page.addItem({ mode: 'positioned', x: p.x + leftW, y: p.y, w: rightW, h: p.h }, 'markdown', { content: ' ' });
+      }
+      doc.commitTransaction();
+    } catch (e) {
+      doc.abortTransaction();
+      throw e;
     }
   }
 
@@ -206,8 +213,15 @@ export class GridEditBridge {
     if (!a || !b) return;
     const placementA = a.getPlacement();
     const placementB = b.getPlacement();
-    a.setPlacement(placementB);
-    b.setPlacement(placementA);
+    doc.beginTransaction();
+    try {
+      a.setPlacement(placementB);
+      b.setPlacement(placementA);
+      doc.commitTransaction();
+    } catch (e) {
+      doc.abortTransaction();
+      throw e;
+    }
   }
 
   private _removeItem(doc: PageDocument, index: number, _gridPath?: (string | number)[]): void {

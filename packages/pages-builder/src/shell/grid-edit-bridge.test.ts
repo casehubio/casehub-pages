@@ -138,6 +138,19 @@ describe('GridEditBridge', () => {
       expect(items[2]!.getPlacement()).toEqual({ mode: 'positioned', x: 3, y: 0, w: 3, h: 2 });
     });
 
+    it('undo after horizontal split restores original item and removes new half', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'split', targetIndex: 0, direction: 'horizontal' });
+
+      doc.undo();
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(2);
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
+      expect(items[0]!.type).toBe('chart');
+    });
+
     it('preserves original item component after split', () => {
       const doc = PageDocument.parse(GRID_YAML);
       const bridge = new GridEditBridge();
@@ -199,6 +212,20 @@ describe('GridEditBridge', () => {
       expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 6, y: 0, w: 6, h: 1 });
       expect(items[0]!.type).toBe('chart');
       expect(items[1]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
+      expect(items[1]!.type).toBe('table');
+    });
+
+    it('undo after swap restores both items to original placements', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'swap', indexA: 0, indexB: 1 });
+
+      doc.undo();
+      const items = doc.getPages()[0]!.getItems();
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
+      expect(items[0]!.type).toBe('chart');
+      expect(items[1]!.getPlacement()).toEqual({ mode: 'positioned', x: 6, y: 0, w: 6, h: 1 });
       expect(items[1]!.type).toBe('table');
     });
   });
