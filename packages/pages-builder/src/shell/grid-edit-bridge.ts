@@ -23,9 +23,11 @@ export class GridEditBridge {
         doc.beginTransaction();
         try {
           this._applyPlacements(doc, detail.items, gp);
-          const page = doc.getPages()[0];
-          if (page && (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items')) {
-            this._compactGrid(page);
+          if (!gp) {
+            const page = doc.getPages()[0];
+            if (page && (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items')) {
+              this._compactGrid(page);
+            }
           }
           doc.commitTransaction();
         } catch (e) {

@@ -319,6 +319,34 @@ describe('GridEditBridge', () => {
       expect(nestedAt0).toEqual({ x: 1, y: 1, w: 3, h: 2 });
     });
 
+    it('does not compact root grid when gridPath targets nested grid', () => {
+      const GAPPED_ROOT_YAML = `pages:
+  - title: Test
+    items:
+      - placement: { x: 0, y: 2, w: 12, h: 4 }
+        type: panel
+        grid:
+          - at: { x: 0, y: 0, w: 3, h: 2 }
+            type: chart
+          - at: { x: 3, y: 0, w: 3, h: 2 }
+            type: table
+`;
+      const doc = PageDocument.parse(GAPPED_ROOT_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'move',
+        gridPath: ['pages', 0, 'items', 0, 'grid'],
+        items: [
+          { at: { mode: 'positioned', x: 1, y: 0, w: 3, h: 2 }, component: { type: 'chart' } },
+          { at: { mode: 'positioned', x: 3, y: 0, w: 3, h: 2 }, component: { type: 'table' } },
+        ],
+      });
+
+      const rootItems = doc.getPages()[0]!.getItems();
+      expect(rootItems[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 2, w: 12, h: 4 });
+    });
+
     it('falls back to root when gridPath is absent', () => {
       const doc = PageDocument.parse(NESTED_GRID_YAML);
       const bridge = new GridEditBridge();
