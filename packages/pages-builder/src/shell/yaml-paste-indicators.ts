@@ -27,6 +27,13 @@ export function computeValidPasteLines(doc: PageDocument, fragmentType: string):
           const compPath: readonly (string | number)[] = ['pages', pi, 'components', ci];
           addSiblingEntries(entries, doc, compPath, lineOffsets);
         }
+      } else if (mode === 'grid' || mode === 'items') {
+        const key = mode === 'grid' ? 'grid' : 'items';
+        const items = page.getItems();
+        for (let ii = 0; ii < items.length; ii++) {
+          const itemPath: readonly (string | number)[] = ['pages', pi, key, ii];
+          addSiblingEntries(entries, doc, itemPath, lineOffsets);
+        }
       }
     }
   }

@@ -39,9 +39,55 @@ describe('computeValidPasteLines', () => {
     expect(lines).toHaveLength(0);
   });
 
-  it('returns positions for grid items when fragment is component', () => {
-    const doc = PageDocument.parse(FLAT_PAGE);
-    const lines = computeValidPasteLines(doc, 'component');
-    expect(lines.length).toBeGreaterThan(0);
+  describe('grid/items mode pages', () => {
+    const ITEMS_PAGE = `pages:
+- name: Grid Page
+  items:
+  - placement: { x: 0, y: 0, w: 6, h: 2 }
+    component:
+      type: chart
+  - placement: { x: 6, y: 0, w: 6, h: 1 }
+    component:
+      type: table
+`;
+
+    const GRID_PAGE = `pages:
+- name: Grid Page
+  grid:
+  - at: { x: 0, y: 0, w: 6, h: 2 }
+    type: chart
+  - at: { x: 6, y: 0, w: 6, h: 1 }
+    type: table
+`;
+
+    it('generates sibling entries for items: mode', () => {
+      const doc = PageDocument.parse(ITEMS_PAGE);
+      const lines = computeValidPasteLines(doc, 'component');
+      const siblings = lines.filter(l => l.position === 'before' || l.position === 'after');
+      expect(siblings.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('generates child entry on page node for items: mode', () => {
+      const doc = PageDocument.parse(ITEMS_PAGE);
+      const lines = computeValidPasteLines(doc, 'component');
+      const children = lines.filter(l => l.position === 'child');
+      expect(children).toHaveLength(1);
+    });
+
+    it('generates sibling entries for grid: mode', () => {
+      const doc = PageDocument.parse(GRID_PAGE);
+      const lines = computeValidPasteLines(doc, 'component');
+      const siblings = lines.filter(l => l.position === 'before' || l.position === 'after');
+      expect(siblings.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('sibling paths reference correct item indices', () => {
+      const doc = PageDocument.parse(ITEMS_PAGE);
+      const lines = computeValidPasteLines(doc, 'component');
+      const siblings = lines.filter(l => l.position === 'before' || l.position === 'after');
+      const paths = siblings.map(l => l.path);
+      expect(paths.some(p => p[2] === 'items' && p[3] === 0)).toBe(true);
+      expect(paths.some(p => p[2] === 'items' && p[3] === 1)).toBe(true);
+    });
   });
 });
