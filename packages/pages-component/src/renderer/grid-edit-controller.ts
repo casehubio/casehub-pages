@@ -115,9 +115,11 @@ class GridEditControllerImpl implements GridEditController {
     };
     this.onExternalSelect = (e: Event) => {
       const { itemId } = (e as CustomEvent).detail as { itemId: string };
+      this.selection = selectItem(this.selection, itemId, this.getIdRects());
       this._setSelectedEl(itemId);
       this.hoveredId = itemId;
       this._toggleDragHandles(itemId);
+      if (this._mode === "layout") this.applySelectionOutlines();
     };
 
     if (gridEl.parentElement) {
