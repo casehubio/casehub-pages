@@ -343,6 +343,29 @@ test.describe("Carousel and Stack", () => {
     expect(hasPieCanvas).toBe(true);
   });
 
+  test("carousel third slide renders data-table with rows", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#sample-count").waitFor();
+    await page.locator('.sample-item:has-text("Carousel and Stack")').first().click();
+    await page.locator("#sample-container").waitFor({ state: "visible" });
+
+    await page.waitForSelector("[data-component-type='carousel']", { timeout: 10000 });
+    await page.locator("[data-carousel-next]").first().click();
+    await page.locator("[data-carousel-next]").first().click();
+
+    await page.waitForFunction(() => {
+      const target = document.getElementById("sample-target");
+      const dt = target?.querySelector("pages-data-table");
+      return dt?.shadowRoot?.querySelector("table") !== null;
+    }, { timeout: 10000 });
+
+    const tableRows = await page.evaluate(() => {
+      const dt = document.getElementById("sample-target")!.querySelector("pages-data-table");
+      return dt?.shadowRoot?.querySelectorAll("tr").length ?? 0;
+    });
+    expect(tableRows).toBeGreaterThan(1);
+  });
+
   test("stack tab renders metric component with data", async ({ page }) => {
     await page.goto("/");
     await page.locator("#sample-count").waitFor();
