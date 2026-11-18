@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { PageDocument } from '@casehubio/pages-document';
 import { GridEditBridge } from './grid-edit-bridge.js';
@@ -161,6 +162,19 @@ describe('GridEditBridge', () => {
       expect(items[0]!.type).toBe('chart');
     });
 
+    it('undo after merge restores original items', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'merge', indices: [0, 1] });
+
+      doc.undo();
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(2);
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
+      expect(items[1]!.getPlacement()).toEqual({ mode: 'positioned', x: 6, y: 0, w: 6, h: 1 });
+    });
+
     it('merges non-adjacent items into bounding rect', () => {
       const doc = PageDocument.parse(GRID_3ITEMS_YAML);
       const bridge = new GridEditBridge();
@@ -190,6 +204,19 @@ describe('GridEditBridge', () => {
   });
 
   describe('remove', () => {
+    it('undo after remove restores the deleted item', () => {
+      const doc = PageDocument.parse(GRID_YAML);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, { type: 'remove', index: 0 });
+
+      doc.undo();
+      const items = doc.getPages()[0]!.getItems();
+      expect(items).toHaveLength(2);
+      expect(items[0]!.getPlacement()).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
+      expect(items[0]!.type).toBe('chart');
+    });
+
     it('removes item at index', () => {
       const doc = PageDocument.parse(GRID_YAML);
       const bridge = new GridEditBridge();

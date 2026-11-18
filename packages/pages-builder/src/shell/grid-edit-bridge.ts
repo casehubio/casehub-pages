@@ -174,18 +174,25 @@ export class GridEditBridge {
     const maxX = Math.max(...placements.map(p => p.placement.x + p.placement.w));
     const maxY = Math.max(...placements.map(p => p.placement.y + p.placement.h));
 
-    const keepIndex = indices[0]!;
-    const removeIndices = [...indices].filter(i => i !== keepIndex).sort((a, b) => b - a);
-    for (const idx of removeIndices) {
-      page.removeItem(idx);
-    }
+    doc.beginTransaction();
+    try {
+      const keepIndex = indices[0]!;
+      const removeIndices = [...indices].filter(i => i !== keepIndex).sort((a, b) => b - a);
+      for (const idx of removeIndices) {
+        page.removeItem(idx);
+      }
 
-    const updatedItems = page.getItems();
-    const adjustedKeep = keepIndex - removeIndices.filter(i => i < keepIndex).length;
-    updatedItems[adjustedKeep]?.setPlacement({
-      mode: 'positioned', x: minX, y: minY, w: maxX - minX, h: maxY - minY,
-    });
-    this._compactGrid(page);
+      const updatedItems = page.getItems();
+      const adjustedKeep = keepIndex - removeIndices.filter(i => i < keepIndex).length;
+      updatedItems[adjustedKeep]?.setPlacement({
+        mode: 'positioned', x: minX, y: minY, w: maxX - minX, h: maxY - minY,
+      });
+      this._compactGrid(page);
+      doc.commitTransaction();
+    } catch (e) {
+      doc.abortTransaction();
+      throw e;
+    }
   }
 
   private _swapItems(doc: PageDocument, indexA: number, indexB: number, _gridPath?: (string | number)[]): void {
@@ -204,8 +211,15 @@ export class GridEditBridge {
   private _removeItem(doc: PageDocument, index: number, _gridPath?: (string | number)[]): void {
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
-    page.removeItem(index);
-    this._compactGrid(page);
+    doc.beginTransaction();
+    try {
+      page.removeItem(index);
+      this._compactGrid(page);
+      doc.commitTransaction();
+    } catch (e) {
+      doc.abortTransaction();
+      throw e;
+    }
   }
 
   private _addEmptyContainer(doc: PageDocument, placement: GridPlacement, _gridPath?: (string | number)[]): void {
