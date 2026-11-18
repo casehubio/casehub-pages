@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { PageDocument } from '@casehubio/pages-document';
 import { buildTreeModel, PagesBuilderTree } from './builder-tree.js';
@@ -275,10 +276,10 @@ describe('PagesBuilderTree interactions', () => {
     expect(addBtns.length).toBeGreaterThan(0);
   });
 
-  it('add-btn stays in layout flow to prevent hover shift', () => {
+  it('tree-actions hidden by opacity to prevent hover shift', () => {
     const cssText = (PagesBuilderTree as unknown as { styles: { cssText: string } }).styles.cssText;
-    expect(cssText).not.toMatch(/\.add-btn\s*\{[^}]*display:\s*none/);
-    expect(cssText).toMatch(/\.add-btn\s*\{[^}]*opacity:\s*0/);
+    expect(cssText).not.toMatch(/\.tree-actions\s*\{[^}]*display:\s*none/);
+    expect(cssText).toMatch(/\.tree-actions\s*\{[^}]*opacity:\s*0/);
   });
 
   it('fires tree-action with delete on Delete key', async () => {
