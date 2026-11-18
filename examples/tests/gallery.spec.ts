@@ -320,4 +320,46 @@ test.describe("Carousel and Stack", () => {
     expect(types).toContain("tabs");
     expect(types).toContain("carousel");
   });
+
+  test("carousel second slide renders pie chart with data", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#sample-count").waitFor();
+    await page.locator('.sample-item:has-text("Carousel and Stack")').first().click();
+    await page.locator("#sample-container").waitFor({ state: "visible" });
+
+    await page.waitForSelector("[data-component-type='carousel']", { timeout: 10000 });
+    await page.locator("[data-carousel-next]").first().click();
+
+    await page.waitForFunction(() => {
+      const target = document.getElementById("sample-target");
+      const pie = target?.querySelector("pages-pie-chart");
+      return pie?.shadowRoot?.querySelector("canvas") !== null;
+    }, { timeout: 10000 });
+
+    const hasPieCanvas = await page.evaluate(() => {
+      const pie = document.getElementById("sample-target")!.querySelector("pages-pie-chart");
+      return pie?.shadowRoot?.querySelector("canvas") !== null;
+    });
+    expect(hasPieCanvas).toBe(true);
+  });
+
+  test("stack tab renders metric component with data", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#sample-count").waitFor();
+    await page.locator('.sample-item:has-text("Carousel and Stack")').first().click();
+    await page.locator("#sample-container").waitFor({ state: "visible" });
+
+    await page.waitForSelector("[data-component-type='carousel']", { timeout: 10000 });
+    await page.locator("[data-tab-bar] button[data-slot='Stack']").click();
+
+    await page.waitForSelector("[data-component-type='metric']", { timeout: 10000 });
+
+    const metricHasData = await page.evaluate(() => {
+      const target = document.getElementById("sample-target")!;
+      const metric = target.querySelector("[data-component-type='metric']");
+      const vizEl = metric?.querySelector("pages-metric") as HTMLElement & { dataSet?: unknown };
+      return vizEl?.dataSet !== undefined && vizEl?.dataSet !== null;
+    });
+    expect(metricHasData).toBe(true);
+  });
 });
