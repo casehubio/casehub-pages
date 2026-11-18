@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
 import type { Component, PermissionContext } from "../model/types.js";
 import { renderComponent } from "./render.js";

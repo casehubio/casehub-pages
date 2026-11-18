@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { renderComponent } from "./render.js";
 import type { Component } from "../model/types.js";

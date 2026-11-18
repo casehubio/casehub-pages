@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
 import { wireInteractivity } from "./interactive.js";
 import type { Component } from "../model/types.js";
