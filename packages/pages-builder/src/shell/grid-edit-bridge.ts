@@ -1,6 +1,7 @@
 import type { PageDocument, PageNode } from '@casehubio/pages-document';
 import type { GridPlacement, GridItem } from '@casehubio/pages-component';
 import type { CrossGridEditDetail } from '@casehubio/pages-component';
+import { compact } from '@casehubio/pages-component';
 import { isSeq, isMap, type YAMLSeq, type YAMLMap } from 'yaml';
 
 export type GridEditDetail =
@@ -18,9 +19,14 @@ export class GridEditBridge {
     const gp = detail.gridPath;
     switch (detail.type) {
       case 'move':
-      case 'resize':
+      case 'resize': {
         this._applyPlacements(doc, detail.items, gp);
+        const page = doc.getPages()[0];
+        if (page && (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items')) {
+          this._compactGrid(page);
+        }
         break;
+      }
       case 'insert':
         this._insertItem(doc, detail.placement, detail.componentType, gp);
         break;
@@ -172,6 +178,7 @@ export class GridEditBridge {
     updatedItems[adjustedKeep]?.setPlacement({
       mode: 'positioned', x: minX, y: minY, w: maxX - minX, h: maxY - minY,
     });
+    this._compactGrid(page);
   }
 
   private _swapItems(doc: PageDocument, indexA: number, indexB: number, _gridPath?: (string | number)[]): void {
@@ -191,12 +198,31 @@ export class GridEditBridge {
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     page.removeItem(index);
+    this._compactGrid(page);
   }
 
   private _addEmptyContainer(doc: PageDocument, placement: GridPlacement, _gridPath?: (string | number)[]): void {
     const page = doc.getPages()[0];
     { const m = page?.getLayoutMode(); if (!page || (m !== 'grid' && m !== 'items')) return; }
     page.addEmptyItem(placement);
+  }
+
+  private _compactGrid(page: PageNode): void {
+    const items = page.getItems();
+    const rects = items.map((item, i) => {
+      const p = item.getPlacement();
+      return p.mode === 'positioned' ? { id: String(i), x: p.x, y: p.y, w: p.w, h: p.h } : null;
+    }).filter((r): r is { id: string; x: number; y: number; w: number; h: number } => r !== null);
+    if (rects.length === 0) return;
+    const compacted = compact(rects);
+    for (const rect of compacted) {
+      const item = items[Number(rect.id)];
+      if (!item) continue;
+      const p = item.getPlacement();
+      if (p.mode === 'positioned' && p.y !== rect.y) {
+        item.setPlacement({ mode: 'positioned', x: p.x, y: rect.y, w: p.w, h: p.h });
+      }
+    }
   }
 
   applyCrossGridEdit(doc: PageDocument, detail: CrossGridEditDetail): void {

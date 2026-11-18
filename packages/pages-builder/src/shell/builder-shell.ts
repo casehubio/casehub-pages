@@ -176,9 +176,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     }
     this._syncTree();
     this._resolvePropertySource();
-    if (origin !== 'grid') {
-      this._refreshPreview();
-    }
+    this._refreshPreview();
     this._emitChange();
     this.requestUpdate();
   }

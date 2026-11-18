@@ -1,6 +1,6 @@
 import type { GridItem, GridPlacement } from "../model/types.js";
 import type { IdRect, Rect } from "./grid-compaction.js";
-import { compactAll, resizeCompact } from "./grid-compaction.js";
+import { compact, compactAll, resizeCompact } from "./grid-compaction.js";
 import { selectItem, extendSelection, clearSelection } from "./grid-selection.js";
 import type { GridSelection } from "./grid-selection.js";
 import type { GridGeometry, CellCoord, ResizeHandle, RowBounds } from "./grid-drag.js";
@@ -649,9 +649,12 @@ class GridEditControllerImpl implements GridEditController {
           })
         : items;
 
-      const resolved = this.dragHandle === "move"
+      const afterPlace = this.dragHandle === "move"
         ? compactAll(baseItems, this.dragItemId!, target, pinnedIds)
         : resizeCompact(items, this.dragItemId!, target);
+      const resolved = this.dragHandle === "move"
+        ? compact(afterPlace, this.dragItemId!, pinnedIds)
+        : afterPlace;
 
       if (this.dragHandle === "move") {
         for (const item of resolved) {
