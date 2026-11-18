@@ -4,7 +4,7 @@
   "description": "CaseHub Pages Examples Gallery",
   "private": true,
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "rimraf dist .typecheck",
     "generate-samples": "node scripts/generate-samples.js",
     "copy-samples": "node scripts/copy-samples.js",
     "build:bundle": "webpack --env prod",

@@ -16,7 +16,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
     "@casehubio/graph-core": "workspace:*",

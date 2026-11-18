@@ -16,13 +16,15 @@
   },
   "devDependencies": {
     "@casehubio/pages-tsconfig": "workspace:*",
+    "rimraf": "^6.1.0",
     "typescript": "~5.8.0",
     "vitest": "^3.2.1"
   },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf .typecheck"
   },
   "files": [
     "dist",

@@ -24,7 +24,8 @@
     "build:prod": "yarn run build",
     "typecheck": "tsc --noEmit",
     "start": "webpack serve -c ./dev-webapp/webpack.config.js --host 0.0.0.0 --env dev",
-    "test": "jest --silent --verbose --passWithNoTests"
+    "test": "jest --silent --verbose --passWithNoTests",
+    "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
     "@casehubio/pages-iframe-api": "workspace:*",

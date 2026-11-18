@@ -27,7 +27,7 @@
     "typecheck": "tsc --noEmit",
     "test": "yarn build:bundle && vitest run",
     "test:watch": "vitest",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
     "@casehubio/pages-schema": "workspace:*",

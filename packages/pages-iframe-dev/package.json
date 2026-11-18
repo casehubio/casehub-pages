@@ -23,7 +23,8 @@
     "build": "rimraf dist && tsc -p tsconfig.build.json && yarn test",
     "build:prod": "yarn run build",
     "typecheck": "tsc --noEmit",
-    "test": "jest --silent --verbose --passWithNoTests"
+    "test": "jest --silent --verbose --passWithNoTests",
+    "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
     "@casehubio/pages-iframe-api": "workspace:*",

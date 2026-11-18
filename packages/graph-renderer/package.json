@@ -35,7 +35,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "vite dev",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist .typecheck"
   },
   "files": [
     "dist",

@@ -24,7 +24,8 @@
     "test": "vitest run",
     "build:controller": "node ../../node_modules/esbuild/bin/esbuild src/controller/standalone.ts --bundle --format=esm --outfile=dist/controller.js --target=es2022 --tsconfig=tsconfig.json --external:node:fs --external:node:url --external:node:path --external:node:child_process",
     "build:tutorial": "node ../../node_modules/esbuild/bin/esbuild src/tutorial/standalone.ts --bundle --format=esm --outfile=dist/tutorial.js --target=es2022 --tsconfig=tsconfig.json --external:node:fs --external:node:url --external:node:path --external:node:child_process",
-    "build": "yarn build:controller && yarn build:tutorial"
+    "build": "yarn build:controller && yarn build:tutorial",
+    "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
     "@casehubio/pages-data": "workspace:*",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
+    "rimraf": "^6.1.0",
     "vitest": "^3.2.4"
   },
   "files": [

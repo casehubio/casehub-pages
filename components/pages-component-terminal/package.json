@@ -30,7 +30,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",

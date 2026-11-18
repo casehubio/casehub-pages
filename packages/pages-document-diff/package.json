@@ -21,7 +21,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
     "@casehubio/pages-primitives": "workspace:*",
