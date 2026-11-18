@@ -231,11 +231,6 @@ describe('computeMenuItems', () => {
     expect(actions).toContain('delete');
   });
 
-  it('returns no row or column menus', () => {
-    expect(computeMenuItems('row', false)).toHaveLength(0);
-    expect(computeMenuItems('column', false)).toHaveLength(0);
-  });
-
   it('returns page actions for page nodes', () => {
     const items = computeMenuItems('page', false);
     const actions = items.filter(i => !i.separator).map(i => i.action);

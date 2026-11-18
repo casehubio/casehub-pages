@@ -9,7 +9,7 @@ import { computeMenuItems } from './tree-context-menu.js';
 
 import '@casehubio/pages-primitives/context-menu';
 
-export type TreeNodeType = 'page' | 'grid-item' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section' | 'row' | 'column';
+export type TreeNodeType = 'page' | 'grid-item' | 'component' | 'dataset' | 'nav-item' | 'module' | 'import' | 'variable' | 'section';
 
 export interface TreeNodeInfo {
   readonly label: string;

@@ -64,9 +64,9 @@ describe('SelectionOverlay', () => {
     expect(overlayRoot.querySelector('.sel-delete-btn')).toBeTruthy();
   });
 
-  it('shows all structural buttons for row node type', () => {
+  it('shows all structural buttons for section node type', () => {
     setup();
-    overlay.update(makeBounds(), 'row', ['pages', 0, 'rows', 0]);
+    overlay.update(makeBounds(), 'section', ['pages']);
     expect(overlayRoot.querySelector('.sel-add-btn')).toBeTruthy();
     expect(overlayRoot.querySelector('.sel-insert-btn')).toBeTruthy();
     expect(overlayRoot.querySelector('.sel-cut-btn')).toBeTruthy();
@@ -99,7 +99,7 @@ describe('SelectionOverlay', () => {
 
   it('dispatches selection-copy on copy button click', () => {
     setup();
-    overlay.update(makeBounds(), 'row', ['pages', 0, 'rows', 0]);
+    overlay.update(makeBounds(), 'section', ['pages']);
     const events: CustomEvent[] = [];
     overlayRoot.addEventListener('selection-copy', (e: Event) => { events.push(e as CustomEvent); });
     (overlayRoot.querySelector('.sel-copy-btn') as HTMLButtonElement).click();
@@ -108,7 +108,7 @@ describe('SelectionOverlay', () => {
 
   it('dispatches selection-insert on insert button click', () => {
     setup();
-    overlay.update(makeBounds(), 'column', ['pages', 0, 'rows', 0, 'columns', 0]);
+    overlay.update(makeBounds(), 'section', ['pages']);
     const events: CustomEvent[] = [];
     overlayRoot.addEventListener('selection-insert', (e: Event) => { events.push(e as CustomEvent); });
     (overlayRoot.querySelector('.sel-insert-btn') as HTMLButtonElement).click();
@@ -161,7 +161,7 @@ describe('SelectionOverlay', () => {
     setup();
     overlay.update(makeBounds(10, 20, 200, 100), 'component', ['pages', 0, 'components', 0]);
     const el1 = overlayRoot.querySelector('.builder-scope-overlay');
-    overlay.update(makeBounds(50, 60, 300, 150), 'row', ['pages', 0, 'rows', 0]);
+    overlay.update(makeBounds(50, 60, 300, 150), 'section', ['pages']);
     const el2 = overlayRoot.querySelector('.builder-scope-overlay');
     expect(el1).toBe(el2);
   });
@@ -183,24 +183,24 @@ describe('SelectionOverlay', () => {
   describe('insertion points', () => {
     it('showInsertionPoints renders N+1 indicators for N children', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 400), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 400), 'section', ['pages'], { isContainer: true });
       const childBounds = [
         new DOMRect(10, 10, 280, 80),
         new DOMRect(10, 100, 280, 80),
         new DOMRect(10, 190, 280, 80),
       ];
-      overlay.showInsertionPoints(childBounds, ['pages', 0, 'columns', 0], 'column');
+      overlay.showInsertionPoints(childBounds, ['pages'], 'section');
       const points = overlayRoot.querySelectorAll('.visual-insertion-point');
       expect(points.length).toBe(4);
     });
 
     it('renders 2 indicators for 1 child', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 200), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 200), 'section', ['pages'], { isContainer: true });
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
       const points = overlayRoot.querySelectorAll('.visual-insertion-point');
       expect(points.length).toBe(2);
@@ -208,19 +208,19 @@ describe('SelectionOverlay', () => {
 
     it('renders 1 indicator for 0 children', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 200), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
-      overlay.showInsertionPoints([], ['pages', 0, 'columns', 0], 'column');
+      overlay.update(makeBounds(0, 0, 300, 200), 'section', ['pages'], { isContainer: true });
+      overlay.showInsertionPoints([], ['pages'], 'section');
       const points = overlayRoot.querySelectorAll('.visual-insertion-point');
       expect(points.length).toBe(1);
     });
 
     it('insertion point click dispatches selection-insert-at', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 400), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 400), 'section', ['pages'], { isContainer: true });
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80), new DOMRect(10, 100, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
 
       let detail: any;
@@ -232,17 +232,17 @@ describe('SelectionOverlay', () => {
       point.click();
       expect(detail).toBeTruthy();
       expect(detail.index).toBe(0);
-      expect(detail.parentNodeType).toBe('column');
+      expect(detail.parentNodeType).toBe('section');
       expect(detail.target).toBe(point);
     });
 
     it('hideInsertionPoints removes all indicators', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 400), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 400), 'section', ['pages'], { isContainer: true });
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
       expect(overlayRoot.querySelectorAll('.visual-insertion-point').length).toBe(2);
 
@@ -252,11 +252,11 @@ describe('SelectionOverlay', () => {
 
     it('hide() also hides insertion points', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 400), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 400), 'section', ['pages'], { isContainer: true });
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
       overlay.hide();
       expect(overlayRoot.querySelectorAll('.visual-insertion-point').length).toBe(0);
@@ -264,11 +264,11 @@ describe('SelectionOverlay', () => {
 
     it('dispose() cleans up insertion points', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 400), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 400), 'section', ['pages'], { isContainer: true });
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
       overlay.dispose();
       expect(overlayRoot.querySelectorAll('.visual-insertion-point').length).toBe(0);
@@ -276,11 +276,11 @@ describe('SelectionOverlay', () => {
 
     it('insertion points have ARIA attributes', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 400), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 400), 'section', ['pages'], { isContainer: true });
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
       const point = overlayRoot.querySelector('.visual-insertion-point');
       expect(point?.getAttribute('role')).toBe('button');
@@ -289,18 +289,18 @@ describe('SelectionOverlay', () => {
 
     it('showInsertionPoints replaces previous insertion points', () => {
       setup();
-      overlay.update(makeBounds(0, 0, 300, 400), 'column', ['pages', 0, 'columns', 0], { isContainer: true });
+      overlay.update(makeBounds(0, 0, 300, 400), 'section', ['pages'], { isContainer: true });
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80), new DOMRect(10, 100, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
       expect(overlayRoot.querySelectorAll('.visual-insertion-point').length).toBe(3);
 
       overlay.showInsertionPoints(
         [new DOMRect(10, 10, 280, 80)],
-        ['pages', 0, 'columns', 0],
-        'column',
+        ['pages'],
+        'section',
       );
       expect(overlayRoot.querySelectorAll('.visual-insertion-point').length).toBe(2);
     });

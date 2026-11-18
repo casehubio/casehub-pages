@@ -13,32 +13,6 @@ const FLAT_PAGE = `pages:
       subtype: column
 `;
 
-const ROWS_PAGE = `pages:
-- name: Dashboard
-  rows:
-  - columns:
-    - span: 4
-      components:
-      - type: metric
-        properties:
-          title: Total Revenue
-          lookup:
-            uuid: sales_tx
-    - span: 4
-      components:
-      - type: metric
-        properties:
-          title: Active Users
-          lookup:
-            uuid: analytics
-  - columns:
-    - span: 8
-      components:
-      - type: bar-chart
-        properties:
-          subtype: column
-`;
-
 const WITH_DATASETS = `datasets:
 - uuid: sales_tx
   name: Sales Transactions
@@ -93,39 +67,6 @@ describe('findPathAtOffset', () => {
     });
   });
 
-  describe('rows/columns layout', () => {
-    it('cursor on first "type: metric" resolves to first row first column component', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const path = findPathAtOffset(doc, offsetIn(doc, 'type: metric'));
-      expect(path).toEqual(['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
-    });
-
-    it('cursor on "title: Active Users" resolves to second column component', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const path = findPathAtOffset(doc, offsetIn(doc, 'title: Active Users'));
-      expect(path).toEqual(['pages', 0, 'rows', 0, 'columns', 1, 'components', 0]);
-    });
-
-    it('cursor on "type: bar-chart" resolves to second row component', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const path = findPathAtOffset(doc, offsetIn(doc, 'type: bar-chart'));
-      expect(path).toBeDefined();
-      expect(path![path!.indexOf('rows') + 1]).toBe(1);
-    });
-
-    it('cursor on "span: 4" resolves to a column', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const path = findPathAtOffset(doc, offsetIn(doc, 'span: 4'));
-      expect(path).toBeDefined();
-      expect(path).toContain('columns');
-    });
-
-    it('cursor on "name: Dashboard" resolves to the page', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const path = findPathAtOffset(doc, offsetIn(doc, 'name: Dashboard'));
-      expect(path).toEqual(['pages', 0]);
-    });
-  });
 
   describe('datasets', () => {
     it('cursor on first dataset resolves to datasets[0]', () => {
@@ -229,79 +170,13 @@ describe('getNodeRange', () => {
     });
   });
 
-  describe('row/column ranges', () => {
-    it('first metric range does not overlap second metric', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const r0 = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
-      const r1 = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 1, 'components', 0]);
-      expect(r0).toBeDefined();
-      expect(r1).toBeDefined();
-      expect(r0!.to).toBeLessThanOrEqual(r1!.from);
-    });
-
-    it('metric range includes its lookup.uuid', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const range = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
-      expect(range).toBeDefined();
-      const text = doc.toString().slice(range!.from, range!.to);
-      expect(text).toContain('title: Total Revenue');
-      expect(text).toContain('uuid: sales_tx');
-    });
-
-    it('column range includes its components but not sibling columns', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const range = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 0]);
-      expect(range).toBeDefined();
-      const text = doc.toString().slice(range!.from, range!.to);
-      expect(text).toContain('Total Revenue');
-      expect(text).not.toContain('Active Users');
-    });
-
-    it('row range includes all its columns', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const range = getNodeRange(doc, ['pages', 0, 'rows', 0]);
-      expect(range).toBeDefined();
-      const text = doc.toString().slice(range!.from, range!.to);
-      expect(text).toContain('Total Revenue');
-      expect(text).toContain('Active Users');
-    });
-
-    it('row range does not include second row', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const range = getNodeRange(doc, ['pages', 0, 'rows', 0]);
-      expect(range).toBeDefined();
-      const text = doc.toString().slice(range!.from, range!.to);
-      expect(text).not.toContain('bar-chart');
-    });
-
-    it('component range ends on the last content line, not the next line', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const range = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
-      expect(range).toBeDefined();
-      const yaml = doc.toString();
-      const lastLine = yaml.slice(0, range!.to).split('\n').pop()!;
-      expect(lastLine.trim()).not.toBe('');
-      expect(lastLine).toContain('uuid: sales_tx');
-    });
-
-    it('range from starts on the same line as the node content', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
-      const range = getNodeRange(doc, ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]);
-      expect(range).toBeDefined();
-      const yaml = doc.toString();
-      const startLine = yaml.slice(0, range!.from).split('\n').length;
-      const textFromStart = yaml.split('\n')[startLine - 1]!;
-      expect(textFromStart.trim()).toMatch(/^-?\s*type:/);
-    });
-  });
-
   describe('page and dataset ranges', () => {
-    it('page range includes all rows', () => {
-      const doc = PageDocument.parse(ROWS_PAGE);
+    it('page range includes all components', () => {
+      const doc = PageDocument.parse(FLAT_PAGE);
       const range = getNodeRange(doc, ['pages', 0]);
       expect(range).toBeDefined();
       const text = doc.toString().slice(range!.from, range!.to);
-      expect(text).toContain('Dashboard');
+      expect(text).toContain('Overview');
       expect(text).toContain('bar-chart');
     });
 
@@ -337,19 +212,9 @@ describe('classifyPath', () => {
     expect(classifyPath(['pages', 1])).toBe('page');
   });
 
-  it('classifies row path', () => {
-    expect(classifyPath(['pages', 0, 'rows', 0])).toBe('row');
-  });
-
-  it('classifies column path', () => {
-    expect(classifyPath(['pages', 0, 'columns', 0])).toBe('column');
-    expect(classifyPath(['pages', 0, 'rows', 0, 'columns', 0])).toBe('column');
-  });
-
   it('classifies component path', () => {
     expect(classifyPath(['pages', 0, 'components', 0])).toBe('component');
-    expect(classifyPath(['pages', 0, 'rows', 0, 'columns', 0, 'components', 0])).toBe('component');
-    expect(classifyPath(['pages', 0, 'columns', 0, 'components', 0])).toBe('component');
+    expect(classifyPath(['pages', 0, 'items', 0, 'component'])).toBe('component');
   });
 
   it('classifies grid-item path', () => {
@@ -373,7 +238,7 @@ describe('classifyPath', () => {
 
   it('returns undefined for property paths (should resolve to parent)', () => {
     expect(classifyPath(['pages', 0, 'components', 0, 'properties', 'text'])).toBe('component');
-    expect(classifyPath(['pages', 0, 'rows', 0, 'columns', 0, 'components', 0, 'properties'])).toBe('component');
+    expect(classifyPath(['pages', 0, 'items', 0, 'properties'])).toBe('component');
   });
 
   it('returns undefined for unrecognised paths', () => {
@@ -385,18 +250,8 @@ describe('classifyPath', () => {
 // --- getParentPath ---
 
 describe('getParentPath', () => {
-  it('component → column', () => {
-    expect(getParentPath(['pages', 0, 'rows', 0, 'columns', 0, 'components', 0]))
-      .toEqual(['pages', 0, 'rows', 0, 'columns', 0]);
-  });
-
-  it('column → row', () => {
-    expect(getParentPath(['pages', 0, 'rows', 0, 'columns', 0]))
-      .toEqual(['pages', 0, 'rows', 0]);
-  });
-
-  it('row → page', () => {
-    expect(getParentPath(['pages', 0, 'rows', 0]))
+  it('grid-item → page', () => {
+    expect(getParentPath(['pages', 0, 'items', 0]))
       .toEqual(['pages', 0]);
   });
 
@@ -434,13 +289,13 @@ describe('getParentPath', () => {
     expect(getParentPath([])).toBeNull();
   });
 
-  it('full chain: component → column → row → page → section → null', () => {
-    let path: readonly (string | number)[] | null = ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0];
+  it('full chain: component → page → section → null', () => {
+    let path: readonly (string | number)[] | null = ['pages', 0, 'components', 0];
     const chain: string[] = [classifyPath(path)!];
     while (path) {
       path = getParentPath(path);
       if (path) chain.push(classifyPath(path)!);
     }
-    expect(chain).toEqual(['component', 'column', 'row', 'page', 'section']);
+    expect(chain).toEqual(['component', 'page', 'section']);
   });
 });

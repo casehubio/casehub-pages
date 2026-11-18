@@ -38,15 +38,15 @@ describe('tree-dnd', () => {
       expect(target.index).toBe(1);
     });
 
-    it('computes on-container target for on position on column', () => {
+    it('computes on-container target for on position on section', () => {
       const target = computeDropTarget(
-        ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0],
-        ['pages', 0, 'rows', 0, 'columns', 1],
-        'column',
+        ['pages', 0, 'components', 0],
+        ['pages'],
+        'section',
         'on'
       );
       expect(target.type).toBe('on-container');
-      expect(target.parentPath).toEqual(['pages', 0, 'rows', 0, 'columns', 1]);
+      expect(target.parentPath).toEqual(['pages']);
     });
 
     it('computes on-container target for on position on page', () => {
@@ -57,16 +57,6 @@ describe('tree-dnd', () => {
         'on'
       );
       expect(target.type).toBe('on-container');
-    });
-
-    it('returns invalid for row targets', () => {
-      const target = computeDropTarget(
-        ['pages', 0, 'rows', 0, 'columns', 0, 'components', 0],
-        ['pages', 0, 'rows', 1],
-        'row',
-        'on'
-      );
-      expect(target.type).toBe('invalid');
     });
 
     it('returns invalid for dataset targets', () => {
@@ -92,7 +82,7 @@ describe('tree-dnd', () => {
     it('accepts on-container targets', () => {
       expect(isValidDrop('component', {
         type: 'on-container',
-        parentPath: ['pages', 0, 'rows', 0, 'columns', 0],
+        parentPath: ['pages', 0, 'items'],
         index: 0,
       })).toBe(true);
     });

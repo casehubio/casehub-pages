@@ -59,7 +59,7 @@ function walkForPath(node: unknown, offset: number, path: (string | number)[]): 
   return path.length > 0 ? path : undefined;
 }
 
-const NODE_KEYS = new Set(['pages', 'datasets', 'navTree', 'rows', 'columns', 'components', 'root_items', 'children', 'grid', 'items']);
+const NODE_KEYS = new Set(['pages', 'datasets', 'navTree', 'components', 'root_items', 'children', 'grid', 'items']);
 
 function trimToNodeBoundary(path: (string | number)[]): (string | number)[] {
   let lastNodeEnd = 0;
@@ -121,15 +121,6 @@ export function classifyPath(path: readonly (string | number)[]): TreeNodeType |
       return 'grid-item';
     }
   }
-  for (let i = path.length - 1; i >= 0; i--) {
-    const seg = path[i];
-    if (seg === 'columns' && i + 1 < path.length && typeof path[i + 1] === 'number') return 'column';
-  }
-  for (let i = path.length - 1; i >= 0; i--) {
-    const seg = path[i];
-    if (seg === 'rows' && i + 1 < path.length && typeof path[i + 1] === 'number') return 'row';
-  }
-
   if (path.length === 2 && path[0] === 'pages' && typeof path[1] === 'number') return 'page';
   if (path.length > 2 && path[0] === 'pages' && typeof path[1] === 'number') return 'page';
 

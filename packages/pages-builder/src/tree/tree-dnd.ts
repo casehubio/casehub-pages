@@ -7,8 +7,8 @@ export interface DropTarget {
   slotName?: string;
 }
 
-const CONTAINER_NODE_TYPES = new Set(['page', 'column', 'section']);
-const INVALID_DROP_TYPES = new Set(['row', 'dataset', 'nav-item']);
+const CONTAINER_NODE_TYPES = new Set(['page', 'section']);
+const INVALID_DROP_TYPES = new Set(['dataset', 'nav-item']);
 
 export function computeDropPosition(e: DragEvent, element: HTMLElement): DropPosition {
   const rect = element.getBoundingClientRect();
