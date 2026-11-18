@@ -15,7 +15,6 @@ describe("dataset scoping for tab content", () => {
     const timeseries: Component = { type: "timeseries" };
     const tabs: Component = {
       type: "tabs",
-      props: { targetPage: true },
       slots: { "Single Metric": [timeseries] },
     };
     const childPage: Component = {
@@ -41,7 +40,6 @@ describe("dataset scoping for tab content", () => {
     const table: Component = { type: "data-table" };
     const tabs: Component = {
       type: "tabs",
-      props: { targetPage: true },
       slots: { "Tab A": [table] },
     };
     const childPage: Component = {

@@ -598,6 +598,26 @@ describe("desugarComponent", () => {
       expect(pageB?.slots?.default?.[0]?.type).toBe("html");
     });
 
+    it("targetPage preserves other properties on the nav component", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        properties: { targetPage: true, width: "100%" },
+        tabs: { "Tab A": { components: [{ html: "A" }] } },
+      });
+      expect(result.props).toEqual({ width: "100%" });
+      expect(result.slots?.["Tab A"]?.[0]?.type).toBe("page");
+    });
+
+    it("targetPage: false does not wrap slots", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        properties: { targetPage: false },
+        tabs: { "Tab A": { components: [{ html: "A" }] } },
+      });
+      expect(result.props).toEqual({ targetPage: false });
+      expect(result.slots?.["Tab A"]?.[0]?.type).toBe("html");
+    });
+
     it("type: accordion with inline sections builds slots", () => {
       const result = desugarComponent({
         type: "accordion",
