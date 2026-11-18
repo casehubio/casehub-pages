@@ -206,4 +206,50 @@ describe('DefinitionParser', () => {
       expect(binding).toEqual({ kind: 'agent-session-close', sessionRef: 'chat-1' });
     });
   });
+
+  describe('parseInvoke — scalar subjects', () => {
+    it('mcp accepts scalar tool name', () => {
+      const binding = DefinitionParser.parseInvoke({ mcp: 'search-docs' });
+      expect(binding).toEqual({ kind: 'mcp', tool: 'search-docs' });
+    });
+
+    it('mcp accepts map form', () => {
+      const binding = DefinitionParser.parseInvoke({ mcp: { tool: 'search-docs' } });
+      expect(binding).toEqual({ kind: 'mcp', tool: 'search-docs' });
+    });
+
+    it('graphql accepts scalar query string', () => {
+      const binding = DefinitionParser.parseInvoke({ graphql: '{ users { name } }' });
+      expect(binding).toEqual({ kind: 'graphql', query: '{ users { name } }' });
+    });
+
+    it('graphql accepts map form', () => {
+      const binding = DefinitionParser.parseInvoke({ graphql: { query: '{ users { name } }' } });
+      expect(binding).toEqual({ kind: 'graphql', query: '{ users { name } }' });
+    });
+
+    it('rest accepts scalar URL string', () => {
+      const binding = DefinitionParser.parseInvoke({ rest: 'https://api.example.com/users' });
+      expect(binding).toEqual({
+        kind: 'rest',
+        method: 'GET',
+        url: 'https://api.example.com/users',
+        headers: {},
+        body: {},
+      });
+    });
+
+    it('rest accepts map form', () => {
+      const binding = DefinitionParser.parseInvoke({
+        rest: { method: 'POST', url: 'https://api.example.com/users', headers: {}, body: {} },
+      });
+      expect(binding).toEqual({
+        kind: 'rest',
+        method: 'POST',
+        url: 'https://api.example.com/users',
+        headers: {},
+        body: {},
+      });
+    });
+  });
 });

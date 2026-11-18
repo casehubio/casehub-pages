@@ -69,7 +69,10 @@ export class DefinitionParser {
 
   static parseInvoke(raw: Record<string, unknown>): InvokeBinding {
     if (raw['mcp']) {
-      return { kind: 'mcp', tool: raw['mcp'] as string };
+      const val = raw['mcp'];
+      if (typeof val === 'string') return { kind: 'mcp', tool: val };
+      const spec = val as Record<string, unknown>;
+      return { kind: 'mcp', tool: spec['tool'] as string };
     }
     if (raw['python']) {
       const wd = (raw['workingDir'] ?? raw['working-dir']) as string | undefined;
@@ -100,10 +103,17 @@ export class DefinitionParser {
       };
     }
     if (raw['graphql']) {
-      return { kind: 'graphql', query: raw['graphql'] as string };
+      const val = raw['graphql'];
+      if (typeof val === 'string') return { kind: 'graphql', query: val };
+      const spec = val as Record<string, unknown>;
+      return { kind: 'graphql', query: spec['query'] as string };
     }
     if (raw['rest']) {
-      const spec = raw['rest'] as Record<string, unknown>;
+      const val = raw['rest'];
+      if (typeof val === 'string') {
+        return { kind: 'rest', method: 'GET', url: val, headers: {}, body: {} };
+      }
+      const spec = val as Record<string, unknown>;
       return {
         kind: 'rest',
         method: (spec['method'] as string) ?? 'GET',
