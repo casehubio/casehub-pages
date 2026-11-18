@@ -18,19 +18,21 @@ function stop(): void {
 
 function handleVisibility(): void {
   if (subscribers.size === 0) return;
-  if (document.hidden) {
+  if (typeof document !== 'undefined' && document.hidden) {
     stop();
   } else {
     start();
   }
 }
 
-document.addEventListener('visibilitychange', handleVisibility);
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', handleVisibility);
+}
 
 export function subscribe(callback: () => void): void {
   if (subscribers.has(callback)) return;
   subscribers.add(callback);
-  if (subscribers.size === 1 && !document.hidden) start();
+  if (subscribers.size === 1 && (typeof document === 'undefined' || !document.hidden)) start();
 }
 
 export function unsubscribe(callback: () => void): void {
