@@ -21,12 +21,17 @@ export class GridEditBridge {
       case 'move':
       case 'resize': {
         doc.beginTransaction();
-        this._applyPlacements(doc, detail.items, gp);
-        const page = doc.getPages()[0];
-        if (page && (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items')) {
-          this._compactGrid(page);
+        try {
+          this._applyPlacements(doc, detail.items, gp);
+          const page = doc.getPages()[0];
+          if (page && (page.getLayoutMode() === 'grid' || page.getLayoutMode() === 'items')) {
+            this._compactGrid(page);
+          }
+          doc.commitTransaction();
+        } catch (e) {
+          doc.abortTransaction();
+          throw e;
         }
-        doc.commitTransaction();
         break;
       }
       case 'insert':
