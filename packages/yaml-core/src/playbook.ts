@@ -13,10 +13,13 @@ export interface PlaybookDocument {
 export const PLAYBOOK_SCHEMAS = {
   CLIENT: 'client',
   SERVER: 'server',
+  ASSISTED: 'assisted',
 } as const;
 
 export function isBuiltInSchema(schema: string): boolean {
-  return schema === PLAYBOOK_SCHEMAS.CLIENT || schema === PLAYBOOK_SCHEMAS.SERVER;
+  return schema === PLAYBOOK_SCHEMAS.CLIENT
+    || schema === PLAYBOOK_SCHEMAS.SERVER
+    || schema === PLAYBOOK_SCHEMAS.ASSISTED;
 }
 
 export function isDomainSchema(schema: string | null | undefined): boolean {

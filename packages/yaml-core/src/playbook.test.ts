@@ -66,14 +66,16 @@ describe('PlaybookFrontMatter', () => {
 });
 
 describe('PlaybookSchemas', () => {
-  it('has client and server constants', () => {
+  it('has client, server, and assisted constants', () => {
     expect(PLAYBOOK_SCHEMAS.CLIENT).toBe('client');
     expect(PLAYBOOK_SCHEMAS.SERVER).toBe('server');
+    expect(PLAYBOOK_SCHEMAS.ASSISTED).toBe('assisted');
   });
 
-  it('identifies built-in schemas', () => {
+  it('identifies built-in schemas including assisted', () => {
     expect(isBuiltInSchema('client')).toBe(true);
     expect(isBuiltInSchema('server')).toBe(true);
+    expect(isBuiltInSchema('assisted')).toBe(true);
     expect(isBuiltInSchema('clinical-client')).toBe(false);
   });
 
@@ -82,6 +84,7 @@ describe('PlaybookSchemas', () => {
     expect(isDomainSchema('aml-server')).toBe(true);
     expect(isDomainSchema('client')).toBe(false);
     expect(isDomainSchema('server')).toBe(false);
+    expect(isDomainSchema('assisted')).toBe(false);
     expect(isDomainSchema(null)).toBe(false);
   });
 });

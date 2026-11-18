@@ -2,6 +2,7 @@ export interface PlaybookSchemaDescriptor {
   name: string;
   baseSchema: string | null;
   capabilities: Set<string>;
+  hasCapability(cap: string): boolean;
 }
 
 export const PLAYBOOK_CAPABILITIES = {
@@ -27,7 +28,12 @@ export const PLAYBOOK_CAPABILITIES = {
   MCP_INVOKE: 'mcp-invoke',
   GRAPHQL_INVOKE: 'graphql-invoke',
   CODEGEN: 'codegen',
-  TRIGGERS: 'triggers',
+
+  // Risk-bearing capabilities (excluded from assisted authoring context)
+  PROCESS_EXECUTION: 'process-execution',
+  RAW_HTTP: 'raw-http',
+  EXPRESSION_MVEL: 'expression-mvel',
+  ENV_ACCESS: 'env-access',
 } as const;
 
 const SHARED_CAPABILITIES = new Set([
@@ -43,7 +49,7 @@ const SHARED_CAPABILITIES = new Set([
 function builtIn(name: string, extra: string[]): PlaybookSchemaDescriptor {
   const capabilities: Set<string> = new Set(SHARED_CAPABILITIES);
   for (const cap of extra) capabilities.add(cap);
-  return { name, baseSchema: null, capabilities };
+  return { name, baseSchema: null, capabilities, hasCapability: (cap) => capabilities.has(cap) };
 }
 
 export function domainSchema(
@@ -51,7 +57,8 @@ export function domainSchema(
   baseSchema: string,
   capabilities: string[],
 ): PlaybookSchemaDescriptor {
-  return { name, baseSchema, capabilities: new Set(capabilities) };
+  const caps = new Set(capabilities);
+  return { name, baseSchema, capabilities: caps, hasCapability: (cap) => caps.has(cap) };
 }
 
 export interface PlaybookSchemaRegistry {
@@ -83,7 +90,21 @@ export function createPlaybookSchemaRegistry(): PlaybookSchemaRegistry {
       PLAYBOOK_CAPABILITIES.MCP_INVOKE,
       PLAYBOOK_CAPABILITIES.GRAPHQL_INVOKE,
       PLAYBOOK_CAPABILITIES.CODEGEN,
-      PLAYBOOK_CAPABILITIES.TRIGGERS,
+      PLAYBOOK_CAPABILITIES.PROCESS_EXECUTION,
+      PLAYBOOK_CAPABILITIES.RAW_HTTP,
+      PLAYBOOK_CAPABILITIES.EXPRESSION_MVEL,
+      PLAYBOOK_CAPABILITIES.ENV_ACCESS,
+    ]),
+  );
+
+  schemas.set(
+    'assisted',
+    builtIn('assisted', [
+      PLAYBOOK_CAPABILITIES.ORCHESTRATION,
+      PLAYBOOK_CAPABILITIES.CORRELATION,
+      PLAYBOOK_CAPABILITIES.MCP_INVOKE,
+      PLAYBOOK_CAPABILITIES.GRAPHQL_INVOKE,
+      PLAYBOOK_CAPABILITIES.CODEGEN,
     ]),
   );
 
