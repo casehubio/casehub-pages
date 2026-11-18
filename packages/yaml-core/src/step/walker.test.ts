@@ -316,17 +316,17 @@ describe('Walker', () => {
   });
 
   describe('structural decorator forms', () => {
-    it('resolves forEach with object value as structural block', () => {
+    it('resolves for-each with object value as structural block', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill'), click: makeEntry('click') });
       const steps = [
-        { forEach: { 'member in members': [{ fill: {} }, { click: {} }] } },
+        { 'for-each': { 'member in members': [{ fill: {} }, { click: {} }] } },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('block');
       if (resolved[0]!.kind === 'block') {
         expect(resolved[0].steps).toHaveLength(2);
         expect(resolved[0].steps[0]!.kind).toBe('plugin');
-        expect(resolved[0].decorators['forEach']).toBe('member in members');
+        expect(resolved[0].decorators['for-each']).toBe('member in members');
       }
     });
 
@@ -412,13 +412,13 @@ describe('Walker', () => {
     it('combines structural decorator with scalar decorators', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { forEach: { 'member in members': [{ fill: {} }] }, retry: 3, timeout: '30s' },
+        { 'for-each': { 'member in members': [{ fill: {} }] }, retry: 3, timeout: '30s' },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('block');
       if (resolved[0]!.kind === 'block') {
         expect(resolved[0].steps).toHaveLength(1);
-        expect(resolved[0].decorators['forEach']).toBe('member in members');
+        expect(resolved[0].decorators['for-each']).toBe('member in members');
         expect(resolved[0].decorators['retry']).toBe(3);
         expect(resolved[0].decorators['timeout']).toBe('30s');
       }
@@ -427,7 +427,7 @@ describe('Walker', () => {
     it('preserves step name on structural decorator', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { name: 'my-loop', forEach: { 'item in items': [{ fill: {} }] } },
+        { name: 'my-loop', 'for-each': { 'item in items': [{ fill: {} }] } },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.name).toBe('my-loop');
@@ -435,17 +435,17 @@ describe('Walker', () => {
 
     it('treats scalar decorator value alongside action key as decorator (unchanged)', () => {
       const catalog = makeCatalog({ click: makeEntry('click') });
-      const steps = [{ click: { role: 'button' }, retry: 3, forEach: 'item in items' }];
+      const steps = [{ click: { role: 'button' }, retry: 3, 'for-each': 'item in items' }];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('plugin');
       expect(resolved[0]!.decorators['retry']).toBe(3);
-      expect(resolved[0]!.decorators['forEach']).toBe('item in items');
+      expect(resolved[0]!.decorators['for-each']).toBe('item in items');
     });
 
     it('throws when two promotable decorators both have non-scalar values', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { forEach: { 'a in b': [{ fill: {} }] }, retry: { '3': [{ fill: {} }] } },
+        { 'for-each': { 'a in b': [{ fill: {} }] }, retry: { '3': [{ fill: {} }] } },
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/structural.*structural/i);
     });
@@ -453,7 +453,7 @@ describe('Walker', () => {
     it('throws when structural decorator conflicts with block', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { block: [{ fill: {} }], forEach: { 'a in b': [{ fill: {} }] } },
+        { block: [{ fill: {} }], 'for-each': { 'a in b': [{ fill: {} }] } },
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/structural.*structural/i);
     });
@@ -461,41 +461,41 @@ describe('Walker', () => {
     it('treats object with multiple keys as decorator (not structural)', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { fill: {}, forEach: { 'a in b': [{ fill: {} }], 'c in d': [{ fill: {} }] } },
+        { fill: {}, 'for-each': { 'a in b': [{ fill: {} }], 'c in d': [{ fill: {} }] } },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('plugin');
-      expect(resolved[0]!.decorators['forEach']).toEqual({ 'a in b': [{ fill: {} }], 'c in d': [{ fill: {} }] });
+      expect(resolved[0]!.decorators['for-each']).toEqual({ 'a in b': [{ fill: {} }], 'c in d': [{ fill: {} }] });
     });
 
     it('treats object with non-array value as decorator (not structural)', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { fill: {}, forEach: { 'a in b': 'not-an-array' } },
+        { fill: {}, 'for-each': { 'a in b': 'not-an-array' } },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('plugin');
-      expect(resolved[0]!.decorators['forEach']).toEqual({ 'a in b': 'not-an-array' });
+      expect(resolved[0]!.decorators['for-each']).toEqual({ 'a in b': 'not-an-array' });
     });
 
     it('throws when structural decorator conflicts with action key', () => {
       const catalog = makeCatalog({ click: makeEntry('click') });
       const steps = [
-        { click: {}, forEach: { 'a in b': [{ click: {} }] } },
+        { click: {}, 'for-each': { 'a in b': [{ click: {} }] } },
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/structural.*action/i);
     });
 
-    it('resolves combined-key form: forEach member in members', () => {
+    it('resolves combined-key form: for-each member in members', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill'), click: makeEntry('click') });
       const steps = [
-        { 'forEach member in members': [{ fill: {} }, { click: {} }] },
+        { 'for-each member in members': [{ fill: {} }, { click: {} }] },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('block');
       if (resolved[0]!.kind === 'block') {
         expect(resolved[0].steps).toHaveLength(2);
-        expect(resolved[0].decorators['forEach']).toBe('member in members');
+        expect(resolved[0].decorators['for-each']).toBe('member in members');
       }
     });
 
@@ -565,12 +565,12 @@ describe('Walker', () => {
     it('combined-key form with scalar decorators', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { 'forEach item in items': [{ fill: {} }], retry: 3, timeout: '30s' },
+        { 'for-each item in items': [{ fill: {} }], retry: 3, timeout: '30s' },
       ];
       const resolved = Walker.resolve(steps, catalog);
       expect(resolved[0]!.kind).toBe('block');
       if (resolved[0]!.kind === 'block') {
-        expect(resolved[0].decorators['forEach']).toBe('item in items');
+        expect(resolved[0].decorators['for-each']).toBe('item in items');
         expect(resolved[0].decorators['retry']).toBe(3);
         expect(resolved[0].decorators['timeout']).toBe('30s');
       }
@@ -579,7 +579,7 @@ describe('Walker', () => {
     it('rejects combined-key with non-array value', () => {
       const catalog = makeCatalog({ fill: makeEntry('fill') });
       const steps = [
-        { 'forEach item in items': 'not-an-array' },
+        { 'for-each item in items': 'not-an-array' },
       ];
       expect(() => Walker.resolve(steps, catalog)).toThrow(/unknown step key/i);
     });

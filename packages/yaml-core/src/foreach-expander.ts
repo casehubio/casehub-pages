@@ -39,7 +39,7 @@ function resolveValues(
   for (const item of inList) {
     let s = String(item);
     if (s.includes('${')) {
-      s = resolver.resolveString(s, `forEach.${context}`);
+      s = resolver.resolveString(s, `for-each.${context}`);
     }
     if (valueExpander) {
       try {
@@ -106,7 +106,7 @@ export class ForEachExpander {
           const group = iterationGroups[groupKey];
           if (!group) {
             throw new Error(
-              `forEach on '${elementId}' references unknown iteration group '${groupKey}'.`,
+              `for-each on '${elementId}' references unknown iteration group '${groupKey}'.`,
             );
           }
           const values = resolveValues(
@@ -124,7 +124,7 @@ export class ForEachExpander {
       const values = groupValues.get(groupKey)!;
       if (values.length > maxExpansion) {
         throw new Error(
-          `forEach template '${elementId}' would expand to ${values.length} elements (limit: ${maxExpansion}).`,
+          `for-each template '${elementId}' would expand to ${values.length} elements (limit: ${maxExpansion}).`,
         );
       }
     }
@@ -165,7 +165,7 @@ export class ForEachExpander {
 
         if (allElements.has(stampedId)) {
           throw new Error(
-            `Duplicate stamped ID '${stampedId}' — forEach values must be unique within each template.`,
+            `Duplicate stamped ID '${stampedId}' — for-each values must be unique within each template.`,
           );
         }
         allElements.set(stampedId, adapter.stamp(element, stampedId, eachResolver));
@@ -212,7 +212,7 @@ export class ForEachExpander {
             const group = iterationGroups[groupKey];
             if (!group) {
               throw new Error(
-                `forEach on '${elementId}' references unknown group or data source '${groupKey}'.`,
+                `for-each on '${elementId}' references unknown group or data source '${groupKey}'.`,
               );
             }
             const values = resolveValues(group.in, resolver, groupKey, null);
@@ -230,7 +230,7 @@ export class ForEachExpander {
       const values = groupValues.get(groupKey)!;
       if (values.length > maxExpansion) {
         throw new Error(
-          `forEach template '${elementId}' would expand to ${values.length} elements (limit: ${maxExpansion}).`,
+          `for-each template '${elementId}' would expand to ${values.length} elements (limit: ${maxExpansion}).`,
         );
       }
     }
@@ -280,7 +280,7 @@ export class ForEachExpander {
 
           if (allElements.has(stampedId)) {
             throw new Error(
-              `Duplicate stamped ID '${stampedId}' — forEach values must be unique within each template.`,
+              `Duplicate stamped ID '${stampedId}' — for-each values must be unique within each template.`,
             );
           }
           allElements.set(stampedId, adapter.stamp(element, stampedId, rowResolver));
@@ -302,7 +302,7 @@ export class ForEachExpander {
 
           if (allElements.has(stampedId)) {
             throw new Error(
-              `Duplicate stamped ID '${stampedId}' — forEach values must be unique within each template.`,
+              `Duplicate stamped ID '${stampedId}' — for-each values must be unique within each template.`,
             );
           }
           allElements.set(stampedId, adapter.stamp(element, stampedId, eachResolver));

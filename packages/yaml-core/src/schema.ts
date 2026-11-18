@@ -26,7 +26,7 @@ export const importSchema = z.object({
   as: z.string(),
   if: z.string().optional(),
   parameters: z.record(z.string(), z.string()).optional(),
-  forEach: z.unknown().optional(),
+  'for-each': z.unknown().optional(),
   loop: z.unknown().optional(),
 });
 
@@ -66,6 +66,6 @@ export const yamlCoreDocumentSchema = z.object({
 });
 
 export const yamlCoreElementMixin = {
-  forEach: forEachSchema.optional(),
+  'for-each': forEachSchema.optional(),
   if: z.string().optional(),
 };

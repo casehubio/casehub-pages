@@ -36,7 +36,7 @@ describe('expand', () => {
         name: 'dashboard',
         components: {
           '${item}-metric': {
-            forEach: { as: 'item', in: ['cpu', 'mem'] },
+            'for-each': { as: 'item', in: ['cpu', 'mem'] },
             type: 'metric',
             properties: { field: '${each.item}' },
           },
@@ -118,7 +118,7 @@ describe('expand', () => {
         name: 'dashboard',
         components: {
           'regional': {
-            forEach: { as: 'r', in: ['${config.regions}'] },
+            'for-each': { as: 'r', in: ['${config.regions}'] },
             type: 'metric',
             properties: { region: '${each.r}' },
           },
@@ -161,7 +161,7 @@ describe('expand', () => {
         name: 'deploy',
         components: {
           'deploy-step': {
-            forEach: 'envs',
+            'for-each': 'envs',
             type: 'deploy',
             properties: { host: '${each.env.name}', port: '${each.env.port}' },
           },
@@ -208,7 +208,7 @@ describe('expand', () => {
         {
           module: 'regional',
           as: 'r',
-          forEach: { as: 'region', in: ['us', 'eu'] },
+          'for-each': { as: 'region', in: ['us', 'eu'] },
           parameters: { region: '${each.region}' },
         },
       ],
@@ -270,7 +270,7 @@ describe('expand', () => {
         {
           module: 'dashboard',
           as: 'dash',
-          forEach: 'envs',
+          'for-each': 'envs',
           parameters: { env: '${each.env}' },
         },
       ],

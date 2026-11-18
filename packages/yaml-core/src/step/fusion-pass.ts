@@ -3,7 +3,7 @@ import type { FusedStageDescriptor } from './streaming-types.js';
 
 const CHAIN_BREAKING_DECORATORS = new Set([
   'from', 'background', 'when', 'on-error', 'wait', 'at',
-  'forEach', 'cancel', 'loop', 'transition', 'signal',
+  'for-each', 'cancel', 'loop', 'transition', 'signal',
   'publish', 'semaphore', 'mutex', 'transform',
 ]);
 

@@ -313,11 +313,11 @@ describe('parseForEachDirective', () => {
   });
 
   it('throws on array input', () => {
-    expect(() => parseForEachDirective([1, 2])).toThrow('Invalid forEach value');
+    expect(() => parseForEachDirective([1, 2])).toThrow('Invalid for-each value');
   });
 
   it('throws on invalid type', () => {
-    expect(() => parseForEachDirective(42)).toThrow('Invalid forEach value');
+    expect(() => parseForEachDirective(42)).toThrow('Invalid for-each value');
   });
 });
 

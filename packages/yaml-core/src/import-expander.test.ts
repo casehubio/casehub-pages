@@ -21,7 +21,7 @@ describe('ImportExpander', () => {
           module: 'regional',
           as: 'region',
           parameters: { region: '${each.env}' },
-          forEach: { as: 'env', in: ['us', 'eu'] },
+          'for-each': { as: 'env', in: ['us', 'eu'] },
         },
       ];
       const result = ImportExpander.expand(imports, {}, {});
@@ -34,7 +34,7 @@ describe('ImportExpander', () => {
 
     it('preserves imports that select actions without adding a module', () => {
       const imports: YamlImport[] = [
-        { actions: 'workflow', as: 'step', parameters: {}, forEach: { as: 'i', in: [1] } },
+        { actions: 'workflow', as: 'step', parameters: {}, 'for-each': { as: 'i', in: [1] } },
       ];
       const result = ImportExpander.expand(imports, {}, {});
       expect(result).toHaveLength(1);
@@ -48,7 +48,7 @@ describe('ImportExpander', () => {
           module: 'svc',
           as: 'service',
           parameters: { env: '${each.env}' },
-          forEach: 'envs',
+          'for-each': 'envs',
         },
       ];
       const groups: Record<string, IterationGroup> = {
@@ -68,11 +68,11 @@ describe('ImportExpander', () => {
           module: 'mod',
           as: 'a',
           parameters: {},
-          forEach: { as: 'x', in: ['1'] },
+          'for-each': { as: 'x', in: ['1'] },
         },
       ];
       const result = ImportExpander.expand(imports, {}, {});
-      expect(result[0]!.forEach).toBeUndefined();
+      expect(result[0]!['for-each']).toBeUndefined();
       expect(result[0]!.loop).toBeUndefined();
     });
 
@@ -82,7 +82,7 @@ describe('ImportExpander', () => {
           module: 'regional',
           as: 'region',
           parameters: { env: '${each.env}' },
-          forEach: { as: 'env', in: ['us', 'eu', 'ap'] },
+          'for-each': { as: 'env', in: ['us', 'eu', 'ap'] },
           condition: 'true',
         },
       ];
@@ -97,7 +97,7 @@ describe('ImportExpander', () => {
           module: 'regional',
           as: 'region',
           parameters: {},
-          forEach: { as: 'flag', in: ['true', 'false', 'no'] },
+          'for-each': { as: 'flag', in: ['true', 'false', 'no'] },
           condition: '${each.flag}',
         },
       ];
@@ -113,7 +113,7 @@ describe('ImportExpander', () => {
           module: 'regional',
           as: 'region',
           parameters: { env: '${each.env}' },
-          forEach: { as: 'env', in: ['us', 'eu'] },
+          'for-each': { as: 'env', in: ['us', 'eu'] },
         },
         { module: 'footer', as: 'footer', parameters: {} },
       ];
@@ -128,7 +128,7 @@ describe('ImportExpander', () => {
           module: 'svc',
           as: 'svc',
           parameters: { name: '${each.name}-service', label: 'svc-${each.name}' },
-          forEach: { as: 'name', in: ['web'] },
+          'for-each': { as: 'name', in: ['web'] },
         },
       ];
       const result = ImportExpander.expand(imports, {}, {});
@@ -142,7 +142,7 @@ describe('ImportExpander', () => {
           module: 'svc',
           as: 'svc',
           parameters: { name: '${each.name}', port: '8080' },
-          forEach: { as: 'name', in: ['web'] },
+          'for-each': { as: 'name', in: ['web'] },
         },
       ];
       const result = ImportExpander.expand(imports, {}, {});
@@ -156,13 +156,13 @@ describe('ImportExpander', () => {
           module: 'mod-a',
           as: 'a',
           parameters: {},
-          forEach: { as: 'x', in: ['1'] },
+          'for-each': { as: 'x', in: ['1'] },
         },
         {
           actions: 'step-defs',
           as: 'b',
           parameters: {},
-          forEach: { as: 'x', in: ['1'] },
+          'for-each': { as: 'x', in: ['1'] },
         },
       ];
       const result = ImportExpander.expand(imports, {}, {});
@@ -178,7 +178,7 @@ describe('ImportExpander', () => {
           module: 'mod',
           as: 'a',
           parameters: {},
-          forEach: 'nonexistent',
+          'for-each': 'nonexistent',
         },
       ];
       expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/nonexistent/);
@@ -201,7 +201,7 @@ describe('ImportExpander', () => {
           actions: 'flow',
           as: 'flow',
           parameters: { env: '${each.env}' },
-          forEach: { as: 'env', in: ['us', 'eu'] },
+          'for-each': { as: 'env', in: ['us', 'eu'] },
         },
       ];
       const result = ImportExpander.expand(imports, {}, {});
@@ -215,7 +215,7 @@ describe('ImportExpander', () => {
           module: 'mod',
           as: 'region',
           parameters: {},
-          forEach: { as: 'env', in: ['us.east'] },
+          'for-each': { as: 'env', in: ['us.east'] },
         },
       ];
       expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/us\.east/);
@@ -227,13 +227,13 @@ describe('ImportExpander', () => {
           module: 'mod-a',
           as: 'item',
           parameters: {},
-          forEach: { as: 'x', in: ['one'] },
+          'for-each': { as: 'x', in: ['one'] },
         },
         {
           module: 'mod-b',
           as: 'item',
           parameters: {},
-          forEach: { as: 'x', in: ['one'] },
+          'for-each': { as: 'x', in: ['one'] },
         },
       ];
       expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/item\.one/);
@@ -246,7 +246,7 @@ describe('ImportExpander', () => {
           module: 'regional',
           as: 'region',
           parameters: {},
-          forEach: { as: 'env', in: ['us'] },
+          'for-each': { as: 'env', in: ['us'] },
         },
       ];
       expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/region\.us/);
@@ -263,7 +263,7 @@ describe('ImportExpander', () => {
             name: '${each.e.name}',
             port: '${each.e.port}',
           },
-          forEach: 'envs',
+          'for-each': 'envs',
         },
       ];
       const groups: Record<string, IterationGroup> = {
@@ -330,7 +330,7 @@ describe('ImportExpander', () => {
           module: 'mod',
           as: 'a',
           parameters: {},
-          forEach: { as: 'x', in: ['one', 'two'] },
+          'for-each': { as: 'x', in: ['one', 'two'] },
           loop: 5,
         },
       ];

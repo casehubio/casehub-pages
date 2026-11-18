@@ -76,7 +76,7 @@ function validateImports(
     if (!imp.as || imp.as.trim() === '') {
       errors.push(`Import of '${imp.module ?? imp.actions}' is missing a required alias (as).`);
     } else {
-      if (imp.as.includes('.') && (imp.forEach != null || imp.loop != null)) {
+      if (imp.as.includes('.') && (imp['for-each'] != null || imp.loop != null)) {
         errors.push(`Import alias '${imp.as}' contains '.', which is reserved as the ID separator.`);
       }
       if (seenAliases.has(imp.as)) {

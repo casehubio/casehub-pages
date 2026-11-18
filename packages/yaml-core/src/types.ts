@@ -151,7 +151,7 @@ export interface YamlImport {
   as: string;
   condition?: string | undefined;
   parameters: Record<string, string>;
-  forEach?: unknown;
+  'for-each'?: unknown;
   loop?: unknown;
 }
 
@@ -265,13 +265,13 @@ export function parseForEachDirective(raw: unknown): ForEachDirective | null {
     const as = m['as'] as string | undefined;
     const inVal = m['in'];
     if (Array.isArray(inVal)) {
-      if (!as) throw new Error("Inline forEach 'as' variable name is required");
+      if (!as) throw new Error("Inline for-each 'as' variable name is required");
       return { type: 'inline', as, in: inVal };
     }
     if (typeof inVal === 'string') return { type: 'group-ref', groupName: inVal, as };
     if (as) return { type: 'group-ref', groupName: as };
   }
   throw new Error(
-    `Invalid forEach value: expected string, {as, in} map, or ForEachDirective — got ${typeof raw}`,
+    `Invalid for-each value: expected string, {as, in} map, or ForEachDirective — got ${typeof raw}`,
   );
 }

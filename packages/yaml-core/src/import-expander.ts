@@ -24,7 +24,7 @@ const importAdapter: ForEachAdapter<YamlImport> = {
     };
   },
   getForEach(element) {
-    return parseForEachDirective(element.forEach ?? null);
+    return parseForEachDirective(element['for-each'] ?? null);
   },
   getCondition(element) {
     return element.condition ?? null;
@@ -42,9 +42,9 @@ function loopToForEach(loop: unknown): ForEachDirective {
 }
 
 function normaliseForEach(imp: YamlImport): YamlImport {
-  if (imp.forEach != null) return imp;
+  if (imp['for-each'] != null) return imp;
   if (imp.loop != null) {
-    return { ...imp, forEach: loopToForEach(imp.loop), loop: undefined };
+    return { ...imp, 'for-each': loopToForEach(imp.loop), loop: undefined };
   }
   return imp;
 }
@@ -56,7 +56,7 @@ export class ImportExpander {
     iterationGroups: Record<string, IterationGroup>,
     dataSources: Record<string, CsvDataSource>,
   ): YamlImport[] {
-    const hasExpansion = imports.some(imp => imp.forEach != null || imp.loop != null);
+    const hasExpansion = imports.some(imp => imp['for-each'] != null || imp.loop != null);
     if (!hasExpansion) return imports;
 
     const result: YamlImport[] = [];
@@ -67,7 +67,7 @@ export class ImportExpander {
     for (const rawImp of imports) {
       const imp = normaliseForEach(rawImp);
 
-      if (imp.forEach == null) {
+      if (imp['for-each'] == null) {
         validateUniqueAlias(imp.as, seenAliases);
         result.push(imp);
         continue;
@@ -84,7 +84,7 @@ export class ImportExpander {
         const value = stampedId.substring(imp.as.length + 1);
         if (value.includes('.')) {
           throw new Error(
-            `Import '${imp.as}' forEach value '${value}' contains '.', which is reserved as the ID separator.`,
+            `Import '${imp.as}' for-each value '${value}' contains '.', which is reserved as the ID separator.`,
           );
         }
         validateUniqueAlias(stampedId, seenAliases);
@@ -99,7 +99,7 @@ export class ImportExpander {
 function validateUniqueAlias(alias: string, seen: Set<string>): void {
   if (seen.has(alias)) {
     throw new Error(
-      `Duplicate stamped import alias '${alias}'. forEach values must be unique.`,
+      `Duplicate stamped import alias '${alias}'. for-each values must be unique.`,
     );
   }
   seen.add(alias);

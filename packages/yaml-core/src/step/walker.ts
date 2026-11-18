@@ -232,7 +232,7 @@ export interface FusedPipelineStep {
 const RESERVED_KEYS = new Set([
   'step', 'name', 'invoke', 'if', 'then', 'else', 'match', 'cases', 'block',
   'try', 'catch', 'finally', 'select',
-  'on-success', 'on-failure', 'forEach', 'loop',
+  'on-success', 'on-failure', 'for-each', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'parallel', 'concurrent', 'semaphore', 'barrier', 'quorum', 'race',
@@ -247,7 +247,7 @@ const RESERVED_KEYS = new Set([
 ]);
 
 const DECORATOR_KEYS = new Set([
-  'if', 'on-success', 'on-failure', 'forEach', 'loop',
+  'if', 'on-success', 'on-failure', 'for-each', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'semaphore', 'barrier', 'quorum',
@@ -257,7 +257,7 @@ const DECORATOR_KEYS = new Set([
   'at', 'on-complete', 'resource', 'priority', 'capture',
 ]);
 
-const PROMOTABLE_DECORATORS = new Set(['forEach', 'retry', 'timeout', 'when', 'mutex', 'loop']);
+const PROMOTABLE_DECORATORS = new Set(['for-each', 'retry', 'timeout', 'when', 'mutex', 'loop']);
 
 const STRUCTURAL_COMPANIONS = new Set(['then', 'else', 'cases', 'catch', 'finally']);
 

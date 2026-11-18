@@ -153,7 +153,7 @@ describe('ModuleExpander', () => {
       name: 'm', parameters: {}, outputs: {}, sections: {},
     };
     expect(() => ModuleExpander.expand(
-      [{ module: 'm', as: 'infra.monitor', parameters: {}, forEach: 'envs' }],
+      [{ module: 'm', as: 'infra.monitor', parameters: {}, 'for-each': 'envs' }],
       { m: module }, {}))
       .toThrow('.');
   });

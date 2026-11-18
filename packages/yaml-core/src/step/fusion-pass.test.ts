@@ -86,7 +86,7 @@ describe('FusionPass', () => {
   it('breaks chain on chain-breaking decorator', () => {
     const steps = [
       pluginStep('a', streamingDef('text', 'json')),
-      pluginStep('b', streamingDef('json', 'text'), { forEach: 'items' }),
+      pluginStep('b', streamingDef('json', 'text'), { 'for-each': 'items' }),
     ];
     const result = FusionPass.fuse(steps);
     expect(result).toHaveLength(2);

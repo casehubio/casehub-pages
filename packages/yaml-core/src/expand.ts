@@ -23,19 +23,19 @@ interface ExpandOptions {
 interface MapElement {
   id: string;
   raw: Record<string, unknown>;
-  forEach: ForEachDirective | null;
+  'for-each': ForEachDirective | null;
   condition: string | null;
 }
 
 const mapAdapter: ForEachAdapter<MapElement> = {
   stamp(template, stampedId, scopedResolver) {
     const raw = { ...template.raw };
-    delete raw['forEach'];
+    delete raw['for-each'];
     delete raw['if'];
     const resolved = scopedResolver.resolveMap(raw, stampedId);
-    return { id: stampedId, raw: resolved, forEach: null, condition: null };
+    return { id: stampedId, raw: resolved, 'for-each': null, condition: null };
   },
-  getForEach(element) { return element.forEach; },
+  getForEach(element) { return element['for-each']; },
   getCondition(element) { return element.condition; },
   getReferences() { return []; },
   withReferences(element) { return element; },
@@ -88,7 +88,7 @@ function parseImports(rawImports: unknown): YamlImport[] {
     as: raw.as as string,
     condition: raw.if as string | undefined,
     parameters: (raw.parameters ?? {}) as Record<string, string>,
-    forEach: raw.forEach as unknown,
+    'for-each': raw['for-each'] as unknown,
     loop: raw.loop as unknown,
   }));
 }
@@ -121,9 +121,9 @@ function expandForEachInSection(
   for (const [key, value] of Object.entries(section)) {
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       const raw = value as Record<string, unknown>;
-      const forEach = parseForEachDirective(raw['forEach'] ?? null);
+      const forEach = parseForEachDirective(raw['for-each'] ?? null);
       const condition = raw['if'] as string | null ?? null;
-      elements.set(key, { id: key, raw, forEach, condition });
+      elements.set(key, { id: key, raw, 'for-each': forEach, condition });
     } else {
       nonMapEntries.push([key, value]);
     }
@@ -131,7 +131,7 @@ function expandForEachInSection(
 
   if (elements.size === 0) return section;
 
-  const hasForEach = [...elements.values()].some((e) => e.forEach !== null);
+  const hasForEach = [...elements.values()].some((e) => e['for-each'] !== null);
   const hasCondition = [...elements.values()].some((e) => e.condition !== null);
   if (!hasForEach && !hasCondition) return section;
 

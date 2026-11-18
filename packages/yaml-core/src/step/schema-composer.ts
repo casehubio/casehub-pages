@@ -1,7 +1,7 @@
 import type { Catalog } from './walker.js';
 
 const DECORATOR_KEYS = [
-  'if', 'on-success', 'on-failure', 'forEach', 'loop',
+  'if', 'on-success', 'on-failure', 'for-each', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'semaphore', 'mutex', 'barrier', 'quorum',
@@ -58,7 +58,7 @@ export class SchemaComposer {
     });
     oneOf.push({ type: 'object', properties: { race: { type: 'array' }, step: { type: 'string' } }, required: ['race'] });
 
-    for (const dk of ['forEach', 'retry', 'timeout', 'when', 'mutex', 'loop']) {
+    for (const dk of ['for-each', 'retry', 'timeout', 'when', 'mutex', 'loop']) {
       const structuralProps: Record<string, unknown> = {
         [dk]: { oneOf: [{ type: 'object' }, { type: 'array' }] },
         step: { type: 'string' },
