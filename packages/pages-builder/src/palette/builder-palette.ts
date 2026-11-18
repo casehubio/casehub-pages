@@ -135,12 +135,12 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       border-radius: 8px;
       font-size: inherit;
       outline: none;
-      background: var(--pages-input-bg, #f8f9fa);
+      background: var(--pages-neutral-2);
     }
 
     .palette-search:focus {
-      border-color: var(--pages-focus-ring, #4285f4);
-      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+      border-color: var(--pages-focus-ring);
+      box-shadow: 0 0 0 2px var(--pages-accent-3);
     }
 
     .palette-categories {
@@ -155,7 +155,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
       padding: 4px 12px;
       border: none;
       border-radius: 16px;
-      background: var(--pages-chip-bg, #f1f3f4);
+      background: var(--pages-neutral-3);
       color: var(--pages-neutral-11);
       cursor: pointer;
       font-size: 12px;
@@ -163,12 +163,12 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
     }
 
     .category-tab:hover {
-      background: var(--pages-chip-hover-bg, #e8eaed);
+      background: var(--pages-neutral-4);
     }
 
     .category-tab.active {
       background: var(--pages-accent-9);
-      color: #fff;
+      color: var(--pages-neutral-1);
     }
 
     .palette-grid {
@@ -196,17 +196,17 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
 
     .palette-tile:hover {
       border-color: var(--pages-accent-9);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--pages-shadow-1);
     }
 
     .palette-tile:focus-visible {
-      outline: 2px solid var(--pages-focus-ring, #4285f4);
+      outline: 2px solid var(--pages-focus-ring);
       outline-offset: -2px;
     }
 
     .palette-tile.promoted {
-      border-color: var(--pages-promoted-border, #34a853);
-      background: var(--pages-promoted-bg, rgba(52, 168, 83, 0.04));
+      border-color: var(--pages-success-9);
+      background: var(--pages-success-3);
     }
 
     .palette-tile.needs-prereq {
@@ -226,7 +226,7 @@ export class PagesBuilderPalette extends RovingTabindexMixin(LitElement) {
 
     .tile-hint {
       font-size: 10px;
-      color: var(--pages-warning-color, #ea8600);
+      color: var(--pages-warning-9);
       margin-top: 4px;
     }
 

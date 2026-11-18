@@ -263,7 +263,7 @@ export class PagesBuilderInlinePicker extends LitElement {
     }
 
     .picker-search:focus {
-      border-color: var(--pages-focus-ring, #4285f4);
+      border-color: var(--pages-focus-ring);
     }
 
     .picker-categories {
@@ -278,7 +278,7 @@ export class PagesBuilderInlinePicker extends LitElement {
       padding: 2px 8px;
       border: none;
       border-radius: 12px;
-      background: var(--pages-chip-bg, #f1f3f4);
+      background: var(--pages-neutral-3);
       color: var(--pages-neutral-11);
       cursor: pointer;
       font-size: 11px;
@@ -287,7 +287,7 @@ export class PagesBuilderInlinePicker extends LitElement {
 
     .cat-chip.active {
       background: var(--pages-accent-9);
-      color: #fff;
+      color: var(--pages-neutral-1);
     }
 
     .picker-list {
@@ -313,7 +313,7 @@ export class PagesBuilderInlinePicker extends LitElement {
     }
 
     .picker-item.promoted {
-      background: var(--pages-promoted-bg, rgba(52, 168, 83, 0.04));
+      background: var(--pages-success-3);
     }
 
     .picker-item.needs-prereq {
@@ -331,7 +331,7 @@ export class PagesBuilderInlinePicker extends LitElement {
 
     .item-hint {
       font-size: 10px;
-      color: var(--pages-warning-color, #ea8600);
+      color: var(--pages-warning-9);
     }
 
     .picker-empty {

@@ -55,7 +55,7 @@ function jsonDisplayDescriptor(): EditorDescriptor {
   return {
     kind: 'render',
     render: (ctx: FieldRenderContext) =>
-      html`<pre style="font-size: 11px; margin: 0; white-space: pre-wrap; color: var(--pages-neutral-11, #374151);">${JSON.stringify(ctx.value, null, 2) ?? '—'}</pre>`,
+      html`<pre style="font-size: 11px; margin: 0; white-space: pre-wrap; color: var(--pages-neutral-11);">${JSON.stringify(ctx.value, null, 2) ?? '—'}</pre>`,
   };
 }
 
@@ -65,9 +65,9 @@ function renderMultiSelectCheckboxes(ctx: FieldRenderContext) {
   return html`
     <div role="group" aria-label=${ctx.key} style="display: flex; flex-direction: column; gap: 4px;">
       ${options.map(opt => html`
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--pages-neutral-12, #333);">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--pages-neutral-12);">
           <input type="checkbox" .checked=${selected.has(opt)} ?disabled=${ctx.readonly}
-            style="accent-color: var(--pages-accent-9, #5470c6);"
+            style="accent-color: var(--pages-accent-9);"
             @change=${(e: Event) => {
               const checked = (e.target as HTMLInputElement).checked;
               const next = checked

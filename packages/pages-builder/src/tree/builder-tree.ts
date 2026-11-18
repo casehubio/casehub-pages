@@ -575,14 +575,16 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
             : html`<span class="toggle-spacer"></span>`}
           <span class="label">${node.label}</span>
           ${node.annotation ? html`<span class="annotation">${node.annotation}</span>` : nothing}
-          ${this._isContainerNode(node) ? html`
-            <button class="add-btn" title="Add child" aria-label="Add to ${node.label}" @click="${(e: Event) => this._handleAddClick(node, e)}">+</button>
-          ` : nothing}
-          ${!isSection ? html`
-            <button class="insert-btn" title="Insert before/after" aria-label="Insert near ${node.label}" @click="${(e: Event) => this._handleInsertClick(node, e)}">↓</button>
-            <button class="cut-btn" title="Cut" aria-label="Cut ${node.label}" @click="${(e: Event) => this._handleCutClick(node, e)}">✂</button>
-            <button class="copy-btn" title="Copy" aria-label="Copy ${node.label}" @click="${(e: Event) => this._handleCopyClick(node, e)}">⎘</button>
-          ` : nothing}
+          <span class="tree-actions">
+            ${this._isContainerNode(node) ? html`
+              <button class="add-btn" title="Add child" aria-label="Add to ${node.label}" @click="${(e: Event) => this._handleAddClick(node, e)}">+</button>
+            ` : nothing}
+            ${!isSection ? html`
+              <button class="insert-btn" title="Insert before/after" aria-label="Insert near ${node.label}" @click="${(e: Event) => this._handleInsertClick(node, e)}">↓</button>
+              <button class="cut-btn" title="Cut" aria-label="Cut ${node.label}" @click="${(e: Event) => this._handleCutClick(node, e)}">✂</button>
+              <button class="copy-btn" title="Copy" aria-label="Copy ${node.label}" @click="${(e: Event) => this._handleCopyClick(node, e)}">⎘</button>
+            ` : nothing}
+          </span>
         </div>
         ${expanded ? html`
           <div role="group">
@@ -680,6 +682,7 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       border-radius: 4px;
       white-space: nowrap;
       outline: none;
+      position: relative;
     }
 
     .tree-item:hover {
@@ -729,6 +732,24 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       white-space: nowrap;
     }
 
+    .tree-actions {
+      position: absolute;
+      right: 4px;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      background: inherit;
+      padding-left: 8px;
+    }
+
+    .tree-item:hover .tree-actions,
+    .tree-item.picker-active .tree-actions {
+      opacity: 1;
+    }
+
     .add-btn {
       display: flex;
       align-items: center;
@@ -743,8 +764,6 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       font-size: 14px;
       line-height: 1;
       padding: 0;
-      flex-shrink: 0;
-      opacity: 0;
     }
 
     .insert-btn, .cut-btn, .copy-btn {
@@ -761,19 +780,6 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       font-size: 12px;
       line-height: 1;
       padding: 0;
-      flex-shrink: 0;
-      opacity: 0;
-    }
-
-    .tree-item:hover .add-btn,
-    .tree-item:hover .insert-btn,
-    .tree-item:hover .cut-btn,
-    .tree-item:hover .copy-btn,
-    .tree-item.picker-active .add-btn,
-    .tree-item.picker-active .insert-btn,
-    .tree-item.picker-active .cut-btn,
-    .tree-item.picker-active .copy-btn {
-      opacity: 1;
     }
 
     .add-btn:hover, .insert-btn:hover, .cut-btn:hover, .copy-btn:hover {
@@ -788,9 +794,12 @@ export class PagesBuilderTree extends RovingTabindexMixin(KeyboardShortcutMixin(
       border-radius: 4px;
     }
 
+    .tree-item.paste-target .tree-actions {
+      opacity: 1;
+    }
+
     .tree-item.paste-target .add-btn,
     .tree-item.paste-target .insert-btn {
-      opacity: 1;
       color: var(--pages-accent-9);
       border-color: var(--pages-accent-9);
     }

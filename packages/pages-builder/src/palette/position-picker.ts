@@ -112,7 +112,7 @@ export class PagesPositionPicker extends LitElement {
 
     button:hover {
       background: var(--pages-accent-9);
-      color: #fff;
+      color: var(--pages-neutral-1);
       border-color: var(--pages-accent-9);
     }
   `;

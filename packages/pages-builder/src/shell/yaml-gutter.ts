@@ -66,11 +66,11 @@ const builderGutterTheme = EditorView.baseTheme({
   '.cm-builder-gutter-mark': {
     width: '4px',
     height: '100%',
-    backgroundColor: '#4285f4',
+    backgroundColor: 'var(--pages-accent-9)',
     borderRadius: '0',
   },
   '.cm-builder-active-line': {
-    backgroundColor: 'rgba(66, 133, 244, 0.12)',
+    backgroundColor: 'var(--pages-accent-3)',
   },
 });
 

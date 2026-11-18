@@ -26,21 +26,21 @@ export class PagesPropertyPalette extends LitElement {
     .advanced-toggle {
       display: flex; align-items: center; gap: var(--pages-space-1, 4px);
       font-size: var(--pages-font-size-xs, 11px);
-      color: var(--pages-neutral-8, #9ca3af);
+      color: var(--pages-neutral-8);
       cursor: pointer;
       user-select: none;
     }
-    .advanced-toggle input { accent-color: var(--pages-accent-9, #5470c6); }
+    .advanced-toggle input { accent-color: var(--pages-accent-9); }
     details.group {
       margin-top: var(--pages-space-2, 8px);
-      border-top: 1px solid var(--pages-neutral-3, #f0f0f0);
+      border-top: 1px solid var(--pages-neutral-3);
       padding-top: var(--pages-space-1, 4px);
     }
     details.group summary {
       padding: var(--pages-space-1, 4px) 0;
       font-size: var(--pages-font-size-xs, 11px);
       font-weight: var(--pages-font-weight-semibold, 600);
-      color: var(--pages-neutral-8, #9ca3af);
+      color: var(--pages-neutral-8);
       text-transform: uppercase;
       letter-spacing: 0.04em;
       cursor: pointer;
@@ -57,7 +57,7 @@ export class PagesPropertyPalette extends LitElement {
     }
     .nested-group {
       padding-left: var(--pages-space-3, 12px);
-      border-left: 2px solid var(--pages-neutral-4, #e5e7eb);
+      border-left: 2px solid var(--pages-neutral-4);
       margin: var(--pages-space-1, 4px) 0;
     }
     .field-wrapper { position: relative; }
@@ -65,16 +65,16 @@ export class PagesPropertyPalette extends LitElement {
       display: flex; align-items: center; gap: var(--pages-space-1, 4px);
       font-size: var(--pages-font-size-base, 14px);
       font-weight: var(--pages-font-weight-medium, 500);
-      color: var(--pages-neutral-12, #333);
+      color: var(--pages-neutral-12);
       margin-bottom: var(--pages-space-1, 4px);
     }
-    .required-indicator { color: var(--pages-danger-9, #dc2626); }
+    .required-indicator { color: var(--pages-danger-9); }
     .help-icon {
       display: inline-flex; align-items: center; justify-content: center;
       width: 16px; height: 16px;
       border-radius: 50%;
-      background: var(--pages-neutral-4, #e5e7eb);
-      color: var(--pages-neutral-9, #6b7280);
+      background: var(--pages-neutral-4);
+      color: var(--pages-neutral-9);
       font-size: 10px; font-weight: 700;
       cursor: help;
     }
