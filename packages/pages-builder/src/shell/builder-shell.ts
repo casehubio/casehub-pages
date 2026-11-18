@@ -359,6 +359,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     requestAnimationFrame(() => {
       const container = this.shadowRoot?.querySelector('.preview-container') as HTMLElement;
       if (!container) return;
+      container.dataset.gridEditingEnabled = '';
 
       const afterRender = () => {
         this._previewClickCleanup?.();
@@ -527,6 +528,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         const itemId = elements[0].dataset.itemId ?? String(path[path.length - 1]);
         gridEl.dispatchEvent(new CustomEvent('pages-grid-select', { detail: { itemId } }));
       }
+    } else {
+      const preview = this.renderRoot.querySelector('[data-preview-root]') ?? this.renderRoot;
+      const activeGrid = preview.querySelector('[data-grid-editing]') as HTMLElement | null;
+      if (activeGrid) {
+        activeGrid.dispatchEvent(new CustomEvent('pages-grid-select', { detail: { itemId: '' } }));
+      }
     }
 
     elements[0]!.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
@@ -679,6 +686,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       if (parent) {
         const parentType = classifyPath(parent);
         if (parentType) {
+          this._applyPreviewHighlight(parent, parentType);
           this._syncSource = 'visual';
           this._selectedPath = parent;
           this._selectedNodeType = parentType;
@@ -1468,6 +1476,8 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         @tree-action="${(e: Event) => this._handleTreeAction(e as Parameters<typeof this._handleTreeAction>[0])}"
       ></pages-builder-tree>
     `, this._treeContainer);
+    const tree = this._treeContainer?.querySelector('pages-builder-tree') as HTMLElement & { _rebuildModel?: () => void } | null;
+    tree?._rebuildModel?.();
   }
 
   private _syncProperties(): void {

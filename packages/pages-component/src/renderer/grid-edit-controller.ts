@@ -318,6 +318,7 @@ class GridEditControllerImpl implements GridEditController {
     clearTimeout(this._barShowTimer);
     if (this._selectedEl) {
       this._selectedEl.querySelector("[data-drag-handle]")?.remove();
+      this._selectedEl.style.zIndex = "";
       this._selectedEl = null;
     }
     this.hoveredId = null;
@@ -920,9 +921,11 @@ class GridEditControllerImpl implements GridEditController {
     if (el === this._selectedEl) return;
     if (this._selectedEl) {
       this._selectedEl.querySelector("[data-drag-handle]")?.remove();
+      this._selectedEl.style.zIndex = "";
     }
     this._selectedEl = el;
     if (!el) return;
+    el.style.zIndex = "20";
     const nestedGridEl = el.querySelector('[data-grid-editing]') as HTMLElement | null;
     if (nestedGridEl) {
       const nestedCtrl = getCoordinator().getControllerForEl(nestedGridEl);
@@ -970,6 +973,7 @@ class GridEditControllerImpl implements GridEditController {
     const trigger = doc.createElement("div");
     trigger.textContent = "⋮";
     trigger.style.cssText = BTN;
+    trigger.dataset.gridEditButton = "";
     const actionGrid = doc.createElement("div");
     actionGrid.style.cssText = "display:grid;grid-template-columns:repeat(3,20px);gap:2px;max-height:0;overflow:hidden;opacity:0;transition:max-height 150ms ease,opacity 150ms ease;margin-top:2px;";
     const ACTIONS: [string, string, string][] = [
@@ -986,6 +990,7 @@ class GridEditControllerImpl implements GridEditController {
       abtn.textContent = label;
       abtn.title = title;
       abtn.style.cssText = BTN;
+      abtn.dataset.gridEditButton = "";
       abtn.addEventListener("click", (ev) => {
         ev.stopPropagation();
         ev.preventDefault();
