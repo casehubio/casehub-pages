@@ -1013,7 +1013,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     if (!parsed) return;
     const yamlObj = parseYaml(clipboard.fragment) as Record<string, unknown>;
     const type = yamlObj['type'] as string | undefined;
-    const props = yamlObj['properties'] as Record<string, unknown> | undefined;
     if (!type) return;
 
     this._applyEdit('tree', () => {
@@ -1088,7 +1087,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       ? entry.defaultProps : undefined;
     const path = this._inlinePickerPath;
     const nt = this._inlinePickerNodeType;
-    const insertPos = this._insertPosition;
     this._inlinePickerOpen = false;
     this._insertPosition = undefined;
 
@@ -1531,7 +1529,6 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
 
   private _refreshPaletteContext(): void {
     const datasets = this._document.getDatasets();
-    const nt = this._selectedNodeType;
     const parentType = this._getParentType();
     this._paletteContext = {
       parentType,
