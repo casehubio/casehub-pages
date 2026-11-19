@@ -26,8 +26,7 @@ import {
 } from "./grid-overlay.js";
 import type { EditorMode } from "./grid-overlay.js";
 import { getCoordinator } from "./grid-edit-coordinator.js";
-import { computeMergeDirection, computeMergeTargets } from "./grid-merge-targets.js";
-import { mergeItems } from "./grid-split-merge.js";
+import { computeMergeDirection } from "./grid-merge-targets.js";
 
 export interface GridEditController {
   readonly gridEl: HTMLElement;

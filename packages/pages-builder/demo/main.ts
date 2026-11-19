@@ -4,7 +4,7 @@ import { injectTheme, applyThemeMode, DEFAULT_THEME } from '@casehubio/pages-ui-
 import '../src/index.js';
 import { PagesBuilderShell } from '../src/shell/builder-shell.js';
 
-const s = (bg: string, label: string) => `background:${bg};border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600`;
+const s = (bg: string, _label: string) => `background:${bg};border-radius:6px;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600`;
 const h = (bg: string, label: string) => `'<div style="${s(bg, label)}">${label}</div>'`;
 
 const PAGES: Record<string, string> = {};
