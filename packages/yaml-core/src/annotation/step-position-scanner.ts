@@ -188,6 +188,7 @@ function scanNamedBranches(
   const nameIndent = containerKey ? contentIndent + 2 : contentIndent + 2;
   const listItemIndent = nameIndent + 2;
 
+  let laneIndex = 0;
   let i = scanStart;
   while (i < stepEnd) {
     const line = lines[i]!;
@@ -198,7 +199,16 @@ function scanNamedBranches(
     if (ind !== nameIndent) { i++; continue; }
 
     const stripped = line.trimStart();
-    if (stripped.startsWith('- ')) { i++; continue; }
+    if (stripped.startsWith('- ')) {
+      if (label === 'lane') {
+        const laneEnd = findNextSibling(lines, i, nameIndent, stepEnd);
+        scanBlock(lines, i, laneEnd, nameIndent, `${address}.${label}.${laneIndex}`, results);
+        laneIndex++;
+        i = laneEnd;
+        continue;
+      }
+      i++; continue;
+    }
 
     const colon = stripped.indexOf(':');
     if (colon <= 0) { i++; continue; }

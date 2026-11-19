@@ -136,6 +136,49 @@ describe('StepPositionScanner', () => {
         { line: 4, endLine: 5, address: '0.lane.reviewer.0' },
       ]);
     });
+
+    it('scans parallel steps with unnamed lanes', () => {
+      const yaml = [
+        '- parallel:',
+        '    - action: step-1',
+        '    - action: step-2',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 3, address: '0' },
+        { line: 1, endLine: 2, address: '0.lane.0.0' },
+        { line: 2, endLine: 3, address: '0.lane.1.0' },
+      ]);
+    });
+
+    it('scans single unnamed lane', () => {
+      const yaml = [
+        '- parallel:',
+        '    - action: only',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 2, address: '0' },
+        { line: 1, endLine: 2, address: '0.lane.0.0' },
+      ]);
+    });
+
+    it('scans unnamed lanes with nested control flow', () => {
+      const yaml = [
+        '- parallel:',
+        '    - if: cond',
+        '      then:',
+        '        - action: deep',
+        '    - action: simple',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 5, address: '0' },
+        { line: 1, endLine: 4, address: '0.lane.0.0' },
+        { line: 3, endLine: 4, address: '0.lane.0.0.then.0' },
+        { line: 4, endLine: 5, address: '0.lane.1.0' },
+      ]);
+    });
   });
 
   describe('deeply nested', () => {
