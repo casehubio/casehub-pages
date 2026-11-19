@@ -714,7 +714,6 @@ class GridEditControllerImpl implements GridEditController {
       if (detail) {
         this.gridEl.dispatchEvent(new CustomEvent("pages-grid-cross-edit", { bubbles: true, composed: true, detail }));
       }
-      setTimeout(() => { this.showBuilderOverlay(); }, 50);
       return;
     }
 
