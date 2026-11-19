@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import './position-picker.js';
 import type { PagesPositionPicker } from './position-picker.js';

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import './builder-shell.js';
 import type { PagesBuilderShell } from './builder-shell.js';

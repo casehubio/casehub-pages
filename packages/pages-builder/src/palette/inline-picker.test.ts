@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import './inline-picker.js';
 import type { PagesBuilderInlinePicker } from './inline-picker.js';

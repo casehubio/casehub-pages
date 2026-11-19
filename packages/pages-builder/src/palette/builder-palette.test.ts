@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import './builder-palette.js';
 import type { PagesBuilderPalette } from './builder-palette.js';
