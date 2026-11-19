@@ -1,22 +1,289 @@
 export interface StepLineInfo {
   line: number;
+  endLine: number;
   address: string;
+}
+
+function indent(line: string): number {
+  let n = 0;
+  while (n < line.length && line[n] === ' ') n++;
+  return n;
+}
+
+function isListItem(line: string, minIndent: number): boolean {
+  const ind = indent(line);
+  if (ind < minIndent) return false;
+  const stripped = line.substring(ind);
+  return stripped.startsWith('- ') && stripped.length > 2;
+}
+
+function firstKey(line: string): string {
+  const stripped = line.trimStart();
+  const afterDash = stripped.startsWith('- ') ? stripped.substring(2) : stripped;
+  const colon = afterDash.indexOf(':');
+  return colon > 0 ? afterDash.substring(0, colon).trim() : '';
+}
+
+const CONTROL_FLOW = new Set(['if', 'try', 'match', 'parallel', 'race', 'select']);
+
+const BRANCH_KEYS: Record<string, { label: string; branches: string[] }> = {
+  'if': { label: '', branches: ['then', 'else'] },
+  'try': { label: '', branches: ['try', 'catch', 'finally'] },
+};
+
+const NAMED_BRANCH_KEYS = new Set(['match', 'parallel', 'race', 'select']);
+
+function findEndOfBlock(lines: string[], start: number, blockIndent: number): number {
+  let i = start;
+  while (i < lines.length) {
+    const line = lines[i]!;
+    if (line.trim() === '' || line.trim().startsWith('#')) { i++; continue; }
+    if (indent(line) < blockIndent) break;
+    i++;
+  }
+  return i;
+}
+
+function scanBlock(
+  lines: string[],
+  startLine: number,
+  endLine: number,
+  listIndent: number,
+  prefix: string,
+  results: StepLineInfo[],
+): void {
+  let stepIndex = 0;
+  let i = startLine;
+
+  while (i < endLine) {
+    const line = lines[i]!;
+
+    if (line.trim() === '' || line.trim().startsWith('#')) { i++; continue; }
+
+    if (!isListItem(line, listIndent)) { i++; continue; }
+
+    const lineIndent = indent(line);
+    if (lineIndent !== listIndent) { i++; continue; }
+
+    const address = prefix ? `${prefix}.${String(stepIndex)}` : String(stepIndex);
+    const key = firstKey(line);
+    const isControl = CONTROL_FLOW.has(key);
+
+    const stepEndLine = findNextSibling(lines, i, listIndent, endLine);
+
+    results.push({ line: i, endLine: stepEndLine, address });
+
+    if (isControl) {
+      scanControlFlow(lines, i, stepEndLine, listIndent, key, address, results);
+    }
+
+    stepIndex++;
+    i = stepEndLine;
+  }
+}
+
+function findNextSibling(lines: string[], start: number, listIndent: number, boundary: number): number {
+  let i = start + 1;
+  while (i < boundary) {
+    const line = lines[i]!;
+    if (line.trim() === '' || line.trim().startsWith('#')) { i++; continue; }
+    const ind = indent(line);
+    if (ind <= listIndent && isListItem(line, listIndent) && ind === listIndent) return i;
+    if (ind < listIndent) return i;
+    i++;
+  }
+  return boundary;
+}
+
+function scanControlFlow(
+  lines: string[],
+  stepStart: number,
+  stepEnd: number,
+  listIndent: number,
+  key: string,
+  address: string,
+  results: StepLineInfo[],
+): void {
+  const contentIndent = listIndent + 2;
+
+  if (key === 'if') {
+    scanBranches(lines, stepStart, stepEnd, contentIndent, address, ['then', 'else'], results);
+  } else if (key === 'try') {
+    scanTryBody(lines, stepStart, stepEnd, contentIndent, listIndent, address, results);
+  } else if (key === 'match') {
+    scanNamedBranches(lines, stepStart, stepEnd, contentIndent, address, 'match', 'arms', results);
+  } else if (key === 'parallel') {
+    scanNamedBranches(lines, stepStart, stepEnd, contentIndent, address, 'lane', undefined, results);
+  } else if (key === 'race') {
+    scanNamedBranches(lines, stepStart, stepEnd, contentIndent, address, 'race', undefined, results);
+  } else if (key === 'select') {
+    scanNamedBranches(lines, stepStart, stepEnd, contentIndent, address, 'select', undefined, results);
+  }
+}
+
+function scanBranches(
+  lines: string[],
+  stepStart: number,
+  stepEnd: number,
+  contentIndent: number,
+  address: string,
+  branchNames: string[],
+  results: StepLineInfo[],
+): void {
+  for (const branchName of branchNames) {
+    const branchLine = findBranchLine(lines, stepStart, stepEnd, contentIndent, branchName);
+    if (branchLine < 0) continue;
+
+    const branchContentIndent = contentIndent + 2;
+    const branchEnd = findBranchEnd(lines, branchLine + 1, stepEnd, contentIndent);
+    scanBlock(lines, branchLine + 1, branchEnd, branchContentIndent, `${address}.${branchName}`, results);
+  }
+}
+
+function scanTryBody(
+  lines: string[],
+  stepStart: number,
+  stepEnd: number,
+  contentIndent: number,
+  listIndent: number,
+  address: string,
+  results: StepLineInfo[],
+): void {
+  const tryLine = stepStart;
+  const bodyIndent = contentIndent + 2;
+
+  let bodyStart = tryLine + 1;
+  let bodyEnd = stepEnd;
+
+  const catchLine = findBranchLine(lines, stepStart, stepEnd, contentIndent, 'catch');
+  const finallyLine = findBranchLine(lines, stepStart, stepEnd, contentIndent, 'finally');
+
+  if (catchLine >= 0) bodyEnd = catchLine;
+  else if (finallyLine >= 0) bodyEnd = finallyLine;
+
+  scanBlock(lines, bodyStart, bodyEnd, bodyIndent, `${address}.body`, results);
+
+  if (catchLine >= 0) {
+    const catchEnd = finallyLine >= 0 ? finallyLine : stepEnd;
+    scanBlock(lines, catchLine + 1, catchEnd, bodyIndent, `${address}.catch`, results);
+  }
+
+  if (finallyLine >= 0) {
+    scanBlock(lines, finallyLine + 1, stepEnd, bodyIndent, `${address}.finally`, results);
+  }
+}
+
+function scanNamedBranches(
+  lines: string[],
+  stepStart: number,
+  stepEnd: number,
+  contentIndent: number,
+  address: string,
+  label: string,
+  containerKey: string | undefined,
+  results: StepLineInfo[],
+): void {
+  let scanStart = stepStart + 1;
+
+  if (containerKey) {
+    const containerLine = findBranchLine(lines, stepStart, stepEnd, contentIndent, containerKey);
+    if (containerLine < 0) return;
+    scanStart = containerLine + 1;
+  }
+
+  const nameIndent = containerKey ? contentIndent + 2 : contentIndent + 2;
+  const listItemIndent = nameIndent + 2;
+
+  let i = scanStart;
+  while (i < stepEnd) {
+    const line = lines[i]!;
+    if (line.trim() === '' || line.trim().startsWith('#')) { i++; continue; }
+
+    const ind = indent(line);
+    if (ind < nameIndent) break;
+    if (ind !== nameIndent) { i++; continue; }
+
+    const stripped = line.trimStart();
+    if (stripped.startsWith('- ')) { i++; continue; }
+
+    const colon = stripped.indexOf(':');
+    if (colon <= 0) { i++; continue; }
+
+    const name = stripped.substring(0, colon).trim();
+    const branchEnd = findBranchEnd(lines, i + 1, stepEnd, nameIndent);
+
+    scanBlock(lines, i + 1, branchEnd, listItemIndent, `${address}.${label}.${name}`, results);
+
+    i = branchEnd;
+  }
+}
+
+function findBranchLine(
+  lines: string[],
+  start: number,
+  end: number,
+  expectedIndent: number,
+  branchName: string,
+): number {
+  for (let i = start; i < end; i++) {
+    const line = lines[i]!;
+    if (line.trim() === '') continue;
+    const ind = indent(line);
+    if (ind !== expectedIndent) continue;
+    const stripped = line.trimStart();
+    if (stripped.startsWith(`${branchName}:`)) return i;
+  }
+  return -1;
+}
+
+function findBranchEnd(lines: string[], start: number, boundary: number, branchIndent: number): number {
+  let i = start;
+  while (i < boundary) {
+    const line = lines[i]!;
+    if (line.trim() === '' || line.trim().startsWith('#')) { i++; continue; }
+    const ind = indent(line);
+    if (ind <= branchIndent) return i;
+    i++;
+  }
+  return boundary;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Preserve the published static facade.
 export class StepPositionScanner {
   static scan(rawYaml: string): StepLineInfo[] {
     const lines = rawYaml.split('\n');
-    const positions: StepLineInfo[] = [];
-    let stepIndex = 0;
+    const totalLines = lines.length;
 
-    for (let i = 0; i < lines.length; i++) {
-      const stripped = lines[i]!.trimStart();
-      if (stripped.startsWith('- ') && stripped.length > 2) {
-        positions.push({ line: i, address: String(stepIndex) });
-        stepIndex++;
+    let listIndent = -1;
+    for (let i = 0; i < totalLines; i++) {
+      const line = lines[i]!;
+      if (line.trim() === '' || line.trim().startsWith('#')) continue;
+      if (isListItem(line, 0)) {
+        listIndent = indent(line);
+        break;
       }
     }
-    return positions;
+
+    if (listIndent < 0) return [];
+
+    const results: StepLineInfo[] = [];
+    scanBlock(lines, 0, totalLines, listIndent, '', results);
+    return results;
+  }
+
+  static findByLine(infos: readonly StepLineInfo[], line: number): StepLineInfo | undefined {
+    let best: StepLineInfo | undefined;
+    for (const info of infos) {
+      if (line >= info.line && line < info.endLine) {
+        if (!best || info.address.length > best.address.length) {
+          best = info;
+        }
+      }
+    }
+    return best;
+  }
+
+  static findByAddress(infos: readonly StepLineInfo[], address: string): StepLineInfo | undefined {
+    return infos.find(i => i.address === address);
   }
 }
