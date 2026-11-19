@@ -26,12 +26,6 @@ function firstKey(line: string): string {
 
 const CONTROL_FLOW = new Set(['if', 'try', 'match', 'parallel', 'race', 'select']);
 
-const BRANCH_KEYS: Record<string, { label: string; branches: string[] }> = {
-  'if': { label: '', branches: ['then', 'else'] },
-  'try': { label: '', branches: ['try', 'catch', 'finally'] },
-};
-
-const NAMED_BRANCH_KEYS = new Set(['match', 'parallel', 'race', 'select']);
 
 function findEndOfBlock(lines: string[], start: number, blockIndent: number): number {
   let i = start;

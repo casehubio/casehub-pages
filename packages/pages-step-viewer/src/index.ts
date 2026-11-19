@@ -42,4 +42,7 @@ export { ControlStepComponent } from './control-step.js';
 export { FusedPipelineStepComponent } from './fused-pipeline-step.js';
 
 export { PagesStepViewer } from './pages-step-viewer.js';
+export { PlaybookSplitView, parseAndResolve } from './playbook-split-view.js';
+export type { StepSelectDetail, SplitViewState } from './playbook-split-view.js';
+export type { StepClickDetail } from './step-click.js';
 export { renderDiffContent } from './diff-dispatch.js';

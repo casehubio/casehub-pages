@@ -32,7 +32,7 @@ export abstract class EditableTextBridge implements EditableText {
     };
   }
 
-  notifyCursorChange(position: Position): void {
+  protected notifyCursorChange(position: Position): void {
     for (const cb of this._cursorListeners) cb(position);
   }
 
