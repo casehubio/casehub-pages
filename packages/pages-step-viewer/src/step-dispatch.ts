@@ -1,5 +1,6 @@
 import { html, type TemplateResult } from 'lit';
 import type { ResolvedStep } from '@casehubio/yaml-core/step';
+import type { StepClickDetail } from './step-click.js';
 import './step-card.js';
 import './swim-lane-view.js';
 import './step-block-view.js';
@@ -56,4 +57,24 @@ export function renderStepContent(step: ResolvedStep): TemplateResult {
     default:
       return html`<error-step kind="${(step as ResolvedStep).kind}" message="unsupported step type"></error-step>`;
   }
+}
+
+export function renderStepContentWithAddress(
+  step: ResolvedStep,
+  address: string,
+  activeAddress: string | null,
+): TemplateResult {
+  const isActive = address === activeAddress;
+  return html`<div
+    class="step-clickable${isActive ? ' step-active' : ''}"
+    data-step-address=${address}
+    @click=${(e: MouseEvent) => {
+      e.stopPropagation();
+      (e.currentTarget as HTMLElement).dispatchEvent(new CustomEvent<StepClickDetail>('step-click', {
+        bubbles: true,
+        composed: true,
+        detail: { address, originalEvent: e },
+      }));
+    }}
+  >${renderStepContent(step)}</div>`;
 }
