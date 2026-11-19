@@ -591,10 +591,12 @@ describe("desugarComponent", () => {
       const pageA = result.slots?.["Tab A"]?.[0];
       expect(pageA?.type).toBe("page");
       expect(pageA?.props).toEqual({ name: "Tab A" });
+      expect(pageA?.style).toEqual({ padding: "0" });
       expect(pageA?.slots?.default).toHaveLength(1);
       expect(pageA?.slots?.default?.[0]?.type).toBe("html");
       const pageB = result.slots?.["Tab B"]?.[0];
       expect(pageB?.type).toBe("page");
+      expect(pageB?.style).toEqual({ padding: "0" });
       expect(pageB?.slots?.default?.[0]?.type).toBe("html");
     });
 

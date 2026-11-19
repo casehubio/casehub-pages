@@ -459,7 +459,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       let effectiveProps = props;
       if (slots && props?.targetPage === true) {
         for (const [name, children] of Object.entries(slots)) {
-          slots[name] = [{ type: "page", props: { name }, slots: { default: children } } as Component];
+          slots[name] = [{ type: "page", props: { name }, style: { padding: "0" }, slots: { default: children } } as Component];
         }
         const { targetPage: _, ...rest } = props;
         effectiveProps = Object.keys(rest).length > 0 ? rest : undefined;
