@@ -116,7 +116,7 @@ class GridEditControllerImpl implements GridEditController {
     this.onExternalSelect = (e: Event) => {
       const { itemId } = (e as CustomEvent).detail as { itemId: string };
       this.selection = selectItem(this.selection, itemId, this.getIdRects());
-      this._setSelectedEl(itemId);
+      this._setSelectedEl(itemId, true);
       this.hoveredId = itemId;
       this._toggleDragHandles(itemId);
       if (this._mode === "layout") this.applySelectionOutlines();
@@ -428,7 +428,7 @@ class GridEditControllerImpl implements GridEditController {
     }
     if (this._mode === "layout") this.applySelectionOutlines();
 
-    this._setSelectedEl(id);
+    this._setSelectedEl(id, true);
 
     if (!wasSelected) {
       if (this.hoveredId != null) {
@@ -919,7 +919,7 @@ class GridEditControllerImpl implements GridEditController {
     }
   }
 
-  private _setSelectedEl(id: string): void {
+  private _setSelectedEl(id: string, immediate = false): void {
     const el = this.gridEl.querySelector(`[data-item-id="${id}"]`) as HTMLElement | null;
     if (el === this._selectedEl) return;
     if (this._selectedEl) {
@@ -1021,9 +1021,13 @@ class GridEditControllerImpl implements GridEditController {
     bar.appendChild(rightGroup);
     el.appendChild(bar);
     clearTimeout(this._barShowTimer);
-    this._barShowTimer = setTimeout(() => {
-      if (this.hoveredId === id && bar.isConnected) bar.style.display = "flex";
-    }, 150);
+    if (immediate) {
+      bar.style.display = "flex";
+    } else {
+      this._barShowTimer = setTimeout(() => {
+        if (this.hoveredId === id && bar.isConnected) bar.style.display = "flex";
+      }, 150);
+    }
   }
 
   private _swapTargetId: string | null = null;
