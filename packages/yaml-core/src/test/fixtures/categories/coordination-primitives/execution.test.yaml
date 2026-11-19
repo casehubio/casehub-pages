@@ -1,0 +1,21 @@
+name: Coordination primitives — behavioral execution
+tests:
+  - name: barrier resolves when named steps complete
+    steps:
+      - name: step-a
+        assert: "true"
+      - barrier:
+          await:
+            - step-a
+
+  - name: quorum resolves when threshold met
+    steps:
+      - name: step-a
+        assert: "true"
+      - name: step-b
+        assert: "true"
+      - quorum:
+          required: 1
+          of:
+            - step-a
+            - step-b

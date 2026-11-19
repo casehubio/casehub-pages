@@ -1,0 +1,14 @@
+name: Concurrency patterns — behavioral execution
+tests:
+  - name: parallel runs all branches
+    steps:
+      - parallel:
+          - assert: "true"
+          - assert: "true"
+          - assert: "true"
+
+  - name: race completes when first branch finishes
+    steps:
+      - race:
+          - assert: "true"
+          - delay: "10s"

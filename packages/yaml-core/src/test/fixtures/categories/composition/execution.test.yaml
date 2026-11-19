@@ -1,0 +1,17 @@
+name: Composition — behavioral execution
+tests:
+  - name: run-playbook executes nested steps
+    steps:
+      - run-playbook:
+          playbook:
+            - assert: "true"
+            - assert: "true"
+
+  - name: run-playbook propagates nested failure
+    steps:
+      - try:
+          - run-playbook:
+              playbook:
+                - assert: "false"
+        catch:
+          - assert: "true"
