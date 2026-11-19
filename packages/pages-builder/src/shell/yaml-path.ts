@@ -121,10 +121,7 @@ export function classifyPath(path: readonly (string | number)[]): TreeNodeType |
       return 'grid-item';
     }
   }
-  if (path.length === 2 && path[0] === 'pages' && typeof path[1] === 'number') return 'page';
-  if (path.length > 2 && path[0] === 'pages' && typeof path[1] === 'number') return 'page';
-
-  return undefined;
+  return 'page';
 }
 
 export function getParentPath(path: readonly (string | number)[]): readonly (string | number)[] | null {
