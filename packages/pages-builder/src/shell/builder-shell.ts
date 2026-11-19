@@ -63,6 +63,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
   @state() private _selectedPath: readonly (string | number)[] | undefined;
   @state() private _selectedNodeType: TreeNodeType | undefined;
   @state() private _viewMode: 'source' | 'visual' | 'split' = 'split';
+  @state() private _showOutlines = true;
   @state() private _paletteContext: PaletteContext | undefined;
 
   private _leftPanels: DockItem[] = [
@@ -262,6 +263,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     this.registerShortcut('Z', () => this._redo(), { description: 'Redo', requiresModifier: true });
     this.registerShortcut('x', () => this._cutSelected(), { description: 'Cut', requiresModifier: true });
     this.registerShortcut('c', () => this._copySelected(), { description: 'Copy', requiresModifier: true });
+    this.registerShortcut('u', () => { this._showOutlines = !this._showOutlines; }, { description: 'Toggle outlines', requiresModifier: true });
     this.registerShortcut('Escape', () => { getClipboard().setInsertMode(false); }, { description: 'Exit insert mode' });
     this._clipboardUnsub = getClipboard().subscribe(() => this._syncTree());
     this.addEventListener('pages-grid-edit', this._gridEditHandler);
@@ -1521,7 +1523,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
         ></pages-code-editor>
       </div>
       <div class="editor-visual${showVisual ? '' : ' hidden'}${this._viewMode === 'split' ? ' split' : ''}" style="position:relative;">
-        <div class="preview-container"></div>
+        <div class="preview-container${this._showOutlines ? ' show-outlines' : ''}"></div>
         <div class="overlay-root" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
       </div>
     `, this._centreContainer);
@@ -1751,6 +1753,9 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
               @click="${() => { this._viewMode = 'visual'; }}">Visual</button>
           </div>
           <div class="toolbar-spacer"></div>
+          <button class="toolbar-btn${this._showOutlines ? ' active' : ''}"
+            @click="${() => { this._showOutlines = !this._showOutlines; }}"
+            title="Toggle item outlines (Ctrl+U)">Outlines</button>
           <button class="toolbar-btn" @click="${this._undo}" ?disabled="${this._undoStack.length === 0}" title="Undo">Undo</button>
           <button class="toolbar-btn" @click="${this._redo}" ?disabled="${this._redoStack.length === 0}" title="Redo">Redo</button>
         </div>
@@ -1823,6 +1828,12 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
     .toolbar-btn:disabled {
       opacity: 0.4;
       cursor: default;
+    }
+
+    .toolbar-btn.active {
+      background: var(--pages-accent-4);
+      color: var(--pages-accent-9);
+      border-color: var(--pages-accent-9);
     }
 
     .toolbar-spacer {
@@ -1912,7 +1923,7 @@ export class PagesBuilderShell extends KeyboardShortcutMixin(LitElement) {
       padding: 16px;
     }
 
-    .preview-container [data-item-id] {
+    .preview-container.show-outlines [data-item-id] {
       outline: 1px dashed var(--pages-neutral-5);
       outline-offset: -1px;
       border-radius: var(--pages-radius-sm, 4px);
