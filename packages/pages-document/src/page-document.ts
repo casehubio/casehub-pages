@@ -75,7 +75,7 @@ export class PageDocument {
   }
 
   toString(): string {
-    return this._doc.toString();
+    return this._doc.toString({ lineWidth: 0 });
   }
 
   // --- Change notification ---

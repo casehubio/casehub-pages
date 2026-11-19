@@ -81,6 +81,21 @@ describe('GridItemNode', () => {
       item.setPlacement({ mode: 'positioned', x: 1, y: 1, w: 3, h: 3 });
       expect(doc.toString()).not.toContain('mode:');
     });
+
+    it('preserves flow-style items longer than 80 chars', () => {
+      const yaml = `pages:
+  - title: Test
+    items:
+      - { placement: { x: 0, y: 0, w: 6, h: 2 }, type: html, properties: { content: hello } }
+`;
+      const doc = parse(yaml);
+      const item = doc.getPages()[0]!.getItems()[0]!;
+      item.setPlacement({ mode: 'positioned', x: 1, y: 1, w: 4, h: 3 });
+      const lines = doc.toString().split('\n');
+      const itemLine = lines.find(l => l.includes('placement:'));
+      expect(itemLine).toContain('{ placement:');
+      expect(itemLine).toContain('properties:');
+    });
   });
 
   describe('moveToIndex', () => {
