@@ -241,6 +241,11 @@ describe('classifyPath', () => {
     expect(classifyPath(['pages', 0, 'items', 0, 'properties'])).toBe('component');
   });
 
+  it('treats non-numeric page indices as page-level', () => {
+    expect(classifyPath(['pages', 'unknownKey'])).toBe('page');
+    expect(classifyPath(['pages', 'unknownKey', 'nested'])).toBe('page');
+  });
+
   it('returns undefined for unrecognised paths', () => {
     expect(classifyPath([])).toBeUndefined();
     expect(classifyPath(['unknown'])).toBeUndefined();
