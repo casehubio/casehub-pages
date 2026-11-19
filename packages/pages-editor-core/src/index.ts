@@ -1,4 +1,4 @@
-export type { Position, HighlightStyle, HighlightOptions, AnnotationOptions, EditSession, EditableText, LineReader } from './types.js';
+export type { Position, HighlightStyle, HighlightOptions, AnnotationOptions, EditSession, EditableText, LineReader, Disposable } from './types.js';
 export { createLineReader } from './line-reader.js';
 export { resolveHighlightStyle, highlightOptionsToCSS } from './highlight-options.js';
 export { EditSessionActiveError } from './types.js';

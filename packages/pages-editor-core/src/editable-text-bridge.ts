@@ -1,4 +1,4 @@
-import type { EditableText, Position, HighlightStyle, HighlightOptions, AnnotationOptions, EditSession, LineReader } from './types.js';
+import type { EditableText, Position, HighlightStyle, HighlightOptions, AnnotationOptions, EditSession, LineReader, Disposable } from './types.js';
 import { EditSessionActiveError } from './types.js';
 import { resolveHighlightStyle } from './highlight-options.js';
 import { createLineReader } from './line-reader.js';
@@ -20,6 +20,21 @@ export abstract class EditableTextBridge implements EditableText {
   private _activeSession: EditSession | null = null;
   private _sessionSnapshot: SessionSnapshot | null = null;
   private _nextId = 0;
+  private _cursorListeners: Array<(pos: Position) => void> = [];
+
+  onCursorChange(callback: (position: Position) => void): Disposable {
+    this._cursorListeners.push(callback);
+    return {
+      dispose: () => {
+        const idx = this._cursorListeners.indexOf(callback);
+        if (idx >= 0) this._cursorListeners.splice(idx, 1);
+      },
+    };
+  }
+
+  notifyCursorChange(position: Position): void {
+    for (const cb of this._cursorListeners) cb(position);
+  }
 
   protected _genId(prefix: string): string {
     return `${prefix}-${++this._nextId}`;

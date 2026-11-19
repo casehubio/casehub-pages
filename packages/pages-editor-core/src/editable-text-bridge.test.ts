@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type { Position, HighlightOptions } from './types.js';
 import { EditSessionActiveError } from './types.js';
 import { EditableTextBridge } from './editable-text-bridge.js';
@@ -466,5 +466,57 @@ describe('EditableTextBridge — read-back API', () => {
     bridge.highlight({ line: 1, col: 0 }, { line: 1, col: 4 }, { group: 'g' });
     bridge.clearHighlightGroup('g');
     expect(bridge.removedHighlights).toHaveLength(2);
+  });
+});
+
+describe('EditableTextBridge — cursor change', () => {
+  it('fires callback on notifyCursorChange', () => {
+    const bridge = new TestBridge();
+    const callback = vi.fn();
+    bridge.onCursorChange(callback);
+    bridge.notifyCursorChange({ line: 5, col: 0 });
+    expect(callback).toHaveBeenCalledWith({ line: 5, col: 0 });
+  });
+
+  it('disposable unsubscribes', () => {
+    const bridge = new TestBridge();
+    const callback = vi.fn();
+    const disposable = bridge.onCursorChange(callback);
+    disposable.dispose();
+    bridge.notifyCursorChange({ line: 5, col: 0 });
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('supports multiple listeners', () => {
+    const bridge = new TestBridge();
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+    bridge.onCursorChange(cb1);
+    bridge.onCursorChange(cb2);
+    bridge.notifyCursorChange({ line: 3, col: 0 });
+    expect(cb1).toHaveBeenCalledOnce();
+    expect(cb2).toHaveBeenCalledOnce();
+  });
+
+  it('only disposes the specific listener', () => {
+    const bridge = new TestBridge();
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+    const d1 = bridge.onCursorChange(cb1);
+    bridge.onCursorChange(cb2);
+    d1.dispose();
+    bridge.notifyCursorChange({ line: 1, col: 0 });
+    expect(cb1).not.toHaveBeenCalled();
+    expect(cb2).toHaveBeenCalledOnce();
+  });
+
+  it('double dispose is safe', () => {
+    const bridge = new TestBridge();
+    const callback = vi.fn();
+    const disposable = bridge.onCursorChange(callback);
+    disposable.dispose();
+    disposable.dispose();
+    bridge.notifyCursorChange({ line: 0, col: 0 });
+    expect(callback).not.toHaveBeenCalled();
   });
 });

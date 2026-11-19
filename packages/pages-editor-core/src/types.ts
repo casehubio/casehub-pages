@@ -3,6 +3,10 @@ export interface Position {
   col: number;
 }
 
+export interface Disposable {
+  dispose(): void;
+}
+
 export interface HighlightOptions {
   background?: string;
   border?: string;
@@ -72,6 +76,8 @@ export interface EditableText {
   endEditSession(session: EditSession): void;
 
   insertRawText?(text: string): void;
+
+  onCursorChange?(callback: (position: Position) => void): Disposable;
 
   triggerCompletion?(): void;
   selectCompletion?(label: string): boolean;
