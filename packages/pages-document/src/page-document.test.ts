@@ -772,4 +772,31 @@ describe('PageDocument', () => {
       expect(doc.canUndo()).toBe(false);
     });
   });
+
+  describe('lineWidth: 0 — scalar preservation', () => {
+    it('preserves long plain scalar without wrapping', () => {
+      const yaml = `pages:\n  - name: Overview\n    components:\n      - type: title\n        properties:\n          text: This is a very long plain scalar string that exceeds the default 80 character lineWidth and must not be wrapped by the YAML serializer\n`;
+      const doc = PageDocument.parse(yaml);
+      const output = doc.toString();
+      expect(output).toContain(
+        'This is a very long plain scalar string that exceeds the default 80 character lineWidth and must not be wrapped by the YAML serializer'
+      );
+    });
+
+    it('preserves block scalar indicator', () => {
+      const yaml = `pages:\n  - name: Overview\n    components:\n      - type: markdown\n        properties:\n          content: |\n            # Heading\n            Paragraph with text.\n            Another line here.\n`;
+      const doc = PageDocument.parse(yaml);
+      const output = doc.toString();
+      expect(output).toContain('content: |');
+      expect(output).toContain('# Heading');
+      expect(output).toContain('Paragraph with text.');
+    });
+
+    it('preserves flow-style map on single line', () => {
+      const yaml = `pages:\n  - name: Overview\n    items:\n      - placement: {x: 0, y: 0, w: 6, h: 4}\n        component: metric\n`;
+      const doc = PageDocument.parse(yaml);
+      const output = doc.toString();
+      expect(output).toMatch(/placement:\s*\{.*x: 0.*y: 0.*w: 6.*h: 4.*\}/);
+    });
+  });
 });
