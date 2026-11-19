@@ -181,6 +181,51 @@ describe('StepPositionScanner', () => {
     });
   });
 
+  describe('nested race', () => {
+    it('scans race with two children', () => {
+      const yaml = [
+        '- race:',
+        '    - action: fast',
+        '    - action: slow',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 3, address: '0' },
+        { line: 1, endLine: 2, address: '0.race.0' },
+        { line: 2, endLine: 3, address: '0.race.1' },
+      ]);
+    });
+
+    it('scans single race child', () => {
+      const yaml = [
+        '- race:',
+        '    - action: only',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 2, address: '0' },
+        { line: 1, endLine: 2, address: '0.race.0' },
+      ]);
+    });
+
+    it('scans race with nested control flow', () => {
+      const yaml = [
+        '- race:',
+        '    - if: timeout',
+        '      then:',
+        '        - action: abort',
+        '    - action: complete',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 5, address: '0' },
+        { line: 1, endLine: 4, address: '0.race.0' },
+        { line: 3, endLine: 4, address: '0.race.0.then.0' },
+        { line: 4, endLine: 5, address: '0.race.1' },
+      ]);
+    });
+  });
+
   describe('deeply nested', () => {
     it('scans if inside try', () => {
       const yaml = [

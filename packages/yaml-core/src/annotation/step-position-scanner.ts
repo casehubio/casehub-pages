@@ -207,6 +207,10 @@ function scanNamedBranches(
         i = laneEnd;
         continue;
       }
+      if (label === 'race') {
+        scanBlock(lines, i, stepEnd, nameIndent, `${address}.race`, results);
+        return;
+      }
       i++; continue;
     }
 
