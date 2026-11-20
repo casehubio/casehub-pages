@@ -359,20 +359,7 @@
   import { Walker } from '@casehubio/yaml-core/step';
   import { CsvParser } from '@casehubio/yaml-core';
   import { parse } from 'yaml';
-
-  // ── Demo Catalog ──
-  // Resolves any non-reserved action name. The gallery is about rendering,
-  // not validation — so every action lookup succeeds.
-  const demoCatalog = {
-    resolve(name) {
-      return {
-        qualifiedName: name,
-        definition: { name, inputs: {}, outputs: {} },
-        action: { execute: async () => ({ kind: 'success', output: {}, executionMetadata: {} }) },
-      };
-    },
-    availableActions() { return new Set(); },
-  };
+  import { demoCatalog } from './src/demo-catalog.ts';
 
   // ── YAML → ResolvedStep[] ──
   function resolveYaml(yamlText) {

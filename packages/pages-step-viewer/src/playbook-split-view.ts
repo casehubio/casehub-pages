@@ -5,6 +5,7 @@ import { Walker } from '@casehubio/yaml-core/step';
 import { StepPositionScanner, type StepLineInfo } from '@casehubio/yaml-core';
 import { parse } from 'yaml';
 import './pages-step-viewer.js';
+import { demoCatalog } from './demo-catalog.js';
 
 export interface StepSelectDetail {
   line: number;
@@ -17,17 +18,6 @@ export interface SplitViewState {
   positionInfos: StepLineInfo[];
   error: string | null;
 }
-
-const demoCatalog = {
-  resolve(name: string) {
-    return {
-      qualifiedName: name,
-      definition: { name, inputs: {}, outputs: {} },
-      action: { execute: async () => ({ kind: 'success' as const, output: {}, executionMetadata: {} }) },
-    };
-  },
-  availableActions() { return new Set<string>(); },
-};
 
 export function parseAndResolve(yaml: string): SplitViewState {
   if (!yaml.trim()) {
