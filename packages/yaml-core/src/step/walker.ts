@@ -143,6 +143,7 @@ export interface ParallelStep {
   name: string | null;
   steps: ResolvedStep[];
   branches?: NamedBranch[];
+  concurrency?: number;
   advanceAfter?: number;
   cancelRemaining?: boolean;
   collectionTimeout?: number;
@@ -235,7 +236,7 @@ const RESERVED_KEYS = new Set([
   'on-success', 'on-failure', 'for-each', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'parallel', 'concurrent', 'semaphore', 'barrier', 'quorum', 'race',
+  'parallel', 'concurrency', 'concurrent', 'semaphore', 'barrier', 'quorum', 'race',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'advance-after', 'cancel-remaining', 'collection-timeout',
@@ -250,7 +251,7 @@ const DECORATOR_KEYS = new Set([
   'if', 'on-success', 'on-failure', 'for-each', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'semaphore', 'barrier', 'quorum',
+  'concurrency', 'semaphore', 'barrier', 'quorum',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'simulation',
@@ -486,6 +487,9 @@ export class Walker {
       } else {
         throw new Error(`${stepPath}: parallel: must be an array or object`);
       }
+      const concurrencyRaw = decorators['concurrency'] ?? step['concurrency'];
+      const concurrency = typeof concurrencyRaw === 'number' ? concurrencyRaw : undefined;
+      delete decorators['concurrency'];
       const advanceAfter = step['advance-after'] as number | undefined;
       const cancelRemaining = step['cancel-remaining'] as boolean | undefined;
       const collectionTimeoutRaw = step['collection-timeout'] as string | undefined;
@@ -493,6 +497,7 @@ export class Walker {
       return {
         kind: 'parallel', name: stepName, steps,
         ...(branches ? { branches } : {}),
+        ...(concurrency !== undefined ? { concurrency } : {}),
         ...(advanceAfter !== undefined ? { advanceAfter } : {}),
         ...(cancelRemaining !== undefined ? { cancelRemaining } : {}),
         ...(collectionTimeout !== undefined ? { collectionTimeout } : {}),

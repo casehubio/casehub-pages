@@ -115,9 +115,12 @@ export class StructuralEvaluator {
     if (step.advanceAfter) {
       return this.evaluateParallelDiscriminator(step, context);
     }
-    const results = await Promise.allSettled(
-      step.steps.map((child) => this.evaluate(child, context)),
-    );
+    const limit = step.concurrency && step.concurrency > 0 ? step.concurrency : 0;
+    const evaluate = (child: ResolvedStep) => this.evaluate(child, context);
+
+    const results = limit > 0
+      ? await this.evaluateWithConcurrencyLimit(step.steps, limit, evaluate)
+      : await Promise.allSettled(step.steps.map(evaluate));
 
     const outputs: Record<string, unknown> = {};
     for (const result of results) {
@@ -130,6 +133,30 @@ export class StructuralEvaluator {
       Object.assign(outputs, result.value.output);
     }
     return stepSuccess(outputs);
+  }
+
+  private async evaluateWithConcurrencyLimit(
+    steps: ResolvedStep[],
+    limit: number,
+    evaluate: (step: ResolvedStep) => Promise<Result>,
+  ): Promise<PromiseSettledResult<Result>[]> {
+    const results: PromiseSettledResult<Result>[] = new Array(steps.length);
+    let running = 0;
+    let next = 0;
+    return new Promise(resolve => {
+      const launch = () => {
+        while (running < limit && next < steps.length) {
+          const idx = next++;
+          running++;
+          evaluate(steps[idx]!)
+            .then(value => { results[idx] = { status: 'fulfilled', value }; })
+            .catch(reason => { results[idx] = { status: 'rejected', reason }; })
+            .finally(() => { running--; launch(); });
+        }
+        if (running === 0 && next >= steps.length) resolve(results);
+      };
+      launch();
+    });
   }
 
   private async evaluateParallelDiscriminator(step: ParallelStep, context: Context): Promise<Result> {

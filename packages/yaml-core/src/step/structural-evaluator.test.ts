@@ -117,6 +117,35 @@ describe('StructuralEvaluator', () => {
       const result = await new StructuralEvaluator().evaluate(step, makeContext());
       expect(result.kind).toBe('failure');
     });
+
+    it('concurrency limits simultaneous branches', async () => {
+      let maxConcurrent = 0;
+      let running = 0;
+      const makeDelayedEntry = (name: string): CatalogEntry => ({
+        qualifiedName: name,
+        definition: { name, inputs: {}, outputs: {} },
+        action: {
+          async execute() {
+            running++;
+            if (running > maxConcurrent) maxConcurrent = running;
+            await new Promise(r => setTimeout(r, 10));
+            running--;
+            return stepSuccess({ [name]: true });
+          },
+        },
+      });
+      const entries = ['a', 'b', 'c', 'd'].map(n => makeDelayedEntry(n));
+      const step: ParallelStep = {
+        kind: 'parallel', name: null, concurrency: 2, decorators: {},
+        steps: entries.map(e => ({
+          kind: 'plugin' as const, name: e.qualifiedName, entry: e, params: {}, decorators: {}, annotations: [],
+        })),
+      };
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      expect(maxConcurrent).toBeLessThanOrEqual(2);
+      expect(maxConcurrent).toBeGreaterThan(0);
+    });
   });
 
   describe('if-else step', () => {

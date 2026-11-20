@@ -7,6 +7,15 @@ tests:
           - assert: "true"
           - assert: "true"
 
+  - name: parallel with concurrency limit runs all branches
+    steps:
+      - parallel:
+          - assert: "true"
+          - assert: "true"
+          - assert: "true"
+          - assert: "true"
+        concurrency: 2
+
   - name: race completes when first branch finishes
     steps:
       - race:
