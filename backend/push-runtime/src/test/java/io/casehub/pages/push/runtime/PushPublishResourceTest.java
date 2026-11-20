@@ -88,6 +88,18 @@ class PushPublishResourceTest {
     }
 
     @Test
+    void publish_null_body_returns_400() {
+        given()
+                .auth().oauth2(validToken())
+                .contentType(ContentType.JSON)
+                .when()
+                .post("/api/push/publish/test:topic")
+                .then()
+                .statusCode(400);
+    }
+
+
+    @Test
     void publish_malformed_json_returns_400() {
         given()
                 .auth().oauth2(validToken())

@@ -1,9 +1,10 @@
 package io.casehub.pages.push.runtime;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.EventStore;
-import io.casehub.pages.push.JsonWriter;
 import io.casehub.pages.push.InMemoryEventStore;
+import io.casehub.pages.push.JsonWriter;
 import io.casehub.pages.push.SessionSender;
 import io.casehub.pages.push.TopicRegistry;
 import io.quarkus.arc.DefaultBean;
@@ -33,7 +34,7 @@ public class PushProducers {
     @ApplicationScoped
     @DefaultBean
     JsonWriter jsonWriter() {
-        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var mapper = new ObjectMapper();
         return mapper::writeValueAsString;
     }
 

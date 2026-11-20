@@ -20,6 +20,7 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PushPublishResource {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public record PublishResponse(long seq) {}
 
@@ -33,7 +34,7 @@ public class PushPublishResource {
             throw new BadRequestException("request body must not be empty");
         }
         try {
-            new ObjectMapper().readTree(body);
+            MAPPER.readTree(body);
         } catch (JsonProcessingException e) {
             throw new BadRequestException("request body must be valid JSON");
         }

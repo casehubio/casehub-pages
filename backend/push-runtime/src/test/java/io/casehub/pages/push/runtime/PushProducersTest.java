@@ -12,20 +12,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @QuarkusTest
 class PushProducersTest {
 
-    @Inject EventBroadcaster broadcaster;
-    @Inject TopicRegistry topicRegistry;
-    @Inject EventStore eventStore;
-  @Inject
-  io.casehub.pages.push.JsonWriter jsonWriter;
+    @Inject
+    EventBroadcaster broadcaster;
+    @Inject
+    TopicRegistry    topicRegistry;
+    @Inject
+    EventStore       eventStore;
+    @Inject
+    io.casehub.pages.push.JsonWriter jsonWriter;
 
 
-  @Test
-  void all_beans_are_resolvable() {
-    assertThat(broadcaster).isNotNull();
-    assertThat(topicRegistry).isNotNull();
-    assertThat(eventStore).isNotNull();
-    assertThat(jsonWriter).isNotNull();
-  }
+    @Test
+    void all_beans_are_resolvable() {
+        assertThat(broadcaster).isNotNull();
+        assertThat(topicRegistry).isNotNull();
+        assertThat(eventStore).isNotNull();
+        assertThat(jsonWriter).isNotNull();
+    }
 
     @Test
     void default_event_store_has_capacity_1000() {
