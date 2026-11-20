@@ -88,6 +88,19 @@ class PushPublishResourceTest {
                 .statusCode(400);
     }
 
+
+    @Test
+    void publish_malformed_json_returns_400() {
+        given()
+                .auth().oauth2(validToken())
+                .contentType(ContentType.JSON)
+                .body("not valid json {{{")
+                .when()
+                .post("/api/push/publish/test:topic")
+                .then()
+                .statusCode(400);
+    }
+
     @Test
     void publish_with_no_subscribers_returns_seq() {
         given()
