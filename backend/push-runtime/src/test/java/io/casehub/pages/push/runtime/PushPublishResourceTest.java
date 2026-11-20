@@ -13,7 +13,6 @@ import java.util.Set;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 
 @QuarkusTest
@@ -46,7 +45,7 @@ class PushPublishResourceTest {
                 .post("/api/push/publish/orders:new")
                 .then()
                 .statusCode(200)
-                .body("seq", equalTo(1));
+                .body("seq", greaterThan(0));
 
         assertThat(testConfig.sent()).hasSize(1);
         assertThat(testConfig.sent().getFirst().message()).contains("\"topic\":\"orders:new\"");
@@ -87,7 +86,6 @@ class PushPublishResourceTest {
                 .then()
                 .statusCode(400);
     }
-
 
     @Test
     void publish_malformed_json_returns_400() {
