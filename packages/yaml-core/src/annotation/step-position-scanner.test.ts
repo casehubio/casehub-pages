@@ -291,6 +291,25 @@ describe('StepPositionScanner', () => {
     });
   });
 
+  describe('select with object-form subscribe', () => {
+    it('extracts channel name from child key', () => {
+      const yaml = [
+        '- select:',
+        '    - subscribe:',
+        '        channel: events',
+        '      action: handle',
+        '    - wait: timeout',
+        '      action: expire',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 6, address: '0' },
+        { line: 1, endLine: 4, address: '0.select.events.0' },
+        { line: 4, endLine: 6, address: '0.select.timeout.0' },
+      ]);
+    });
+  });
+
   describe('deeply nested', () => {
     it('scans if inside try', () => {
       const yaml = [

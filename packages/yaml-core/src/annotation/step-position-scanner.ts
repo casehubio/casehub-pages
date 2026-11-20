@@ -26,7 +26,14 @@ function firstKey(line: string): string {
 
 const CONTROL_FLOW = new Set(['if', 'try', 'match', 'parallel', 'race', 'select']);
 
-function selectBranchName(line: string): string {
+function unquote(s: string): string {
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    return s.substring(1, s.length - 1);
+  }
+  return s;
+}
+
+function selectBranchName(line: string, lines?: string[], start?: number, end?: number): string {
   const stripped = line.trimStart();
   const afterDash = stripped.startsWith('- ') ? stripped.substring(2) : stripped;
   const colon = afterDash.indexOf(':');
@@ -34,10 +41,22 @@ function selectBranchName(line: string): string {
   const key = afterDash.substring(0, colon).trim();
   if (key !== 'subscribe' && key !== 'wait') return '';
   const raw = afterDash.substring(colon + 1).trim();
-  if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
-    return raw.substring(1, raw.length - 1);
+  if (raw) return unquote(raw);
+  if (key === 'subscribe' && lines && start !== undefined && end !== undefined) {
+    const childIndent = indent(line) + 4;
+    for (let j = start + 1; j < end; j++) {
+      const jLine = lines[j]!;
+      if (jLine.trim() === '' || jLine.trim().startsWith('#')) continue;
+      if (indent(jLine) !== childIndent) break;
+      const jKey = firstKey(jLine);
+      if (jKey === 'channel') {
+        const jStripped = jLine.trimStart();
+        const jColon = jStripped.indexOf(':');
+        return jColon > 0 ? unquote(jStripped.substring(jColon + 1).trim()) : '';
+      }
+    }
   }
-  return raw;
+  return '';
 }
 
 
@@ -227,7 +246,7 @@ function scanNamedBranches(
       }
       if (label === 'select') {
         const childEnd = findNextSibling(lines, i, nameIndent, stepEnd);
-        const name = selectBranchName(line);
+        const name = selectBranchName(line, lines, i, childEnd);
         if (name) {
           const stepAddr = `${address}.select.${name}.0`;
           results.push({ line: i, endLine: childEnd, address: stepAddr });
