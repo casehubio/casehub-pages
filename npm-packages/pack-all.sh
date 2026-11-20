@@ -65,4 +65,12 @@ for pkg_json in sorted(packages_dir.glob("*/package.json")):
 print(f"  Rewrote {count} package.json files")
 ' "$OUTPUT_DIR"
 
-echo "=== Done — $(ls "$OUTPUT_DIR/packages/" | wc -l | tr -d ' ') packages unpacked to $OUTPUT_DIR/packages/ ==="
+# Copy shared scripts into the artifact — single source of truth
+echo "=== Bundling shared scripts ==="
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)/scripts"
+mkdir -p "$OUTPUT_DIR/scripts"
+cp "$SCRIPT_DIR/strip-internal-deps.py" "$OUTPUT_DIR/scripts/"
+cp "$SCRIPT_DIR/link-casehub-packages.mjs" "$OUTPUT_DIR/scripts/"
+echo "  Bundled strip-internal-deps.py + link-casehub-packages.mjs"
+
+echo "=== Done — $(ls "$OUTPUT_DIR/packages/" | wc -l | tr -d ' ') packages + scripts unpacked to $OUTPUT_DIR/ ==="
