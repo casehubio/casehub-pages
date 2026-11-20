@@ -102,20 +102,37 @@ describe('StepPositionScanner', () => {
   });
 
   describe('nested match', () => {
-    it('scans match with named arms', () => {
+    it('scans match with cases', () => {
       const yaml = [
         '- match: status',
-        '  arms:',
-        '    open:',
-        '      - action: handle-open',
-        '    closed:',
-        '      - action: handle-closed',
+        '  cases:',
+        '    - when: open',
+        '      action: handle-open',
+        '    - when: closed',
+        '      action: handle-closed',
       ].join('\n');
       const result = StepPositionScanner.scan(yaml);
       expect(result).toEqual([
         { line: 0, endLine: 6, address: '0' },
-        { line: 3, endLine: 4, address: '0.match.open.0' },
-        { line: 5, endLine: 6, address: '0.match.closed.0' },
+        { line: 3, endLine: 4, address: '0.match.0.0' },
+        { line: 5, endLine: 6, address: '0.match.1.0' },
+      ]);
+    });
+
+    it('scans match with default case', () => {
+      const yaml = [
+        '- match: status',
+        '  cases:',
+        '    - when: open',
+        '      action: handle-open',
+        '    - default:',
+        '        - action: fallback',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 6, address: '0' },
+        { line: 3, endLine: 4, address: '0.match.0.0' },
+        { line: 5, endLine: 6, address: '0.match.1.0' },
       ]);
     });
   });

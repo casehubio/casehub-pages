@@ -138,7 +138,7 @@ function scanControlFlow(
   } else if (key === 'try') {
     scanTryBody(lines, stepStart, stepEnd, contentIndent, listIndent, address, results);
   } else if (key === 'match') {
-    scanNamedBranches(lines, stepStart, stepEnd, contentIndent, address, 'match', 'arms', results);
+    scanMatchCases(lines, stepStart, stepEnd, contentIndent, address, results);
   } else if (key === 'parallel') {
     scanNamedBranches(lines, stepStart, stepEnd, contentIndent, address, 'lane', undefined, results);
   } else if (key === 'race') {
@@ -197,6 +197,56 @@ function scanTryBody(
 
   if (finallyLine >= 0) {
     scanBlock(lines, finallyLine + 1, stepEnd, bodyIndent, `${address}.finally`, results);
+  }
+}
+
+function scanMatchCases(
+  lines: string[],
+  stepStart: number,
+  stepEnd: number,
+  contentIndent: number,
+  address: string,
+  results: StepLineInfo[],
+): void {
+  const casesLine = findBranchLine(lines, stepStart, stepEnd, contentIndent, 'cases');
+  if (casesLine < 0) return;
+
+  const caseListIndent = contentIndent + 2;
+  let caseIndex = 0;
+  let i = casesLine + 1;
+  while (i < stepEnd) {
+    const line = lines[i]!;
+    if (line.trim() === '' || line.trim().startsWith('#')) { i++; continue; }
+    const ind = indent(line);
+    if (ind < caseListIndent) break;
+    if (!isListItem(line, caseListIndent) || ind !== caseListIndent) { i++; continue; }
+
+    const caseEnd = findNextSibling(lines, i, caseListIndent, stepEnd);
+    const caseContentIndent = caseListIndent + 2;
+    const casePrefix = `${address}.match.${caseIndex}`;
+
+    const caseKey = firstKey(line);
+    if (caseKey === 'default') {
+      scanBlock(lines, i + 1, caseEnd, caseContentIndent + 2, casePrefix, results);
+    } else {
+      for (let j = i + 1; j < caseEnd; j++) {
+        const jLine = lines[j]!;
+        if (jLine.trim() === '' || jLine.trim().startsWith('#')) continue;
+        if (indent(jLine) !== caseContentIndent) continue;
+        const jKey = firstKey(jLine);
+        if (jKey === 'when' || jKey === 'pattern' || jKey === 'guard') continue;
+        const stepEnd2 = findBranchEnd(lines, j + 1, caseEnd, caseContentIndent);
+        const stepAddr = `${casePrefix}.0`;
+        results.push({ line: j, endLine: stepEnd2, address: stepAddr });
+        if (CONTROL_FLOW.has(jKey)) {
+          scanControlFlow(lines, j, stepEnd2, caseContentIndent, jKey, stepAddr, results);
+        }
+        break;
+      }
+    }
+
+    caseIndex++;
+    i = caseEnd;
   }
 }
 
