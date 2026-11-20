@@ -10,7 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TopicRegistryTest {
 
@@ -55,6 +58,21 @@ class TopicRegistryTest {
         assertTrue(reg.connections("file:/x").isEmpty());
         assertTrue(reg.connections("chat:lobby").isEmpty());
     }
+
+    @Test
+    void clear_removes_all_connections_and_topics() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:abc", "file:/x"));
+        reg.listen("conn-2", List.of("debate:**"));
+        reg.clear();
+        assertThat(reg.connections("debate:abc")).isEmpty();
+        assertThat(reg.connections("file:/x")).isEmpty();
+        assertThat(reg.connections("debate:anything")).isEmpty();
+
+        reg.listen("conn-3", List.of("debate:new"));
+        assertThat(reg.connections("debate:new")).containsExactly("conn-3");
+    }
+
 
     @Test
     void connections_returns_unmodifiable_snapshot() {

@@ -24,6 +24,7 @@ class PushPublishResourceTest {
     @BeforeEach
     void setUp() {
         testConfig.clear();
+        topicRegistry.clear();
     }
 
     private String validToken() {

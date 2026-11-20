@@ -25,6 +25,7 @@ class BroadcastIntegrationTest {
     @BeforeEach
     void setUp() {
         testConfig.clear();
+        topicRegistry.clear();
     }
 
     @Test

@@ -105,6 +105,13 @@ public final class TopicRegistry {
         }
     }
 
+    public void clear() {
+        connectionToTopics.clear();
+        root.children.clear();
+        root.connections.clear();
+        root.doubleStarConnections.clear();
+    }
+
     /**
      * Returns all connection IDs listening to a concrete topic.
      * Walks the trie, collecting connections from exact matches,
