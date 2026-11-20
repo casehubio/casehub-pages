@@ -26,6 +26,20 @@ function firstKey(line: string): string {
 
 const CONTROL_FLOW = new Set(['if', 'try', 'match', 'parallel', 'race', 'select']);
 
+function selectBranchName(line: string): string {
+  const stripped = line.trimStart();
+  const afterDash = stripped.startsWith('- ') ? stripped.substring(2) : stripped;
+  const colon = afterDash.indexOf(':');
+  if (colon <= 0) return '';
+  const key = afterDash.substring(0, colon).trim();
+  if (key !== 'subscribe' && key !== 'wait') return '';
+  const raw = afterDash.substring(colon + 1).trim();
+  if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+    return raw.substring(1, raw.length - 1);
+  }
+  return raw;
+}
+
 
 function findEndOfBlock(lines: string[], start: number, blockIndent: number): number {
   let i = start;
@@ -210,6 +224,27 @@ function scanNamedBranches(
       if (label === 'race') {
         scanBlock(lines, i, stepEnd, nameIndent, `${address}.race`, results);
         return;
+      }
+      if (label === 'select') {
+        const childEnd = findNextSibling(lines, i, nameIndent, stepEnd);
+        const name = selectBranchName(line);
+        if (name) {
+          const stepAddr = `${address}.select.${name}.0`;
+          results.push({ line: i, endLine: childEnd, address: stepAddr });
+          const contentInd = nameIndent + 2;
+          for (let j = i + 1; j < childEnd; j++) {
+            const jLine = lines[j]!;
+            if (jLine.trim() === '' || jLine.trim().startsWith('#')) continue;
+            if (indent(jLine) !== contentInd) continue;
+            const jKey = firstKey(jLine);
+            if (CONTROL_FLOW.has(jKey)) {
+              scanControlFlow(lines, i, childEnd, nameIndent, jKey, stepAddr, results);
+              break;
+            }
+          }
+        }
+        i = childEnd;
+        continue;
       }
       i++; continue;
     }

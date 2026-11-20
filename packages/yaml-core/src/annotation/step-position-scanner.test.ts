@@ -226,6 +226,71 @@ describe('StepPositionScanner', () => {
     });
   });
 
+  describe('nested select', () => {
+    it('scans select with subscribe and wait branches', () => {
+      const yaml = [
+        '- select:',
+        '    - subscribe: events',
+        '      action: handle',
+        '    - wait: timeout',
+        '      action: expire',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 5, address: '0' },
+        { line: 1, endLine: 3, address: '0.select.events.0' },
+        { line: 3, endLine: 5, address: '0.select.timeout.0' },
+      ]);
+    });
+
+    it('scans single select branch', () => {
+      const yaml = [
+        '- select:',
+        '    - wait: signal',
+        '      action: respond',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 3, address: '0' },
+        { line: 1, endLine: 3, address: '0.select.signal.0' },
+      ]);
+    });
+
+    it('scans select with nested control flow', () => {
+      const yaml = [
+        '- select:',
+        '    - wait: timeout',
+        '      if: expired',
+        '      then:',
+        '        - action: abort',
+        '    - subscribe: events',
+        '      action: handle',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 7, address: '0' },
+        { line: 1, endLine: 5, address: '0.select.timeout.0' },
+        { line: 4, endLine: 5, address: '0.select.timeout.0.then.0' },
+        { line: 5, endLine: 7, address: '0.select.events.0' },
+      ]);
+    });
+
+    it('scans select with empty branch', () => {
+      const yaml = [
+        '- select:',
+        '    - wait: sig-a',
+        '    - wait: sig-b',
+        '      action: handle',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 4, address: '0' },
+        { line: 1, endLine: 2, address: '0.select.sig-a.0' },
+        { line: 2, endLine: 4, address: '0.select.sig-b.0' },
+      ]);
+    });
+  });
+
   describe('deeply nested', () => {
     it('scans if inside try', () => {
       const yaml = [
