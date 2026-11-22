@@ -235,11 +235,11 @@ function scanMatchCases(
         if (indent(jLine) !== caseContentIndent) continue;
         const jKey = firstKey(jLine);
         if (jKey === 'when' || jKey === 'pattern' || jKey === 'guard') continue;
-        const stepEnd2 = findBranchEnd(lines, j + 1, caseEnd, caseContentIndent);
+        const stepEnd2 = caseEnd;
         const stepAddr = `${casePrefix}.0`;
         results.push({ line: j, endLine: stepEnd2, address: stepAddr });
         if (CONTROL_FLOW.has(jKey)) {
-          scanControlFlow(lines, j, stepEnd2, caseContentIndent, jKey, stepAddr, results);
+          scanControlFlow(lines, j, stepEnd2, caseListIndent, jKey, stepAddr, results);
         }
         break;
       }

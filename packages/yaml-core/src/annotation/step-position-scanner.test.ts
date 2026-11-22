@@ -119,6 +119,44 @@ describe('StepPositionScanner', () => {
       ]);
     });
 
+    it('skips guard key and scans action step', () => {
+      const yaml = [
+        '- match: status',
+        '  cases:',
+        '    - when: open',
+        '      guard: x > 0',
+        '      action: handle-open',
+        '    - when: closed',
+        '      action: handle-closed',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 7, address: '0' },
+        { line: 4, endLine: 5, address: '0.match.0.0' },
+        { line: 6, endLine: 7, address: '0.match.1.0' },
+      ]);
+    });
+
+    it('scans nested control flow inside match case', () => {
+      const yaml = [
+        '- match: status',
+        '  cases:',
+        '    - when: open',
+        '      if: condition',
+        '      then:',
+        '        - action: yes-step',
+        '      else:',
+        '        - action: no-step',
+      ].join('\n');
+      const result = StepPositionScanner.scan(yaml);
+      expect(result).toEqual([
+        { line: 0, endLine: 8, address: '0' },
+        { line: 3, endLine: 8, address: '0.match.0.0' },
+        { line: 5, endLine: 6, address: '0.match.0.0.then.0' },
+        { line: 7, endLine: 8, address: '0.match.0.0.else.0' },
+      ]);
+    });
+
     it('scans match with default case', () => {
       const yaml = [
         '- match: status',
