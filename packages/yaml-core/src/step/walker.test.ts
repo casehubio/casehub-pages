@@ -313,6 +313,13 @@ describe('Walker', () => {
         { block: [{ steps: [{ doA: {} }] }] },
       ], catalog)).toThrow("'steps' is no longer valid — use inline sibling keys");
     });
+
+    it('rejects steps wrapper in parallel map form', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      expect(() => Walker.resolve([
+        { parallel: { steps: [{ doA: {} }], 'advance-after': 1 } },
+      ], catalog)).toThrow("parallel does not accept a 'steps' wrapper");
+    });
   });
 
   describe('structural decorator forms', () => {

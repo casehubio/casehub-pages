@@ -478,6 +478,9 @@ export class Walker {
       if (Array.isArray(structuralValue)) {
         steps = Walker.resolveAtDepth(structuralValue as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel`, seenNames, annotationMap, stepAddress);
       } else if (typeof structuralValue === 'object' && structuralValue !== null) {
+        if ('steps' in (structuralValue as Record<string, unknown>)) {
+          throw new Error(`${stepPath}: parallel does not accept a 'steps' wrapper — use the array form instead: parallel: [step1, step2, ...]`);
+        }
         const namedBranches = Object.entries(structuralValue as Record<string, unknown>).map(([bName, bSteps]) => ({
           name: bName,
           steps: Walker.resolveAtDepth(bSteps as Record<string, unknown>[], catalog, depth + 1, `${stepPath} → parallel:${bName}`, seenNames, annotationMap, stepAddress),
