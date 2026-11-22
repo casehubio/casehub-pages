@@ -55,9 +55,10 @@ describe('playbook-split-view core logic', () => {
     expect(result.positionInfos.some(i => i.address.includes('then'))).toBe(true);
   });
 
-  it('parseAndResolve handles doc with steps key', () => {
+  it('parseAndResolve rejects steps wrapper', () => {
     const yaml = 'steps:\n  - action: step-a\n  - action: step-b\n';
     const result = parseAndResolve(yaml);
-    expect(result.steps.length).toBe(2);
+    expect(result.error).toContain("'steps' wrapper is not valid");
+    expect(result.steps).toEqual([]);
   });
 });

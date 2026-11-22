@@ -36,9 +36,12 @@ export function parseAndResolve(yaml: string): SplitViewState {
   try {
     const doc = parse(yaml) as unknown;
     if (!doc) return { steps: [], positionInfos: [], error: null };
-    const rawSteps = Array.isArray(doc) ? doc : (doc as Record<string, unknown>).steps ?? doc;
+    if (!Array.isArray(doc) && typeof doc === 'object' && doc !== null && 'steps' in (doc as Record<string, unknown>)) {
+      return { steps: [], positionInfos: [], error: "'steps' wrapper is not valid — use a bare list of steps" };
+    }
+    const rawSteps = Array.isArray(doc) ? doc : doc;
     if (!Array.isArray(rawSteps)) {
-      return { steps: [], positionInfos: [], error: 'YAML must be a list of steps or an object with a "steps" key' };
+      return { steps: [], positionInfos: [], error: 'YAML must be a list of steps' };
     }
     const steps = Walker.resolve(rawSteps as Record<string, unknown>[], demoCatalog);
     const positionInfos = StepPositionScanner.scan(yaml);
