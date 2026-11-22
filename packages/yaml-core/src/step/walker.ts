@@ -493,10 +493,12 @@ export class Walker {
       const concurrencyRaw = decorators['concurrency'] ?? step['concurrency'];
       const concurrency = typeof concurrencyRaw === 'number' ? concurrencyRaw : undefined;
       delete decorators['concurrency'];
-      const advanceAfter = step['advance-after'] as number | undefined;
+      const advanceAfterRaw = step['advance-after'] as number | undefined;
       const cancelRemaining = step['cancel-remaining'] as boolean | undefined;
       const collectionTimeoutRaw = step['collection-timeout'] as string | undefined;
       const collectionTimeout = collectionTimeoutRaw ? parseDurationMs(collectionTimeoutRaw) : undefined;
+      const branchCount = branches ? branches.length : steps.length;
+      const advanceAfter = advanceAfterRaw ?? (cancelRemaining !== undefined || collectionTimeout !== undefined ? branchCount : undefined);
       return {
         kind: 'parallel', name: stepName, steps,
         ...(branches ? { branches } : {}),

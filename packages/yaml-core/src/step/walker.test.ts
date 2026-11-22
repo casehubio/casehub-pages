@@ -873,6 +873,39 @@ describe('Walker', () => {
       }
     });
 
+    it('defaults advance-after to branch count when cancel-remaining is set', () => {
+      const steps = Walker.resolve([{
+        parallel: [{ doA: {} }, { doA: {} }, { doA: {} }],
+        'cancel-remaining': true,
+      }], catalog);
+      expect(steps[0]!.kind).toBe('parallel');
+      if (steps[0]!.kind === 'parallel') {
+        expect(steps[0].advanceAfter).toBe(3);
+      }
+    });
+
+    it('does not default advance-after when no policy keys are set', () => {
+      const steps = Walker.resolve([{
+        parallel: [{ doA: {} }, { doA: {} }],
+      }], catalog);
+      expect(steps[0]!.kind).toBe('parallel');
+      if (steps[0]!.kind === 'parallel') {
+        expect(steps[0].advanceAfter).toBeUndefined();
+      }
+    });
+
+    it('preserves explicit advance-after over default', () => {
+      const steps = Walker.resolve([{
+        parallel: [{ doA: {} }, { doA: {} }, { doA: {} }],
+        'advance-after': 1,
+        'cancel-remaining': true,
+      }], catalog);
+      expect(steps[0]!.kind).toBe('parallel');
+      if (steps[0]!.kind === 'parallel') {
+        expect(steps[0].advanceAfter).toBe(1);
+      }
+    });
+
     it('H8: Result failure type allows detail field', () => {
       const result: import('./walker.js').Result = {
         kind: 'failure',
