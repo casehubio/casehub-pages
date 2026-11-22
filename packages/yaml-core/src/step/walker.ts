@@ -236,7 +236,7 @@ const RESERVED_KEYS = new Set([
   'on-success', 'on-failure', 'for-each', 'loop',
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
-  'parallel', 'concurrency', 'concurrent', 'semaphore', 'barrier', 'quorum', 'race',
+  'parallel', 'concurrency', 'semaphore', 'barrier', 'quorum', 'race',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
   'advance-after', 'cancel-remaining', 'collection-timeout',
