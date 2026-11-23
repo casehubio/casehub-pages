@@ -148,6 +148,97 @@ describe('StructuralEvaluator', () => {
     });
   });
 
+  describe('parallel discriminator (advanceAfter / cancelRemaining)', () => {
+    it('advanceAfter returns after N branches without waiting for all', async () => {
+      let slowStarted = false;
+      let slowFinished = false;
+      const makeDelayedEntry = (name: string, delayMs: number): CatalogEntry => ({
+        qualifiedName: name,
+        definition: { name, inputs: {}, outputs: {} },
+        action: {
+          async execute() {
+            if (delayMs > 10) slowStarted = true;
+            await new Promise(r => setTimeout(r, delayMs));
+            if (delayMs > 10) slowFinished = true;
+            return stepSuccess({ [name]: true });
+          },
+        },
+      });
+      const a = makeDelayedEntry('a', 5);
+      const b = makeDelayedEntry('b', 5);
+      const c = makeDelayedEntry('c', 200);
+      const step: ParallelStep = {
+        kind: 'parallel', name: null, decorators: {},
+        advanceAfter: 2,
+        cancelRemaining: false,
+        steps: [
+          { kind: 'plugin', name: 'a', entry: a, params: {}, decorators: {} },
+          { kind: 'plugin', name: 'b', entry: b, params: {}, decorators: {} },
+          { kind: 'plugin', name: 'c', entry: c, params: {}, decorators: {} },
+        ],
+      };
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      expect(slowStarted).toBe(true);
+      expect(slowFinished).toBe(false);
+    });
+
+    it('advanceAfter equal to branch count waits for all', async () => {
+      const a = makeEntry('a', stepSuccess({ a: 1 }));
+      const b = makeEntry('b', stepSuccess({ b: 2 }));
+      const step: ParallelStep = {
+        kind: 'parallel', name: null, decorators: {},
+        advanceAfter: 2,
+        cancelRemaining: false,
+        steps: [
+          { kind: 'plugin', name: 'a', entry: a, params: {}, decorators: {} },
+          { kind: 'plugin', name: 'b', entry: b, params: {}, decorators: {} },
+        ],
+      };
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      if (result.kind === 'success') {
+        expect(result.output).toEqual({ a: 1, b: 2 });
+      }
+    });
+
+    it('cancelRemaining true aborts tracker signals after advancement', async () => {
+      const { ParallelCompletionTracker } = await import('./parallel-completion-tracker.js');
+      const tracker = new ParallelCompletionTracker(3, 1, true);
+      tracker.branchDone(0);
+      await tracker.awaitAdvancement();
+      expect(tracker.signalFor(1).aborted).toBe(true);
+      expect(tracker.signalFor(2).aborted).toBe(true);
+      expect(tracker.signalFor(0).aborted).toBe(false);
+    });
+
+    it('cancelRemaining false does not abort tracker signals', async () => {
+      const { ParallelCompletionTracker } = await import('./parallel-completion-tracker.js');
+      const tracker = new ParallelCompletionTracker(3, 1, false);
+      tracker.branchDone(0);
+      await tracker.awaitAdvancement();
+      expect(tracker.signalFor(1).aborted).toBe(false);
+      expect(tracker.signalFor(2).aborted).toBe(false);
+    });
+
+    it('without advanceAfter uses allSettled path and merges all outputs', async () => {
+      const a = makeEntry('a', stepSuccess({ a: 1 }));
+      const b = makeEntry('b', stepSuccess({ b: 2 }));
+      const step: ParallelStep = {
+        kind: 'parallel', name: null, decorators: {},
+        steps: [
+          { kind: 'plugin', name: 'a', entry: a, params: {}, decorators: {} },
+          { kind: 'plugin', name: 'b', entry: b, params: {}, decorators: {} },
+        ],
+      };
+      const result = await new StructuralEvaluator().evaluate(step, makeContext());
+      expect(result.kind).toBe('success');
+      if (result.kind === 'success') {
+        expect(result.output).toEqual({ a: 1, b: 2 });
+      }
+    });
+  });
+
   describe('if-else step', () => {
     it('executes then branch when condition is truthy', async () => {
       const thenEntry = makeEntry('then-action', stepSuccess({ branch: 'then' }));
