@@ -873,7 +873,7 @@ describe('Walker', () => {
       }
     });
 
-    it('defaults advance-after to branch count when cancel-remaining is set', () => {
+    it('defaults advance-after to branch count when cancel-remaining is true', () => {
       const steps = Walker.resolve([{
         parallel: [{ doA: {} }, { doA: {} }, { doA: {} }],
         'cancel-remaining': true,
@@ -891,6 +891,18 @@ describe('Walker', () => {
       expect(steps[0]!.kind).toBe('parallel');
       if (steps[0]!.kind === 'parallel') {
         expect(steps[0].advanceAfter).toBeUndefined();
+      }
+    });
+
+    it('does not default advance-after when cancel-remaining is false', () => {
+      const steps = Walker.resolve([{
+        parallel: [{ doA: {} }, { doA: {} }, { doA: {} }],
+        'cancel-remaining': false,
+      }], catalog);
+      expect(steps[0]!.kind).toBe('parallel');
+      if (steps[0]!.kind === 'parallel') {
+        expect(steps[0].advanceAfter).toBeUndefined();
+        expect(steps[0].cancelRemaining).toBe(false);
       }
     });
 

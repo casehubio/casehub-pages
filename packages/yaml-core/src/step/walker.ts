@@ -498,7 +498,7 @@ export class Walker {
       const collectionTimeoutRaw = step['collection-timeout'] as string | undefined;
       const collectionTimeout = collectionTimeoutRaw ? parseDurationMs(collectionTimeoutRaw) : undefined;
       const branchCount = branches ? branches.length : steps.length;
-      const advanceAfter = advanceAfterRaw ?? (cancelRemaining !== undefined || collectionTimeout !== undefined ? branchCount : undefined);
+      const advanceAfter = advanceAfterRaw ?? (cancelRemaining === true || collectionTimeout !== undefined ? branchCount : undefined);
       return {
         kind: 'parallel', name: stepName, steps,
         ...(branches ? { branches } : {}),
