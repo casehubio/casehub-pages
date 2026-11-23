@@ -1,0 +1,7 @@
+name: barrier resolves when named steps complete
+---
+- name: step-a
+  assert: 'true'
+- barrier:
+    await:
+    - step-a

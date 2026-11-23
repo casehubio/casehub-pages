@@ -1,0 +1,10 @@
+name: match dispatches to matching case
+---
+- match: beta
+  cases:
+  - pattern: alpha
+    assert: 'false'
+  - pattern: beta
+    assert: 'true'
+  - default:
+    - assert: 'false'

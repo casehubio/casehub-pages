@@ -1,0 +1,8 @@
+name: run-playbook propagates nested failure
+---
+- try:
+  - run-playbook:
+      playbook:
+      - assert: 'false'
+  catch:
+  - assert: 'true'

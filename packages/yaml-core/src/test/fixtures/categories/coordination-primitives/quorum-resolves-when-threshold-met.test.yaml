@@ -1,0 +1,11 @@
+name: quorum resolves when threshold met
+---
+- name: step-a
+  assert: 'true'
+- name: step-b
+  assert: 'true'
+- quorum:
+    required: 1
+    of:
+    - step-a
+    - step-b

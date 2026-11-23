@@ -1,0 +1,8 @@
+name: match falls through to default
+---
+- match: unknown
+  cases:
+  - pattern: alpha
+    assert: 'false'
+  - default:
+    - assert: 'true'

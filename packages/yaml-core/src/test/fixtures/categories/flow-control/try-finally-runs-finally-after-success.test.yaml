@@ -1,0 +1,6 @@
+name: try-finally runs finally after success
+---
+- try:
+  - assert: 'true'
+  finally:
+  - assert: 'true'

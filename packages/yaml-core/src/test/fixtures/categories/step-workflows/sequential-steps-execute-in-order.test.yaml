@@ -1,0 +1,5 @@
+name: sequential steps execute in order
+---
+- assert: 'true'
+- assert: 'true'
+- assert: 'true'

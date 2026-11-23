@@ -1,0 +1,6 @@
+name: run-playbook executes nested steps
+---
+- run-playbook:
+    playbook:
+    - assert: 'true'
+    - assert: 'true'

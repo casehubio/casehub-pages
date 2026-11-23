@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { parse as parseYaml } from 'yaml';
 import { YamlTestDiscovery } from './yaml-test-discovery.js';
 import { YamlTestParser } from './yaml-test-parser.js';
 import { YamlTestExecutor } from './yaml-test-executor.js';
@@ -15,8 +14,7 @@ export function describeYamlTests(
 
   for (const filePath of files) {
     const rawYaml = readFileSync(filePath, 'utf-8');
-    const raw = parseYaml(rawYaml) as Record<string, unknown>;
-    const testFile = YamlTestParser.parse(raw, rawYaml);
+    const testFile = YamlTestParser.parseRaw(rawYaml);
 
     describe(testFile.name, () => {
       for (const testCase of testFile.tests) {

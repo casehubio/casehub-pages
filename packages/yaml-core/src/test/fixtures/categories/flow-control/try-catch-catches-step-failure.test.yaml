@@ -1,0 +1,6 @@
+name: try-catch catches step failure
+---
+- try:
+  - assert: 'false'
+  catch:
+  - assert: 'true'

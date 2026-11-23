@@ -1,0 +1,7 @@
+name: if-else takes then branch on truthy condition
+---
+- if: 'true'
+  then:
+  - assert: 'true'
+  else:
+  - assert: 'false'

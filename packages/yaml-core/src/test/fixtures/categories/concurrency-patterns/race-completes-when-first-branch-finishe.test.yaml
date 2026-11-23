@@ -1,0 +1,5 @@
+name: race completes when first branch finishes
+---
+- race:
+  - assert: 'true'
+  - delay: 10s

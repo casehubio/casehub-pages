@@ -85,4 +85,43 @@ describe('YamlTestParser', () => {
     const result = YamlTestParser.parse(raw);
     expect(result.tests[0]!.simulate).toBeUndefined();
   });
+
+  describe('parseRaw — multi-document YAML', () => {
+    it('parses multi-document format (metadata + bare step list)', () => {
+      const yaml = 'name: multi-doc\n---\n- log: hello\n- assert: "true"\n';
+      const result = YamlTestParser.parseRaw(yaml);
+      expect(result.name).toBe('multi-doc');
+      expect(result.tests).toHaveLength(1);
+      expect(result.tests[0]!.steps).toEqual([{ log: 'hello' }, { assert: 'true' }]);
+    });
+
+    it('carries metadata fields through multi-document parse', () => {
+      const yaml = 'name: full\nsimulate:\n  agent:\n    strategy: sequential\nvars:\n  x: 1\n---\n- log: hello\n';
+      const result = YamlTestParser.parseRaw(yaml);
+      expect(result.name).toBe('full');
+      expect(result.simulate).toEqual({ agent: { strategy: 'sequential' } });
+      expect(result.vars).toEqual({ x: 1 });
+    });
+
+    it('falls back to single-document parse for old format', () => {
+      const yaml = 'name: old\ntests:\n  - name: t1\n    steps:\n      - log: hello\n';
+      const result = YamlTestParser.parseRaw(yaml);
+      expect(result.name).toBe('old');
+      expect(result.tests).toHaveLength(1);
+      expect(result.tests[0]!.name).toBe('t1');
+    });
+
+    it('falls back to single-document parse for steps shorthand', () => {
+      const yaml = 'name: short\nsteps:\n  - log: hello\n';
+      const result = YamlTestParser.parseRaw(yaml);
+      expect(result.tests).toHaveLength(1);
+      expect(result.tests[0]!.steps).toEqual([{ log: 'hello' }]);
+    });
+
+    it('preserves rawYaml in multi-document parse', () => {
+      const yaml = 'name: raw\n---\n- log: hello\n';
+      const result = YamlTestParser.parseRaw(yaml);
+      expect(result.rawYaml).toBe(yaml);
+    });
+  });
 });

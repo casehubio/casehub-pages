@@ -1,0 +1,5 @@
+name: block executes steps sequentially
+---
+- block:
+  - assert: 'true'
+  - assert: 'true'

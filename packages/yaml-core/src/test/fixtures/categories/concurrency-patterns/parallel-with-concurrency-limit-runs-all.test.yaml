@@ -1,0 +1,8 @@
+name: parallel with concurrency limit runs all branches
+---
+- parallel:
+  - assert: 'true'
+  - assert: 'true'
+  - assert: 'true'
+  - assert: 'true'
+  concurrency: 2

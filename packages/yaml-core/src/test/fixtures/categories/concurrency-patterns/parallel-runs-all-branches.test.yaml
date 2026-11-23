@@ -1,0 +1,6 @@
+name: parallel runs all branches
+---
+- parallel:
+  - assert: 'true'
+  - assert: 'true'
+  - assert: 'true'

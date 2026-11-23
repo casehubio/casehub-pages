@@ -1,0 +1,7 @@
+name: if-else takes else branch on falsy condition
+---
+- if: 'false'
+  then:
+  - assert: 'false'
+  else:
+  - assert: 'true'
