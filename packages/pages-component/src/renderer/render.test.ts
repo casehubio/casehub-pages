@@ -625,3 +625,54 @@ describe("deferred component type", () => {
     expect(childEl).toBeNull();
   });
 });
+
+describe("renderComponent — fixedWidth panels", () => {
+  it("applies justify-self and width when fixedWidth is present", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      props: { columns: 12 },
+      grid: [
+        {
+          at: { mode: "positioned", x: 0, y: 0, w: 4, h: 1, fixedWidth: 160 },
+          component: { type: "html" },
+        },
+        {
+          at: { mode: "positioned", x: 4, y: 0, w: 8, h: 1 },
+          component: { type: "html" },
+        },
+      ],
+    };
+    renderComponent(target, component);
+
+    const gridEl = target.firstElementChild as HTMLElement;
+    const children = gridEl.querySelectorAll(":scope > [data-item-id]");
+    const fixedItem = children[0] as HTMLElement;
+    const normalItem = children[1] as HTMLElement;
+
+    expect(fixedItem.style.width).toBe("160px");
+    expect(fixedItem.style.justifySelf).toBe("start");
+    expect(normalItem.style.width).toBe("");
+    expect(normalItem.style.justifySelf).toBe("");
+  });
+
+  it("does not apply fixedWidth CSS to panels without fixedWidth", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "grid",
+      props: { columns: 12 },
+      grid: [
+        {
+          at: { mode: "positioned", x: 0, y: 0, w: 6, h: 1 },
+          component: { type: "html" },
+        },
+      ],
+    };
+    renderComponent(target, component);
+
+    const gridEl = target.firstElementChild as HTMLElement;
+    const child = gridEl.querySelector("[data-item-id]") as HTMLElement;
+    expect(child.style.width).toBe("");
+    expect(child.style.justifySelf).toBe("");
+  });
+});

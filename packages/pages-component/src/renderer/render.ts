@@ -3,6 +3,7 @@ import { ALLOW_ALL } from "../model/types.js";
 import { generateId } from "./id.js";
 import { checkAccess } from "./access.js";
 import { applyGridPlacement } from "./grid.js";
+import { computeEffectiveWidth } from "./grid-fixed-width.js";
 import { getSlotNames, getSlotChildren } from "./slots.js";
 import { isLayoutType, applyLayoutCSS } from "./layout.js";
 import { isGrid } from "../model/type-guards.js";
@@ -124,6 +125,12 @@ function renderNode(
     gridTarget.style.alignContent = "start";
     gridTarget.style.gap = "var(--pages-space-3, 12px)";
 
+    const gapPx = 12;
+    const containerWidth = gridTarget.getBoundingClientRect().width;
+    const cellWidth = columns > 0 && containerWidth > 0
+      ? (containerWidth - gapPx * (columns - 1)) / columns
+      : 0;
+
     const hasAutoItems = component.grid.some(item => item.at.mode === "auto");
     if (hasAutoItems) {
       gridTarget.style.gridAutoFlow = "row";
@@ -158,6 +165,20 @@ function renderNode(
         child.dataset.itemId = String(originalIndex);
         child.style.position = "relative";
         applyGridPlacement(child, item.at);
+        if (item.at.fixedWidth != null && item.at.fixedWidth > 0) {
+          if (cellWidth > 0) {
+            const effectiveW = computeEffectiveWidth(item.at.fixedWidth, cellWidth, gapPx, item.at.w);
+            if (effectiveW < item.at.w) {
+              if (item.at.mode === "positioned") {
+                child.style.gridColumn = `${String(item.at.x + 1)} / span ${String(effectiveW)}`;
+              } else {
+                child.style.gridColumn = `span ${String(effectiveW)}`;
+              }
+            }
+          }
+          child.style.width = `${String(item.at.fixedWidth)}px`;
+          child.style.justifySelf = "start";
+        }
         if (rowHeight !== undefined) {
           child.style.overflow = "hidden";
         }
