@@ -945,15 +945,21 @@ export class GridItemNode {
     }
     const obj = toRecord(raw);
     if ('x' in obj && 'y' in obj) {
-      return {
+      const p: GridPlacement = {
         mode: 'positioned',
         x: obj.x as number,
         y: obj.y as number,
         w: (obj.w as number) ?? 1,
         h: (obj.h as number) ?? 1,
       };
+      const fw = obj.fixedWidth as number | undefined;
+      if (fw != null) return { ...p, fixedWidth: fw };
+      return p;
     }
-    return { mode: 'auto', w: (obj.w as number) ?? 1, h: (obj.h as number) ?? 1 };
+    const autoP: GridPlacement = { mode: 'auto', w: (obj.w as number) ?? 1, h: (obj.h as number) ?? 1 };
+    const autoFw = obj.fixedWidth as number | undefined;
+    if (autoFw != null) return { ...autoP, fixedWidth: autoFw };
+    return autoP;
   }
 
   setPlacement(p: GridPlacement): void {
@@ -967,6 +973,11 @@ export class GridItemNode {
     if (p.mode === 'positioned') {
       doc.setIn([...base, 'x'], p.x);
       doc.setIn([...base, 'y'], p.y);
+    }
+    if (p.fixedWidth != null) {
+      doc.setIn([...base, 'fixedWidth'], p.fixedWidth);
+    } else {
+      doc.deleteIn([...base, 'fixedWidth']);
     }
     this._doc._notifyInternal();
   }

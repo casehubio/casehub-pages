@@ -31,6 +31,25 @@ describe('GridItemNode', () => {
       const p = items[0]!.getPlacement();
       expect(p).toEqual({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
     });
+
+    it('reads fixedWidth from positioned placement', () => {
+      const yaml = `pages:
+  - title: Test
+    items:
+      - placement: { x: 8, y: 0, w: 2, h: 1, fixedWidth: 160 }
+        component:
+          type: html
+`;
+      const doc = parse(yaml);
+      const p = doc.getPages()[0]!.getItems()[0]!.getPlacement();
+      expect(p).toEqual({ mode: 'positioned', x: 8, y: 0, w: 2, h: 1, fixedWidth: 160 });
+    });
+
+    it('omits fixedWidth when not in YAML', () => {
+      const doc = parse(GRID_PAGE_YAML);
+      const p = doc.getPages()[0]!.getItems()[0]!.getPlacement();
+      expect(p.fixedWidth).toBeUndefined();
+    });
   });
 
   describe('getComponent', () => {
@@ -80,6 +99,38 @@ describe('GridItemNode', () => {
       const item = doc.getPages()[0]!.getItems()[0]!;
       item.setPlacement({ mode: 'positioned', x: 1, y: 1, w: 3, h: 3 });
       expect(doc.toString()).not.toContain('mode:');
+    });
+
+    it('persists fixedWidth in YAML round-trip', () => {
+      const yaml = `pages:
+  - title: Test
+    items:
+      - placement: { x: 0, y: 0, w: 6, h: 2 }
+        component:
+          type: chart
+`;
+      const doc = parse(yaml);
+      const item = doc.getPages()[0]!.getItems()[0]!;
+      item.setPlacement({ mode: 'positioned', x: 0, y: 0, w: 3, h: 1, fixedWidth: 160 });
+      const result = doc.toString();
+      expect(result).toContain('fixedWidth: 160');
+      const updated = parse(result).getPages()[0]!.getItems()[0]!.getPlacement();
+      expect(updated).toEqual({ mode: 'positioned', x: 0, y: 0, w: 3, h: 1, fixedWidth: 160 });
+    });
+
+    it('removes fixedWidth when not in new placement', () => {
+      const yaml = `pages:
+  - title: Test
+    items:
+      - placement: { x: 0, y: 0, w: 2, h: 1, fixedWidth: 160 }
+        component:
+          type: chart
+`;
+      const doc = parse(yaml);
+      const item = doc.getPages()[0]!.getItems()[0]!;
+      item.setPlacement({ mode: 'positioned', x: 0, y: 0, w: 6, h: 2 });
+      const result = doc.toString();
+      expect(result).not.toContain('fixedWidth');
     });
 
     it('preserves flow-style items longer than 80 chars', () => {
