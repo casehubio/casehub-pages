@@ -616,5 +616,53 @@ describe('GridEditBridge', () => {
       const result = doc.toString();
       expect(result).toContain('fixedWidth: 100');
     });
+
+    it('preserves fixedWidth through top-level split', () => {
+      const yaml = `pages:
+  - title: Test
+    items:
+      - placement: { x: 0, y: 0, w: 4, h: 2, fixedWidth: 160 }
+        component:
+          type: html
+      - placement: { x: 4, y: 0, w: 8, h: 2 }
+        component:
+          type: chart
+`;
+      const doc = PageDocument.parse(yaml);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'split',
+        targetIndex: 0,
+        direction: 'horizontal',
+      });
+
+      const p = doc.getPages()[0]!.getItems()[0]!.getPlacement();
+      expect(p.fixedWidth).toBe(160);
+    });
+
+    it('preserves fixedWidth through top-level vertical split', () => {
+      const yaml = `pages:
+  - title: Test
+    items:
+      - placement: { x: 0, y: 0, w: 4, h: 2, fixedWidth: 160 }
+        component:
+          type: html
+      - placement: { x: 4, y: 0, w: 8, h: 2 }
+        component:
+          type: chart
+`;
+      const doc = PageDocument.parse(yaml);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'split',
+        targetIndex: 0,
+        direction: 'vertical',
+      });
+
+      const p = doc.getPages()[0]!.getItems()[0]!.getPlacement();
+      expect(p.fixedWidth).toBe(160);
+    });
   });
 });

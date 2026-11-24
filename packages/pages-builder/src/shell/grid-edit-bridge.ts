@@ -202,12 +202,14 @@ export class GridEditBridge {
       if (direction === 'horizontal') {
         const topH = Math.floor(p.h / 2);
         const bottomH = p.h - topH;
-        target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: p.w, h: topH });
+        const topP: GridPlacement = { mode: 'positioned', x: p.x, y: p.y, w: p.w, h: topH };
+        target.setPlacement(p.fixedWidth != null ? { ...topP, fixedWidth: p.fixedWidth } : topP);
         page.addItem({ mode: 'positioned', x: p.x, y: p.y + topH, w: p.w, h: bottomH }, 'markdown', { content: ' ' });
       } else {
         const leftW = Math.floor(p.w / 2);
         const rightW = p.w - leftW;
-        target.setPlacement({ mode: 'positioned', x: p.x, y: p.y, w: leftW, h: p.h });
+        const leftP: GridPlacement = { mode: 'positioned', x: p.x, y: p.y, w: leftW, h: p.h };
+        target.setPlacement(p.fixedWidth != null ? { ...leftP, fixedWidth: p.fixedWidth } : leftP);
         page.addItem({ mode: 'positioned', x: p.x + leftW, y: p.y, w: rightW, h: p.h }, 'markdown', { content: ' ' });
       }
       doc.commitTransaction();
