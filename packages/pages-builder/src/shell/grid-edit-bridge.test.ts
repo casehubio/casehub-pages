@@ -565,4 +565,56 @@ describe('GridEditBridge', () => {
       expect(rootSeq.items.length).toBe(2);
     });
   });
+
+  describe('fixedWidth preservation', () => {
+    it('preserves fixedWidth through move via setPlacement', () => {
+      const yaml = `pages:
+  - title: Test
+    grid:
+      - at: { x: 0, y: 0, w: 4, h: 1, fixedWidth: 160 }
+        type: html
+      - at: { x: 4, y: 0, w: 8, h: 1 }
+        type: chart
+`;
+      const doc = PageDocument.parse(yaml);
+      const bridge = new GridEditBridge();
+
+      bridge.applyGridEdit(doc, {
+        type: 'move',
+        items: [
+          { at: { mode: 'positioned', x: 2, y: 1, w: 4, h: 1, fixedWidth: 160 }, component: { type: 'html' } },
+          { at: { mode: 'positioned', x: 4, y: 0, w: 8, h: 1 }, component: { type: 'chart' } },
+        ],
+      });
+
+      const p = doc.getPages()[0]!.getItems()[0]!.getPlacement();
+      expect(p).toEqual({ mode: 'positioned', x: 2, y: 1, w: 4, h: 1, fixedWidth: 160 });
+    });
+
+    it('preserves fixedWidth through nested grid move', () => {
+      const yaml = `pages:
+  - title: Test
+    grid:
+      - at: { x: 0, y: 0, w: 12, h: 2 }
+        type: grid
+        grid:
+          - at: { x: 0, y: 0, w: 3, h: 1, fixedWidth: 100 }
+            type: html
+`;
+      const doc = PageDocument.parse(yaml);
+      const bridge = new GridEditBridge();
+      const gridPath: (string | number)[] = ['pages', 0, 'grid', 0, 'grid'];
+
+      bridge.applyGridEdit(doc, {
+        type: 'move',
+        items: [
+          { at: { mode: 'positioned', x: 2, y: 0, w: 3, h: 1, fixedWidth: 100 }, component: { type: 'html' } },
+        ],
+        gridPath,
+      });
+
+      const result = doc.toString();
+      expect(result).toContain('fixedWidth: 100');
+    });
+  });
 });

@@ -70,8 +70,11 @@ export class GridEditBridge {
         const at = entry.get('at', true);
         const currentAt = isMap(at) ? at.toJSON() as Record<string, unknown> : undefined;
         if (currentAt && currentAt.x === eventAt.x && currentAt.y === eventAt.y &&
-            currentAt.w === eventAt.w && currentAt.h === eventAt.h) continue;
-        const atNode = yamlDoc.createNode({ x: eventAt.x, y: eventAt.y, w: eventAt.w, h: eventAt.h });
+            currentAt.w === eventAt.w && currentAt.h === eventAt.h &&
+            (currentAt.fixedWidth ?? undefined) === (eventAt.fixedWidth ?? undefined)) continue;
+        const atObj: Record<string, number> = { x: eventAt.x, y: eventAt.y, w: eventAt.w, h: eventAt.h };
+        if (eventAt.fixedWidth != null) atObj['fixedWidth'] = eventAt.fixedWidth;
+        const atNode = yamlDoc.createNode(atObj);
         entry.set('at', atNode);
       }
       return;
@@ -133,9 +136,10 @@ export class GridEditBridge {
       const yamlDoc = doc._getDoc();
       const seq = yamlDoc.getIn(gridPath);
       if (!isSeq(seq)) return;
-      const atObj = placement.mode === 'positioned'
+      const atBase = placement.mode === 'positioned'
         ? { x: placement.x, y: placement.y, w: placement.w, h: placement.h }
         : { w: placement.w, h: placement.h };
+      const atObj = placement.fixedWidth != null ? { ...atBase, fixedWidth: placement.fixedWidth } : atBase;
       const node = yamlDoc.createNode({ at: atObj, type: componentType });
       (seq as YAMLSeq).add(node);
       return;
@@ -159,19 +163,23 @@ export class GridEditBridge {
       if (!isMap(entry)) return;
       const at = (entry as YAMLMap).get('at', true);
       if (!isMap(at)) return;
-      const p = (at as YAMLMap).toJSON() as { x: number; y: number; w: number; h: number };
+      const p = (at as YAMLMap).toJSON() as { x: number; y: number; w: number; h: number; fixedWidth?: number };
 
       doc.beginTransaction();
       try {
         if (direction === 'horizontal') {
           const topH = Math.floor(p.h / 2);
           const bottomH = p.h - topH;
-          (entry as YAMLMap).set('at', yamlDoc.createNode({ x: p.x, y: p.y, w: p.w, h: topH }));
+          const topAt: Record<string, number> = { x: p.x, y: p.y, w: p.w, h: topH };
+          if (p.fixedWidth != null) topAt['fixedWidth'] = p.fixedWidth;
+          (entry as YAMLMap).set('at', yamlDoc.createNode(topAt));
           (seq as YAMLSeq).add(yamlDoc.createNode({ at: { x: p.x, y: p.y + topH, w: p.w, h: bottomH }, type: 'markdown', properties: { content: ' ' } }));
         } else {
           const leftW = Math.floor(p.w / 2);
           const rightW = p.w - leftW;
-          (entry as YAMLMap).set('at', yamlDoc.createNode({ x: p.x, y: p.y, w: leftW, h: p.h }));
+          const leftAt: Record<string, number> = { x: p.x, y: p.y, w: leftW, h: p.h };
+          if (p.fixedWidth != null) leftAt['fixedWidth'] = p.fixedWidth;
+          (entry as YAMLMap).set('at', yamlDoc.createNode(leftAt));
           (seq as YAMLSeq).add(yamlDoc.createNode({ at: { x: p.x + leftW, y: p.y, w: rightW, h: p.h }, type: 'markdown', properties: { content: ' ' } }));
         }
         doc.commitTransaction();
@@ -359,9 +367,10 @@ export class GridEditBridge {
       const yamlDoc = doc._getDoc();
       const seq = yamlDoc.getIn(gridPath);
       if (!isSeq(seq)) return;
-      const atObj = placement.mode === 'positioned'
+      const atBase = placement.mode === 'positioned'
         ? { x: placement.x, y: placement.y, w: placement.w, h: placement.h }
         : { w: placement.w, h: placement.h };
+      const atObj = placement.fixedWidth != null ? { ...atBase, fixedWidth: placement.fixedWidth } : atBase;
       (seq as YAMLSeq).add(yamlDoc.createNode({ at: atObj }));
       return;
     }
@@ -383,7 +392,8 @@ export class GridEditBridge {
       if (!item) continue;
       const p = item.getPlacement();
       if (p.mode === 'positioned' && p.y !== rect.y) {
-        item.setPlacement({ mode: 'positioned', x: p.x, y: rect.y, w: p.w, h: p.h });
+        const compactedP: GridPlacement = { mode: 'positioned', x: p.x, y: rect.y, w: p.w, h: p.h };
+        item.setPlacement(p.fixedWidth != null ? { ...compactedP, fixedWidth: p.fixedWidth } : compactedP);
       }
     }
   }
@@ -401,7 +411,8 @@ export class GridEditBridge {
       if (isMap(swapNode) && isMap(sourceNode)) {
         const sourceAt = sourceNode.get('at', true);
         const tp = detail.targetPlacement;
-        const newSourceAt = yamlDoc.createNode(tp.mode === 'positioned' ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h } : { w: tp.w, h: tp.h });
+        const sourceAtBase = tp.mode === 'positioned' ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h } : { w: tp.w, h: tp.h };
+        const newSourceAt = yamlDoc.createNode(tp.fixedWidth != null ? { ...sourceAtBase, fixedWidth: tp.fixedWidth } : sourceAtBase);
         sourceSeq.delete(detail.sourceIndex);
         targetSeq.delete(detail.swapTargetIndex);
         const movedSource = sourceNode.clone() as YAMLMap;
@@ -426,6 +437,7 @@ export class GridEditBridge {
       const atObj: Record<string, number> = tp.mode === 'positioned'
         ? { x: tp.x, y: tp.y, w: tp.w, h: tp.h }
         : { w: tp.w, h: tp.h };
+      if (tp.fixedWidth != null) atObj['fixedWidth'] = tp.fixedWidth;
       const entry: Record<string, unknown> = { at: atObj };
       if (detail.component) {
         entry['type'] = detail.component.type;
