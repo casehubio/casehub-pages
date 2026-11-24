@@ -20,4 +20,5 @@ export type { EditorMode } from "./grid-overlay.js";
 export { computeGridGeometry, snapToCell, clampPlacement, cellRectToPixel, DRAG_THRESHOLD } from "./grid-drag.js";
 export type { GridGeometry, CellCoord, ResizeHandle } from "./grid-drag.js";
 export { applyGridPlacement } from "./grid.js";
+export { computeEffectiveWidth } from "./grid-fixed-width.js";
 export { showPlaceholder, hidePlaceholder } from "./grid-overlay.js";
