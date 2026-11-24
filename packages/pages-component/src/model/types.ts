@@ -18,8 +18,8 @@ export interface AccessControl {
 }
 
 export type GridPlacement =
-  | { readonly mode: "positioned"; readonly x: number; readonly y: number; readonly w: number; readonly h: number }
-  | { readonly mode: "auto"; readonly w: number; readonly h: number };
+  | { readonly mode: "positioned"; readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly fixedWidth?: number }
+  | { readonly mode: "auto"; readonly w: number; readonly h: number; readonly fixedWidth?: number };
 
 export interface GridItem {
   readonly at: GridPlacement;
