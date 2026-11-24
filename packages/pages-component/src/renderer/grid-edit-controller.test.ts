@@ -347,4 +347,130 @@ describe("GridEditController", () => {
     expect(bar).not.toBeNull();
     ctrl.dispose();
   });
+
+  describe("hover bar action buttons", () => {
+    function selectItem(grid: HTMLElement, itemId: string): void {
+      grid.dispatchEvent(new CustomEvent("pages-grid-select", { detail: { itemId } }));
+    }
+
+    function clickAction(grid: HTMLElement, itemId: string, title: string): void {
+      const bar = grid.querySelector(`[data-item-id='${itemId}'] [data-drag-handle]`);
+      const btn = bar?.querySelector(`button[title='${title}']`) as HTMLElement | null;
+      btn?.click();
+    }
+
+    it("split-h dispatches pages-grid-edit with type split and direction horizontal", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      selectItem(grid, "0");
+
+      const events: CustomEvent[] = [];
+      grid.addEventListener("pages-grid-edit", (e) => events.push(e as CustomEvent));
+      clickAction(grid, "0", "Split horizontally");
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail).toEqual({ type: "split", targetIndex: 0, direction: "horizontal" });
+      ctrl.dispose();
+    });
+
+    it("split-v dispatches pages-grid-edit with type split and direction vertical", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      selectItem(grid, "1");
+
+      const events: CustomEvent[] = [];
+      grid.addEventListener("pages-grid-edit", (e) => events.push(e as CustomEvent));
+      clickAction(grid, "1", "Split vertically");
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail).toEqual({ type: "split", targetIndex: 1, direction: "vertical" });
+      ctrl.dispose();
+    });
+
+    it("delete dispatches pages-grid-edit with type remove", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      selectItem(grid, "0");
+
+      const events: CustomEvent[] = [];
+      grid.addEventListener("pages-grid-edit", (e) => events.push(e as CustomEvent));
+      clickAction(grid, "0", "Delete");
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail).toEqual({ type: "remove", index: 0 });
+      ctrl.dispose();
+    });
+
+    it("merge dispatches pages-grid-merge with rootId", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      selectItem(grid, "0");
+
+      const events: CustomEvent[] = [];
+      grid.addEventListener("pages-grid-merge", (e) => events.push(e as CustomEvent));
+      clickAction(grid, "0", "Merge");
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail).toEqual({ rootId: "0" });
+      ctrl.dispose();
+    });
+
+    it("add-empty dispatches pages-grid-edit with placement below existing items", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      selectItem(grid, "0");
+
+      const events: CustomEvent[] = [];
+      grid.addEventListener("pages-grid-edit", (e) => events.push(e as CustomEvent));
+      clickAction(grid, "0", "Add empty");
+
+      expect(events).toHaveLength(1);
+      const detail = events[0]!.detail;
+      expect(detail.type).toBe("add-empty");
+      expect(detail.placement.mode).toBe("positioned");
+      expect(detail.placement.x).toBe(0);
+      expect(detail.placement.y).toBe(2);
+      expect(detail.placement.w).toBe(12);
+      expect(detail.placement.h).toBe(1);
+      ctrl.dispose();
+    });
+
+    it("pages-grid-edit events bubble and are composed", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      selectItem(grid, "0");
+
+      const events: CustomEvent[] = [];
+      document.body.addEventListener("pages-grid-edit", (e) => events.push(e as CustomEvent));
+      clickAction(grid, "0", "Delete");
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.bubbles).toBe(true);
+      expect(events[0]!.composed).toBe(true);
+      ctrl.dispose();
+    });
+
+    it("pages-grid-merge does not bubble", () => {
+      const items = makeItems();
+      const grid = setupGrid(items);
+      const ctrl = attachGridEditController(grid, items, 12, 60);
+      selectItem(grid, "0");
+
+      const gridEvents: CustomEvent[] = [];
+      const bodyEvents: CustomEvent[] = [];
+      grid.addEventListener("pages-grid-merge", (e) => gridEvents.push(e as CustomEvent));
+      document.body.addEventListener("pages-grid-merge", (e) => bodyEvents.push(e as CustomEvent));
+      clickAction(grid, "0", "Merge");
+
+      expect(gridEvents).toHaveLength(1);
+      expect(bodyEvents).toHaveLength(0);
+      ctrl.dispose();
+    });
+  });
 });
