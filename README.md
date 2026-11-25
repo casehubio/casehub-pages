@@ -62,7 +62,9 @@ Pages is not a charting library. It is a composition framework for entire applic
 ./gallery.sh
 ```
 
-Opens the interactive gallery at `http://localhost:8080` with all 115 examples. Browse by category: Charts, Tables, Forms, Layout, Monitoring, Scenarios, Graph Editing, Grid Editing, Domain Showcases, Theming, and more.
+Installs dependencies, builds packages, and starts a webpack dev server at `http://localhost:8080` with hot reload. Browse all examples by category: Charts, Tables, Forms, Layout, Monitoring, Scenarios, Graph Editing, Grid Editing, Domain Showcases, Theming, and more.
+
+First run takes ~60 seconds to build packages; subsequent starts are near-instant.
 
 ### With the Java backend (real-time push, server data)
 
@@ -70,7 +72,7 @@ Opens the interactive gallery at `http://localhost:8080` with all 115 examples. 
 ./gallery-server.sh
 ```
 
-Starts the Quarkus backend on port 8090 (WebSocket push, event generators, Prometheus relay) and the gallery on port 8080. The Server category examples come alive — live event streams, multi-topic push, reconnect with replay.
+Starts the Quarkus backend on port 8090 (WebSocket push, event generators, Prometheus relay) and the gallery on port 8080. The gallery proxies `/api/` and `/ws/` to the backend automatically. The Server category examples come alive — live event streams, multi-topic push, reconnect with replay.
 
 **Prerequisites:** Node.js 18+, Java 21+ (for server mode only).
 

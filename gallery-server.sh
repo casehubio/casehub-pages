@@ -2,8 +2,10 @@
 set -euo pipefail
 
 # Start the casehub-pages examples gallery with the Quarkus backend.
-# - Gallery: http://localhost:8080 (all 115 examples)
+# - Gallery: http://localhost:8080 (all examples with hot reload)
 # - Backend: http://localhost:8090 (WebSocket push, event generators, Prometheus relay)
+#
+# The gallery proxies /api/ and /ws/ to the backend automatically.
 #
 # Prerequisites: Node.js 18+, Java 21+
 
@@ -14,31 +16,37 @@ if [ ! -d node_modules ]; then
   yarn install
 fi
 
-if [ ! -d examples/dist ]; then
-  echo "Building frontend (first run takes ~60s)..."
-  yarn build
-  yarn build:examples
+# Build core packages (needed by examples webpack)
+if [ ! -d packages/pages-runtime/dist ]; then
+  echo "Building packages (first run takes ~60s)..."
+  yarn build:packages
 fi
+
+# Generate samples.json and copy sample YAML files
+cd examples
+yarn generate-samples
+yarn copy-samples
+yarn copy-playbooks
 
 echo ""
 echo "  casehub-pages examples gallery + Quarkus backend"
 echo "  Gallery:  http://localhost:8080"
 echo "  Backend:  http://localhost:8090"
 echo ""
-echo "  Starting backend (Ctrl-C to stop both)..."
+echo "  Starting backend and gallery (Ctrl-C to stop both)..."
 echo ""
 
 cleanup() {
   echo ""
   echo "  Shutting down..."
-  kill $GALLERY_PID 2>/dev/null || true
-  wait $GALLERY_PID 2>/dev/null || true
+  kill $BACKEND_PID 2>/dev/null || true
+  wait $BACKEND_PID 2>/dev/null || true
 }
 trap cleanup EXIT
 
-cd examples
-npx http-server dist -c-1 -p 8080 -s &
-GALLERY_PID=$!
-
 cd server
-exec mvn quarkus:dev
+mvn quarkus:dev &
+BACKEND_PID=$!
+cd ..
+
+npx webpack serve --env dev --open

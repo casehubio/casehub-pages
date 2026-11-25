@@ -109,6 +109,12 @@ module.exports = (env = {}) => {
     },
     devServer: {
       port: 8080,
+      static: [
+        { directory: path.resolve(__dirname, "src"), publicPath: "/" },
+        { directory: path.resolve(__dirname, "samples"), publicPath: "/samples" },
+        { directory: path.resolve(__dirname, "fixtures"), publicPath: "/fixtures" },
+        { directory: path.resolve(__dirname), publicPath: "/", staticOptions: { extensions: ["html"] } },
+      ],
       proxy: [
         {
           context: ["/api/", "/ws/"],
