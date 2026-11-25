@@ -379,6 +379,18 @@ LLM prompter, SVG heatmap, terminal emulator.
 | `mcp` | MCP server integration. |
 | `cross-parser-test` | TypeScript/Java YAML parser parity verification. |
 
+### Platform dependencies
+
+The frontend has **zero** platform dependencies — all packages are self-contained.
+
+Five backend modules depend on `casehub-platform` artifacts:
+
+| Concern | Artifacts | Used by |
+|---------|-----------|---------|
+| YAML parsing | `yaml-core`, `yaml-jackson` | `playbook`, `cross-parser-test`, backend parent BOM |
+| Simulation | `simulation-core`, `simulation-config-core`, `event-simulation` | `playbook-runtime` |
+| Platform API | `api`, `mcp` | `data-json`, `mcp` |
+
 ### IntelliJ plugin
 
 `plugins/intellij/` — Kotlin/Gradle LSP client using LSP4IJ. Bundles the pages-lsp for schema-driven autocomplete and diagnostics. Requires JDK 21.
