@@ -1,77 +1,234 @@
-casehub-pages
---
+# casehub-pages
 
-casehub-pages is a web application framework for the CaseHub platform — a TypeScript runtime for composing applications from layouts, data pipelines, visualization, forms, hosted components, and inter-component communication.
+A web application framework where YAML is the programming language.
 
-* **TypeScript-first** — type-safe DSL builders with full IDE autocompletion; YAML supported for runtime-loaded pages
-* **Data–display separation** — data defined once, bound by reference; same dataset drives charts, tables, and forms simultaneously
-* **Reactive data pipeline** — event-driven mutations cascade automatically to all bound components
-* **Unified data + event bus** — data mutations and inter-panel events flow through one pipeline over a single connection
-* **Recursive composition** — every component nests inside any other; the tree is the API
-* **Component hosting** — mount arbitrary Web Components inside the layout tree with managed lifecycle
+Declare data sources, layouts, charts, forms, tables, real-time streams, and inter-component communication in a single `.page.yaml` file. The runtime compiles it into a reactive application — no JavaScript required. When you need programmatic control, an equivalent TypeScript DSL gives you full IDE autocompletion and type safety over the same component model.
 
-Licensed under the Apache License, Version 2.0
+115 working examples ship with the framework. Run `./gallery.sh` to see them.
+
+```yaml
+datasets:
+  - uuid: sales
+    url: /api/sales
+
+pages:
+  - name: Sales
+    grid:
+      - at: { x: 0, y: 0, w: 6, h: 2 }
+        type: bar
+        properties:
+          title: Revenue by Region
+          lookup:
+            uuid: sales
+            group: { by: Region, columns: [Region], functions: [sum(Revenue)] }
+
+      - at: { x: 6, y: 0, w: 6, h: 2 }
+        type: data-table
+        properties:
+          lookup: { uuid: sales }
+          sortable: true
+          filter: { enabled: true }
+```
+
+Both components bind to the same dataset. Filter one, the other updates. Change the data source, nothing else moves.
+
+Licensed under the Apache License, Version 2.0.
+
+---
+
+## What you can build
+
+Pages is not a charting library. It is a composition framework for entire applications.
+
+**Monitoring** — 13 production-grade monitoring pages ship as examples: Prometheus, OpenTelemetry, JVM, Quarkus, Ansible, Backstage, JupyterHub, Kepler, ModelMesh, Triton inference server. Real-time WebSocket push with event replay and automatic reconnection.
+
+**CRUD applications** — Helpdesk ticketing, contact management, task tracking. Schema-driven forms with validation, master-detail layouts, data-scoped record editing with auto-save.
+
+**Workbench IDEs** — Split panes, dockable panels, tabbed editors, floating workspaces. Mount your own Web Components (terminals, diff viewers, code editors) and let Pages manage layout and lifecycle.
+
+**Graph editors** — Interactive node-and-edge diagrams with ELK auto-layout, drag-and-drop from stencil palettes, multi-select, nested sub-graphs.
+
+**Playbook orchestration** — Visual workflow authoring with control flow (if/else, match, try/catch), concurrency primitives (parallel, barrier, race, quorum), decorators (timeout, retry, loop, guard), and time-controllable simulation.
+
+**Data exploration** — Cross-filtered charts and tables, drill-through navigation, grouped and tree views, virtual-scroll tables with 10k+ rows, CSV export, heatmaps, treemaps, timeseries.
+
+---
+
+## Run the examples gallery
+
+### Client-side only (no backend needed)
+
+```bash
+./gallery.sh
+```
+
+Opens the interactive gallery at `http://localhost:8080` with all 115 examples. Browse by category: Charts, Tables, Forms, Layout, Monitoring, Scenarios, Graph Editing, Grid Editing, Domain Showcases, Theming, and more.
+
+### With the Java backend (real-time push, server data)
+
+```bash
+./gallery-server.sh
+```
+
+Starts the Quarkus backend on port 8090 (WebSocket push, event generators, Prometheus relay) and the gallery on port 8080. The Server category examples come alive — live event streams, multi-topic push, reconnect with replay.
+
+**Prerequisites:** Node.js 18+, Java 21+ (for server mode only).
+
+---
+
+## Core design
+
+### YAML is the programming language
+
+A `.page.yaml` file is a complete application definition: data sources, layouts, components, navigation, interactivity, and styling. The runtime parses it into a reactive component tree and manages everything — data fetching, event propagation, lifecycle, and rendering.
+
+There is no "YAML config layer over a real API." The YAML surface **is** the API. It drives the same component model as the TypeScript DSL.
+
+### Data-display separation
+
+Data is defined once and bound by reference. The same dataset drives a chart, a table, and a form simultaneously. Swap the visualization without touching the data. Change the source without touching the components.
+
+```yaml
+datasets:
+  - uuid: tickets
+    url: /api/tickets             # REST endpoint
+  - uuid: events
+    url: ws://localhost:8090/push  # real-time WebSocket
+  - uuid: metrics
+    url: http://prometheus:9090   # Prometheus PromQL
+    type: metrics
+```
+
+### Reactive pipeline
+
+Every data source — REST, WebSocket, SSE, CSV, inline, Prometheus, simulated — produces the same event model: snapshot, append, replace, remove. Mutations cascade automatically to all bound components. No manual refresh, no subscription wiring, no state management.
+
+### Recursive composition
+
+Any component nests inside any other. Tabs inside splits inside grids. Forms alongside charts inside accordions. The tree is the API — there are no fixed slots, no special containers, no depth limits.
+
+### Component hosting
+
+`hostPanel` mounts arbitrary Web Components inside the layout tree with managed lifecycle. Build domain-specific UI (terminal emulators, diff viewers, diagram editors) in whatever framework you like, and let Pages handle layout, data flow, and communication around it.
+
+---
 
 ## Capabilities
 
-### Architecture
+### Layout
 
-| Capability | Description |
+| Primitive | What it does |
 |-----------|-------------|
-| Data–display separation | Data defined once, bound by reference. Same dataset drives a chart, a table, and a form simultaneously. Swap the visualization without touching the data. Change the source without touching the components. |
-| Reactive data pipeline | Event-driven mutation model (snapshot, append, replace, remove). All sources — HTTP, WebSocket, expression generators — produce the same events. Changes cascade automatically to all bound components. |
-| Unified data + event bus | Single connection carries data mutations and inter-panel events through one pipeline. Data operations and component events share the same transport and lifecycle. |
-| Unified component model | Charts, forms, tables, layouts, navigation, and hosted panels are all `Component` nodes in one recursive tree. A page mixing a bar chart, a form, and a card grid is just a tree. |
-| Recursive composition | Any component nests inside any other. Tabs inside splits inside grids. Forms alongside charts inside accordions. No fixed slots — the tree is the API. |
+| Grid | CSS Grid with `{x, y, w, h}` placement. 12-column default. Drag-and-drop editing with compaction, resize, split, merge, and cross-grid moves. |
+| Columns + Rows | Proportional column distribution with nested row slots. Drag to resize column ratios. |
+| Tabs / Pills | Tabbed containers with lazy rendering. Pill variant for compact layouts. |
+| Split | Resizable N-panel splits with drag handles. Horizontal and vertical. Nest splits for IDE-style arrangements. |
+| Dock | Collapsible panels with toggle strips. Shrink to icon bar, expand on demand. |
+| Sidebar | Collapsible sidebar with header and toggle. |
+| Accordion | Expandable sections. Single or multi-open. |
+| Carousel / Stack | Card carousel with auto-advance. Stack for layered views. |
+| Floating workspace | Detachable panels that float over the layout. |
+| Frame sandbox | Iframe-isolated regions for untrusted content. |
 
-### Application Shell
+### Data sources
 
-| Capability | Description |
-|-----------|-------------|
-| Linked pages | Multi-page sites with shared data context. A form page and a chart page bound to the same datasets, with drill-through navigation between them. |
-| Dockable panels | Preconfigured shrink/expand regions with toggle strips. Declared in the component tree, not user-draggable. |
-| Split layouts | Resizable N-panel splits with drag handles. Nested splits for complex workbench arrangements. |
-| Component hosting | `hostPanel()` mounts arbitrary Web Components with lifecycle management (configure before mount, reconfigure without remount). Iframe-isolated microfrontends via Component API for sandboxed custom visualizations. |
-| Layout system | Grid, columns, rows, tabs, pills, sidebar, accordion, carousel, stack. All recursive — layouts nest inside layouts. |
-| Navigation | Tree navigation, multi-page sites, URL state management for filters, pagination, and dock state. |
+| Source | Description |
+|--------|-------------|
+| REST (`url:`) | JSON endpoints with optional polling refresh. |
+| Mutable REST | Full CRUD — `createUrl`, `updateUrl`, `deleteUrl` with `keyColumn`. |
+| WebSocket | Real-time push with topic subscriptions, event replay, and automatic reconnection. |
+| SSE | Server-Sent Events for one-way streaming. |
+| CSV | Local or remote CSV files, parsed automatically. |
+| Inline (`content:`) | Embedded JSON data for demos and prototypes. |
+| Prometheus (`type: metrics`) | PromQL queries with configurable time ranges. |
+| Join | Client-side joins across datasets on shared keys. |
+| Composite | Merge multiple sources into one dataset. |
+| Simulated | Mutation operators for testing — inject delays, errors, partial updates. |
+| Server query | Push-down queries to backend data providers (SQL, IoTDB). |
+| Expression | Computed datasets from expressions over other datasets. |
+| PostMessage | Data from parent window or iframe host. |
+| Recording / Replay | Capture and replay data sessions for demos and testing. |
 
-### Data
+### Visualization (Apache ECharts)
 
-| Capability | Description |
-|-----------|-------------|
-| Data sources | JSON, CSV, metrics (Prometheus), WebSocket (real-time push), polling refresh, expression generators. |
-| Data operations | Filter, group, sort, aggregate via the lookup API. JSONata transforms for complex reshaping. |
-| Cross-filtering | User interaction in one component cascades filters to listening components. Filter groups isolate independent channels. Toggle semantics — click to select, click again to deselect. |
+Bar, line, area, pie, scatter, bubble, timeseries, timeline, heatmap, density heatmap, treemap, histogram, graph (network), map (choropleth). Every chart type supports cross-filtering, theming, and responsive sizing.
 
-### Components
+### Tables
 
-| Capability | Description |
-|-----------|-------------|
-| Visualization | Bar, line, area, pie, scatter, bubble, map, and timeseries charts. Tables with sort, pagination, and CSV export. Metrics and meters. Powered by Apache ECharts. |
-| Forms | Text, number, dropdown, checkbox, date picker, textarea. Data-scope record selection. Save handlers for form submission. |
-| Content | HTML, markdown, titles. Custom Web Components via `hostPanel()`. |
+Virtual-scroll CSS Grid table engine. Sortable columns, filterable rows, CSV export, row detail expansion, master-detail, cell spanning, tree/hierarchical data, grouped views, row accent styling, inline editing, keyboard navigation, ARIA grid roles. Handles 10k+ rows without pagination.
 
-### Developer Experience
+### Forms
 
-| Capability | Description |
-|-----------|-------------|
-| TypeScript DSL | Type-safe builders with full IDE autocompletion. Import from `@casehubio/ui` and `@casehubio/data`. |
-| YAML support | Runtime-loaded pages for dynamic content (e.g. stored in a database). Parsed into the same component tree as the TypeScript DSL. |
-| Build pipeline | Quinoa/esbuild integration for Quarkus hosts. Hot reload via `mvn quarkus:dev`. Sub-second builds. |
-| Foundation tier | Zero upstream CaseHub dependencies. Any CaseHub app can consume it. Runtime-only via iframe embedding or direct integration. |
-| Embeddable | Iframe embedding into any host application, or standalone deployment. |
+Schema-driven form rendering from JSON Schema with recursive nesting. Input types: text, number, select, checkbox, date, datetime, duration, textarea, tag editor, colour swatch, slider. Array groups, variant groups (oneOf/discriminator), object groups. Data-scoped record editing with auto-save and local/REST adapters. Custom renderers via `x-renderer`.
 
-## Getting Started
+### Content
 
-### Build with Quinoa
+HTML, Markdown, titles, alerts, badges, metric cards, countdown timers, action buttons, status indicators.
 
-Quinoa gives you a single `mvn quarkus:dev` that hot-reloads both Java and TypeScript. One `mvn package` produces a single JAR with the frontend included. No Node.js at runtime.
+### Interactivity
 
-See [`docs/quinoa-convention.md`](docs/quinoa-convention.md) for setup.
+| Feature | Description |
+|---------|-------------|
+| Cross-filtering | Click a chart segment, bound tables and charts update. Filter groups isolate channels. Toggle semantics. |
+| Navigation | Multi-page sites with shared data context. URL state for filters, pagination, dock positions. Drill-through links. |
+| Dynamic visibility | Show/hide components based on expressions or selections. |
+| Action buttons | Trigger navigation, data operations, or custom events. |
+| Selectors | Dropdown, radio, and label selectors that drive filters across all bound components. |
 
-### Use the TypeScript DSL
+### Real-time push
 
-The TypeScript DSL is the primary API. YAML is for runtime-loaded pages only (content stored in a database, loaded dynamically).
+WebSocket push protocol with topic-based subscriptions, wildcard matching, and sequence-based event replay. Automatic reconnection with replay from last-seen sequence — no data loss on network interruption.
+
+Backend: Quarkus CDI integration with `EventBroadcaster`, `EventStore` (in-memory, JDBC, Redis), and typed SDK. One annotation wires a bean to the push pipeline.
+
+### Design tokens and theming
+
+OKLCH 12-step colour scales across 8 semantic palettes. Spacing, typography, elevation, and motion tokens. Light and dark presets. Interactive theme designer and theme picker components. Register custom themes with `registerTheme()`.
+
+### Graph editing
+
+Domain-agnostic graph model with stencil grammar, ELK auto-layout, React Flow rendering, edge routing, drill-down, multi-select, and SVG/PNG export. Drag from a stencil palette to build node-and-edge diagrams interactively.
+
+### Playbook system
+
+Full workflow language runtime in TypeScript: step execution, decorator chain (timeout, loop, retry, parallel, cancel, background, guard), control flow (if/else, match, try/catch, barrier, race, quorum, select), concurrency primitives (semaphore, latch, signal, channel, state machine, event router, correlation scope). Variables, modules, forEach, conditionals, CSV data sources, import/include. Visual step viewer renders playbooks as swim lane diagrams.
+
+Simulation infrastructure: corpus management, phased execution, streaming, and overlay strategies. The same YAML drives both real execution and simulated data injection.
+
+### Editor infrastructure
+
+| Package | What it provides |
+|---------|-----------------|
+| `pages-code-editor` | CodeMirror 6 Lit component with YAML syntax, schema-driven completion, linting. |
+| `pages-markdown-editor` | Milkdown/ProseMirror Lit component. WYSIWYG, source, and split views. Toolbar, annotations, scroll sync. |
+| `pages-document-diff` | LCS diff engine with word-level highlights, canvas minimap, scroll sync. Split and unified views. |
+| `pages-editor-core` | EditableText interface and bridge. MCP tool adapter for LLM-assisted editing. |
+
+### Visual page builder
+
+Drag-and-drop page composition with bidirectional YAML sync. Component catalogue with contextual filtering, outline tree with reorder, selection overlay, grid editing (move, resize, split, merge), paste indicators, diff patching. YAML is always the source of truth — the builder is a view.
+
+### Language Server (LSP)
+
+Schema-driven completion, diagnostics, hover, and navigation for all CaseHub YAML formats. Runs in Node and browser. Powers the IntelliJ plugin and the code editor component.
+
+### IntelliJ plugin
+
+LSP client for IntelliJ-family IDEs via LSP4IJ. Schema-driven YAML autocomplete and diagnostics for `.page.yaml` and playbook files, directly in the IDE.
+
+### Accessibility
+
+FocusTrapMixin, RovingTabindexMixin, KeyboardShortcutMixin, LiveRegionMixin. ARIA grid roles on tables. Keyboard navigation throughout. `<pages-modal>` with focus management.
+
+### UI component library
+
+Standalone Lit web components styled with design tokens: Badge, Button, Checkbox, Colour Swatch, Confirm Dialog, Date/DateTime/Duration inputs, Event Trail, Number Input, Property Tree, Select, Slider, Sparkline, Split Workbench, Status Badge, Status Dot, Submit Button, Tag Editor, Textarea. All light/dark aware.
+
+---
+
+## TypeScript DSL
+
+When YAML doesn't fit — dynamic pages, programmatic composition, build-time generation — the TypeScript DSL covers the same surface with full type safety.
 
 ```typescript
 import { page, barChart, table, columns, dataset } from "@casehubio/ui";
@@ -86,315 +243,237 @@ const app = page("Sales",
       title: "Revenue by Region",
       lookup: lookup("sales", groupBy("Region", col("Region"), sum("Revenue"))),
     })],
-    [table({
-      lookup: lookup("sales"),
-    })],
+    [table({ lookup: lookup("sales") })],
   ),
 );
 
-const site = await loadSite(document.getElementById("app")!, app);
+await loadSite(document.getElementById("app")!, app);
 ```
 
-The DSL gives you IDE autocompletion, type checking, and composability that YAML cannot.
-
-### Start from `loadSite()`
-
-`loadSite()` is the single entry point. Build a component tree, hand it to `loadSite()`, done. It wires data to components, sets up event delegation, and manages the lifecycle.
+`loadSite()` accepts both component trees and YAML strings. It wires data to components, sets up event delegation, and manages the lifecycle.
 
 ### Bring your own components
 
-`hostPanel()` mounts any custom Web Component inside the pages layout tree. Don't try to express everything in the DSL — build custom panels for domain-specific UI (terminal emulators, diff viewers, session grids) and let pages manage layout, lifecycle, and communication around them.
+`hostPanel()` mounts any Web Component inside the layout tree. Build domain-specific UI in whatever framework you like — Pages manages layout, lifecycle, and communication.
 
 ```typescript
-import { rows, split, hostPanel } from "@casehubio/ui";
+import { split, hostPanel } from "@casehubio/ui";
 import { registerPanel, loadSite } from "@casehubio/pages-runtime";
 
 registerPanel("my-terminal", "app-terminal");
-registerPanel("my-sidebar", "app-sidebar");
+registerPanel("my-editor", "app-code-editor");
 
-const workbench = rows(
-  split("horizontal", [
-    hostPanel("my-sidebar"),
-    hostPanel("my-terminal", { sessionId: "abc" }),
-  ], { ratio: [30, 70] }),
-);
+const workbench = split("horizontal", [
+  hostPanel("my-editor"),
+  hostPanel("my-terminal", { sessionId: "abc" }),
+], { ratio: [70, 30] });
 
-const site = await loadSite(document.getElementById("app")!, workbench);
+await loadSite(document.getElementById("app")!, workbench);
 ```
 
-### Compose recursively
+---
 
-Every component nests inside any other. Build small, compose big.
+## Architecture
 
-```typescript
-const sidebar = tabs(
-  ["Files", fileTree()],
-  ["Search", searchPanel()],
-);
+### Data flow
 
-const main = split("horizontal", [
-  sidebar,
-  split("vertical", [
-    hostPanel("editor"),
-    hostPanel("terminal"),
-  ]),
-]);
+```
+YAML page file  ─or─  TypeScript DSL
+         ↓
+    Component tree + DataSetDef[]
+         ↓
+    pages-data: resolve sources, apply reactive events
+         ↓
+    DataSet (columns + rows) ── mutations cascade to all bound components
+         ↓
+    pages-component: layout rendering (CSS Grid, tabs, splits, docks)
+         ↓
+    pages-viz: charts, tables, metrics (ECharts Web Components)
+  + hostPanel: custom Web Components with managed lifecycle
+         ↓
+    User interactions (filter, sort, navigate, action) → back to data layer
 ```
 
-### Drive requirements upstream
+### Package map
 
-casehub-pages evolves from app needs. The workbench primitives (#64 — splits, docks, host panels, event bus) were driven by DraftHouse and Claudony requirements. If the framework doesn't have a primitive you need, file an issue. Your use case shapes the next capability.
+**Runtime core:**
 
-## Building casehub-pages
+| Package | Role |
+|---------|------|
+| `pages-data` | Dataset model, reactive event engine, 14 data source types, operations (filter, group, sort, aggregate), JSONata transforms. |
+| `pages-ui` | TypeScript DSL builders, YAML parser, component model, schema validation. |
+| `pages-viz` | Web Component wrappers for charts, tables, metrics, forms (ECharts). |
+| `pages-component` | CSS Grid layout renderer, interactive containers, grid editing (drag/resize/split/merge). |
+| `pages-runtime` | Site orchestrator: `loadSite()`, navigation, data pipeline, event delegation, panel hosting, error boundaries. |
+| `pages-table` | CSS Grid table engine: virtual scroll, tree rows, spanning, sorting, CSV export. |
 
-casehub-pages is a TypeScript monorepo managed with Yarn workspaces.
+**Authoring:**
+
+| Package | Role |
+|---------|------|
+| `pages-builder` | Visual page builder with bidirectional YAML sync. |
+| `pages-lsp` | Language Server Protocol for YAML formats. |
+| `pages-code-editor` | CodeMirror 6 with schema-driven YAML completion. |
+| `pages-markdown-editor` | Milkdown/ProseMirror with WYSIWYG/source/split modes. |
+| `pages-document-diff` | LCS diff engine with minimap and scroll sync. |
+| `pages-editor-core` | EditableText interface, MCP tool adapter. |
+| `pages-document` | CST-backed typed facade for page YAML manipulation. |
+| `pages-schema` | Zod schemas for all component types. |
+
+**Playbook and scenarios:**
+
+| Package | Role |
+|---------|------|
+| `yaml-core` | Playbook language runtime: steps, decorators, control flow, concurrency, simulation, variables, modules. |
+| `pages-aria` | Scenario/playbook executor for the browser: commands, spotlight, visual feedback, scheduling, triggers. |
+| `pages-step-viewer` | Lit components for rendering playbooks as visual cards, swim lanes, and control flow diagrams. |
+
+**Graph editing:**
+
+| Package | Role |
+|---------|------|
+| `graph-core` | Domain-agnostic graph model, grammar, query, traversal, edit operations. |
+| `graph-renderer` | React Flow rendering, ELK layout, edge routing, gestures, drill-down, export. |
+| `pages-diagram-core` | Diagram base mixin, toolbar, YAML integration, schema registry. |
+| `pages-diagram-palette` | Draggable stencil palette and node chooser. |
+
+**Design system:**
+
+| Package | Role |
+|---------|------|
+| `pages-ui-tokens` | OKLCH colour scales, spacing, typography, elevation, motion. Theme designer and picker. |
+| `pages-ui-components` | Standalone Lit web components (inputs, badges, status dots, buttons). |
+| `pages-filter-bar` | Type-ahead filter chips with date ranges. |
+| `pages-primitives` | Accessibility mixins, context menus, dock primitives, modal. |
+| `pages-property-palette` | Schema-driven property inspector. |
+
+**Iframe isolation:**
+
+| Package | Role |
+|---------|------|
+| `pages-iframe-api` | Component controller and communication bridge for sandboxed components. |
+| `pages-iframe-dev` | Development utilities for iframe component testing. |
+
+**Iframe-isolated components** (`components/`):
+LLM prompter, SVG heatmap, terminal emulator.
+
+### Backend (Java / Quarkus)
+
+| Module | Role |
+|--------|------|
+| `push` + `push-runtime` | WebSocket push protocol: topic subscriptions, wildcard matching, event replay, `EventBroadcaster`, CDI integration. |
+| `push-store-jdbc` | JDBC-backed durable event store (Postgres, H2). |
+| `push-store-redis` | Redis-backed durable event store. |
+| `data` + `data-json` | Data provider SPI. JSON/file provider, app catalogue, seed data, schema validation. |
+| `data-prometheus` | Prometheus metrics data provider. |
+| `data-sql` | SQL push-down data provider. |
+| `data-iotdb` | Apache IoTDB time-series provider. |
+| `playbook` + `playbook-runtime` | Playbook model, GraphQL dispatch, trigger dispatch, activation queue, `@DefaultBean` producers. |
+| `scenario` + `scenario-runtime` | Scenario model, execution runtime, REST client. |
+| `terminal` + `terminal-runtime` | Terminal model and WebSocket handler. |
+| `auth` | JWT dev-auth resource. |
+| `layout` + `layout-sqlite` | Layout persistence API with SQLite store. |
+| `pages-sqlite` | SQLite app store. |
+| `mcp` | MCP server integration. |
+| `cross-parser-test` | TypeScript/Java YAML parser parity verification. |
+
+### IntelliJ plugin
+
+`plugins/intellij/` — Kotlin/Gradle LSP client using LSP4IJ. Bundles the pages-lsp for schema-driven autocomplete and diagnostics. Requires JDK 21.
+
+---
+
+## Building
 
 ### Prerequisites
 
-* Node.js 18+
-* Yarn 4.10.3 (included via Yarn Berry)
+- Node.js 18+
+- Yarn 4.10.3 (included via Yarn Berry — no global install needed)
+- Java 21+ (backend and IntelliJ plugin only)
 
-### Quick Start - Full Build
-
-**This is the recommended approach for clean environments and CI/CD:**
+### Quick start
 
 ```bash
-# Install dependencies and build everything in correct order
 yarn install
 yarn build
 ```
 
-**If you encounter module resolution errors**, clear the yarn cache and reinstall:
+Builds all packages in dependency order. Output in `webapp/dist/`.
+
+### Gallery
 
 ```bash
-yarn cache clean
-yarn install
-yarn build
+# Client-side gallery (no backend)
+./gallery.sh
+
+# With Quarkus backend (real-time push, server data sources)
+./gallery-server.sh
 ```
 
-The final application will be in [webapp/dist/](webapp/dist/).
+### Development
 
-The `yarn build` command:
-1. Builds shared packages (`@casehubio/pages-data`, `@casehubio/pages-ui`, `@casehubio/pages-viz`, `@casehubio/pages-component`, `@casehubio/pages-runtime`)
-2. Builds iframe-isolated components in parallel
-3. Assembles final webapp bundle with all assets
+```bash
+# Gallery with hot reload
+yarn workspace @casehubio/pages-examples run dev
 
-### Production Build
+# Specific package
+yarn workspace @casehubio/pages-data run test
+yarn workspace @casehubio/pages-component-llm-prompter run start
+```
+
+### Production
 
 ```bash
 yarn build:prod
 ```
 
-Production build includes:
-* Full optimized webpack builds for all packages
-* Examples gallery with validation tests
-* Minified bundles ready for deployment
+Optimized webpack builds for all packages, minified bundles, examples gallery with validation tests.
 
-The output will be in [webapp/dist/](webapp/dist/).
-
-### Individual Build Steps
-
-**If you need granular control:**
+### Granular builds
 
 ```bash
-# Build only shared packages
-yarn build:packages
-
-# Build only iframe components (requires packages to be built first)
-yarn build:components
-
-# Build only final webapp (requires everything else to be built first)
-yarn build:webapp
-
-# Build examples gallery (requires webapp to be built first)
-yarn build:examples
-
-# Build a specific component
-yarn workspace @casehubio/pages-component-llm-prompter run build
+yarn build:packages      # Core packages only
+yarn build:components    # Iframe components (needs packages first)
+yarn build:webapp        # Final webapp (needs everything)
+yarn build:examples      # Examples gallery (needs webapp)
 ```
 
-### Development Mode
+### Quarkus integration
 
-Run a component in development mode with hot reload:
-
-```bash
-yarn workspace @casehubio/pages-component-llm-prompter run start  # Starts webpack-dev-server on port 9001
-```
-
-Run the examples gallery:
-
-```bash
-# Serve examples gallery (port 8080) — requires webapp to be built first
-yarn workspace @casehubio/pages-examples run serve
-
-# Dev mode with file watching
-yarn workspace @casehubio/pages-examples run dev
-```
+Quinoa gives you a single `mvn quarkus:dev` that hot-reloads both Java and TypeScript. One `mvn package` produces a single JAR with the frontend included. No Node.js at runtime. See `docs/quinoa-convention.md`.
 
 ### Testing
 
-Run tests on all packages:
-
 ```bash
-yarn workspaces foreach -A run test
+yarn workspaces foreach -A run test     # All packages
+yarn workspace @casehubio/pages-data run test  # Specific package
 ```
 
-Run tests for a specific package:
+---
 
-```bash
-yarn workspace @casehubio/pages-data run test
+## Key technologies
 
-# Run specific test file
-yarn workspace @casehubio/pages-component-llm-prompter run test -- <test-file-pattern>
-```
+| Technology | Role |
+|-----------|------|
+| TypeScript 5.x | Type-safe development across all packages |
+| Lit | Web Components for visualization, editors, and UI components |
+| Apache ECharts | Chart rendering |
+| CodeMirror 6 | Code editing with schema-driven completion |
+| Milkdown / ProseMirror | Rich text editing |
+| React Flow | Graph rendering and editing |
+| ELK | Automatic graph layout |
+| JSONata | Data transformation expressions |
+| Zod | Schema validation |
+| Yarn 4 (Berry) | Workspace management |
+| Webpack 5 | Module bundling |
+| Vitest / Playwright | Unit and E2E testing |
+| Quarkus 3 | Java backend runtime |
 
-## Architecture Overview
-
-### Monorepo Structure
-
-casehub-pages is organized as a TypeScript monorepo with Yarn workspaces:
-
-- **`packages/`** — Core TypeScript libraries: data engine, component model, layout renderer, DSL builders, runtime orchestrator
-- **`components/`** — Iframe-isolated React microfrontend components
-- **`webapp/`** — Webpack orchestrator that assembles the final application bundle
-- **`examples/`** — Interactive examples gallery
-
-### Package Overview
-
-**Core Packages** (`packages/`):
-- `@casehubio/pages-data` — DataSet model, reactive event engine (snapshot/append/replace/remove), operations (filter/group/sort/aggregate), external data extraction (JSON, CSV, Prometheus), WebSocket sources, JSONata transforms
-- `@casehubio/pages-ui` — TypeScript DSL builders, YAML parser, component model
-- `@casehubio/pages-viz` — Web Component wrappers for charts, tables, metrics, selectors (ECharts)
-- `@casehubio/pages-component` — CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion, split, dock bar)
-- `@casehubio/pages-runtime` — Site orchestrator: `loadSite()` API, navigation, data pipeline, event delegation, panel hosting
-
-**Iframe Component API** (`packages/`):
-- `@casehubio/pages-iframe-api` — Component controller and communication interfaces
-- `@casehubio/pages-iframe-dev` — Development utilities for component testing
-
-**Build Configuration** (`packages/`):
-- `@casehubio/pages-webpack-base` — Common webpack configuration
-- `@casehubio/pages-tsconfig` — Shared TypeScript configuration
-
-**Available Components** (`components/`):
-- `@casehubio/pages-component-llm-prompter` — LLM prompt engineering UI
-- `@casehubio/pages-component-svg-heatmap` — SVG-based heatmaps
-
-### Data Flow
-
-```
-TypeScript DSL (or YAML string)
-    ↓
-Component tree + DataSetDef[]
-    ↓
-@casehubio/pages-data (resolve datasets, apply events)
-    ↓
-DataSet (columns + rows) — reactive: mutations cascade to bound components
-    ↓
-@casehubio/pages-component (layout rendering)
-    ↓
-@casehubio/pages-viz (chart/table/metric Web Components)
-  + hostPanel (custom Web Components)
-    ↓
-pages-filter / pages-event / pages-sort events → back to data layer
-```
-
-1. **@casehubio/pages-ui** provides type-safe DSL builders that produce a component tree (YAML is parsed into the same tree structure for runtime-loaded pages)
-2. **@casehubio/pages-data** resolves datasets from REST, JSON, CSV, metrics, and WebSocket sources. The reactive event model (snapshot, append, replace, remove) drives incremental updates.
-3. **@casehubio/pages-component** renders layouts with interactive containers
-4. **@casehubio/pages-viz** provides Web Components for charts, tables, and metrics (Apache ECharts)
-5. **hostPanel** mounts custom Web Components with lifecycle management
-6. User interactions (filtering, sorting, panel events) flow back through the data and event pipeline
-
-### Entry Point
-
-Host applications build pages using the TypeScript DSL and render them with `loadSite()`:
-
-```typescript
-import { page, barChart, dataset } from "@casehubio/ui";
-import { lookup, groupBy, col, sum } from "@casehubio/data";
-import { loadSite } from "@casehubio/pages-runtime";
-
-dataset("sales", "/api/sales");
-
-const app = page("Sales",
-  barChart({
-    title: "Sales by Region",
-    lookup: lookup("sales", groupBy("Region", col("Region"), sum("Revenue"))),
-  }),
-);
-
-const site = await loadSite(document.getElementById("app")!, app);
-```
-
-`loadSite()` also accepts a YAML string for runtime-loaded pages. For new applications, always prefer the TypeScript DSL — see [`docs/CASEHUB-PAGES.md`](docs/CASEHUB-PAGES.md) for the complete API reference.
-
-### Iframe-Isolated Component Architecture
-
-Each component in `components/` runs in an isolated `<iframe>` and communicates with the runtime through `window.postMessage`. The `@casehubio/pages-iframe-api` package provides the TypeScript bridge.
-
-**Component Lifecycle Pattern**:
-```typescript
-// 1. Get controller from ComponentApi
-const api = new ComponentApi();
-const controller = api.getComponentController();
-
-// 2. Register dataset handler
-controller.setOnDataSet((dataset, params) => {
-  // Transform dataset and update visualization
-});
-
-// 3. Register initialization handler
-controller.setOnInit((params) => {
-  // Initialize with configuration
-});
-
-// 4. Signal ready
-controller.ready();
-
-// 5. Send filters back to runtime
-controller.filter(filterRequest);
-```
-
-**Key Interface (`@casehubio/pages-iframe-api`)**:
-- `ComponentController` - Manages component lifecycle and communication
-- `ComponentBus` - Message bus for inter-component communication
-- `DataSet` - Data structure passed from runtime to components
-- `FilterRequest` - Filter queries sent from components back to runtime
-- `FunctionCallRequest` - Backend function calls
-
-### Adding a New Component
-
-1. Create new directory in `components/@casehubio/pages-component-<name>/`
-2. Add `package.json` with dependency on `@casehubio/pages-iframe-api`
-3. Create `src/index.tsx` with ComponentController integration
-4. Add webpack configuration (can extend `@casehubio/pages-webpack-base`)
-5. Register component in `webapp/package.json` devDependencies
-6. Update `webapp/webpack.config.js` to copy component bundle
-7. Build with `yarn build` - output goes to `dist/index.js`
-
-### Deployment
-
-The final artifact is a single directory (`webapp/dist/`) containing:
-- Core casehub-pages runtime bundles
-- All component bundles (from `components/*/dist/`)
-- Static assets and HTML entry points
-
-This can be deployed to any static web server or GitHub Pages.
-
-## Key Technologies
-
-- **Yarn**: v4.10.3 for workspace management
-- **TypeScript**: 5.x for type-safe development
-- **React**: 17.0.2 for iframe component UI
-- **Webpack**: 5.x for module bundling
-- **Vitest / Jest**: Testing frameworks with ts-jest for TypeScript
-- **Apache ECharts**: Chart library
-- **JSONata**: Data transformation language
+---
 
 <details>
 <summary>History</summary>
 
-casehub-pages descends from dashbuilder, a GWT dashboard authoring platform. The melviz fork modernised the frontend, progressively replacing GWT with TypeScript Web Components. casehub-pages completes that journey — 100% TypeScript, and designed as a foundational building block for the CaseHub platform.
+casehub-pages descends from dashbuilder, a GWT dashboard authoring platform. The melviz fork modernised the frontend, progressively replacing GWT with TypeScript Web Components. casehub-pages completes that journey — 100% TypeScript, zero GWT — and extends it from dashboards into a general-purpose application composition framework for the CaseHub platform.
 
 </details>
