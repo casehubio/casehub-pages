@@ -70,6 +70,14 @@ variable interpolation, event-driven await.</description>
             <artifactId>quarkus-scheduler</artifactId>
         </dependency>
 
+        <!-- Headless playbook execution (optional — only needed by HeadlessPlaybookRunner) -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.52.0</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>io.quarkus</groupId>
