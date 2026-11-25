@@ -258,7 +258,8 @@ public class HeadlessPlaybookRunner {
                                             List<Map<String, Object>> expectations) {
         // TODO: parse JSON response, match against expectations
         // For each expectation: find matching item, check asserted fields
-        return List.of("Not yet implemented");
+        throw new UnsupportedOperationException(
+                "checkExpectations not yet implemented — verify steps cannot run until this is complete");
     }
 
     public record HeadlessRunnerConfig(
@@ -268,6 +269,7 @@ public class HeadlessPlaybookRunner {
             Duration pollInterval
     ) {
         public HeadlessRunnerConfig {
+            java.util.Objects.requireNonNull(baseUrl, "baseUrl is required");
             if (timeout == null) timeout = Duration.ofSeconds(30);
             if (pollInterval == null) pollInterval = Duration.ofMillis(500);
         }
