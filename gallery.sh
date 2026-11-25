@@ -12,8 +12,9 @@ if [ ! -d node_modules ]; then
 fi
 
 if [ ! -d examples/dist ]; then
-  echo "Building (first run takes ~30s)..."
+  echo "Building (first run takes ~60s)..."
   yarn build
+  yarn build:examples
 fi
 
 echo ""
