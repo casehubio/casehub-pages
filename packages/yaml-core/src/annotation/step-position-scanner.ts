@@ -60,16 +60,6 @@ function selectBranchName(line: string, lines?: string[], start?: number, end?: 
 }
 
 
-function findEndOfBlock(lines: string[], start: number, blockIndent: number): number {
-  let i = start;
-  while (i < lines.length) {
-    const line = lines[i]!;
-    if (line.trim() === '' || line.trim().startsWith('#')) { i++; continue; }
-    if (indent(line) < blockIndent) break;
-    i++;
-  }
-  return i;
-}
 
 function scanBlock(
   lines: string[],
@@ -179,7 +169,7 @@ function scanTryBody(
   const tryLine = stepStart;
   const bodyIndent = contentIndent + 2;
 
-  let bodyStart = tryLine + 1;
+  const bodyStart = tryLine + 1;
   let bodyEnd = stepEnd;
 
   const catchLine = findBranchLine(lines, stepStart, stepEnd, contentIndent, 'catch');
