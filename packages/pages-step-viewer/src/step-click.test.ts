@@ -4,7 +4,6 @@ import type {
   ResolvedStep, PluginStep, IfElseStep, TryCatchFinallyStep,
   MatchStep, ParallelStep, BlockStep, RaceStep, SelectStep,
 } from '@casehubio/yaml-core/step';
-import type { ResolvedMatchCase, SelectBranch, NamedBranch } from '@casehubio/yaml-core/step';
 
 function plugin(name: string): PluginStep {
   return {

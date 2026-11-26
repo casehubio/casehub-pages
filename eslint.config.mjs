@@ -51,6 +51,8 @@ export default tseslint.config(
       "@typescript-eslint/no-unsafe-call": "off",
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/unbound-method": "off",
+      // Tests declare empty classes that exist only to carry decorators (or to lack them)
+      "@typescript-eslint/no-extraneous-class": "off",
     },
   },
   {
