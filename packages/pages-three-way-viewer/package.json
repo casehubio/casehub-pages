@@ -1,0 +1,41 @@
+{
+  "name": "@casehubio/pages-three-way-viewer",
+  "version": "0.1.0",
+  "description": "CaseHub three-way viewer — YAML/visual/split mode for any artifact",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist .typecheck"
+  },
+  "dependencies": {
+    "@casehubio/pages-code-editor": "workspace:*",
+    "@casehubio/pages-ui-tokens": "workspace:^",
+    "@codemirror/state": "^6.5.0",
+    "@codemirror/view": "^6.36.0",
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "rimraf": "^6.1.0",
+    "typescript": "~5.8.0",
+    "vitest": "^3.2.1"
+  },
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "package.json"
+  ]
+}
