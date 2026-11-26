@@ -19,7 +19,7 @@ export function ApplicationScoped<T extends new (...args: any[]) => any>(
 
 export function Observes(topic: string): MethodDecorator {
   return function (
-    target: Object,
+    target: object,
     propertyKey: string | symbol,
     _descriptor: PropertyDescriptor,
   ) {
@@ -32,7 +32,7 @@ export function Observes(topic: string): MethodDecorator {
 
 export function Publish(topic: string): MethodDecorator {
   return function (
-    target: Object,
+    target: object,
     propertyKey: string | symbol,
     _descriptor: PropertyDescriptor,
   ) {

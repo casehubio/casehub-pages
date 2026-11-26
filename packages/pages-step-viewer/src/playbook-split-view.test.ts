@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Since PlaybookSplitView is a Lit component that uses browser APIs,
 // we test the core logic functions directly rather than the custom element.
-import { parseAndResolve, type SplitViewState } from './playbook-split-view.js';
+import { parseAndResolve } from './playbook-split-view.js';
 
 describe('playbook-split-view core logic', () => {
   it('parseAndResolve returns steps for valid flat YAML', () => {

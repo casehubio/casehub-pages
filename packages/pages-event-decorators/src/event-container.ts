@@ -8,8 +8,11 @@ export interface EventContainerConfig {
   auth?: { token: string };
 }
 
+type Constructor = new (...args: any[]) => object;
+type Instance = Record<string, (...args: unknown[]) => unknown>;
+
 interface Registration {
-  constructor: new (...args: any[]) => any;
+  constructor: Constructor;
   observers: readonly ObserverEntry[];
   publishers: readonly PublisherEntry[];
 }
@@ -17,7 +20,7 @@ interface Registration {
 export class EventContainer {
   private readonly config: EventContainerConfig;
   private readonly registrations: Registration[] = [];
-  private readonly instances = new Map<Function, any>();
+  private readonly instances = new Map<Constructor, Instance>();
   private readonly streams: EventStream[] = [];
   private started = false;
 
@@ -25,7 +28,7 @@ export class EventContainer {
     this.config = config;
   }
 
-  register(...classes: Function[]): void {
+  register(...classes: Constructor[]): void {
     if (this.started) {
       throw new Error("Cannot register after container has started");
     }
@@ -35,7 +38,7 @@ export class EventContainer {
           `${clazz.name} is not decorated with @ApplicationScoped`,
         );
       }
-      const proto = clazz.prototype;
+      const proto = clazz.prototype as object;
       const observers = getObservers(proto);
       const publishers = getPublishers(proto);
 
@@ -55,7 +58,7 @@ export class EventContainer {
       }
 
       this.registrations.push({
-        constructor: clazz as new (...args: any[]) => any,
+        constructor: clazz,
         observers,
         publishers,
       });
@@ -67,7 +70,7 @@ export class EventContainer {
     this.started = true;
 
     for (const reg of this.registrations) {
-      const instance = new reg.constructor();
+      const instance = new reg.constructor() as Instance;
       this.instances.set(reg.constructor, instance);
       this.wirePublishers(instance, reg.publishers);
     }
@@ -96,13 +99,13 @@ export class EventContainer {
   }
 
   getInstance<T>(clazz: new (...args: any[]) => T): T {
-    const instance = this.instances.get(clazz);
+    const instance = this.instances.get(clazz as Constructor);
     if (!instance) {
       throw new Error(
         `No instance for ${clazz.name} — not registered or container not started`,
       );
     }
-    return instance as T;
+    return instance as unknown as T;
   }
 
   private dispatchLatest(stream: EventStream): void {
@@ -128,7 +131,7 @@ export class EventContainer {
   }
 
   private wirePublishers(
-    instance: any,
+    instance: Instance,
     publishers: readonly PublisherEntry[],
   ): void {
     const { publishBaseUrl, auth } = this.config;
@@ -136,7 +139,7 @@ export class EventContainer {
     for (const pub of publishers) {
       const original = instance[pub.methodName].bind(instance);
       instance[pub.methodName] = async (
-        ...args: any[]
+        ...args: unknown[]
       ): Promise<{ seq: number } | undefined> => {
         const payload = original(...args);
         if (payload == null) return undefined;
