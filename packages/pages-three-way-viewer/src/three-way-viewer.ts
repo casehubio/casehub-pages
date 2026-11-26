@@ -1,12 +1,13 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { EditorView } from '@codemirror/view';
+import type { Extension } from '@codemirror/state';
 import { ViewerController, type ViewerMode } from './viewer-controller.js';
 import { isViewerSyncTarget, type ViewerSelectDetail } from './sync-protocol.js';
 import type { PagesCodeEditor } from '@casehubio/pages-code-editor';
 import '@casehubio/pages-code-editor';
 
-@customElement('three-way-viewer')
+@customElement('pages-three-way-viewer')
 export class ThreeWayViewer extends LitElement {
   static override styles = css`
     :host {
@@ -69,6 +70,7 @@ export class ThreeWayViewer extends LitElement {
       cursor: col-resize;
       background: var(--pages-border, #334155);
       flex-shrink: 0;
+      touch-action: none;
     }
     .splitter:hover {
       background: var(--pages-primary, #38bdf8);
@@ -86,6 +88,7 @@ export class ThreeWayViewer extends LitElement {
 
   private _controller: ViewerController | undefined;
   private _cursorDebounce: ReturnType<typeof setTimeout> | undefined;
+  private _cursorExtension: Extension | undefined;
 
   get controller(): ViewerController {
     if (!this._controller) {
@@ -100,6 +103,7 @@ export class ThreeWayViewer extends LitElement {
       initialSplitRatio: this.splitRatio,
       onChange: (m, r) => {
         this._mode = m;
+        this.mode = m;
         this.splitRatio = r;
         this.dispatchEvent(new CustomEvent('mode-change', {
           bubbles: true, composed: true, detail: { mode: m },
@@ -115,11 +119,17 @@ export class ThreeWayViewer extends LitElement {
     }
     this._mode = this.mode;
     this.addEventListener('viewer-select', this._onViewerSelect as EventListener);
+    this._cursorExtension = EditorView.updateListener.of((update) => {
+      if (update.selectionSet) {
+        this._syncCursorToVisual();
+      }
+    });
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener('viewer-select', this._onViewerSelect as EventListener);
+    if (this._cursorDebounce) clearTimeout(this._cursorDebounce);
   }
 
   override updated(changed: Map<string, unknown>): void {
@@ -149,7 +159,6 @@ export class ThreeWayViewer extends LitElement {
     this.dispatchEvent(new CustomEvent('value-change', {
       bubbles: true, composed: true, detail: { value: editor.value },
     }));
-    this._syncCursorToVisual();
   };
 
   private _syncCursorToVisual(): void {
@@ -183,6 +192,7 @@ export class ThreeWayViewer extends LitElement {
     const splitter = e.currentTarget as HTMLElement;
     splitter.setPointerCapture(e.pointerId);
     const content = this.renderRoot.querySelector('.content') as HTMLElement;
+    content.style.userSelect = 'none';
 
     const onMove = (ev: PointerEvent): void => {
       const rect = content.getBoundingClientRect();
@@ -190,13 +200,16 @@ export class ThreeWayViewer extends LitElement {
       this.controller.setSplitRatio(ratio);
     };
 
-    const onUp = (): void => {
+    const cleanup = (): void => {
+      content.style.userSelect = '';
       splitter.removeEventListener('pointermove', onMove);
-      splitter.removeEventListener('pointerup', onUp);
+      splitter.removeEventListener('pointerup', cleanup);
+      splitter.removeEventListener('pointercancel', cleanup);
     };
 
     splitter.addEventListener('pointermove', onMove);
-    splitter.addEventListener('pointerup', onUp);
+    splitter.addEventListener('pointerup', cleanup);
+    splitter.addEventListener('pointercancel', cleanup);
   };
 
   override render() {
@@ -212,7 +225,7 @@ export class ThreeWayViewer extends LitElement {
       <div class="toolbar">
         <button class="mode-btn ${m === 'yaml' ? 'active' : ''}"
                 @click=${() => this.controller.setMode('yaml')}
-                aria-pressed=${String(m === 'yaml')}>YAML</button>
+                aria-pressed=${String(m === 'yaml')}>Source</button>
         <button class="mode-btn ${m === 'split' ? 'active' : ''}"
                 @click=${() => this.controller.setMode('split')}
                 aria-pressed=${String(m === 'split')}>Split</button>
@@ -227,6 +240,7 @@ export class ThreeWayViewer extends LitElement {
             .value=${this.value}
             .language=${this.language}
             ?readonly=${this.readonly}
+            .extensions=${this._cursorExtension ? [this._cursorExtension] : []}
             @input=${this._onEditorInput}
           ></pages-code-editor>
         </div>

@@ -12,7 +12,10 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "sideEffects": true,
+  "sideEffects": [
+    "./dist/index.js",
+    "./src/index.ts"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",

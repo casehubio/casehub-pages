@@ -40,7 +40,9 @@ export class ViewerController {
   }
 
   setSplitRatio(ratio: number): void {
-    this._splitRatio = Math.max(0.15, Math.min(0.85, ratio));
+    const clamped = Math.max(0.15, Math.min(0.85, ratio));
+    if (clamped === this._splitRatio) return;
+    this._splitRatio = clamped;
     this._onChange?.(this._mode, this._splitRatio);
   }
 }

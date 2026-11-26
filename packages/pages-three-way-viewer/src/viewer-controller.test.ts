@@ -64,4 +64,11 @@ describe('ViewerController', () => {
     vc.setSplitRatio(0.4);
     expect(onChange).toHaveBeenCalledWith('split', 0.4);
   });
+
+  it('setSplitRatio to same value is a no-op', () => {
+    const onChange = vi.fn();
+    const vc = new ViewerController({ initialSplitRatio: 0.5, onChange });
+    vc.setSplitRatio(0.5);
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });
