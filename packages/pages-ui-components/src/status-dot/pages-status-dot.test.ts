@@ -41,6 +41,12 @@ describe('PagesStatusDot', () => {
     expect(el.getAttribute('variant')).toBe('info');
   });
 
+  it('reflects accent variant', async () => {
+    (el as any).variant = 'accent';
+    await (el as any).updateComplete;
+    expect(el.getAttribute('variant')).toBe('accent');
+  });
+
   it('defaults to neutral variant', () => {
     expect((el as any).variant).toBe('neutral');
     expect(el.getAttribute('variant')).toBe('neutral');

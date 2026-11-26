@@ -15,9 +15,10 @@ export class PagesStatusDot extends LitElement {
     :host([variant="danger"]) { background: var(--pages-danger-9); }
     :host([variant="neutral"]) { background: var(--pages-neutral-7); }
     :host([variant="info"]) { background: var(--pages-info-9); }
+    :host([variant="accent"]) { background: var(--pages-accent-9); }
   `;
 
-  @property({ reflect: true }) variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' = 'neutral';
+  @property({ reflect: true }) variant: 'success' | 'warning' | 'danger' | 'neutral' | 'info' | 'accent' = 'neutral';
   @property({ reflect: true }) size: 'sm' | 'md' = 'md';
   @property({ reflect: true }) override role = 'status';
 
