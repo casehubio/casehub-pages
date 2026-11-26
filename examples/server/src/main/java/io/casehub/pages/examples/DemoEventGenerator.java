@@ -4,6 +4,7 @@ import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.PushColumn;
 import io.casehub.pages.push.PushMessage;
 import io.quarkus.scheduler.Scheduled;
+import io.casehub.pages.push.runtime.ConnectionRegistry;
 import io.quarkus.websockets.next.WebSocketConnection;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
