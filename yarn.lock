@@ -1793,6 +1793,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/pages-event-decorators@workspace:packages/pages-event-decorators":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-event-decorators@workspace:packages/pages-event-decorators"
+  dependencies:
+    "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-tsconfig": "workspace:*"
+    vitest: "npm:^3.2.1"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/pages-examples@workspace:examples":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-examples@workspace:examples"

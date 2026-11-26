@@ -1,0 +1,36 @@
+{
+  "name": "@casehubio/pages-event-decorators",
+  "version": "0.1.0",
+  "description": "CDI-inspired decorators for push topic event handling",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist .typecheck"
+  },
+  "dependencies": {
+    "@casehubio/pages-data": "workspace:*"
+  },
+  "devDependencies": {
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "vitest": "^3.2.1"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
+}
