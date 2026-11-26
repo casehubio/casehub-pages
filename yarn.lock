@@ -2029,6 +2029,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/pages-three-way-viewer@workspace:packages/pages-three-way-viewer":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-three-way-viewer@workspace:packages/pages-three-way-viewer"
+  dependencies:
+    "@casehubio/pages-code-editor": "workspace:*"
+    "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-ui-tokens": "workspace:^"
+    "@codemirror/state": "npm:^6.5.0"
+    "@codemirror/view": "npm:^6.36.0"
+    lit: "npm:^3.3.3"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:~5.8.0"
+    vitest: "npm:^3.2.1"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/pages-tsconfig@workspace:*, @casehubio/pages-tsconfig@workspace:packages/pages-tsconfig":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-tsconfig@workspace:packages/pages-tsconfig"
