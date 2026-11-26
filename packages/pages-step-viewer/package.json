@@ -21,6 +21,7 @@
     "clean": "rimraf dist .typecheck"
   },
   "dependencies": {
+    "@casehubio/pages-three-way-viewer": "workspace:^",
     "@casehubio/pages-ui-tokens": "workspace:^",
     "@casehubio/yaml-core": "workspace:*",
     "lit": "^3.3.3"

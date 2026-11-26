@@ -2002,6 +2002,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-step-viewer@workspace:packages/pages-step-viewer"
   dependencies:
+    "@casehubio/pages-three-way-viewer": "workspace:^"
     "@casehubio/pages-tsconfig": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:^"
     "@casehubio/yaml-core": "workspace:*"
@@ -2029,7 +2030,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-three-way-viewer@workspace:packages/pages-three-way-viewer":
+"@casehubio/pages-three-way-viewer@workspace:^, @casehubio/pages-three-way-viewer@workspace:packages/pages-three-way-viewer":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-three-way-viewer@workspace:packages/pages-three-way-viewer"
   dependencies:

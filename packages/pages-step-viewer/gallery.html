@@ -325,22 +325,7 @@
 <h2>33. Split View — YAML Editor + Step Viewer</h2>
 <h3>bidirectional sync: edit YAML on the left, see steps on the right</h3>
 <div id="section-33" style="height: 500px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
-  <playbook-split-view id="split-view" style="height: 100%;">
-    <div style="display: flex; flex-direction: column; height: 100%;">
-      <textarea id="split-yaml-editor" style="flex: 1; background: var(--surface); color: var(--text); border: none; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; resize: none; outline: none; tab-size: 2;" spellcheck="false">- action: fetch-data
-  with:
-    url: /api/tickets
-- if: tickets.length > 0
-  then:
-    - action: process-tickets
-      with:
-        batch: true
-    - action: send-report
-  else:
-    - action: log-empty
-- action: cleanup</textarea>
-    </div>
-  </playbook-split-view>
+  <playbook-split-view id="split-view" style="height: 100%;"></playbook-split-view>
 </div>
 
 <script type="module">
@@ -1419,42 +1404,24 @@
   addBadge('badge-grid', 'from', '← raw-events');
   addBadge('badge-grid', 'cancel', 'cancel: shutdown');
 
-  // 8. Split View
+  // 8. Split View — now self-contained via pages-three-way-viewer
   // ═══════════════════════════════════════════════
   {
     const splitView = document.getElementById('split-view');
-    const editor = document.getElementById('split-yaml-editor');
-    if (splitView && editor) {
-      // Initial render
-      splitView.updateYaml(editor.value);
-
-      // Editor changes → viewer updates
-      editor.addEventListener('input', () => {
-        splitView.updateYaml(editor.value);
-      });
-
-      // Cursor position → viewer sync
-      editor.addEventListener('click', () => {
-        const lines = editor.value.substring(0, editor.selectionStart).split('\n');
-        splitView.syncCursorLine(lines.length - 1);
-      });
-      editor.addEventListener('keyup', () => {
-        const lines = editor.value.substring(0, editor.selectionStart).split('\n');
-        splitView.syncCursorLine(lines.length - 1);
-      });
-
-      // Step click → editor cursor
-      splitView.addEventListener('step-select', (e) => {
-        const { line } = e.detail;
-        const lines = editor.value.split('\n');
-        let offset = 0;
-        for (let i = 0; i < line && i < lines.length; i++) {
-          offset += lines[i].length + 1;
-        }
-        editor.focus();
-        editor.selectionStart = offset;
-        editor.selectionEnd = offset;
-      });
+    if (splitView) {
+      const demoYaml = `- action: fetch-data
+  with:
+    url: /api/tickets
+- if: tickets.length > 0
+  then:
+    - action: process-tickets
+      with:
+        batch: true
+    - action: send-report
+  else:
+    - action: log-empty
+- action: cleanup`;
+      splitView.updateYaml(demoYaml);
     }
   }
 
