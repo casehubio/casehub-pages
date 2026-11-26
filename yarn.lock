@@ -1538,6 +1538,7 @@ __metadata:
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-editor-core": "workspace:*"
     "@casehubio/pages-primitives": "workspace:*"
+    "@casehubio/pages-three-way-viewer": "workspace:^"
     "@casehubio/yaml-core": "workspace:*"
     jsdom: "npm:^26.1.0"
     lit: "npm:^3.3.3"

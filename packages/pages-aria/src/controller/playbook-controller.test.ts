@@ -250,13 +250,12 @@ describe('pages-playbook-controller', () => {
 
     const viewer = document.querySelector('pages-playbook-yaml-viewer');
     expect(viewer).not.toBeNull();
-    expect((el as any)._docked).toBe(true);
-    expect((el as any)._yamlOpen).toBe(true);
+    expect((el as any)._panelMode).toBe('docked');
 
     toggleBtn.click();
     await el.updateComplete;
     expect(viewer?.style.display).toBe('none');
-    expect((el as any)._yamlOpen).toBe(false);
+    expect((el as any)._panelMode).toBe('closed');
 
     el.remove();
     viewer?.remove();
@@ -281,7 +280,7 @@ describe('pages-playbook-controller', () => {
 
     undockBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await el.updateComplete;
-    expect((el as any)._docked).toBe(false);
+    expect((el as any)._panelMode).toBe('floating');
 
     const undockBtnAfter = el.shadowRoot?.querySelector('[aria-label="Undock viewer"]');
     expect(undockBtnAfter).toBeNull();
@@ -307,7 +306,8 @@ describe('pages-playbook-controller', () => {
     toggleBtn.click();
     await el.updateComplete;
 
-    (el as any)._docked = false;
+    (el as any)._panel.setMode('floating');
+    (el as any)._panelMode = 'floating';
     await el.updateComplete;
 
     const dockBtn = el.shadowRoot?.querySelector('[aria-label="Dock viewer"]') as HTMLButtonElement;
@@ -315,7 +315,7 @@ describe('pages-playbook-controller', () => {
     dockBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await el.updateComplete;
 
-    expect((el as any)._docked).toBe(true);
+    expect((el as any)._panelMode).toBe('docked');
 
     el.remove();
     document.querySelector('pages-playbook-yaml-viewer')?.remove();

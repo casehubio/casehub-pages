@@ -4,6 +4,7 @@ import type { EventConnection } from '@casehubio/pages-data';
 import { KeyboardShortcutMixin } from '@casehubio/pages-primitives';
 import { PlaybookConnectionController, type PlaybookState, type OutlineNode } from './playbook-connection-controller';
 import type { PagesPlaybookYamlViewer } from './playbook-yaml-viewer';
+import { PanelController, type PanelMode } from '@casehubio/pages-three-way-viewer';
 import './library-view.js';
 import type { PagesLibraryView } from './library-view.js';
 import './step-catalog.js';
@@ -187,7 +188,7 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
   @property() scenario?: string;
 
   @state() private _expanded = false;
-  @state() private _yamlOpen = false;
+  @state() private _panelMode: PanelMode = 'closed';
   @state() private _calloutMsPerChar = 25;
   @state() private _view: 'outline' | 'library' | 'catalog' = 'outline';
 
@@ -198,10 +199,26 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
   private _yamlViewer: PagesPlaybookYamlViewer | null = null;
   private _popoutWindow: Window | null = null;
   private _popoutPoll: ReturnType<typeof setInterval> | null = null;
-  @state() private _docked = true;
   @state() private _fullOutline = false;
 
   private _resizeHandler = (): void => { this._clampToViewport(); };
+
+  private _panel = new PanelController({
+    onChange: (mode) => {
+      this._panelMode = mode;
+      if (mode === 'closed') {
+        this._hideYamlViewer();
+      } else {
+        this._ensureViewerCreated();
+        this._yamlViewer!.style.display = 'block';
+        if (mode === 'docked') {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => { this._snapViewerToController(); });
+          });
+        }
+      }
+    },
+  });
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -605,7 +622,7 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
           <button aria-label=${this._fullOutline ? 'Compact outline' : 'Full outline'}
                   @click=${() => { this._fullOutline = !this._fullOutline; }}>${this._fullOutline ? '⊟' : '⊞'}</button>
           <button aria-label="Toggle source" @click=${() => { this._toggleYaml(); }}>&lt;/&gt;</button>
-          ${this._yamlOpen ? (this._docked
+          ${this._panelMode !== 'closed' ? (this._panelMode === 'docked'
             ? html`<button aria-label="Undock viewer" @click=${() => { this._undockViewer(); }} title="Undock panels">⊟</button>`
             : html`<button aria-label="Dock viewer" @click=${() => { this._dockViewer(); }} title="Dock panels">⊞</button>`
           ) : nothing}
@@ -659,34 +676,24 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _toggleYaml(): void {
-    this._yamlOpen = !this._yamlOpen;
-    if (this._yamlOpen) {
-      this._showYamlViewer();
-    } else {
-      this._hideYamlViewer();
-    }
+    this._panel.toggle();
   }
 
-  private _showYamlViewer(): void {
+  private _ensureViewerCreated(): void {
     if (!this._yamlViewer) {
       const viewer = document.createElement('pages-playbook-yaml-viewer') as PagesPlaybookYamlViewer;
       viewer.connection = this.connection;
       viewer.eventTarget = this.eventTarget;
       if (this.baseUrl) viewer.baseUrl = this.baseUrl;
       if (this.scenario) viewer.scenario = this.scenario;
-      viewer.onClose = () => { this._toggleYaml(); };
+      viewer.onClose = () => { this._panel.toggle(); };
       viewer.onDetach = () => { this._detachYaml(); };
       viewer.onDragMove = (left: number, top: number) => { this._onViewerDrag(left, top); };
       viewer.onDragEnd = () => { this._onViewerDragEnd(); };
-      viewer.onResize = () => { if (this._docked) this._snapViewerToController(); };
+      viewer.onResize = () => { if (this._panelMode === 'docked') this._snapViewerToController(); };
       document.body.appendChild(viewer);
       this._yamlViewer = viewer;
-      this._docked = true;
     }
-    this._yamlViewer.style.display = 'block';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => { this._snapViewerToController(); });
-    });
   }
 
   private _snapViewerToController(): void {
@@ -698,16 +705,15 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
     const viewerHeight = viewerRect.height > 0 ? viewerRect.height : window.innerHeight * 0.5;
     const top = hostRect.bottom - viewerHeight;
     this._yamlViewer.setPosition(left, top);
-    this._docked = true;
   }
 
   private _onViewerDrag(left: number, top: number): void {
-    if (!this._docked) return;
+    if (this._panelMode !== 'docked') return;
     const hostRect = this.getBoundingClientRect();
     const viewerRect = this._yamlViewer!.getBoundingClientRect();
     const gap = hostRect.left - (left + viewerRect.width);
     if (Math.abs(gap - 8) > 30) {
-      this._docked = false;
+      this._panel.setMode('floating');
       return;
     }
     const viewerBottom = top + viewerRect.height;
@@ -722,21 +728,21 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
   }
 
   private _trySnap(): void {
-    if (!this._yamlViewer || this._docked) return;
+    if (!this._yamlViewer || this._panelMode === 'docked') return;
     const hostRect = this.getBoundingClientRect();
     const viewerRect = this._yamlViewer.getBoundingClientRect();
     const gap = hostRect.left - (viewerRect.left + viewerRect.width);
     if (Math.abs(gap) < 30 && Math.abs(hostRect.bottom - viewerRect.bottom) < 30) {
-      this._snapViewerToController();
+      this._panel.setMode('docked');
     }
   }
 
   private _undockViewer(): void {
-    this._docked = false;
+    this._panel.setMode('floating');
   }
 
   private _dockViewer(): void {
-    this._snapViewerToController();
+    this._panel.setMode('docked');
   }
 
   private _hideYamlViewer(): void {
@@ -752,8 +758,7 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
     const win = window.open(url, 'yaml-viewer', 'width=400,height=600');
     if (!win) return;
     this._popoutWindow = win;
-    this._hideYamlViewer();
-    this._yamlOpen = false;
+    this._panel.setMode('closed');
     if (this._popoutPoll) clearInterval(this._popoutPoll);
     this._popoutPoll = setInterval(() => {
       if (win.closed) {
@@ -821,7 +826,7 @@ export class PagesPlaybookController extends KeyboardShortcutMixin(LitElement) {
     this.style.top = `${top}px`;
     this.style.right = 'auto';
     this.style.bottom = 'auto';
-    if (this._docked && this._yamlViewer) {
+    if (this._panelMode === 'docked' && this._yamlViewer) {
       const viewerRect = this._yamlViewer.getBoundingClientRect();
       const viewerWidth = viewerRect.width;
       const viewerHeight = viewerRect.height > 0 ? viewerRect.height : window.innerHeight * 0.5;

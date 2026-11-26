@@ -31,6 +31,7 @@
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-editor-core": "workspace:*",
     "@casehubio/pages-primitives": "workspace:*",
+    "@casehubio/pages-three-way-viewer": "workspace:^",
     "@casehubio/yaml-core": "workspace:*",
     "lit": "^3.3.3",
     "yaml": "^2.9.0"
